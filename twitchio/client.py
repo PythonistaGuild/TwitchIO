@@ -1,21 +1,7 @@
-from twitchio.connection import *
 import asyncio
 import inspect
 
-from twitchio.errors import *
-
-import traceback
-import sys
-import os
-import re
-import math
-import json
-import configparser
-import time
-import subprocess
-import functools
-import sqlite3
-import pathlib
+from .connection import *
 
 
 class Client(BaseConnection):

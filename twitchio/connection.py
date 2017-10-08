@@ -197,4 +197,3 @@ class BaseConnection:
 
     async def on_message(self, message):
         pass
-
