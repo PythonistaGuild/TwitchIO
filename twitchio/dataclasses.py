@@ -44,18 +44,20 @@ class User(Messageable):
 
     def __init__(self, **attrs):
         self._name = attrs.pop('author', None)
-        self.tags = attrs.pop('tags', None)
         self._writer = attrs.pop('_writer')
         self._channel = attrs.pop('channel', None)
+        tags = attrs.pop('tags', None)
 
-        if self.tags:
-            self._display_name = self.tags['display-name']
-            self._id = int(self.tags['user-id'])
-            self._type = self.tags['user-type'] if self.tags['user-type'] else 'Standard User'
-            self._colour = self.tags['color']
-            self._subscriber = self.tags['subscriber'] == 1
-            self._turbo = self.tags['turbo'] == 1
-            self._badges = self.tags['badges'].split(',')
+        if not tags:
+            return
+
+        self.display_name = tags['display-name']
+        self.id = int(tags['user-id'])
+        self.type = tags['user-type'] if tags['user-type'] else 'Standard User'
+        self.colour = tags['color']
+        self.subscriber = tags['subscriber'] == 1
+        self.turbo = tags['turbo'] == 1
+        self.badges = tags['badges'].split(',')
 
     def __repr__(self):
         return '<User name={0.name} id={0.id} channel={0._channel}>'.format(self)
@@ -68,40 +70,4 @@ class User(Messageable):
 
     async def _get_method(self):
         return self.__class__.__name__
-
-    @property
-    def display_name(self):
-        return self._display_name
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def user_type(self):
-        return self._type
-
-    @property
-    def colour(self):
-        return self._colour
-
-    @property
-    def color(self):
-        return self._colour
-
-    @property
-    def is_subscriber(self):
-        return self._subscriber
-
-    @property
-    def is_turbo(self):
-        return self._turbo
-
-    @property
-    def badges(self):
-        return self._badges
 
