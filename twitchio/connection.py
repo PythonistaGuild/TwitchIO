@@ -11,6 +11,8 @@ log = logging.getLogger(__name__)
 
 
 class BaseConnection:
+    # todo Update Docstrings.
+    """Base Connection class used for handling incoming and outgoing requests from Twitch."""
 
     def __init__(self, loop, host: str, port: int, nick: str, token: str, modes: (tuple, list), autojoin: bool=True):
         self.loop = loop
@@ -43,17 +45,24 @@ class BaseConnection:
 
     @property
     def host(self):
+        """The host address used to connect to Twitch."""
         return self._host
 
     @property
     def port(self):
+        """The port used to connect to Twitch."""
         return self._port
 
     @property
     def nick(self):
+        """The username used to connect to Twitch."""
         return self._nick
 
     async def auth_seq(self, channels):
+        """An Automated Authentication process which provides Twitch
+        with the given PASS and NICK.
+
+        If Authentication is successful, we will attempt to join the provided channels. """
 
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
         self._writer.write("NICK {}\r\n".format(self.nick).encode('utf-8'))
@@ -64,12 +73,22 @@ class BaseConnection:
         await self.join_channels(channels)
 
     async def send_auth(self):
+        """Send an Authentication request to Twitch.
+         Only useful if the Automated sequence was not used.
+         """
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
 
     async def send_nick(self):
+        """Send an NICK request to Twitch.
+         Only useful if the Automated sequence was not used.
+         """
         self._writer.write("NICK {}\r\n".format(self.nick).encode('utf-8'))
 
     async def _send_privmsg(self, channel, content):
+        """Send a PRIVMSG to Twitch.
+
+         Using this is unadvised.
+         """
         content = content.replace("\n", " ")
         self._writer.write("PRIVMSG #{} :{}\r\n".format(channel, content).encode('utf-8'))
 
@@ -91,6 +110,7 @@ class BaseConnection:
             raise ClientError(raise_msg)
 
     async def keep_alive(self, channels):
+        # todo docstrings, other logic
 
         try:
             self._reader, self._writer = await asyncio.open_connection(self.host, self.port, loop=self.loop)
@@ -114,6 +134,7 @@ class BaseConnection:
                 await self.on_error(e.__class__.__name__)
 
     async def process_data(self, data):
+        # todo docs, other logic
 
         await self.on_raw_data(data)
 
@@ -161,6 +182,8 @@ class BaseConnection:
             self._writer.write("PONG {}\r\n".format(resp).encode('utf-8'))
 
     async def process_actions(self, groups, tags=None):
+
+        # todo add remaining actions, docs
 
         action = groups.pop('action', 'PING')
         data = groups.pop('data', None)
