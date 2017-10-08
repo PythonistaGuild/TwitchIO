@@ -53,8 +53,8 @@ class User(Messageable):
             self._id = int(self.tags['user-id'])
             self._type = self.tags['user-type'] if self.tags['user-type'] else 'Standard User'
             self._colour = self.tags['color']
-            self._subscriber = True if self.tags['subscriber'] == 1 else False
-            self._turbo = True if self.tags['turbo'] == 1 else False
+            self._subscriber = self.tags['subscriber'] == 1
+            self._turbo = self.tags['turbo'] == 1
             self._badges = self.tags['badges'].split(',')
 
     def __repr__(self):
