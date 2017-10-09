@@ -36,6 +36,8 @@ class BaseConnection:
         self.auto_join = autojoin
         self.modes = modes
 
+        self.channel_cache = set()
+
         self.regex = {
             "data": re.compile(
                 r"^(?:@(?P<tags>\S+)\s)?:(?P<data>\S+)(?:\s)"
@@ -49,7 +51,8 @@ class BaseConnection:
             "host": re.compile(
                 "(?P<channel>[a-zA-Z0-9_]+) "
                 "(?P<count>[0-9\-]+)"),
-            'code': re.compile(r":tmi.twitch.tv (?P<code>[0-9]{3}) ")}
+            'code': re.compile(r"tmi.twitch.tv (?P<code>[0-9]{3}) "), }
+
         self._groups = ('action', 'data', 'content', 'channel', 'author')
 
     @property
@@ -106,6 +109,8 @@ class BaseConnection:
         for entry in channels:
             channel = re.sub('[#\s]', '', entry)
             self._writer.write("JOIN #{}\r\n".format(channel).encode('utf-8'))
+
+            self.channel_cache.add(entry)
 
     async def _force_close(self, *args, **kwargs):
         # todo
@@ -248,6 +253,10 @@ class BaseConnection:
 
         elif action == 'JOIN':
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
+
+            if author == self._nick:
+                self.channel_cache.add(channel)
+
             await self.on_join(user)
 
         elif action == 'PART':
