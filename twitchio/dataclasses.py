@@ -46,10 +46,13 @@ class User(Messageable):
         self._name = attrs.pop('author', None)
         self._writer = attrs.pop('_writer')
         self._channel = attrs.pop('channel', None)
-        tags = attrs.pop('tags', {})
+        tags = attrs.pop('tags', {'None': 'None'})
+
+        if not tags:
+            tags = {'None': 'None'}
 
         self.display_name = tags.get('display_name', None)
-        self.id = int(tags.get('user-id', None))
+        self.id = int(tags.get('user-id', 0))
         self.type = tags.get('user-type', 'Empty')
         self.colour = tags.get('color', None)
         self.subscriber = tags.get('subscriber', None)
