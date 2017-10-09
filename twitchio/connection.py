@@ -3,11 +3,17 @@ import re
 import logging
 import sys, traceback
 
+try:
+    from socket import socketpair
+except ImportError:
+    from asyncio.windows_utils import socketpair
+
 from .dataclasses import Context, User
 from .errors import *
 
 
 log = logging.getLogger(__name__)
+# todo Actual logger
 
 
 class BaseConnection:
@@ -24,6 +30,8 @@ class BaseConnection:
 
         self._reader = None
         self._writer = None
+        self._is_connected = None
+        self._is_ready = asyncio.Event()
 
         self.auto_join = autojoin
         self.modes = modes
@@ -40,7 +48,8 @@ class BaseConnection:
             "mode": re.compile("(?P<mode>[\+\-])o (?P<user>.+)"),
             "host": re.compile(
                 "(?P<channel>[a-zA-Z0-9_]+) "
-                "(?P<count>[0-9\-]+)")}
+                "(?P<count>[0-9\-]+)"),
+            'code': re.compile(r":tmi.twitch.tv (?P<code>[0-9]{3}) ")}
         self._groups = ('action', 'data', 'content', 'channel', 'author')
 
     @property
@@ -111,11 +120,15 @@ class BaseConnection:
 
     async def keep_alive(self, channels):
         # todo docstrings, other logic
+        self._is_ready.clear()
 
         try:
             self._reader, self._writer = await asyncio.open_connection(self.host, self.port, loop=self.loop)
         except:
             raise HostConnectionFailure(self.host, self.port)
+        else:
+            self._is_connected = True
+            self._is_ready.set()
 
         if self.auto_join:
             await self.auth_seq(channels)
@@ -123,7 +136,10 @@ class BaseConnection:
             await self.send_auth()
             await self.send_nick()
 
-        while True:
+        await self._is_ready.wait()
+        await self.on_ready()
+
+        while self._is_connected:
             data = (await self._reader.readline()).decode("utf-8").strip()
             if not data:
                 continue
@@ -133,14 +149,46 @@ class BaseConnection:
             except Exception as e:
                 await self.on_error(e.__class__.__name__)
 
+    async def _reconnect(self):
+        count = 0
+        retries = 15
+
+        self._writer.close()
+        self._is_connected = False
+
+        for task in asyncio.Task.all_tasks():
+            try:
+                task.cancel()
+            except:
+                pass
+
+        while not self._is_connected:
+            if retries <= 0:
+                await self._force_close(raise_msg='Reconnect: Maximum number of retries [15] exhausted. Terminating')
+
+            count += 1
+            retries -= 1
+            await asyncio.sleep(5 * count)
+
+            try:
+                self.loop.create_task(self.keep_alive(self.channels))
+            except:
+                pass
+            else:
+                await asyncio.sleep(1)
+
     async def process_data(self, data):
         # todo docs, other logic
 
         await self.on_raw_data(data)
 
-        if data.startswith(':tmi.twitch.tv 376'):
+        try:
+            code = int(self.regex['code'].match(data).group('code'))
+        except:
+            code = None
+
+        if code == 376:
             print('\n\033[92mSuccessful Authentication: {0._host}:{0._port}\033[0m\n'.format(self))
-            await self.on_ready()
             # todo logging
 
         elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed':
@@ -195,8 +243,16 @@ class BaseConnection:
         except:
             author = None
 
-        if action == 'JOIN':
-            pass
+        if action == 'RECONNECT':
+            return await asyncio.shield(self._reconnect())
+
+        elif action == 'JOIN':
+            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
+            await self.on_join(user)
+
+        elif action == 'PART':
+            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
+            await self.on_part(user)
 
         elif action == 'PING':
             await self.process_ping(content)
@@ -219,4 +275,10 @@ class BaseConnection:
         pass
 
     async def on_message(self, message):
+        pass
+
+    async def on_join(self, user):
+        pass
+
+    async def on_part(self, user):
         pass

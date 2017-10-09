@@ -60,7 +60,7 @@ class User(Messageable):
         self.badges = tags['badges'].split(',')
 
     def __repr__(self):
-        return '<User name={0.name} id={0.id} channel={0._channel}>'.format(self)
+        return '<User name={0.name} channel={0._channel}>'.format(self)
 
     async def _get_channel(self):
         return self._channel, self._name
@@ -71,3 +71,10 @@ class User(Messageable):
     async def _get_method(self):
         return self.__class__.__name__
 
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def channel(self):
+        return self._channel
