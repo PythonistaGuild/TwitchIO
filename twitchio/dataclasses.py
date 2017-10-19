@@ -46,18 +46,18 @@ class User(Messageable):
         self._name = attrs.pop('author', None)
         self._writer = attrs.pop('_writer')
         self._channel = attrs.pop('channel', None)
-        tags = attrs.pop('tags', {'None': 'None'})
+        self.tags = attrs.pop('tags', None)
 
-        if not tags:
-            tags = {'None': 'None'}
+        if not self.tags:
+            self.tags = {'None': 'None'}
 
-        self.display_name = tags.get('display_name', None)
-        self.id = int(tags.get('user-id', 0))
-        self.type = tags.get('user-type', 'Empty')
-        self.colour = tags.get('color', None)
-        self.subscriber = tags.get('subscriber', None)
-        self.turbo = tags.get('turbo', None)
-        self.badges = tags.get('badges', ',').split(',')
+        self.display_name = self.tags.get('display-name', None)
+        self.id = int(self.tags.get('user-id', 0))
+        self.type = self.tags.get('user-type', 'Empty')
+        self.colour = self.tags.get('color', None)
+        self.subscriber = self.tags.get('subscriber', None)
+        self.turbo = self.tags.get('turbo', None)
+        self.badges = self.tags.get('badges', ',').split(',')
 
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)

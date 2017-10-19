@@ -29,6 +29,8 @@ class Client(BaseConnection):
         else:
             channels = self._gather_channels
 
+        # todo Task or Stand-Alone
+
         task = self.loop.create_task(self.keep_alive(channels))
 
         def end_loop(fut):

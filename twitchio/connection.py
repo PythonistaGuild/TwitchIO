@@ -37,6 +37,8 @@ class BaseConnection:
         self.modes = modes
 
         self.channel_cache = set()
+        self._mod_token = 0
+        self._channel_token = 0
 
         self.regex = {
             "data": re.compile(
@@ -118,10 +120,18 @@ class BaseConnection:
 
         try:
             raise_msg = kwargs['raise_msg']
-        except:
+        except KeyError:
             pass
         else:
             raise ClientError(raise_msg)
+
+    async def _token_update(self, user):
+        if 'moderator/1' in user.badges:
+            self._mod_token += 1
+        else:
+            if self._mod_token <= 0:
+                return
+            self._mod_token -= 1
 
     async def keep_alive(self, channels):
         # todo docstrings, other logic
@@ -147,8 +157,8 @@ class BaseConnection:
         while self._is_connected:
             data = (await self._reader.readline()).decode("utf-8").strip()
             if not data:
+                await asyncio.sleep(0)
                 continue
-
             try:
                 await self.process_data(data)
             except Exception as e:
@@ -256,11 +266,17 @@ class BaseConnection:
 
             if author == self._nick:
                 self.channel_cache.add(channel)
+                self._channel_token += 1
 
             await self.on_join(user)
 
         elif action == 'PART':
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
+
+            if author == self._nick:
+                self.channel_cache.remove(channel)
+                self._channel_token -= 1
+
             await self.on_part(user)
 
         elif action == 'PING':
@@ -271,6 +287,18 @@ class BaseConnection:
             message = Context(author=user, content=content, channel=channel, raw_data=data, tags=tags,
                               _writer=self._writer)
             await self.on_message(message)
+
+        elif action == 'USERSTATE':
+            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
+            try:
+                user.display_name
+            except AttributeError:
+                pass
+            else:
+                if user.display_name.lower() == self._nick.lower():
+                    await self._token_update(user)
+            finally:
+                await self.on_userstate(user)
 
     async def on_ready(self):
         pass
@@ -290,4 +318,7 @@ class BaseConnection:
         pass
 
     async def on_part(self, user):
+        pass
+
+    async def on_userstate(self, user):
         pass
