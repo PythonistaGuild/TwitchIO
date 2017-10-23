@@ -39,6 +39,7 @@ class BaseConnection:
         self.channel_cache = set()
         self._mod_token = 0
         self._channel_token = 0
+        self._rate_status = None
 
         self.regex = {
             "data": re.compile(
@@ -114,16 +115,15 @@ class BaseConnection:
 
             self.channel_cache.add(entry)
 
-    async def _force_close(self, *args, **kwargs):
-        # todo
-        self.loop.stop()
+    async def _update_limit(self):
 
-        try:
-            raise_msg = kwargs['raise_msg']
-        except KeyError:
-            pass
-        else:
-            raise ClientError(raise_msg)
+        while True:
+            if self._mod_token == len(self.channel_cache):
+                self._rate_status = 1
+            else:
+                self._rate_status = 0
+
+            await asyncio.sleep(60)
 
     async def _token_update(self, user):
         if 'moderator/1' in user.badges:
@@ -132,6 +132,11 @@ class BaseConnection:
             if self._mod_token <= 0:
                 return
             self._mod_token -= 1
+
+        if self._mod_token == len(self.channel_cache):
+            self._rate_status = 1
+        else:
+            self._rate_status = 0
 
     async def keep_alive(self, channels):
         # todo docstrings, other logic
@@ -145,6 +150,8 @@ class BaseConnection:
             self._is_connected = True
             self._is_ready.set()
 
+        self.loop.create_task(self._update_limit())
+
         if self.auto_join:
             await self.auth_seq(channels)
         else:
@@ -152,7 +159,7 @@ class BaseConnection:
             await self.send_nick()
 
         await self._is_ready.wait()
-        await self.on_ready()
+        await self.event_ready()
 
         while self._is_connected:
             data = (await self._reader.readline()).decode("utf-8").strip()
@@ -162,40 +169,12 @@ class BaseConnection:
             try:
                 await self.process_data(data)
             except Exception as e:
-                await self.on_error(e.__class__.__name__)
-
-    async def _reconnect(self):
-        count = 0
-        retries = 15
-
-        self._writer.close()
-        self._is_connected = False
-
-        for task in asyncio.Task.all_tasks():
-            try:
-                task.cancel()
-            except:
-                pass
-
-        while not self._is_connected:
-            if retries <= 0:
-                await self._force_close(raise_msg='Reconnect: Maximum number of retries [15] exhausted. Terminating')
-
-            count += 1
-            retries -= 1
-            await asyncio.sleep(5 * count)
-
-            try:
-                self.loop.create_task(self.keep_alive(self.channels))
-            except:
-                pass
-            else:
-                await asyncio.sleep(1)
+                await self.event_error(e.__class__.__name__)
 
     async def process_data(self, data):
         # todo docs, other logic
 
-        await self.on_raw_data(data)
+        await self.event_raw_data(data)
 
         try:
             code = int(self.regex['code'].match(data).group('code'))
@@ -207,8 +186,8 @@ class BaseConnection:
             # todo logging
 
         elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed':
-            # todo logging
-            return await self._force_close(raise_msg='Login Authentication Failure.')
+            # todo Disconnection/Reconnection Logic.
+            return
 
         _groupsdict = {}
 
@@ -259,7 +238,8 @@ class BaseConnection:
             author = None
 
         if action == 'RECONNECT':
-            return await asyncio.shield(self._reconnect())
+            # TODO Disconnection/Reconnection Logic.
+            return
 
         elif action == 'JOIN':
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
@@ -268,7 +248,7 @@ class BaseConnection:
                 self.channel_cache.add(channel)
                 self._channel_token += 1
 
-            await self.on_join(user)
+            await self.event_join(user)
 
         elif action == 'PART':
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
@@ -277,7 +257,7 @@ class BaseConnection:
                 self.channel_cache.remove(channel)
                 self._channel_token -= 1
 
-            await self.on_part(user)
+            await self.event_part(user)
 
         elif action == 'PING':
             await self.process_ping(content)
@@ -286,7 +266,7 @@ class BaseConnection:
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
             message = Context(author=user, content=content, channel=channel, raw_data=data, tags=tags,
                               _writer=self._writer)
-            await self.on_message(message)
+            await self.event_message(message)
 
         elif action == 'USERSTATE':
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
@@ -298,27 +278,27 @@ class BaseConnection:
                 if user.display_name.lower() == self._nick.lower():
                     await self._token_update(user)
             finally:
-                await self.on_userstate(user)
+                await self.event_userstate(user)
 
-    async def on_ready(self):
+    async def event_ready(self):
         pass
 
-    async def on_error(self, error_name, *args, **kwargs):
+    async def event_error(self, error_name, *args, **kwargs):
 
         print('Ignoring exception in {}:'.format(error_name), file=sys.stderr)
         traceback.print_exc()
 
-    async def on_raw_data(self, data):
+    async def event_raw_data(self, data):
         pass
 
-    async def on_message(self, message):
+    async def event_message(self, message):
         pass
 
-    async def on_join(self, user):
+    async def event_join(self, user):
         pass
 
-    async def on_part(self, user):
+    async def event_part(self, user):
         pass
 
-    async def on_userstate(self, user):
+    async def event_userstate(self, user):
         pass

@@ -10,6 +10,7 @@ class Client(BaseConnection):
                  host: str='irc.chat.twitch.tv', port: int=6667, loop=None, **attrs):
         modes = attrs.pop('modes', ("commands", "tags", "membership"))
         self._gather_channels = initial_channels
+        self.intergrated = attrs.get('integrated', False)
         super().__init__(loop, host, port, nick, token, modes)
 
     def run(self, pre_run=None):
@@ -29,7 +30,7 @@ class Client(BaseConnection):
         else:
             channels = self._gather_channels
 
-        # todo Task or Stand-Alone
+        # todo Task or Stand-Alone / Actual callback handling.
 
         task = self.loop.create_task(self.keep_alive(channels))
 
@@ -38,8 +39,18 @@ class Client(BaseConnection):
 
         task.add_done_callback(end_loop)
 
+        if self.intergrated:
+            return
+
         try:
             self.loop.run_forever()
         except KeyboardInterrupt:
             #todo stuff
             print('Terminating TwitchIO Client...')
+
+    @property
+    def rate_status(self):
+        if self._rate_status == 1:
+            return "Full"
+        else:
+            return "Restricted"
