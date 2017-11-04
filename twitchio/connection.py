@@ -287,7 +287,6 @@ class BaseConnection:
             mstatus = mdata.group('status')
 
             user = User(author=mdata.group('user'), channel=channel, tags=tags, _writer=self._writer)
-            print(user)
 
             if user._name.lower() == self._nick.lower():
                 await self._token_update(mstatus)
