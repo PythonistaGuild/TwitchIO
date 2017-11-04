@@ -46,7 +46,7 @@ class Messageable(metaclass=abc.ABCMeta):
 
         content = content.replace('\n', ' ')
 
-        if method == 'Context':
+        if method == 'Message':
             writer.write('PRIVMSG #{} :{}\r\n'.format(channel, content).encode('utf-8'))
 
         # Currently unavailable

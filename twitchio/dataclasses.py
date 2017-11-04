@@ -1,7 +1,7 @@
 from .abcs import Messageable
 
 
-class Context(Messageable):
+class Message(Messageable):
 
     def __init__(self, **attrs):
         self._author = attrs.pop('author', None)
@@ -33,11 +33,34 @@ class Context(Messageable):
 
     @property
     def channel(self):
-        return self._channel
+        return str(self._channel)
 
     @property
     def raw_data(self):
         return self._raw_data
+
+
+class Channel(Messageable):
+
+    def __init__(self, channel, _writer):
+        self._channel = channel
+        self._writer = _writer
+
+    def __repr__(self):
+        return self._channel
+
+    @property
+    def name(self):
+        return self._channel
+
+    async def _get_channel(self):
+        return self.name, None
+
+    async def _get_writer(self):
+        return self._writer
+
+    async def _get_method(self):
+        return self.__class__.__name__
 
 
 class User(Messageable):
@@ -51,7 +74,7 @@ class User(Messageable):
         if not self.tags:
             self.tags = {'None': 'None'}
 
-        self.display_name = self.tags.get('display-name', None)
+        self.display_name = self.tags.get('display-name', self._name)
         self.id = int(self.tags.get('user-id', 0))
         self.type = self.tags.get('user-type', 'Empty')
         self.colour = self.tags.get('color', None)
@@ -63,7 +86,7 @@ class User(Messageable):
         return '<User name={0.name} channel={0._channel}>'.format(self)
 
     async def _get_channel(self):
-        return self._channel, self._name
+        return self.channel, self._name
 
     async def _get_writer(self):
         return self._writer
@@ -77,7 +100,7 @@ class User(Messageable):
 
     @property
     def channel(self):
-        return self._channel
+        return str(self._channel)
 
     @property
     def is_turbo(self):

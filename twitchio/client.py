@@ -7,11 +7,11 @@ from .connection import *
 class Client(BaseConnection):
 
     def __init__(self, nick: str, token: str, initial_channels: (list, tuple, callable), *,
-                 host: str='irc.chat.twitch.tv', port: int=6667, loop=None, **attrs):
+                 host: str='irc.chat.twitch.tv', port: int=6667, loop=None, autojoin: bool=True, **attrs):
         modes = attrs.pop('modes', ("commands", "tags", "membership"))
         self._gather_channels = initial_channels
         self.intergrated = attrs.get('integrated', False)
-        super().__init__(loop, host, port, nick, token, modes)
+        super().__init__(loop, host, port, nick, token, modes, autojoin, **attrs)
 
     def run(self, pre_run=None):
 
@@ -40,7 +40,7 @@ class Client(BaseConnection):
         task.add_done_callback(end_loop)
 
         if self.intergrated:
-            return
+            self.task = task
 
         try:
             self.loop.run_forever()

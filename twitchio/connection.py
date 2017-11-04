@@ -8,9 +8,8 @@ try:
 except ImportError:
     from asyncio.windows_utils import socketpair
 
-from .dataclasses import Context, User
+from .dataclasses import Message, User, Channel
 from .errors import *
-
 
 log = logging.getLogger(__name__)
 # todo Actual logger
@@ -20,7 +19,8 @@ class BaseConnection:
     # todo Update Docstrings.
     """Base Connection class used for handling incoming and outgoing requests from Twitch."""
 
-    def __init__(self, loop, host: str, port: int, nick: str, token: str, modes: (tuple, list), autojoin: bool=True):
+    def __init__(self, loop, host: str, port: int, nick: str, token: str, modes: (tuple, list), autojoin: bool,
+                 **kwargs):
         self.loop = loop
         self._host = host
         self._port = port
@@ -40,6 +40,9 @@ class BaseConnection:
         self._mod_token = 0
         self._channel_token = 0
         self._rate_status = None
+
+        print(kwargs)
+        self._bot = kwargs.get('_bot', None)
 
         self.regex = {
             "data": re.compile(
@@ -125,8 +128,8 @@ class BaseConnection:
 
             await asyncio.sleep(60)
 
-    async def _token_update(self, user):
-        if 'moderator/1' in user.badges:
+    async def _token_update(self, status):
+        if '+o' in status:
             self._mod_token += 1
         else:
             if self._mod_token <= 0:
@@ -218,12 +221,12 @@ class BaseConnection:
             except:
                 pass
 
-        await self.process_actions(_groupsdict, tags)
+        await self.process_actions(data, _groupsdict, tags)
 
     async def process_ping(self, resp):
             self._writer.write("PONG {}\r\n".format(resp).encode('utf-8'))
 
-    async def process_actions(self, groups, tags=None):
+    async def process_actions(self, raw, groups, tags=None):
 
         # todo add remaining actions, docs
 
@@ -231,6 +234,9 @@ class BaseConnection:
         data = groups.pop('data', None)
         content = groups.pop('content', None)
         channel = groups.pop('channel', None)
+
+        if channel:
+            channel = Channel(channel=channel, _writer=self._writer)
 
         try:
             author = self.regex["author"].match(data).group("author")
@@ -245,7 +251,7 @@ class BaseConnection:
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
 
             if author == self._nick:
-                self.channel_cache.add(channel)
+                self.channel_cache.add(channel.name)
                 self._channel_token += 1
 
             await self.event_join(user)
@@ -254,7 +260,7 @@ class BaseConnection:
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
 
             if author == self._nick:
-                self.channel_cache.remove(channel)
+                self.channel_cache.remove(channel.name)
                 self._channel_token -= 1
 
             await self.event_part(user)
@@ -263,22 +269,30 @@ class BaseConnection:
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
+            # TODO Commands handling.
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
-            message = Context(author=user, content=content, channel=channel, raw_data=data, tags=tags,
+            message = Message(author=user, content=content, channel=channel, raw_data=data, tags=tags,
                               _writer=self._writer)
-            await self.event_message(message)
+            await self.event_message(message, user)
+
+            if self._bot:
+                await self._bot.process_commands(message)
 
         elif action == 'USERSTATE':
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
-            try:
-                user.display_name
-            except AttributeError:
-                pass
-            else:
-                if user.display_name.lower() == self._nick.lower():
-                    await self._token_update(user)
-            finally:
-                await self.event_userstate(user)
+            await self.event_userstate(user)
+
+        elif action == 'MODE':
+            mdata = re.match(r':jtv MODE #(?P<channel>.+?[a-z0-9])\s(?P<status>[\+\-]o)\s(?P<user>.*[a-z0-9])', raw)
+            mstatus = mdata.group('status')
+
+            user = User(author=mdata.group('user'), channel=channel, tags=tags, _writer=self._writer)
+            print(user)
+
+            if user._name.lower() == self._nick.lower():
+                await self._token_update(mstatus)
+
+            await self.event_mode(channel, user, mstatus)
 
     async def event_ready(self):
         pass
@@ -291,7 +305,7 @@ class BaseConnection:
     async def event_raw_data(self, data):
         pass
 
-    async def event_message(self, message):
+    async def event_message(self, message, user):
         pass
 
     async def event_join(self, user):
@@ -301,4 +315,7 @@ class BaseConnection:
         pass
 
     async def event_userstate(self, user):
+        pass
+
+    async def event_mode(self, channel, user, status):
         pass
