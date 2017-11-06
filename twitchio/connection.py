@@ -29,6 +29,7 @@ class BaseConnection:
         self._nick = nick.lower()
         self._token = token
         self._id = kwargs.get('client_id', None)
+        self._integ = kwargs.get('integrated', False)
         self.channels = None
 
         self._reader = None
@@ -144,6 +145,11 @@ class BaseConnection:
 
     async def keep_alive(self, channels):
         # todo docstrings, other logic
+
+        if self._integ:
+            await asyncio.sleep(10)
+        # TODO This is kinda a quick fix. But we should add actual handling. (Wait for Discord to load first...)
+
         self._is_ready.clear()
         self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop))
 
