@@ -12,7 +12,7 @@ if not version:
     raise RuntimeError('version is not set')
 
 readme = ''
-with open('README.md') as f:
+with open('README.rst') as f:
     readme = f.read()
 
 setup(name='twitchio',
