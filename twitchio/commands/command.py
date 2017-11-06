@@ -11,7 +11,7 @@ class Command:
         sig = inspect.signature(func)
         self.params = sig.parameters.copy()
 
-    async def parse_args(self, command, parsed):
+    async def parse_args(self, parsed):
 
         iterator = iter(self.params.items())
         index = 0
@@ -21,12 +21,12 @@ class Command:
         try:
             next(iterator)
         except StopIteration:
-            raise TwitchIOCommandError("{0}() missing 1 required positional argument: 'self'".format(command.name))
+            raise TwitchIOCommandError("{0}() missing 1 required positional argument: 'self'".format(self.name))
 
         try:
             next(iterator)
         except StopIteration:
-            raise TwitchIOCommandError("{0}() missing 1 required positional argument: 'ctx'".format(command.name))
+            raise TwitchIOCommandError("{0}() missing 1 required positional argument: 'ctx'".format(self.name))
 
         for name, param in iterator:
             index += 1
@@ -38,7 +38,7 @@ class Command:
                         args.append(param.default)
                     else:
                         raise TwitchMissingRequiredArguments('Missing required arguments in command: {}()'
-                                                             .format(command.name))
+                                                             .format(self.name))
             if param.kind == param.KEYWORD_ONLY:
                 rest = ' '.join(parsed.values())
                 if rest.startswith(' '):

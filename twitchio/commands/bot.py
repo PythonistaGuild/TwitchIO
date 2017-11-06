@@ -43,7 +43,7 @@ class TwitchBot(Client):
 
     async def get_context(self, message, channel, user, command, parsed):
 
-        args, kwargs = await command.parse_args(command, parsed)
+        args, kwargs = await command.parse_args(parsed)
         context = Context(message=message, channel=channel, user=user, Command=command, args=args, kwargs=kwargs)
 
         return context
