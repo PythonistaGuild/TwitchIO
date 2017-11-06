@@ -21,13 +21,16 @@ class BaseConnection:
     # todo Update Docstrings.
     """Base Connection class used for handling incoming and outgoing requests from Twitch."""
 
-    def __init__(self, loop, host: str, port: int, nick: str, token: str, modes: (tuple, list), autojoin: bool,
-                 **kwargs):
+    def __init__(self, loop, host: str, port: int, nick: str,
+                 token: str,
+                 modes: (tuple, list),
+                 autojoin: bool, **kwargs):
         self.loop = loop
         self._host = host
         self._port = port
         self._nick = nick.lower()
         self._token = token
+        self._api_token = kwargs.get('api_token', None)
         self._id = kwargs.get('client_id', None)
         self._integ = kwargs.get('integrated', False)
         self.channels = None

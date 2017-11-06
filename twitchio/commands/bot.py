@@ -76,11 +76,12 @@ class TwitchBot(Client):
         for pre in prefixes:
             if msg.startswith(pre):
                 prefix = pre
+                break
 
         if not prefix:
             return
 
-        msg = msg.strip(prefix)
+        msg = msg[len(prefix)::].lstrip(' ')
         parsed = StringParser().process_string(msg)
         command = parsed.pop(0)
 
