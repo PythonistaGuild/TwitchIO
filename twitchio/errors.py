@@ -15,3 +15,9 @@ class ClientError(TwitchIOBException):
 class InvalidContent(TwitchIOBException):
     def __init__(self, message):
         super().__init__(message)
+
+
+class HTTPException(TwitchIOBException):
+    def __init__(self, message):
+        super().__init__(message)
+

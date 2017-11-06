@@ -1,4 +1,3 @@
-import asyncio
 import inspect
 
 from .connection import *
@@ -51,6 +50,9 @@ class Client(BaseConnection):
         except KeyboardInterrupt:
             #todo stuff
             print('Terminating TwitchIO Client...')
+
+    async def get_chatters(self, channel: str):
+        return await self._http._get_chatters(channel)
 
     @property
     def rate_status(self):

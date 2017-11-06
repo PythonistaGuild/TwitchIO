@@ -1,4 +1,5 @@
 import asyncio
+import aiohttp
 import re
 import logging
 import sys, traceback
@@ -9,6 +10,7 @@ except ImportError:
     from asyncio.windows_utils import socketpair
 
 from .dataclasses import Message, User, Channel
+from .http import HttpSession
 from .errors import *
 
 log = logging.getLogger(__name__)
@@ -26,6 +28,7 @@ class BaseConnection:
         self._port = port
         self._nick = nick.lower()
         self._token = token
+        self._id = kwargs.get('client_id', None)
         self.channels = None
 
         self._reader = None
@@ -55,7 +58,7 @@ class BaseConnection:
             "host": re.compile(
                 "(?P<channel>[a-zA-Z0-9_]+) "
                 "(?P<count>[0-9\-]+)"),
-            'code': re.compile(r"tmi.twitch.tv (?P<code>[0-9]{3}) "), }
+            'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"), }
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
 
@@ -142,6 +145,7 @@ class BaseConnection:
     async def keep_alive(self, channels):
         # todo docstrings, other logic
         self._is_ready.clear()
+        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop))
 
         try:
             self._reader, self._writer = await asyncio.open_connection(self.host, self.port, loop=self.loop)
@@ -179,7 +183,7 @@ class BaseConnection:
 
         try:
             code = int(self.regex['code'].match(data).group('code'))
-        except:
+        except AttributeError:
             code = None
 
         if code == 376:
