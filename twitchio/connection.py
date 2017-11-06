@@ -280,7 +280,7 @@ class BaseConnection:
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
             message = Message(author=user, content=content, channel=channel, raw_data=data, tags=tags,
                               _writer=self._writer)
-            await self.event_message(message, user)
+            await self.event_message(message)
 
             if self._bot:
                 await self._bot.process_commands(message, channel, user)
@@ -311,7 +311,7 @@ class BaseConnection:
     async def event_raw_data(self, data):
         pass
 
-    async def event_message(self, message, user):
+    async def event_message(self, message):
         pass
 
     async def event_join(self, user):
