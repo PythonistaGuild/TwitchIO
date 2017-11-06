@@ -14,6 +14,7 @@ class TwitchBot(Client):
 
         self.prefixes = prefix
         self.commands = {}
+        self._command_aliases = {}
         self.get_commands()
 
     def get_commands(self):
@@ -22,6 +23,15 @@ class TwitchBot(Client):
         for name, func in coms:
             if isinstance(func, Command):
                 self.commands[name] = func
+
+                if isinstance(func.aliases, list):
+                    for a in func.aliases:
+                        if a in self.commands.keys() or a in self._command_aliases.keys():
+                            raise ClientError('{0} is already a command.'.format(a))
+                        else:
+                            self._command_aliases[a] = name
+
+        # TODO This is actually so bad...But for now as a base let's just roll with it :')
 
     async def get_prefix(self, message):
         prefix = ret = self.prefixes
@@ -73,6 +83,11 @@ class TwitchBot(Client):
         msg = msg.strip(prefix)
         parsed = StringParser().process_string(msg)
         command = parsed.pop(0)
+
+        try:
+            command = self._command_aliases[command]
+        except KeyError:
+            pass
 
         if command not in self.commands:
             if not command:

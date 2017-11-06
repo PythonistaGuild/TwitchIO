@@ -6,6 +6,7 @@ from .errors import *
 class Command:
     def __init__(self, name: str, func, **attrs):
         self.name = name
+        self.aliases = attrs.get('aliases', None)
         self.func = func
         self._self = attrs.get('_self', False)
         sig = inspect.signature(func)
@@ -53,13 +54,13 @@ class Command:
         return args, kwargs
 
 
-def twitch_command():
+def twitch_command(aliases: list=None):
     def decorator(func):
         cls = Command
         if not asyncio.iscoroutinefunction(func):
             raise TypeError('Command callback must be a coroutine.')
 
         fname = func.__name__
-        return cls(name=fname, func=func)
+        return cls(name=fname, func=func, aliases=aliases)
 
     return decorator
