@@ -50,7 +50,7 @@ Standalone
         
         @tcommands.twitch_command(aliases=['silly'])
         async def silly_command(self, ctx):
-            """A simple command, which send a message back to the channel!"""
+            """A simple command, which sends a message back to the channel!"""
             await ctx.send('Hai there {0} Kappa.'.format(ctx.author.name))
 
 
