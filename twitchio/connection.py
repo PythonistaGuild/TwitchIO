@@ -40,8 +40,6 @@ class BaseConnection:
         self._mod_token = 0
         self._channel_token = 0
         self._rate_status = None
-
-        print(kwargs)
         self._bot = kwargs.get('_bot', None)
 
         self.regex = {
@@ -276,7 +274,7 @@ class BaseConnection:
             await self.event_message(message, user)
 
             if self._bot:
-                await self._bot.process_commands(message)
+                await self._bot.process_commands(message, channel, user)
 
         elif action == 'USERSTATE':
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)

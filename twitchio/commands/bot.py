@@ -1,5 +1,9 @@
 from twitchio.client import *
 from twitchio.errors import *
+from twitchio.dataclasses import Context
+from .errors import *
+from .stringparser import StringParser
+from .command import Command
 
 
 class TwitchBot(Client):
@@ -10,9 +14,14 @@ class TwitchBot(Client):
 
         self.prefixes = prefix
         self.commands = {}
+        self.get_commands()
 
-    async def command(self):
-        pass
+    def get_commands(self):
+        coms = inspect.getmembers(self)
+
+        for name, func in coms:
+            if isinstance(func, Command):
+                self.commands[name] = func
 
     async def get_prefix(self, message):
         prefix = ret = self.prefixes
@@ -32,12 +41,19 @@ class TwitchBot(Client):
 
         return ret
 
-    async def process_commands(self, message):
+    async def get_context(self, message, channel, user, command, parsed):
+
+        args, kwargs = await command.parse_args(command, parsed)
+        context = Context(message=message, channel=channel, user=user, Command=command, args=args, kwargs=kwargs)
+
+        return context
+
+    async def process_commands(self, message, channel, user):
 
         prefixes = await self.get_prefix(message)
 
         if not isinstance(prefixes, (list, tuple)):
-            raise ClientError('Invalid prefix provided. Prefix must be a List, Tuple or String.')
+            raise TwitchInvalidPrefix(type(prefixes))
 
         prefix = None
         msg = message.content
@@ -49,11 +65,25 @@ class TwitchBot(Client):
         if not prefix:
             return
 
+        msg = msg.strip(prefix)
+        parsed = StringParser().process_string(msg)
+        command = parsed.pop(0)
 
+        if command not in self.commands:
+            if not command:
+                return
+            raise TwitchCommandNotFound(command)
+        else:
+            command = self.commands[command]
 
+        ctx = await self.get_context(message, channel, user, command, parsed)
 
+        try:
+            await ctx.command.func(self, ctx, *ctx.args, **ctx.kwargs)
+        except Exception as e:
+            print(e)
 
-
+        # TODO Proper command invocation
 
 
 

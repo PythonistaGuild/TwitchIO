@@ -109,3 +109,29 @@ class User(Messageable):
     @property
     def is_subscriber(self):
         return self.subscriber
+
+
+class Context(Messageable):
+
+    def __init__(self, message: Message, channel: Channel, user: User, **attrs):
+        self.message = message
+        self.channel = channel
+        self.user = user
+
+        self.content = message.content
+        self.author = self.user
+
+        self._writer = self.channel._writer
+
+        self.command = attrs.get('Command', None)
+        self.args = attrs.get('args')
+        self.kwargs = attrs.get('kwargs')
+
+    async def _get_channel(self):
+        return self.channel.name, None
+
+    async def _get_writer(self):
+        return self._writer
+
+    async def _get_method(self):
+        return self.__class__.__name__
