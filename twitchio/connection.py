@@ -89,13 +89,13 @@ class BaseConnection:
         await self.join_channels(channels)
 
     async def send_auth(self):
-        """Send an Authentication request to Twitch.
+        """Send a PASS request to Twitch.
          Only useful if the Automated sequence was not used.
          """
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
 
     async def send_nick(self):
-        """Send an NICK request to Twitch.
+        """Send a NICK request to Twitch.
          Only useful if the Automated sequence was not used.
          """
         self._writer.write("NICK {}\r\n".format(self.nick).encode('utf-8'))
