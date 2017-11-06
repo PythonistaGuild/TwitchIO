@@ -32,7 +32,10 @@ class Client(BaseConnection):
 
         # todo Task or Stand-Alone / Actual callback handling.
 
-        task = self.loop.create_task(self.keep_alive(channels))
+        try:
+            task = self.loop.create_task(self.keep_alive(channels))
+        except RuntimeError:
+            pass  # TODO Handling here.
 
         def end_loop(fut):
             self.loop.stop()
@@ -41,6 +44,7 @@ class Client(BaseConnection):
 
         if self.intergrated:
             self.task = task
+            return
 
         try:
             self.loop.run_forever()
