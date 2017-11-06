@@ -26,7 +26,7 @@ setup(name='twitchio',
       include_package_data=True,
       install_requires=requirements,
       classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 2 - Beta',
         'License :: OSI Approved :: MIT License',
         'Intended Audience :: Developers',
         'Natural Language :: English',
