@@ -7,7 +7,14 @@ Installation
 ------------
 TwitchIO requires Python 3.5+
 
-.. code:: sh
-    WINDOWS: py -version -m pip install git+https://github.com/MysterialPy/TwitchIO.git
+**Windows**
 
-    LINUX: python3 -m pip install git+https://github.com/MysterialPy/TwitchIO.git
+.. code:: sh
+
+    py -version -m pip install git+https://github.com/MysterialPy/TwitchIO.git
+
+**Linux**
+
+.. code:: sh
+
+    python3 -m pip install git+https://github.com/MysterialPy/TwitchIO.git
