@@ -48,6 +48,11 @@ class TwitchBot(Client):
 
         return context
 
+    async def event_command_error(self, ctx, exception):
+
+        print('Ignoring exception: {0} in command: {1}:'.format(exception, ctx.command.name), file=sys.stderr)
+        traceback.print_exc()
+
     async def process_commands(self, message, channel, user):
 
         prefixes = await self.get_prefix(message)
@@ -76,14 +81,13 @@ class TwitchBot(Client):
         else:
             command = self.commands[command]
 
-        ctx = await self.get_context(message, channel, user, command, parsed)
-
         try:
+            ctx = await self.get_context(message, channel, user, command, parsed)
             await ctx.command.func(self, ctx, *ctx.args, **ctx.kwargs)
         except Exception as e:
-            print(e)
+            await self.event_error(e.__class__.__name__)
 
-        # TODO Proper command invocation
+        # TODO Proper command invocation and error handling
 
 
 
