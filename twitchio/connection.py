@@ -170,7 +170,6 @@ class BaseConnection:
             await self.send_nick()
 
         await self._is_ready.wait()
-        await self.event_ready()
 
         while self._is_connected:
             data = (await self._reader.readline()).decode("utf-8").strip()
@@ -193,6 +192,7 @@ class BaseConnection:
             code = None
 
         if code == 376:
+            await self.event_ready()
             print('\n\033[92mSuccessful Authentication: {0._host}:{0._port}\033[0m\n'.format(self))
             # todo logging
 
