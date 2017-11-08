@@ -3,6 +3,8 @@
 
 An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in Python!
 
+Official Documentation: http://twitchio.readthedocs.io/en/latest/twitchio.html (Under Construction)
+
 Installation
 ------------
 TwitchIO requires Python 3.5+
