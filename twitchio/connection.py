@@ -341,7 +341,7 @@ class BaseConnection:
 
         Parameters
         ------------
-        message : :class:`dataclasses.Message`
+        message : :class:`.Message`
             Message object containing relevant information.
 
         """
