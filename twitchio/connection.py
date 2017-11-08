@@ -21,15 +21,12 @@ class BaseConnection:
     # todo Update Docstrings.
     """Base Connection class used for handling incoming and outgoing requests from Twitch."""
 
-    def __init__(self, loop, host: str, port: int, nick: str,
-                 token: str,
-                 modes: (tuple, list),
-                 autojoin: bool, **kwargs):
-        self.loop = loop
-        self._host = host
-        self._port = port
-        self._nick = nick.lower()
-        self._token = token
+    def __init__(self, **kwargs):
+        self.loop = kwargs.get('loop', asyncio.get_event_loop())
+        self._host = kwargs.get('host', 'irc.chat.twitch.tv')
+        self._port = kwargs.get('port', 6667)
+        self._nick = kwargs.get('nick', None).lower()
+        self._token = kwargs.get('token', None)
         self._api_token = kwargs.get('api_token', None)
         self._id = kwargs.get('client_id', None)
         self._integ = kwargs.get('integrated', False)
@@ -40,8 +37,8 @@ class BaseConnection:
         self._is_connected = None
         self._is_ready = asyncio.Event()
 
-        self.auto_join = autojoin
-        self.modes = modes
+        self.auto_join = kwargs.get('autojoin', True)
+        self.modes = kwargs.get('modes', None)
 
         self.channel_cache = set()
         self._mod_token = 0
@@ -68,24 +65,27 @@ class BaseConnection:
 
     @property
     def host(self):
-        """The host address used to connect to Twitch."""
+        """Host address used to connect the IRC Server."""
         return self._host
 
     @property
     def port(self):
-        """The port used to connect to Twitch."""
+        """Port used to connect to the IRC Server."""
         return self._port
 
     @property
     def nick(self):
-        """The username used to connect to Twitch."""
+        """Username used to connect to the IRC Server."""
         return self._nick
 
-    async def auth_seq(self, channels):
-        """An Automated Authentication process which provides Twitch
-        with the given PASS and NICK.
+    async def auth_seq(self, channels=None):
+        """Automated Authentication process.
 
-        If Authentication is successful, we will attempt to join the provided channels. """
+        Attempts to authenticate on the Twitch servers with the provided
+        nickname and IRC Token(pass).
+
+        On successful auth, an attempt to join the provided channels is made.
+        """
 
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
         self._writer.write("NICK {}\r\n".format(self.nick).encode('utf-8'))
@@ -97,13 +97,15 @@ class BaseConnection:
 
     async def send_auth(self):
         """Send a PASS request to Twitch.
-         Only useful if the Automated sequence was not used.
+
+         Should only be used if :.auth_seq: was not used.
          """
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
 
     async def send_nick(self):
         """Send a NICK request to Twitch.
-         Only useful if the Automated sequence was not used.
+
+         Should only be used if :.auth_seq: was not used.
          """
         self._writer.write("NICK {}\r\n".format(self.nick).encode('utf-8'))
 
@@ -116,6 +118,13 @@ class BaseConnection:
         self._writer.write("PRIVMSG #{} :{}\r\n".format(channel, content).encode('utf-8'))
 
     async def join_channels(self, channels: (list, tuple)):
+        """Attempt to join the provided channels.
+
+        Parameters
+        ------------
+        channels: list or tuple
+            A list of channels to attempt joining.
+        """
 
         for entry in channels:
             channel = re.sub('[#\s]', '', entry)
@@ -303,15 +312,15 @@ class BaseConnection:
     async def event_ready(self):
         """|coro|
 
-        Event called when the :class:`client.Client` has successfully authenticated
-        on the Twitch servers.
+        Event called when the :class:`.Client` has successfully authenticated
+        on the Twitch server.
         """
         pass
 
     async def event_error(self, error_name, *args, **kwargs):
         """|coro|
 
-        The default error handler for TwitchIO Client.
+        Default error handler for the TwitchIO Client.
 
         This could be overridden to implement custom error handling.
         """
@@ -322,7 +331,7 @@ class BaseConnection:
     async def event_raw_data(self, data):
         """|coro|
 
-        Event called when Twitch sends us a message or notification.
+        Event called when any message or notification is received from Twitch.
 
         This should be used sparingly, and only when needed, as the client already aims to break
         this down for you.
@@ -330,7 +339,7 @@ class BaseConnection:
         Parameters
         ------------
         data: str
-            The raw data received from Twitch. This data is already decoded as UTF-8.
+            The raw data received from Twitch. Decoded as UTF-8.
         """
         pass
 
@@ -341,20 +350,60 @@ class BaseConnection:
 
         Parameters
         ------------
-        message : :class:`.Message`
+        message: :class:`.Message`
             Message object containing relevant information.
-
         """
         pass
 
     async def event_join(self, user):
+        """|coro|
+
+        Event called when a JOIN is received from Twitch.
+
+        Parameters
+        ------------
+        user: :class:`.User`
+            User object containing relevant information to the JOIN.
+        """
         pass
 
     async def event_part(self, user):
+        """|coro|
+
+        Event called when a PART is received from Twitch.
+
+        Parameters
+        ------------
+        user: :class:`.User`
+            User object containing relevant information to the PART.
+        """
         pass
 
     async def event_userstate(self, user):
+        """|coro|
+
+        Event called when a USERSTATE is received from Twitch.
+
+        Parameters
+        ------------
+        user: :class:`.User`
+            User object containing relevant information to the USERSTATE.
+        """
         pass
 
     async def event_mode(self, channel, user, status):
+        """|coro|
+
+        Event called when a MODE is received from Twitch.
+
+        Parameters
+        ------------
+        channel: :class:`.Channel`
+            Channel object relevant to the MODE event.
+        user: :class:`.User`
+            User object containing relevant information to the MODE.
+        status: str
+            The JTV status received by Twitch. Could be either o+ or o-.
+            Indicates a moderation promotion/demotion to the `.User.`
+        """
         pass

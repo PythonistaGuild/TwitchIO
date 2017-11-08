@@ -5,17 +5,19 @@ from .connection import *
 
 class Client(BaseConnection):
 
-    def __init__(self, nick: str, token: str, initial_channels: (list, tuple, callable), *,
-                 host: str='irc.chat.twitch.tv',
-                 port: int=6667,
-                 loop=None,
-                 autojoin: bool=True, **attrs):
+    def __init__(self, nick: str, token: str, initial_channels: (list, tuple, callable), **attrs):
         modes = attrs.pop('modes', ("commands", "tags", "membership"))
-        self._gather_channels = initial_channels
         self.intergrated = attrs.get('integrated', False)
-        super().__init__(loop, host, port, nick, token, modes, autojoin, **attrs)
+        self._gather_channels = initial_channels
+        attrs['nick'] = nick
+        attrs['token'] = token
+        attrs['modes'] = modes
+        super().__init__(**attrs)
 
     def run(self, pre_run=None):
+        """A blocking call that initializes the event loop.
+
+        This should be the last function to be called."""
 
         if not self.loop:
             self.loop = asyncio.get_event_loop()
@@ -55,10 +57,34 @@ class Client(BaseConnection):
             print('Terminating TwitchIO Client...')
 
     async def get_chatters(self, channel: str):
+        """|coro|
+
+        Method which attempts to retrieve the current viewers for the provided channel.
+
+        Parameters
+        ------------
+        channel: str
+            The channel name to retrieve viewer data from.
+
+        Returns
+        ---------
+        json
+            A json containing the channels viewer data.
+        """
         return await self._http._get_chatters(channel)
 
     @property
     def rate_status(self):
+        """The current rate limit status.
+
+        If the bot has Moderator status on all current connected channels,
+        this will return Full else Restricted.
+
+        Returns
+        ---------
+        status: str
+            Full/Restricted
+        """
         if self._rate_status == 1:
             return "Full"
         else:
