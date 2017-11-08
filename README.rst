@@ -1,7 +1,7 @@
 .. image:: logo.png?raw=true
     :align: center
 
-An Asynchronous IRC/API Wrapper currently in Development for TwitchBots.
+An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in Python!
 Official Documentation: `Click Here! <http://twitchio.readthedocs.io/en/latest/twitchio.html>`_
 
 Installation
