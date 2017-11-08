@@ -301,17 +301,49 @@ class BaseConnection:
             await self.event_mode(channel, user, mstatus)
 
     async def event_ready(self):
+        """|coro|
+
+        Event called when the :class:`client.Client` has successfully authenticated
+        on the Twitch servers.
+        """
         pass
 
     async def event_error(self, error_name, *args, **kwargs):
+        """|coro|
+
+        The default error handler for TwitchIO Client.
+
+        This could be overridden to implement custom error handling.
+        """
 
         print('Ignoring exception in {}:'.format(error_name), file=sys.stderr)
         traceback.print_exc()
 
     async def event_raw_data(self, data):
+        """|coro|
+
+        Event called when Twitch sends us a message or notification.
+
+        This should be used sparingly, and only when needed, as the client already aims to break
+        this down for you.
+
+        Parameters
+        ------------
+        data: str
+            The raw data received from Twitch. This data is already decoded as UTF-8.
+        """
         pass
 
     async def event_message(self, message):
+        """|coro|
+
+        Event called when a PRIVMSG is received from Twitch.
+
+        Parameters
+        ------------
+        message: :class:`dataclasses.Message`
+            Message object containing relevant information.
+        """
         pass
 
     async def event_join(self, user):

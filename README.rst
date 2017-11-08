@@ -22,7 +22,7 @@ TwitchIO requires Python 3.5+
 Simple Usage
 ____________
 Please keep in mind TwitchIO is currently in very early **Alpha-Stages**. It will come with it's serveral kinks, flaws and bugs.
-One of those flaws is that the Command System(TwitchBot) currently only works when subclassed. But the Client is able to be used either way.
+One of those flaws is that the Command System(TwitchBot) currently only works when subclassed.
 
 Standalone
 ~~~~~~~~~~

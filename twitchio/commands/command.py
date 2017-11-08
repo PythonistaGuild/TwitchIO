@@ -12,6 +12,23 @@ class Command:
         sig = inspect.signature(func)
         self.params = sig.parameters.copy()
 
+    async def _convert_types(self, param, parsed):
+
+        converter = param.annotation
+        if converter is param.empty:
+            if param.default is not param.empty:
+                converter = str if param.default is None else type(param.default)
+            else:
+                converter = str
+
+        try:
+            argument = converter(parsed)
+        except Exception:
+            raise TwitchBadArgument('Invalid argument parsed at `{0}` in command `{1}`. Expected type {2} got {3}.'
+                                    .format(param.name, self.name, converter, type(parsed)))
+
+        return argument
+
     async def parse_args(self, parsed):
 
         iterator = iter(self.params.items())
@@ -33,13 +50,17 @@ class Command:
             index += 1
             if param.kind == param.POSITIONAL_OR_KEYWORD:
                 try:
-                    args.append(parsed.pop(index))
+                    argument = parsed.pop(index)
                 except (KeyError, IndexError):
-                    if not param.default == param.empty:
+                    if param.default is not param.empty:
                         args.append(param.default)
                     else:
                         raise TwitchMissingRequiredArguments('Missing required arguments in command: {}()'
                                                              .format(self.name))
+                else:
+                    argument = await self._convert_types(param, argument)
+                    args.append(argument)
+
             if param.kind == param.KEYWORD_ONLY:
                 rest = ' '.join(parsed.values())
                 if rest.startswith(' '):

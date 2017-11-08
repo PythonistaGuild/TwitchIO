@@ -24,3 +24,8 @@ class TwitchTooManyArguments(TwitchIOCommandError):
 class TwitchMissingRequiredArguments(TwitchIOCommandError):
     def __int__(self, msg):
         super().__init__(msg)
+
+
+class TwitchBadArgument(TwitchIOCommandError):
+    def __int__(self, msg):
+        super().__init__(msg)

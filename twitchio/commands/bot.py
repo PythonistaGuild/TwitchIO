@@ -15,9 +15,9 @@ class TwitchBot(Client):
         self.prefixes = prefix
         self.commands = {}
         self._command_aliases = {}
-        self.get_commands()
+        self._init_commands()
 
-    def get_commands(self):
+    def _init_commands(self):
         coms = inspect.getmembers(self)
 
         for name, func in coms:
@@ -99,9 +99,10 @@ class TwitchBot(Client):
 
         try:
             ctx = await self.get_context(message, channel, user, command, parsed)
-            await ctx.command.func(self, ctx, *ctx.args, **ctx.kwargs)
         except Exception as e:
             await self.event_error(e.__class__.__name__)
+        else:
+            await ctx.command.func(self, ctx, *ctx.args, **ctx.kwargs)
 
         # TODO Proper command invocation and error handling
 
