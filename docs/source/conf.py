@@ -22,16 +22,12 @@ import sys
 sys.path.insert(0, os.path.abspath('../'))
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
-if on_rtd is True:
-    html_theme = 'alabaster'
-else:
-    import sphinx_nameko_theme
 
-    html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
-    html_theme = 'nameko'
+import sphinx_nameko_theme
 
+html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
+html_theme = 'nameko'
 html_logo = 'logo.png'
-    
 
 
 # -- General configuration ------------------------------------------------
@@ -191,4 +187,5 @@ texinfo_documents = [
 ]
 
 
-
+def setup(app):
+    app.add_stylesheet('/custom.css')
