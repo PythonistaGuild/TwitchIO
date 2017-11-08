@@ -20,7 +20,18 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
+
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd is True:
+    html_theme = 'alabaster'
+else:
+    import sphinx_nameko_theme
+
+    html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
+    html_theme = 'nameko'
+
+html_logo = 'logo.png'
+    
 
 
 # -- General configuration ------------------------------------------------
@@ -100,12 +111,6 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-#
-import sphinx_nameko_theme
-
-html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
-html_theme = 'nameko'
-html_logo = 'logo.png'
 # html_theme_options = {'stickysidebar': True}
 
 # Theme options are theme-specific and customize the look and feel of a theme
