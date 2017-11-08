@@ -23,10 +23,8 @@ sys.path.insert(0, os.path.abspath('..'))
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
 
-import sphinx_nameko_theme
-
-html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
-html_theme = 'nameko'
+# html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
+html_theme = 'basic'
 html_logo = 'logo.png'
 
 
@@ -40,16 +38,18 @@ html_logo = 'logo.png'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-              'sphinxcontrib.napoleon',
               'sphinx.ext.extlinks',
               'sphinxcontrib.asyncio']
+
+if on_rtd:
+  extensions.append('sphinxcontrib.napoleon')
+else:
+  extensions.append('sphinx.ext.napoleon')
 
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = False
-
-autodoc_member_order = 'bysource'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -186,7 +186,6 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-"""
+
 def setup(app):
-    app.add_stylesheet('/nameko.css')
-"""
+    app.add_stylesheet('/style.css')
