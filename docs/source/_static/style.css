@@ -1,0 +1,542 @@
+/*
+ * nameko.css_t
+ * ~~~~~~~~~~~~~~
+ *
+ * Sphinx Nameko Theme
+ *
+ * Forked from https://github.com/ignacysokolowski/sphinx-readable-theme
+ *
+ * :copyright: Copyright 2013 Ignacy Sokolowski; 2015 Lifealike, Ltd. DBA onefinestay
+ * :license: MIT, see LICENSE for details.
+ *
+ */
+
+
+
+@import url('basic.css');
+
+/* -- page layout --------------------------------------------------------- */
+
+body {
+    font-family: "Lato","proxima-nova","Helvetica Neue",Arial,sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: rgb(252, 252, 252);
+}
+
+h1, h2, h3, h4 {
+    color: #2a2730;
+    font-weight: 700;
+    font-family: "Lora","Times",serif;
+    clear: both;
+}
+
+div.document {
+    margin: 10px auto 0 auto;
+    max-width: 940px;
+}
+
+div.documentwrapper {
+    float: left;
+    width: 100%;
+}
+
+div.bodywrapper {
+    margin: 0 0 0 230px;
+}
+
+div.body {
+    background-color: rgb(252, 252, 252);
+    color: #3e4349;
+    padding: 0 30px 30px 30px;
+}
+
+div.footer {
+    color: #555;
+    font-size: 14px;
+    margin: 20px auto 30px auto;
+    text-align: right;
+    max-width: 880px;
+}
+
+div.footer a {
+    color: #444;
+    text-decoration: underline;
+}
+
+div.related {
+    padding: 10px 10px;
+    width: auto;
+}
+
+div.sphinxsidebar {
+    float: left;
+    font-size: 14px;
+    line-height: 1.5em;
+    margin-left: -100%;
+    width: 230px;
+}
+
+div.sphinxsidebarwrapper {
+  font-size: 14px;
+  line-height: 1.5em;
+  padding: 10px 0 10px 10px;
+
+  /* sticky sidebar */
+  position: fixed;
+  width: 220px; /* sidebar width */
+  height: 90%;
+  overflow: hidden;
+}
+
+/* show scrollbar on hover */
+div.sphinxsidebarwrapper:hover {
+  overflow: auto;
+}
+
+div.sphinxsidebar h3,
+div.sphinxsidebar h4 {
+    color: #333;
+    font-size: 24px;
+    font-weight: normal;
+    margin: 0 0 5px 0;
+    padding: 0;
+}
+
+div.sphinxsidebar h4 {
+    font-size: 1.1em;
+}
+
+div.sphinxsidebar h3 a {
+    color: #333;
+}
+
+div.sphinxsidebar p {
+    color: #888;
+}
+
+div.sphinxsidebar p.searchtip {
+    line-height: 1.4em;
+}
+
+div.sphinxsidebar ul {
+    color: #000;
+    margin: 10px 0 20px;
+    padding: 0;
+}
+
+div.sphinxsidebar a {
+    color: #444;
+}
+
+div.sphinxsidebar a:hover {
+    color: #d00;
+}
+
+div.sphinxsidebar input {
+    border: 1px solid #ccc;
+    font-family: sans-serif;
+    font-size: 1em;
+}
+
+/* -- body styles --------------------------------------------------------- */
+
+a {
+    color: #900;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #700;
+}
+
+a:hover {
+    color: #d00;
+    text-decoration: underline;
+}
+
+hr {
+    border: 1px solid #b1b4b6;
+}
+
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 { font-weight: normal; }
+
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4 { color: #212224; }
+div.body h5 { color: #000; }
+div.body h6 { color: #777; }
+
+div.body h1 { margin: 0 0 10px 0; }
+div.body h2,
+div.body h3 { margin: 30px 0px 10px 0px; }
+div.body h4,
+div.body h5,
+div.body h6 { margin: 20px 0px 10px 0px; }
+
+div.body h1 { padding: 0 0 10px 0; }
+div.body h2,
+div.body h3 { padding: 10px 0 10px 0; }
+div.body h4 { padding: 10px 0 10px 0; }
+div.body h5,
+div.body h6 { padding: 10px 0 0 0; }
+
+div.body h1,
+div.body h2,
+div.body h3 { border-bottom: 1px solid #ddd; }
+div.body h4 { border-bottom: 1px solid #e5e5e5; }
+
+div.body h1 { font-size: 230%; }
+div.body h2 { font-size: 180%; }
+div.body h3 { font-size: 130%; }
+div.body h4 { font-size: 110%; }
+div.body h5 { font-size: 105%; }
+div.body h6 { font-size: 100%; }
+
+a.headerlink {
+    color: #c60f0f;
+    font-size: 0.8em;
+    padding: 0 4px 0 4px;
+    text-decoration: none;
+}
+
+a.headerlink:hover {
+    background-color: #c60f0f;
+    color: #fff;
+}
+
+div.body ul {
+    list-style: disc;
+    margin: 1em 0;
+    padding-left: 1.3em;
+}
+
+div.body ul ul, div.body ol ul {
+    margin: .2em 0;
+    padding-left: 1.2em;
+}
+
+div.body ul li {
+    padding: 2px 0;
+}
+
+div.body ul.search li {
+    padding: 5px 0 5px 20px;
+}
+
+div.body ol {
+    counter-reset: li;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+div.body ol ol {
+    margin: .2em 0;
+}
+
+div.body ol > li {
+    list-style: none;
+    margin: 0 0 0 1.9em;
+    padding: 2px 1px;
+    position: relative;
+}
+
+div.body ol > li:before {
+    content: counter(li) ".";
+    counter-increment: li;
+    top: -2px;
+    left: -1.9em;
+    width: 1.9em;
+    padding: 4px 0;
+    position: absolute;
+    text-align: left;
+}
+
+div.body p,
+div.body dd,
+div.body li {
+    line-height: 1.4em;
+}
+
+div.sidebar, div.topic {
+    background-color: #f6f7f9;
+    border: 1px solid #cdcdd1;
+    padding: 0;
+    margin: 0 0 1em 1.5em;
+}
+
+div.topic {
+    margin: 0;
+}
+
+div.sidebar p.sidebar-title, div.topic p.topic-title {
+    background-color: #cdcdd1;
+    padding: 8px;
+}
+
+div.sidebar p, div.topic p {
+    font-size: 0.9em;
+    padding: 10px 20px 0px 20px;
+}
+
+div.admonition {
+    background-color: #f6f7f9;
+    border: 1px solid #cdcdd1;
+    padding: 0px 12px 12px 12px;
+    font-size: 0.9em;
+}
+
+p.admonition-title {
+    display: block;
+    background-color: #cdcdd1;
+    margin: -12px -12px 12px -12px;
+    padding: 6px 12px;
+}
+
+div.admonition p.admonition-title + p {
+    display: inline;
+}
+
+div.attention, div.caution, div.seealso {
+    background-color: #fef9e9;
+    border: 1px solid #fbe091;
+}
+
+div.attention p.admonition-title,
+div.caution p.admonition-title,
+div.seealso p.admonition-title {
+    background-color: #fbe091;
+}
+
+div.danger, div.error, div.warning {
+    border: 1px solid #FEA1A2;
+    background-color: #FEE4E4;
+}
+
+div.danger p.admonition-title,
+div.error p.admonition-title,
+div.warning p.admonition-title {
+    background-color: #FEA1A2;
+}
+
+div.note, div.important, div.hint, div.tip {
+    border: 1px solid #daebea;
+    background-color: #F7FAFA;
+}
+
+div.note p.admonition-title,
+div.important p.admonition-title,
+div.hint p.admonition-title,
+div.tip p.admonition-title {
+    background-color: #daebea;
+}
+
+div.highlight {
+    background-color: #fff;
+}
+
+pre {
+    background-color: #f6f7f9;
+    border: 1px solid #9aa2ab;
+    color: #222;
+    font-size: 0.75em;
+    line-height: 1.5em;
+    margin: 1.5em 0 1.5em 0;
+    padding: 10px;
+}
+
+pre, tt, code {
+    font-family: 'Consolas', 'Menlo', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+}
+
+tt, code, code.xref {
+    padding: 2px;
+    background-color: #fff;
+    border: 1px solid #daebea;
+    font-size: 0.75em;
+}
+
+tt.descname, code.descname {
+    font-size: 0.95em;
+}
+
+tt.xref, a tt, code.xref, a code {
+    font-weight: normal;
+}
+
+dl.class, dl.function {
+    margin-bottom: 50px;
+}
+
+dl.function > dt,
+dl.attribute > dt,
+dl.classmethod > dt,
+dl.method > dt,
+dl.class > dt,
+dl.exception > dt {
+    background-color: #f5f5f5;
+    border-radius: 5px;
+    margin: 25px 0 10px 0;
+    padding: 1px 10px;
+}
+
+dl.function code.descname,
+dl.attribute code.descname,
+dl.classmethod code.descname,
+dl.method code.descname,
+dl.class code.descname,
+dl.exception code.descname {
+    border: none;
+}
+
+table.docutils {
+    width: 100%;
+    font-size: 0.9em;
+}
+
+table.docutils.footnote {
+    width: auto;
+}
+
+table.docutils thead,
+table.docutils tfoot {
+    background: #f5f5f5;
+}
+
+table.docutils thead tr th {
+    color: #000;
+    font-weight: normal;
+    padding: 7px 5px;
+    vertical-align: middle;
+}
+
+table.docutils tbody tr th,
+table.docutils tbody tr td {
+    border-bottom: 0;
+    border-top: solid 1px #ddd;
+    padding: 7px 5px;
+    vertical-align: top;
+}
+table.docutils tbody tr:last-child th,
+table.docutils tbody tr:last-child td {
+    border-bottom: solid 1px #ddd;
+}
+
+table.docutils thead tr td p,
+table.docutils tfoot tr td p,
+table.docutils tbody tr td p,
+table.docutils thead tr td ul,
+table.docutils tfoot tr td ul,
+table.docutils tbody tr td ul,
+table.docutils thead tr td ol,
+table.docutils tfoot tr td ol,
+table.docutils tbody tr td ol {
+    margin: 0 0 .5em;
+}
+table.docutils thead tr td p.last,
+table.docutils tfoot tr td p.last,
+table.docutils tbody tr td p.last,
+table.docutils thead tr td ul.last,
+table.docutils tfoot tr td ul.last,
+table.docutils tbody tr td ul.last,
+table.docutils thead tr td ol.last,
+table.docutils tfoot tr td ol.last,
+table.docutils tbody tr td ol.last {
+    margin-bottom: 0;
+}
+
+code.descname {
+    font-size: 0.8em;
+}
+
+span.viewcode-link {
+    font-size: 0.8em;
+    line-height: 1.75;
+}
+
+dl em {
+    font-size: 0.9em;
+}
+
+.viewcode-back {
+    font-family: Arial, sans-serif;
+}
+
+div.viewcode-block:target {
+    background-color: #fef9e9;
+    border-top: 1px solid #fbe091;
+    border-bottom: 1px solid #fbe091;
+}
+
+@media screen and (max-width: 870px) {
+
+    div.document {
+        width: auto;
+        margin: 0;
+    }
+
+    div.documentwrapper {
+        float: none;
+    }
+
+    div.bodywrapper {
+        margin: 0;
+    }
+
+    div.body {
+        min-height: 0;
+        padding: 0 20px 30px 20px;
+    }
+
+    div.footer {
+        background-color: #333;
+        color: #888;
+        margin: 0;
+        padding: 10px 20px 20px;
+        text-align: left;
+        width: auto;
+    }
+
+    div.footer a {
+        color: #bbb;
+    }
+
+    div.footer a:hover {
+        color: #fff;
+    }
+
+    div.sphinxsidebar {
+        background-color: #333;
+        color: #fff;
+        float: none;
+        margin: 0;
+        padding: 10px 20px;
+        width: auto;
+    }
+
+    div.sphinxsidebar h3,
+    div.sphinxsidebar h4,
+    div.sphinxsidebar p,
+    div.sphinxsidebar h3 a {
+        color: #fff;
+    }
+
+    div.sphinxsidebar ul {
+        color: #999;
+    }
+
+    div.sphinxsidebar a {
+        color: #aaa;
+    }
+
+    div.sphinxsidebar a:hover {
+        color: #fff;
+    }
+
+}
