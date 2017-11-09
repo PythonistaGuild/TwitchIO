@@ -251,21 +251,30 @@ class BaseConnection:
         content = groups.pop('content', None)
         channel = groups.pop('channel', None)
 
-        if channel:
-            channel = Channel(channel=channel, _writer=self._writer)
-
         try:
             author = self.regex["author"].match(data).group("author")
         except:
             author = None
+
+        if channel:
+            channel = Channel(channel=channel, _writer=self._writer)
+
+        try:
+            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
+        except (TypeError, KeyError):
+            user = None
+
+        try:
+            message = Message(author=user, content=content, channel=channel, raw_data=data, tags=tags,
+                              _writer=self._writer)
+        except (TypeError, KeyError):
+            pass
 
         if action == 'RECONNECT':
             # TODO Disconnection/Reconnection Logic.
             return
 
         elif action == 'JOIN':
-            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
-
             if author == self._nick:
                 self.channel_cache.add(channel.name)
                 self._channel_token += 1
@@ -273,8 +282,6 @@ class BaseConnection:
             await self.event_join(user)
 
         elif action == 'PART':
-            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
-
             if author == self._nick:
                 self.channel_cache.remove(channel.name)
                 self._channel_token -= 1
@@ -286,16 +293,12 @@ class BaseConnection:
 
         elif action == 'PRIVMSG':
             # TODO Commands handling.
-            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
-            message = Message(author=user, content=content, channel=channel, raw_data=data, tags=tags,
-                              _writer=self._writer)
             await self.event_message(message)
 
             if self._bot:
                 await self._bot.process_commands(message, channel, user)
 
         elif action == 'USERSTATE':
-            user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
             await self.event_userstate(user)
 
         elif action == 'MODE':

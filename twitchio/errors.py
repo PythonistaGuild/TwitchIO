@@ -17,7 +17,7 @@ class InvalidContent(TwitchIOBException):
         super().__init__(message)
 
 
-class HTTPException(TwitchIOBException):
+class TwitchHTTPException(TwitchIOBException):
     def __init__(self, message):
         super().__init__(message)
 

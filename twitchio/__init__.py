@@ -16,6 +16,5 @@ __version__ = '0.0.1a'
 
 from .abcs import Messageable
 from .client import Client
-from .connection import *
 from .dataclasses import Context, Message, User, Channel
 from .errors import *

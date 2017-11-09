@@ -1,4 +1,4 @@
-from .errors import HTTPException
+from .errors import TwitchHTTPException
 
 
 class HttpSession:
@@ -35,5 +35,5 @@ class HttpSession:
         if resp.status == 200:
             return cont
         else:
-            raise HTTPException('Status: {} :: There was a problem retrieving chatters in channel: {}'
-                                .format(resp.status, name))
+            raise TwitchHTTPException('Status: {} :: There was a problem retrieving chatters in channel: {}'
+                                      .format(resp.status, name))

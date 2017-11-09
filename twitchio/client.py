@@ -1,6 +1,6 @@
 import inspect
 
-from .connection import *
+from .base import *
 
 
 class Client(BaseConnection):
@@ -37,17 +37,11 @@ class Client(BaseConnection):
         # todo Task or Stand-Alone / Actual callback handling.
 
         try:
-            task = self.loop.create_task(self.keep_alive(channels))
+            self.loop.create_task(self.keep_alive(channels))
         except RuntimeError:
             pass  # TODO Handling here.
 
-        def end_loop(fut):
-            self.loop.stop()
-
-        task.add_done_callback(end_loop)
-
         if self.intergrated:
-            self.task = task
             return
 
         try:

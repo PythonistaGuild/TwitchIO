@@ -1,6 +1,6 @@
 from twitchio.client import *
 from twitchio.errors import *
-from twitchio.dataclasses import Context
+from twitchio.dataclasses import Context, Message
 from .errors import *
 from .stringparser import StringParser
 from .command import Command
@@ -33,6 +33,9 @@ class TwitchBot(Client):
 
         # TODO This is actually so bad...But for now as a base let's just roll with it :')
 
+    async def make_context(self, message: Message):
+        pass
+
     async def get_prefix(self, message):
         prefix = ret = self.prefixes
         if callable(prefix):
@@ -51,17 +54,12 @@ class TwitchBot(Client):
 
         return ret
 
-    async def get_context(self, message, channel, user, command, parsed):
+    async def process_parameters(self, message, channel, user, command, parsed):
 
         args, kwargs = await command.parse_args(parsed)
         context = Context(message=message, channel=channel, user=user, Command=command, args=args, kwargs=kwargs)
 
         return context
-
-    async def event_command_error(self, ctx, exception):
-
-        print('Ignoring exception: {0} in command: {1}:'.format(exception, ctx.command.name), file=sys.stderr)
-        traceback.print_exc()
 
     async def process_commands(self, message, channel, user):
 
@@ -98,13 +96,19 @@ class TwitchBot(Client):
             command = self.commands[command]
 
         try:
-            ctx = await self.get_context(message, channel, user, command, parsed)
+            ctx = await self.process_parameters(message, channel, user, command, parsed)
         except Exception as e:
             await self.event_error(e.__class__.__name__)
         else:
             await ctx.command.func(self, ctx, *ctx.args, **ctx.kwargs)
 
         # TODO Proper command invocation and error handling
+
+    async def event_command_error(self, ctx, exception):
+
+        print('Ignoring exception: {0} in command: {1}:'.format(exception, ctx.command.name), file=sys.stderr)
+        traceback.print_exc()
+
 
 
 

@@ -33,7 +33,7 @@ class Message(Messageable):
 
     @property
     def channel(self):
-        return str(self._channel)
+        return self._channel
 
     @property
     def raw_data(self):
