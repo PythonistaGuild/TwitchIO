@@ -24,7 +24,7 @@ design.
 
 With all that being said, please enjoy the library (in it's current state), and feel free to suggest changes or fixes
 as and where you see fit. Special thanks should be made to Rapptz(https://github.com/Rapptz/discord.py) and
-Discord.py for providing a high quality and very well structered library and code (better than I could ever do)
+Discord.py for providing a high quality and very well structured library and code (better than I could ever do)
 which has certainly influenced the design of TwitchIO.
 
 
