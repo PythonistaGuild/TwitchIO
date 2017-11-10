@@ -9,11 +9,11 @@ class Message(Messageable):
         self._raw_data = attrs.pop('raw_data', None)
         self._writer = attrs.pop('_writer', None)
         self.content = attrs.pop('content', None)
-        self.tags = attrs.pop('tags', None)
+        self._tags = attrs.pop('tags', None)
         try:
-            self.timestamp = self.tags['sent-ts']
-        except:
-            self.timestamp = self.tags['tmi-sent-ts']
+            self._timestamp = self.tags['sent-ts']
+        except KeyError:
+            self._timestamp = self.tags['tmi-sent-ts']
 
     def __repr__(self):
         return '<Message author={0.author} channel={0.channel}>'.format(self)
@@ -38,6 +38,14 @@ class Message(Messageable):
     @property
     def raw_data(self):
         return self._raw_data
+
+    @property
+    def tags(self):
+        return self._tags
+
+    @property
+    def timestamp(self):
+        return self._timestamp
 
 
 class Channel(Messageable):
@@ -69,18 +77,18 @@ class User(Messageable):
         self._name = attrs.pop('author', None)
         self._writer = attrs.pop('_writer')
         self._channel = attrs.pop('channel', None)
-        self.tags = attrs.pop('tags', None)
+        self._tags = attrs.pop('tags', None)
 
-        if not self.tags:
-            self.tags = {'None': 'None'}
+        if not self._tags:
+            self._tags = {'None': 'None'}
 
-        self.display_name = self.tags.get('display-name', self._name)
-        self.id = int(self.tags.get('user-id', 0))
-        self.type = self.tags.get('user-type', 'Empty')
-        self.colour = self.tags.get('color', None)
-        self.subscriber = self.tags.get('subscriber', None)
-        self.turbo = self.tags.get('turbo', None)
-        self.badges = self.tags.get('badges', ',').split(',')
+        self.display_name = self._tags.get('display-name', self._name)
+        self._id = int(self._tags.get('user-id', 0))
+        self.type = self._tags.get('user-type', 'Empty')
+        self._colour = self._tags.get('color', None)
+        self.subscriber = self._tags.get('subscriber', None)
+        self.turbo = self._tags.get('turbo', None)
+        self._badges = self._tags.get('badges', ',').split(',')
 
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)
@@ -99,8 +107,20 @@ class User(Messageable):
         return self._name
 
     @property
+    def id(self):
+        return self._id
+
+    @property
     def channel(self):
         return str(self._channel)
+
+    @property
+    def colour(self):
+        return self._colour
+
+    @property
+    def color(self):
+        return self.colour
 
     @property
     def is_turbo(self):
@@ -110,22 +130,28 @@ class User(Messageable):
     def is_subscriber(self):
         return self.subscriber
 
+    @property
+    def badges(self):
+        return self._badges
+
+    @property
+    def tags(self):
+        return self._tags
+
 
 class Context(Messageable):
 
     def __init__(self, message: Message, channel: Channel, user: User, **attrs):
         self.message = message
         self.channel = channel
-        self.user = user
-
         self.content = message.content
-        self.author = self.user
+        self.author = user
 
         self._writer = self.channel._writer
 
         self.command = attrs.get('Command', None)
-        self.args = attrs.get('args')
-        self.kwargs = attrs.get('kwargs')
+        self.args = attrs.get('args', None)
+        self.kwargs = attrs.get('kwargs', None)
 
     async def _get_channel(self):
         return self.channel.name, None
