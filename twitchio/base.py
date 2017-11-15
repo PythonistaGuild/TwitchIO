@@ -159,7 +159,8 @@ class BaseConnection:
         # todo docstrings, other logic
 
         self._is_ready.clear()
-        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop))
+        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token,
+                                 cid=self._id)
 
         try:
             self._reader, self._writer = await asyncio.open_connection(self.host, self.port, loop=self.loop)

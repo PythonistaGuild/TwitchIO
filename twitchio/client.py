@@ -15,6 +15,8 @@ class Client(BaseConnection):
         super().__init__(**attrs)
 
     def run(self, pre_run=None):
+        # todo Major Buggo in pre_run....
+
         """A blocking call that initializes the event loop.
 
         This should be the last function to be called."""
