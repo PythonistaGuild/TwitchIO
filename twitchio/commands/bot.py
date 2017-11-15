@@ -54,10 +54,12 @@ class TwitchBot(Client):
 
         return ret
 
-    async def process_parameters(self, message, channel, user, command, parsed):
+    async def process_parameters(self, message, channel, user, command, parsed, prefix):
 
+        message.clean_content = ' '.join(parsed)
         args, kwargs = await command.parse_args(parsed)
-        context = Context(message=message, channel=channel, user=user, Command=command, args=args, kwargs=kwargs)
+        context = Context(message=message, channel=channel, user=user, Command=command,
+                          args=args, kwargs=kwargs, prefix=prefix)
 
         return context
 
@@ -96,7 +98,7 @@ class TwitchBot(Client):
             command = self.commands[command]
 
         try:
-            ctx = await self.process_parameters(message, channel, user, command, parsed)
+            ctx = await self.process_parameters(message, channel, user, command, parsed, prefix)
         except Exception as e:
             await self.event_error(e.__class__.__name__)
         else:

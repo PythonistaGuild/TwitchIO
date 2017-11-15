@@ -9,6 +9,7 @@ class Message(Messageable):
         self._raw_data = attrs.pop('raw_data', None)
         self._writer = attrs.pop('_writer', None)
         self.content = attrs.pop('content', None)
+        self.clean_content = attrs.pop('clean_content', None)
         self._tags = attrs.pop('tags', None)
         try:
             self._timestamp = self.tags['sent-ts']
@@ -146,6 +147,7 @@ class Context(Messageable):
         self.channel = channel
         self.content = message.content
         self.author = user
+        self.prefix = attrs.get('prefix', None)
 
         self._writer = self.channel._writer
 
