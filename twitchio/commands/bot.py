@@ -56,7 +56,7 @@ class TwitchBot(Client):
 
     async def process_parameters(self, message, channel, user, command, parsed, prefix):
 
-        message.clean_content = ' '.join(parsed)
+        message.clean_content = ' '.join(parsed.values())
         args, kwargs = await command.parse_args(parsed)
         context = Context(message=message, channel=channel, user=user, Command=command,
                           args=args, kwargs=kwargs, prefix=prefix)
