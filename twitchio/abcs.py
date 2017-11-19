@@ -23,6 +23,7 @@ class Messageable(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     async def send(self, content):
+        content = str(content)
 
         channel, user = await self._get_channel()
         writer = await self._get_writer()
