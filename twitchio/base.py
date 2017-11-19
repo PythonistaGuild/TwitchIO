@@ -183,7 +183,6 @@ class BaseConnection:
         while self._is_connected:
             data = (await self._reader.readline()).decode("utf-8").strip()
             if not data:
-                await asyncio.sleep(0)
                 continue
             try:
                 await self.process_data(data)
@@ -191,8 +190,6 @@ class BaseConnection:
                 await self.event_error(e.__class__.__name__)
 
     async def process_data(self, data):
-        # todo docs, other logic
-
         await self.event_raw_data(data)
 
         try:
@@ -228,14 +225,14 @@ class BaseConnection:
                     t[1] = int(t[1])
                 tagdict[t[0]] = t[1]
             tags = tagdict
-        except:
+        except (AttributeError, IndexError, KeyError):
             tags = None
 
         for group in self._groups:
             try:
                 res = result.group(group)
                 _groupsdict[group] = res
-            except:
+            except (AttributeError, KeyError, IndexError):
                 pass
 
         await self.process_actions(data, _groupsdict, tags)

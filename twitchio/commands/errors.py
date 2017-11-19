@@ -8,12 +8,12 @@ class TwitchIOCommandError(TwitchIOBException):
 
 class TwitchCommandNotFound(TwitchIOCommandError):
     def __init__(self, command):
-        super().__init__('The command ({}) is invalid or was not found.'.format(command))
+        super().__init__('The command ({}) is invalid or was not found'.format(command))
 
 
 class TwitchInvalidPrefix(TwitchIOCommandError):
     def __init__(self, ptype: type):
-        super().__init__('Invalid prefix type: {0}. Prefix must be of List, Tuple or String.'.format(ptype))
+        super().__init__('Invalid prefix type: {0}. Prefix must be of List, Tuple or String'.format(ptype))
 
 
 class TwitchTooManyArguments(TwitchIOCommandError):

@@ -33,9 +33,6 @@ class TwitchBot(Client):
 
         # TODO This is actually so bad...But for now as a base let's just roll with it :')
 
-    async def make_context(self, message: Message):
-        pass
-
     async def get_prefix(self, message):
         prefix = ret = self.prefixes
         if callable(prefix):
@@ -54,12 +51,10 @@ class TwitchBot(Client):
 
         return ret
 
-    async def process_parameters(self, message, channel, user, command, parsed, prefix):
-
+    async def process_parameters(self, message, channel, user, parsed, prefix):
         message.clean_content = ' '.join(parsed.values())
-        args, kwargs = await command.parse_args(parsed)
-        context = Context(message=message, channel=channel, user=user, Command=command,
-                          args=args, kwargs=kwargs, prefix=prefix)
+
+        context = Context(message=message, channel=channel, user=user, prefix=prefix)
 
         return context
 
@@ -83,34 +78,45 @@ class TwitchBot(Client):
 
         msg = msg[len(prefix)::].lstrip(' ')
         parsed = StringParser().process_string(msg)
-        command = parsed.pop(0)
+
+        try:
+            ctx = await self.process_parameters(message, channel, user, parsed, prefix)
+        except Exception as e:
+            return await self.event_error(e.__class__.__name__)
+
+        try:
+            command = parsed.pop(0)
+        except KeyError:
+            return
 
         try:
             command = self._command_aliases[command]
         except KeyError:
             pass
 
-        if command not in self.commands:
-            if not command:
-                return
-            raise TwitchCommandNotFound(command)
+        try:
+            if command not in self.commands:
+                if not command:
+                    return
+                raise TwitchCommandNotFound(command)
+            else:
+                command = self.commands[command]
+        except Exception as e:
+            ctx.command = None
+            return await self.event_command_error(ctx, e)
         else:
-            command = self.commands[command]
+            ctx.command = command
+            ctx.args, ctx.kwrags = await command.parse_args(parsed)
 
         try:
-            ctx = await self.process_parameters(message, channel, user, command, parsed, prefix)
-        except Exception as e:
-            await self.event_error(e.__class__.__name__)
-        else:
             await ctx.command.func(self, ctx, *ctx.args, **ctx.kwargs)
-
-        # TODO Proper command invocation and error handling
+        except Exception as e:
+            await self.event_command_error(ctx, e)
 
     async def event_command_error(self, ctx, exception):
 
-        print('Ignoring exception: {0} in command: {1}:'.format(exception, ctx.command.name), file=sys.stderr)
+        print('Ignoring exception in command: {0}:'.format(exception), file=sys.stderr)
         traceback.print_exc()
-
 
 
 
