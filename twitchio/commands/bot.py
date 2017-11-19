@@ -106,7 +106,7 @@ class TwitchBot(Client):
             return await self.event_command_error(ctx, e)
         else:
             ctx.command = command
-            ctx.args, ctx.kwrags = await command.parse_args(parsed)
+            ctx.args, ctx.kwargs = await command.parse_args(parsed)
 
         try:
             await ctx.command.func(self, ctx, *ctx.args, **ctx.kwargs)
