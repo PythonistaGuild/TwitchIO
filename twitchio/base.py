@@ -107,7 +107,7 @@ class BaseConnection:
 
         Sends a PASS request to the Twitch IRC Endpoint.
 
-        This should only be used if :function:`.auth_seq` was not used.
+        This should only be used if :func:`auth_seq` was not used.
         """
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
 
@@ -116,7 +116,7 @@ class BaseConnection:
 
         Sends a NICK request to the Twitch IRC Endpoint.
 
-        This should only be used if :function:`.auth_seq` was not used.
+        This should only be used if :func:`auth_seq` was not used.
         """
         self._writer.write("NICK {}\r\n".format(self.nick).encode('utf-8'))
 
@@ -125,7 +125,7 @@ class BaseConnection:
 
         Sends a PRIVMSG to the Twitch IRC Endpoint.
 
-        This should only be used in rare circumstances where a :class:`abcs.Messageable` is not available.
+        This should only be used in rare circumstances where a :class:`twitchio.abcs.Messageable` is not available.
         """
         content = content.replace("\n", " ")
         self._writer.write("PRIVMSG #{} :{}\r\n".format(channel, content).encode('utf-8'))
