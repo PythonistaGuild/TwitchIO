@@ -4,6 +4,7 @@
 An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in Python!
 
 Official Documentation: `Click Here! <http://twitchio.readthedocs.io/en/latest/twitchio.html>`_
+For more support, you can join the `Discord server! <https://discord.me/twitch-api>`_
 
 Current Development and Goals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
