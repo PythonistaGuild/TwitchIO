@@ -75,13 +75,24 @@ class Command:
         return args, kwargs
 
 
-def twitch_command(aliases: list=None):
+def twitch_command(name: str=None, aliases: list=None):
+    if not aliases:
+        aliases = []
+
     def decorator(func):
         cls = Command
         if not asyncio.iscoroutinefunction(func):
             raise TypeError('Command callback must be a coroutine.')
 
         fname = func.__name__
-        return cls(name=fname, func=func, aliases=aliases)
 
+        if name:
+            if name == fname:
+                pass
+            elif name in aliases:
+                pass
+            else:
+                aliases.append(name)
+
+        return cls(name=fname, func=func, aliases=aliases)
     return decorator

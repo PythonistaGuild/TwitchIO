@@ -78,13 +78,20 @@ class BaseConnection:
         """Username used to connect to the IRC Server."""
         return self._nick
 
-    async def auth_seq(self, channels=None):
-        """Automated Authentication process.
+    async def auth_seq(self, channels=(list, tuple)):
+        """|coro|
+
+        Automated Authentication process.
 
         Attempts to authenticate on the Twitch servers with the provided
         nickname and IRC Token(pass).
 
-        On successful auth, an attempt to join the provided channels is made.
+        On successful authentication, an attempt to join the provided channels is made.
+
+        Parameters
+        ------------
+        channels: list or tuple
+            A list or tuple of channels to attempt joining.
         """
 
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
@@ -96,29 +103,37 @@ class BaseConnection:
         await self.join_channels(channels)
 
     async def send_auth(self):
-        """Send a PASS request to Twitch.
+        """|coro|
 
-         Should only be used if :.auth_seq: was not used.
-         """
+        Sends a PASS request to the Twitch IRC Endpoint.
+
+        This should only be used if :function:`.auth_seq` was not used.
+        """
         self._writer.write("PASS {}\r\n".format(self._token).encode('utf-8'))
 
     async def send_nick(self):
-        """Send a NICK request to Twitch.
+        """|coro|
 
-         Should only be used if :.auth_seq: was not used.
-         """
+        Sends a NICK request to the Twitch IRC Endpoint.
+
+        This should only be used if :function:`.auth_seq` was not used.
+        """
         self._writer.write("NICK {}\r\n".format(self.nick).encode('utf-8'))
 
-    async def _send_privmsg(self, channel, content):
-        """Send a PRIVMSG to Twitch.
+    async def send_privmsg(self, channel, content):
+        """|coro|
 
-         Using this is unadvised.
-         """
+        Sends a PRIVMSG to the Twitch IRC Endpoint.
+
+        This should only be used in rare circumstances where a :class:`abcs.Messageable` is not available.
+        """
         content = content.replace("\n", " ")
         self._writer.write("PRIVMSG #{} :{}\r\n".format(channel, content).encode('utf-8'))
 
     async def join_channels(self, channels: (list, tuple)):
-        """Attempt to join the provided channels.
+        """|coro|
+
+        Attempt to join the provided channels.
 
         Parameters
         ------------
@@ -266,7 +281,7 @@ class BaseConnection:
             message = Message(author=user, content=content, channel=channel, raw_data=data, tags=tags,
                               _writer=self._writer)
         except (TypeError, KeyError):
-            pass
+            message = None
 
         if action == 'RECONNECT':
             # TODO Disconnection/Reconnection Logic.
@@ -405,6 +420,6 @@ class BaseConnection:
             User object containing relevant information to the MODE.
         status: str
             The JTV status received by Twitch. Could be either o+ or o-.
-            Indicates a moderation promotion/demotion to the `.User.`
+            Indicates a moderation promotion/demotion to the :class:`.User`
         """
         pass
