@@ -5,6 +5,9 @@ An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in 
 
 Official Documentation: `Click Here! <http://twitchio.readthedocs.io/en/latest/twitchio.html>`_
 
+Official Support Server: `Click Here! <https://discord.me/twitch-api>`_
+=======
+
 Current Development and Goals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 TwitchIO has **three** main initial goals in mind. All of which will hopefully, combine to make the
