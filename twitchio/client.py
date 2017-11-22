@@ -1,6 +1,7 @@
 import inspect
 
 from .base import *
+from .dataclasses import Context
 
 
 class Client(BaseConnection):
@@ -52,22 +53,50 @@ class Client(BaseConnection):
             #todo stuff
             print('Terminating TwitchIO Client...')
 
-    async def get_chatters(self, channel: str):
+    async def get_chatters(self, channel):
         """|coro|
 
         Method which attempts to retrieve the current viewers for the provided channel.
 
         Parameters
         ------------
-        channel: str
-            The channel name to retrieve viewer data from.
+        channel: Context, Channel or str
+            The channel name to retrieve viewer data from. Could be either Context, channel or string.
 
         Returns
         ---------
         json
-            A json containing the channels viewer data.
+            A json containing the streams viewer data.
         """
+        if isinstance(channel, Context):
+            channel = channel.channel
+
         return await self._http._get_chatters(channel)
+
+    async def is_live(self, channel):
+        """|coro|
+
+        Method which checks whether a stream is currently live.
+
+        Parameters
+        ------------
+        channel: Context, Channel or str
+            The channel to check. Could be either Context, channel or string.
+
+        Returns
+        ---------
+        bool
+            Boolean indicating whether the channel is currently live.
+        """
+        if isinstance(channel, Context):
+            channel = channel.channel
+        resp = await self._http._get_stream(channel)
+
+        try:
+            resp = resp['data'][0]['type'] == 'live'
+        except IndexError:
+            return False
+        return resp
 
     @property
     def rate_status(self):
