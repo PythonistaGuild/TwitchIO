@@ -25,7 +25,7 @@ class BaseConnection:
         self.loop = kwargs.get('loop', asyncio.get_event_loop())
         self._host = kwargs.get('host', 'irc.chat.twitch.tv')
         self._port = kwargs.get('port', 6667)
-        self._nick = kwargs.get('nick', None).lower()
+        self._nick = kwargs.get('nick', '').lower()
         self._token = kwargs.get('token', None)
         self._api_token = kwargs.get('api_token', None)
         self._id = kwargs.get('client_id', None)
@@ -62,6 +62,12 @@ class BaseConnection:
             'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"), }
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
+
+        self.loop.create_task(self.async_init())
+
+    async def async_init(self):
+        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token,
+                                 cid=self._id)
 
     @property
     def host(self):
@@ -174,8 +180,6 @@ class BaseConnection:
         # todo docstrings, other logic
 
         self._is_ready.clear()
-        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token,
-                                 cid=self._id)
 
         try:
             self._reader, self._writer = await asyncio.open_connection(self.host, self.port, loop=self.loop)

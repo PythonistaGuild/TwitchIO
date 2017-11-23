@@ -6,21 +6,20 @@ from .dataclasses import Context
 
 class Client(BaseConnection):
 
-    def __init__(self, nick: str, token: str, initial_channels: (list, tuple, callable), **attrs):
+    def __init__(self, **attrs):
         modes = attrs.pop('modes', ("commands", "tags", "membership"))
         self.intergrated = attrs.get('integrated', False)
-        self._gather_channels = initial_channels
-        attrs['nick'] = nick
-        attrs['token'] = token
+        self._gather_channels = attrs.get('initial_channels')
         attrs['modes'] = modes
         super().__init__(**attrs)
 
     def run(self, pre_run=None):
         # todo Major Buggo in pre_run....
+        """A blocking call that initializes the IRC Bot event loop.
 
-        """A blocking call that initializes the event loop.
+        This should be the last function to be called.
 
-        This should be the last function to be called."""
+        .. warning:: Do not use this function if you are not using the IRC Endpoint."""
 
         if not self.loop:
             self.loop = asyncio.get_event_loop()
