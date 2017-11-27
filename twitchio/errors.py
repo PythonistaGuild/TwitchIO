@@ -8,7 +8,7 @@ class HostConnectionFailure(TwitchIOBException):
 
 
 class ClientError(TwitchIOBException):
-    def __init__(self, message):
+    def __init__(self, message, **kwargs):
         super().__init__(message)
 
 

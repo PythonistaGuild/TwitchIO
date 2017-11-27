@@ -19,7 +19,7 @@ class Client(BaseConnection):
 
         This should be the last function to be called.
 
-        .. warning:: Do not use this function if you are not using the IRC Endpoint."""
+        .. warning:: You do not need to use this function unless you are accessing the IRC Endpoints."""
 
         if not self.loop:
             self.loop = asyncio.get_event_loop()
@@ -71,6 +71,31 @@ class Client(BaseConnection):
             channel = channel.channel
 
         return await self._http._get_chatters(channel)
+
+    async def get_streams(self, channels: (list, tuple)):
+        """|coro|
+
+        Method which retrieves information on active streams with the channels provided.
+
+        Parameters
+        ------------
+        channels: list or tuple of str or int
+            A list of channel/stream names and/or ids.
+
+        Returns
+        ---------
+        dict
+            Dict containing active streamer data.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching streams.
+        """
+        if not isinstance(channels, (list, tuple)):
+            raise ClientError('Channels must be either a list or tuple. Type {} was provided.'.format(type(channels)))
+
+        return await self._http._get_streams(channels)
 
     async def is_live(self, channel):
         """|coro|
