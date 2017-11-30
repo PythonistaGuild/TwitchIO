@@ -9,8 +9,8 @@ from .command import Command
 class TwitchBot(Client):
     # todo
 
-    def __init__(self, prefix: (callable, list, tuple), *args, **kwargs):
-        super().__init__(*args, **kwargs, prefix=prefix, _bot=self)
+    def __init__(self, prefix: (callable, list, tuple), **kwargs):
+        super().__init__(prefix=prefix, _bot=self, **kwargs)
 
         self.prefixes = prefix
         self.commands = {}

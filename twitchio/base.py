@@ -151,8 +151,6 @@ class BaseConnection:
             channel = re.sub('[#\s]', '', entry)
             self._writer.write("JOIN #{}\r\n".format(channel).encode('utf-8'))
 
-            self.channel_cache.add(entry)
-
     async def _update_limit(self):
 
         while True:
@@ -274,7 +272,7 @@ class BaseConnection:
             author = None
 
         if channel:
-            channel = Channel(channel=channel, _writer=self._writer)
+            channel = Channel(name=channel, _writer=self._writer, _http=self._http)
 
         try:
             user = User(author=author, channel=channel, tags=tags, _writer=self._writer)
@@ -309,9 +307,9 @@ class BaseConnection:
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
-            # TODO Commands handling.
             await self.event_message(message)
 
+            # TODO Handle this differently
             if self._bot:
                 await self._bot.process_commands(message, channel, user)
 

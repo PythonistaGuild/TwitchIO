@@ -96,6 +96,8 @@ class HttpSession:
 
         cursor = cont['pagination']
         if not cursor:
+            if not cont['data']:
+                return None
             return cont
 
         data = {'data': []}

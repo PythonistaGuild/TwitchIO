@@ -87,6 +87,10 @@ class Client(BaseConnection):
         dict
             Dict containing active streamer data.
 
+        Notes
+        -------
+        Channels/Streams which are not currently live, will be None or missing.
+
         Raises
         --------
         TwitchHTTPException
