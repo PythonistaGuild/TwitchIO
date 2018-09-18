@@ -32,7 +32,7 @@ from typing import Union
 from .backoff import ExponentialBackoff
 from .errors import WSConnectionFailure
 
-log = logging.Logger(__name__)
+log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
