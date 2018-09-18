@@ -7,6 +7,7 @@ __copyright__ = 'Copyright 2017-2018 EvieePy'
 __version__ = '0.0.1a'
 
 import logging
+from .dataclasses import Context, Message, User, Channel
 
 try:
     from logging import NullHandler
@@ -16,5 +17,3 @@ except ImportError:
             pass
 
 logging.getLogger(__name__).addHandler(NullHandler())
-
-from .websocket import WebsocketConnection

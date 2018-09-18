@@ -2,6 +2,10 @@ class TwitchIOBException(Exception):
     """Base exception class for TwitchIO"""
 
 
+class AuthenticationError(TwitchIOBException):
+    """Authentication Error"""
+
+
 class WSConnectionFailure(TwitchIOBException):
     """Exception raised when WS fails to connect."""
 
