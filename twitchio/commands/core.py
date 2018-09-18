@@ -2,7 +2,6 @@ import inspect
 from typing import Union
 
 
-
 class TwitchCommand:
 
     def __init__(self, name: str, func, **attrs):

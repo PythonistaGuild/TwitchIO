@@ -222,7 +222,6 @@ class WebsocketConnection:
             code = None
 
         if code == 376 or code == 1:
-            print(code)
             await self.event_ready()
             self.is_ready.set()
             log.info('Successfully logged onto Twitch WS | %s', self.nick)
@@ -374,7 +373,6 @@ class WebsocketConnection:
 
     async def event_join(self, user):
         """|coro|
-
         Event called when a JOIN is received from Twitch.
 
         Parameters

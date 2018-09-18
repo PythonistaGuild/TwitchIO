@@ -6,7 +6,6 @@ class Message:
     __slots__ = ('_author', '_channel', '_raw_data', 'content', 'clean_content', '_tags', '_timestamp')
 
     def __init__(self, **attrs):
-        print('In Message')
         self._author = attrs.pop('author', None)
         self._channel = attrs.pop('channel', None)
         self._raw_data = attrs.pop('raw_data', None)
