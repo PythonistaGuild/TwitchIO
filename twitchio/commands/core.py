@@ -1,7 +1,6 @@
 import inspect
 from typing import Union
 
-from .errors import TwitchIOCommandError
 
 
 class TwitchCommand:
