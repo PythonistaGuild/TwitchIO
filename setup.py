@@ -46,7 +46,7 @@ with open('README.rst') as f:
 
 setup(name='twitchio',
       author='EvieePy',
-      url='https://github.com/MysterialPy/TwitchIO',
+      url='https://github.com/EvieePy/TwitchIO',
       version=version,
       packages=['twitchio', 'twitchio.commands'],
       license='MIT',
