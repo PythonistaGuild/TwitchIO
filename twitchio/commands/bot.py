@@ -1,21 +1,26 @@
 import asyncio
 import inspect
 import sys
+import traceback
 from typing import Union
 
 from .core import TwitchCommand
+from .errors import TwitchIOCommandError, TwitchCommandNotFound
+from .stringparser import StringParser
+from ..dataclasses import Context
+from ..errors import ClientError
 from ..websocket import WebsocketConnection
 
 
 class TwitchBot(WebsocketConnection):
 
-    def __init__(self, irc_token: str, api_token: str, *, prefix, nick: str, loop: asyncio.BaseEventLoop=None,
-                 channels: Union[list, tuple]=None, **attrs):
+    def __init__(self, irc_token: str, api_token: str, *, prefix: Union[list, tuple, str],
+                 nick: str, loop: asyncio.BaseEventLoop=None, channels: Union[list, tuple]=None, **attrs):
         self.loop = loop or asyncio.get_event_loop()
         super().__init__(token=irc_token, api_token=api_token, initial_channels=channels,
                          loop=self.loop, nick=nick, **attrs)
 
-        self.prefix = prefix
+        self.loop.create_task(self.prefix_setter(prefix))
 
         self.listeners = {}
         self.extra_listeners = {}
@@ -96,5 +101,96 @@ class TwitchBot(WebsocketConnection):
     def teardown(self):
         pass
 
+    async def prefix_setter(self, item):
+        if inspect.iscoroutinefunction(item):
+            item = await item()
+        elif callable(item):
+            item = item()
+
+        if isinstance(item, (list, tuple)):
+            self.prefixes = item
+        elif isinstance(item, str):
+            self.prefixes = [item]
+        else:
+            raise ClientError('Invalid prefix provided. A list, tuple, str or callable returning either should be used.')
+
+    async def get_prefix(self, message):
+        prefix = ret = self.prefixes
+        if callable(prefix):
+            ret = prefix(self, message.content)
+            if inspect.isawaitable(ret):
+                ret = await ret
+
+        if isinstance(ret, (list, tuple)):
+            ret = [p for p in ret if p]
+
+        if isinstance(ret, str):
+            ret = [ret]
+
+        if not ret:
+            raise ClientError('Invalid prefix provided.')
+
+        return ret
+
+    async def process_parameters(self, message, channel, user, parsed, prefix):
+        message.clean_content = ' '.join(parsed.values())
+        context = Context(message=message, channel=channel, user=user, prefix=prefix)
+
+        return context
+
     async def process_commands(self, message, channel, user):
-        print('In command')
+
+        prefixes = await self.get_prefix(message)
+
+        prefix = None
+        msg = message.content
+
+        for pre in prefixes:
+            if msg.startswith(pre):
+                prefix = pre
+                break
+
+        if not prefix:
+            return
+
+        msg = msg[len(prefix)::].lstrip(' ')
+        parsed = StringParser().process_string(msg)
+
+        try:
+            ctx = await self.process_parameters(message, channel, user, parsed, prefix)
+        except Exception as e:
+            return await self.event_error(e.__class__.__name__)
+
+        try:
+            command = parsed.pop(0)
+        except KeyError:
+            return
+
+        try:
+            command = self._aliases[command]
+        except KeyError:
+            pass
+
+        try:
+            if command not in self.commands:
+                if not command:
+                    return
+                raise TwitchCommandNotFound(f'<{command}> was not found.')
+            else:
+                command = self.commands[command]
+        except Exception as e:
+            ctx.command = None
+            return await self.event_command_error(ctx, e)
+        else:
+            ctx.command = command
+            ctx.args, ctx.kwargs = await command.parse_args(parsed)
+
+        try:
+            await ctx.command.callback(self, ctx, *ctx.args, **ctx.kwargs)
+        except Exception as e:
+            await self.event_command_error(ctx, e)
+
+    async def event_command_error(self, ctx, exception):
+
+        print('Ignoring exception in command: {0}:'.format(exception), file=sys.stderr)
+        traceback.print_exc()
