@@ -13,7 +13,7 @@ Welcome to TwitchIO's documentation!
    twitchio
 
 .. toctree::
-   :maxdpth: 2
+   :maxdepth: 2
    :caption: Commands:
 
    twitchio.commands
