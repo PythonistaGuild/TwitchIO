@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import sys
 import traceback
+
 from typing import Union
 
 from .core import TwitchCommand
@@ -26,6 +27,7 @@ class TwitchBot(WebsocketConnection):
         self.extra_listeners = {}
         self.commands = {}
         self._aliases = {}
+        self.prefixes = None
 
         self._init_methods()
 
@@ -33,7 +35,7 @@ class TwitchBot(WebsocketConnection):
         commands = inspect.getmembers(self)
 
         for name, obj in commands:
-            if name.startswith('event'):
+            if name.startswith('event_'):
                 self.listeners[name] = obj
 
             if not isinstance(obj, TwitchCommand):
@@ -114,7 +116,7 @@ class TwitchBot(WebsocketConnection):
         else:
             raise ClientError('Invalid prefix provided. A list, tuple, str or callable returning either should be used.')
 
-    async def get_prefix(self, message):
+    async def _get_prefixes(self, message):
         prefix = ret = self.prefixes
         if callable(prefix):
             ret = prefix(self, message.content)
@@ -132,34 +134,49 @@ class TwitchBot(WebsocketConnection):
 
         return ret
 
-    async def process_parameters(self, message, channel, user, parsed, prefix):
-        message.clean_content = ' '.join(parsed.values())
-        context = Context(message=message, channel=channel, user=user, prefix=prefix)
-
-        return context
-
-    async def process_commands(self, message, channel, user):
-
-        prefixes = await self.get_prefix(message)
+    async def get_prefix(self, message):
+        prefixes = await self._get_prefixes(message)
 
         prefix = None
-        msg = message.content
+        content = message.content
 
         for pre in prefixes:
-            if msg.startswith(pre):
+            if content.startswith(pre):
                 prefix = pre
                 break
 
-        if not prefix:
+        return prefix
+
+    async def get_context(self, message, cls=None):
+        prefix = await self.get_prefix(message)
+
+        if not cls:
+            cls = Context
+
+        ctx = cls(message=message, channel=message.channel, user=message.author, prefix=prefix)
+        return ctx
+
+    # async def process_parameters(self, message, channel, user, parsed, prefix):
+        # message.clean_content = ' '.join(parsed.values())
+        # context = Context(message=message, channel=channel, user=user, prefix=prefix)
+
+        # return context
+
+    async def process_commands(self, message, ctx=None):
+        if ctx is None:
+            try:
+                ctx = await self.get_context(message)
+            except Exception as e:
+                return await self.event_error(message.raw_data, e)
+
+        if not ctx.prefix:
             return
 
-        msg = msg[len(prefix)::].lstrip(' ')
-        parsed = StringParser().process_string(msg)
+        content = message.content
+        content = content[len(ctx.prefix)::].lstrip(' ')
+        parsed = StringParser().process_string(content)
 
-        try:
-            ctx = await self.process_parameters(message, channel, user, parsed, prefix)
-        except Exception as e:
-            return await self.event_error(e.__class__.__name__)
+        message.clean_content = ' '.join(parsed.values())
 
         try:
             command = parsed.pop(0)
