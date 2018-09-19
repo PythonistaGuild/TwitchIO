@@ -78,7 +78,7 @@ class WebsocketConnection:
             'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"), }
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
-        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop))
+        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token)
 
     async def _update_limit(self):
 
@@ -310,8 +310,6 @@ class WebsocketConnection:
         elif action == 'PRIVMSG':
             await self.event_message(message)
 
-            await self.process_commands(message, channel, user)
-
         elif action == 'USERSTATE':
             await self.event_userstate(user)
 
@@ -326,7 +324,7 @@ class WebsocketConnection:
 
             await self.event_mode(channel, user, mstatus)
 
-    async def process_commands(self, message, channel, user):
+    async def process_commands(self, message: Message, ctx: Context=None):
         pass
 
     async def event_raw_data(self, data):
@@ -369,7 +367,7 @@ class WebsocketConnection:
         message: :class:`.Message`
             Message object containing relevant information.
         """
-        pass
+        await self.process_commands(message)
 
     async def event_join(self, user):
         """|coro|
