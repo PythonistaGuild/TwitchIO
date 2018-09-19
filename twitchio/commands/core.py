@@ -35,7 +35,6 @@ class TwitchCommand:
         return argument
 
     async def parse_args(self, parsed):
-
         iterator = iter(self.params.items())
         index = 0
         args = []
@@ -69,6 +68,14 @@ class TwitchCommand:
                 rest = ' '.join(parsed.values())
                 if rest.startswith(' '):
                     rest = rest.lstrip(' ')
+
+                if not rest and param.default is not param.empty:
+                    rest = param.default
+
+                if not rest and param.default is not None:
+                    raise TwitchMissingRequiredArguments(f'Missing required arguments in commands: {self.name}()')
+
+                rest = await self._convert_types(param, rest)
                 kwargs[param.name] = rest
                 parsed.clear()
                 break
