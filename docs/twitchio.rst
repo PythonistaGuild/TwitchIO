@@ -1,6 +1,19 @@
 TwitchIO
 ================
 
+Bot
+-----------------------
+.. automodule:: twitchio.commands.bot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+ABC
+------------------------
+.. automodule:: twitchio.commands.abcs
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Objects
 ----------------------------
@@ -18,6 +31,10 @@ Errors
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: twitchio.commands.errors
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 
 Module contents
