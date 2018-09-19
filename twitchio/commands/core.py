@@ -29,8 +29,8 @@ class TwitchCommand:
         try:
             argument = converter(parsed)
         except Exception:
-            raise TwitchBadArgument('Invalid argument parsed at `{0}` in command `{1}`. Expected type {2} got {3}.'
-                                    .format(param.name, self.name, converter, type(parsed)))
+            raise TwitchBadArgument(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
+                                    f' Expected type {converter} got {type(parsed)}.')
 
         return argument
 
@@ -44,12 +44,12 @@ class TwitchCommand:
         try:
             next(iterator)
         except StopIteration:
-            raise TwitchIOCommandError("{0}() missing 1 required positional argument: 'self'".format(self.name))
+            raise TwitchIOCommandError(f'{self.name}() missing 1 required positional argument: `self`')
 
         try:
             next(iterator)
         except StopIteration:
-            raise TwitchIOCommandError("{0}() missing 1 required positional argument: 'ctx'".format(self.name))
+            raise TwitchIOCommandError(f'{self.name}() missing 1 required positional argument: `ctx`')
 
         for name, param in iterator:
             index += 1
@@ -60,8 +60,7 @@ class TwitchCommand:
                     if param.default is not param.empty:
                         args.append(param.default)
                     else:
-                        raise TwitchMissingRequiredArguments('Missing required arguments in command: {}()'
-                                                             .format(self.name))
+                        raise TwitchMissingRequiredArguments(f'Missing required arguments in command: {self.name}()')
                 else:
                     argument = await self._convert_types(param, argument)
                     args.append(argument)

@@ -11,15 +11,12 @@ class WSConnectionFailure(TwitchIOBException):
 
 
 class ClientError(TwitchIOBException):
-    def __init__(self, message, **kwargs):
-        super().__init__(message)
+    pass
 
 
 class InvalidContent(TwitchIOBException):
-    def __init__(self, message):
-        super().__init__(message)
+    pass
 
 
 class TwitchHTTPException(TwitchIOBException):
-    def __init__(self, message):
-        super().__init__(message)
+    pass
