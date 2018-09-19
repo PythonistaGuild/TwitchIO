@@ -216,7 +216,6 @@ class BaseConnection:
 
         if code == 376:
             await self.event_ready()
-            print('\n\033[92mSuccessful Authentication: {0._host}:{0._port}\033[0m\n'.format(self))
             # todo logging
 
         elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed':
@@ -333,7 +332,8 @@ class BaseConnection:
         Event called when the :class:`.Client` has successfully authenticated
         on the Twitch server.
         """
-        pass
+
+        print('\033[92mSuccessful Authentication: {0._host}:{0._port}\033[0m'.format(self))
 
     async def event_error(self, error_name, *args, **kwargs):
         """|coro|
