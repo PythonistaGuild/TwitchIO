@@ -1,13 +1,6 @@
 TwitchIO
 ================
 
-Client
------------------------
-
-.. autoclass:: twitchio.client.Client
-    :members:
-    :inherited-members:
-    :no-undoc-members:
 
 Objects
 ----------------------------
@@ -31,6 +24,11 @@ Module contents
 ---------------
 
 .. automodule:: twitchio
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: twitchio.commands
     :members:
     :undoc-members:
     :show-inheritance:
