@@ -1,7 +1,7 @@
 formats: []
 
 build:
-  image: rewrite
+  image: latest
 
 python:
   version: 3.6
