@@ -21,7 +21,7 @@ class TwitchBot(WebsocketConnection):
         super().__init__(token=irc_token, api_token=api_token, initial_channels=channels,
                          loop=self.loop, nick=nick, **attrs)
 
-        self.loop.create_task(self.prefix_setter(prefix))
+        self.loop.create_task(self._prefix_setter(prefix))
 
         self.listeners = {}
         self.extra_listeners = {}
@@ -46,7 +46,7 @@ class TwitchBot(WebsocketConnection):
                       file=sys.stderr)
                 continue
 
-            if not inspect.iscoroutinefunction(obj.callback):
+            if not inspect.iscoroutinefunction(obj._callback):
                 print(f'Failed to load command <{obj.name}>. Commands must coroutines.', file=sys.stderr)
 
             self.commands[obj.name] = obj
@@ -103,7 +103,7 @@ class TwitchBot(WebsocketConnection):
     def teardown(self):
         pass
 
-    async def prefix_setter(self, item):
+    async def _prefix_setter(self, item):
         if inspect.iscoroutinefunction(item):
             item = await item()
         elif callable(item):
@@ -148,6 +148,23 @@ class TwitchBot(WebsocketConnection):
         return prefix
 
     async def get_context(self, message, cls=None):
+        """|coro|
+
+        A function which creates context with the given message.
+        A custom context class can be passed.
+
+        Parameters
+        ------------
+        message: :class:`Message`
+            The message to create context from.
+        cls: Optional
+            The optional custom class to create Context.
+
+        Returns
+        ---------
+        :class:`Context`
+            The context created.
+        """
         prefix = await self.get_prefix(message)
 
         if not cls:
@@ -198,16 +215,34 @@ class TwitchBot(WebsocketConnection):
         except Exception as e:
             ctx.command = None
             return await self.event_command_error(ctx, e)
-        else:
-            ctx.command = command
-            ctx.args, ctx.kwargs = await command.parse_args(parsed)
+
+        ctx.command = command
+        instance = ctx.command.instance or self
 
         try:
-            await ctx.command.callback(self, ctx, *ctx.args, **ctx.kwargs)
+            ctx.args, ctx.kwargs = await command.parse_args(parsed)
+
+            if ctx.command._before_invoke:
+                await ctx.command._before_invoke(instance, ctx)
+
+            await ctx.command._callback(instance, ctx, *ctx.args, **ctx.kwargs)
         except Exception as e:
+            if ctx.command.on_error:
+                await ctx.command.on_error(instance, ctx, e)
+
             await self.event_command_error(ctx, e)
 
-    async def event_command_error(self, ctx, exception):
+    async def event_command_error(self, ctx, error):
+        """|coro|
 
-        print('Ignoring exception in command: {0}:'.format(exception), file=sys.stderr)
+        Event called when an error occurs during command invocation.
+
+        Parameters
+        ------------
+        ctx: :class:`Context`
+            The command context.
+        error: :class:`Exception`
+            The exception raised while trying to invoke the command.
+        """
+        print('Ignoring exception in command: {0}:'.format(error), file=sys.stderr)
         traceback.print_exc()

@@ -7,15 +7,25 @@ from .errors import *
 class TwitchCommand:
 
     def __init__(self, name: str, func, **attrs):
-        self.name = name
-        self.callback = func
+        self._name = name
+        self._callback = func
         self.aliases = attrs.get('aliases', None)
         sig = inspect.signature(func)
         self.params = sig.parameters.copy()
 
+        self.on_error = None
+        self._before_invoke = None
+        self._after_invoke = None
+
+        self.instance = None
+
         for key, value in self.params.items():
             if isinstance(value.annotation, str):
                 self.params[key] = value.replace(annotation=eval(value.annotation, func.__globals__))
+
+    @property
+    def name(self):
+        return self._name
 
     async def _convert_types(self, param, parsed):
 
@@ -85,6 +95,50 @@ class TwitchCommand:
 
         return args, kwargs
 
+    def error(self, func):
+        """Decorator which registers a coroutine as a local error handler.
+
+        event_command_error will still be invoked alongside this local handler.
+        The local handler must take ctx and error as parameters.
+
+        Parameters
+        ------------
+        func : :ref:`coroutine <coroutine>`
+            The coroutine function to register as a local error handler.
+
+        Raises
+        --------
+        twitchio.TwitchIOBException
+            The func is not a coroutine function.
+        """
+        if not inspect.iscoroutinefunction(func):
+            raise TwitchIOBException('Command error handler must be a coroutine.')
+
+        self.on_error = func
+        return func
+
+    def before_invoke(self, func):
+        """Decorator which registers a coroutine as a before invocation hook.
+
+        The hook will be called before the command is invoked.
+        The hook must take ctx as a sole parameter.
+
+        Parameters
+        ------------
+        func: :ref:`coroutine <coroutine>`
+            The coroutine function to register as a before command hook.
+
+        Raises
+        --------
+        twitchio.TwitchIOBException
+            The func is not a coroutine function.
+        """
+        if not inspect.iscoroutinefunction(func):
+            raise TwitchIOBException('Before invoke func must be a coroutine')
+
+        self._before_invoke = func
+        return func
+
 
 def twitch_command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
     if cls and not inspect.isclass(cls):
@@ -98,5 +152,5 @@ def twitch_command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None
 
         fname = name or func.__name__
 
-        return cls(name=fname, func=func, aliases=aliases)
+        return cls(name=fname, func=func, aliases=aliases, instance=None)
     return decorator
