@@ -6,15 +6,14 @@ Bot
 
 .. autoclass:: twitchio.commands.bot.TwitchBot
     :members:
-
-.. autoclass:: twitchio.websocket.WebsocketConnection
-    :members:
+    :inherited-members:
 
 Objects
 ----------------------------
 
 .. automodule:: twitchio.dataclasses
     :members:
+    :undoc-members:
     :show-inheritance:
 
 Errors

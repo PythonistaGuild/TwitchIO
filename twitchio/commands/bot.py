@@ -74,7 +74,7 @@ class TwitchBot(WebsocketConnection):
         .. warning::
             You do not need to use this function unless are accessing the IRC Endpoints.
         .. warning::
-            You do not use this function if you are using :meth:`start`
+            You do not use this function if you are using :meth:`.start`
         """
         loop = self.loop or asyncio.get_event_loop()
 
@@ -89,10 +89,11 @@ class TwitchBot(WebsocketConnection):
 
     async def start(self):
         """|coro|
+
         An asynchronous call which starts the IRC Bot event loop.
 
         This should only be used when integrating Twitch Bots with Discords Bots.
-        :meth:`run` should be used instead.
+        :meth:`.run` should be used instead.
         """
         await self._connect()
 
@@ -253,6 +254,104 @@ class TwitchBot(WebsocketConnection):
         print('Ignoring exception in command: {0}:'.format(error), file=sys.stderr)
         traceback.print_exc()
 
+    async def event_mode(self, channel, user, status):
+        """|coro|
+
+        Event called when a MODE is received from Twitch.
+
+        Parameters
+        ------------
+        channel: :class:`.Channel`
+            Channel object relevant to the MODE event.
+        user: :class:`.User`
+            User object containing relevant information to the MODE.
+        status: str
+            The JTV status received by Twitch. Could be either o+ or o-.
+            Indicates a moderation promotion/demotion to the :class:`.User`
+        """
+        pass
+
+    async def event_userstate(self, user):
+        """|coro|
+
+        Event called when a USERSTATE is received from Twitch.
+
+        Parameters
+        ------------
+        user: :class:`.User`
+            User object containing relevant information to the USERSTATE.
+        """
+        pass
+
+    async def event_part(self, user):
+        """|coro|
+
+        Event called when a PART is received from Twitch.
+
+        Parameters
+        ------------
+        user: :class:`.User`
+            User object containing relevant information to the PART.
+        """
+        pass
+
+    async def event_join(self, user):
+        """|coro|
+
+        Event called when a JOIN is received from Twitch.
+
+        Parameters
+        ------------
+        user: :class:`.User`
+            User object containing relevant information to the JOIN.
+        """
+        pass
+
+    async def event_message(self, message):
+        """|coro|
+
+        Event called when a PRIVMSG is received from Twitch.
+
+        Parameters
+        ------------
+        message: :class:`.Message`
+            Message object containing relevant information.
+        """
+        await self.process_commands(message)
+
+    async def event_error(self, data, error: Exception):
+        """|coro|
+
+        Event called when an error occurs processing data.
+
+        Parameters
+        ------------
+        data: str
+            The raw data received from Twitch.
+        error: Exception
+            The exception raised.
+        """
+        traceback.print_exc()
+
+    async def event_ready(self):
+        """|coro|
+
+        Event called when the Bot has logged in and is ready.
+        """
+        pass
+
+    async def event_raw_data(self, data):
+        """|coro|
+
+        Event called with the raw data received by Twitch.
+
+        Parameters
+        ------------
+        data: str
+            The raw data received from Twitch.
+        """
+        pass
+
     def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=None):
         """Decorator which registers a command with the bot.
         """
@@ -269,7 +368,7 @@ class TwitchBot(WebsocketConnection):
         return decorator
 
     def event(self, func):
-        """Decorator which adds an event listener.
+        """Decorator which adds an event listener to the bot.
         """
         if not inspect.iscoroutinefunction(func):
             raise TypeError('Events must be coroutines.')

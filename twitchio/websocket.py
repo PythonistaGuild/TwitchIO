@@ -328,97 +328,27 @@ class WebsocketConnection:
         pass
 
     async def event_raw_data(self, data):
-        """|coro|
-        Event called with the raw data received by Twitch.
-
-        Parameters
-        ------------
-        data: str
-            The raw data received from Twitch.
-        """
         pass
 
     async def event_ready(self):
-        """|coro|
-        Event called when the Bot has logged in and is ready.
-        """
         pass
 
     async def event_error(self, data, error: Exception):
-        """|coro|
-        Event called when an error occurs processing data.
-
-        Parameters
-        ------------
-        data: str
-            The raw data received from Twitch.
-        error: Exception
-            The exception raised.
-        """
         traceback.print_exc()
 
     async def event_message(self, message):
-        """|coro|
-
-        Event called when a PRIVMSG is received from Twitch.
-
-        Parameters
-        ------------
-        message: :class:`.Message`
-            Message object containing relevant information.
-        """
         await self.process_commands(message)
 
     async def event_join(self, user):
-        """|coro|
-        Event called when a JOIN is received from Twitch.
-
-        Parameters
-        ------------
-        user: :class:`.User`
-            User object containing relevant information to the JOIN.
-        """
         pass
 
     async def event_part(self, user):
-        """|coro|
-
-        Event called when a PART is received from Twitch.
-
-        Parameters
-        ------------
-        user: :class:`.User`
-            User object containing relevant information to the PART.
-        """
         pass
 
     async def event_userstate(self, user):
-        """|coro|
-
-        Event called when a USERSTATE is received from Twitch.
-
-        Parameters
-        ------------
-        user: :class:`.User`
-            User object containing relevant information to the USERSTATE.
-        """
         pass
 
     async def event_mode(self, channel, user, status):
-        """|coro|
-
-        Event called when a MODE is received from Twitch.
-
-        Parameters
-        ------------
-        channel: :class:`.Channel`
-            Channel object relevant to the MODE event.
-        user: :class:`.User`
-            User object containing relevant information to the MODE.
-        status: str
-            The JTV status received by Twitch. Could be either o+ or o-.
-            Indicates a moderation promotion/demotion to the :class:`.User`
-        """
         pass
 
 
