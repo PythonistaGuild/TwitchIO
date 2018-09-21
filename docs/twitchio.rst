@@ -1,12 +1,20 @@
 TwitchIO
 ================
 
+Bot
+------------------------
+
+.. autoclass:: twitchio.commands.bot.TwitchBot
+    :members:
+
+.. autoclass:: twitchio.websocket.WebsocketConnection
+    :members:
+
 Objects
 ----------------------------
 
 .. automodule:: twitchio.dataclasses
     :members:
-    :undoc-members:
     :show-inheritance:
 
 Errors
@@ -14,24 +22,11 @@ Errors
 
 .. automodule:: twitchio.errors
     :members:
-    :undoc-members:
     :show-inheritance:
-
-.. automodule:: twitchio.commands.errors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
 
 .. automodule:: twitchio
     :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: twitchio.commands
-    :members:
-    :undoc-members:
     :show-inheritance:

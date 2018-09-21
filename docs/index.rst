@@ -7,12 +7,11 @@ Welcome to TwitchIO's documentation!
 ====================================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Contents:
 
    twitchio
    twitchio.commands
-
 
 Indices and tables
 ==================
