@@ -23,7 +23,6 @@ class TwitchBot(WebsocketConnection):
 
         self.loop.create_task(self._prefix_setter(prefix))
 
-        self.listeners = {}
         self.extra_listeners = {}
         self.commands = {}
         self._aliases = {}
@@ -35,33 +34,37 @@ class TwitchBot(WebsocketConnection):
         commands = inspect.getmembers(self)
 
         for name, obj in commands:
-            if name.startswith('event_'):
-                self.listeners[name] = obj
-
             if not isinstance(obj, TwitchCommand):
                 continue
 
-            if obj.name in self.commands:
-                print(f'Failed to load command <{obj.name}> a command with that name/alias already exists',
-                      file=sys.stderr)
+            obj.instance = self
+
+            try:
+                self.add_command(obj)
+            except TwitchIOCommandError:
+                traceback.print_exc()
                 continue
 
-            if not inspect.iscoroutinefunction(obj._callback):
-                print(f'Failed to load command <{obj.name}>. Commands must coroutines.', file=sys.stderr)
+    def add_command(self, command):
+        if not isinstance(command, TwitchCommand):
+            raise TypeError('Commands passed my be a subclass of TwitchCommand')
+        elif command.name in self.commands:
+            raise TwitchIOCommandError(f'Failed to load command <{command.name}>, a command with that name already exists')
+        elif not inspect.iscoroutinefunction(command._callback):
+            raise TwitchIOCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines')
 
-            self.commands[obj.name] = obj
+        self.commands[command.name] = command
 
-            if not obj.aliases:
-                continue
+        if not command.aliases:
+            return
 
-            for alias in obj.aliases:
-                if alias in self.commands:
-                    print(f'Failed to load command <{obj.name}>, a command with that name/alias already exists.',
-                          file=sys.stderr)
-                    del self.commands[obj.name]
-                    continue
+        for alias in command.aliases:
+            if alias in self.commands:
+                del self.commands[command.name]
+                raise TwitchIOCommandError(
+                    f'Failed to load command <{command.name}>, a command with that name/alias already exists.')
 
-                self._aliases[alias] = obj.name
+            self._aliases[alias] = command.name
 
     def run(self):
         """A blocking call the initializes the IRC Bot event loop.
@@ -217,15 +220,18 @@ class TwitchBot(WebsocketConnection):
             return await self.event_command_error(ctx, e)
 
         ctx.command = command
-        instance = ctx.command.instance or self
+        instance = ctx.command.instance
 
         try:
-            ctx.args, ctx.kwargs = await command.parse_args(parsed)
+            ctx.args, ctx.kwargs = await command.parse_args(instance, parsed)
 
             if ctx.command._before_invoke:
                 await ctx.command._before_invoke(instance, ctx)
 
-            await ctx.command._callback(instance, ctx, *ctx.args, **ctx.kwargs)
+            if instance:
+                await ctx.command._callback(instance, ctx, *ctx.args, **ctx.kwargs)
+            else:
+                await ctx.command._callback(ctx, *ctx.args, **ctx.kwargs)
         except Exception as e:
             if ctx.command.on_error:
                 await ctx.command.on_error(instance, ctx, e)
@@ -246,3 +252,27 @@ class TwitchBot(WebsocketConnection):
         """
         print('Ignoring exception in command: {0}:'.format(error), file=sys.stderr)
         traceback.print_exc()
+
+    def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=None):
+        """Decorator which registers a command with the bot.
+        """
+        if cls and not inspect.isclass(cls):
+            raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+
+        cls = cls or TwitchCommand
+
+        def decorator(func):
+            fname = name or func.__name__
+
+            command = cls(name=fname, func=func, aliases=aliases, instance=None)
+            self.add_command(command)
+        return decorator
+
+    def event(self, func):
+        """Decorator which adds an event listener.
+        """
+        if not inspect.iscoroutinefunction(func):
+            raise TypeError('Events must be coroutines.')
+
+        setattr(self, func.__name__, func)
+        return func

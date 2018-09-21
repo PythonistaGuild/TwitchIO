@@ -1,6 +1,7 @@
 import inspect
 from typing import Union
 
+from ..dataclasses import Context
 from .errors import *
 
 
@@ -44,7 +45,7 @@ class TwitchCommand:
 
         return argument
 
-    async def parse_args(self, parsed):
+    async def parse_args(self, instance, parsed):
         iterator = iter(self.params.items())
         index = 0
         args = []
@@ -52,13 +53,10 @@ class TwitchCommand:
 
         try:
             next(iterator)
+            if instance:
+                next(iterator)
         except StopIteration:
-            raise TwitchIOCommandError(f'{self.name}() missing 1 required positional argument: `self`')
-
-        try:
-            next(iterator)
-        except StopIteration:
-            raise TwitchIOCommandError(f'{self.name}() missing 1 required positional argument: `ctx`')
+            raise TwitchMissingRequiredArguments(f'self or ctx is a required argument which is missing.')
 
         for name, param in iterator:
             index += 1
@@ -151,6 +149,8 @@ def twitch_command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None
             raise TypeError('Command callback must be a coroutine.')
 
         fname = name or func.__name__
+        command = cls(name=fname, func=func, aliases=aliases)
+        command.instance = command
 
-        return cls(name=fname, func=func, aliases=aliases, instance=None)
+        return command
     return decorator
