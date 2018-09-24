@@ -95,7 +95,7 @@ class Channel(Messageable):
 class User(Messageable):
 
     __slots__ = ('_name', '_channel', '_tags', 'display_name', '_id', 'type',
-                 '_colour', 'subscriber', 'turbo', '_badges','_ws')
+                 '_colour', 'subscriber', 'turbo', '_badges', '_ws', '_mod')
 
     def __init__(self, ws, **attrs):
         self._name = attrs.pop('author', None)
@@ -113,6 +113,8 @@ class User(Messageable):
         self.subscriber = self._tags.get('subscriber', None)
         self.turbo = self._tags.get('turbo', None)
         self._badges = self._tags.get('badges', ',').split(',')
+        self._mod = self._tags.get('mod', 0)
+
 
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)
@@ -194,6 +196,13 @@ class User(Messageable):
         Could be a Dict containing None if no tags were received.
         """
         return self._tags
+
+    @property
+    def is_mod(self):
+        """A boolean indicating whether the User is a moderator of the current channel.
+
+        Could be None if no Tags were received."""
+        return self._mod == 1
 
 
 class Context(Messageable):

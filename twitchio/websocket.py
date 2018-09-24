@@ -125,6 +125,20 @@ class WebsocketConnection:
     async def wait_until_ready(self):
         await self.is_ready.wait()
 
+    async def send_cap(self, cap: str):
+        """|coro|
+
+        Send a CAP REQ to Twitch.
+
+        Valid caps are: commands, tags, membership
+
+        Parameters
+        ------------
+        cap: str
+            The cap request you wish to send to Twitch. Must be either commands, tags or membership.
+        """
+        await self._websocket.send(f'CAP REQ :twitch.tv/{cap}')
+
     async def auth_seq(self, channels: Union[list, tuple]=None):
         """|coro|
 
@@ -146,12 +160,16 @@ class WebsocketConnection:
         await self._websocket.send(f'PASS {self._token}\r\n')
         await self._websocket.send(f'NICK {self.nick}\r\n')
 
+        for cap in self.modes:
+            await self._websocket.send(f'CAP REQ :twitch.tv/{cap}')
+
         if not channels and not self._initial_channels:
             return
 
         channels = channels or self._initial_channels
 
         await self.join_channels(channels)
+
 
     async def send_nick(self):
         """|coro|
