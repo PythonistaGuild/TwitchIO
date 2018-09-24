@@ -188,7 +188,7 @@ class TwitchBot(WebsocketConnection):
             try:
                 ctx = await self.get_context(message)
             except Exception as e:
-                return await self.event_error(message.raw_data, e)
+                return await self.event_error(e, message.raw_data)
 
         if not ctx.prefix:
             return
@@ -252,7 +252,7 @@ class TwitchBot(WebsocketConnection):
             The exception raised while trying to invoke the command.
         """
         print('Ignoring exception in command: {0}:'.format(error), file=sys.stderr)
-        traceback.print_exc()
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     async def event_mode(self, channel, user, status):
         """|coro|
@@ -319,19 +319,19 @@ class TwitchBot(WebsocketConnection):
         """
         await self.process_commands(message)
 
-    async def event_error(self, data, error: Exception):
+    async def event_error(self, error: Exception, data=None):
         """|coro|
 
         Event called when an error occurs processing data.
 
         Parameters
         ------------
-        data: str
-            The raw data received from Twitch.
         error: Exception
             The exception raised.
+        data: str
+            The raw data received from Twitch. Depending on how this is called, this could be None.
         """
-        traceback.print_exc()
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     async def event_ready(self):
         """|coro|

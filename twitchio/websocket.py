@@ -27,6 +27,7 @@ import aiohttp
 import asyncio
 import logging
 import re
+import sys
 import traceback
 import websockets
 from typing import Union
@@ -53,6 +54,7 @@ class WebsocketConnection:
 
         self._initial_channels = attrs.get('initial_channels')
         self.nick = attrs.get('nick')
+        self.extra_listeners = {}
 
         self.modes = attrs.pop('modes', ("commands", "tags", "membership"))
         self._channel_cache = set()
@@ -208,7 +210,7 @@ class WebsocketConnection:
             except AuthenticationError:
                 raise
             except Exception as e:
-                await self.event_error(data, e)
+                await self.event_error(e, data)
 
     async def process_ping(self, resp):
             await self._websocket.send(f"PONG {resp}\r\n")
@@ -222,7 +224,7 @@ class WebsocketConnection:
             code = None
 
         if code == 376 or code == 1:
-            await self.event_ready()
+            await self._dispatch('ready')
             self.is_ready.set()
             log.info('Successfully logged onto Twitch WS | %s', self.nick)
         elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed':
@@ -295,23 +297,23 @@ class WebsocketConnection:
                 self._channel_cache.add(channel.name)
                 self._channel_token += 1
 
-            await self.event_join(user)
+            await self._dispatch('join', user)
 
         elif action == 'PART':
             if author == self.nick:
                 self._channel_cache.remove(channel.name)
                 self._channel_token -= 1
 
-            await self.event_part(user)
+            await self._dispatch('part', user)
 
         elif action == 'PING':
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
-            await self.event_message(message)
+            await self._dispatch('message', message)
 
         elif action == 'USERSTATE':
-            await self.event_userstate(user)
+            await self._dispatch('userstate', user)
 
         elif action == 'MODE':
             mdata = re.match(r':jtv MODE #(?P<channel>.+?[a-z0-9])\s(?P<status>[\+\-]o)\s(?P<user>.*[a-z0-9])', raw)
@@ -322,7 +324,18 @@ class WebsocketConnection:
             if user._name.lower() == self.nick.lower():
                 await self._token_update(mstatus)
 
-            await self.event_mode(channel, user, mstatus)
+            await self._dispatch('mode', channel, user, mstatus)
+
+    async def _dispatch(self, event: str, *args, **kwargs):
+        func = getattr(self, f'event_{event}')
+        self.loop.create_task(func(*args, **kwargs))
+
+        extras = self.extra_listeners.get(f'event_{event}', [])
+        ret = await asyncio.gather(*[e(*args, **kwargs) for e in extras])
+
+        for e in ret:
+            if isinstance(e, Exception):
+                self.loop.create_task(self.event_error(e))
 
     async def process_commands(self, message: Message, ctx: Context=None):
         pass
@@ -330,25 +343,7 @@ class WebsocketConnection:
     async def event_raw_data(self, data):
         pass
 
-    async def event_ready(self):
-        pass
-
-    async def event_error(self, data, error: Exception):
-        traceback.print_exc()
-
-    async def event_message(self, message):
-        await self.process_commands(message)
-
-    async def event_join(self, user):
-        pass
-
-    async def event_part(self, user):
-        pass
-
-    async def event_userstate(self, user):
-        pass
-
-    async def event_mode(self, channel, user, status):
-        pass
+    async def event_error(self, error: Exception, data=None):
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
