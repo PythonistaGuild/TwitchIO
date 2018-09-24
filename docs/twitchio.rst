@@ -1,12 +1,6 @@
 TwitchIO
 ================
 
-Bot
-------------------------
-
-.. autoclass:: twitchio.commands.bot.TwitchBot
-    :members:
-    :inherited-members:
 
 Objects
 ----------------------------

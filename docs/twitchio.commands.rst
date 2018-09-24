@@ -5,24 +5,17 @@ Submodules
 ----------
 
 Bot
-----------------------------
+------------------------
 
-.. automodule:: twitchio.commands.bot
+.. autoclass:: twitchio.commands.bot.TwitchBot
     :members:
     :inherited-members:
-    :show-inheritance:
 
-twitchio.commands.cooldowns module
-----------------------------------
-
-.. automodule:: twitchio.commands.cooldowns
-    :members:
-    :show-inheritance:
 
 Command
 -----------------------------
 
-.. autoclass:: twitchio.commands.core.Command
+.. autoclass:: twitchio.commands.core.TwitchCommand
     :members:
 
 twitchio.commands.errors module
