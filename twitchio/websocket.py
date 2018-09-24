@@ -227,7 +227,8 @@ class WebsocketConnection:
             await self._dispatch('ready')
             self.is_ready.set()
             log.info('Successfully logged onto Twitch WS | %s', self.nick)
-        elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed':
+        elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed' or\
+                data == ':tmi.twitch.tv NOTICE * :Improperly formatted auth':
             log.warning('Authentication failed | %s', self._token)
             raise AuthenticationError('Websocket Authentication Failure... Check your token and nick.')
 

@@ -15,10 +15,10 @@ from ..websocket import WebsocketConnection
 
 class TwitchBot(WebsocketConnection):
 
-    def __init__(self, irc_token: str, api_token: str, *, prefix: Union[list, tuple, str],
-                 nick: str, loop: asyncio.BaseEventLoop=None, channels: Union[list, tuple]=None, **attrs):
+    def __init__(self, irc_token: str, api_token: str=None, *, prefix: Union[list, tuple, str],
+                 nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None, **attrs):
         self.loop = loop or asyncio.get_event_loop()
-        super().__init__(token=irc_token, api_token=api_token, initial_channels=channels,
+        super().__init__(token=irc_token, api_token=api_token, initial_channels=initial_channels,
                          loop=self.loop, nick=nick, **attrs)
 
         self.loop.create_task(self._prefix_setter(prefix))
@@ -94,6 +94,9 @@ class TwitchBot(WebsocketConnection):
 
         This should only be used when integrating Twitch Bots with Discords Bots.
         :meth:`.run` should be used instead.
+
+        .. warning::
+            Do not use this function if you are using :meth:`.run`
         """
         await self._connect()
 
@@ -159,14 +162,14 @@ class TwitchBot(WebsocketConnection):
 
         Parameters
         ------------
-        message: :class:`Message`
+        message: :class:`.Message`
             The message to create context from.
         cls: Optional
             The optional custom class to create Context.
 
         Returns
         ---------
-        :class:`Context`
+        :class:`.Context`
             The context created.
         """
         prefix = await self.get_prefix(message)
@@ -246,9 +249,9 @@ class TwitchBot(WebsocketConnection):
 
         Parameters
         ------------
-        ctx: :class:`Context`
+        ctx: :class:`.Context`
             The command context.
-        error: :class:`Exception`
+        error: :class:`.Exception`
             The exception raised while trying to invoke the command.
         """
         print('Ignoring exception in command: {0}:'.format(error), file=sys.stderr)
@@ -375,3 +378,12 @@ class TwitchBot(WebsocketConnection):
 
         setattr(self, func.__name__, func)
         return func
+
+    def listen(self, func):
+        """Decorator which adds a coroutine as a listener to an event.
+
+        This can be used in place of :meth:`.event` or when more than one of the same event is required.
+
+        Parameters
+        ------------
+        func: """
