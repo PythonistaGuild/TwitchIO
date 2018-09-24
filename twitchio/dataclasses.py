@@ -115,7 +115,6 @@ class User(Messageable):
         self._badges = self._tags.get('badges', ',').split(',')
         self._mod = self._tags.get('mod', 0)
 
-
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)
 
@@ -202,7 +201,12 @@ class User(Messageable):
         """A boolean indicating whether the User is a moderator of the current channel.
 
         Could be None if no Tags were received."""
-        return self._mod == 1
+        if self._mod == 1:
+            return True
+        if self.channel.name == self.display_name:
+            return True
+        else:
+            return False
 
 
 class Context(Messageable):
