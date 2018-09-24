@@ -1,9 +1,6 @@
 Twitchio Commands
 =========================
 
-Submodules
-----------
-
 Bot
 ------------------------
 
@@ -18,7 +15,8 @@ Command
 .. autoclass:: twitchio.commands.core.TwitchCommand
     :members:
 
-twitchio.commands.errors module
+
+Errors
 -------------------------------
 
 .. automodule:: twitchio.commands.errors
