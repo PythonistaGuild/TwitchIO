@@ -64,10 +64,10 @@ class Channel(Messageable):
         """The channel name."""
         return self._channel
 
-    async def _get_channel(self):
+    def _get_channel(self):
         return self.name, None
 
-    async def _get_method(self):
+    def _get_method(self):
         return self.__class__.__name__
 
     @property
