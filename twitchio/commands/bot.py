@@ -16,10 +16,11 @@ from ..websocket import WebsocketConnection
 class TwitchBot(WebsocketConnection):
 
     def __init__(self, irc_token: str, api_token: str=None, *, prefix: Union[list, tuple, str],
-                 nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None, **attrs):
+                 nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None,
+                 client_id: str=None, **attrs):
         self.loop = loop or asyncio.get_event_loop()
-        super().__init__(token=irc_token, api_token=api_token, initial_channels=initial_channels,
-                         loop=self.loop, nick=nick, **attrs)
+        super().__init__(irc_token=irc_token, api_token=api_token, initial_channels=initial_channels,
+                         loop=self.loop, nick=nick, client_id=client_id, **attrs)
 
         self.loop.create_task(self._prefix_setter(prefix))
 

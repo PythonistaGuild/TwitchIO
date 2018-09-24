@@ -43,11 +43,12 @@ log.addHandler(logging.NullHandler())
 
 class WebsocketConnection:
 
-    def __init__(self, *, token: str, loop: asyncio.BaseEventLoop=None, **attrs):
+    def __init__(self, *, irc_token: str, loop: asyncio.BaseEventLoop=None, **attrs):
         self.loop = loop or asyncio.get_event_loop()
 
-        self._token = token
+        self._token = irc_token
         self._api_token = attrs.get('api_token')
+        self.client_id = attrs.get('client_id')
         self._host = 'wss://irc-ws.chat.twitch.tv:443'
         self._websocket = None
         self._last_exec = None
@@ -80,7 +81,8 @@ class WebsocketConnection:
             'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"), }
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
-        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token)
+        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token,
+                                 cid=self.client_id)
 
     async def _update_limit(self):
 
