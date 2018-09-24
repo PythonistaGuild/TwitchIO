@@ -1,2 +1,5 @@
 # Ignore logs
 *.log
+
+# Ignore IntelliJ files
+.idea/
