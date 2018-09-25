@@ -203,7 +203,7 @@ class User(Messageable):
         Could be None if no Tags were received."""
         if self._mod == 1:
             return True
-        if self.channel.name == self.display_name:
+        if self.channel.name == self.display_name.lower():
             return True
         else:
             return False
