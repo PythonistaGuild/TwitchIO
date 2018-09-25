@@ -40,10 +40,10 @@ class Messageable(metaclass=abc.ABCMeta):
         if content.startswith('.'):
             content = content.lstrip('.')
 
-        if content.startswith(self.__invalid__):
-            raise InvalidContent('UnAuthorised chat command for send. Use built in method(s).')
-        else:
-            content = original
+            if content.startswith(self.__invalid__):
+                raise InvalidContent('UnAuthorised chat command for send. Use built in method(s).')
+            else:
+                content = original
 
         content = content.replace('\n', ' ')
 
