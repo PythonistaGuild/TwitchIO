@@ -5,7 +5,7 @@ class Bot(commands.TwitchBot):
 
     def __init__(self):
         super().__init__(irc_token='...', api_token='...', nick='mysterialpy', prefix='!',
-                         channels=['mysterialpy'])
+                         initial_channels=['mysterialpy'])
 
     # Events don't need decorators when subclassed
     async def event_ready(self):

@@ -8,7 +8,7 @@ class DiscordCog(tcommands.TwitchBot):
         # Discord bot instance
         self.dbot = bot
         super().__init__(irc_token='...', api_token='...', nick='mysterialpy', prefix='!',
-                         channels=['mysterialpy'])
+                         initial_channels=['mysterialpy'])
 
         # Start the Twitch Bot
         self.loop.create_task(self.start())
