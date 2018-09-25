@@ -34,4 +34,4 @@ class DiscordCog(tcommands.TwitchBot):
 
 # Add the Discord cog as per usual
 def setup(bot):
-    bot.add_command(DiscordCog(bot))
+    bot.add_cog(DiscordCog(bot))
