@@ -172,7 +172,6 @@ class WebsocketConnection:
 
         await self.join_channels(channels)
 
-
     async def send_nick(self):
         """|coro|
 

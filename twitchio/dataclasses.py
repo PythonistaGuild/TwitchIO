@@ -89,7 +89,7 @@ class Channel(Messageable):
         TwitchHTTPException
             Bad request while fetching streams.
         """
-        return await self._http._get_streams(self.name)
+        return await self._http._get_stream(self.name)
 
 
 class User(Messageable):
