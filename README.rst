@@ -31,7 +31,7 @@ which has certainly influenced the design of TwitchIO.
 
 Installation
 ------------
-TwitchIO requires Python 3.5+
+TwitchIO requires Python 3.5.2+
 
 **Windows**
 
@@ -48,37 +48,34 @@ TwitchIO requires Python 3.5+
 Simple Usage
 ____________
 Please keep in mind TwitchIO is currently in very early **Alpha-Stages**. It will come with it's serveral kinks, flaws and bugs.
-One of those flaws is that the Command System(TwitchBot) currently only works when subclassed.
+
 
 Standalone
 ~~~~~~~~~~
 .. code:: py
-    
-    from twitchio import commands as tcommands
+
+    from twitchio import commands
 
 
-    class Botto(tcommands.TwitchBot):
-        """Create our IRC Twitch Bot.
-        api_token is optional, but without it, you will not be able to make certain calls to the API."""
-        
+    class Bot(commands.TwitchBot):
+
         def __init__(self):
-            super().__init__(prefix=['!', '?'], token='IRC_TOKEN', api_token='API_TOKEN', client_id='CLIENT_ID',
-                             nick='mycoolircnick', initial_channels=['my_channel'])
-        
+            super().__init__(irc_token='...', api_token='...', nick='mysterialpy', prefix='!',
+                             initial_channels=['mysterialpy'])
+
+        # Events don't need decorators when subclassed
         async def event_ready(self):
-            """Event called when the bot is ready to go!"""
-            print('READY!')
-        
+            print(f'Ready | {self.nick}')
+
         async def event_message(self, message):
-            """Event called when a message is sent to a channel you are in."""
-            if message.content == 'Hello':
-                await message.send('World!')
-        
-        @tcommands.twitch_command(aliases=['silly'])
-        async def silly_command(self, ctx):
-            """A simple command, which sends a message back to the channel!"""
-            await ctx.send('Hai there {0} Kappa.'.format(ctx.author.name))
+            print(message.content)
+            await self.process_commands(message)
+
+        # Commands use a different decorator
+        @commands.twitch_command(name='test')
+        async def my_command(self, ctx):
+            await ctx.send(f'Hello {ctx.author.name}!')
 
 
-    bot = Botto()
+    bot = Bot()
     bot.run()
