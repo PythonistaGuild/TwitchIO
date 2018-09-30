@@ -13,14 +13,16 @@ from ..errors import ClientError
 from ..websocket import WebsocketConnection
 
 
-class TwitchBot(WebsocketConnection):
+class TwitchBot:
 
     def __init__(self, irc_token: str, api_token: str=None, *, prefix: Union[list, tuple, str],
                  nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None,
                  client_id: str=None, **attrs):
+
         self.loop = loop or asyncio.get_event_loop()
-        super().__init__(irc_token=irc_token, api_token=api_token, initial_channels=initial_channels,
-                         loop=self.loop, nick=nick, client_id=client_id, **attrs)
+        self._ws = WebsocketConnection(bot=self, irc_token=irc_token, api_token=api_token
+                                       , initial_channels=initial_channels, loop=self.loop, nick=nick,
+                                       client_id=client_id, **attrs)
 
         self.loop.create_task(self._prefix_setter(prefix))
 
@@ -79,10 +81,10 @@ class TwitchBot(WebsocketConnection):
         """
         loop = self.loop or asyncio.get_event_loop()
 
-        loop.run_until_complete(self._connect())
+        loop.run_until_complete(self._ws._connect())
 
         try:
-            loop.run_until_complete(self._listen())
+            loop.run_until_complete(self._ws._listen())
         except KeyboardInterrupt:
             pass
         finally:
@@ -99,10 +101,10 @@ class TwitchBot(WebsocketConnection):
         .. warning::
             Do not use this function if you are using :meth:`.run`
         """
-        await self._connect()
+        await self._ws._connect()
 
         try:
-            await self._listen()
+            await self._ws._listen()
         except KeyboardInterrupt:
             pass
         finally:
@@ -387,4 +389,5 @@ class TwitchBot(WebsocketConnection):
 
         Parameters
         ------------
-        func: """
+        func """
+        raise NotImplemented('This method has not been implemented yet.')

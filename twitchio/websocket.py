@@ -43,7 +43,8 @@ log.addHandler(logging.NullHandler())
 
 class WebsocketConnection:
 
-    def __init__(self, *, irc_token: str, loop: asyncio.BaseEventLoop=None, **attrs):
+    def __init__(self, bot, *, irc_token: str, loop: asyncio.BaseEventLoop=None, **attrs):
+        self._bot = bot
         self.loop = loop or asyncio.get_event_loop()
 
         self._token = irc_token
@@ -222,7 +223,7 @@ class WebsocketConnection:
                 await asyncio.sleep(retry)
                 continue
 
-            self.loop.create_task(self.event_raw_data(data))
+            self.loop.create_task(self._bot.event_raw_data(data))
 
             try:
                 await self.process_data(data)
@@ -347,7 +348,7 @@ class WebsocketConnection:
             await self._dispatch('mode', channel, user, mstatus)
 
     async def _dispatch(self, event: str, *args, **kwargs):
-        func = getattr(self, f'event_{event}')
+        func = getattr(self._bot, f'event_{event}')
         self.loop.create_task(func(*args, **kwargs))
 
         extras = self.extra_listeners.get(f'event_{event}', [])
@@ -356,12 +357,6 @@ class WebsocketConnection:
         for e in ret:
             if isinstance(e, Exception):
                 self.loop.create_task(self.event_error(e))
-
-    async def process_commands(self, message: Message, ctx: Context=None):
-        pass
-
-    async def event_raw_data(self, data):
-        pass
 
     async def event_error(self, error: Exception, data=None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
