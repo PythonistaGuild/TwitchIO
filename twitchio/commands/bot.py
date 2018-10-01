@@ -382,12 +382,51 @@ class TwitchBot:
         setattr(self, func.__name__, func)
         return func
 
-    def listen(self, func):
+    def add_listener(self, func, name: str=None):
+        """Method which adds a coroutine as an extra listener.
+
+        This can be used to add extra event listeners to the bot.
+
+        Parameters
+        ------------
+        func: coro [Required]
+            The coroutine to assign as a listener.
+        name: str [Required]
+            The event to register. E.g "event_message".
+        """
+        if not inspect.iscoroutinefunction(func):
+            raise TypeError('Events must be coroutines.')
+
+        name = name or func.__name__
+
+        if name not in self.extra_listeners:
+            self.extra_listeners[name] = [func]
+        else:
+            self.extra_listeners[name].append(func)
+
+    def listen(self, event: str=None):
         """Decorator which adds a coroutine as a listener to an event.
 
         This can be used in place of :meth:`.event` or when more than one of the same event is required.
 
         Parameters
         ------------
-        func """
-        raise NotImplemented('This method has not been implemented yet.')
+        event: str
+            The event to listen to in form of a string. E.g "event_message".
+
+        Examples
+        ---------
+        ::
+            @bot.event()
+            async def event_message(message):
+                print(message.content)
+
+            @bot.listen("event_message")
+            async def extra_message(message):
+                print(message.content)
+        """
+        def wrapper(func):
+            self.add_listener(func, event)
+
+            return func
+        return wrapper

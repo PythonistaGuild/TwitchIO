@@ -351,7 +351,7 @@ class WebsocketConnection:
         func = getattr(self._bot, f'event_{event}')
         self.loop.create_task(func(*args, **kwargs))
 
-        extras = self.extra_listeners.get(f'event_{event}', [])
+        extras = self._bot.extra_listeners.get(f'event_{event}', [])
         ret = await asyncio.gather(*[e(*args, **kwargs) for e in extras])
 
         for e in ret:
@@ -360,5 +360,3 @@ class WebsocketConnection:
 
     async def event_error(self, error: Exception, data=None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
-
