@@ -416,7 +416,7 @@ class TwitchBot:
 
         Examples
         ---------
-        .. code-block: python
+        .. code-block:: python
             @bot.event()
             async def event_message(message):
                 print(message.content)
