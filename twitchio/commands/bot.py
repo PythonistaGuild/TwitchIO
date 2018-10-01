@@ -416,14 +416,13 @@ class TwitchBot:
 
         Examples
         ----------
-        Some examples::
-            @bot.event()
-            async def event_message(message):
-                print(message.content)
+            >>> @bot.event()
+            >>> async def event_message(message):
+            >>>     print(message.content)
 
-            @bot.listen("event_message")
-            async def extra_message(message):
-                print(message.content)
+            >>> @bot.listen("event_message")
+            >>> async def extra_message(message):
+            >>>    print(message.content)
         """
         def wrapper(func):
             self.add_listener(func, event)
