@@ -416,6 +416,7 @@ class TwitchBot:
 
         Examples
         ----------
+        Some examples::
             @bot.event()
             async def event_message(message):
                 print(message.content)
