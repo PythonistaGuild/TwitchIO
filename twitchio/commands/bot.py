@@ -414,8 +414,8 @@ class TwitchBot:
         event: str
             The event to listen to in form of a string. E.g "event_message".
 
-        .. code-block:: python3
-
+        Examples
+        ----------
             @bot.event()
             async def event_message(message):
                 print(message.content)
