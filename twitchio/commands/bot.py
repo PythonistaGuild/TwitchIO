@@ -50,11 +50,11 @@ class TwitchBot:
 
     def add_command(self, command):
         if not isinstance(command, TwitchCommand):
-            raise TypeError('Commands passed my be a subclass of TwitchCommand')
+            raise TypeError('Commands passed my be a subclass of TwitchCommand.')
         elif command.name in self.commands:
             raise TwitchIOCommandError(f'Failed to load command <{command.name}>, a command with that name already exists')
         elif not inspect.iscoroutinefunction(command._callback):
-            raise TwitchIOCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines')
+            raise TwitchIOCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines.')
 
         self.commands[command.name] = command
 
@@ -182,12 +182,6 @@ class TwitchBot:
 
         ctx = cls(message=message, channel=message.channel, user=message.author, prefix=prefix)
         return ctx
-
-    # async def process_parameters(self, message, channel, user, parsed, prefix):
-        # message.clean_content = ' '.join(parsed.values())
-        # context = Context(message=message, channel=channel, user=user, prefix=prefix)
-
-        # return context
 
     async def process_commands(self, message, ctx=None):
         if ctx is None:

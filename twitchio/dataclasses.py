@@ -144,11 +144,12 @@ class User(Messageable):
     def channel(self):
         """The channel object associated with the User.
 
-        Notes
-        -------
-            The channel will be valid for the data which triggered the Event. But it's possible the
+        .. note::
+
+            The channel will be valid for the data which triggered the Event. It's possible the
             user could be in multiple channels. E.g: The User BobRoss sends a message from the Channel ArtIsCool.
-            The Channel object received will be ArtIsCool."""
+            The Channel object received will be ArtIsCool.
+        """
         return self._channel
 
     @property

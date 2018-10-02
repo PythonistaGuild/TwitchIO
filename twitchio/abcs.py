@@ -1,12 +1,12 @@
 import abc
-from .errors import InvalidContent
+from .errors import *
 
 
 class Messageable(metaclass=abc.ABCMeta):
 
     __slots__ = ()
 
-    __invalid__ = ('ban', 'unban', 'timeout', 'me', 'w', 'colour', 'color', 'mod',
+    __invalid__ = ('ban', 'unban', 'timeout', 'w', 'colour', 'color', 'mod',
                    'unmod', 'clear', 'subscribers', 'subscriberoff', 'slow', 'slowoff',
                    'r9k', 'r9koff', 'emoteonly', 'emoteonlyoff', 'host', 'unhost')
 
@@ -24,21 +24,38 @@ class Messageable(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     async def send(self, content: str):
+        """Send a message to the destination associated with the dataclass.
+
+        Destination will be either a channel or user.
+        Chat commands are not allowed to be invoked with this method.
+
+        Parameters
+        ------------
+        content: str
+            The content you wish to send as a message. The content must be a string.
+
+        Raises
+        --------
+        TwitchIOBException
+            Invalid destination.
+        InvalidContent
+            Invalid content.
+        """
         content = str(content)
 
         channel, user = self._get_channel()
         method = self._get_method()
 
         if not channel:
-            raise InvalidContent('Invalid channel for Messageable. Must be channel or user.')
+            raise TwitchIOBException('Invalid channel for Messageable. Must be channel or user.')
 
         if len(content) > 500:
             raise InvalidContent('Length of message can not be > 500.')
 
         original = content
 
-        if content.startswith('.'):
-            content = content.lstrip('.')
+        if content.startswith('.') or content.startswith('/'):
+            content = content.lstrip('.').lstrip('/')
 
             if content.startswith(self.__invalid__):
                 raise InvalidContent('UnAuthorised chat command for send. Use built in method(s).')
@@ -49,7 +66,6 @@ class Messageable(metaclass=abc.ABCMeta):
 
         if method != 'User':
             await self._get_socket.send(f'PRIVMSG #{channel} :{content}\r\n')
-
-        # Currently unavailable
-        # writer.write('PRIVMSG #{} :.w {} {}\r\n'.format(channel, user, content).encode('utf-8'))
+        else:
+            await self._get_socket.send(f'PRIVMSG #{channel} :.w {user} {content}\r\n')
 

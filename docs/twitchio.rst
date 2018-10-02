@@ -7,7 +7,7 @@ Objects
 
 .. automodule:: twitchio.dataclasses
     :members:
-    :undoc-members:
+    :inherited-members:
     :show-inheritance:
 
 Errors
