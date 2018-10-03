@@ -25,7 +25,7 @@ class TwitchBot:
                                        , initial_channels=initial_channels, loop=self.loop, nick=nick,
                                        client_id=client_id, **attrs)
 
-        self.http = HTTPSession(loop=loop, client_id=client_id)
+        self.http = HTTPSession(loop=self.loop, client_id=client_id)
 
         self.loop.create_task(self._prefix_setter(prefix))
 
