@@ -33,7 +33,7 @@ TwitchIO has many endpoint some which require different tokens and ID's.
     To get an IRC token easily, log in to Twitch with your account made especially for your bot,
     and visit: https://twitchapps.com/tmi/
 
-2. HTTP-Endpoints which require only a Client-ID
+2. HTTP-Endpoints which require only a Client-ID.
     Info coming soon...
 
 3. HTTP-Endpoints which require a token and scopes.

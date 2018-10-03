@@ -8,6 +8,7 @@ __version__ = '0.0.1a'
 
 import logging
 from .dataclasses import Context, Message, User, Channel
+from .errors import *
 
 try:
     from logging import NullHandler
