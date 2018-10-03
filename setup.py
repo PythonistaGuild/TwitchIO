@@ -11,6 +11,7 @@ if on_rtd:
     requirements.append('sphinxcontrib-napoleon')
     requirements.append('sphinxcontrib-asyncio')
     requirements.append('sphinxcontrib-websupport')
+    requirements.append('Pygments')
 
 version = ''
 with open('twitchio/__init__.py') as f:
