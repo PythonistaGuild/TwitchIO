@@ -211,6 +211,10 @@ class User(Messageable):
 
 
 class Context(Messageable):
+    """
+    .. note::
+        Context is only available through the commands extension.
+    """
 
     def __init__(self, message: Message, channel: Channel, user: User, **attrs):
         self.message = message
