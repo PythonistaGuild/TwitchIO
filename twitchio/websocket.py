@@ -82,6 +82,8 @@ class WebsocketConnection:
             'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"), }
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
+
+        # Future session will be _HTTP in bot, but for now we will use this
         self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token,
                                  cid=self.client_id)
 

@@ -10,6 +10,7 @@ from .errors import TwitchIOCommandError, TwitchCommandNotFound
 from .stringparser import StringParser
 from twitchio.dataclasses import Context
 from twitchio.errors import ClientError
+from twitchio.http import HTTPSession
 from twitchio.websocket import WebsocketConnection
 
 
@@ -23,6 +24,8 @@ class TwitchBot:
         self._ws = WebsocketConnection(bot=self, irc_token=irc_token, api_token=api_token
                                        , initial_channels=initial_channels, loop=self.loop, nick=nick,
                                        client_id=client_id, **attrs)
+
+        self.http = HTTPSession(loop=loop, client_id=client_id)
 
         self.loop.create_task(self._prefix_setter(prefix))
 

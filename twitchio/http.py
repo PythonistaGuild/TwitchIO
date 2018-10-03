@@ -1,3 +1,6 @@
+import aiohttp
+from typing import Union
+
 from .errors import TwitchHTTPException
 
 BASE = 'https://api.twitch.tv/helix/'
@@ -12,7 +15,28 @@ def _check_cid(func):
     return deco
 
 
+class HTTPSession:
+    """Rewrite Session (Will soon be the only Session)"""
+
+    def __init__(self, loop, **attrs):
+        self._id = attrs.get('client_id')
+        self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
+
+    async def _get_chatters(self, channel: str):
+        raise NotImplementedError
+
+    async def _get_followers(self, channel: str):
+        raise NotImplementedError
+
+    async def _get_stream(self, channel: str):
+        raise NotImplementedError
+
+    async def _get_streams(self, channels: Union[list, tuple]):
+        raise NotImplementedError
+
+
 class HttpSession:
+    """Legacy Session (Will soon be deprecated)"""
 
     def __init__(self, session, **attrs):
         self._aiosess = session
