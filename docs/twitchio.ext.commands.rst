@@ -1,10 +1,10 @@
-Twitchio Commands
+Twitchio Commands Extension
 =========================
 
 Bot
 ------------------------
 
-.. autoclass:: twitchio.commands.bot.TwitchBot
+.. autoclass:: twitchio.ext.commands.bot.TwitchBot
     :members:
     :inherited-members:
 
@@ -12,14 +12,14 @@ Bot
 Command
 -----------------------------
 
-.. autoclass:: twitchio.commands.core.TwitchCommand
+.. autoclass:: twitchio.ext.commands.core.TwitchCommand
     :members:
 
 
 Errors
 -------------------------------
 
-.. automodule:: twitchio.commands.errors
+.. automodule:: twitchio.ext.commands.errors
     :members:
     :show-inheritance:
 
@@ -27,6 +27,6 @@ Errors
 Module contents
 ---------------
 
-.. automodule:: twitchio.commands
+.. automodule:: twitchio.ext.commands
     :members:
     :show-inheritance:
