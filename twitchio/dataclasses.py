@@ -89,7 +89,24 @@ class Channel(Messageable):
         TwitchHTTPException
             Bad request while fetching streams.
         """
-        return await self._http._get_stream(self.name)
+        return await self._http._get_stream_by_name(self.name)
+
+    async def get_chatters(self):
+        """|coro|
+
+        Method which retrieves the currently active chatters on the given stream.
+
+        Returns
+        ---------
+        dict:
+            Dict containing active chatter data.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching stream chatters.
+        """
+        return await self._http._get_chatters(self.name)
 
 
 class User(Messageable):
@@ -255,3 +272,20 @@ class Context(Messageable):
             Bad request while fetching streams.
         """
         return await self.channel.get_stream()
+
+    async def get_chatters(self):
+        """|coro|
+
+        Method which retrieves the currently active chatters on the given stream.
+
+        Returns
+        ---------
+        dict:
+            Dict containing active chatter data.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching stream chatters.
+        """
+        return await self.channel.get_chatters()
