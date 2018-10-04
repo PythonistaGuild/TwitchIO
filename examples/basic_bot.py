@@ -1,4 +1,4 @@
-from twitchio import commands
+from twitchio.ext import commands
 
 # api token can be passed as test if not needed.
 # Channels is the initial channels to join, this could be a list, tuple or callable

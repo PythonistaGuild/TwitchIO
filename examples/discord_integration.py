@@ -1,5 +1,5 @@
 from discord.ext import commands
-from twitchio import commands as tcommands
+from twitchio.ext import commands as tcommands
 
 
 class DiscordCog(tcommands.TwitchBot):

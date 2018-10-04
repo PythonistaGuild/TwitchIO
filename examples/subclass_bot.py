@@ -1,4 +1,4 @@
-from twitchio import commands
+from twitchio.ext import commands
 
 
 class Bot(commands.TwitchBot):
