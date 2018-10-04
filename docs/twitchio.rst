@@ -74,6 +74,12 @@ A quick and easy bot example:
     bot = Bot()
     bot.run()
 
+Client
+----------------------------
+
+.. autoclass:: twitchio.client.TwitchClient
+    :members:
+
 Dataclasses
 ----------------------------
 Dataclasses belonging to TwitchIO.
