@@ -35,7 +35,7 @@ from typing import Union
 from .backoff import ExponentialBackoff
 from .dataclasses import *
 from .errors import WSConnectionFailure, AuthenticationError
-from .http import HttpSession
+
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -82,10 +82,7 @@ class WebsocketConnection:
             'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"), }
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
-
-        # Future session will be _HTTP in bot, but for now we will use this
-        self._http = HttpSession(session=aiohttp.ClientSession(loop=self.loop), apitok=self._api_token,
-                                 cid=self.client_id)
+        self._http = attrs.get('http')
 
     async def _update_limit(self):
 
