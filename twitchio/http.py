@@ -1,18 +1,46 @@
 import aiohttp
+import time
 from typing import Union
 
 from .errors import TwitchHTTPException
+
 
 BASE = 'https://api.twitch.tv/helix/'
 BASE5 = 'https://api.twitch.tv/kraken/'
 
 
-def _check_cid(func):
-    def deco(inst, *args, **kwargs):
-        if not inst._cid:
-            raise TwitchHTTPException('Client ID is required to access this endpoint.')
-        return func(inst, *args, **kwargs)
-    return deco
+class RateBucket:
+
+    def __init__(self):
+        self.tokens = 30
+        self.refresh = time.time()
+
+    def update_tokens(self):
+        current = time.time()
+
+        if self.tokens == 30:
+            self.refresh = current + 60
+        elif self.refresh <= current:
+            self.tokens = 30
+            self.refresh = current + 60
+
+        self.tokens -= 1
+
+        if self.tokens == 0:
+            raise Exception(f'Rate limit exceeded please try again in {self.refresh - current}s')
+        else:
+            return self.tokens
+
+
+rates = RateBucket()
+
+
+def update_bucket(func):
+    async def wrapper(*args, **kwargs):
+        rates.update_tokens()
+
+        return await func(*args, **kwargs)
+    return wrapper
 
 
 class HTTPSession:
@@ -22,21 +50,60 @@ class HTTPSession:
         self._id = attrs.get('client_id')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
 
+    @update_bucket
     async def _get_chatters(self, channel: str):
-        raise NotImplementedError
+        channel = channel.lower()
+
+        async with self._session.get(f'http://tmi.twitch.tv/group/user/{channel}/chatters') as resp:
+            if resp.status == 200:
+                data = await resp.json()
+            else:
+                raise TwitchHTTPException(f'Error retrieving chatters - Status {resp.status}')
+
+            return data
 
     async def _get_followers(self, channel: str):
         raise NotImplementedError
 
-    async def _get_stream(self, channel: str):
-        raise NotImplementedError
+    @update_bucket
+    async def _get_stream_by_id(self, channel: int):
+        url = BASE + f'streams?user_id={channel}'
+
+        async with self._session.get(url) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+            else:
+                raise TwitchHTTPException(f'Error retrieving stream - Status {resp.status}')
+
+            return data
+
+    @update_bucket
+    async def _get_stream_by_name(self, channel: str):
+        url = BASE + f'streams?user_login={channel}'
+
+        async with self._session.get(url) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+            else:
+                raise TwitchHTTPException(f'Error retrieving stream - Status {resp.status}')
+
+            return data
 
     async def _get_streams(self, channels: Union[list, tuple]):
         raise NotImplementedError
 
 
+"""
+def _check_cid(func):
+    def deco(inst, *args, **kwargs):
+        if not inst._cid:
+            raise TwitchHTTPException('Client ID is required to access this endpoint.')
+        return func(inst, *args, **kwargs)
+    return deco
+    
+    
 class HttpSession:
-    """Legacy Session (Will soon be deprecated)"""
+    # Legacy Session (deprecated)
 
     def __init__(self, session, **attrs):
         self._aiosess = session
@@ -67,24 +134,6 @@ class HttpSession:
                 return resp, await cont()
             else:
                 return resp, None
-
-    async def _get_chatters(self, name):
-        # Todo Error Handling
-
-        name = name.lower()
-
-        try:
-            resp, cont = await self.fetch('http://tmi.twitch.tv/group/user/{}/chatters'.format(name), timeout=10,
-                                          return_type='json')
-        except Exception as e:
-            raise TwitchHTTPException('Status: {} :: There was a problem retrieving chatters in channel: {}'
-                                      .format(e, name))
-
-        if resp.status == 200:
-            return cont
-        else:
-            raise TwitchHTTPException('Status: {} :: There was a problem retrieving chatters in channel: {}'
-                                      .format(resp.status, name))
 
     # TODO Error Handling
     @_check_cid
@@ -186,3 +235,4 @@ class HttpSession:
 
         if len(resp['data']) > 99:
             pass
+"""
