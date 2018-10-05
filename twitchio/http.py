@@ -1,6 +1,6 @@
 import aiohttp
 import time
-from typing import Union
+from typing import Union, Sequence
 
 from .errors import TwitchHTTPException
 
@@ -89,8 +89,60 @@ class HTTPSession:
 
             return data
 
-    async def _get_streams(self, channels: Union[list, tuple]):
-        raise NotImplementedError
+    @update_bucket
+    async def _get_streams_by_id(self, channels: Sequence[int]):
+        ids = set()
+
+        # Check if we are only getting ID's not names.
+        for chan in channels:
+            try:
+                chan = int(chan)
+            except (TypeError, ValueError):
+                pass
+            else:
+                ids.add(chan)
+
+        if len(ids) > 100:
+            raise TwitchHTTPException('Bad Request - Total channels must not exceed 100.')
+
+        ids = '&user_id='.join(str(c) for c in ids)
+        url = BASE + f'streams?user_id={ids}'
+
+        async with self._session.get(url) as resp:
+            if resp.status == 200:
+                cont = await resp.json()
+            else:
+                raise TwitchHTTPException(f'Bad Request while retrieving streams - {resp.status}')
+
+        cursor = cont['pagination']
+        if not cursor:
+            if not cont['data']:
+                return None
+
+        data = {'data': []}
+        for d in cont['data']:
+            data['data'].append(d)
+
+        while True:
+            url = BASE + 'streams?after={}'.format(cursor)
+
+            try:
+                async with self._session.get(url) as resp:
+                    cont = await resp.json()
+            except Exception:
+                break
+
+            if resp.status > 200:
+                break
+            elif not cont['data']:
+                break
+
+            cursor = cont['pagination']
+
+            for d in cont['data']:
+                data['data'].append(d)
+
+        return data
 
 
 """
