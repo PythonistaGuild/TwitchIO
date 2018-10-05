@@ -26,7 +26,7 @@ class Messageable(metaclass=abc.ABCMeta):
     async def send(self, content: str):
         """Send a message to the destination associated with the dataclass.
 
-        Destination will be either a channel or user.
+        Destination will either be a channel or user.
         Chat commands are not allowed to be invoked with this method.
 
         Parameters

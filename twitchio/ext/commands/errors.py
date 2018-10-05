@@ -12,7 +12,7 @@ class TwitchCommandNotFound(TwitchIOCommandError):
 
 
 class TwitchMissingRequiredArguments(TwitchIOCommandError):
-    """Eception raised when a required argument is not passed to a command."""
+    """Exception raised when a required argument is not passed to a command."""
 
 
 class TwitchBadArgument(TwitchIOCommandError):
