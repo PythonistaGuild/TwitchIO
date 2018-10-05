@@ -28,7 +28,7 @@ class TwitchClient:
         """
         return await self.http._get_stream_by_name(channel)
 
-    async def get_stream_by_id(self, channel: id):
+    async def get_stream_by_id(self, channel: int):
         """|coro|
 
         Method which retrieves stream information on the channel, provided it is active (Live).
