@@ -90,7 +90,7 @@ class HTTPSession:
             return data
 
     @update_bucket
-    async def _get_streams(self, channels: Sequence[Union[str, int]]):
+    async def _get_streams(self, *channels: Union[str, int]):
         names = set()
         ids = set()
 
