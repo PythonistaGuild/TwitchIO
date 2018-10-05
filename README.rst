@@ -1,8 +1,11 @@
 .. image:: logo.png?raw=true
     :align: center
-    
-.. image:: https://img.shields.io/github/license/EvieePy/TwitchIO.svg
+
 .. image:: https://img.shields.io/badge/Python-3.6%20%7C%203.7-blue.svg
+    :target: https://www.python.org
+
+.. image:: https://img.shields.io/github/license/EvieePy/TwitchIO.svg
+    :target: LICENSE
 
 An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in Python!
 
