@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Union
 from twitchio.http import HTTPSession
 
 
@@ -51,15 +51,15 @@ class TwitchClient:
         """
         return await self.http._get_stream_by_id(channel)
 
-    async def get_streams_by_id(self, channels: Sequence[int]):
+    async def get_streams(self, channels: Sequence[Union[int, str]]):
         """|coro|
 
         Method which retrieves multiple stream information on the given channels, provided they are active (Live).
 
         Parameters
         ------------
-        channels: List[int]
-            The channels in id form, to retrieve information for.
+        channels: List[Union[int, str]]
+            The channels in id or name form, to retrieve information for.
 
         Returns
         ---------
@@ -71,7 +71,7 @@ class TwitchClient:
         TwitchHTTPException
             Bad request while fetching streams.
         """
-        return await self.http._get_streams_by_id(channels)
+        return await self.http._get_streams(channels)
 
     async def get_chatters(self, channel: str):
         """|coro|

@@ -90,23 +90,19 @@ class HTTPSession:
             return data
 
     @update_bucket
-    async def _get_streams_by_id(self, channels: Sequence[int]):
-        ids = set()
+    async def _get_streams(self, channels: Sequence[Union[str, int]]):
+        args = set()
 
-        # Check if we are only getting ID's not names.
+        # Check if we are only getting ID's or names.
         for chan in channels:
-            try:
-                chan = int(chan)
-            except (TypeError, ValueError):
-                pass
-            else:
-                ids.add(chan)
+            if isinstance(chan, str) or isinstance(chan, int):
+                args.add(chan)
 
-        if len(ids) > 100:
+        if len(args) > 100:
             raise TwitchHTTPException('Bad Request - Total channels must not exceed 100.')
 
-        ids = '&user_id='.join(str(c) for c in ids)
-        url = BASE + f'streams?user_id={ids}'
+        args = "&".join(f'user_id={arg}' if isinstance(arg, int) else f'user_login={arg}' for arg in args)
+        url = BASE + f'streams?{args}'
 
         async with self._session.get(url) as resp:
             if resp.status == 200:
