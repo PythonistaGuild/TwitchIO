@@ -18,7 +18,7 @@ able to provide a solid base for designing a bot on Twitch.
 endpoints with ease, whilst of course, providing flawless use by the TwitchIO bot framework.
 
 3. **Integration into a Discord Bot:** Having a framework which allows for a Twitchbot, and Discord bot to be easily
-developed alongside and integrated into eachother, is a main focus of TwitchIO. As such, TwitchIO focuses on using
+developed alongside and integrated into each other, is a main focus of TwitchIO. As such, TwitchIO focuses on using
 methods and other conventions which will hopefully minimize conflicts. Although TwitchIO is not affiliated with the
 target discord library (discord.py), it is the library which suits best, and has been a great influence in TwitchIO's
 design.
