@@ -47,21 +47,21 @@ TwitchIO requires Python 3.5.2+
 
 Simple Usage
 ____________
-Please keep in mind TwitchIO is currently in very early **Alpha-Stages**. It will come with it's serveral kinks, flaws and bugs.
+Please keep in mind TwitchIO is currently in very early **Alpha-Stages**. It will come with it's several kinks, flaws and bugs.
 
 
 Standalone
 ~~~~~~~~~~
 .. code:: py
 
-    from twitchio import commands
+    from twitchio.ext import commands
 
 
     class Bot(commands.TwitchBot):
 
         def __init__(self):
-            super().__init__(irc_token='...', api_token='...', nick='mysterialpy', prefix='!',
-                             initial_channels=['mysterialpy'])
+            super().__init__(irc_token='...', client_id='...', nick='...', prefix='!',
+                             initial_channels=['...'])
 
         # Events don't need decorators when subclassed
         async def event_ready(self):
