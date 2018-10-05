@@ -118,13 +118,13 @@ class TwitchCommand:
     def before_invoke(self, func):
         """Decorator which registers a coroutine as a before invocation hook.
 
-        The hook will be called before the command is invoked.
+        The hook will be called before a command is invoked.
         The hook must take ctx as a sole parameter.
 
         Parameters
         ------------
         func: :ref:`coroutine <coroutine>`
-            The coroutine function to register as a before command hook.
+            The coroutine function to register as a before invocation hook.
 
         Raises
         --------

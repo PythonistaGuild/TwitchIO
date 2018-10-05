@@ -38,7 +38,8 @@ class Message:
     def tags(self):
         """The tags associated with the Message.
 
-        Could be None."""
+        Could be None.
+        """
         return self._tags
 
     @property
@@ -77,7 +78,7 @@ class Channel(Messageable):
     async def get_stream(self):
         """|coro|
 
-        Method which retrieves stream information on the channel, provided it is active(Live).
+        Method which retrieves stream information on the channel, provided it is active (Live).
 
         Returns
         ---------
@@ -147,12 +148,12 @@ class User(Messageable):
 
     @property
     def name(self):
-        """The users name."""
+        """The user's name."""
         return self._name
 
     @property
     def id(self):
-        """The users ID.
+        """The user's ID.
 
          Could be None if no Tags were received."""
         return self._id
@@ -163,7 +164,7 @@ class User(Messageable):
 
         .. note::
 
-            The channel will be valid for the data which triggered the Event. It's possible the
+            The channel will be valid for the data which triggered the Event. It is possible the
             user could be in multiple channels. E.g: The User BobRoss sends a message from the Channel ArtIsCool.
             The Channel object received will be ArtIsCool.
         """
@@ -171,7 +172,7 @@ class User(Messageable):
 
     @property
     def colour(self):
-        """The users colour.
+        """The user's colour.
 
         Could be None if no Tags were received.
         """
@@ -218,7 +219,8 @@ class User(Messageable):
     def is_mod(self):
         """A boolean indicating whether the User is a moderator of the current channel.
 
-        Could be None if no Tags were received."""
+        Could be None if no Tags were received.
+        """
         if self._mod == 1:
             return True
         if self.channel.name == self.display_name.lower():
@@ -259,7 +261,7 @@ class Context(Messageable):
     async def get_stream(self):
         """|coro|
 
-        Method which retrieves stream information on the channel stored in Context; provided it is active(Live).
+        Method which retrieves stream information on the channel stored in Context, provided it is active (Live).
 
         Returns
         ---------

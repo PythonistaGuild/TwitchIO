@@ -9,7 +9,7 @@ class TwitchClient:
     async def get_stream_by_name(self, channel: str):
         """|coro|
 
-        Method which retrieves stream information on the channel, provided it is active(Live).
+        Method which retrieves stream information on the channel, provided it is active (Live).
 
         Parameters
         ------------
@@ -31,7 +31,7 @@ class TwitchClient:
     async def get_stream_by_id(self, channel: id):
         """|coro|
 
-        Method which retrieves stream information on the channel, provided it is active(Live).
+        Method which retrieves stream information on the channel, provided it is active (Live).
 
         Parameters
         ------------

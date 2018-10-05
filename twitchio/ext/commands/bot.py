@@ -71,12 +71,12 @@ class TwitchBot(TwitchClient):
             self._aliases[alias] = command.name
 
     def run(self):
-        """A blocking call the initializes the IRC Bot event loop.
+        """A blocking call that initializes the IRC Bot event loop.
 
         This should be the last function to be called.
 
         .. warning::
-            You do not need to use this function unless are accessing the IRC Endpoints.
+            You do not need to use this function unless you are accessing the IRC Endpoints.
         .. warning::
             You do not use this function if you are using :meth:`.start`
         """
@@ -96,7 +96,7 @@ class TwitchBot(TwitchClient):
 
         An asynchronous call which starts the IRC Bot event loop.
 
-        This should only be used when integrating Twitch Bots with Discords Bots.
+        This should only be used when integrating Twitch Bots with Discord Bots.
         :meth:`.run` should be used instead.
 
         .. warning::
@@ -323,7 +323,7 @@ class TwitchBot(TwitchClient):
     async def event_error(self, error: Exception, data=None):
         """|coro|
 
-        Event called when an error occurs processing data.
+        Event called when an error occurs while processing data.
 
         Parameters
         ------------
@@ -378,7 +378,7 @@ class TwitchBot(TwitchClient):
         pass
 
     def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=None):
-        """Decorator which registers a command with the bot.
+        """Decorator which registers a command on the bot.
 
         Commands must be coroutines.
 
@@ -461,7 +461,7 @@ class TwitchBot(TwitchClient):
         Parameters
         ------------
         event: str [Optional]
-            The event to listen to in form of a string. E.g "event_message".
+            The event to listen to in the form of a string. E.g "event_message".
 
         Example
         ----------

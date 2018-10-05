@@ -147,7 +147,7 @@ class WebsocketConnection:
         Automated Authentication process.
 
         Attempts to authenticate on the Twitch servers with the provided
-        nickname and IRC Token(pass).
+        nickname and IRC Token (pass).
 
         On successful authentication, an attempt to join the provided channels is made.
 
