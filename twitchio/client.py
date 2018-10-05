@@ -54,7 +54,7 @@ class TwitchClient:
     async def get_streams_by_id(self, channels: Sequence[int]):
         """|coro|
 
-        Method which retrieves mutiple stream information on the given channels, provided they are active (Live).
+        Method which retrieves multiple stream information on the given channels, provided they are active (Live).
 
         Parameters
         ------------
@@ -63,13 +63,13 @@ class TwitchClient:
 
         Returns
         ---------
-        dict:
-            Dict containing active streamer data. Could be None if none of the streams are live.
+        list:
+            List containing active streamer data. Could be None if none of the streams are live.
 
         Raises
         --------
         TwitchHTTPException
-            Bad request while fetching stream.
+            Bad request while fetching streams.
         """
         return await self.http._get_streams_by_id(channels)
 

@@ -11,7 +11,7 @@ Installation
 TwitchIO is not currently on Pypi and thus needs to be installed using git. The following commands are the currently
 valid ways of installing TwitchIO.
 
-**TwitchIO requires Python 3.5.2+**
+**TwitchIO requires Python 3.6+**
 
 **Windows**
 
@@ -54,8 +54,8 @@ A quick and easy bot example:
     class Bot(commands.TwitchBot):
 
         def __init__(self):
-            super().__init__(irc_token='...', api_token='...', nick='mysterialpy', prefix='!',
-                             initial_channels=['mysterialpy'])
+            super().__init__(irc_token='...', client_id='...', nick='...', prefix='!',
+                             initial_channels=['...'])
 
         # Events don't need decorators when subclassed
         async def event_ready(self):
