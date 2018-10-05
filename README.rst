@@ -88,3 +88,8 @@ Standalone
 
     bot = Bot()
     bot.run()
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/61e9d573b4af415a809068333d6b437b
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/app/mysterialpy/TwitchIO?utm_source=github.com&utm_medium=referral&utm_content=EvieePy/TwitchIO&utm_campaign=Badge_Grade_Settings
