@@ -20,10 +20,10 @@ class TwitchBot(TwitchClient):
                  nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None, **attrs):
 
         self.loop = loop or asyncio.get_event_loop()
-        super().__init__(loop=self.loop, client_id=client_id)
+        super().__init__(loop=self.loop, client_id=client_id, **attrs)
 
-        self._ws = WebsocketConnection(bot=self, irc_token=irc_token, initial_channels=initial_channels,
-                                       loop=self.loop, nick=nick, http=self.http, **attrs)
+        self._ws = WebsocketConnection(bot=self, loop=self.loop, http=self.http, irc_token=irc_token,
+                                       nick=nick, initial_channels=initial_channels, **attrs)
 
         self.loop.create_task(self._prefix_setter(prefix))
 
@@ -239,6 +239,46 @@ class TwitchBot(TwitchClient):
                 await ctx.command.on_error(instance, ctx, e)
 
             await self.event_command_error(ctx, e)
+
+    async def event_raw_pubsub(self, data):
+        """|coro|
+
+        Event which fires when a PubSub scription event is received.
+
+        Parameters
+        ------------
+        data:
+            The raw data received from the PubSub event.
+
+        .. note::
+            No parsing is done on the JSON and thus the data will be raw.
+            A new event which parses the JSON will be released at a later date.
+        """
+
+    async def event_pubsub(self, data):
+        raise NotImplementedError
+
+    async def pubsub_subscribe(self, token: str, *topics):
+        """|coro|
+
+        Method which sends a LISTEN event over PubSub. This subscribes you to the topics provided.
+
+        Parameters
+        ------------
+        token: str [Required]
+            The oAuth token to use to subscribe.
+        \*topics: Union[str] [Required]
+            The topics to subscribe to.
+
+        Raises
+        --------
+        WSConnectionFailure
+            The PubSub websocket failed to connect.
+        ClientError
+            You reached the maximum amount of PubSub connections/Subscriptions.
+        """
+        connection = await self._ws._pubsub_pool.delegate(*topics)
+        await connection.subscribe(token, *topics)
 
     async def event_command_error(self, ctx, error):
         """|coro|

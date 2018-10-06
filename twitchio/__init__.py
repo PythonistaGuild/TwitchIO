@@ -9,6 +9,7 @@ __version__ = '0.0.1a'
 import logging
 from .dataclasses import Context, Message, User, Channel
 from .errors import *
+from .client import TwitchClient
 
 try:
     from logging import NullHandler

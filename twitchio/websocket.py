@@ -23,31 +23,64 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-import aiohttp
 import asyncio
+import async_timeout
+import json
 import logging
+import random
 import re
 import sys
 import traceback
+import uuid
 import websockets
 from typing import Union
 
 from .backoff import ExponentialBackoff
 from .dataclasses import *
-from .errors import WSConnectionFailure, AuthenticationError
+from .errors import WSConnectionFailure, AuthenticationError, ClientError
 
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 
+class PubSubPool:
+    POOL_MAX = 10
+
+    def __init__(self, loop, base):
+        self.loop = loop
+        self.base = base
+        self.connections = {}
+
+        for x in range(1, 11):
+            self.connections[x] = PubSub(loop=self.loop, pool=self, node=x)
+
+    async def delegate(self, *topics):
+        for x in self.connections.values():
+            if len(x._topics) == 50:
+                continue
+            elif len(x._topics) + len(topics) > 50:
+                continue
+
+            if x._websocket:
+                return x
+
+            await x.connect()
+
+            if x._websocket.open:
+                return x
+
+            raise WSConnectionFailure('Unable to delegate WebSocket. Please try again.')
+        raise ClientError('Maximum PubSub connections established.')
+
+
 class WebsocketConnection:
 
-    def __init__(self, bot, *, irc_token: str, loop: asyncio.BaseEventLoop=None, **attrs):
+    def __init__(self, bot, *, loop: asyncio.BaseEventLoop=None, **attrs):
         self._bot = bot
         self.loop = loop or asyncio.get_event_loop()
 
-        self._token = irc_token
+        self._token = attrs.get('irc_token')
         self._api_token = attrs.get('api_token')
         self.client_id = attrs.get('client_id')
         self._host = 'wss://irc-ws.chat.twitch.tv:443'
@@ -83,6 +116,8 @@ class WebsocketConnection:
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
         self._http = attrs.get('http')
+
+        self._pubsub_pool = PubSubPool(loop=loop, base=self)
 
     async def _update_limit(self):
 
@@ -305,7 +340,7 @@ class WebsocketConnection:
 
         try:
             message = Message(author=user, content=content, channel=channel, raw_data=data, tags=tags)
-        except (TypeError, KeyError) as e:
+        except (TypeError, KeyError):
             message = None
 
         if action == 'RECONNECT':
@@ -350,7 +385,11 @@ class WebsocketConnection:
         func = getattr(self._bot, f'event_{event}')
         self.loop.create_task(func(*args, **kwargs))
 
-        extras = self._bot.extra_listeners.get(f'event_{event}', [])
+        listeners = getattr(self._bot, 'extra_listeners', None)
+        if not listeners:
+            return
+
+        extras = listeners.get(f'event_{event}', [])
         ret = await asyncio.gather(*[e(*args, **kwargs) for e in extras])
 
         for e in ret:
@@ -359,3 +398,114 @@ class WebsocketConnection:
 
     async def event_error(self, error: Exception, data=None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
+
+class PubSub:
+
+    __slots__ = ('loop', '_pool', '_node', '_subscriptions', '_topics', '_websocket', '_timeout', '_last_result',
+                 '_listener')
+
+    def __init__(self, loop, pool: PubSubPool, node: int):
+        self.loop = loop
+        self._pool = pool
+        self._node = node
+        self._topics = []
+        self._websocket = None
+        self._timeout = asyncio.Event()
+
+        self._last_result = None
+
+        loop.create_task(self.handle_ping())
+        self._listener = None
+
+    @property
+    def node(self):
+        return self._node
+
+    async def reconnection(self):
+        backoff = ExponentialBackoff()
+        self._listener.cancel()
+
+        while True:
+            retry = backoff.delay()
+            log.info('Websocket closed: Retrying connection in %s seconds...', retry)
+
+            await self.connect()
+
+            if self._websocket is not None and self._websocket.open:
+                for topic in self._topics:
+                    await self.resub(topic[1], topic[0])
+
+            await asyncio.sleep(retry)
+
+    async def connect(self):
+        try:
+            self._websocket = await websockets.connect('wss://pubsub-edge.twitch.tv')
+        except Exception as e:
+            self._last_result = e
+            log.error('PubSub websocket connection failed | %s', e)
+
+            raise WSConnectionFailure('PubSub websocket connection failed. Check logs for details.')
+
+        log.info('PubSub connection successful')
+        self._listener = self.loop.create_task(self.listen())
+
+    async def handle_ping(self):
+        while True:
+            jitter = random.randint(1, 5)
+            await asyncio.sleep(240 + jitter)
+            self._timeout.clear()
+
+            if not self._websocket:
+                continue
+            if self._websocket.open:
+                log.debug('PubSub %s Sending PING payload.', self.node)
+                await self._websocket.send(json.dumps({"type": "PING"}))
+            else:
+                continue
+
+            try:
+                async with async_timeout.timeout(10):
+                    await self._timeout.wait()
+            except asyncio.TimeoutError:
+                self.loop.create_task(self.reconnection())
+
+    async def listen(self):
+        while True:
+            try:
+                data = json.loads(await self._websocket.recv())
+                self.loop.create_task(self._pool.base._dispatch('raw_pubsub', data))
+            except websockets.ConnectionClosed:
+                return self.loop.create_task(self.reconnection())
+
+            if data['type'] == 'PONG':
+                self._timeout.set()
+            else:
+                self.loop.create_task(self._pool.base._dispatch('pubsub', data))
+
+    async def subscribe(self, token: str, *topics: str):
+        nonce = uuid.uuid4().hex
+
+        for t in topics:
+            self._topics.append((t, token))
+
+        payload = {"type": "LISTEN",
+                   "nonce": nonce,
+                   "data": {"topics": [*topics],
+                            "auth_token": token}}
+
+        await self._websocket.send(json.dumps(payload))
+
+    async def resub(self, token: str, topic: str):
+        payload = {"type": "LISTEN",
+                   "data": {"topics": [topic],
+                            "auth_token": token}}
+
+        await self._websocket.send(json.dumps(payload))
+
+
+
+
+
+
+
