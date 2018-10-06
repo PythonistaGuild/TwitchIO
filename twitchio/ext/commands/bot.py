@@ -250,6 +250,8 @@ class TwitchBot(TwitchClient):
         data:
             The raw data received from the PubSub event.
 
+        Notes
+        ------
         .. note::
 
             No parsing is done on the JSON and thus the data will be raw.
