@@ -3,15 +3,15 @@ TwitchIO
 
 Support
 ---------------------------
-For support with TwitchIO, please join the official `Support Server
-<https://discord.me/twitch-api>`_.
+For support using TwitchIO, please join the official `support server
+<https://discord.me/twitch-api>`_ on `Discord <https://discordapp.com/>`_.
 
 Installation
 ---------------------------
-TwitchIO is not currently on Pypi and thus needs to be installed using git. The following commands are the currently
-valid ways of installing TwitchIO.
+TwitchIO is currently not on PyPI and thus needs to be installed using git.
+The following commands are currently the valid ways of installing TwitchIO.
 
-**TwitchIO requires Python 3.6+**
+**TwitchIO requires Python 3.6 or higher.**
 
 **Windows**
 
@@ -27,21 +27,21 @@ valid ways of installing TwitchIO.
 
 Getting Started
 ----------------------------
-TwitchIO has many endpoint some which require different tokens and ID's.
+TwitchIO uses many endpoints which may require different tokens and IDs.
 
-1. IRC (IRC Token)
-    To get an IRC token easily, log in to Twitch with your account made especially for your bot,
-    and visit: https://twitchapps.com/tmi/
+1. IRC endpoints which require an OAuth token.
+    To get a token, log in to Twitch with the bot's account and visit:
+    https://twitchapps.com/tmi/
 
-2. HTTP-Endpoints which require only a Client-ID.
-    Info coming soon...
+2. HTTP endpoints which require a client ID.
+    *To be documented.*
 
-3. HTTP-Endpoints which require a token and scopes.
-    Info coming soon...
+3. HTTP endpoints which require an OAuth token and certain scopes.
+    *To be documented.*
 
-All 3 endpoints may be used at the same time. Or you may decided to use either one as a standalone.
+All 3 endpoints may be used at the same time. Otherwise, you may choose to use any or some of the endpoints.
 
-Currently TwitchIO is at a phase which has emphasis on the IRC endpoint, and creating a framework around it.
+Currently, TwitchIO's development is at a phase which has emphasis on the IRC endpoint and creating a framework around it.
 Once this is implemented, the other 2 endpoints will be developed further.
 
 A quick and easy bot example:
@@ -85,8 +85,8 @@ Dataclasses
 Dataclasses belonging to TwitchIO.
 
 .. note::
-    These should not be created. Instead you should use the ones available
-    through the various events and the commands extension.
+    These should not be created by the user. Instead, you should use the ones
+    passed to event listeners or returned from properties and methods of TwitchIO's objects.
 
 .. autoclass:: twitchio.dataclasses.Message
     :members:
@@ -115,7 +115,7 @@ Errors
     :members:
     :show-inheritance:
 
-Module contents
+Module Contents
 ---------------
 
 .. automodule:: twitchio
