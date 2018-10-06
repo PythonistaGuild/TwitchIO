@@ -1,4 +1,4 @@
-Twitchio Commands Extension
+TwitchIO Commands Extension
 =========================
 
 Bot
@@ -24,7 +24,7 @@ Errors
     :show-inheritance:
 
 
-Module contents
+Module Contents
 ---------------
 
 .. automodule:: twitchio.ext.commands
