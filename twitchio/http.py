@@ -48,7 +48,26 @@ class HTTPSession:
 
     def __init__(self, loop, **attrs):
         self._id = attrs.get('client_id')
-        self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
+        self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id}, raise_for_status=True)
+
+    async def _get(self, url: str):
+        error_message = f'Error retrieving API data \'{url}\''
+        try:
+            body = await (await self._session.get(url)).json()
+            if 'pagination' in body:
+                cursor = body['pagination'].get('cursor')
+                while cursor:
+                    next_url = url + f'&after={cursor}'
+                    next_body = await(await self._session.get(next_url)).json()
+                    body['data'] += next_body['data']
+                    cursor = next_body['pagination'].get('cursor')
+            return body
+        except aiohttp.ClientResponseError as e:
+            # HTTP errors
+            raise TwitchHTTPException(f'{error_message} - Status {e.code}')
+        except aiohttp.ClientError:
+            # aiohttp errors
+            raise TwitchHTTPException(error_message)
 
     @staticmethod
     def _populate_channels(*channels: Union[str, int]):
@@ -80,25 +99,13 @@ class HTTPSession:
         args = "&".join(ids + names)
         url = BASE + f'users?{args}'
 
-        async with self._session.get(url) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-            else:
-                raise TwitchHTTPException(f'Bad Request while retrieving streams - {resp.status}')
-
-        return data
+        return await self._get(url)
 
     @update_bucket
     async def _get_chatters(self, channel: str):
         channel = channel.lower()
-
-        async with self._session.get(f'http://tmi.twitch.tv/group/user/{channel}/chatters') as resp:
-            if resp.status == 200:
-                data = await resp.json()
-            else:
-                raise TwitchHTTPException(f'Error retrieving chatters - Status {resp.status}')
-
-            return data
+        url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'
+        return await self._get(url)
 
     async def _get_followers(self, channel: str):
         raise NotImplementedError
@@ -106,26 +113,12 @@ class HTTPSession:
     @update_bucket
     async def _get_stream_by_id(self, channel: int):
         url = BASE + f'streams?user_id={channel}'
-
-        async with self._session.get(url) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-            else:
-                raise TwitchHTTPException(f'Error retrieving stream - Status {resp.status}')
-
-            return data
+        return await self._get(url)
 
     @update_bucket
     async def _get_stream_by_name(self, channel: str):
         url = BASE + f'streams?user_login={channel}'
-
-        async with self._session.get(url) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-            else:
-                raise TwitchHTTPException(f'Error retrieving stream - Status {resp.status}')
-
-            return data
+        return await self._get(url)
 
     @update_bucket
     async def _get_streams(self, *channels: Union[str, int]):
@@ -137,41 +130,7 @@ class HTTPSession:
         args = "&".join(ids + names)
         url = BASE + f'streams?{args}'
 
-        async with self._session.get(url) as resp:
-            if resp.status == 200:
-                cont = await resp.json()
-            else:
-                raise TwitchHTTPException(f'Bad Request while retrieving streams - {resp.status}')
-
-        cursor = cont['pagination']
-        if not cursor:
-            if not cont['data']:
-                return None
-
-        data = {'data': []}
-        for d in cont['data']:
-            data['data'].append(d)
-
-        while True:
-            url = BASE + 'streams?after={}'.format(cursor)
-
-            try:
-                async with self._session.get(url) as resp:
-                    cont = await resp.json()
-            except Exception:
-                break
-
-            if resp.status > 200:
-                break
-            elif not cont['data']:
-                break
-
-            cursor = cont['pagination']
-
-            for d in cont['data']:
-                data['data'].append(d)
-
-        return data
+        return await self._get(url)
 
 
 """
