@@ -243,7 +243,7 @@ class TwitchBot(TwitchClient):
     async def event_raw_pubsub(self, data):
         """|coro|
 
-        Event which fires when a PubSub scription event is received.
+        Event which fires when a PubSub subscription event is received.
 
         Parameters
         ------------
@@ -251,6 +251,7 @@ class TwitchBot(TwitchClient):
             The raw data received from the PubSub event.
 
         .. note::
+
             No parsing is done on the JSON and thus the data will be raw.
             A new event which parses the JSON will be released at a later date.
         """
@@ -430,12 +431,6 @@ class TwitchBot(TwitchClient):
             The command aliases. This must be a list or tuple.
         cls: class [Optional]
             The custom command class to override the default class. This must be similar to :class:`.Command`.
-
-        Example
-        ---------
-        .. code:: py
-
-            import twitchio.commands
         """
         if cls and not inspect.isclass(cls):
             raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
