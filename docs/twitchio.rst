@@ -48,7 +48,7 @@ A quick and easy bot example:
 
 .. code:: py
 
-    from twitchio import commands
+    from twitchio.ext import commands
 
 
     class Bot(commands.TwitchBot):
