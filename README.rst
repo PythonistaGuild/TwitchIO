@@ -12,35 +12,21 @@
 
 An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in Python!
 
+Documentation
+---------------------------
 Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/rewrite/twitchio.html>`_
-Official Support Server: `Click Here! <https://discord.me/twitch-api>`_
 
-Current Development and Goals
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-TwitchIO has **three** main initial goals in mind. All of which will hopefully, combine to make the
-eventual release version of TwitchIO.
-
-1. **An IRC Bot framework for Twitch:** This will be the basis of TwitchIO. A framework which is easy to use, and is
-able to provide a solid base for designing a bot on Twitch.
-
-2. **A non-IRC related API Wrapper:** The goal here is to have a wrapper which will allow users to access non-IRC
-endpoints with ease, whilst of course, providing flawless use by the TwitchIO bot framework.
-
-3. **Integration into a Discord Bot:** Having a framework which allows for a Twitchbot, and Discord bot to be easily
-developed alongside and integrated into each other, is a main focus of TwitchIO. As such, TwitchIO focuses on using
-methods and other conventions which will hopefully minimize conflicts. Although TwitchIO is not affiliated with the
-target discord library (discord.py), it is the library which suits best, and has been a great influence in TwitchIO's
-design.
-
-With all that being said, please enjoy the library (in it's current state), and feel free to suggest changes or fixes
-as and where you see fit. Special thanks should be made to Rapptz(https://github.com/Rapptz/discord.py) and
-Discord.py for providing a high quality and very well structured library and code (better than I could ever do)
-which has certainly influenced the design of TwitchIO.
-
+Support
+---------------------------
+For support using TwitchIO, please join the official `support server
+<https://discord.me/twitch-api>`_ on `Discord <https://discordapp.com/>`_.
 
 Installation
-------------
-TwitchIO requires Python 3.5.2+
+---------------------------
+TwitchIO is currently not on PyPI and thus needs to be installed using git.
+The following commands are currently the valid ways of installing TwitchIO.
+
+**TwitchIO requires Python 3.6 or higher.**
 
 **Windows**
 
@@ -54,13 +40,27 @@ TwitchIO requires Python 3.5.2+
 
     python3 -m pip install git+https://github.com/MysterialPy/TwitchIO.git
 
-Simple Usage
-____________
-Please keep in mind TwitchIO is currently in very early **Alpha-Stages**. It will come with it's several kinks, flaws and bugs.
+Getting Started
+----------------------------
+TwitchIO uses many endpoints which may require different tokens and IDs.
 
+1. IRC endpoints which require an OAuth token.
+    To get a token, log in to Twitch with the bot's account and visit:
+    https://twitchapps.com/tmi/
 
-Standalone
-~~~~~~~~~~
+2. HTTP endpoints which require a client ID.
+    *To be documented.*
+
+3. HTTP endpoints which require an OAuth token and certain scopes.
+    *To be documented.*
+
+All 3 endpoints may be used at the same time. Otherwise, you may choose to use any or some of the endpoints.
+
+Currently, TwitchIO's development is at a phase which has emphasis on the IRC endpoint and creating a framework around it.
+Once this is implemented, the other 2 endpoints will be developed further.
+
+A quick and easy bot example:
+
 .. code:: py
 
     from twitchio.ext import commands
