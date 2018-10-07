@@ -31,7 +31,6 @@ import random
 import re
 import sys
 import traceback
-import uuid
 import websockets
 from typing import Union
 
@@ -483,12 +482,12 @@ class PubSub:
                 self._timeout.set()
             elif data['type'] == 'RECONNECT':
                 self.loop.create_task(self.reconnection())
+            else:
+                await self.process_payload(data)
 
             #self.loop.create_task(self._pool.base._dispatch('pubsub', data))
 
-    async def subscribe(self, token: str, *topics: str):
-        nonce = uuid.uuid4().hex
-
+    async def subscribe(self, token: str, nonce: str, *topics: str):
         for t in topics:
             self._topics.append((t, token))
 
@@ -506,9 +505,7 @@ class PubSub:
 
         await self._websocket.send(json.dumps(payload))
 
-    async def process_payload(self, data):
-        # Test Test
-        pass
+
 
 
 

@@ -2,6 +2,7 @@ import asyncio
 import inspect
 import sys
 import traceback
+import uuid
 
 from typing import Union
 
@@ -279,9 +280,18 @@ class TwitchBot(TwitchClient):
             The PubSub websocket failed to connect.
         ClientError
             You reached the maximum amount of PubSub connections/Subscriptions.
+
+        Returns
+        ---------
+        nonce: str
+            The nonce associated with this subscription. Useful for validating responses.
         """
+        nonce = uuid.uuid4().hex
+
         connection = await self._ws._pubsub_pool.delegate(*topics)
-        await connection.subscribe(token, *topics)
+        await connection.subscribe(token, nonce, *topics)
+
+        return nonce
 
     async def event_command_error(self, ctx, error):
         """|coro|
