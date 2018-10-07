@@ -435,6 +435,7 @@ class PubSub:
             if self._websocket is not None and self._websocket.open:
                 for topic in self._topics:
                     await self.resub(topic[1], topic[0])
+                return
 
             await asyncio.sleep(retry)
 
