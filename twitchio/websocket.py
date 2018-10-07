@@ -483,8 +483,8 @@ class PubSub:
                 self._timeout.set()
             elif data['type'] == 'RECONNECT':
                 self.loop.create_task(self.reconnection())
-            else:
-                self.loop.create_task(self._pool.base._dispatch('pubsub', data))
+
+            #self.loop.create_task(self._pool.base._dispatch('pubsub', data))
 
     async def subscribe(self, token: str, *topics: str):
         nonce = uuid.uuid4().hex
@@ -505,6 +505,10 @@ class PubSub:
                             "auth_token": token}}
 
         await self._websocket.send(json.dumps(payload))
+
+    async def process_payload(self, data):
+        pass
+
 
 
 
