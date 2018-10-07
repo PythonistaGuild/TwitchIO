@@ -427,7 +427,7 @@ class PubSub:
 
         while True:
             retry = backoff.delay()
-            log.info('Websocket closed: Retrying connection in %s seconds...', retry)
+            log.info('PubSub Websocket closed: Retrying connection in %s seconds...', retry)
 
             await self.connect()
 
@@ -447,7 +447,7 @@ class PubSub:
 
             raise WSConnectionFailure('PubSub websocket connection failed. Check logs for details.')
 
-        log.info('PubSub connection successful')
+        log.info('PubSub %s connection successful', self.node)
         self._listener = self.loop.create_task(self.listen())
 
     async def handle_ping(self):
@@ -479,11 +479,11 @@ class PubSub:
                 return self.loop.create_task(self.reconnection())
 
             if data['type'] == 'PONG':
+                log.debug('PubSub %s received PONG payload.', self.node)
                 self._timeout.set()
             elif data['type'] == 'RECONNECT':
+                log.debug('PubSub %s received RECONNECT payload... Attempting reconnection', self.node)
                 self.loop.create_task(self.reconnection())
-            else:
-                await self.process_payload(data)
 
             #self.loop.create_task(self._pool.base._dispatch('pubsub', data))
 
