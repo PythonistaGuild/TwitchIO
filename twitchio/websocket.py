@@ -480,6 +480,8 @@ class PubSub:
 
             if data['type'] == 'PONG':
                 self._timeout.set()
+            elif data['type'] == 'RECONNECT':
+                self.loop.create_task(self.reconnection())
             else:
                 self.loop.create_task(self._pool.base._dispatch('pubsub', data))
 
