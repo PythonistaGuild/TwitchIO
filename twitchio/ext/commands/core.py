@@ -1,7 +1,6 @@
 import inspect
 from typing import Union
 
-from twitchio.dataclasses import Context
 from .errors import *
 
 

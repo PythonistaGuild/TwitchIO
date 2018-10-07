@@ -1,6 +1,6 @@
 import aiohttp
 import time
-from typing import Union, Sequence
+from typing import Union
 
 from .errors import TwitchHTTPException
 
