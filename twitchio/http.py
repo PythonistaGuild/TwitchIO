@@ -70,6 +70,7 @@ class HTTPSession:
 
         return names, ids
 
+    @update_bucket
     async def _get_users(self, *users: Union[str, int]):
         names, ids = self._populate_channels(*users)
 
