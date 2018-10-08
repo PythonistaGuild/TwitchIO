@@ -18,13 +18,14 @@ from twitchio.websocket import WebsocketConnection
 
 
 class TwitchBot(TwitchClient):
-    """.. note::
+    """
+    .. note::
 
         To enable the webhook server, the webhook_server parameter must be True.
         A local_host, external_host and port must also be provided.
 
         An optional parameter `callback` may be passed. This should be the page Twitch sends data to.
-        A long random string, such as hex, is advised e.g 2t389hth892t3h898hweiogtieo.
+        A long random string, such as hex, is advised e.g `2t389hth892t3h898hweiogtieo`
     """
 
     def __init__(self, irc_token: str, api_token: str=None, *, client_id: str=None, prefix: Union[list, tuple, str],
@@ -286,6 +287,9 @@ class TwitchBot(TwitchClient):
         ---------
         response
             The response received from the POST request.
+
+        Notes
+        -------
 
         .. note::
 
