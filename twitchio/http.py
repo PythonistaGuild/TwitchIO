@@ -52,22 +52,30 @@ class HTTPSession:
 
     async def _get(self, url: str):
         error_message = f'Error retrieving API data \'{url}\''
+
         try:
             body = await (await self._session.get(url)).json()
+
             if 'pagination' in body:
                 cursor = body['pagination'].get('cursor')
+
                 while cursor:
                     next_url = url + f'&after={cursor}'
                     next_body = await(await self._session.get(next_url)).json()
+                    rates.update_tokens()
                     body['data'] += next_body['data']
                     cursor = next_body['pagination'].get('cursor')
-            return body
+
         except aiohttp.ClientResponseError as e:
             # HTTP errors
             raise TwitchHTTPException(f'{error_message} - Status {e.code}')
+
         except aiohttp.ClientError:
             # aiohttp errors
             raise TwitchHTTPException(error_message)
+
+        else:
+            return body
 
     @staticmethod
     def _populate_channels(*channels: Union[str, int]):
