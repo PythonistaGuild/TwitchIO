@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 import sys
+import threading
 import traceback
 import uuid
 
@@ -12,19 +13,41 @@ from .stringparser import StringParser
 from twitchio.client import TwitchClient
 from twitchio.dataclasses import Context
 from twitchio.errors import ClientError
+from twitchio.webhook import TwitchWebhookServer
 from twitchio.websocket import WebsocketConnection
 
 
 class TwitchBot(TwitchClient):
+    """.. note::
+
+        To enable the webhook server, the webhook_server parameter must be True.
+        A local_host, external_host and port must also be provided.
+
+        An optional parameter `callback` may be passed. This should be the page Twitch sends data to.
+        A long random string, such as hex, is advised e.g 2t389hth892t3h898hweiogtieo.
+    """
 
     def __init__(self, irc_token: str, api_token: str=None, *, client_id: str=None, prefix: Union[list, tuple, str],
-                 nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None, **attrs):
+                 nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None,
+                 webhook_server: bool=False, local_host: str=None, external_host: str=None, callback: str=None,
+                 port: int=None, **attrs):
 
         self.loop = loop or asyncio.get_event_loop()
         super().__init__(loop=self.loop, client_id=client_id, **attrs)
 
         self._ws = WebsocketConnection(bot=self, loop=self.loop, http=self.http, irc_token=irc_token,
                                        nick=nick, initial_channels=initial_channels, **attrs)
+
+        self._webhook_server = None
+        if webhook_server:
+            self._webhook_server = TwitchWebhookServer(bot=self,
+                                                       local=local_host,
+                                                       external=external_host,
+                                                       callback=callback,
+                                                       port=port)
+            loop = asyncio.new_event_loop()
+            thread = threading.Thread(target=self._webhook_server.run_server, args=(loop, ))
+            thread.start()
 
         self.loop.create_task(self._prefix_setter(prefix))
 
@@ -241,6 +264,59 @@ class TwitchBot(TwitchClient):
 
             await self.event_command_error(ctx, e)
 
+    async def webhook_subscribe(self, topic: str, callback: str=None):
+        """|coro|
+
+        Subscribe to WebHook topics.
+
+        Parameters
+        ------------
+        topic: str [Required]
+            The topic you would like to subscribe to.
+        callback: str [Optional]
+            The callback the subscription flow should use. If you are using the built-in server, you don't need
+            to worry about this. The callback must be a full address. e.g http://twitch.io/callback
+
+        Raises
+        --------
+        ClientError
+            No callback was able to be used.
+
+        Returns
+        ---------
+        response
+            The response received from the POST request.
+
+        .. note::
+
+            A list of topics can be found here: https://dev.twitch.tv/docs/api/webhooks-reference/
+        """
+        if not self._webhook_server and callback:
+            raise ClientError('A valid callback is required to subscribe to webhook events.')
+
+        if not callback:
+            callback = f'{self._webhook_server.external}:{self._webhook_server.port}/{self._webhook_server.callback}'
+
+        payload = {"hub.mode": "subscribe",
+                   "hub.topic": topic,
+                   "hub.callback": callback,
+                   "hub.lease_seconds": 864000}
+
+        async with self.http._session.post('https://api.twitch.tv/helix/webhooks/hub', data=payload) as resp:
+            return resp
+
+    async def event_webhook(self, data):
+        """|coro|
+
+        Event which is fired when a message from a Webhook subscription is received.
+
+        Parameters
+        ------------
+        data: dict
+            The webhook data as JSON.
+        """
+        pass
+
     async def event_raw_pubsub(self, data):
         """|coro|
 
@@ -258,6 +334,7 @@ class TwitchBot(TwitchClient):
             No parsing is done on the JSON and thus the data will be raw.
             A new event which parses the JSON will be released at a later date.
         """
+        pass
 
     async def event_pubsub(self, data):
         raise NotImplementedError
