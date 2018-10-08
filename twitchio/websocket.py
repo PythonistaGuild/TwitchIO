@@ -505,12 +505,3 @@ class PubSub:
 
         await self._websocket.send(json.dumps(payload))
 
-
-
-
-
-
-
-
-
-

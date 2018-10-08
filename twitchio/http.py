@@ -50,6 +50,43 @@ class HTTPSession:
         self._id = attrs.get('client_id')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
 
+    @staticmethod
+    def _populate_channels(*channels: Union[str, int]):
+        names = set()
+        ids = set()
+
+        for channel in channels:
+            if isinstance(channel, str):
+                if channel.isdigit():
+                    # Handle ids in the string form
+                    ids.add(int(channel))
+                else:
+                    names.add(channel)
+            elif isinstance(channel, int):
+                ids.add(channel)
+
+        if len(names | ids) > 100:
+            raise TwitchHTTPException('Bad Request - Total channels must not exceed 100.')
+
+        return names, ids
+
+    async def _get_users(self, *users: Union[str, int]):
+        names, ids = self._populate_channels(*users)
+
+        ids = [f'id={c}' for c in ids]
+        names = [f'login={c}' for c in names]
+
+        args = "&".join(ids + names)
+        url = BASE + f'users?{args}'
+
+        async with self._session.get(url) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+            else:
+                raise TwitchHTTPException(f'Bad Request while retrieving streams - {resp.status}')
+
+        return data
+
     @update_bucket
     async def _get_chatters(self, channel: str):
         channel = channel.lower()
@@ -91,21 +128,7 @@ class HTTPSession:
 
     @update_bucket
     async def _get_streams(self, *channels: Union[str, int]):
-        names = set()
-        ids = set()
-
-        for channel in channels:
-            if isinstance(channel, str):
-                if channel.isdigit():
-                    # Handle ids in the string form
-                    ids.add(int(channel))
-                else:
-                    names.add(channel)
-            elif isinstance(channel, int):
-                ids.add(channel)
-
-        if len(names | ids) > 100:
-            raise TwitchHTTPException('Bad Request - Total channels must not exceed 100.')
+        names, ids = self._populate_channels(*channels)
 
         ids = [f'user_id={c}' for c in ids]
         names = [f'user_login={c}' for c in names]

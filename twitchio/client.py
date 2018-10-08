@@ -9,6 +9,33 @@ class TwitchClient:
         loop = loop or asyncio.get_event_loop()
         self.http = HTTPSession(loop=loop, client_id=client_id)
 
+    async def get_users(self, *users: Union[str, int]):
+        """|coro|
+
+        Method which retrieves user information on the specified names/ids.
+
+        Parameters
+        ------------
+        \*users: str [Required]
+            The user name(s)/id(s) to retrieve data for.
+
+        Returns
+        ---------
+        dict:
+            Dict containing user(s) data.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching stream.
+
+        Notes
+        -------
+        .. note::
+            This method accepts both user ids or names, or a combination of both. Multiple names/ids may be passed.
+        """
+        return await self.http._get_users(*users)
+
     async def get_stream_by_name(self, channel: str):
         """|coro|
 
