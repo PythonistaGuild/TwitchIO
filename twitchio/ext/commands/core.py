@@ -57,7 +57,7 @@ class TwitchCommand:
         except StopIteration:
             raise TwitchMissingRequiredArguments(f'self or ctx is a required argument which is missing.')
 
-        for name, param in iterator:
+        for _, param in iterator:
             index += 1
             if param.kind == param.POSITIONAL_OR_KEYWORD:
                 try:

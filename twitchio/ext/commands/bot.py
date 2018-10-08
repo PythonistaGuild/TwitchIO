@@ -62,7 +62,7 @@ class TwitchBot(TwitchClient):
     def _init_methods(self):
         commands = inspect.getmembers(self)
 
-        for name, obj in commands:
+        for _, obj in commands:
             if not isinstance(obj, TwitchCommand):
                 continue
 
