@@ -1,3 +1,5 @@
+import datetime
+
 from .abcs import Messageable
 
 
@@ -44,8 +46,15 @@ class Message:
 
     @property
     def timestamp(self):
-        """The Twitch timestamp for this Message."""
-        return self._timestamp
+        """The Twitch timestamp for this Message.
+
+        Returns
+        ---------
+        timestamp:
+            UTC datetime object of the Twitch timestamp.
+        """
+        timestamp = datetime.datetime.utcfromtimestamp(self._timestamp/1000)
+        return timestamp
 
 
 class Channel(Messageable):
