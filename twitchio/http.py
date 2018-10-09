@@ -55,15 +55,22 @@ class HTTPSession:
         try:
             body = await (await self._session.get(url)).json()
 
-            if 'pagination' in body:
-                cursor = body['pagination'].get('cursor')
+            if not body['data']:
+                return body
 
-                while cursor:
+            if 'pagination' in body:
+                cursor = body['pagination'].get('cursor', None)
+
+                while True:
                     next_url = url + f'&after={cursor}'
                     next_body = await(await self._session.get(next_url)).json()
                     rates.update_tokens()
+
+                    if not next_body['data']:
+                        break
+
                     body['data'] += next_body['data']
-                    cursor = next_body['pagination'].get('cursor')
+                    cursor = next_body['pagination'].get('cursor', None)
 
         except aiohttp.ClientResponseError as e:
             # HTTP errors
