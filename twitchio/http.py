@@ -84,7 +84,7 @@ class HTTPSession:
             return body
 
     @staticmethod
-    def _populate_channels(*channels: Union[str, int]):
+    def _populate_entries(*channels: Union[str, int]):
         names = set()
         ids = set()
 
@@ -99,13 +99,13 @@ class HTTPSession:
                 ids.add(channel)
 
         if len(names | ids) > 100:
-            raise TwitchHTTPException('Bad Request - Total channels must not exceed 100.')
+            raise TwitchHTTPException('Bad Request - Total entries must not exceed 100.')
 
         return names, ids
 
     @update_bucket
     async def _get_users(self, *users: Union[str, int]):
-        names, ids = self._populate_channels(*users)
+        names, ids = self._populate_entries(*users)
 
         ids = [f'id={c}' for c in ids]
         names = [f'login={c}' for c in names]
@@ -136,7 +136,7 @@ class HTTPSession:
 
     @update_bucket
     async def _get_streams(self, *channels: Union[str, int]):
-        names, ids = self._populate_channels(*channels)
+        names, ids = self._populate_entries(*channels)
 
         ids = [f'user_id={c}' for c in ids]
         names = [f'user_login={c}' for c in names]
@@ -148,7 +148,7 @@ class HTTPSession:
 
     @update_bucket
     async def _get_games(self, *games: Union[str, int]):
-        names, ids = self._populate_channels(*games)
+        names, ids = self._populate_entries(*games)
 
         ids = [f'id={g}' for g in ids]
         names= [f'name={g}' for g in names]

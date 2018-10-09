@@ -115,7 +115,7 @@ class TwitchClient:
         Returns
         ---------
         list:
-            List containing game information. could be None if no games matched.
+            List containing game information. Could be None if no games matched.
 
         Raises
         --------
