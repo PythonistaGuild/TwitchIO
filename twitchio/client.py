@@ -102,6 +102,28 @@ class TwitchClient:
         """
         return await self.http._get_streams(*channels)
 
+    async def get_games(self, *games: Union[str, int]):
+        """|coro|
+
+        Method which retrieves games information on the given game ID(s)/Name(s).
+
+        Parameters
+        ------------
+        \*games: Union[str, int] [Required]
+            The games in either id or name form to retrieve information for.
+
+        Returns
+        ---------
+        list:
+            List containing game information. could be None if no games matched.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching games.
+        """
+        return await self.http._get_games(*games)
+
     async def get_chatters(self, channel: str):
         """|coro|
 

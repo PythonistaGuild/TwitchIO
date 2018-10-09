@@ -146,3 +146,16 @@ class HTTPSession:
 
         return await self._get(url)
 
+    @update_bucket
+    async def _get_games(self, *games: Union[str, int]):
+        names, ids = self._populate_channels(*games)
+
+        ids = [f'id={g}' for g in ids]
+        names= [f'name={g}' for g in names]
+
+        args = "&".join(ids + names)
+        url = BASE + f'games?{args}'
+
+        return await self._get(url)
+
+
