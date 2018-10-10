@@ -52,7 +52,7 @@ class HelixHTTPSession:
         self._bucket = Bucket()
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
 
-    async def get(self, url, params=None, *, limit=None):
+    async def request(self, method, url, *, params=None, limit=None, **kwargs):
         data = []
 
         params = params or []
@@ -76,7 +76,11 @@ class HelixHTTPSession:
 
             params.append(('first', get_limit()))
 
-            body = await self._request(url, params=params)
+            body, is_text = await self._request(method, url, params=params, **kwargs)
+
+            if is_text:
+                return body
+
             if not body['data']:
                 break
 
@@ -94,14 +98,14 @@ class HelixHTTPSession:
 
         return data
 
-    async def _request(self, url, **kwargs):
+    async def _request(self, method, url, **kwargs):
         reason = None
 
         for attempt in range(5):
             if self._bucket.limited:
                 await self._bucket.wait_reset()
 
-            async with self._session.get(url, **kwargs) as resp:
+            async with self._session.request(method, url, **kwargs) as resp:
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
                     await asyncio.sleep(2 ** attempt + 1)
@@ -113,7 +117,10 @@ class HelixHTTPSession:
                 self._bucket.update(reset=reset, remaining=remaining)
 
                 if 200 <= resp.status < 300:
-                    return await resp.json()
+                    if resp.headers.get('content-type') == 'application/json':
+                        return await resp.json(), False
+
+                    return await resp.text(encoding='utf-8'), True
 
                 if resp.status == 429:
                     reason = 'Ratelimit Reached'
@@ -147,7 +154,7 @@ class HelixHTTPSession:
         names, ids = self._populate_entries(*users)
         params = [('id', x) for x in ids] + [('login', x) for x in names]
 
-        return await self.get('/users', params=params)
+        return await self.request('GET', '/users', params=params)
 
     async def get_followers(self, channel: str):
         raise NotImplementedError
@@ -165,13 +172,26 @@ class HelixHTTPSession:
         if language is not None:
             params.append(('language', language))
 
-        return await self.get('/streams', params=params, limit=limit)
+        return await self.request('GET', '/streams', params=params, limit=limit)
 
     async def get_games(self, *games: Union[str, int]):
         names, ids = self._populate_entries(*games)
         params = [('id', x) for x in ids] + [('name', x) for x in names]
 
-        return await self.get('/games', params=params)
+        return await self.request('GET', '/games', params=params)
 
     async def get_top_games(self, limit=None):
-        return await self.get('/games/top', limit=limit)
+        return await self.request('GET', '/games/top', limit=limit)
+
+    async def modify_webhook_subscription(self, *, callback, mode, topic, lease_seconds, secret=None):
+        data = {
+            'hub.callback': callback,
+            'hub.mode': mode,
+            'hub.topic': topic,
+            'hub.lease_seconds': lease_seconds
+        }
+
+        if secret is not None:
+            data['secret'] = secret
+
+        return await self.request('POST', '/webhooks/hub', json=data)

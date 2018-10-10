@@ -159,3 +159,36 @@ class TwitchClient:
         """
 
         return await self.http.get_top_games(limit=limit)
+
+    async def modify_webhook_subscription(self, *, callback, mode, topic, lease_seconds=0, secret=None):
+        """|coro|
+
+        Creates a webhook subscription.
+
+        Parameters
+        ----------
+        callback: str
+            The URL which will be called to verify the subscripton and on callback.
+        mode: :class:`.WebhookMode`
+            Mode which describes whether the subscription should be created or not.
+        topic: :class:`.WebhookTopic`
+            Details about the subscription.
+        lease_seconds: Optional[int]
+            How many seconds the subscription should last. Defaults to 0, maximum is 846000.
+        secret: Optional[str]
+            A secret string which Twitch will use to add the `X-Hub-Signature` header to webhook requests.
+            You can use this to verify the POST request came from Twitch using `sha256(secret, body)`.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while modifying the subscription.
+        """
+
+        await self.http.modify_webhook_subscription(
+            callback=callback,
+            mode=mode.name,
+            topic=topic.as_uri(),
+            lease_seconds=lease_seconds,
+            secret=secret,
+        )
