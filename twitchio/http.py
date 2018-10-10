@@ -51,7 +51,6 @@ class HelixHTTPSession:
         url = f'{self.BASE}{url}'
 
         cursor = None
-        can_paginate = True
 
         def reached_limit():
             return limit and len(data) >= limit
@@ -63,7 +62,7 @@ class HelixHTTPSession:
             to_get = limit - len(data)
             return str(to_get) if to_get < 100 else '100'
 
-        while can_paginate and not reached_limit():
+        while not reached_limit():
             if cursor is not None:
                 params.append(('after', cursor))
 
