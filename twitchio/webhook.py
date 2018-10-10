@@ -105,7 +105,7 @@ class UserChanged(WebhookTopic):
 
     __slots__ = ('id',)
 
-    def __iter__(self, id):
+    def __init__(self, id):
         self.id = id
 
 
@@ -114,7 +114,7 @@ class GameAnalytics(WebhookTopic):
 
     __slots__ = ('game_id',)
 
-    def __int__(self, game_id):
+    def __init__(self, game_id):
         self.game_id = game_id
 
 
