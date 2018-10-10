@@ -99,7 +99,9 @@ class Channel(Messageable):
         TwitchHTTPException
             Bad request while fetching streams.
         """
-        return await self._http._get_stream_by_name(self.name)
+
+        data = await self._http.get_streams(channels=[self.name])
+        return data[0]
 
     async def get_chatters(self):
         """|coro|
@@ -116,7 +118,8 @@ class Channel(Messageable):
         TwitchHTTPException
             Bad request while fetching stream chatters.
         """
-        return await self._http._get_chatters(self.name)
+
+        raise NotImplementedError
 
 
 class User(Messageable):
