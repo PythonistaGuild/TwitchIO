@@ -107,7 +107,7 @@ class HelixHTTPSession:
                     reason = 'Ratelimit Reached'
                     continue  # the Bucket will handle waiting
 
-                raise TwitchHTTPException(f'Failed to fulfil request ({resp.status}).', reason)
+                raise TwitchHTTPException(f'Failed to fulfil request ({resp.status}).', resp.reason)
 
         raise TwitchHTTPException('Failed to reach Twitch API', reason)
 
