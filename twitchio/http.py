@@ -86,7 +86,11 @@ class HelixHTTPSession:
                 params.pop()
 
             data += body['data']
-            cursor = body['pagination'].get('cursor', None)
+
+            try:
+                cursor = body['pagination'].get('cursor', None)
+            except KeyError:
+                break
 
         return data
 
