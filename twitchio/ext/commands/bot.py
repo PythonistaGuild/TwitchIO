@@ -322,8 +322,6 @@ class TwitchBot(TwitchClient):
 
         Warning
         ---------
-        .. warning::
-
             This event is only applicable when using the built in webhook server.
         """
         pass
