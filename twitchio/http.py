@@ -95,19 +95,19 @@ class HelixHTTPSession:
                     await asyncio.sleep(2 ** attempt + 1)
                     continue
 
-                data = await resp.json()
-
                 reset = resp.headers.get('Ratelimit-Reset')
                 remaining = resp.headers.get('Ratelimit-Remaining')
 
                 self._bucket.update(reset=reset, remaining=remaining)
 
                 if 200 <= resp.status < 300:
-                    return data
+                    return await resp.json()
 
                 if resp.status == 429:
                     reason = 'Ratelimit Reached'
                     continue  # the Bucket will handle waiting
+
+                raise TwitchHTTPException(f'Failed to fulfil request ({resp.status}).', reason)
 
         raise TwitchHTTPException('Failed to reach Twitch API', reason)
 
