@@ -148,7 +148,6 @@ class HelixHTTPSession:
         else:
             params = []
 
-        print(params)
         if game_id is not None:
             params.append(('game_id', str(game_id)))
 
