@@ -1,87 +1,116 @@
-import aiohttp
+import asyncio
 import time
 from typing import Union
+
+import aiohttp
 
 from .errors import TwitchHTTPException
 
 
-BASE = 'https://api.twitch.tv/helix/'
-BASE5 = 'https://api.twitch.tv/kraken/'
-
-
-class RateBucket:
+class Bucket:
+    LIMIT = 30
 
     def __init__(self):
-        self.tokens = 30
-        self.refresh = time.time()
+        self.tokens = 0
+        self.reset = time.time() + 60
 
-    def update_tokens(self):
-        current = time.time()
+    @property
+    def limited(self):
+        return self.tokens == self.LIMIT
 
-        if self.tokens == 30:
-            self.refresh = current + 60
-        elif self.refresh <= current:
-            self.tokens = 30
-            self.refresh = current + 60
+    def update(self, *, reset=None, remaining=None):
+        now = time.time()
 
-        self.tokens -= 1
+        if reset:
+            self.reset = int(reset)
 
-        if self.tokens == 0:
-            raise Exception(f'Rate limit exceeded please try again in {self.refresh - current}s')
+        if remaining:
+            self.tokens = self.LIMIT - int(remaining)
         else:
-            return self.tokens
+            self.tokens -= 1
+
+    async def wait_reset(self):
+        now = time.time()
+
+        await asyncio.sleep(self.reset - now)
 
 
-rates = RateBucket()
-
-
-def update_bucket(func):
-    async def wrapper(*args, **kwargs):
-        rates.update_tokens()
-
-        return await func(*args, **kwargs)
-    return wrapper
-
-
-class HTTPSession:
+class HelixHTTPSession:
+    BASE = 'https://api.twitch.tv/helix'
 
     def __init__(self, loop, **attrs):
         self._id = attrs.get('client_id')
-        self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id}, raise_for_status=True)
 
-    async def _get(self, url: str):
-        error_message = f'Error retrieving API data \'{url}\''
+        self._bucket = Bucket()
+        self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
 
-        try:
-            body = await (await self._session.get(url)).json()
+    async def get(self, url, params=None, *, limit=None):
+        data = []
 
+        params = params or []
+        url = f'{self.BASE}{url}'
+
+        cursor = None
+        can_paginate = True
+
+        def reached_limit():
+            return limit and len(data) >= limit
+
+        def get_limit():
+            if limit is None:
+                return '100'
+
+            to_get = limit - len(data)
+            return str(to_get) if to_get < 100 else '100'
+
+        while can_paginate and not reached_limit():
+            if cursor is not None:
+                params.append(('after', cursor))
+
+            params.append(('first', get_limit()))
+
+            body = await self._request(url, params=params)
             if not body['data']:
-                return body
+                break
 
-            if 'pagination' in body:
-                cursor = body['pagination'].get('cursor', None)
+            params.pop()  # remove the first param
 
-                while True:
-                    next_url = url + f'&after={cursor}'
-                    next_body = await(await self._session.get(next_url)).json()
-                    rates.update_tokens()
+            if cursor is not None:
+                params.pop()
 
-                    if not next_body['data']:
-                        break
+            data += body['data']
+            cursor = body['pagination'].get('cursor', None)
 
-                    body['data'] += next_body['data']
-                    cursor = next_body['pagination'].get('cursor', None)
+        return data
 
-        except aiohttp.ClientResponseError as e:
-            # HTTP errors
-            raise TwitchHTTPException(f'{error_message} - Status {e.code}')
+    async def _request(self, url, **kwargs):
+        reason = None
 
-        except aiohttp.ClientError:
-            # aiohttp errors
-            raise TwitchHTTPException(error_message)
+        for attempt in range(5):
+            if self._bucket.limited:
+                await self._bucket.wait_reset()
 
-        else:
-            return body
+            async with self._session.get(url, **kwargs) as resp:
+                if 500 <= resp.status <= 504:
+                    reason = resp.reason
+                    await asyncio.sleep(2 ** attempt + 1)
+                    continue
+
+                data = await resp.json()
+
+                reset = resp.headers.get('Ratelimit-Reset')
+                remaining = resp.headers.get('Ratelimit-Remaining')
+
+                self._bucket.update(reset=reset, remaining=remaining)
+
+                if 200 <= resp.status < 300:
+                    return data
+
+                if resp.status == 429:
+                    reason = 'Ratelimit Reached'
+                    continue  # the Bucket will handle waiting
+
+        raise TwitchHTTPException('Failed to reach Twitch API', reason)
 
     @staticmethod
     def _populate_entries(*channels: Union[str, int]):
@@ -96,66 +125,51 @@ class HTTPSession:
                 else:
                     names.add(channel)
             elif isinstance(channel, int):
-                ids.add(channel)
+                ids.add(str(channel))
 
         if len(names | ids) > 100:
             raise TwitchHTTPException('Bad Request - Total entries must not exceed 100.')
 
         return names, ids
 
-    @update_bucket
-    async def _get_users(self, *users: Union[str, int]):
+    async def get_users(self, *users: Union[str, int]):
         names, ids = self._populate_entries(*users)
+        params = [('id', x) for x in ids] + [('login', x) for x in names]
 
-        ids = [f'id={c}' for c in ids]
-        names = [f'login={c}' for c in names]
+        return await self.get('/users', params=params)
 
-        args = "&".join(ids + names)
-        url = BASE + f'users?{args}'
+    async def get_followers(self, channel: str):
+        raise NotImplementedError
 
-        return await self._get(url)
+    async def get_streams(self, *, game_id=None, language=None, channels, limit=None):
+        if channels:
+            names, ids = self._populate_entries(*channels)
+            params = [('id', x) for x in ids] + [('user_login', x) for x in names]
+        else:
+            params = []
 
-    @update_bucket
-    async def _get_chatters(self, channel: str):
+        print(params)
+        if game_id is not None:
+            params.append(('game_id', str(game_id)))
+
+        if language is not None:
+            params.append(('language', language))
+
+        return await self.get('/streams', params=params, limit=limit)
+
+    async def get_games(self, *games: Union[str, int]):
+        names, ids = self._populate_entries(*games)
+        params = [('id', x) for x in ids] + [('name', x) for x in names]
+
+        return await self.get('/games', params=params)
+
+    async def get_top_games(self, limit=None):
+        return await self.get('/games/top', limit=limit)
+
+# todo: reimplement this separately
+"""
+    async def get_chatters(self, channel: str):
         channel = channel.lower()
         url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'
         return await self._get(url)
-
-    async def _get_followers(self, channel: str):
-        raise NotImplementedError
-
-    @update_bucket
-    async def _get_stream_by_id(self, channel: int):
-        url = BASE + f'streams?user_id={channel}'
-        return await self._get(url)
-
-    @update_bucket
-    async def _get_stream_by_name(self, channel: str):
-        url = BASE + f'streams?user_login={channel}'
-        return await self._get(url)
-
-    @update_bucket
-    async def _get_streams(self, *channels: Union[str, int]):
-        names, ids = self._populate_entries(*channels)
-
-        ids = [f'user_id={c}' for c in ids]
-        names = [f'user_login={c}' for c in names]
-
-        args = "&".join(ids + names)
-        url = BASE + f'streams?{args}'
-
-        return await self._get(url)
-
-    @update_bucket
-    async def _get_games(self, *games: Union[str, int]):
-        names, ids = self._populate_entries(*games)
-
-        ids = [f'id={g}' for g in ids]
-        names= [f'name={g}' for g in names]
-
-        args = "&".join(ids + names)
-        url = BASE + f'games?{args}'
-
-        return await self._get(url)
-
-
+"""
