@@ -19,8 +19,6 @@ class Bucket:
         return self.tokens == self.LIMIT
 
     def update(self, *, reset=None, remaining=None):
-        now = time.time()
-
         if reset:
             self.reset = int(reset)
 
@@ -163,11 +161,3 @@ class HelixHTTPSession:
 
     async def get_top_games(self, limit=None):
         return await self.get('/games/top', limit=limit)
-
-# todo: reimplement this separately
-"""
-    async def get_chatters(self, channel: str):
-        channel = channel.lower()
-        url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'
-        return await self._get(url)
-"""
