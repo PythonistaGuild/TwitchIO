@@ -12,25 +12,35 @@ class Bucket:
 
     def __init__(self):
         self.tokens = 0
-        self.reset = time.time() + 60
+        self._reset = time.time() + 60
 
     @property
     def limited(self):
         return self.tokens == self.LIMIT
 
+    def reset(self):
+        self.tokens = 0
+        self._reset = time.time() + 60
+
     def update(self, *, reset=None, remaining=None):
+        now = time.time()
+
+        if self._reset <= now:
+            self.reset()
+
         if reset:
-            self.reset = int(reset)
+            self._reset = int(reset)
 
         if remaining:
             self.tokens = self.LIMIT - int(remaining)
         else:
-            self.tokens -= 1
+            self.tokens += 1
 
     async def wait_reset(self):
         now = time.time()
 
-        await asyncio.sleep(self.reset - now)
+        await asyncio.sleep(self._reset - now)
+        self.reset()
 
 
 class HelixHTTPSession:
