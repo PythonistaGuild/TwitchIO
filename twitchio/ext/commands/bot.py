@@ -613,3 +613,42 @@ class TwitchBot(TwitchClient):
 
             return func
         return wrapper
+
+    async def modify_webhook_subscription(self, *, callback=None, mode, topic, lease_seconds=0, secret=None):
+        """|coro|
+
+        Creates a webhook subscription.
+
+        Parameters
+        ----------
+        callback: Optional[str]
+            The URL which will be called to verify the subscripton and on callback.
+            If there's a webhook server running on the bot the callback will be automatically added.
+        mode: :class:`.WebhookMode`
+            Mode which describes whether the subscription should be created or not.
+        topic: :class:`.WebhookTopic`
+            Details about the subscription.
+        lease_seconds: Optional[int]
+            How many seconds the subscription should last. Defaults to 0, maximum is 846000.
+        secret: Optional[str]
+            A secret string which Twitch will use to add the `X-Hub-Signature` header to webhook requests.
+            You can use this to verify the POST request came from Twitch using `sha256(secret, body)`.
+
+        Raises
+        --------
+        Exception
+            No callback url was specified and there is no webhook server running to retrieve a callback url from.
+
+        TwitchHTTPException
+            Bad request while modifying the subscription.
+        """
+
+        if callback is None:
+            if self._webhook_server is None:
+                raise Exception('No callback passed and no webhook server running to retrieve a callback url from.')
+
+            callback = f'{self._webhook_server.external}:{self._webhook_server.port}/{self._webhook_server.callback}'
+
+        await super().modify_webhook_subscription(
+            callback=callback, mode=mode, topic=topic, lease_seconds=lease_seconds, secret=secret
+        )
