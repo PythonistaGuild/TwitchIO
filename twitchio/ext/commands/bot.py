@@ -24,6 +24,7 @@ class TwitchBot(TwitchClient):
         To enable the webhook server, the webhook_server parameter must be True.
         A local_host, external_host and port must also be provided.
 
+
         An optional parameter `callback` may be passed. This should be the page Twitch sends data to.
         A long random string, such as hex, is advised e.g `2t389hth892t3h898hweiogtieo`
     """
@@ -318,6 +319,12 @@ class TwitchBot(TwitchClient):
         ------------
         data: dict
             The webhook data as JSON.
+
+        Warning
+        ---------
+        .. warning::
+
+            This event is only applicable when using the built in webhook server.
         """
         pass
 
