@@ -159,26 +159,3 @@ class TwitchClient:
         """
 
         return await self.http.get_top_games(limit=limit)
-
-    async def get_chatters(self, channel: str):
-        """|coro|
-
-        Method which retrieves the currently active chatters on the given stream.
-
-        Parameters
-        ------------
-        channel: str [Required]
-            The channel name to retrieve data for.
-
-        Returns
-        ---------
-        dict:
-            Dict containing active chatter data.
-
-        Raises
-        --------
-        TwitchHTTPException
-            Bad request while fetching stream chatters.
-        """
-
-        raise NotImplementedError
