@@ -196,12 +196,12 @@ class TwitchClient:
     async def get_followers(self, user_id: str):
         """|coro|
 
-        Retrieves the list of users who are following a user
+        Retrieves the list of users who are following a user.
 
         Parameters
         ------------
-        user_id: str [Required]
-            The user to retrieve the list of followers for
+        user_id: str
+            The user to retrieve the list of followers for.
 
         Returns
         ---------
@@ -219,12 +219,12 @@ class TwitchClient:
     async def get_following(self, user_id: str):
         """|coro|
 
-        Retrieves the list of users who this user is following
+        Retrieves the list of users who this user is following.
 
         Parameters
         ------------
-        user_id: str [Required]
-            The user to retrieve the list of followed users for
+        user_id: str
+            The user to retrieve the list of followed users for.
 
         Returns
         ---------
