@@ -335,7 +335,7 @@ class WebsocketConnection:
             author = None
 
         if channel:
-            channel = Channel(name=channel, ws=self._websocket, http=self._http)
+            channel = Channel(name=channel, ws=self, http=self._http)
 
         try:
             user = User(author=author, channel=channel, tags=tags, ws=self._websocket)
@@ -382,6 +382,7 @@ class WebsocketConnection:
 
             if user._name.lower() == self.nick.lower():
                 await self._token_update(mstatus)
+                self._channel_cache[channel.name]['bot'] = user
 
             await self._dispatch('mode', channel, user, mstatus)
 
