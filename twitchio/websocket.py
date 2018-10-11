@@ -394,6 +394,8 @@ class WebsocketConnection:
                                 tags=tags,
                                 ws=self._websocket,
                                 mod=badges['mod'])
+                else:
+                    return
 
             if user._name.lower() == self.nick.lower():
                 self._channel_cache[channel.name]['bot'] = user
