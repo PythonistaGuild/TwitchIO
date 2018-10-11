@@ -8,14 +8,14 @@ from .errors import *
 class IRCLimiterMapping:
 
     def __init__(self):
-        self.channels = {}
+        self.buckets = {}
 
     def get_bucket(self, channel: str, method: str):
         try:
-            bucket = self.channels[channel]
+            bucket = self.buckets[channel]
         except KeyError:
             bucket = RateBucket(method=method)
-            self.channels[channel] = bucket
+            self.buckets[channel] = bucket
 
         if bucket.method != method:
             bucket.method = method
@@ -24,7 +24,7 @@ class IRCLimiterMapping:
             else:
                 bucket.limit = bucket.IRCLIMIT
 
-            self.channels[channel] = bucket
+            self.buckets[channel] = bucket
 
         return bucket
 
