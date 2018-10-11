@@ -104,7 +104,8 @@ class Messageable(metaclass=abc.ABCMeta):
         bucket.update()
 
         if bucket.limited:
-            raise TwitchIOBException(f'IRC Message rate limit reached. Please try again in {bucket._reset - now:.2f}s')
+            raise TwitchIOBException(f'IRC Message rate limit reached for channel <{channel}>.'
+                                     f' Please try again in {bucket._reset - now:.2f}s')
 
         content = content.replace('\n', ' ')
 
