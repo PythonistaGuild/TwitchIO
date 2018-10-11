@@ -626,7 +626,7 @@ class TwitchBot(TwitchClient):
             If there's a webhook server running on the bot the callback will be automatically added.
         mode: :class:`.WebhookMode`
             Mode which describes whether the subscription should be created or not.
-        topic: :class:`.WebhookTopic`
+        topic: :class:`.Topic`
             Details about the subscription.
         lease_seconds: Optional[int]
             How many seconds the subscription should last. Defaults to 0, maximum is 846000.

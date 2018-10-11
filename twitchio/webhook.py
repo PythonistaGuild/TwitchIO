@@ -8,7 +8,7 @@ from twitchio.errors import TwitchHTTPException
 
 
 __all__ = (
-    'WebhookTopic', 'UserFollows', 'StreamChanged', 'UserChanged', 'GameAnalytics', 'ExtensionAnalytics',
+    'Topic', 'UserFollows', 'StreamChanged', 'UserChanged', 'GameAnalytics', 'ExtensionAnalytics',
     'TwitchWebhookServer'
 )
 
@@ -66,7 +66,7 @@ class TwitchWebhookServer:
         return web.Response(text='200: OK', status=200)
 
 
-class WebhookTopic:
+class Topic:
     URL = None
 
     __slots__ = ()
@@ -80,7 +80,7 @@ class WebhookTopic:
         return f'{self.URL}?{params}'
 
 
-class UserFollows(WebhookTopic):
+class UserFollows(Topic):
     URL = 'https://api.twitch.tv/helix/users/follows'
 
     __slots__ = ('first', 'from_id', 'to_id')
@@ -91,7 +91,7 @@ class UserFollows(WebhookTopic):
         self.to_id = to_id
 
 
-class StreamChanged(WebhookTopic):
+class StreamChanged(Topic):
     URL = 'https://api.twitch.tv/helix/streams'
 
     __slots__ = ('user_id',)
@@ -100,7 +100,7 @@ class StreamChanged(WebhookTopic):
         self.user_id = user_id
 
 
-class UserChanged(WebhookTopic):
+class UserChanged(Topic):
     URL = 'https://api.twitch.tv/helix/users'
 
     __slots__ = ('id',)
@@ -109,7 +109,7 @@ class UserChanged(WebhookTopic):
         self.id = user_id
 
 
-class GameAnalytics(WebhookTopic):
+class GameAnalytics(Topic):
     URL = 'https://api.twitch.tv/helix/analytics/games'
 
     __slots__ = ('game_id',)
@@ -118,7 +118,7 @@ class GameAnalytics(WebhookTopic):
         self.game_id = game_id
 
 
-class ExtensionAnalytics(WebhookTopic):
+class ExtensionAnalytics(Topic):
     URL = 'https://api.twitch.tv/helix/analytics/extensions'
 
     __slots__ = ('extension_id',)
