@@ -85,7 +85,7 @@ class UserFollows(WebhookTopic):
 
     __slots__ = ('first', 'from_id', 'to_id')
 
-    def __init__(self, first=1, from_id=None, to_id=None):
+    def __init__(self, *, first=1, from_id=None, to_id=None):
         self.first = first
         self.from_id = from_id
         self.to_id = to_id
