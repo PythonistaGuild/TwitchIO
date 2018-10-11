@@ -32,6 +32,9 @@ from .cooldowns import RateBucket
 from .errors import TwitchHTTPException
 
 
+Chatters = namedtuple('Chatters', ('count', 'all', 'vips', 'moderators', 'staff', 'admins', 'global_mods', 'viewers'))
+
+
 class HelixHTTPSession:
 
     BASE = 'https://api.twitch.tv/helix'
@@ -41,15 +44,6 @@ class HelixHTTPSession:
 
         self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
-
-        self.Chatters = namedtuple('Chatters', ['count',
-                                                'all',
-                                                'vips',
-                                                'moderators',
-                                                'staff',
-                                                'admins',
-                                                'global_mods',
-                                                'viewers'])
 
     async def request(self, method, url, *, params=None, limit=None, **kwargs):
         data = []
@@ -97,11 +91,11 @@ class HelixHTTPSession:
 
         return data
 
-    async def _request(self, method, url, **kwargs):
+    async def _request(self, method, url, utilize_bucket=True, **kwargs):
         reason = None
 
         for attempt in range(5):
-            if self._bucket.limited:
+            if utilize_bucket and self._bucket.limited:
                 await self._bucket.wait_reset()
 
             async with self._session.request(method, url, **kwargs) as resp:
@@ -110,10 +104,11 @@ class HelixHTTPSession:
                     await asyncio.sleep(2 ** attempt + 1)
                     continue
 
-                reset = resp.headers.get('Ratelimit-Reset')
-                remaining = resp.headers.get('Ratelimit-Remaining')
+                if utilize_bucket:
+                    reset = resp.headers.get('Ratelimit-Reset')
+                    remaining = resp.headers.get('Ratelimit-Remaining')
 
-                self._bucket.update(reset=reset, remaining=remaining)
+                    self._bucket.update(reset=reset, remaining=remaining)
 
                 if 200 <= resp.status < 300:
                     if resp.headers.get('content-type') == 'application/json':
@@ -123,7 +118,10 @@ class HelixHTTPSession:
 
                 if resp.status == 429:
                     reason = 'Ratelimit Reached'
-                    continue  # the Bucket will handle waiting
+
+                    if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
+                        await asyncio.sleep(3 ** attempt + 1)
+                    continue
 
                 raise TwitchHTTPException(f'Failed to fulfil request ({resp.status}).', resp.reason)
 
@@ -202,11 +200,11 @@ class HelixHTTPSession:
 
     async def get_chatters(self, channel: str):
         url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'
-        all_ = []
 
-        data = await self._request('GET', url)
+        data = await self._request('GET', url, utilize_bucket=False)
+
+        all_ = []
         for x in data[0]['chatters'].values():
             all_ += x
 
-        chatters = self.Chatters(data[0]['chatter_count'], all_, *data[0]['chatters'].values())
-        return chatters
+        return Chatters(data[0]['chatter_count'], all_, *data[0]['chatters'].values())
