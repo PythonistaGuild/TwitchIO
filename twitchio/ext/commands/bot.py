@@ -195,7 +195,7 @@ class TwitchBot(TwitchClient):
         ------------
         message: :class:`.Message`
             The message to create context from.
-        cls: Optional
+        cls: Optional[Type]
             The optional custom class to create Context.
 
         Returns

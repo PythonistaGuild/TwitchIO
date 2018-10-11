@@ -16,12 +16,12 @@ class TwitchClient:
 
         Parameters
         ------------
-        \*users: str [Required]
+        \*users: str
             The user name(s)/id(s) to retrieve data for.
 
         Returns
         ---------
-        dict:
+        dict
             Dict containing user(s) data.
 
         Raises
@@ -44,12 +44,12 @@ class TwitchClient:
 
         Parameters
         ------------
-        channel: str [Required]
+        channel: str
             The channel name to retrieve data for.
 
         Returns
         ---------
-        dict:
+        dict
             Dict containing active streamer data. Could be None if the stream is not live.
 
         Raises
@@ -68,12 +68,12 @@ class TwitchClient:
 
         Parameters
         ------------
-        channel: int [Required]
+        channel: int
             The channel id to retrieve data for.
 
         Returns
         ---------
-        dict:
+        dict
             Dict containing active streamer data. Could be None if the stream is not live.
 
         Raises
@@ -96,14 +96,14 @@ class TwitchClient:
             The game to filter streams for.
         language: Optional[str]
             The language to filter streams for.
-        channels: Union[int, str]
+        channels: Optional[Union[int, str]]
             The channels in id or name form, to retrieve information for.
         limit: Optional[int]
             Maximum number of results to return.
 
         Returns
         ---------
-        list:
+        list
             List containing active streamer data. Could be None if none of the streams are live.
 
         Raises
@@ -121,12 +121,12 @@ class TwitchClient:
 
         Parameters
         ------------
-        \*games: Union[str, int] [Required]
+        \*games: Union[str, int]
             The games in either id or name form to retrieve information for.
 
         Returns
         ---------
-        list:
+        list
             List containing game information. Could be None if no games matched.
 
         Raises
@@ -149,7 +149,7 @@ class TwitchClient:
 
         Returns
         ---------
-        list:
+        list
             List containing game information. Could be None if no games matched.
 
         Raises

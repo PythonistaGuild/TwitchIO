@@ -276,7 +276,7 @@ class Context(Messageable):
 
         Returns
         ---------
-        dict:
+        dict
             Dict containing active chatter data.
 
         Raises

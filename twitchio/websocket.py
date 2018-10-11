@@ -23,6 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+
 import asyncio
 import async_timeout
 import json
@@ -244,7 +245,7 @@ class WebsocketConnection:
 
         Parameters
         ------------
-        channels: list or tuple
+        channels: Union[list, tuple]
             A list of channels to attempt joining.
         """
         for entry in channels:
