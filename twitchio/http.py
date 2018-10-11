@@ -146,8 +146,13 @@ class HelixHTTPSession:
 
         return await self.request('GET', '/users', params=params)
 
-    async def get_followers(self, channel: str):
-        raise NotImplementedError
+    async def get_followers(self, user_id: str):
+        params = [('to_id', user_id)]
+        return await self.request('GET', '/users/follows', params=params)
+
+    async def get_following(self, user_id: str):
+        params = [('from_id', user_id)]
+        return await self.request('GET', '/users/follows', params=params)
 
     async def get_streams(self, *, game_id=None, language=None, channels, limit=None):
         if channels:
