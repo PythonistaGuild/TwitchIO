@@ -106,7 +106,7 @@ class UserFollows(Topic):
     first: Optional[int]
         This needs to be 1. Please see the Twitch documentation for more information.
     from_id: Optional[int]
-        User ID for the user that's following another Twitch channels.
+        User ID for the user that's following Twitch channels.
     to_id: Optional[int]
         User ID for the channel that other Twitch users follow.
 
