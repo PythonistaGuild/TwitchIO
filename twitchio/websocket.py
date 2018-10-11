@@ -91,7 +91,7 @@ class WebsocketConnection:
         self.extra_listeners = {}
 
         self.modes = attrs.pop('modes', ("commands", "tags", "membership"))
-        self._channel_cache = set()
+        self._channel_cache = {}
         self._mod_token = 0
         self._channel_token = 0
         self._rate_status = None
@@ -203,7 +203,6 @@ class WebsocketConnection:
             return
 
         channels = channels or self._initial_channels
-
         await self.join_channels(channels)
 
     async def send_nick(self):
@@ -221,8 +220,14 @@ class WebsocketConnection:
         Sends a PRIVMSG to the Twitch IRC Endpoint.
 
         This should only be used in rare circumstances where a :class:`twitchio.abcs.Messageable` is not available.
+
+        .. warning::
+
+            This method is not handled by built-in rate-limits. You risk getting rate limited by twitch,
+            which has a 30 minute cooldown.
         """
         content = content.replace("\n", " ")
+        channel = re.sub('[#\s]', '', channel).lower()
         await self._websocket.send(f"PRIVMSG #{channel} :{content}\r\n")
 
     async def join_channels(self, channels: (list, tuple)):
@@ -348,14 +353,14 @@ class WebsocketConnection:
 
         elif action == 'JOIN':
             if author == self.nick:
-                self._channel_cache.add(channel.name)
+                self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
                 self._channel_token += 1
 
             await self._dispatch('join', user)
 
         elif action == 'PART':
             if author == self.nick:
-                self._channel_cache.remove(channel.name)
+                del self._channel_cache[channel.name]
                 self._channel_token -= 1
 
             await self._dispatch('part', user)
@@ -485,7 +490,7 @@ class PubSub:
                 log.debug('PubSub %s received RECONNECT payload... Attempting reconnection', self.node)
                 self.loop.create_task(self.reconnection())
 
-            #self.loop.create_task(self._pool.base._dispatch('pubsub', data))
+            # self.loop.create_task(self._pool.base._dispatch('pubsub', data))
 
     async def subscribe(self, token: str, nonce: str, *topics: str):
         for t in topics:
