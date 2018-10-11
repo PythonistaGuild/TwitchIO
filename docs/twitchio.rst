@@ -84,30 +84,30 @@ Topics
 ----------------------------
 Webhooks allow you to subscribe to different topics, which ones are described below.
 
-.. autoclass:: twitchio.webhooks.Topic
+.. autoclass:: twitchio.webhook.Topic
     :members:
 
-.. autoclass:: twitchio.webhooks.UserFollows
-    :members:
-    :inherited-members:
-    :show-inheritance:
-
-.. autoclass:: twitchio.webhooks.StreamChanged
+.. autoclass:: twitchio.webhook.UserFollows
     :members:
     :inherited-members:
     :show-inheritance:
 
-.. autoclass:: twitchio.webhooks.UserChanged
+.. autoclass:: twitchio.webhook.StreamChanged
     :members:
     :inherited-members:
     :show-inheritance:
 
-.. autoclass:: twitchio.webhooks.GameAnalytics
+.. autoclass:: twitchio.webhook.UserChanged
     :members:
     :inherited-members:
     :show-inheritance:
 
-.. autoclass:: twitchio.webhooks.ExtensionAnalytics
+.. autoclass:: twitchio.webhook.GameAnalytics
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+.. autoclass:: twitchio.webhook.ExtensionAnalytics
     :members:
     :inherited-members:
     :show-inheritance:
