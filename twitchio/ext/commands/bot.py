@@ -71,6 +71,8 @@ class TwitchBot(TwitchClient):
     callback: str [Optional]
         The pages as a string where the webhook_server should lsiten for events.
 
+    Notes
+    -------
     .. note::
 
         To enable the webhook server, the webhook_server parameter must be True.
