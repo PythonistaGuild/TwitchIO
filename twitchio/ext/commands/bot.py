@@ -44,7 +44,33 @@ from twitchio.websocket import WebsocketConnection
 
 
 class TwitchBot(TwitchClient):
-    """
+    """Twitch IRC Bot.
+
+    Parameters
+    ------------
+    irc_token: str
+        The OAuth token to use for IRC.
+    client_id: str:
+        Your application ID, used for HTTP endpoints.
+    prefix: str
+        The bots prefix.
+    nick: str
+        The bots nick in lowercase.
+    loop: [Optional]
+        The asyncio event loop to use.
+    initial_channels: list
+        The initial channels for the bot to join on startup.
+    webhook_server: bool [Optional]
+        A bool indicating whether the built-in webhook server should be used.
+    local_host: str [Optional]
+        The local host the webhook server should run on.
+    external_host: str [Optional]
+        The external address the webhook_server should lsiten on.
+    port: int [Optional]
+        The port the webhook_server should be started on.
+    callback: str [Optional]
+        The pages as a string where the webhook_server should lsiten for events.
+
     .. note::
 
         To enable the webhook server, the webhook_server parameter must be True.
