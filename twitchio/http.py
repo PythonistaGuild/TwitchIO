@@ -1,46 +1,10 @@
 import asyncio
-import time
 from typing import Union
 
 import aiohttp
 
+from .cooldowns import RateBucket
 from .errors import TwitchHTTPException
-
-
-class Bucket:
-    LIMIT = 30
-
-    def __init__(self):
-        self.tokens = 0
-        self._reset = time.time() + 60
-
-    @property
-    def limited(self):
-        return self.tokens == self.LIMIT
-
-    def reset(self):
-        self.tokens = 0
-        self._reset = time.time() + 60
-
-    def update(self, *, reset=None, remaining=None):
-        now = time.time()
-
-        if self._reset <= now:
-            self.reset()
-
-        if reset:
-            self._reset = int(reset)
-
-        if remaining:
-            self.tokens = self.LIMIT - int(remaining)
-        else:
-            self.tokens += 1
-
-    async def wait_reset(self):
-        now = time.time()
-
-        await asyncio.sleep(self._reset - now)
-        self.reset()
 
 
 class HelixHTTPSession:
@@ -49,7 +13,7 @@ class HelixHTTPSession:
     def __init__(self, loop, **attrs):
         self._id = attrs.get('client_id')
 
-        self._bucket = Bucket()
+        self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
 
     async def get(self, url, params=None, *, limit=None):
