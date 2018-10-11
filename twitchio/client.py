@@ -27,14 +27,14 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 from typing import Union
 
-from twitchio.http import HelixHTTPSession
+from twitchio.http import HTTPSession
 
 
 class TwitchClient:
 
     def __init__(self, *, loop=None, client_id=None, **kwargs):
         loop = loop or asyncio.get_event_loop()
-        self.http = HelixHTTPSession(loop=loop, client_id=client_id)
+        self.http = HTTPSession(loop=loop, client_id=client_id)
 
     async def get_users(self, *users: Union[str, int]):
         """|coro|

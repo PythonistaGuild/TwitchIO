@@ -35,8 +35,7 @@ from .errors import TwitchHTTPException
 Chatters = namedtuple('Chatters', ('count', 'all', 'vips', 'moderators', 'staff', 'admins', 'global_mods', 'viewers'))
 
 
-class HelixHTTPSession:
-
+class HTTPSession:
     BASE = 'https://api.twitch.tv/helix'
 
     def __init__(self, loop, **attrs):
