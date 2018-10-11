@@ -557,7 +557,7 @@ class TwitchBot(TwitchClient):
             @bot.event
             async def event_message(message):
                 print(message.content)
-                await bot.process_commands(message)
+                await bot.handle_commands(message)
         """
         if not inspect.iscoroutinefunction(func):
             raise TypeError('Events must be coroutines.')
