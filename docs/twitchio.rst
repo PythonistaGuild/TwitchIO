@@ -80,6 +80,39 @@ Client
 .. autoclass:: twitchio.client.TwitchClient
     :members:
 
+Topics
+----------------------------
+Webhooks allow you to subscribe to different topics, which ones are described below.
+
+.. autoclass:: twitchio.webhooks.Topic
+    :members:
+
+.. autoclass:: twitchio.webhooks.UserFollows
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+.. autoclass:: twitchio.webhooks.StreamChanged
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+.. autoclass:: twitchio.webhooks.UserChanged
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+.. autoclass:: twitchio.webhooks.GameAnalytics
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+.. autoclass:: twitchio.webhooks.ExtensionAnalytics
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+
 Dataclasses
 ----------------------------
 Dataclasses belonging to TwitchIO.
