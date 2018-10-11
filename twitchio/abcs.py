@@ -1,5 +1,35 @@
 import abc
+import time
+
+from .cooldowns import RateBucket
 from .errors import *
+
+
+class IRCLimiterMapping:
+
+    def __init__(self):
+        self.channels = {}
+
+    def get_bucket(self, channel: str, method: str):
+        try:
+            bucket = self.channels[channel]
+        except KeyError:
+            bucket = RateBucket(method=method)
+            self.channels[channel] = bucket
+
+        if bucket.method != method:
+            bucket.method = method
+            if method == 'mod':
+                bucket.limit = bucket.MODLIMIT
+            else:
+                bucket.limit = bucket.IRCLIMIT
+
+            self.channels[channel] = bucket
+
+        return bucket
+
+
+limiter = IRCLimiterMapping()
 
 
 class Messageable(metaclass=abc.ABCMeta):
@@ -62,10 +92,25 @@ class Messageable(metaclass=abc.ABCMeta):
             else:
                 content = original
 
+        ws = self._get_socket._websocket
+        bot = self._get_socket._channel_cache[channel]['bot']
+
+        if bot.is_mod:
+            bucket = limiter.get_bucket(channel=channel, method='mod')
+        else:
+            bucket = limiter.get_bucket(channel=channel, method='irc')
+
+        now = time.time()
+        bucket.update()
+
+        if bucket.limited:
+            raise TwitchIOBException(f'IRC Message rate limit reached. Please try again in {bucket._reset - now:.2f}s')
+
         content = content.replace('\n', ' ')
 
         if method != 'User':
-            await self._get_socket.send(f'PRIVMSG #{channel} :{content}\r\n')
+            await ws.send(f'PRIVMSG #{channel} :{content}\r\n')
         else:
-            await self._get_socket.send(f'PRIVMSG #{channel} :.w {user} {content}\r\n')
+            await ws.send(f'PRIVMSG #{channel} :.w {user} {content}\r\n')
+
 

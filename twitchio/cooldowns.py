@@ -5,8 +5,8 @@ import time
 class RateBucket:
 
     HTTPLIMIT = 30
-    IRCLIMIT = 5
-    MODLIMIT = 5
+    IRCLIMIT = 20
+    MODLIMIT = 100
 
     HTTP = 60
     IRC = 30

@@ -125,7 +125,7 @@ class User(Messageable):
         self.subscriber = self._tags.get('subscriber', None)
         self.turbo = self._tags.get('turbo', None)
         self._badges = self._tags.get('badges', ',').split(',')
-        self._mod = self._tags.get('mod', 0)
+        self._mod = self._tags.get('mod', 0) if self._tags else attrs.get('mod', 0)
 
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)
