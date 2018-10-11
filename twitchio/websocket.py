@@ -111,7 +111,14 @@ class WebsocketConnection:
             "host": re.compile(
                 "(?P<channel>[a-zA-Z0-9_]+) "
                 "(?P<count>[0-9\-]+)"),
-            'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"), }
+            'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"),
+            'badges': re.compile(r"@badges=moderator\/(?P<moderator>[1]{1});"
+                                 r"color=(?P<color>#[A-Z0-9]+);"
+                                 r"display-name=(?P<name>[a-zA-Z0-9]+);"
+                                 r"emote-sets=(?P<emotes>[0-9]+);"
+                                 r"mod=(?P<mod>[0-9]);"
+                                 r"subscriber=(?P<sub>[0-9]);"
+                                 r"user-type=(?P<type>[a-zA-Z]+)\s+:tmi\.twitch\.tv\s+(?P<action>[A-Z]+)\s+(?P<channel>#[a-z0-9]+)")}
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
         self._http = attrs.get('http')
@@ -299,6 +306,11 @@ class WebsocketConnection:
 
         result = match.match(data)
 
+        badges = self.regex['badges'].match(data)
+        if badges:
+            badges = {'name': badges.group('name'), 'mod': badges.group('mod'), 'action': badges.group('action'),
+                      'channel': badges.group('channel')}
+
         try:
             tags = result.group("tags")
 
@@ -319,15 +331,18 @@ class WebsocketConnection:
             except (AttributeError, KeyError, IndexError):
                 pass
 
-        await self.process_actions(data, _groupsdict, tags)
+        await self.process_actions(data, _groupsdict, badges, tags)
 
-    async def process_actions(self, raw, groups, tags=None):
+    async def process_actions(self, raw, groups, badges, tags=None):
         # todo add remaining actions, docs
 
-        action = groups.pop('action', 'PING')
+        action = groups.pop('action', None)
         data = groups.pop('data', None)
         content = groups.pop('content', None)
         channel = groups.pop('channel', None)
+
+        if not action and badges:
+            action = badges['action']
 
         try:
             author = self.regex["author"].match(data).group("author")
@@ -338,7 +353,7 @@ class WebsocketConnection:
             channel = Channel(name=channel, ws=self, http=self._http)
 
         try:
-            user = User(author=author, channel=channel, tags=tags, ws=self._websocket)
+            user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
         except (TypeError, KeyError):
             user = None
 
@@ -372,6 +387,17 @@ class WebsocketConnection:
             await self._dispatch('message', message)
 
         elif action == 'USERSTATE':
+            if not user or not user.name:
+                if badges:
+                    user = User(author=badges['name'],
+                                channel=badges['channel'] or None,
+                                tags=tags,
+                                ws=self._websocket,
+                                mod=badges['mod'])
+
+            if user._name.lower() == self.nick.lower():
+                self._channel_cache[channel.name]['bot'] = user
+
             await self._dispatch('userstate', user)
 
         elif action == 'MODE':
