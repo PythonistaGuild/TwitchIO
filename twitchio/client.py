@@ -193,7 +193,7 @@ class TwitchClient:
             secret=secret,
         )
 
-    async def get_followers(self, user_id: str):
+    async def get_followers(self, user_id: int):
         """|coro|
 
         Retrieves the list of users who are following a user.
@@ -205,7 +205,7 @@ class TwitchClient:
 
         Returns
         ---------
-        list:
+        list
             List containing users following this user.
 
         Raises
@@ -214,21 +214,21 @@ class TwitchClient:
             Bad request while fetching users.
         """
 
-        return await self.http.get_followers(user_id)
+        return await self.http.get_followers(str(user_id))
 
-    async def get_following(self, user_id: str):
+    async def get_following(self, user_id: int):
         """|coro|
 
         Retrieves the list of users who this user is following.
 
         Parameters
         ------------
-        user_id: str
+        user_id: int
             The user to retrieve the list of followed users for.
 
         Returns
         ---------
-        list:
+        list
             List containing users that the user is following.
 
         Raises
@@ -237,4 +237,4 @@ class TwitchClient:
             Bad request while fetching users.
         """
 
-        return await self.http.get_following(user_id)
+        return await self.http.get_following(str(user_id))
