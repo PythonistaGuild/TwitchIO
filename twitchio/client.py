@@ -192,3 +192,49 @@ class TwitchClient:
             lease_seconds=lease_seconds,
             secret=secret,
         )
+
+    async def get_followers(self, user_id: str):
+        """|coro|
+
+        Retrieves the list of users who are following the user with id 'user_id'
+
+        Parameters
+        ------------
+        user_id: str [Required]
+            the user to retrieve the list of followers for
+
+        Returns
+        ---------
+        list:
+            List containing users following this user.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching users.
+        """
+
+        return await self.http.get_followers(user_id)
+
+    async def get_following(self, user_id: str):
+        """|coro|
+
+        Retrieves the list of users that the user with id 'user_id' is following
+
+        Parameters
+        ------------
+        user_id: str [Required]
+            the user to retrieve the list of followed users for
+
+        Returns
+        ---------
+        list:
+            List containing users that the user is following.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching users.
+        """
+
+        return await self.http.get_following(user_id)
