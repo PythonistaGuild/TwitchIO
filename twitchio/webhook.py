@@ -1,3 +1,4 @@
+import abc
 import asyncio
 import json
 import uuid
@@ -66,7 +67,14 @@ class TwitchWebhookServer:
         return web.Response(text='200: OK', status=200)
 
 
-class Topic:
+class Topic(abc.ABC):
+    """
+    Represents a Topic which can be used to modify a Webhook subscription.
+
+    .. note::
+        You can not create an instance of this class, use one of the derived ones instead.
+    """
+
     URL = None
 
     __slots__ = ()
@@ -76,22 +84,59 @@ class Topic:
         return [x for x in self.__slots__ if getattr(self, x) is not None]
 
     def as_uri(self):
+        """
+        Converts the Topic into the URI which can be used to create a Webhook subscription.
+
+        Returns
+        -------
+        str
+            The Topic as an URI.
+        """
+
         params = '&'.join(f'{name}={getattr(self, name)}' for name in self._parameters)
         return f'{self.URL}?{params}'
 
 
 class UserFollows(Topic):
+    """
+    This Topic notifies you whenever a user follows someone or someone is being followed.
+
+    Parameters
+    ----------
+    first: Optional[int]
+        This needs to be 1. Please see the Twitch documentation for more information.
+    from_id: Optional[int]
+
+    Raises
+    ------
+    TypeError
+        Neither the `from_id` or `to_id` parameter were given.
+    """
+
     URL = 'https://api.twitch.tv/helix/users/follows'
 
     __slots__ = ('first', 'from_id', 'to_id')
 
     def __init__(self, *, first=1, from_id=None, to_id=None):
         self.first = first
+
+        if from_id is None and to_id is None:
+            raise TypeError('Missing either "from_id" or "to_id" argument.')
+
         self.from_id = from_id
         self.to_id = to_id
 
 
 class StreamChanged(Topic):
+    """
+    This Topic notifies you whenever a Stream starts, is modified or stops.
+
+    Parameters
+    ----------
+    user_id: int
+        The channel to receive notifications for.
+    """
+
     URL = 'https://api.twitch.tv/helix/streams'
 
     __slots__ = ('user_id',)
@@ -101,6 +146,15 @@ class StreamChanged(Topic):
 
 
 class UserChanged(Topic):
+    """
+    This Topic notifies you whenever a user updates their profile.
+
+    Parameters
+    ----------
+    user_id: int
+        The user to receive information for.
+    """
+
     URL = 'https://api.twitch.tv/helix/users'
 
     __slots__ = ('id',)
@@ -110,6 +164,18 @@ class UserChanged(Topic):
 
 
 class GameAnalytics(Topic):
+    """
+    This Topic notifies you whenever a new game analytics report is available.
+
+    .. note::
+        This Topic requires the `analytics:read:games` OAuth scope.
+
+    Parameters
+    ----------
+    game_id: int
+        The game to receive notifications for.
+    """
+
     URL = 'https://api.twitch.tv/helix/analytics/games'
 
     __slots__ = ('game_id',)
@@ -119,6 +185,18 @@ class GameAnalytics(Topic):
 
 
 class ExtensionAnalytics(Topic):
+    """
+    This Topic notifies you whenever a new extension analytics report is available.
+
+    ..note ::
+        This Topic requires the `analytics:read:extensions` OAuth scope.
+
+    Parameters
+    ----------
+    extension_id: int
+        The extension to receive notifications for.
+    """
+
     URL = 'https://api.twitch.tv/helix/analytics/extensions'
 
     __slots__ = ('extension_id',)
