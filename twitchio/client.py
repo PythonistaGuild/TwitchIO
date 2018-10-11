@@ -265,3 +265,26 @@ class TwitchClient:
         """
 
         return await self.http.get_following(str(user_id))
+
+    async def get_chatters(self, channel: str):
+        """|coro|
+
+        Method which retrieves the currently active chatters on the given stream.
+
+        Parameters
+        ------------
+        channel: str
+            The channel name to retrieve data for.
+
+        Returns
+        ---------
+        namedtuple:
+            Namedtiple containing active chatter data.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching stream chatters.
+        """
+
+        return await self.http.get_chatters(channel)
