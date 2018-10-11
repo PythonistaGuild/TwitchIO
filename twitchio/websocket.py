@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2018 EvieePy
+Copyright (c) 2017-2018 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -25,15 +25,16 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import async_timeout
 import json
 import logging
 import random
 import re
 import sys
 import traceback
-import websockets
 from typing import Union
+
+import async_timeout
+import websockets
 
 from .backoff import ExponentialBackoff
 from .dataclasses import *
