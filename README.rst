@@ -78,7 +78,7 @@ A quick and easy bot example:
 
         async def event_message(self, message):
             print(message.content)
-            await self.process_commands(message)
+            await self.handle_commands(message)
 
         # Commands use a different decorator
         @commands.twitch_command(name='test')
