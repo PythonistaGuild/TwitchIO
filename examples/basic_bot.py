@@ -17,7 +17,7 @@ async def event_message(message):
     print(message.content)
 
     # If you override event_message you will need to process_commands for commands to work.
-    await bot.process_commands(message)
+    await bot.handle_commands(message)
 
 
 # Register a command with the bot

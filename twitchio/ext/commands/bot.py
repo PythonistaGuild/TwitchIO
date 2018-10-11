@@ -36,6 +36,7 @@ class TwitchBot(TwitchClient):
 
         self.loop = loop or asyncio.get_event_loop()
         super().__init__(loop=self.loop, client_id=client_id, **attrs)
+        self.nick = nick
 
         self._ws = WebsocketConnection(bot=self, loop=self.loop, http=self.http, irc_token=irc_token,
                                        nick=nick, initial_channels=initial_channels, **attrs)
