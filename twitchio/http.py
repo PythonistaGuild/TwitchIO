@@ -23,17 +23,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-
-import asyncio
-from typing import Union
-
 import aiohttp
+import asyncio
+from collections import namedtuple
+from typing import Union
 
 from .cooldowns import RateBucket
 from .errors import TwitchHTTPException
 
 
 class HelixHTTPSession:
+
     BASE = 'https://api.twitch.tv/helix'
 
     def __init__(self, loop, **attrs):
@@ -41,6 +41,15 @@ class HelixHTTPSession:
 
         self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
+
+        self.Chatters = namedtuple('Chatters', ['count',
+                                                'all',
+                                                'vips',
+                                                'moderators',
+                                                'staff',
+                                                'admins',
+                                                'global_mods',
+                                                'viewers'])
 
     async def request(self, method, url, *, params=None, limit=None, **kwargs):
         data = []
@@ -190,3 +199,14 @@ class HelixHTTPSession:
             data['secret'] = secret
 
         return await self.request('POST', '/webhooks/hub', json=data)
+
+    async def get_chatters(self, channel: str):
+        url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'
+        all_ = []
+
+        data = await self._request('GET', url)
+        for x in data[0]['chatters'].values():
+            all_ += x
+
+        chatters = self.Chatters(data[0]['chatter_count'], all_, *data[0]['chatters'].values())
+        return chatters

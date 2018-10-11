@@ -129,6 +129,24 @@ class Channel(Messageable):
         data = await self._http.get_streams(channels=[self.name])
         return data[0]
 
+    async def get_chatters(self):
+        """|coro|
+
+        Method which retrieves the currently active chatters on the given stream.
+
+        Returns
+        ---------
+        namedtuple:
+            A namedtuple containing chatter data.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while fetching stream chatters.
+        """
+
+        return await self._http.get_chatters(self.name)
+
 
 class User(Messageable):
 
