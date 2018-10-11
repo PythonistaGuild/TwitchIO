@@ -72,11 +72,11 @@ class Topic:
     __slots__ = ()
 
     @property
-    def parameters(self):
-        return [x for x in self.__slots__ if getattr(self, x, None) is not None]
+    def _parameters(self):
+        return [x for x in self.__slots__ if getattr(self, x) is not None]
 
     def as_uri(self):
-        params = '&'.join(f'{name}={getattr(self, name)}' for name in self.parameters)
+        params = '&'.join(f'{name}={getattr(self, name)}' for name in self._parameters)
         return f'{self.URL}?{params}'
 
 
