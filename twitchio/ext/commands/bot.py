@@ -210,7 +210,7 @@ class TwitchBot(TwitchClient):
         ctx = cls(message=message, channel=message.channel, user=message.author, prefix=prefix)
         return ctx
 
-    async def process_commands(self, message, ctx=None):
+    async def handle_commands(self, message, ctx=None):
         if ctx is None:
             try:
                 ctx = await self.get_context(message)
@@ -457,7 +457,7 @@ class TwitchBot(TwitchClient):
         message: :class:`.Message`
             Message object containing relevant information.
         """
-        await self.process_commands(message)
+        await self.handle_commands(message)
 
     async def event_error(self, error: Exception, data=None):
         """|coro|
