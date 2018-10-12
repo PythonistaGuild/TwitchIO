@@ -120,7 +120,14 @@ class WebsocketConnection:
                                  r"emote-sets=(?P<emotes>[0-9]+);"
                                  r"mod=(?P<mod>[0-9]);"
                                  r"subscriber=(?P<sub>[0-9]);"
-                                 r"user-type=(?P<type>[a-zA-Z]+)\s+:tmi\.twitch\.tv\s+(?P<action>[A-Z]+)\s+(?P<channel>#[a-z0-9]+)")}
+                                 r"user-type=(?P<type>[a-zA-Z]+)\s+:tmi\.twitch\.tv\s+(?P<action>[A-Z]+)\s+(?P<channel>#[a-z0-9]+)"),
+            'badges2': re.compile(r"@badges=;"
+                                  r"color=(?P<color>#[A-Z0-9]+);"
+                                  r"display-name=(?P<name>[a-zA-Z0-9]+);"
+                                  r"emote-sets=(?P<emotes>[0-9]+);"
+                                  r"mod=(?P<mod>[0-9]);"
+                                  r"subscriber=(?P<sub>[0-9]);"
+                                  r"user-type=\s+:tmi\.twitch\.tv\s+(?P<action>[A-Z]+)\s+(?P<channel>#[a-z0-9]+)")}
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
         self._http = attrs.get('http')
@@ -309,9 +316,14 @@ class WebsocketConnection:
         result = match.match(data)
 
         badges = self.regex['badges'].match(data)
+        badges2 = self.regex['badges2'].match(data)
+        
         if badges:
             badges = {'name': badges.group('name'), 'mod': badges.group('mod'), 'action': badges.group('action'),
                       'channel': badges.group('channel')}
+        elif not badges and badges2:
+            badges = {'name': badges2.group('name'), 'mod': badges2.group('mod'), 'action': badges2.group('action'),
+                      'channel': badges2.group('channel')}
 
         try:
             tags = result.group("tags")
@@ -394,7 +406,7 @@ class WebsocketConnection:
             if not user or not user.name:
                 if badges:
                     user = User(author=badges['name'],
-                                channel=badges['channel'] or None,
+                                channel=Channel(name=badges['channel'], ws=self, http=self._http)or None,
                                 tags=tags,
                                 ws=self._websocket,
                                 mod=badges['mod'])
