@@ -114,20 +114,14 @@ class WebsocketConnection:
                 "(?P<channel>[a-zA-Z0-9_]+) "
                 "(?P<count>[0-9\-]+)"),
             'code': re.compile(r":tmi\.twitch\.tv\s(?P<code>[0-9]{3}).*?"),
-            'badges': re.compile(r"@badges=moderator\/(?P<moderator>[1]{1});"
-                                 r"color=(?P<color>#[A-Z0-9]+);"
-                                 r"display-name=(?P<name>[a-zA-Z0-9]+);"
-                                 r"emote-sets=(?P<emotes>[0-9]+);"
-                                 r"mod=(?P<mod>[0-9]);"
-                                 r"subscriber=(?P<sub>[0-9]);"
-                                 r"user-type=(?P<type>[a-zA-Z]+)\s+:tmi\.twitch\.tv\s+(?P<action>[A-Z]+)\s+(?P<channel>#[a-z0-9]+)"),
-            'badges2': re.compile(r"@badges=;"
-                                  r"color=(?P<color>#[A-Z0-9]+);"
-                                  r"display-name=(?P<name>[a-zA-Z0-9]+);"
-                                  r"emote-sets=(?P<emotes>[0-9]+);"
-                                  r"mod=(?P<mod>[0-9]);"
-                                  r"subscriber=(?P<sub>[0-9]);"
-                                  r"user-type=\s+:tmi\.twitch\.tv\s+(?P<action>[A-Z]+)\s+(?P<channel>#[a-z0-9]+)")}
+            'badges': re.compile(r"@badges=(?P<moderator>[^;]*);"
+                                 r"color=(?P<color>[^;]*);"
+                                 r"display-name=(?P<name>[^;]*);"
+                                 r"emote-sets=(?P<emotes>[^;]*);"
+                                 r"mod=(?P<mod>[^;]*);"
+                                 r"subscriber=(?P<subscriber>[^;]*);"
+                                 r"user-type=(?P<type>[^\s]+)\s:tmi.twitch.tv\s(?P<action>[A-Z]*)\s"
+                                 r"#(?P<channel>[a-z0-9A-Z]+)")}
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
         self._http = attrs.get('http')
@@ -316,14 +310,10 @@ class WebsocketConnection:
         result = match.match(data)
 
         badges = self.regex['badges'].match(data)
-        badges2 = self.regex['badges2'].match(data)
-        
+
         if badges:
             badges = {'name': badges.group('name'), 'mod': badges.group('mod'), 'action': badges.group('action'),
                       'channel': badges.group('channel')}
-        elif not badges and badges2:
-            badges = {'name': badges2.group('name'), 'mod': badges2.group('mod'), 'action': badges2.group('action'),
-                      'channel': badges2.group('channel')}
 
         try:
             tags = result.group("tags")
