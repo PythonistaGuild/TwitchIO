@@ -345,7 +345,7 @@ class WebsocketConnection:
 
         if not action and badges:
             action = badges['action']
-        else:
+        elif not action:
             action = 'PING'
 
         try:
@@ -388,6 +388,7 @@ class WebsocketConnection:
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
+            print('Here')
             await self._dispatch('message', message)
 
         elif action == 'USERSTATE':
