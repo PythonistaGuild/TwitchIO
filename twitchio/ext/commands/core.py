@@ -97,7 +97,7 @@ class TwitchCommand:
                     argument = await self._convert_types(param, argument)
                     args.append(argument)
 
-            if param.kind == param.KEYWORD_ONLY:
+            elif param.kind == param.KEYWORD_ONLY:
                 rest = ' '.join(parsed.values())
                 if rest.startswith(' '):
                     rest = rest.lstrip(' ')
@@ -111,6 +111,10 @@ class TwitchCommand:
                 rest = await self._convert_types(param, rest)
                 kwargs[param.name] = rest
                 parsed.clear()
+                break
+            elif param.VAR_POSITIONAL:
+                print("HERE")
+                args.extend(parsed.values())
                 break
 
         if parsed:
