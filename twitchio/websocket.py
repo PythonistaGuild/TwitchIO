@@ -25,16 +25,15 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import async_timeout
 import json
 import logging
 import random
 import re
 import sys
 import traceback
-from typing import Union
-
-import async_timeout
 import websockets
+from typing import Union
 
 from .backoff import ExponentialBackoff
 from .dataclasses import *
@@ -46,9 +45,10 @@ log.addHandler(logging.NullHandler())
 
 
 class PubSubPool:
+
     POOL_MAX = 10
 
-    def __init__(self, loop, base):
+    def __init__(self, loop: asyncio.BaseEventLoop, base):
         self.loop = loop
         self.base = base
         self.connections = {}
@@ -128,7 +128,7 @@ class WebsocketConnection:
 
         self._pubsub_pool = PubSubPool(loop=loop, base=self)
 
-    async def _update_limit(self):
+    async def _update_limit(self) -> None:
 
         while True:
             if self._mod_token == len(self._channel_cache):
@@ -138,7 +138,7 @@ class WebsocketConnection:
 
             await asyncio.sleep(60)
 
-    async def _token_update(self, status):
+    async def _token_update(self, status: str) -> None:
         if '+o' in status:
             self._mod_token += 1
         else:
@@ -152,10 +152,10 @@ class WebsocketConnection:
             self._rate_status = 0
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         return self._websocket is not None and self._websocket.open
 
-    async def _connect(self):
+    async def _connect(self) -> None:
         try:
             self._websocket = await websockets.connect(self._host, timeout=30)
         except Exception as e:
@@ -168,10 +168,10 @@ class WebsocketConnection:
             log.debug('Sending authentication sequence payload to Twitch')
             await self.auth_seq()
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self) -> None:
         await self.is_ready.wait()
 
-    async def send_cap(self, cap: str):
+    async def send_cap(self, cap: str) -> None:
         """|coro|
 
         Send a CAP REQ to Twitch.
@@ -185,7 +185,7 @@ class WebsocketConnection:
         """
         await self._websocket.send(f'CAP REQ :twitch.tv/{cap}')
 
-    async def auth_seq(self, channels: Union[list, tuple]=None):
+    async def auth_seq(self, channels: Union[list, tuple]=None) -> None:
         """|coro|
 
         Automated Authentication process.
@@ -215,7 +215,7 @@ class WebsocketConnection:
         channels = channels or self._initial_channels
         await self.join_channels(channels)
 
-    async def send_nick(self):
+    async def send_nick(self) -> None:
         """|coro|
 
         Sends a NICK request to the Twitch IRC Endpoint.
@@ -224,7 +224,7 @@ class WebsocketConnection:
         """
         await self._websocket.send(f"NICK {self.nick}\r\n")
 
-    async def send_privmsg(self, channel, content):
+    async def send_privmsg(self, channel: str, content: str) -> None:
         """|coro|
 
         Sends a PRIVMSG to the Twitch IRC Endpoint.
@@ -240,7 +240,7 @@ class WebsocketConnection:
         channel = re.sub('[#\s]', '', channel).lower()
         await self._websocket.send(f"PRIVMSG #{channel} :{content}\r\n")
 
-    async def join_channels(self, channels: (list, tuple)):
+    async def join_channels(self, channels: [list, tuple]) -> None:
         """|coro|
 
         Attempt to join the provided channels.
@@ -254,7 +254,7 @@ class WebsocketConnection:
             channel = re.sub('[#\s]', '', entry).lower()
             await self._websocket.send(f'JOIN #{channel}\r\n')
 
-    async def _listen(self):
+    async def _listen(self) -> None:
         backoff = ExponentialBackoff()
 
         if not self.is_connected and self._last_exec:
@@ -280,7 +280,7 @@ class WebsocketConnection:
             except Exception as e:
                 await self.event_error(e, data)
 
-    async def process_ping(self, resp):
+    async def process_ping(self, resp: str) -> None:
             await self._websocket.send(f"PONG {resp}\r\n")
 
     async def process_data(self, data):
@@ -337,7 +337,7 @@ class WebsocketConnection:
 
         await self.process_actions(data, _groupsdict, badges, tags)
 
-    async def process_actions(self, raw, groups, badges, tags=None):
+    async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict=None) -> None:
         # todo add remaining actions, docs
 
         action = groups.pop('action', None)
@@ -420,7 +420,7 @@ class WebsocketConnection:
 
             await self._dispatch('mode', channel, user, mstatus)
 
-    async def _dispatch(self, event: str, *args, **kwargs):
+    async def _dispatch(self, event: str, *args, **kwargs) -> None:
         func = getattr(self._bot, f'event_{event}')
         self.loop.create_task(func(*args, **kwargs))
 
@@ -435,7 +435,7 @@ class WebsocketConnection:
             if isinstance(e, Exception):
                 self.loop.create_task(self.event_error(e))
 
-    async def event_error(self, error: Exception, data=None):
+    async def event_error(self, error: Exception, data: str=None) -> None:
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
@@ -444,7 +444,7 @@ class PubSub:
     __slots__ = ('loop', '_pool', '_node', '_subscriptions', '_topics', '_websocket', '_timeout', '_last_result',
                  '_listener')
 
-    def __init__(self, loop, pool: PubSubPool, node: int):
+    def __init__(self, loop: asyncio.BaseEventLoop, pool: PubSubPool, node: int):
         self.loop = loop
         self._pool = pool
         self._node = node
@@ -458,10 +458,10 @@ class PubSub:
         self._listener = None
 
     @property
-    def node(self):
+    def node(self) -> int:
         return self._node
 
-    async def reconnection(self):
+    async def reconnection(self) -> None:
         backoff = ExponentialBackoff()
         self._listener.cancel()
 
@@ -478,7 +478,7 @@ class PubSub:
 
             await asyncio.sleep(retry)
 
-    async def connect(self):
+    async def connect(self) -> None:
         try:
             self._websocket = await websockets.connect('wss://pubsub-edge.twitch.tv')
         except Exception as e:
@@ -490,7 +490,7 @@ class PubSub:
         log.info('PubSub %s connection successful', self.node)
         self._listener = self.loop.create_task(self.listen())
 
-    async def handle_ping(self):
+    async def handle_ping(self) -> None:
         while True:
             jitter = random.randint(1, 5)
             await asyncio.sleep(240 + jitter)
@@ -510,7 +510,7 @@ class PubSub:
             except asyncio.TimeoutError:
                 self.loop.create_task(self.reconnection())
 
-    async def listen(self):
+    async def listen(self) -> None:
         while True:
             try:
                 data = json.loads(await self._websocket.recv())
@@ -527,7 +527,7 @@ class PubSub:
 
             # self.loop.create_task(self._pool.base._dispatch('pubsub', data))
 
-    async def subscribe(self, token: str, nonce: str, *topics: str):
+    async def subscribe(self, token: str, nonce: str, *topics: str) -> None:
         for t in topics:
             self._topics.append((t, token))
 
@@ -538,7 +538,7 @@ class PubSub:
 
         await self._websocket.send(json.dumps(payload))
 
-    async def resub(self, token: str, topic: str):
+    async def resub(self, token: str, topic: str) -> None:
         payload = {"type": "LISTEN",
                    "data": {"topics": [topic],
                             "auth_token": token}}
