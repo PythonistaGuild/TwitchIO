@@ -117,7 +117,7 @@ class Channel(Messageable):
 
         Returns
         ---------
-        dict
+        dict:
             Dict containing active streamer data. Could be None if the stream is not live.
 
         Raises

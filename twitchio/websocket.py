@@ -345,6 +345,8 @@ class WebsocketConnection:
 
         if not action and badges:
             action = badges['action']
+        else:
+            action = 'PING'
 
         try:
             author = self.regex["author"].match(data).group("author")
