@@ -113,7 +113,6 @@ class TwitchCommand:
                 parsed.clear()
                 break
             elif param.VAR_POSITIONAL:
-                print("HERE")
                 args.extend(parsed.values())
                 break
 
