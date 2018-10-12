@@ -388,7 +388,6 @@ class WebsocketConnection:
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
-            print('Here')
             await self._dispatch('message', message)
 
         elif action == 'USERSTATE':
