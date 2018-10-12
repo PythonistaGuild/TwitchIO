@@ -23,6 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from collections import OrderedDict
 
 
 class StringParser:
@@ -31,7 +32,7 @@ class StringParser:
         self.index = 0
         self.eof = 0
         self.start = 0
-        self.words = {}
+        self.words = OrderedDict()
         self.ignore = False
 
     def process_string(self, msg: str):
@@ -48,7 +49,7 @@ class StringParser:
                 break
 
             if loc.isspace() and not self.ignore:
-                self.words[self.index] = msg[self.start:self.count]
+                self.words[self.index] = msg[self.start:self.count].replace(' ', '', 1)
                 self.index += 1
                 self.start = self.count + 1
 
@@ -64,5 +65,4 @@ class StringParser:
                     self.ignore = False
 
             self.count += 1
-
         return self.words
