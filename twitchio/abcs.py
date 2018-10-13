@@ -121,12 +121,16 @@ class Messageable(metaclass=abc.ABCMeta):
                 content = original
 
         ws = self._get_socket._websocket
-        bot = self._get_socket._channel_cache[channel]['bot']
 
-        if bot.is_mod:
-            bucket = limiter.get_bucket(channel=channel, method='mod')
-        else:
+        try:
+            bot = self._get_socket._channel_cache[channel]['bot']
+        except KeyError:
             bucket = limiter.get_bucket(channel=channel, method='irc')
+        else:
+            if bot.is_mod:
+                bucket = limiter.get_bucket(channel=channel, method='mod')
+            else:
+                bucket = limiter.get_bucket(channel=channel, method='irc')
 
         now = time.time()
         bucket.update()
@@ -141,5 +145,3 @@ class Messageable(metaclass=abc.ABCMeta):
             await ws.send(f'PRIVMSG #{channel} :{content}\r\n')
         else:
             await ws.send(f'PRIVMSG #{channel} :.w {user} {content}\r\n')
-
-

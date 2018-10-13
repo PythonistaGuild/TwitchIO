@@ -404,7 +404,10 @@ class WebsocketConnection:
                     return
 
             if user._name.lower() == self.nick.lower():
-                self._channel_cache[channel.name]['bot'] = user
+                try:
+                    self._channel_cache[channel.name]['bot'] = user
+                except KeyError:
+                    self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
 
             await self._dispatch('userstate', user)
 
@@ -416,7 +419,10 @@ class WebsocketConnection:
 
             if user._name.lower() == self.nick.lower():
                 await self._token_update(mstatus)
-                self._channel_cache[channel.name]['bot'] = user
+                try:
+                    self._channel_cache[channel.name]['bot'] = user
+                except KeyError:
+                    self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
 
             await self._dispatch('mode', channel, user, mstatus)
 
