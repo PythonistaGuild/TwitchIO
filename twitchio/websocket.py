@@ -88,12 +88,13 @@ class WebsocketConnection:
         self._websocket = None
         self._last_exec = None
 
+        self._channel_cache = {}
         self._initial_channels = attrs.get('initial_channels')
+
         self.nick = attrs.get('nick')
         self.extra_listeners = {}
 
         self.modes = attrs.pop('modes', ("commands", "tags", "membership"))
-        self._channel_cache = {}
         self._mod_token = 0
         self._channel_token = 0
         self._rate_status = None
@@ -138,7 +139,7 @@ class WebsocketConnection:
 
             await asyncio.sleep(60)
 
-    async def _token_update(self, status: str) -> None:
+    async def _token_update(self, status: str):
         if '+o' in status:
             self._mod_token += 1
         else:
@@ -155,7 +156,7 @@ class WebsocketConnection:
     def is_connected(self) -> bool:
         return self._websocket is not None and self._websocket.open
 
-    async def _connect(self) -> None:
+    async def _connect(self):
         try:
             self._websocket = await websockets.connect(self._host, timeout=30)
         except Exception as e:
@@ -168,10 +169,10 @@ class WebsocketConnection:
             log.debug('Sending authentication sequence payload to Twitch')
             await self.auth_seq()
 
-    async def wait_until_ready(self) -> None:
+    async def wait_until_ready(self):
         await self.is_ready.wait()
 
-    async def send_cap(self, cap: str) -> None:
+    async def send_cap(self, cap: str):
         """|coro|
 
         Send a CAP REQ to Twitch.
@@ -185,7 +186,7 @@ class WebsocketConnection:
         """
         await self._websocket.send(f'CAP REQ :twitch.tv/{cap}')
 
-    async def auth_seq(self, channels: Union[list, tuple]=None) -> None:
+    async def auth_seq(self, channels: Union[list, tuple]=None):
         """|coro|
 
         Automated Authentication process.
@@ -215,7 +216,7 @@ class WebsocketConnection:
         channels = channels or self._initial_channels
         await self.join_channels(channels)
 
-    async def send_nick(self) -> None:
+    async def send_nick(self):
         """|coro|
 
         Sends a NICK request to the Twitch IRC Endpoint.
@@ -224,7 +225,7 @@ class WebsocketConnection:
         """
         await self._websocket.send(f"NICK {self.nick}\r\n")
 
-    async def send_privmsg(self, channel: str, content: str) -> None:
+    async def send_privmsg(self, channel: str, content: str):
         """|coro|
 
         Sends a PRIVMSG to the Twitch IRC Endpoint.
@@ -240,7 +241,7 @@ class WebsocketConnection:
         channel = re.sub('[#\s]', '', channel).lower()
         await self._websocket.send(f"PRIVMSG #{channel} :{content}\r\n")
 
-    async def join_channels(self, channels: [list, tuple]) -> None:
+    async def join_channels(self, channels: [list, tuple]):
         """|coro|
 
         Attempt to join the provided channels.
@@ -254,7 +255,7 @@ class WebsocketConnection:
             channel = re.sub('[#\s]', '', entry).lower()
             await self._websocket.send(f'JOIN #{channel}\r\n')
 
-    async def _listen(self) -> None:
+    async def _listen(self):
         backoff = ExponentialBackoff()
 
         if not self.is_connected and self._last_exec:
@@ -280,7 +281,7 @@ class WebsocketConnection:
             except Exception as e:
                 await self.event_error(e, data)
 
-    async def process_ping(self, resp: str) -> None:
+    async def process_ping(self, resp: str):
             await self._websocket.send(f"PONG {resp}\r\n")
 
     async def process_data(self, data):
@@ -337,7 +338,7 @@ class WebsocketConnection:
 
         await self.process_actions(data, _groupsdict, badges, tags)
 
-    async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict=None) -> None:
+    async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict=None):
         # todo add remaining actions, docs
 
         action = groups.pop('action', None)
@@ -373,7 +374,7 @@ class WebsocketConnection:
             return
 
         elif action == 'JOIN':
-            if author == self.nick:
+            if author.lower() == self.nick.lower():
                 self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
                 self._channel_token += 1
 
@@ -426,7 +427,7 @@ class WebsocketConnection:
 
             await self._dispatch('mode', channel, user, mstatus)
 
-    async def _dispatch(self, event: str, *args, **kwargs) -> None:
+    async def _dispatch(self, event: str, *args, **kwargs):
         func = getattr(self._bot, f'event_{event}')
         self.loop.create_task(func(*args, **kwargs))
 
@@ -467,7 +468,7 @@ class PubSub:
     def node(self) -> int:
         return self._node
 
-    async def reconnection(self) -> None:
+    async def reconnection(self):
         backoff = ExponentialBackoff()
         self._listener.cancel()
 
@@ -484,7 +485,7 @@ class PubSub:
 
             await asyncio.sleep(retry)
 
-    async def connect(self) -> None:
+    async def connect(self):
         try:
             self._websocket = await websockets.connect('wss://pubsub-edge.twitch.tv')
         except Exception as e:
@@ -496,7 +497,7 @@ class PubSub:
         log.info('PubSub %s connection successful', self.node)
         self._listener = self.loop.create_task(self.listen())
 
-    async def handle_ping(self) -> None:
+    async def handle_ping(self):
         while True:
             jitter = random.randint(1, 5)
             await asyncio.sleep(240 + jitter)
@@ -516,7 +517,7 @@ class PubSub:
             except asyncio.TimeoutError:
                 self.loop.create_task(self.reconnection())
 
-    async def listen(self) -> None:
+    async def listen(self):
         while True:
             try:
                 data = json.loads(await self._websocket.recv())
@@ -533,7 +534,7 @@ class PubSub:
 
             # self.loop.create_task(self._pool.base._dispatch('pubsub', data))
 
-    async def subscribe(self, token: str, nonce: str, *topics: str) -> None:
+    async def subscribe(self, token: str, nonce: str, *topics: str):
         for t in topics:
             self._topics.append((t, token))
 
@@ -544,7 +545,7 @@ class PubSub:
 
         await self._websocket.send(json.dumps(payload))
 
-    async def resub(self, token: str, topic: str) -> None:
+    async def resub(self, token: str, topic: str):
         payload = {"type": "LISTEN",
                    "data": {"topics": [topic],
                             "auth_token": token}}
