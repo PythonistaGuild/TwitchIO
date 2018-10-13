@@ -305,6 +305,8 @@ class TwitchBot(TwitchClient):
         try:
             ctx.args, ctx.kwargs = await command.parse_args(instance, parsed)
 
+            await self.global_before_hook(ctx)
+
             if ctx.command._before_invoke:
                 await ctx.command._before_invoke(instance, ctx)
 
@@ -317,6 +319,38 @@ class TwitchBot(TwitchClient):
                 await ctx.command.on_error(instance, ctx, e)
 
             await self.event_command_error(ctx, e)
+
+    async def global_before_hook(self, ctx):
+        """|coro|
+
+        Method which is called before any command is about to be invoked.
+
+        This method is useful for setting up things before command invocation. E.g Database connections or
+        retrieving tokens for use in the command.
+
+        Parameters
+        ------------
+        ctx:
+            The context used for command invocation.
+
+        Examples
+        ----------
+        .. code:: py
+
+            async def global_before_hook(self, ctx):
+                # Make a database query for example to retrieve a specific token.
+                token = db_query()
+
+                ctx.token = token
+
+            async def my_command(self, ctx):
+                data = await self.create_clip(ctx.token, ...)
+
+        Note
+        ------
+            The global_before_hook is called before any other command specific hooks.
+        """
+        pass
 
     async def webhook_subscribe(self, topic: str, callback: str=None):
         """|coro|
