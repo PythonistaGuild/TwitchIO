@@ -103,7 +103,7 @@ class TwitchBot(TwitchClient):
                                                        callback=callback,
                                                        port=port)
             loop = asyncio.new_event_loop()
-            thread = threading.Thread(target=self._webhook_server.run_server, args=(loop, ))
+            thread = threading.Thread(target=self._webhook_server.run_server, args=(loop, ), daemon=True)
             thread.start()
 
         self.loop.create_task(self._prefix_setter(prefix))
@@ -170,7 +170,7 @@ class TwitchBot(TwitchClient):
         except KeyboardInterrupt:
             pass
         finally:
-            self.teardown()
+            self._ws.teardown()
 
     async def start(self):
         """|coro|
@@ -190,10 +190,7 @@ class TwitchBot(TwitchClient):
         except KeyboardInterrupt:
             pass
         finally:
-            self.teardown()
-
-    def teardown(self):
-        pass
+            self._ws.teardown()
 
     async def _prefix_setter(self, item):
         if inspect.iscoroutinefunction(item):

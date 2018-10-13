@@ -34,15 +34,13 @@ from aiohttp import web
 from twitchio.errors import TwitchHTTPException
 
 
-__all__ = (
-    'Topic', 'UserFollows', 'StreamChanged', 'UserChanged', 'GameAnalytics', 'ExtensionAnalytics',
-    'TwitchWebhookServer'
-)
+__all__ = ('Topic', 'UserFollows', 'StreamChanged', 'UserChanged', 'GameAnalytics', 'ExtensionAnalytics',
+           'TwitchWebhookServer')
 
 
 class TwitchWebhookServer:
 
-    def __init__(self, *, bot, local: str, external, port: int, callback: str=None):
+    def __init__(self, *, bot, local: str, external: str, port: int, callback: str=None):
         self._bot = bot
         self.local = local
         self.external = external
@@ -54,7 +52,10 @@ class TwitchWebhookServer:
 
         self.loop = None
 
-    def run_server(self, loop):
+    def stop(self):
+        self.loop.stop()
+
+    def run_server(self, loop: asyncio.BaseEventLoop):
         asyncio.set_event_loop(loop)
         self.loop = loop
 
@@ -64,7 +65,7 @@ class TwitchWebhookServer:
         loop.run_until_complete(server)
         loop.run_forever()
 
-    async def handle_callback_post(self, request):
+    async def handle_callback_post(self, request) -> web.Response:
         try:
             data = await request.json()
         except json.JSONDecodeError:
@@ -74,7 +75,7 @@ class TwitchWebhookServer:
 
         return web.Response(text='200: OK', status=200)
 
-    async def handle_callback(self, request):
+    async def handle_callback(self, request) -> web.Response:
         query = request.query
 
         try:

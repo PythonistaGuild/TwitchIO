@@ -445,6 +445,12 @@ class WebsocketConnection:
     async def event_error(self, error: Exception, data: str=None) -> None:
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
+    def teardown(self):
+        if self._bot._webhook_server:
+            self._bot._webhook_server.stop()
+
+        self._websocket.close()
+
 
 class PubSub:
 
