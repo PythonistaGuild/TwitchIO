@@ -288,3 +288,23 @@ class TwitchClient:
         """
 
         return await self.http.get_chatters(channel)
+
+    async def create_clip(self, token: str, broadcaster_id: Union[str, int]):
+        """|coro|
+
+        Method which creater and returns an edit clip url for the given broadcaster_id.
+
+        Parameters
+        ------------
+        token: str
+            The token to use for Authorization.
+        broadcaster_id: Union[str, int]
+            The id of the stream you wish to create a clip for.
+
+        Raises
+        --------
+        TwitchHTTPException
+            Bad request while creating a clip.
+        """
+
+        return await self.http.create_clip(token, broadcaster_id)

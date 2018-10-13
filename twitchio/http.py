@@ -197,6 +197,10 @@ class HTTPSession:
 
         return await self.request('POST', '/webhooks/hub', json=data)
 
+    async def create_clip(self, token: str, broadcaster_id: int):
+        params = [('broadcaster_id', str(broadcaster_id))]
+        return await self.request('POST', '/clips', params=params, headers={'Authorization': f'Bearer {token}'})
+
     async def get_chatters(self, channel: str):
         url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'
 
