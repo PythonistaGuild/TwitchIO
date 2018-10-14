@@ -10,15 +10,12 @@
  * :license: MIT, see LICENSE for details.
  *
  */
-
-
-
 @import url('basic.css');
 
 /* -- page layout --------------------------------------------------------- */
 
 body {
-    font-family: "Lato","proxima-nova","Helvetica Neue",Arial,sans-serif;
+    font-family: "Lato", "proxima-nova", "Helvetica Neue", Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: rgb(252, 252, 252);
@@ -27,7 +24,7 @@ body {
 h1, h2, h3, h4 {
     color: #2a2730;
     font-weight: 700;
-    font-family: "Lora","Times",serif;
+    font-family: "Lora", "Times", serif;
     clear: both;
 }
 
@@ -78,20 +75,20 @@ div.sphinxsidebar {
 }
 
 div.sphinxsidebarwrapper {
-  font-size: 14px;
-  line-height: 1.5em;
-  padding: 10px 0 10px 10px;
+    font-size: 14px;
+    line-height: 1.5em;
+    padding: 10px 0 10px 10px;
 
-  /* sticky sidebar */
-  position: fixed;
-  width: 220px; /* sidebar width */
-  height: 90%;
-  overflow: hidden;
+    /* sticky sidebar */
+    position: fixed;
+    width: 220px; /* sidebar width */
+    height: 90%;
+    overflow: hidden;
 }
 
 /* show scrollbar on hover */
 div.sphinxsidebarwrapper:hover {
-  overflow: auto;
+    overflow: auto;
 }
 
 div.sphinxsidebar h3,
@@ -164,40 +161,91 @@ div.body h2,
 div.body h3,
 div.body h4,
 div.body h5,
-div.body h6 { font-weight: normal; }
+div.body h6 {
+    font-weight: normal;
+}
 
 div.body h1,
 div.body h2,
 div.body h3,
-div.body h4 { color: #212224; }
-div.body h5 { color: #000; }
-div.body h6 { color: #777; }
+div.body h4 {
+    color: #212224;
+}
 
-div.body h1 { margin: 0 0 10px 0; }
+div.body h5 {
+    color: #000;
+}
+
+div.body h6 {
+    color: #777;
+}
+
+div.body h1 {
+    margin: 0 0 10px 0;
+}
+
 div.body h2,
-div.body h3 { margin: 30px 0px 10px 0px; }
+div.body h3 {
+    margin: 30px 0px 10px 0px;
+}
+
 div.body h4,
 div.body h5,
-div.body h6 { margin: 20px 0px 10px 0px; }
+div.body h6 {
+    margin: 20px 0px 10px 0px;
+}
 
-div.body h1 { padding: 0 0 10px 0; }
+div.body h1 {
+    padding: 0 0 10px 0;
+}
+
 div.body h2,
-div.body h3 { padding: 10px 0 10px 0; }
-div.body h4 { padding: 10px 0 10px 0; }
+div.body h3 {
+    padding: 10px 0 10px 0;
+}
+
+div.body h4 {
+    padding: 10px 0 10px 0;
+}
+
 div.body h5,
-div.body h6 { padding: 10px 0 0 0; }
+div.body h6 {
+    padding: 10px 0 0 0;
+}
 
 div.body h1,
 div.body h2,
-div.body h3 { border-bottom: 1px solid #ddd; }
-div.body h4 { border-bottom: 1px solid #e5e5e5; }
+div.body h3 {
+    border-bottom: 1px solid #ddd;
+}
 
-div.body h1 { font-size: 230%; }
-div.body h2 { font-size: 180%; }
-div.body h3 { font-size: 130%; }
-div.body h4 { font-size: 110%; }
-div.body h5 { font-size: 105%; }
-div.body h6 { font-size: 100%; }
+div.body h4 {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+div.body h1 {
+    font-size: 230%;
+}
+
+div.body h2 {
+    font-size: 180%;
+}
+
+div.body h3 {
+    font-size: 130%;
+}
+
+div.body h4 {
+    font-size: 110%;
+}
+
+div.body h5 {
+    font-size: 105%;
+}
+
+div.body h6 {
+    font-size: 100%;
+}
 
 a.headerlink {
     color: #c60f0f;
@@ -423,6 +471,7 @@ table.docutils tbody tr td {
     padding: 7px 5px;
     vertical-align: top;
 }
+
 table.docutils tbody tr:last-child th,
 table.docutils tbody tr:last-child td {
     border-bottom: solid 1px #ddd;
@@ -439,6 +488,7 @@ table.docutils tfoot tr td ol,
 table.docutils tbody tr td ol {
     margin: 0 0 .5em;
 }
+
 table.docutils thead tr td p.last,
 table.docutils tfoot tr td p.last,
 table.docutils tbody tr td p.last,

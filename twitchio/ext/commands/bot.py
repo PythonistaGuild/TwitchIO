@@ -25,23 +25,21 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import importlib
 import inspect
 import sys
 import threading
 import traceback
 import uuid
-
 from typing import Union
 
-from .core import TwitchCommand
-from .errors import TwitchIOCommandError, TwitchCommandNotFound
-from .stringparser import StringParser
 from twitchio.client import TwitchClient
 from twitchio.dataclasses import Context
 from twitchio.errors import ClientError
 from twitchio.webhook import TwitchWebhookServer
 from twitchio.websocket import WebsocketConnection
+from .core import TwitchCommand
+from .errors import TwitchIOCommandError, TwitchCommandNotFound
+from .stringparser import StringParser
 
 
 class TwitchBot(TwitchClient):
@@ -84,10 +82,10 @@ class TwitchBot(TwitchClient):
         A long random string, such as hex, is advised e.g `2t389hth892t3h898hweiogtieo`
     """
 
-    def __init__(self, irc_token: str, api_token: str=None, *, client_id: str=None, prefix: Union[list, tuple, str],
-                 nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None,
-                 webhook_server: bool=False, local_host: str=None, external_host: str=None, callback: str=None,
-                 port: int=None, **attrs):
+    def __init__(self, irc_token: str, api_token: str = None, *, client_id: str = None, prefix: Union[list, tuple, str],
+                 nick: str, loop: asyncio.BaseEventLoop = None, initial_channels: Union[list, tuple] = None,
+                 webhook_server: bool = False, local_host: str = None, external_host: str = None, callback: str = None,
+                 port: int = None, **attrs):
 
         self.loop = loop or asyncio.get_event_loop()
         super().__init__(loop=self.loop, client_id=client_id, **attrs)
@@ -104,15 +102,13 @@ class TwitchBot(TwitchClient):
                                                        callback=callback,
                                                        port=port)
             loop = asyncio.new_event_loop()
-            thread = threading.Thread(target=self._webhook_server.run_server, args=(loop, ), daemon=True)
+            thread = threading.Thread(target=self._webhook_server.run_server, args=(loop,))
             thread.start()
 
         self.loop.create_task(self._prefix_setter(prefix))
 
         self.extra_listeners = {}
         self.commands = {}
-        self.modules = {}
-        self.cogs = {}
         self._aliases = {}
         self.prefixes = None
 
@@ -137,7 +133,8 @@ class TwitchBot(TwitchClient):
         if not isinstance(command, TwitchCommand):
             raise TypeError('Commands passed my be a subclass of TwitchCommand.')
         elif command.name in self.commands:
-            raise TwitchIOCommandError(f'Failed to load command <{command.name}>, a command with that name already exists')
+            raise TwitchIOCommandError(
+                f'Failed to load command <{command.name}>, a command with that name already exists')
         elif not inspect.iscoroutinefunction(command._callback):
             raise TwitchIOCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines.')
 
@@ -153,109 +150,6 @@ class TwitchBot(TwitchClient):
                     f'Failed to load command <{command.name}>, a command with that name/alias already exists.')
 
             self._aliases[alias] = command.name
-
-    def remove_command(self, command):
-        if command.aliases:
-            for a in command.aliases:
-                self._aliases.pop(a)
-
-        try:
-            del self.commands[command.name]
-        except KeyError:
-            # Not sure why this would happen, but people be people.
-            pass
-
-    def load_module(self, name: str):
-        """Method which loads a module and it's cogs.
-
-        Parameters
-        ------------
-        name: str
-            The name of the module to load in dot.path format.
-        """
-        module = importlib.import_module(name)
-
-        if not hasattr(module, 'prepare'):
-            del module
-            del sys.modules[module]
-            raise ImportError(f'Module <{name}> is missing a prepare method')
-
-        if inspect.iscoroutinefunction(module.prepare):
-            self.loop.create_task(module.prepare(self))
-        else:
-            module.prepare(self)
-
-        self.modules[name] = module
-
-    def unload_module(self, name: str):
-        """Method which unloads a module and it's cogs/commands/events.
-
-        Parameters
-        ------------
-        name: str
-            The name of the module to load in dot.path format.
-        """
-
-        module = self.modules.pop(name, None)
-        if not module:
-            return
-
-        for cog_name, cog in self.cogs.copy().items():
-            if cog.__module__ == module.__name__:
-                self.remove_cog(cog)
-
-        if hasattr(module, 'breakdown'):
-            if inspect.iscoroutinefunction(module.cog_breakdown):
-                self.loop.create_task(module.cog_breakdown())
-            else:
-                module.cog_breakdown()
-
-        del module
-        del sys.modules[name]
-
-    def add_cog(self, cog):
-        """Method which loads a cog and adds it's commands and events.
-
-        Parameters
-        ------------
-        cog:
-            An instance of the cog you wish to load.
-        """
-        members = inspect.getmembers(cog)
-
-        for name, member in members:
-            if isinstance(member, TwitchCommand):
-                self.add_command(member)
-            elif name.startswith('event_'):
-                self.add_listener(member, name)
-
-        self.cogs[type(cog).__name__] = cog
-
-    def remove_cog(self, cog):
-        """Method which removes a cog and adds it's commands and events.
-
-        Parameters
-        ------------
-        cog:
-            An instance of the cog you wish to remove.
-        """
-        cog = self.cogs.pop(type(cog).__name__, None)
-        if not cog:
-            return
-
-        for name, member in inspect.getmembers(cog):
-            if isinstance(member, TwitchCommand):
-                self.remove_command(member)
-            elif name.startswith('event_'):
-                del self.extra_listeners[name]
-            elif name in self.extra_listeners:
-                del self.extra_listeners[member.__name__]
-
-        if hasattr(cog, 'cog_unload'):
-            if inspect.iscoroutinefunction(cog.cog_breakdown):
-                self.loop.create_task(cog.cog_unload())
-            else:
-                cog.cog_unload()
 
     def run(self):
         """A blocking call that initializes the IRC Bot event loop.
@@ -276,7 +170,7 @@ class TwitchBot(TwitchClient):
         except KeyboardInterrupt:
             pass
         finally:
-            self._ws.teardown()
+            self.teardown()
 
     async def start(self):
         """|coro|
@@ -296,7 +190,10 @@ class TwitchBot(TwitchClient):
         except KeyboardInterrupt:
             pass
         finally:
-            self._ws.teardown()
+            self.teardown()
+
+    def teardown(self):
+        pass
 
     async def _prefix_setter(self, item):
         if inspect.iscoroutinefunction(item):
@@ -309,7 +206,8 @@ class TwitchBot(TwitchClient):
         elif isinstance(item, str):
             self.prefixes = [item]
         else:
-            raise ClientError('Invalid prefix provided. A list, tuple, str or callable returning either should be used.')
+            raise ClientError(
+                'Invalid prefix provided. A list, tuple, str or callable returning either should be used.')
 
     async def _get_prefixes(self, message):
         prefix = ret = self.prefixes
@@ -342,7 +240,7 @@ class TwitchBot(TwitchClient):
 
         return prefix
 
-    async def get_context(self, message, cls=None):
+    async def get_context(self, message, cls = None):
         """|coro|
 
         A function which creates context with the given message.
@@ -368,7 +266,7 @@ class TwitchBot(TwitchClient):
         ctx = cls(message=message, channel=message.channel, user=message.author, prefix=prefix)
         return ctx
 
-    async def handle_commands(self, message, ctx=None):
+    async def handle_commands(self, message, ctx = None):
         if ctx is None:
             try:
                 ctx = await self.get_context(message)
@@ -411,8 +309,6 @@ class TwitchBot(TwitchClient):
         try:
             ctx.args, ctx.kwargs = await command.parse_args(instance, parsed)
 
-            await self.global_before_hook(ctx)
-
             if ctx.command._before_invoke:
                 await ctx.command._before_invoke(instance, ctx)
 
@@ -426,39 +322,7 @@ class TwitchBot(TwitchClient):
 
             await self.event_command_error(ctx, e)
 
-    async def global_before_hook(self, ctx):
-        """|coro|
-
-        Method which is called before any command is about to be invoked.
-
-        This method is useful for setting up things before command invocation. E.g Database connections or
-        retrieving tokens for use in the command.
-
-        Parameters
-        ------------
-        ctx:
-            The context used for command invocation.
-
-        Examples
-        ----------
-        .. code:: py
-
-            async def global_before_hook(self, ctx):
-                # Make a database query for example to retrieve a specific token.
-                token = db_query()
-
-                ctx.token = token
-
-            async def my_command(self, ctx):
-                data = await self.create_clip(ctx.token, ...)
-
-        Note
-        ------
-            The global_before_hook is called before any other command specific hooks.
-        """
-        pass
-
-    async def webhook_subscribe(self, topic: str, callback: str=None):
+    async def webhook_subscribe(self, topic: str, callback: str = None):
         """|coro|
 
         Subscribe to WebHook topics.
@@ -651,7 +515,7 @@ class TwitchBot(TwitchClient):
         """
         await self.handle_commands(message)
 
-    async def event_error(self, error: Exception, data=None):
+    async def event_error(self, error: Exception, data = None):
         """|coro|
 
         Event called when an error occurs while processing data.
@@ -708,7 +572,7 @@ class TwitchBot(TwitchClient):
         """
         pass
 
-    def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=None):
+    def command(self, *, name: str = None, aliases: Union[list, tuple] = None, cls = None):
         """Decorator which registers a command on the bot.
 
         Commands must be coroutines.
@@ -732,6 +596,7 @@ class TwitchBot(TwitchClient):
 
             command = cls(name=fname, func=func, aliases=aliases, instance=None)
             self.add_command(command)
+
         return decorator
 
     def event(self, func):
@@ -756,7 +621,7 @@ class TwitchBot(TwitchClient):
         setattr(self, func.__name__, func)
         return func
 
-    def add_listener(self, func, name: str=None):
+    def add_listener(self, func, name: str = None):
         """Method which adds a coroutine as an extra listener.
 
         This can be used to add extra event listeners to the bot.
@@ -778,7 +643,7 @@ class TwitchBot(TwitchClient):
         else:
             self.extra_listeners[name].append(func)
 
-    def listen(self, event: str=None):
+    def listen(self, event: str = None):
         """Decorator which adds a coroutine as a listener to an event.
 
         This can be used in place of :meth:`.event` or when more than one of the same event is required.
@@ -800,13 +665,15 @@ class TwitchBot(TwitchClient):
             async def extra_message(message):
             print(message.content)
         """
+
         def wrapper(func):
             self.add_listener(func, event)
 
             return func
+
         return wrapper
 
-    async def modify_webhook_subscription(self, *, callback=None, mode, topic, lease_seconds=0, secret=None):
+    async def modify_webhook_subscription(self, *, callback = None, mode, topic, lease_seconds = 0, secret = None):
         """|coro|
 
         Creates a webhook subscription.

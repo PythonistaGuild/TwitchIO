@@ -32,7 +32,7 @@ from twitchio.http import HTTPSession
 
 class TwitchClient:
 
-    def __init__(self, *, loop=None, client_id=None, **kwargs):
+    def __init__(self, *, loop = None, client_id = None, **kwargs):
         loop = loop or asyncio.get_event_loop()
         self.http = HTTPSession(loop=loop, client_id=client_id)
 
@@ -112,7 +112,7 @@ class TwitchClient:
         data = await self.http.get_streams(channels=[channel])
         return data[0]
 
-    async def get_streams(self, *, game_id=None, language=None, channels=None, limit=None):
+    async def get_streams(self, *, game_id = None, language = None, channels = None, limit = None):
         """|coro|
 
         Method which retrieves multiple stream information on the given channels, provided they are active (Live).
@@ -164,7 +164,7 @@ class TwitchClient:
 
         return await self.http.get_games(*games)
 
-    async def get_top_games(self, limit=None):
+    async def get_top_games(self, limit = None):
         """|coro|
 
         Retrieves the top games currently being played on Twitch.
@@ -187,7 +187,7 @@ class TwitchClient:
 
         return await self.http.get_top_games(limit=limit)
 
-    async def modify_webhook_subscription(self, *, callback, mode, topic, lease_seconds=0, secret=None):
+    async def modify_webhook_subscription(self, *, callback, mode, topic, lease_seconds = 0, secret = None):
         """|coro|
 
         Creates a webhook subscription.
@@ -288,23 +288,3 @@ class TwitchClient:
         """
 
         return await self.http.get_chatters(channel)
-
-    async def create_clip(self, token: str, broadcaster_id: Union[str, int]):
-        """|coro|
-
-        Method which creater and returns an edit clip url for the given broadcaster_id.
-
-        Parameters
-        ------------
-        token: str
-            The token to use for Authorization.
-        broadcaster_id: Union[str, int]
-            The id of the stream you wish to create a clip for.
-
-        Raises
-        --------
-        TwitchHTTPException
-            Bad request while creating a clip.
-        """
-
-        return await self.http.create_clip(token, broadcaster_id)

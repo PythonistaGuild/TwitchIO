@@ -23,14 +23,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-import aiohttp
 import asyncio
 from collections import namedtuple
 from typing import Union
 
+import aiohttp
+
 from .cooldowns import RateBucket
 from .errors import TwitchHTTPException
-
 
 Chatters = namedtuple('Chatters', ('count', 'all', 'vips', 'moderators', 'staff', 'admins', 'global_mods', 'viewers'))
 
@@ -44,7 +44,7 @@ class HTTPSession:
         self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
 
-    async def request(self, method, url, *, params=None, limit=None, **kwargs):
+    async def request(self, method, url, *, params = None, limit = None, **kwargs):
         data = []
 
         params = params or []
@@ -90,7 +90,7 @@ class HTTPSession:
 
         return data
 
-    async def _request(self, method, url, utilize_bucket=True, **kwargs):
+    async def _request(self, method, url, utilize_bucket = True, **kwargs):
         reason = None
 
         for attempt in range(5):
@@ -160,7 +160,7 @@ class HTTPSession:
         params = [('from_id', user_id)]
         return await self.request('GET', '/users/follows', params=params)
 
-    async def get_streams(self, *, game_id=None, language=None, channels, limit=None):
+    async def get_streams(self, *, game_id = None, language = None, channels, limit = None):
         if channels:
             names, ids = self._populate_entries(*channels)
             params = [('id', x) for x in ids] + [('user_login', x) for x in names]
@@ -181,10 +181,10 @@ class HTTPSession:
 
         return await self.request('GET', '/games', params=params)
 
-    async def get_top_games(self, limit=None):
+    async def get_top_games(self, limit = None):
         return await self.request('GET', '/games/top', limit=limit)
 
-    async def modify_webhook_subscription(self, *, callback, mode, topic, lease_seconds, secret=None):
+    async def modify_webhook_subscription(self, *, callback, mode, topic, lease_seconds, secret = None):
         data = {
             'hub.callback': callback,
             'hub.mode': mode,
@@ -196,10 +196,6 @@ class HTTPSession:
             data['secret'] = secret
 
         return await self.request('POST', '/webhooks/hub', json=data)
-
-    async def create_clip(self, token: str, broadcaster_id: int):
-        params = [('broadcaster_id', str(broadcaster_id))]
-        return await self.request('POST', '/clips', params=params, headers={'Authorization': f'Bearer {token}'})
 
     async def get_chatters(self, channel: str):
         url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'

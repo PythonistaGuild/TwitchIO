@@ -24,8 +24,8 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import time
 import random
+import time
 
 
 class ExponentialBackoff:
@@ -50,7 +50,7 @@ class ExponentialBackoff:
         number in between may be returned.
     """
 
-    def __init__(self, base=1, *, integral=False):
+    def __init__(self, base = 1, *, integral = False):
         self._base = base
 
         self._exp = 0

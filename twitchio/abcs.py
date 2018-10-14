@@ -59,7 +59,6 @@ limiter = IRCLimiterMapping()
 
 
 class Messageable(metaclass=abc.ABCMeta):
-
     __slots__ = ()
 
     __invalid__ = ('ban', 'unban', 'timeout', 'w', 'colour', 'color', 'mod',
@@ -121,16 +120,12 @@ class Messageable(metaclass=abc.ABCMeta):
                 content = original
 
         ws = self._get_socket._websocket
+        bot = self._get_socket._channel_cache[channel]['bot']
 
-        try:
-            bot = self._get_socket._channel_cache[channel]['bot']
-        except KeyError:
-            bucket = limiter.get_bucket(channel=channel, method='irc')
+        if bot.is_mod:
+            bucket = limiter.get_bucket(channel=channel, method='mod')
         else:
-            if bot.is_mod:
-                bucket = limiter.get_bucket(channel=channel, method='mod')
-            else:
-                bucket = limiter.get_bucket(channel=channel, method='irc')
+            bucket = limiter.get_bucket(channel=channel, method='irc')
 
         now = time.time()
         bucket.update()

@@ -29,7 +29,6 @@ import time
 
 
 class RateBucket:
-
     HTTPLIMIT = 30
     IRCLIMIT = 20
     MODLIMIT = 100
@@ -61,7 +60,7 @@ class RateBucket:
         self.tokens = 0
         self._reset = time.time() + self.reset_time
 
-    def update(self, *, reset=None, remaining=None):
+    def update(self, *, reset = None, remaining = None):
         now = time.time()
 
         if self._reset <= now:

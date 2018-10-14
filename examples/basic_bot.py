@@ -51,4 +51,5 @@ async def event_message(message):
 async def test_command(ctx):
     await ctx.send(f'Hello {ctx.author.name}')
 
+
 bot.run()

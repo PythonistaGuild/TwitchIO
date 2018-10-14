@@ -166,7 +166,7 @@ class TwitchCommand:
         return func
 
 
-def twitch_command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
+def twitch_command(*, name: str = None, aliases: Union[list, tuple] = None, cls = None):
     if cls and not inspect.isclass(cls):
         raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
@@ -181,4 +181,5 @@ def twitch_command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None
         command.instance = command
 
         return command
+
     return decorator

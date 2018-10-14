@@ -1,5 +1,5 @@
 TwitchIO Commands Extension
-===========================
+=========================
 
 Bot
 ------------------------
@@ -8,11 +8,13 @@ Bot
     :members:
     :inherited-members:
 
+
 Command
 -----------------------------
 
 .. autoclass:: twitchio.ext.commands.core.TwitchCommand
     :members:
+
 
 Errors
 -------------------------------

@@ -30,7 +30,6 @@ from .abcs import Messageable
 
 
 class Message:
-
     __slots__ = ('_author', '_channel', '_raw_data', 'content', 'clean_content', '_tags', '_timestamp')
 
     def __init__(self, **attrs):
@@ -79,13 +78,12 @@ class Message:
         timestamp:
             UTC datetime object of the Twitch timestamp.
         """
-        timestamp = datetime.datetime.utcfromtimestamp(self._timestamp/1000)
+        timestamp = datetime.datetime.utcfromtimestamp(self._timestamp / 1000)
         return timestamp
 
 
 class Channel(Messageable):
-
-    __slots__ = ('_channel', '_ws', '_http', )
+    __slots__ = ('_channel', '_ws', '_http',)
 
     def __init__(self, name, ws, http):
         self._channel = name
@@ -149,7 +147,6 @@ class Channel(Messageable):
 
 
 class User(Messageable):
-
     __slots__ = ('_name', '_channel', '_tags', 'display_name', '_id', 'type',
                  '_colour', 'subscriber', 'turbo', '_badges', '_ws', '_mod')
 
