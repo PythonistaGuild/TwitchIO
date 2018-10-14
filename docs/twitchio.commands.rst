@@ -1,5 +1,5 @@
 TwitchIO Commands Extension
-===========================
+=========================
 
 Bot
 ------------------------
@@ -8,18 +8,24 @@ Bot
     :members:
     :inherited-members:
 
+
 Command
 -----------------------------
 
 .. autoclass:: twitchio.ext.commands.core.TwitchCommand
     :members:
 
+
 Errors
 -------------------------------
 
-.. automodule:: twitchio.ext.commands.errors
-    :members:
-    :show-inheritance:
+.. autoexception:: twitchio.ext.commands.errors.TwitchIOCommandError
+
+.. autoexception:: twitchio.ext.commands.errors.TwitchCommandNotFound
+
+.. autoexception:: twitchio.ext.commands.errors.TwitchMissingRequiredArguments
+
+.. autoexception:: twitchio.ext.commands.errors.TwitchBadArgument
 
 
 Module Contents

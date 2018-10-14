@@ -144,9 +144,18 @@ Dataclasses belonging to TwitchIO.
 Errors
 -----------------------
 
-.. automodule:: twitchio.errors
-    :members:
-    :show-inheritance:
+.. autoexception:: twitchio.errors.TwitchIOBException
+
+.. autoexception:: twitchio.errors.AuthenticationError
+
+.. autoexception:: twitchio.errors.WSConnectionFailure
+
+.. autoexception:: twitchio.errors.ClientError
+
+.. autoexception:: twitchio.errors.InvalidContent
+
+.. autoexception:: twitchio.errors.TwitchHTTPException
+
 
 Module Contents
 ---------------
