@@ -200,10 +200,8 @@ class TwitchBot(TwitchClient):
         if not module:
             return
 
-        module_name = module.__name__
-
         for cog_name, cog in self.cogs.copy().items():
-            if cog.__module__ == module_name:
+            if cog.__module__ == module.__name__:
                 self.remove_cog(cog)
 
         if hasattr(module, 'breakdown'):
