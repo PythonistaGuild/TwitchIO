@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import importlib
 import inspect
 import sys
 import threading
@@ -110,6 +111,8 @@ class TwitchBot(TwitchClient):
 
         self.extra_listeners = {}
         self.commands = {}
+        self.modules = {}
+        self.cogs = {}
         self._aliases = {}
         self.prefixes = None
 
@@ -150,6 +153,111 @@ class TwitchBot(TwitchClient):
                     f'Failed to load command <{command.name}>, a command with that name/alias already exists.')
 
             self._aliases[alias] = command.name
+
+    def remove_command(self, command):
+        if command.aliases:
+            for a in command.aliases:
+                self._aliases.pop(a)
+
+        try:
+            del self.commands[command.name]
+        except KeyError:
+            # Not sure why this would happen, but people be people.
+            pass
+
+    def load_module(self, name: str):
+        """Method which loads a module and it's cogs.
+
+        Parameters
+        ------------
+        name: str
+            The name of the module to load in dot.path format.
+        """
+        module = importlib.import_module(name)
+
+        if not hasattr(module, 'prepare'):
+            del module
+            del sys.modules[module]
+            raise ImportError(f'Module <{name}> is missing a prepare method')
+
+        if inspect.iscoroutinefunction(module.prepare):
+            self.loop.create_task(module.prepare(self))
+        else:
+            module.prepare(self)
+
+        self.modules[name] = module
+
+    def unload_module(self, name: str):
+        """Method which unloads a module and it's cogs/commands/events.
+
+        Parameters
+        ------------
+        name: str
+            The name of the module to load in dot.path format.
+        """
+
+        module = self.modules.pop(name, None)
+        if not module:
+            return
+
+        module_name = module.__name__
+
+        for cog_name, cog in self.cogs.copy().items():
+            if cog.__module__ == module_name:
+                self.remove_cog(cog)
+
+        if hasattr(module, 'breakdown'):
+            if inspect.iscoroutinefunction(module.cog_breakdown):
+                self.loop.create_task(module.cog_breakdown())
+            else:
+                module.cog_breakdown()
+
+        del module
+        del sys.modules[name]
+
+    def add_cog(self, cog):
+        """Method which loads a cog and adds it's commands and events.
+
+        Parameters
+        ------------
+        cog:
+            An instance of the cog you wish to load.
+        """
+        members = inspect.getmembers(cog)
+
+        for name, member in members:
+            if isinstance(member, TwitchCommand):
+                self.add_command(member)
+            elif name.startswith('event_'):
+                self.add_listener(member, name)
+
+        self.cogs[type(cog).__name__] = cog
+
+    def remove_cog(self, cog):
+        """Method which removes a cog and adds it's commands and events.
+
+        Parameters
+        ------------
+        cog:
+            An instance of the cog you wish to remove.
+        """
+        cog = self.cogs.pop(type(cog).__name__, None)
+        if not cog:
+            return
+
+        for name, member in inspect.getmembers(cog):
+            if isinstance(member, TwitchCommand):
+                self.remove_command(member)
+            elif name.startswith('event_'):
+                del self.extra_listeners[name]
+            elif name in self.extra_listeners:
+                del self.extra_listeners[member.__name__]
+
+        if hasattr(cog, 'cog_unload'):
+            if inspect.iscoroutinefunction(cog.cog_breakdown):
+                self.loop.create_task(cog.cog_unload())
+            else:
+                cog.cog_unload()
 
     def run(self):
         """A blocking call that initializes the IRC Bot event loop.
