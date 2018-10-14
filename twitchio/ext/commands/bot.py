@@ -458,50 +458,6 @@ class TwitchBot(TwitchClient):
         """
         pass
 
-    async def webhook_subscribe(self, topic: str, callback: str=None):
-        """|coro|
-
-        Subscribe to WebHook topics.
-
-        Parameters
-        ------------
-        topic: str [Required]
-            The topic you would like to subscribe to.
-        callback: str [Optional]
-            The callback the subscription flow should use. If you are using the built-in server, you don't need
-            to worry about this. The callback must be a full address. e.g http://twitch.io/callback
-
-        Raises
-        --------
-        ClientError
-            No callback was able to be used.
-
-        Returns
-        ---------
-        response
-            The response received from the POST request.
-
-        Notes
-        -------
-
-        .. note::
-
-            A list of topics can be found here: https://dev.twitch.tv/docs/api/webhooks-reference/
-        """
-        if not self._webhook_server and callback:
-            raise ClientError('A valid callback is required to subscribe to webhook events.')
-
-        if not callback:
-            callback = f'{self._webhook_server.external}:{self._webhook_server.port}/{self._webhook_server.callback}'
-
-        payload = {"hub.mode": "subscribe",
-                   "hub.topic": topic,
-                   "hub.callback": callback,
-                   "hub.lease_seconds": 864000}
-
-        async with self.http._session.post('https://api.twitch.tv/helix/webhooks/hub', data=payload) as resp:
-            return resp
-
     async def event_webhook(self, data):
         """|coro|
 
