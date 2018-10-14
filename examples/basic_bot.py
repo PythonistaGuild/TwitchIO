@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 from twitchio.ext import commands
 
+
 # api token can be passed as test if not needed.
 # Channels is the initial channels to join, this could be a list, tuple or callable
 bot = commands.TwitchBot(irc_token='...', api_token='test', nick='mysterialpy', prefix='!',

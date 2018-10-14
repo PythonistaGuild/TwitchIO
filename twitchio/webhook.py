@@ -33,6 +33,7 @@ from aiohttp import web
 
 from twitchio.errors import TwitchHTTPException
 
+
 __all__ = (
     'Topic', 'UserFollows', 'StreamChanged', 'UserChanged', 'GameAnalytics', 'ExtensionAnalytics',
     'TwitchWebhookServer'

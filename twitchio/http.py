@@ -32,6 +32,7 @@ import aiohttp
 from .cooldowns import RateBucket
 from .errors import TwitchHTTPException
 
+
 Chatters = namedtuple('Chatters', ('count', 'all', 'vips', 'moderators', 'staff', 'admins', 'global_mods', 'viewers'))
 
 

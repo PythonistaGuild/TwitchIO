@@ -40,6 +40,7 @@ from .backoff import ExponentialBackoff
 from .dataclasses import *
 from .errors import WSConnectionFailure, AuthenticationError, ClientError
 
+
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 

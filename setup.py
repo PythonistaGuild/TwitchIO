@@ -29,6 +29,7 @@ import re
 
 from setuptools import setup
 
+
 on_rtd = os.getenv('READTHEDOCS') == 'True'
 
 with open('requirements.txt') as f:
@@ -53,6 +54,7 @@ if version.endswith(('a', 'b', 'rc')):
     # append version identifier based on commit count
     try:
         import subprocess
+
 
         p = subprocess.Popen(['git', 'rev-list', '--count', 'HEAD'],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)

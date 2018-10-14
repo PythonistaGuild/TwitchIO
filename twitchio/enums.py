@@ -24,9 +24,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import enum
-
 __all__ = ('WebhookMode',)
+
+import enum
 
 
 class WebhookMode(enum.Enum):
