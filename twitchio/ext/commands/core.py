@@ -178,7 +178,6 @@ def twitch_command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None
 
         fname = name or func.__name__
         command = cls(name=fname, func=func, aliases=aliases)
-        command.instance = command
 
         return command
     return decorator

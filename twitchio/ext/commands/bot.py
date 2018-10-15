@@ -225,6 +225,7 @@ class TwitchBot(TwitchClient):
 
         for name, member in members:
             if isinstance(member, TwitchCommand):
+                member.instance = cog
                 self.add_command(member)
             elif name.startswith('event_'):
                 self.add_listener(member, name)
