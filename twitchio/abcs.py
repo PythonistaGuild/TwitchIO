@@ -79,6 +79,34 @@ class Messageable(metaclass=abc.ABCMeta):
     def _get_method(self):
         raise NotImplementedError
 
+    def check_bucket(self, channel):
+        ws = self._get_socket
+
+        try:
+            bot = ws._channel_cache[channel]['bot']
+        except KeyError:
+            bucket = limiter.get_bucket(channel=channel, method='irc')
+        else:
+            if bot.is_mod:
+                bucket = limiter.get_bucket(channel=channel, method='mod')
+            else:
+                bucket = limiter.get_bucket(channel=channel, method='irc')
+
+        now = time.time()
+        bucket.update()
+
+        if bucket.limited:
+            raise TwitchIOBException(f'IRC Message rate limit reached for channel <{channel}>.'
+                                     f' Please try again in {bucket._reset - now:.2f}s')
+
+    @staticmethod
+    def check_content(channel, content: str):
+        if not channel:
+            raise TwitchIOBException('Invalid channel for Messageable. Must be channel or user.')
+
+        if len(content) > 500:
+            raise InvalidContent('Length of message can not be > 500.')
+
     async def send(self, content: str):
         """|coro|
 
@@ -104,11 +132,7 @@ class Messageable(metaclass=abc.ABCMeta):
         channel, user = self._get_channel()
         method = self._get_method()
 
-        if not channel:
-            raise TwitchIOBException('Invalid channel for Messageable. Must be channel or user.')
-
-        if len(content) > 500:
-            raise InvalidContent('Length of message can not be > 500.')
+        self.check_content(channel, content)
 
         original = content
 
@@ -121,23 +145,7 @@ class Messageable(metaclass=abc.ABCMeta):
                 content = original
 
         ws = self._get_socket._websocket
-
-        try:
-            bot = self._get_socket._channel_cache[channel]['bot']
-        except KeyError:
-            bucket = limiter.get_bucket(channel=channel, method='irc')
-        else:
-            if bot.is_mod:
-                bucket = limiter.get_bucket(channel=channel, method='mod')
-            else:
-                bucket = limiter.get_bucket(channel=channel, method='irc')
-
-        now = time.time()
-        bucket.update()
-
-        if bucket.limited:
-            raise TwitchIOBException(f'IRC Message rate limit reached for channel <{channel}>.'
-                                     f' Please try again in {bucket._reset - now:.2f}s')
+        self.check_bucket(channel)
 
         content = content.replace('\n', ' ')
 
@@ -145,3 +153,45 @@ class Messageable(metaclass=abc.ABCMeta):
             await ws.send(f'PRIVMSG #{channel} :{content}\r\n')
         else:
             await ws.send(f'PRIVMSG #{channel} :.w {user} {content}\r\n')
+
+    async def ban(self, user: str, reason: str=''):
+        ws = self._get_socket._websocket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(hannel)
+
+        await ws.send(f'PRIVMSG #{channel} :.ban {user} {reason}')
+
+    async def unban(self, user: str):
+        ws = self._get_socket._websocket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(channel)
+
+        await ws.send(f'PRIVMSG #{channel} :.unban {user}')
+
+    async def send_me(self, content: str):
+        """|coro|
+
+        Method which sends .me along with your content.
+
+        Parameters
+        ------------
+        content: str
+            The message you wish to send.
+
+        Raises
+        --------
+        InvalidContent
+            The content exceeded 500 characters.
+        """
+        ws = self._get_socket._websocket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(channel)
+        self.check_content(channel, content)
+
+        await ws.send(f'PRIVMSG #{channel} :.me {content}')
+
+
+
