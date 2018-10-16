@@ -10,6 +10,11 @@
 .. image:: https://api.codacy.com/project/badge/Grade/61e9d573b4af415a809068333d6b437b
     :target: https://app.codacy.com/app/mysterialpy/TwitchIO?utm_source=github.com&utm_medium=referral&utm_content=EvieePy/TwitchIO&utm_campaign=Badge_Grade_Settings
 
+.. image:: https://api.codeclimate.com/v1/badges/1d1a6d3e8e3e3e29109e/maintainability
+    :target: https://codeclimate.com/github/TwitchIO/TwitchIO/maintainability
+    :alt: Maintainability
+
+
 An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in Python!
 
 Documentation
