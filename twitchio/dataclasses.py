@@ -148,7 +148,7 @@ class Channel(Messageable):
         return await self._http.get_chatters(self.name)
 
 
-class User(Messageable):
+class User:
 
     __slots__ = ('_name', '_channel', '_tags', 'display_name', '_id', 'type',
                  '_colour', 'subscriber', 'turbo', '_badges', '_ws', '_mod')
