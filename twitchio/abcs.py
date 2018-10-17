@@ -154,15 +154,105 @@ class Messageable(metaclass=abc.ABCMeta):
         else:
             await ws.send(f'PRIVMSG #{channel} :.w {user} {content}\r\n')
 
-    async def ban(self, user: str, reason: str=''):
+    async def clear(self):
+        """|coro|
+
+        Method which sends .clear to Twitch and clears the chat.
+        """
+
         ws = self._get_socket._websocket
         channel, _ = self._get_channel()
 
-        self.check_bucket(hannel)
+        self.check_bucket(channel)
+
+        await ws.send(f'PRIVMSG #{channel} :.clear')
+
+    async def slow(self):
+        """|coro|
+
+        Method which sends a .slow to Twitch and sets the channel to slowmode.
+        """
+
+        ws = self._get_socket._websocket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(channel)
+
+        await ws.send(f'PRIVMSG #{channel} :.slow')
+
+    async def unslow(self):
+        """|coro|
+
+        Method which sends a .slowoff to Twitch and sets the channel to slowmode off.
+        """
+
+        ws = self._get_socket._websocket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(channel)
+
+        await ws.send(f'PRIVMSG #{channel} :.slowoff')
+
+    async def slow_off(self):
+        """|coro|
+
+        Alias to unslow.
+        """
+        await self.unslow()
+
+    async def timeout(self, user: str, duration: int=600, reason: str=''):
+        """|coro|
+
+        Method which sends a .timeout command to Twitch.
+
+        Parameters
+        ------------
+        user: str
+            The user you wish to timeout.
+        duration: int
+            The duration in seconds to timeout the user.
+        reason: Optional[str]
+            The reason you timed out the user.
+        """
+
+        ws = self._get_socket._websocket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(channel)
+
+        await ws.send(f'PRIVMSG #{channel} :.timeout {user} {duration} {reason}')
+
+    async def ban(self, user: str, reason: str=''):
+        """|coro|
+
+        Method which sends a .ban command to Twitch.
+
+        Parameters
+        ------------
+        user: str
+            The user you would like to ban.
+        reason: Optional[str]
+            The reason you banned this user.
+        """
+
+        ws = self._get_socket._websocket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(channel)
 
         await ws.send(f'PRIVMSG #{channel} :.ban {user} {reason}')
 
     async def unban(self, user: str):
+        """|coro|
+
+        Method which sends a .unban command to Twitch.
+
+        Parameters
+        ------------
+        user: str
+            The user you wish to unban.
+        """
+
         ws = self._get_socket._websocket
         channel, _ = self._get_channel()
 
@@ -185,6 +275,7 @@ class Messageable(metaclass=abc.ABCMeta):
         InvalidContent
             The content exceeded 500 characters.
         """
+
         ws = self._get_socket._websocket
         channel, _ = self._get_channel()
 
