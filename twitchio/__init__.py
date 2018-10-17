@@ -28,7 +28,7 @@ __title__ = 'twitchio'
 __author__ = 'EvieePy'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-2018 EvieePy'
-__version__ = '0.0.1a'
+__version__ = '0.0.3a'
 
 import logging
 from .dataclasses import Context, Message, User, Channel
