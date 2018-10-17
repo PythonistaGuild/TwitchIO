@@ -259,12 +259,12 @@ class User:
 
 class Context(Messageable):
     """
-    :ivar author: initial value: The author of the command.
-    :ivar prefix: initial value: The prefix associated with the command.
-    :ivar message: initial value: The message associated with the command.
-    :ivar channel: initial value: THe channel associated with the command.
-    :ivar command: initial value: The command which was invoked.
-    
+    :ivar author: The author of the command.
+    :ivar prefix: The prefix associated with the command.
+    :ivar message: The message associated with the command.
+    :ivar channel: The channel associated with the command.
+    :ivar command: The command which was invoked.
+
     .. note::
         Context is only available through the commands extension.
     """
