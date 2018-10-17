@@ -174,16 +174,6 @@ class User:
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)
 
-    def _get_channel(self):
-        return self.channel, self._name
-
-    def _get_method(self):
-        return self.__class__.__name__
-
-    @property
-    def _get_socket(self):
-        return self._ws
-
     @property
     def name(self):
         """The user's name."""
