@@ -25,15 +25,16 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import async_timeout
 import json
 import logging
 import random
 import re
 import sys
 import traceback
-import websockets
 from typing import Union
+
+import async_timeout
+import websockets
 
 from .backoff import ExponentialBackoff
 from .dataclasses import *
@@ -41,7 +42,6 @@ from .errors import WSConnectionFailure, AuthenticationError, ClientError
 
 
 log = logging.getLogger(__name__)
-log.addHandler(logging.NullHandler())
 
 
 class PubSubPool:
