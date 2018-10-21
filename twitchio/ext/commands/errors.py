@@ -24,6 +24,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ('TwitchIOCommandError', 'TwitchCommandNotFound', 'TwitchMissingRequiredArguments', 'TwitchBadArgument',)
+
+
 from twitchio.errors import TwitchIOBException
 
 

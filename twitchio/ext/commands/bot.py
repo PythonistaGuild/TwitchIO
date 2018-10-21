@@ -31,7 +31,6 @@ import sys
 import threading
 import traceback
 import uuid
-
 from typing import Union
 
 from .core import TwitchCommand
