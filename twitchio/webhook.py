@@ -24,6 +24,17 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = (
+    'Topic',
+    'UserFollows',
+    'StreamChanged',
+    'UserChanged',
+    'GameAnalytics',
+    'ExtensionAnalytics',
+    'TwitchWebhookServer',
+)
+
+
 import abc
 import asyncio
 import json
@@ -32,10 +43,6 @@ import uuid
 from aiohttp import web
 
 from twitchio.errors import TwitchHTTPException
-
-
-__all__ = ('Topic', 'UserFollows', 'StreamChanged', 'UserChanged', 'GameAnalytics', 'ExtensionAnalytics',
-           'TwitchWebhookServer')
 
 
 class TwitchWebhookServer:

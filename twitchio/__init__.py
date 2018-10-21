@@ -31,6 +31,7 @@ __copyright__ = 'Copyright 2017-2018 EvieePy'
 __version__ = '0.0.3a'
 
 import logging
+
 from .dataclasses import Context, Message, User, Channel
 from .errors import *
 from .enums import *
@@ -38,8 +39,8 @@ from .client import TwitchClient
 from .webhook import *
 
 try:
-    from logging import NullHandler
-except ImportError:
+    NullHandler = logging.NullHandler
+except AttributeError:
     class NullHandler(logging.Handler):
         def emit(self, record):
             pass
