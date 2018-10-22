@@ -30,7 +30,7 @@ __all__ = (
     'WSConnectionFailure',
     'ClientError',
     'InvalidContent',
-    'TwitchHTTPException',
+    'HTTPException',
 )
 
 
@@ -54,5 +54,5 @@ class InvalidContent(TwitchIOBException):
     pass
 
 
-class TwitchHTTPException(TwitchIOBException):
+class HTTPException(TwitchIOBException):
     pass

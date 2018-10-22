@@ -4,7 +4,7 @@ TwitchIO Commands Extension
 Bot
 ------------------------
 
-.. autoclass:: twitchio.ext.commands.bot.TwitchBot
+.. autoclass:: twitchio.ext.commands.bot.Bot
     :members:
     :inherited-members:
 
@@ -12,20 +12,20 @@ Bot
 Command
 -----------------------------
 
-.. autoclass:: twitchio.ext.commands.core.TwitchCommand
+.. autoclass:: twitchio.ext.commands.core.Command
     :members:
 
 
 Errors
 -------------------------------
 
-.. autoexception:: twitchio.ext.commands.errors.TwitchIOCommandError
+.. autoexception:: twitchio.ext.commands.errors.CommandError
 
-.. autoexception:: twitchio.ext.commands.errors.TwitchCommandNotFound
+.. autoexception:: twitchio.ext.commands.errors.CommandNotFound
 
-.. autoexception:: twitchio.ext.commands.errors.TwitchMissingRequiredArguments
+.. autoexception:: twitchio.ext.commands.errors.MissingRequiredArguments
 
-.. autoexception:: twitchio.ext.commands.errors.TwitchBadArgument
+.. autoexception:: twitchio.ext.commands.errors.BadArgument
 
 
 Module Contents

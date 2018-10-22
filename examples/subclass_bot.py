@@ -27,11 +27,16 @@ DEALINGS IN THE SOFTWARE.
 from twitchio.ext import commands
 
 
-class Bot(commands.TwitchBot):
+class Bot(commands.Bot):
 
     def __init__(self):
-        super().__init__(irc_token='...', api_token='...', nick='mysterialpy', prefix='!',
-                         initial_channels=['mysterialpy'])
+        super().__init__(
+            irc_token='...',
+            api_token='...',
+            nick='mysterialpy',
+            prefix='!',
+            initial_channels=['mysterialpy']
+        )
 
     # Events don't need decorators when subclassed
     async def event_ready(self):
@@ -42,7 +47,7 @@ class Bot(commands.TwitchBot):
         await self.handle_commands(message)
 
     # Commands use a different decorator
-    @commands.twitch_command(name='test')
+    @commands.command(name='test')
     async def my_command(self, ctx):
         await ctx.send(f'Hello {ctx.author.name}!')
 

@@ -34,7 +34,7 @@ import uuid
 from typing import Union
 
 from .core import Command
-from .errors import TwitchIOCommandError, TwitchCommandNotFound
+from .errors import CommandError, CommandNotFound
 from .stringparser import StringParser
 from twitchio.client import Client
 from twitchio.dataclasses import Context
@@ -128,7 +128,7 @@ class Bot(Client):
 
             try:
                 self.add_command(obj)
-            except TwitchIOCommandError:
+            except CommandError:
                 traceback.print_exc()
                 continue
 
@@ -136,9 +136,9 @@ class Bot(Client):
         if not isinstance(command, Command):
             raise TypeError('Commands passed my be a subclass of Command.')
         elif command.name in self.commands:
-            raise TwitchIOCommandError(f'Failed to load command <{command.name}>, a command with that name already exists')
+            raise CommandError(f'Failed to load command <{command.name}>, a command with that name already exists')
         elif not inspect.iscoroutinefunction(command._callback):
-            raise TwitchIOCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines.')
+            raise CommandError(f'Failed to load command <{command.name}>. Commands must be coroutines.')
 
         self.commands[command.name] = command
 
@@ -148,7 +148,7 @@ class Bot(Client):
         for alias in command.aliases:
             if alias in self.commands:
                 del self.commands[command.name]
-                raise TwitchIOCommandError(
+                raise CommandError(
                     f'Failed to load command <{command.name}>, a command with that name/alias already exists.')
 
             self._aliases[alias] = command.name
@@ -398,7 +398,7 @@ class Bot(Client):
             if command not in self.commands:
                 if not command:
                     return
-                raise TwitchCommandNotFound(f'<{command}> was not found.')
+                raise CommandNotFound(f'<{command}> was not found.')
             else:
                 command = self.commands[command]
         except Exception as e:
@@ -787,7 +787,7 @@ class Bot(Client):
         Exception
             No callback url was specified and there is no webhook server running to retrieve a callback url from.
 
-        TwitchHTTPException
+        HTTPException
             Bad request while modifying the subscription.
         """
 

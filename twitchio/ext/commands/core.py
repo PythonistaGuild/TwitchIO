@@ -65,7 +65,7 @@ class Command:
         try:
             argument = converter(parsed)
         except Exception:
-            raise TwitchBadArgument(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
+            raise BadArgument(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
                                     f' Expected type {converter} got {type(parsed)}.')
 
         return argument
@@ -81,7 +81,7 @@ class Command:
             if instance:
                 next(iterator)
         except StopIteration:
-            raise TwitchMissingRequiredArguments(f'self or ctx is a required argument which is missing.')
+            raise MissingRequiredArguments(f'self or ctx is a required argument which is missing.')
 
         for _, param in iterator:
             index += 1
@@ -92,7 +92,7 @@ class Command:
                     if param.default is not param.empty:
                         args.append(param.default)
                     else:
-                        raise TwitchMissingRequiredArguments(f'Missing required arguments in command: {self.name}()')
+                        raise MissingRequiredArguments(f'Missing required arguments in command: {self.name}()')
                 else:
                     argument = await self._convert_types(param, argument)
                     args.append(argument)
@@ -106,7 +106,7 @@ class Command:
                     rest = param.default
 
                 if not rest and param.default is not None:
-                    raise TwitchMissingRequiredArguments(f'Missing required arguments in commands: {self.name}()')
+                    raise MissingRequiredArguments(f'Missing required arguments in commands: {self.name}()')
 
                 rest = await self._convert_types(param, rest)
                 kwargs[param.name] = rest
@@ -138,7 +138,7 @@ class Command:
             The func is not a coroutine function.
         """
         if not inspect.iscoroutinefunction(func):
-            raise TwitchIOCommandError('Command error handler must be a coroutine.')
+            raise CommandError('Command error handler must be a coroutine.')
 
         self.on_error = func
         return func
@@ -160,7 +160,7 @@ class Command:
             The func is not a coroutine function.
         """
         if not inspect.iscoroutinefunction(func):
-            raise TwitchIOCommandError('Before invoke func must be a coroutine')
+            raise CommandError('Before invoke func must be a coroutine')
 
         self._before_invoke = func
         return func

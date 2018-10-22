@@ -24,15 +24,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from discord.ext import commands
-from twitchio.ext import commands as tcommands
+from discord.ext import commands as discord_commands
+from twitchio.ext import commands as commands
 
 
-class DiscordCog(tcommands.TwitchBot):
+class DiscordCog(commands.Bot):
 
     def __init__(self, bot):
         # Discord bot instance
-        self.dbot = bot
+        self.discord_bot = bot
         super().__init__(irc_token='...', nick='...', prefix='!', initial_channels=['...'])
 
         # Start the Twitch Bot
@@ -48,12 +48,12 @@ class DiscordCog(tcommands.TwitchBot):
         await self.handle_commands(message)
 
     # Discord command
-    @commands.command(name='test')
+    @discord_commands.command(name='test')
     async def discord_command(self, ctx):
         await ctx.send('Hai there!')
 
     # TwitchIO command
-    @tcommands.twitch_command(name='test')
+    @commands.command(name='test')
     async def twitch_command(self, ctx):
         await ctx.send('Hai there!')
 

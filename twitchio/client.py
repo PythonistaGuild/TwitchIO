@@ -53,7 +53,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching stream.
 
         Notes
@@ -81,7 +81,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching stream.
         """
 
@@ -105,7 +105,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching stream.
         """
 
@@ -135,7 +135,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching streams.
         """
 
@@ -158,7 +158,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching games.
         """
 
@@ -181,7 +181,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching games.
         """
 
@@ -208,7 +208,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while modifying the subscription.
         """
 
@@ -237,7 +237,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching users.
         """
 
@@ -260,7 +260,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching users.
         """
 
@@ -283,7 +283,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching stream chatters.
         """
 
@@ -303,7 +303,7 @@ class Client:
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while creating a clip.
         """
 

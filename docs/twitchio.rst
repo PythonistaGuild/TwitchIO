@@ -51,7 +51,7 @@ A quick and easy bot example:
     from twitchio.ext import commands
 
 
-    class Bot(commands.TwitchBot):
+    class Bot(commands.Bot):
 
         def __init__(self):
             super().__init__(irc_token='...', client_id='...', nick='...', prefix='!',
@@ -77,7 +77,7 @@ A quick and easy bot example:
 Client
 ----------------------------
 
-.. autoclass:: twitchio.client.TwitchClient
+.. autoclass:: twitchio.client.Client
     :members:
 
 Topics
@@ -89,27 +89,22 @@ Webhooks allow you to subscribe to different topics, which ones are described be
 
 .. autoclass:: twitchio.webhook.UserFollows
     :members:
-    :inherited-members:
     :show-inheritance:
 
 .. autoclass:: twitchio.webhook.StreamChanged
     :members:
-    :inherited-members:
     :show-inheritance:
 
 .. autoclass:: twitchio.webhook.UserChanged
     :members:
-    :inherited-members:
     :show-inheritance:
 
 .. autoclass:: twitchio.webhook.GameAnalytics
     :members:
-    :inherited-members:
     :show-inheritance:
 
 .. autoclass:: twitchio.webhook.ExtensionAnalytics
     :members:
-    :inherited-members:
     :show-inheritance:
 
 
@@ -154,7 +149,7 @@ Errors
 
 .. autoexception:: twitchio.errors.InvalidContent
 
-.. autoexception:: twitchio.errors.TwitchHTTPException
+.. autoexception:: twitchio.errors.HTTPException
 
 
 Module Contents

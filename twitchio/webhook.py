@@ -42,7 +42,7 @@ import uuid
 
 from aiohttp import web
 
-from twitchio.errors import TwitchHTTPException
+from twitchio.errors import HTTPException
 
 
 class TwitchWebhookServer:
@@ -88,7 +88,7 @@ class TwitchWebhookServer:
         try:
             if query['hub.mode'] == 'denied':
                 asyncio.run_coroutine_threadsafe(self._bot._ws.event_error(
-                    TwitchHTTPException(f'Webhook subscription denied | {query["hub.reason"]}')), loop=self.loop)
+                    HTTPException(f'Webhook subscription denied | {query["hub.reason"]}')), loop=self.loop)
                 return web.Response(text='200: OK', status=200)
 
             if query['hub.challenge']:

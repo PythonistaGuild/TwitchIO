@@ -125,7 +125,7 @@ class Channel(Messageable):
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching streams.
         """
 
@@ -144,7 +144,7 @@ class Channel(Messageable):
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching stream chatters.
         """
 
@@ -307,7 +307,7 @@ class Context(Messageable):
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching streams.
         """
         return await self.channel.get_stream()
@@ -324,7 +324,7 @@ class Context(Messageable):
 
         Raises
         --------
-        TwitchHTTPException
+        HTTPException
             Bad request while fetching stream chatters.
         """
         return await self.channel.get_chatters()

@@ -24,25 +24,25 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ('TwitchIOCommandError', 'TwitchCommandNotFound', 'TwitchMissingRequiredArguments', 'TwitchBadArgument',)
+__all__ = ('CommandError', 'CommandNotFound', 'MissingRequiredArguments', 'BadArgument',)
 
 
 from twitchio.errors import TwitchIOBException
 
 
-class TwitchIOCommandError(TwitchIOBException):
+class CommandError(TwitchIOBException):
     """Base Exception for errors raised by commands."""
     pass
 
 
-class TwitchCommandNotFound(TwitchIOCommandError):
+class CommandNotFound(CommandError):
     """Exception raised when a command is not found."""
     pass
 
 
-class TwitchMissingRequiredArguments(TwitchIOCommandError):
+class MissingRequiredArguments(CommandError):
     """Exception raised when a required argument is not passed to a command."""
 
 
-class TwitchBadArgument(TwitchIOCommandError):
+class BadArgument(CommandError):
     """Exception raised when a bad argument is passed to a command."""

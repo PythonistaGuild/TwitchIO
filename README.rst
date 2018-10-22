@@ -71,7 +71,7 @@ A quick and easy bot example:
     from twitchio.ext import commands
 
 
-    class Bot(commands.TwitchBot):
+    class Bot(commands.Bot):
 
         def __init__(self):
             super().__init__(irc_token='...', client_id='...', nick='...', prefix='!',
@@ -86,7 +86,7 @@ A quick and easy bot example:
             await self.handle_commands(message)
 
         # Commands use a different decorator
-        @commands.twitch_command(name='test')
+        @commands.command(name='test')
         async def my_command(self, ctx):
             await ctx.send(f'Hello {ctx.author.name}!')
 

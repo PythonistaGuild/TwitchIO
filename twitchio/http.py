@@ -29,7 +29,7 @@ from collections import namedtuple
 from typing import Union
 
 from .cooldowns import RateBucket
-from .errors import TwitchHTTPException
+from .errors import HTTPException
 
 
 Chatters = namedtuple('Chatters', ('count', 'all', 'vips', 'moderators', 'staff', 'admins', 'global_mods', 'viewers'))
@@ -122,9 +122,9 @@ class HTTPSession:
                         await asyncio.sleep(3 ** attempt + 1)
                     continue
 
-                raise TwitchHTTPException(f'Failed to fulfil request ({resp.status}).', resp.reason)
+                raise HTTPException(f'Failed to fulfil request ({resp.status}).', resp.reason)
 
-        raise TwitchHTTPException('Failed to reach Twitch API', reason)
+        raise HTTPException('Failed to reach Twitch API', reason)
 
     @staticmethod
     def _populate_entries(*channels: Union[str, int]):
@@ -142,7 +142,7 @@ class HTTPSession:
                 ids.add(str(channel))
 
         if len(names | ids) > 100:
-            raise TwitchHTTPException('Bad Request - Total entries must not exceed 100.')
+            raise HTTPException('Bad Request - Total entries must not exceed 100.')
 
         return names, ids
 
