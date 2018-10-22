@@ -35,7 +35,7 @@ import logging
 from .dataclasses import Context, Message, User, Channel
 from .errors import *
 from .enums import *
-from .client import TwitchClient
+from .client import Client
 from .webhook import *
 
 try:

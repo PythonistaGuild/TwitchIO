@@ -30,7 +30,7 @@ from typing import Union
 from twitchio.http import HTTPSession
 
 
-class TwitchClient:
+class Client:
 
     def __init__(self, *, loop=None, client_id=None, **kwargs):
         loop = loop or asyncio.get_event_loop()

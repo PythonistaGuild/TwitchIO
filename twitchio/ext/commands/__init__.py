@@ -25,5 +25,5 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from .errors import *
-from .core import twitch_command
-from .bot import TwitchBot
+from .core import command
+from .bot import Bot

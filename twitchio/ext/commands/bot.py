@@ -33,17 +33,17 @@ import traceback
 import uuid
 from typing import Union
 
-from .core import TwitchCommand
+from .core import Command
 from .errors import TwitchIOCommandError, TwitchCommandNotFound
 from .stringparser import StringParser
-from twitchio.client import TwitchClient
+from twitchio.client import Client
 from twitchio.dataclasses import Context
 from twitchio.errors import ClientError
 from twitchio.webhook import TwitchWebhookServer
 from twitchio.websocket import WebsocketConnection
 
 
-class TwitchBot(TwitchClient):
+class Bot(Client):
     """Twitch IRC Bot.
 
     Parameters
@@ -121,7 +121,7 @@ class TwitchBot(TwitchClient):
         commands = inspect.getmembers(self)
 
         for _, obj in commands:
-            if not isinstance(obj, TwitchCommand):
+            if not isinstance(obj, Command):
                 continue
 
             obj.instance = self
@@ -133,8 +133,8 @@ class TwitchBot(TwitchClient):
                 continue
 
     def add_command(self, command):
-        if not isinstance(command, TwitchCommand):
-            raise TypeError('Commands passed my be a subclass of TwitchCommand.')
+        if not isinstance(command, Command):
+            raise TypeError('Commands passed my be a subclass of Command.')
         elif command.name in self.commands:
             raise TwitchIOCommandError(f'Failed to load command <{command.name}>, a command with that name already exists')
         elif not inspect.iscoroutinefunction(command._callback):
@@ -223,7 +223,7 @@ class TwitchBot(TwitchClient):
         members = inspect.getmembers(cog)
 
         for name, member in members:
-            if isinstance(member, TwitchCommand):
+            if isinstance(member, Command):
                 member.instance = cog
                 self.add_command(member)
             elif name.startswith('event_'):
@@ -244,7 +244,7 @@ class TwitchBot(TwitchClient):
             return
 
         for name, member in inspect.getmembers(cog):
-            if isinstance(member, TwitchCommand):
+            if isinstance(member, Command):
                 self.remove_command(member)
             elif name.startswith('event_'):
                 del self.extra_listeners[name]
@@ -681,7 +681,7 @@ class TwitchBot(TwitchClient):
         if cls and not inspect.isclass(cls):
             raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
-        cls = cls or TwitchCommand
+        cls = cls or Command
 
         def decorator(func):
             fname = name or func.__name__

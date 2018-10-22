@@ -30,7 +30,7 @@ from typing import Union
 from .errors import *
 
 
-class TwitchCommand:
+class Command:
 
     def __init__(self, name: str, func, **attrs):
         self._name = name
@@ -138,7 +138,7 @@ class TwitchCommand:
             The func is not a coroutine function.
         """
         if not inspect.iscoroutinefunction(func):
-            raise TwitchIOBException('Command error handler must be a coroutine.')
+            raise TwitchIOCommandError('Command error handler must be a coroutine.')
 
         self.on_error = func
         return func
@@ -160,17 +160,17 @@ class TwitchCommand:
             The func is not a coroutine function.
         """
         if not inspect.iscoroutinefunction(func):
-            raise TwitchIOBException('Before invoke func must be a coroutine')
+            raise TwitchIOCommandError('Before invoke func must be a coroutine')
 
         self._before_invoke = func
         return func
 
 
-def twitch_command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
+def command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
     if cls and not inspect.isclass(cls):
         raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
-    cls = cls or TwitchCommand
+    cls = cls or Command
 
     def decorator(func):
         if not inspect.iscoroutinefunction(func):
