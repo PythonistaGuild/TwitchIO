@@ -664,7 +664,7 @@ class Bot(Client):
         """
         pass
 
-    def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=None):
+    def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Command):
         """Decorator which registers a command on the bot.
 
         Commands must be coroutines.
@@ -678,16 +678,18 @@ class Bot(Client):
         cls: class [Optional]
             The custom command class to override the default class. This must be similar to :class:`.Command`.
         """
-        if cls and not inspect.isclass(cls):
+
+        if not inspect.isclass(cls):
             raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
-        cls = cls or Command
-
         def decorator(func):
-            fname = name or func.__name__
+            cmd_name = name or func.__name__
 
-            command = cls(name=fname, func=func, aliases=aliases, instance=None)
+            command = cls(name=cmd_name, func=func, aliases=aliases, instance=None)
             self.add_command(command)
+
+            return command
+
         return decorator
 
     def event(self, func):
