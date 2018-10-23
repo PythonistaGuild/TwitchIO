@@ -25,14 +25,10 @@ DEALINGS IN THE SOFTWARE.
 """
 import aiohttp
 import asyncio
-from collections import namedtuple
 from typing import Union
 
 from .cooldowns import RateBucket
 from .errors import HTTPException
-
-
-Chatters = namedtuple('Chatters', ('count', 'all', 'vips', 'moderators', 'staff', 'admins', 'global_mods', 'viewers'))
 
 
 class HTTPSession:
@@ -110,7 +106,7 @@ class HTTPSession:
                     self._bucket.update(reset=reset, remaining=remaining)
 
                 if 200 <= resp.status < 300:
-                    if resp.headers.get('content-type') == 'application/json':
+                    if 'application/json' in resp.headers.get('content-type'):
                         return await resp.json(), False
 
                     return await resp.text(encoding='utf-8'), True
@@ -200,14 +196,3 @@ class HTTPSession:
     async def create_clip(self, token: str, broadcaster_id: int):
         params = [('broadcaster_id', str(broadcaster_id))]
         return await self.request('POST', '/clips', params=params, headers={'Authorization': f'Bearer {token}'})
-
-    async def get_chatters(self, channel: str):
-        url = f'http://tmi.twitch.tv/group/user/{channel}/chatters'
-
-        data = await self._request('GET', url, utilize_bucket=False)
-
-        all_ = []
-        for x in data[0]['chatters'].values():
-            all_ += x
-
-        return Chatters(data[0]['chatter_count'], all_, *data[0]['chatters'].values())

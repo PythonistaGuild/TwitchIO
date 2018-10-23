@@ -25,9 +25,16 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+from collections import namedtuple
 from typing import Union
 
+from twitchio.errors import HTTPException
 from twitchio.http import HTTPSession
+
+
+User = namedtuple('User', ('id', 'login', 'display_name', 'type', 'broadcaster_type', 'description',
+                           'profile_image', 'offline_image', 'view_count'))
+Chatters = namedtuple('Chatters', ('count', 'all', 'vips', 'moderators', 'staff', 'admins', 'global_mods', 'viewers'))
 
 
 class Client:
@@ -48,8 +55,8 @@ class Client:
 
         Returns
         ---------
-        dict
-            Dict containing user(s) data.
+        namedtuple:
+            Namedtuple containing user(s) data.
 
         Raises
         --------
@@ -62,7 +69,9 @@ class Client:
             This method accepts both user ids or names, or a combination of both. Multiple names/ids may be passed.
         """
 
-        return await self.http.get_users(*users)
+        data = await self.http.get_users(*users)
+
+        return [User(*user.values()) for user in data]
 
     async def get_stream_by_name(self, channel: str):
         """|coro|
@@ -279,7 +288,7 @@ class Client:
         Returns
         ---------
         namedtuple:
-            Namedtiple containing active chatter data.
+            Namedtuple containing active chatter data.
 
         Raises
         --------
@@ -287,12 +296,24 @@ class Client:
             Bad request while fetching stream chatters.
         """
 
-        return await self.http.get_chatters(channel)
+        url = f'http://tmi.twitch.tv/group/user/{channel.lower()}/chatters'
+
+        async with self.http._session.get(url) as resp:
+            if 200 <= resp.status < 300:
+                data = await resp.json()
+            else:
+                raise HTTPException(f'Fetching chatters failed: {resp.status}', resp.reason)
+
+            all_ = []
+            for x in data['chatters'].values():
+                all_ += x
+
+            return Chatters(data['chatter_count'], all_, *data['chatters'].values())
 
     async def create_clip(self, token: str, broadcaster_id: Union[str, int]):
         """|coro|
 
-        Method which creater and returns an edit clip url for the given broadcaster_id.
+        Method which creates and returns an edit clip url for the given broadcaster_id.
 
         Parameters
         ------------
