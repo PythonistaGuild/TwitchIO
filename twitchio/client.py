@@ -55,7 +55,7 @@ class Client:
 
         Returns
         ---------
-        namedtuple:
+        User
             Namedtuple containing user(s) data.
 
         Raises
@@ -287,7 +287,7 @@ class Client:
 
         Returns
         ---------
-        namedtuple:
+        Chatters
             Namedtuple containing active chatter data.
 
         Raises
