@@ -55,8 +55,8 @@ class Client:
 
         Returns
         ---------
-        User
-            Namedtuple containing user(s) data.
+        list: User
+            List containing user data in a namedtuple.
 
         Raises
         --------
