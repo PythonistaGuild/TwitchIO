@@ -98,7 +98,7 @@ class Client:
 
         try:
             return data[0]
-        except KeyError:
+        except IndexError:
             pass
 
     async def get_stream_by_id(self, channel: int):
@@ -126,7 +126,7 @@ class Client:
 
         try:
             return data[0]
-        except KeyError:
+        except IndexError:
             pass
 
     async def get_streams(self, *, game_id=None, language=None, channels=None, limit=None):
