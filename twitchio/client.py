@@ -95,7 +95,11 @@ class Client:
         """
 
         data = await self.http.get_streams(channels=[channel])
-        return data[0]
+
+        try:
+            return data[0]
+        except KeyError:
+            pass
 
     async def get_stream_by_id(self, channel: int):
         """|coro|
@@ -119,7 +123,11 @@ class Client:
         """
 
         data = await self.http.get_streams(channels=[channel])
-        return data[0]
+
+        try:
+            return data[0]
+        except KeyError:
+            pass
 
     async def get_streams(self, *, game_id=None, language=None, channels=None, limit=None):
         """|coro|
