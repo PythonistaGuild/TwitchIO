@@ -272,7 +272,7 @@ class WebsocketConnection:
                 await asyncio.sleep(retry)
                 continue
 
-            self.loop.create_task(self._bot.event_raw_data(data))
+            await self._dispatch('raw_data', data)
 
             try:
                 await self.process_data(data)
