@@ -342,6 +342,20 @@ class Bot(Client):
 
         return prefix
 
+    def get_channel(self, name: str):
+        """Retrieves a :class:`.Channel` from cache.
+
+        Parameters
+        ------------
+        name: str
+            The channel name to retrieve from cache.
+        """
+        cache = self._ws._channel_cache.get(name.lower())
+        if cache:
+            return cache['channel']
+
+        return None
+
     async def get_context(self, message, cls=None):
         """|coro|
 
