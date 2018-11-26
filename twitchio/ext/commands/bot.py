@@ -356,6 +356,18 @@ class Bot(Client):
 
         return None
 
+    async def join_channels(self, channels: Union[list, tuple]):
+        """|coro|
+
+        Join the specified channels.
+
+        Parameters
+        ------------
+        channels: Union[list, tuple]
+            The channels in either a list or tuple for to join.
+        """
+        await self._ws.join_channels(channels=channels)
+
     async def get_context(self, message, cls=None):
         """|coro|
 
