@@ -295,6 +295,7 @@ class WebsocketConnection:
         if code == 376 or code == 1:
             await self._dispatch('ready')
             self.is_ready.set()
+
             log.info('Successfully logged onto Twitch WS | %s', self.nick)
         elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed' or\
                 data == ':tmi.twitch.tv NOTICE * :Improperly formatted auth':

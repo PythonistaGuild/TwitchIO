@@ -25,5 +25,5 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from .errors import *
-from .core import command
+from .core import command, cog, AutoCog
 from .bot import Bot
