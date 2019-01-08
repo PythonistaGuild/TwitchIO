@@ -254,6 +254,7 @@ class WebsocketConnection:
         for entry in channels:
             channel = re.sub('[#\s]', '', entry).lower()
             await self._websocket.send(f'JOIN #{channel}\r\n')
+            self._channel_cache[channel] = {'channel': Channel(channel, self, self._http), 'bot': None}
 
     async def _listen(self):
         backoff = ExponentialBackoff()
