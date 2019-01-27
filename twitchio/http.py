@@ -106,7 +106,7 @@ class HTTPSession:
                     self._bucket.update(reset=reset, remaining=remaining)
 
                 if 200 <= resp.status < 300:
-                    if 'application/json' in resp.headers.get('content-type'):
+                    if resp.content_type == 'application/json':
                         return await resp.json(), False
 
                     return await resp.text(encoding='utf-8'), True
