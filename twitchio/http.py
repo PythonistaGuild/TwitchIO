@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 import aiohttp
 import asyncio
+import sys
 from typing import Union
 
 from .cooldowns import RateBucket
@@ -35,7 +36,11 @@ class HTTPSession:
     BASE = 'https://api.twitch.tv/helix'
 
     def __init__(self, loop, **attrs):
-        self._id = attrs.get('client_id')
+        self._id = attrs.get('client_id', None)
+
+        if not self._id:
+            print('\nWARNING! client_id is not set. A client ID is required to use HTTP Endpoints.\n'
+                  '=============================================================================\n', file=sys.stderr)
 
         self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
