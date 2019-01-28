@@ -33,7 +33,7 @@ import traceback
 import uuid
 from typing import Union
 
-from .core import Command
+from .core import Command, AutoCog
 from .errors import CommandError, CommandNotFound
 from .stringparser import StringParser
 from twitchio.client import Client
@@ -172,19 +172,26 @@ class Bot(Client):
         name: str
             The name of the module to load in dot.path format.
         """
-        module = importlib.import_module(name)
+        if name in self.modules:
+            return
 
-        if not hasattr(module, 'prepare'):
+        valid = False
+
+        module = importlib.import_module(name)
+        for n, member in inspect.getmembers(module):
+            if inspect.isclass(member) and issubclass(member, AutoCog):
+                member(self)._prepare(self)
+                valid = True
+
+        if hasattr(module, 'prepare'):
+            module.prepare(self)
+        elif not valid:
             del module
-            del sys.modules[module]
+            del sys.modules[name]
             raise ImportError(f'Module <{name}> is missing a prepare method')
 
-        if inspect.iscoroutinefunction(module.prepare):
-            self.loop.create_task(module.prepare(self))
-        else:
-            module.prepare(self)
-
-        self.modules[name] = module
+        if name not in self.modules:
+            self.modules[name] = module
 
     def unload_module(self, name: str):
         """Method which unloads a module and it's cogs/commands/events.
@@ -194,23 +201,19 @@ class Bot(Client):
         name: str
             The name of the module to load in dot.path format.
         """
-
         module = self.modules.pop(name, None)
         if not module:
             return
 
-        for cog_name, cog in self.cogs.copy().items():
-            if cog.__module__ == module.__name__:
-                self.remove_cog(cog)
+        for cogname, cog in inspect.getmembers(module):
+            if cogname in self.cogs:
+                self.remove_cog(cogname)
 
-        if hasattr(module, 'breakdown'):
-            if inspect.iscoroutinefunction(module.cog_breakdown):
-                self.loop.create_task(module.cog_breakdown())
-            else:
-                module.cog_breakdown()
-
-        del module
-        del sys.modules[name]
+        try:
+            module.breakdown(self)
+        finally:
+            del module
+            del sys.modules[name]
 
     def add_cog(self, cog):
         """Method which loads a cog and adds it's commands and events.
@@ -231,15 +234,15 @@ class Bot(Client):
 
         self.cogs[type(cog).__name__] = cog
 
-    def remove_cog(self, cog):
+    def remove_cog(self, cogname: str):
         """Method which removes a cog and adds it's commands and events.
 
         Parameters
         ------------
-        cog:
-            An instance of the cog you wish to remove.
+        cogname:
+            The name of the cog you wish to remove.
         """
-        cog = self.cogs.pop(type(cog).__name__, None)
+        cog = self.cogs.pop(cogname, None)
         if not cog:
             return
 
@@ -251,11 +254,14 @@ class Bot(Client):
             elif name in self.extra_listeners:
                 del self.extra_listeners[member.__name__]
 
-        if hasattr(cog, 'cog_unload'):
-            if inspect.iscoroutinefunction(cog.cog_breakdown):
-                self.loop.create_task(cog.cog_unload())
-            else:
-                cog.cog_unload()
+        try:
+            unload = getattr(cog, f'_{cog.__name__}__unload')
+        except AttributeError:
+            pass
+        else:
+            unload(self)
+
+        del cog
 
     def run(self):
         """A blocking call that initializes the IRC Bot event loop.

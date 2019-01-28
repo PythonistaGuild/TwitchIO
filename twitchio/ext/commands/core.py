@@ -181,3 +181,37 @@ def command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
 
         return command
     return decorator
+
+
+class AutoCog:
+    pass
+
+
+def cog(*, name: str=None, **attrs):
+    def wrapper(klass):
+        class Cog(AutoCog, klass):
+
+            def __new__(cls, *args, **kwargs):
+                result = super().__new__(cls)
+
+                result.__module__ = klass.__module__
+                result.__name__ = name or klass.__name__
+
+                for k, v in attrs.items():
+                    setattr(result, k, v)
+
+                return result
+
+            def _prepare(self, bot):
+                for name_, member in inspect.getmembers(self):
+                    if isinstance(member, Command):
+                        member.instance = self
+                        bot.add_command(member)
+
+                    elif name_.startswith('event_'):
+                        bot.add_listener(member, name_)
+
+                bot.cogs[self.__name__] = self
+
+        return Cog
+    return wrapper
