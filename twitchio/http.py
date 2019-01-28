@@ -25,11 +25,15 @@ DEALINGS IN THE SOFTWARE.
 """
 import aiohttp
 import asyncio
+import logging
 import sys
 from typing import Union
 
 from .cooldowns import RateBucket
 from .errors import HTTPException
+
+
+log = logging.getLogger(__name__)
 
 
 class HTTPSession:
@@ -39,8 +43,7 @@ class HTTPSession:
         self._id = attrs.get('client_id', None)
 
         if not self._id:
-            print('\nWARNING! client_id is not set. A client ID is required to use HTTP Endpoints.\n'
-                  '=============================================================================\n', file=sys.stderr)
+            log.warning('Running without client ID, some HTTP endpoints may not work without authentication.')
 
         self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
