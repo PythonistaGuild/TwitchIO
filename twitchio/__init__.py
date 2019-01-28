@@ -27,8 +27,8 @@ DEALINGS IN THE SOFTWARE.
 __title__ = 'twitchio'
 __author__ = 'TwitchIO'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2017-2018 TwitchIO'
-__version__ = '0.0.3a'
+__copyright__ = 'Copyright 2017-2019 TwitchIO'
+__version__ = '0.0.4a'
 
 import logging
 
