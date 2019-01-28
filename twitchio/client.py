@@ -43,7 +43,7 @@ class Client:
         loop = loop or asyncio.get_event_loop()
         self.http = HTTPSession(loop=loop, client_id=client_id)
 
-    async def get_users(self, *users: Union[str, int]):
+    async def get_users(self, *users: Union[str, int]) -> list:
         """|coro|
 
         Method which retrieves user information on the specified names/ids.

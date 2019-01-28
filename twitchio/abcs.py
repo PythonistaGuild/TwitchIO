@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2018 TwitchIO
+Copyright (c) 2017-2019 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -36,7 +36,7 @@ class IRCLimiterMapping:
     def __init__(self):
         self.buckets = {}
 
-    def get_bucket(self, channel: str, method: str):
+    def get_bucket(self, channel: str, method: str) -> RateBucket:
         try:
             bucket = self.buckets[channel]
         except KeyError:
