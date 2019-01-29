@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import functools
 import json
 import logging
 import random
@@ -99,6 +100,9 @@ class WebsocketConnection:
         self._channel_token = 0
         self._rate_status = None
 
+        self._pending_joins = {}
+        self._authentication_error = False
+
         self.is_ready = asyncio.Event()
 
         self.regex = {
@@ -129,7 +133,7 @@ class WebsocketConnection:
 
         self._pubsub_pool = PubSubPool(loop=loop, base=self)
 
-    async def _update_limit(self) -> None:
+    async def _update_limit(self):
 
         while True:
             if self._mod_token == len(self._channel_cache):
@@ -166,8 +170,8 @@ class WebsocketConnection:
 
         if self.is_connected:
             # Make sure we are 100% connected
-            log.debug('Sending authentication sequence payload to Twitch')
-            await self.auth_seq()
+            log.debug('Sending authentication sequence payload to Twitch.')
+            self.loop.create_task(self.auth_seq())
 
     async def wait_until_ready(self):
         await self.is_ready.wait()
@@ -184,6 +188,7 @@ class WebsocketConnection:
         cap: str
             The cap request you wish to send to Twitch. Must be either commands, tags or membership.
         """
+        log.debug('Sending CAP REQ: %s', cap)
         await self._websocket.send(f'CAP REQ :twitch.tv/{cap}')
 
     async def auth_seq(self, channels: Union[list, tuple]=None):
@@ -214,7 +219,7 @@ class WebsocketConnection:
             return
 
         channels = channels or self._initial_channels
-        await self.join_channels(channels)
+        await self.join_channels(*channels)
 
     async def send_nick(self):
         """|coro|
@@ -241,19 +246,32 @@ class WebsocketConnection:
         channel = re.sub('[#\s]', '', channel).lower()
         await self._websocket.send(f"PRIVMSG #{channel} :{content}\r\n")
 
-    async def join_channels(self, channels: [list, tuple]):
+    async def join_channels(self, *channels: str):
         """|coro|
 
         Attempt to join the provided channels.
 
         Parameters
         ------------
-        channels: Union[list, tuple]
-            A list of channels to attempt joining.
+        *channels : str
+            An argument list of channels to attempt joining.
         """
-        for entry in channels:
-            channel = re.sub('[#\s]', '', entry).lower()
-            await self._websocket.send(f'JOIN #{channel}\r\n')
+
+        await asyncio.gather(*[self._join_channel(x) for x in channels])
+
+    async def _join_channel(self, entry):
+        channel = re.sub('[#\s]', '', entry).lower()
+        await self._websocket.send(f'JOIN #{channel}\r\n')
+
+        self._pending_joins[channel] = fut = self.loop.create_future()
+
+        try:
+            await asyncio.wait_for(fut, timeout=10)
+        except asyncio.TimeoutError:
+            self._pending_joins.pop(channel)
+
+            raise asyncio.TimeoutError(
+                f'Request to join the "{channel}" channel has timed out. Make sure the channel exists.')
 
     async def _listen(self):
         backoff = ExponentialBackoff()
@@ -262,6 +280,10 @@ class WebsocketConnection:
             raise WSConnectionFailure(f'Websocket connection failure:\n\n{self._last_exec}')
 
         while True:
+            if self._authentication_error:
+                log.error('!AUTHENTICATION ERROR!', AuthenticationError('Incorrect IRC token passed.'))
+                raise AuthenticationError
+
             try:
                 data = await self._websocket.recv()
             except websockets.ConnectionClosed:
@@ -274,15 +296,19 @@ class WebsocketConnection:
 
             await self._dispatch('raw_data', data)
 
-            try:
-                await self.process_data(data)
-            except AuthenticationError:
-                raise
-            except Exception as e:
-                await self.event_error(e, data)
+            _task = self.loop.create_task(self.process_data(data))
+            _task.add_done_callback(functools.partial(self._task_callback, data))
+
+    def _task_callback(self, data, task):
+        exc = task.exception()
+
+        if isinstance(exc, AuthenticationError):
+            self._authentication_error = True
+        elif exc:
+            self.loop.create_task(self.event_error(exc, data))
 
     async def process_ping(self, resp: str):
-            await self._websocket.send(f"PONG {resp}\r\n")
+        await self._websocket.send(f"PONG {resp}\r\n")
 
     async def process_data(self, data):
         data = data.strip()
@@ -293,10 +319,25 @@ class WebsocketConnection:
             code = None
 
         if code == 376 or code == 1:
+            log.info('Successfully logged onto Twitch WS | %s', self.nick)
+
+            futures = [fut for chan, fut in self._pending_joins.items() if chan.lower() in
+                       [re.sub('[#\s]', '', c).lower() for c in self._initial_channels]]
+
+            for fut in futures:
+                try:
+                    fut.exception()
+                except asyncio.InvalidStateError:
+                    pass
+
+                if fut.done():
+                    futures.remove(fut)
+
+            await asyncio.wait(futures)
+
             await self._dispatch('ready')
             self.is_ready.set()
 
-            log.info('Successfully logged onto Twitch WS | %s', self.nick)
         elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed' or\
                 data == ':tmi.twitch.tv NOTICE * :Improperly formatted auth':
             log.warning('Authentication failed | %s', self._token)
@@ -375,13 +416,22 @@ class WebsocketConnection:
             return
 
         elif action == 'JOIN':
+            log.debug('ACTION:: JOIN: %s', channel.name)
+
             if author.lower() == self.nick.lower():
                 self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
+
+                if self._pending_joins:
+                    self._pending_joins[channel.name].set_result(None)
+                    self._pending_joins.pop(channel.name)
+
                 self._channel_token += 1
 
             await self._dispatch('join', user)
 
         elif action == 'PART':
+            log.debug('ACTION:: PART: %s', channel.name)
+
             if author == self.nick:
                 del self._channel_cache[channel.name]
                 self._channel_token -= 1
@@ -389,12 +439,15 @@ class WebsocketConnection:
             await self._dispatch('part', user)
 
         elif action == 'PING':
+            log.debug('ACTION:: PING')
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
             await self._dispatch('message', message)
 
         elif action == 'USERSTATE':
+            log.debug('ACTION:: USERSTATE')
+
             if not user or not user.name:
                 if badges:
                     user = User(author=badges['name'],
@@ -414,6 +467,8 @@ class WebsocketConnection:
             await self._dispatch('userstate', user)
 
         elif action == 'MODE':
+            log.debug('ACTION:: MODE')
+
             mdata = re.match(r':jtv MODE #(?P<channel>.+?[a-z0-9])\s(?P<status>[\+\-]o)\s(?P<user>.*[a-z0-9])', raw)
             mstatus = mdata.group('status')
 
@@ -429,6 +484,8 @@ class WebsocketConnection:
             await self._dispatch('mode', channel, user, mstatus)
 
     async def _dispatch(self, event: str, *args, **kwargs):
+        log.debug('Dispatching event: %s', event)
+
         func = getattr(self._bot, f'event_{event}')
         self.loop.create_task(func(*args, **kwargs))
 
@@ -443,7 +500,7 @@ class WebsocketConnection:
             if isinstance(e, Exception):
                 self.loop.create_task(self.event_error(e))
 
-    async def event_error(self, error: Exception, data: str=None) -> None:
+    async def event_error(self, error: Exception, data: str=None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     def teardown(self):
