@@ -31,6 +31,7 @@ __all__ = (
     'ClientError',
     'InvalidContent',
     'HTTPException',
+    'Unauthorized',
 )
 
 
@@ -55,4 +56,8 @@ class InvalidContent(TwitchIOBException):
 
 
 class HTTPException(TwitchIOBException):
+    pass
+
+
+class Unauthorized(HTTPException):
     pass

@@ -30,7 +30,7 @@ import sys
 from typing import Union
 
 from .cooldowns import RateBucket
-from .errors import HTTPException
+from .errors import HTTPException, Unauthorized
 
 
 log = logging.getLogger(__name__)
@@ -40,19 +40,24 @@ class HTTPSession:
     BASE = 'https://api.twitch.tv/helix'
 
     def __init__(self, loop, **attrs):
-        self._id = attrs.get('client_id', None)
+        self.client_id = client_id = attrs.get('client_id', None)
 
-        if not self._id:
+        if not client_id:
             log.warning('Running without client ID, some HTTP endpoints may not work without authentication.')
 
         self._bucket = RateBucket(method='http')
-        self._session = aiohttp.ClientSession(loop=loop, headers={'Client-ID': self._id})
+        self._session = aiohttp.ClientSession(loop=loop)
 
     async def request(self, method, url, *, params=None, limit=None, **kwargs):
         data = []
 
         params = params or []
         url = f'{self.BASE}{url}'
+
+        headers = {}
+
+        if self.client_id:
+            headers['Client-ID'] = self.client_id
 
         cursor = None
 
@@ -72,7 +77,7 @@ class HTTPSession:
 
             params.append(('first', get_limit()))
 
-            body, is_text = await self._request(method, url, params=params, **kwargs)
+            body, is_text = await self._request(method, url, params=params, headers=headers, **kwargs)
 
             if is_text:
                 return body
@@ -118,6 +123,12 @@ class HTTPSession:
                         return await resp.json(), False
 
                     return await resp.text(encoding='utf-8'), True
+
+                if resp.status == 401:
+                    if self.client_id is None:
+                        raise Unauthorized('A client ID or other authorization is needed to use this route.')
+
+                    raise Unauthorized('You\'re not authorized to use this route.')
 
                 if resp.status == 429:
                     reason = 'Ratelimit Reached'
