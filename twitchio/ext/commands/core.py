@@ -57,10 +57,10 @@ class Command:
 
         converter = param.annotation
         if converter is param.empty:
-            if param.default is not param.empty:
-                converter = str if param.default is None else type(param.default)
-            else:
+            if param.default in (param.empty, None):
                 converter = str
+            else:
+                converter = type(param.default)
 
         try:
             argument = converter(parsed)
