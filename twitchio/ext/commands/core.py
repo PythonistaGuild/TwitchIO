@@ -89,10 +89,9 @@ class Command:
                 try:
                     argument = parsed.pop(index)
                 except (KeyError, IndexError):
-                    if param.default is not param.empty:
-                        args.append(param.default)
-                    else:
+                    if param.default is param.empty:
                         raise MissingRequiredArguments(f'Missing required arguments in command: {self.name}()')
+                    args.append(param.default)
                 else:
                     argument = await self._convert_types(param, argument)
                     args.append(argument)
