@@ -105,7 +105,7 @@ class Command:
                 if rest:
                     rest = await self._convert_types(param, rest)
                 elif param.default is param.empty:
-                    raise MissingRequiredArguments(f'Missing required arguments in commands: {self.name}()')
+                    raise MissingRequiredArguments(f'Missing required arguments in command: {self.name}()')
                 else:
                     rest = param.default
 
