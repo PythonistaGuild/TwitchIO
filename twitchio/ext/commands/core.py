@@ -102,13 +102,13 @@ class Command:
                 if rest.startswith(' '):
                     rest = rest.lstrip(' ')
 
-                if not rest and param.default is not param.empty:
+                if rest:
+                    rest = await self._convert_types(param, rest)
+                elif param.default is param.empty:
+                    raise MissingRequiredArguments(f'Missing required arguments in commands: {self.name}()')
+                else:
                     rest = param.default
 
-                if not rest and param.default is not None:
-                    raise MissingRequiredArguments(f'Missing required arguments in commands: {self.name}()')
-
-                rest = await self._convert_types(param, rest)
                 kwargs[param.name] = rest
                 parsed.clear()
                 break
