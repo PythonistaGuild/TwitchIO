@@ -41,7 +41,16 @@ class CommandNotFound(CommandError):
 
 
 class MissingRequiredArguments(CommandError):
-    """Exception raised when a required argument is not passed to a command."""
+    """Exception raised when a required argument is not passed to a command.
+
+    Attributes
+    ----------
+    param: :class:`inspect.Parameter`
+        The argument that is missing.
+    """
+    def __init__(self, param):
+        self.param = param
+        super().__init__(f'{param.name} is a required argument that is missing.')
 
 
 class BadArgument(CommandError):
