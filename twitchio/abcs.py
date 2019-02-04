@@ -144,15 +144,13 @@ class Messageable(metaclass=abc.ABCMeta):
             else:
                 content = original
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         self.check_bucket(channel)
 
-        content = content.replace('\n', ' ')
-
         if method != 'User':
-            await ws.send(f'PRIVMSG #{channel} :{content}\r\n')
+            await ws.send_privmsg(channel, content=content)
         else:
-            await ws.send(f'PRIVMSG #{channel} :.w {user} {content}\r\n')
+            await ws.send_privmsg(channel, content=f'.w {user} {content}')
 
     async def clear(self):
         """|coro|
@@ -160,12 +158,12 @@ class Messageable(metaclass=abc.ABCMeta):
         Method which sends .clear to Twitch and clears the chat.
         """
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         channel, _ = self._get_channel()
 
         self.check_bucket(channel)
 
-        await ws.send(f'PRIVMSG #{channel} :.clear')
+        await ws.send_privmsg(channel, content=f'.clear')
 
     async def slow(self):
         """|coro|
@@ -173,12 +171,12 @@ class Messageable(metaclass=abc.ABCMeta):
         Method which sends a .slow to Twitch and sets the channel to slowmode.
         """
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         channel, _ = self._get_channel()
 
         self.check_bucket(channel)
 
-        await ws.send(f'PRIVMSG #{channel} :.slow')
+        await ws.send_privmsg(channel, content=f'.slow')
 
     async def unslow(self):
         """|coro|
@@ -186,12 +184,12 @@ class Messageable(metaclass=abc.ABCMeta):
         Method which sends a .slowoff to Twitch and sets the channel to slowmode off.
         """
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         channel, _ = self._get_channel()
 
         self.check_bucket(channel)
 
-        await ws.send(f'PRIVMSG #{channel} :.slowoff')
+        await ws.send_privmsg(channel, content=f'.slowoff')
 
     async def slow_off(self):
         """|coro|
@@ -215,12 +213,12 @@ class Messageable(metaclass=abc.ABCMeta):
             The reason you timed out the user.
         """
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         channel, _ = self._get_channel()
 
         self.check_bucket(channel)
 
-        await ws.send(f'PRIVMSG #{channel} :.timeout {user} {duration} {reason}')
+        await ws.send_privmsg(channel, content=f'.timeout {user} {duration} {reason}')
 
     async def ban(self, user: str, reason: str=''):
         """|coro|
@@ -235,12 +233,12 @@ class Messageable(metaclass=abc.ABCMeta):
             The reason you banned this user.
         """
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         channel, _ = self._get_channel()
 
         self.check_bucket(channel)
 
-        await ws.send(f'PRIVMSG #{channel} :.ban {user} {reason}')
+        await ws.send_privmsg(channel, content=f'.ban {user} {reason}')
 
     async def unban(self, user: str):
         """|coro|
@@ -253,12 +251,12 @@ class Messageable(metaclass=abc.ABCMeta):
             The user you wish to unban.
         """
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         channel, _ = self._get_channel()
 
         self.check_bucket(channel)
 
-        await ws.send(f'PRIVMSG #{channel} :.unban {user}')
+        await ws.send_privmsg(channel, content=f'.unban {user}')
 
     async def send_me(self, content: str):
         """|coro|
@@ -276,13 +274,10 @@ class Messageable(metaclass=abc.ABCMeta):
             The content exceeded 500 characters.
         """
 
-        ws = self._get_socket._websocket
+        ws = self._get_socket
         channel, _ = self._get_channel()
 
         self.check_bucket(channel)
         self.check_content(channel, content)
 
-        await ws.send(f'PRIVMSG #{channel} :.me {content}')
-
-
-
+        await ws.send_privmsg(channel, content=f'.me {content}')
