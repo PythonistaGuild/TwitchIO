@@ -32,7 +32,7 @@ __version__ = '0.0.4a'
 
 import logging
 
-from .dataclasses import Context, Message, User, Channel
+from .dataclasses import *
 from .errors import *
 from .enums import *
 from .client import Client
