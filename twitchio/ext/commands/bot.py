@@ -178,7 +178,7 @@ class Bot(Client):
         valid = False
 
         module = importlib.import_module(name)
-        for n, member in inspect.getmembers(module):
+        for _, member in inspect.getmembers(module):
             if inspect.isclass(member) and issubclass(member, AutoCog):
                 member(self)._prepare(self)
                 valid = True
@@ -205,7 +205,7 @@ class Bot(Client):
         if not module:
             return
 
-        for cogname, cog in inspect.getmembers(module):
+        for cogname, _ in inspect.getmembers(module):
             if cogname in self.cogs:
                 self.remove_cog(cogname)
 

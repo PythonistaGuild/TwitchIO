@@ -285,7 +285,7 @@ class WebsocketConnection:
 
         while True:
             if self._authentication_error:
-                log.error('!AUTHENTICATION ERROR!', AuthenticationError('Incorrect IRC token passed.'))
+                log.error('AUTHENTICATION ERROR:: Incorrect IRC Token passed.')
                 raise AuthenticationError
 
             try:
