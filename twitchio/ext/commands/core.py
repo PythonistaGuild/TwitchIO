@@ -81,7 +81,7 @@ class Command:
             if instance:
                 next(iterator)
         except StopIteration:
-            raise MissingRequiredArguments(f'self or ctx is a required argument which is missing.')
+            raise CommandError(f'self or ctx is a required argument which is missing.')
 
         for _, param in iterator:
             index += 1
@@ -92,7 +92,7 @@ class Command:
                     if param.default is not param.empty:
                         args.append(param.default)
                     else:
-                        raise MissingRequiredArguments(f'Missing required arguments in command: {self.name}()')
+                        raise MissingRequiredArguments(param)
                 else:
                     argument = await self._convert_types(param, argument)
                     args.append(argument)
@@ -106,7 +106,7 @@ class Command:
                     rest = param.default
 
                 if not rest and param.default is not None:
-                    raise MissingRequiredArguments(f'Missing required arguments in commands: {self.name}()')
+                    raise MissingRequiredArguments(param)
 
                 rest = await self._convert_types(param, rest)
                 kwargs[param.name] = rest
