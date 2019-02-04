@@ -27,10 +27,11 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import async_timeout
 import functools
+import itertools
 import json
 import logging
-import random
 import re
+import secrets
 import sys
 import traceback
 import websockets
@@ -572,9 +573,20 @@ class PubSub:
         log.info('PubSub %s connection successful', self.node)
         self._listener = self.loop.create_task(self.listen())
 
+    def generate_jitter(self):
+        # Generates a random number between around 1 and 10
+        jitter = 0
+
+        while jitter == 11 or jitter == 0:
+            bites = secrets.token_bytes(2)
+            number = list(itertools.accumulate(list(bites)))
+            jitter = int(sum(number) / 2 ** 6)
+
+        return jitter
+
     async def handle_ping(self):
         while True:
-            jitter = random.randint(1, 5)
+            jitter = self.generate_jitter()
             await asyncio.sleep(240 + jitter)
             self._timeout.clear()
 
