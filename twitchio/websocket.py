@@ -579,7 +579,7 @@ class PubSub:
 
         while jitter == 11 or jitter == 0:
             bites = secrets.token_bytes(2)
-            number = list(itertools.accumulate(list(bites)))
+            number = itertools.accumulate(bites)
             jitter = int(sum(number) / 2 ** 6)
 
         return jitter
