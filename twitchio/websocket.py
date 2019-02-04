@@ -573,7 +573,8 @@ class PubSub:
         log.info('PubSub %s connection successful', self.node)
         self._listener = self.loop.create_task(self.listen())
 
-    def generate_jitter(self):
+    @staticmethod
+    def generate_jitter():
         # Generates a random number between around 1 and 10
         jitter = 0
 
