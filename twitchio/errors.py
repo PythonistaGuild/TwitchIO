@@ -59,5 +59,10 @@ class HTTPException(TwitchIOBException):
     pass
 
 
+class EchoMessageWarning(TwitchIOBException):
+    """Exception raised when a bot user tries to repsond to it's own message."""
+    pass
+
+
 class Unauthorized(HTTPException):
     pass

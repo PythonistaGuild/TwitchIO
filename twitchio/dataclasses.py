@@ -31,11 +31,12 @@ import datetime
 from typing import *
 
 from .abcs import Messageable
+from .errors import EchoMessageWarning
 
 
 class Message:
 
-    __slots__ = ('_author', '_channel', '_raw_data', 'content', 'clean_content', '_tags', '_timestamp')
+    __slots__ = ('_author', '_channel', '_raw_data', 'content', 'clean_content', '_tags', '_timestamp', 'echo')
 
     def __init__(self, **attrs):
         self._author = attrs.pop('author', None)
@@ -44,6 +45,7 @@ class Message:
         self.content = attrs.pop('content', None)
         self.clean_content = attrs.pop('clean_content', None)
         self._tags = attrs.pop('tags', None)
+        self.echo = False
 
         if self._tags:
             try:
@@ -89,12 +91,13 @@ class Message:
 
 class Channel(Messageable):
 
-    __slots__ = ('_channel', '_ws', '_http', )
+    __slots__ = ('_channel', '_ws', '_http', '_echo', )
 
     def __init__(self, name, ws, http):
         self._channel = name
         self._http = http
         self._ws = ws
+        self._echo = False
 
     def __str__(self):
         return self._channel
@@ -112,6 +115,9 @@ class Channel(Messageable):
 
     @property
     def _get_socket(self):  # stub
+        if self._echo is True:
+            raise EchoMessageWarning('Unable to respond to Echo-Messages.')
+
         return self._ws
 
     async def get_stream(self) -> dict:

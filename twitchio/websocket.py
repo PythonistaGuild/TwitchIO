@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import async_timeout
 import functools
 import json
 import logging
@@ -32,10 +33,8 @@ import random
 import re
 import sys
 import traceback
-from typing import Union
-
-import async_timeout
 import websockets
+from typing import Union
 
 from .backoff import ExponentialBackoff
 from .dataclasses import *
@@ -108,7 +107,7 @@ class WebsocketConnection:
         self.regex = {
             "data": re.compile(
                 r"^(?:@(?P<tags>\S+)\s)?:(?P<data>\S+)(?:\s)"
-                r"(?P<action>[A-Z]+)(?:\s#)(?P<channel>\S+)"
+                r"(?P<action>[A-Z()-]+)(?:\s#)(?P<channel>\S+)"
                 r"(?:\s(?::)?(?P<content>.+))?"),
             "ping": re.compile("PING (?P<content>.+)"),
             "author": re.compile(
@@ -235,16 +234,21 @@ class WebsocketConnection:
 
         Sends a PRIVMSG to the Twitch IRC Endpoint.
 
-        This should only be used in rare circumstances where a :class:`twitchio.abcs.Messageable` is not available.
+        This should only be used directly in rare circumstances where a :class:`twitchio.abcs.Messageable` is not available.
 
         .. warning::
 
-            This method is not handled by built-in rate-limits. You risk getting rate limited by twitch,
+            This method is not directly handled by built-in rate-limits. You risk getting rate limited by twitch,
             which has a 30 minute cooldown.
         """
+
         content = content.replace("\n", " ")
         channel = re.sub('[#\s]', '', channel).lower()
         await self._websocket.send(f"PRIVMSG #{channel} :{content}\r\n")
+
+        # Create a dummy message, used as a fake echo-message...
+        data = f':{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO-MESSAGE) #{channel} :{content}\r\n'
+        self.loop.create_task(self.process_data(data))
 
     async def join_channels(self, *channels: str):
         """|coro|
@@ -444,6 +448,12 @@ class WebsocketConnection:
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
+            await self._dispatch('message', message)
+        elif action == 'PRIVMSG(ECHO-MESSAGE)':
+            message.echo = True
+            message.channel._echo = True
+
+            await self._dispatch('raw_data', data)
             await self._dispatch('message', message)
 
         elif action == 'USERSTATE':

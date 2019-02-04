@@ -21,7 +21,7 @@ class Message:
 
 
 class Channel(Messageable):
-    __slots__ = ('_channel', '_ws', '_http', )
+    __slots__ = ('_channel', '_ws', '_http', '_echo', )
 
     def __init__(self, name: str, ws: WebsocketConnection, http: HTTPSession): ...
 
