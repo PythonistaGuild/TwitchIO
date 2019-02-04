@@ -1,5 +1,4 @@
 import datetime
-from collections import namedtuple
 from typing import *
 
 from .abcs import Messageable
