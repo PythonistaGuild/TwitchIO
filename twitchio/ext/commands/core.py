@@ -92,7 +92,7 @@ class Command:
                     if param.default is not param.empty:
                         args.append(param.default)
                     else:
-                        raise MissingRequiredArguments(param)
+                        raise MissingRequiredArgument(param)
                 else:
                     argument = await self._convert_types(param, argument)
                     args.append(argument)
@@ -106,7 +106,7 @@ class Command:
                     rest = param.default
 
                 if not rest and param.default is not None:
-                    raise MissingRequiredArguments(param)
+                    raise MissingRequiredArgument(param)
 
                 rest = await self._convert_types(param, rest)
                 kwargs[param.name] = rest
