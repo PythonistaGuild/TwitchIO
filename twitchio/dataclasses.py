@@ -104,7 +104,7 @@ class Channel(Messageable):
         """The channel name."""
         return self._channel
 
-    def _get_channel(self) -> Tuple[Callable[str], None]:
+    def _get_channel(self) -> Tuple[str, None]:
         return self.name, None
 
     def _get_method(self) -> str:
@@ -211,7 +211,7 @@ class User:
         return self._colour
 
     @property
-    def color(self) -> Optional[Callable[str]]:
+    def color(self) -> Optional[str]:
         """An American-English alias to colour."""
         return self.colour
 
@@ -286,7 +286,7 @@ class Context(Messageable):
         self.args = attrs.get('args', None)
         self.kwargs = attrs.get('kwargs', None)
 
-    def _get_channel(self) -> Tuple[Callable[str], None]:
+    def _get_channel(self) -> Tuple[str, None]:
         return self.channel.name, None
 
     def _get_method(self) -> str:
