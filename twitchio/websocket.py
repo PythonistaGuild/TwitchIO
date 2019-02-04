@@ -333,7 +333,8 @@ class WebsocketConnection:
                 if fut.done():
                     futures.remove(fut)
 
-            await asyncio.wait(futures)
+            if futures:
+                await asyncio.wait(futures)
 
             await self._dispatch('ready')
             self.is_ready.set()
