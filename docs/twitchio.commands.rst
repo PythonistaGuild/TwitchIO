@@ -23,7 +23,7 @@ Errors
 
 .. autoexception:: twitchio.ext.commands.errors.CommandNotFound
 
-.. autoexception:: twitchio.ext.commands.errors.MissingRequiredArguments
+.. autoexception:: twitchio.ext.commands.errors.MissingRequiredArgument
 
 .. autoexception:: twitchio.ext.commands.errors.BadArgument
 

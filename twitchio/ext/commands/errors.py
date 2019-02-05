@@ -24,7 +24,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ('CommandError', 'CommandNotFound', 'MissingRequiredArguments', 'BadArgument',)
+__all__ = ('CommandError', 'CommandNotFound', 'MissingRequiredArgument', 'BadArgument',)
 
 
 from twitchio.errors import TwitchIOBException
@@ -40,8 +40,17 @@ class CommandNotFound(CommandError):
     pass
 
 
-class MissingRequiredArguments(CommandError):
-    """Exception raised when a required argument is not passed to a command."""
+class MissingRequiredArgument(CommandError):
+    """Exception raised when a required argument is not passed to a command.
+
+    Attributes
+    ----------
+    param: :class:`inspect.Parameter`
+        The argument that is missing.
+    """
+    def __init__(self, param):
+        self.param = param
+        super().__init__(f'{param.name} is a required argument that is missing.')
 
 
 class BadArgument(CommandError):
