@@ -413,7 +413,7 @@ class WebsocketConnection:
             user = None
 
         try:
-            message = Message(author=user, content=content, channel=channel, raw_data=data, tags=tags)
+            message = Message(author=user, content=content, channel=channel, raw_data=raw, tags=tags)
         except (TypeError, KeyError):
             message = None
 
@@ -454,7 +454,7 @@ class WebsocketConnection:
             message.echo = True
             message.channel._echo = True
 
-            await self._dispatch('raw_data', data)
+            await self._dispatch('raw_data', raw)
             await self._dispatch('message', message)
 
         elif action == 'USERSTATE':
