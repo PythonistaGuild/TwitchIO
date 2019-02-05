@@ -57,10 +57,10 @@ class Command:
 
         converter = param.annotation
         if converter is param.empty:
-            if param.default is not param.empty:
-                converter = str if param.default is None else type(param.default)
-            else:
+            if param.default in (param.empty, None):
                 converter = str
+            else:
+                converter = type(param.default)
 
         try:
             argument = converter(parsed)
@@ -89,10 +89,9 @@ class Command:
                 try:
                     argument = parsed.pop(index)
                 except (KeyError, IndexError):
-                    if param.default is not param.empty:
-                        args.append(param.default)
-                    else:
+                    if param.default is param.empty:
                         raise MissingRequiredArgument(param)
+                    args.append(param.default)
                 else:
                     argument = await self._convert_types(param, argument)
                     args.append(argument)
