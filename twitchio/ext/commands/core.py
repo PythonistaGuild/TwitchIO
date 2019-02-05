@@ -102,13 +102,13 @@ class Command:
                 if rest.startswith(' '):
                     rest = rest.lstrip(' ')
 
-                if not rest and param.default is not param.empty:
+                if rest:
+                    rest = await self._convert_types(param, rest)
+                elif param.default is param.empty:
+                    raise MissingRequiredArgument(param)
+                else:
                     rest = param.default
 
-                if not rest and param.default is not None:
-                    raise MissingRequiredArgument(param)
-
-                rest = await self._convert_types(param, rest)
                 kwargs[param.name] = rest
                 parsed.clear()
                 break
