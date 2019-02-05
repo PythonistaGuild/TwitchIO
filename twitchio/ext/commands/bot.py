@@ -31,7 +31,7 @@ import sys
 import threading
 import traceback
 import uuid
-from typing import Union
+from typing import Union, List, Tuple
 
 from .core import Command, AutoCog
 from .errors import CommandError, CommandNotFound
@@ -178,7 +178,7 @@ class Bot(Client):
         valid = False
 
         module = importlib.import_module(name)
-        for n, member in inspect.getmembers(module):
+        for _, member in inspect.getmembers(module):
             if inspect.isclass(member) and issubclass(member, AutoCog):
                 member(self)._prepare(self)
                 valid = True
@@ -205,7 +205,7 @@ class Bot(Client):
         if not module:
             return
 
-        for cogname, cog in inspect.getmembers(module):
+        for cogname, _ in inspect.getmembers(module):
             if cogname in self.cogs:
                 self.remove_cog(cogname)
 
@@ -362,17 +362,17 @@ class Bot(Client):
 
         return None
 
-    async def join_channels(self, channels: Union[list, tuple]):
+    async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
 
         Join the specified channels.
 
         Parameters
         ------------
-        channels: Union[list, tuple]
-            The channels in either a list or tuple for to join.
+        channels: Union[List[str], Tuple[str]]
+            The channels in either a list or tuple form to join.
         """
-        await self._ws.join_channels(channels=channels)
+        await self._ws.join_channels(*channels)
 
     async def get_context(self, message, cls=None):
         """|coro|

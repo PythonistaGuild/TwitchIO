@@ -26,7 +26,6 @@ DEALINGS IN THE SOFTWARE.
 import aiohttp
 import asyncio
 import logging
-import sys
 from typing import Union
 
 from .cooldowns import RateBucket

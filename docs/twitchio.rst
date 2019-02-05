@@ -63,10 +63,10 @@ A quick and easy bot example:
 
         async def event_message(self, message):
             print(message.content)
-            await self.process_commands(message)
+            await self.handle_commands(message)
 
-        # Commands use a different decorator
-        @commands.twitch_command(name='test')
+        # Commands use a decorator...
+        @commands.command(name='test')
         async def my_command(self, ctx):
             await ctx.send(f'Hello {ctx.author.name}!')
 
@@ -146,6 +146,8 @@ Errors
 .. autoexception:: twitchio.errors.WSConnectionFailure
 
 .. autoexception:: twitchio.errors.ClientError
+
+.. autoexception:: twitchio.errors.EchoMessageWarning
 
 .. autoexception:: twitchio.errors.InvalidContent
 

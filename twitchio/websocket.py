@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2018 TwitchIO
+Copyright (c) 2017-2019 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -25,17 +25,17 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import async_timeout
 import functools
+import itertools
 import json
 import logging
-import random
 import re
+import secrets
 import sys
 import traceback
-from typing import Union
-
-import async_timeout
 import websockets
+from typing import Union
 
 from .backoff import ExponentialBackoff
 from .dataclasses import *
@@ -108,7 +108,7 @@ class WebsocketConnection:
         self.regex = {
             "data": re.compile(
                 r"^(?:@(?P<tags>\S+)\s)?:(?P<data>\S+)(?:\s)"
-                r"(?P<action>[A-Z]+)(?:\s#)(?P<channel>\S+)"
+                r"(?P<action>[A-Z()-]+)(?:\s#)(?P<channel>\S+)"
                 r"(?:\s(?::)?(?P<content>.+))?"),
             "ping": re.compile("PING (?P<content>.+)"),
             "author": re.compile(
@@ -235,16 +235,21 @@ class WebsocketConnection:
 
         Sends a PRIVMSG to the Twitch IRC Endpoint.
 
-        This should only be used in rare circumstances where a :class:`twitchio.abcs.Messageable` is not available.
+        This should only be used directly in rare circumstances where a :class:`twitchio.abcs.Messageable` is not available.
 
         .. warning::
 
-            This method is not handled by built-in rate-limits. You risk getting rate limited by twitch,
+            This method is not directly handled by built-in rate-limits. You risk getting rate limited by twitch,
             which has a 30 minute cooldown.
         """
+
         content = content.replace("\n", " ")
         channel = re.sub('[#\s]', '', channel).lower()
         await self._websocket.send(f"PRIVMSG #{channel} :{content}\r\n")
+
+        # Create a dummy message, used as a fake echo-message...
+        data = f':{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO-MESSAGE) #{channel} :{content}\r\n'
+        self.loop.create_task(self.process_data(data))
 
     async def join_channels(self, *channels: str):
         """|coro|
@@ -281,7 +286,7 @@ class WebsocketConnection:
 
         while True:
             if self._authentication_error:
-                log.error('!AUTHENTICATION ERROR!', AuthenticationError('Incorrect IRC token passed.'))
+                log.error('AUTHENTICATION ERROR:: Incorrect IRC Token passed.')
                 raise AuthenticationError
 
             try:
@@ -333,7 +338,8 @@ class WebsocketConnection:
                 if fut.done():
                     futures.remove(fut)
 
-            await asyncio.wait(futures)
+            if futures:
+                await asyncio.wait(futures)
 
             await self._dispatch('ready')
             self.is_ready.set()
@@ -443,6 +449,12 @@ class WebsocketConnection:
             await self.process_ping(content)
 
         elif action == 'PRIVMSG':
+            await self._dispatch('message', message)
+        elif action == 'PRIVMSG(ECHO-MESSAGE)':
+            message.echo = True
+            message.channel._echo = True
+
+            await self._dispatch('raw_data', data)
             await self._dispatch('message', message)
 
         elif action == 'USERSTATE':
@@ -561,9 +573,21 @@ class PubSub:
         log.info('PubSub %s connection successful', self.node)
         self._listener = self.loop.create_task(self.listen())
 
+    @staticmethod
+    def generate_jitter():
+        # Generates a random number between around 1 and 10
+        jitter = 0
+
+        while jitter == 11 or jitter == 0:
+            bites = secrets.token_bytes(2)
+            number = itertools.accumulate(bites)
+            jitter = int(sum(number) / 2 ** 6)
+
+        return jitter
+
     async def handle_ping(self):
         while True:
-            jitter = random.randint(1, 5)
+            jitter = self.generate_jitter()
             await asyncio.sleep(240 + jitter)
             self._timeout.clear()
 

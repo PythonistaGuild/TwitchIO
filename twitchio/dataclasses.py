@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2018 TwitchIO
+Copyright (c) 2017-2019 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,13 +28,15 @@ __all__ = ('Message', 'Channel', 'User', 'Context',)
 
 
 import datetime
+from typing import *
 
 from .abcs import Messageable
+from .errors import EchoMessageWarning
 
 
 class Message:
 
-    __slots__ = ('_author', '_channel', '_raw_data', 'content', 'clean_content', '_tags', '_timestamp')
+    __slots__ = ('_author', '_channel', '_raw_data', 'content', 'clean_content', '_tags', '_timestamp', 'echo')
 
     def __init__(self, **attrs):
         self._author = attrs.pop('author', None)
@@ -43,6 +45,7 @@ class Message:
         self.content = attrs.pop('content', None)
         self.clean_content = attrs.pop('clean_content', None)
         self._tags = attrs.pop('tags', None)
+        self.echo = False
 
         if self._tags:
             try:
@@ -51,22 +54,22 @@ class Message:
                 self._timestamp = self.tags['tmi-sent-ts']
 
     @property
-    def author(self):
+    def author(self) -> 'User':  # stub
         """The User object associated with the Message."""
         return self._author
 
     @property
-    def channel(self):
+    def channel(self) -> 'Channel':  # stub
         """The Channel object associated with the Message."""
         return self._channel
 
     @property
-    def raw_data(self):
+    def raw_data(self) -> str:
         """The raw data received from Twitch for this Message."""
         return self._raw_data
 
     @property
-    def tags(self):
+    def tags(self) -> Optional[dict]:
         """The tags associated with the Message.
 
         Could be None.
@@ -74,7 +77,7 @@ class Message:
         return self._tags
 
     @property
-    def timestamp(self):
+    def timestamp(self) -> datetime.datetime.timestamp:
         """The Twitch timestamp for this Message.
 
         Returns
@@ -88,32 +91,36 @@ class Message:
 
 class Channel(Messageable):
 
-    __slots__ = ('_channel', '_ws', '_http', )
+    __slots__ = ('_channel', '_ws', '_http', '_echo', )
 
     def __init__(self, name, ws, http):
         self._channel = name
         self._http = http
         self._ws = ws
+        self._echo = False
 
     def __str__(self):
         return self._channel
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The channel name."""
         return self._channel
 
-    def _get_channel(self):
+    def _get_channel(self) -> Tuple[str, None]:
         return self.name, None
 
-    def _get_method(self):
+    def _get_method(self) -> str:
         return self.__class__.__name__
 
     @property
-    def _get_socket(self):
+    def _get_socket(self):  # stub
+        if self._echo is True:
+            raise EchoMessageWarning('Unable to respond to Echo-Messages.')
+
         return self._ws
 
-    async def get_stream(self):
+    async def get_stream(self) -> dict:
         """|coro|
 
         Method which retrieves stream information on the channel, provided it is active (Live).
@@ -132,7 +139,7 @@ class Channel(Messageable):
         data = await self._http.get_streams(channels=[self.name])
         return data[0]
 
-    async def get_chatters(self):
+    async def get_chatters(self) -> NamedTuple:
         """|coro|
 
         Method which retrieves the currently active chatters on the given stream.
@@ -178,19 +185,19 @@ class User:
         return '<User name={0.name} channel={0._channel}>'.format(self)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The user's name."""
         return self._name
 
     @property
-    def id(self):
+    def id(self) -> int:
         """The user's ID.
 
          Could be None if no Tags were received."""
         return self._id
 
     @property
-    def channel(self):
+    def channel(self) -> Channel:
         """The channel object associated with the User.
 
         .. note::
@@ -202,7 +209,7 @@ class User:
         return self._channel
 
     @property
-    def colour(self):
+    def colour(self) -> Optional[str]:
         """The user's colour.
 
         Could be None if no Tags were received.
@@ -210,12 +217,12 @@ class User:
         return self._colour
 
     @property
-    def color(self):
+    def color(self) -> Optional[str]:
         """An American-English alias to colour."""
         return self.colour
 
     @property
-    def is_turbo(self):
+    def is_turbo(self) -> bool:
         """A boolean indicating whether the User is Turbo.
 
         Could be None if no Tags were received.
@@ -223,7 +230,7 @@ class User:
         return self.turbo
 
     @property
-    def is_subscriber(self):
+    def is_subscriber(self) -> bool:
         """A boolean indicating whether the User is a subscriber of the current channel.
 
         Could be None if no Tags were received.
@@ -231,7 +238,7 @@ class User:
         return self.subscriber
 
     @property
-    def badges(self):
+    def badges(self) -> str:
         """The badges associated with the User.
 
         Could be None if no Tags were received.
@@ -239,7 +246,7 @@ class User:
         return self._badges
 
     @property
-    def tags(self):
+    def tags(self) -> dict:
         """The Tags received for the User.
 
         Could be a Dict containing None if no tags were received.
@@ -247,7 +254,7 @@ class User:
         return self._tags
 
     @property
-    def is_mod(self):
+    def is_mod(self) -> bool:
         """A boolean indicating whether the User is a moderator of the current channel.
 
         Could be None if no Tags were received.
@@ -285,21 +292,20 @@ class Context(Messageable):
         self.args = attrs.get('args', None)
         self.kwargs = attrs.get('kwargs', None)
 
-    def _get_channel(self):
+    def _get_channel(self) -> Tuple[str, None]:
         return self.channel.name, None
 
-    def _get_method(self):
+    def _get_method(self) -> str:
         return self.__class__.__name__
 
     @property
-    def _get_socket(self):
+    def _get_socket(self):  # stub
         return self._ws
 
-    async def get_stream(self):
+    async def get_stream(self) -> dict:
         """|coro|
 
-        Method which retrieves stream information on the channel stored in Context, provided it is active (Live).
-
+        Method which retrieves stream information on the channel stored in Context, provided it is active (Live
         Returns
         ---------
         dict
@@ -312,7 +318,7 @@ class Context(Messageable):
         """
         return await self.channel.get_stream()
 
-    async def get_chatters(self):
+    async def get_chatters(self) -> dict:
         """|coro|
 
         Method which retrieves the currently active chatters on the given stream.
