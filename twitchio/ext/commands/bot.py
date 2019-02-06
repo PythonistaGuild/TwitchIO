@@ -603,13 +603,14 @@ class Bot(Client):
         """
         pass
 
-    async def event_usernotice(self, tags: dict):
+    async def event_raw_usernotice(self, tags: dict):
         """|coro|
 
         Event called when a USERNOTICE is received from Twitch.
         Since USERNOTICE's can be fairly complex and vary, the following sub-events are available:
 
-            :meth:`event_usernotice_sub` : Called when a USERNOTICE Subscription or Resubscription event is received.
+            :meth:`event_usernotice_subscription` :
+            Called when a USERNOTICE Subscription or Re-subscription event is received.
 
 
         .. seealso::
@@ -626,14 +627,14 @@ class Bot(Client):
         """
         pass
 
-    async def event_usernotice_sub(self, metadata):
+    async def event_usernotice_subscription(self, metadata):
         """|coro|
 
         Event called when a USERNOTICE subscription or re-subscription event is received from Twitch.
 
         Parameters
         ------------
-        metadata: :class:`.NoticeSubscription`
+        metadata: :class:`twitchio.dataclasses.NoticeSubscription`
             The object containing various metadata about the subscription event.
             For ease of use, this contains a :class:`.User` and :class:`.Channel`.
         """

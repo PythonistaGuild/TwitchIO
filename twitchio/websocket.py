@@ -458,13 +458,13 @@ class WebsocketConnection:
             await self._dispatch('message', message)
 
         elif action == 'USERNOTICE':
-            await self._dispatch('usernotice', tags)
+            await self._dispatch('raw_usernotice', tags)
 
             if tags['msg-id'] in ('sub', 'resub'):
                 user = User(author=tags['login'], channel=channel, tags=tags, ws=self._websocket)
                 notice = NoticeSubscription(channel=channel, user=user, tags=tags)
 
-                await self._dispatch('usernotice_sub', notice)
+                await self._dispatch('usernotice_subscription', notice)
 
         elif action == 'USERSTATE':
             log.debug('ACTION:: USERSTATE')

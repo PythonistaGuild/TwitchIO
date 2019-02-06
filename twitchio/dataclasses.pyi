@@ -103,11 +103,11 @@ class Context(Messageable):
 class NoticeSubscription:
 
     def __init__(self, *, channel: Channel, user: User, tags: dict):
-        self._channel: Channel = channel
-        self._user: User = user
-        self._tags: dict = tags
-        self._cumulative_months: int = int(tags['msg-param-cumulative-months'])
-        self._share_streak: bool = bool(tags['msg-param-should-share-streak'])
-        self._streak_months: int = int(tags['msg-param-streak-months'])
-        self._sub_plan: str = tags['msg-param-sub-plan']
-        self._sub_plan_name: str = tags['msg-param-sub-plan-name']
+        self.channel: Channel = channel
+        self.user: User = user
+        self.tags: dict = tags
+        self.cumulative_months: int = int(tags['msg-param-cumulative-months'])
+        self.share_streak: bool = bool(tags['msg-param-should-share-streak'])
+        self.streak_months: int = int(tags['msg-param-streak-months'])
+        self.sub_plan: str = tags['msg-param-sub-plan']
+        self.sub_plan_name: str = tags['msg-param-sub-plan-name']
