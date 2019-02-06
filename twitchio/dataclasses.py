@@ -202,7 +202,7 @@ class User:
     def id(self) -> int:
         """The user's ID.
 
-         Could be None if no Tags were received."""
+         Could be 0 if no Tags were received."""
         return self._id
 
     @property
