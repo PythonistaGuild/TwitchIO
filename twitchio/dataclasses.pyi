@@ -51,7 +51,7 @@ class User:
         self._colour: Optional[str]
         self.subscriber: Optional[str]
         self.turbo: Optional[str]
-        self._badges: Optional[dict]
+        self._badges: dict
         self._mod: int
 
     def name(self) -> str: ...
@@ -68,7 +68,7 @@ class User:
 
     def is_subscriber(self) -> bool: ...
 
-    def badges(self) -> Optional[dict]: ...
+    def badges(self) -> dict: ...
 
     def tags(self) -> dict: ...
 
