@@ -136,6 +136,11 @@ Dataclasses belonging to TwitchIO.
     :inherited-members:
     :show-inheritance:
 
+.. autoclass:: twitchio.dataclasses.NoticeSubscription
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
 Errors
 -----------------------
 
