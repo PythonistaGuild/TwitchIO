@@ -264,10 +264,7 @@ class User:
 
     @property
     def is_mod(self) -> bool:
-        """A boolean indicating whether the User is a moderator of the current channel.
-
-        Could be None if no Tags were received.
-        """
+        """A boolean indicating whether the User is a moderator of the current channel."""
         if self._mod == 1:
             return True
         if self.channel.name == self.display_name.lower():
