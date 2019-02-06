@@ -70,7 +70,7 @@ class User:
 
     def is_subscriber(self) -> bool: ...
 
-    def badges(self) -> str: ...
+    def badges(self) -> Optional[dict]: ...
 
     def tags(self) -> dict: ...
 
@@ -99,3 +99,15 @@ class Context(Messageable):
     async def get_stream(self) -> dict: ...
 
     async def get_chatters(self) -> dict: ...
+
+class NoticeSubscription:
+
+    def __init__(self, *, channel: Channel, user: User, tags: dict):
+        self._channel: Channel = channel
+        self._user: User = user
+        self._tags: dict = tags
+        self._cumulative_months: int = int(tags['msg-param-cumulative-months'])
+        self._share_streak: bool = bool(tags['msg-param-should-share-streak'])
+        self._streak_months: int = int(tags['msg-param-streak-months'])
+        self._sub_plan: str = tags['msg-param-sub-plan']
+        self._sub_plan_name: str = tags['msg-param-sub-plan-name']

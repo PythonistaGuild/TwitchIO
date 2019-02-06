@@ -457,13 +457,22 @@ class WebsocketConnection:
             await self._dispatch('raw_data', raw)
             await self._dispatch('message', message)
 
+        elif action == 'USERNOTICE':
+            await self._dispatch('usernotice', tags)
+
+            if tags['msg-id'] in ('sub', 'resub'):
+                user = User(author=tags['login'], channel=channel, tags=tags, ws=self._websocket)
+                notice = NoticeSubscription(channel=channel, user=user, tags=tags)
+
+                await self._dispatch('usernotice_sub', notice)
+
         elif action == 'USERSTATE':
             log.debug('ACTION:: USERSTATE')
 
             if not user or not user.name:
                 if badges:
                     user = User(author=badges['name'],
-                                channel=Channel(name=badges['channel'], ws=self, http=self._http)or None,
+                                channel=Channel(name=badges['channel'], ws=self, http=self._http) or None,
                                 tags=tags,
                                 ws=self._websocket,
                                 mod=badges['mod'])

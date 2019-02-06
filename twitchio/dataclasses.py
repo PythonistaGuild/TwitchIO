@@ -24,7 +24,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ('Message', 'Channel', 'User', 'Context',)
+__all__ = ('Message', 'Channel', 'User', 'Context', 'NoticeSubscription')
 
 
 import datetime
@@ -178,7 +178,16 @@ class User:
         self._colour = self._tags.get('color', None)
         self.subscriber = self._tags.get('subscriber', None)
         self.turbo = self._tags.get('turbo', None)
-        self._badges = self._tags.get('badges', ',').split(',')
+
+        badges = self._tags.get('badges', None)
+        if badges:
+            self._badges = {}
+            for chunk in badges.split(','):
+                k, _, v = chunk.partition('/')
+                self._badges[k] = int(v)
+        else:
+            self._badges = None
+
         self._mod = self._tags.get('mod', 0) if self._tags else attrs.get('mod', 0)
 
     def __repr__(self):
@@ -238,7 +247,7 @@ class User:
         return self.subscriber
 
     @property
-    def badges(self) -> str:
+    def badges(self) -> Optional[dict]:
         """The badges associated with the User.
 
         Could be None if no Tags were received.
@@ -269,11 +278,21 @@ class User:
 
 class Context(Messageable):
     """
-    :ivar author: The author of the command.
-    :ivar prefix: The prefix associated with the command.
-    :ivar message: The message associated with the command.
-    :ivar channel: The channel associated with the command.
-    :ivar command: The command which was invoked.
+    The context of which a command is invoked under.
+
+    Attributes
+    ------------
+    author : :class:`.User`
+        The author of the command.
+    prefix : str
+        The prefix associated with the command.
+    message : :class:`.Message`
+        The message associated with the command.
+    channel : :class:`.Channel`
+        The channel associated with the command.
+    command : :class:`twitchio.ext.core.Command`
+        The command which was invoked.
+
 
     .. note::
         Context is only available through the commands extension.
@@ -334,3 +353,46 @@ class Context(Messageable):
             Bad request while fetching stream chatters.
         """
         return await self.channel.get_chatters()
+
+
+class NoticeSubscription:
+    """
+    The Dataclass sent to `event_usernotice_sub` events.
+
+    Attributes
+    ------------
+    channel : :class:`.Channel`
+        The channel associated with the subscription event.
+    user : :class:`.User`
+        The user associated with the subscription event.
+    tags : dict
+        The raw tags dict associated with the subscription event.
+    cumulative_months : int
+        The total number of months the user has subscribed.
+    share_streak : bool
+        Boolean indicating whether users want their streaks to be shared.
+    streak_months : int
+        The number of consecutive months the user has subscribed.
+        This is 0 if ``share_streak`` is False.
+    sub_plan : str
+        The type of subscription plan being used.
+        Valid values: Prime, 1000, 2000, 3000.
+
+        1000, 2000, and 3000 refer to the first, second, and third levels of paid subscriptions,
+        respectively (currently $4.99, $9.99, and $24.99).
+    sub_plan_name : str
+        The display name of the subscription plan.
+        This may be a default name or one created by the channel owner.
+    """
+
+    def __init__(self, *, channel: Channel, user: User, tags: dict):
+        self.channel = channel
+        self.user = user
+
+        self.tags = tags
+
+        self.cumulative_months = int(tags['msg-param-cumulative-months'])
+        self.share_streak = bool(tags['msg-param-should-share-streak'])
+        self.streak_months = int(tags['msg-param-streak-months'])
+        self.sub_plan = tags['msg-param-sub-plan']
+        self.sub_plan_name = tags['msg-param-sub-plan-name']

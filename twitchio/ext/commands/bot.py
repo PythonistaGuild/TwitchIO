@@ -603,6 +603,42 @@ class Bot(Client):
         """
         pass
 
+    async def event_usernotice(self, tags: dict):
+        """|coro|
+
+        Event called when a USERNOTICE is received from Twitch.
+        Since USERNOTICE's can be fairly complex and vary, the following sub-events are available:
+
+            :meth:`event_usernotice_sub` : Called when a USERNOTICE Subscription or Resubscription event is received.
+
+
+        .. seealso::
+
+            For more information on how to handle USERNOTICE's visit:
+            https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
+
+
+        Parameters
+        ------------
+        tags : dict
+            A dictionary with the relevant information associated with the USERNOTICE.
+            This could vary depending on the event.
+        """
+        pass
+
+    async def event_usernotice_sub(self, metadata):
+        """|coro|
+
+        Event called when a USERNOTICE subscription or re-subscription event is received from Twitch.
+
+        Parameters
+        ------------
+        metadata: :class:`.NoticeSubscription`
+            The object containing various metadata about the subscription event.
+            For ease of use, this contains a :class:`.User` and :class:`.Channel`.
+        """
+        pass
+
     async def event_part(self, user):
         """|coro|
 
