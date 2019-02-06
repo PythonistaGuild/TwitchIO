@@ -427,12 +427,12 @@ class Bot(Client):
             pass
 
         try:
-            if command not in self.commands:
-                if not command:
-                    return
+            if command in self.commands:
+                command = self.commands[command]
+            elif command:
                 raise CommandNotFound(f'<{command}> was not found.')
             else:
-                command = self.commands[command]
+                return
         except Exception as e:
             ctx.command = None
             return await self.event_command_error(ctx, e)
