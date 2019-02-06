@@ -357,7 +357,7 @@ class Context(Messageable):
 
 class NoticeSubscription:
     """
-    The Dataclass sent to `event_usernotice_sub` events.
+    The Dataclass sent to `event_usernotice_subscription` events.
 
     Attributes
     ------------
