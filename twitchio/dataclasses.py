@@ -367,12 +367,12 @@ class NoticeSubscription:
         The user associated with the subscription event.
     tags : dict
         The raw tags dict associated with the subscription event.
-    cumulative_months : int
-        The total number of months the user has subscribed.
+    cumulative_months : Optional[int]
+        The total number of months the user has subscribed. Could be None if not provided.
     share_streak : bool
         Boolean indicating whether users want their streaks to be shared.
-    streak_months : int
-        The number of consecutive months the user has subscribed.
+    streak_months : Optional[int]
+        The number of consecutive months the user has subscribed. Could be None if not provided.
         This is 0 if ``share_streak`` is False.
     sub_plan : str
         The type of subscription plan being used.
@@ -391,8 +391,15 @@ class NoticeSubscription:
 
         self.tags = tags
 
-        self.cumulative_months = int(tags['msg-param-cumulative-months'])
+        self.cumulative_months = tags.get('msg-param-cumulative-months', None)
+        if self.cumulative_months:
+            self.cumulative_months = int(self.cumulative_months)
+
         self.share_streak = bool(tags['msg-param-should-share-streak'])
-        # self.streak_months = int(tags['msg-param-streak-months'])
+
+        self.streak_months = tags.get('msg-param-streak-months', None)
+        if self.streak_months:
+            self.streak_months = int(self.streak_months)
+
         self.sub_plan = tags['msg-param-sub-plan']
         self.sub_plan_name = tags['msg-param-sub-plan-name']
