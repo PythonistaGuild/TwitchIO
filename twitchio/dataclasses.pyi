@@ -108,6 +108,6 @@ class NoticeSubscription:
         self.tags: dict = tags
         self.cumulative_months: int = int(tags['msg-param-cumulative-months'])
         self.share_streak: bool = bool(tags['msg-param-should-share-streak'])
-        self.streak_months: int = int(tags['msg-param-streak-months'])
+        # self.streak_months: int = int(tags['msg-param-streak-months'])
         self.sub_plan: str = tags['msg-param-sub-plan']
         self.sub_plan_name: str = tags['msg-param-sub-plan-name']
