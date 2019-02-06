@@ -179,14 +179,12 @@ class User:
         self.subscriber = self._tags.get('subscriber', None)
         self.turbo = self._tags.get('turbo', None)
 
+        self._badges = {}
         badges = self._tags.get('badges', None)
         if badges:
-            self._badges = {}
             for chunk in badges.split(','):
                 k, _, v = chunk.partition('/')
                 self._badges[k] = int(v)
-        else:
-            self._badges = None
 
         self._mod = self._tags.get('mod', 0) if self._tags else attrs.get('mod', 0)
 
@@ -247,10 +245,10 @@ class User:
         return self.subscriber
 
     @property
-    def badges(self) -> Optional[dict]:
+    def badges(self) -> dict:
         """The badges associated with the User.
 
-        Could be None if no Tags were received.
+        Could be an empty Dict if no Tags were received.
         """
         return self._badges
 
