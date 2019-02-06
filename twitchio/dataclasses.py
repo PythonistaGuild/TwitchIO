@@ -170,7 +170,7 @@ class User:
         self._ws = ws
 
         if not self._tags:
-            self._tags = {'None': 'None'}
+            self._tags = {}
 
         self.display_name = self._tags.get('display-name', self._name)
         self._id = int(self._tags.get('user-id', 0))
@@ -258,7 +258,7 @@ class User:
     def tags(self) -> dict:
         """The Tags received for the User.
 
-        Could be a Dict containing None if no tags were received.
+        Could be an empty Dict if no tags were received.
         """
         return self._tags
 
