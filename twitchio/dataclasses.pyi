@@ -43,7 +43,7 @@ class User:
     def __init__(self, ws: WebsocketConnection, **attrs):
         self._name: Optional[str]
         self._channel: Union[Channel, str]
-        self._tags: Optional[dict]
+        self._tags: dict
         self._ws: WebsocketConnection
         self.display_name: str
         self._id: int
