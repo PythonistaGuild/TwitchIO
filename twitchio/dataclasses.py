@@ -139,24 +139,6 @@ class Channel(Messageable):
         data = await self._http.get_streams(channels=[self.name])
         return data[0]
 
-    async def get_chatters(self) -> NamedTuple:
-        """|coro|
-
-        Method which retrieves the currently active chatters on the given stream.
-
-        Returns
-        ---------
-        namedtuple:
-            A namedtuple containing chatter data.
-
-        Raises
-        --------
-        HTTPException
-            Bad request while fetching stream chatters.
-        """
-
-        return await self._http.get_chatters(self.name)
-
 
 class User:
 
@@ -333,23 +315,6 @@ class Context(Messageable):
             Bad request while fetching streams.
         """
         return await self.channel.get_stream()
-
-    async def get_chatters(self) -> dict:
-        """|coro|
-
-        Method which retrieves the currently active chatters on the given stream.
-
-        Returns
-        ---------
-        dict
-            Dict containing active chatter data.
-
-        Raises
-        --------
-        HTTPException
-            Bad request while fetching stream chatters.
-        """
-        return await self.channel.get_chatters()
 
 
 class NoticeSubscription:

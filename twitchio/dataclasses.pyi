@@ -35,8 +35,6 @@ class Channel(Messageable):
 
     async def get_stream(self) -> dict: ...
 
-    async def get_chatters(self) -> NamedTuple:
-
 
 class User:
     __slots__ = ('_name', '_channel', '_tags', 'display_name', '_id', 'type',
@@ -97,8 +95,6 @@ class Context(Messageable):
     def _get_socket(self) -> WebsocketConnection: ...
 
     async def get_stream(self) -> dict: ...
-
-    async def get_chatters(self) -> dict: ...
 
 class NoticeSubscription:
 
