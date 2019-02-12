@@ -245,7 +245,7 @@ class Client:
 
         Parameters
         ------------
-        user_id: str
+        user_id: Union[nit, str]
             The user to retrieve the list of followers for.
 
         Returns
