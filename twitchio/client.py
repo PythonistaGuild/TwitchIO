@@ -238,7 +238,7 @@ class Client:
             secret=secret,
         )
 
-    async def get_followers(self, user_id: int):
+    async def get_followers(self, user_id: Union[int, str]):
         """|coro|
 
         Retrieves the list of users who are following a user.
@@ -261,14 +261,14 @@ class Client:
 
         return await self.http.get_followers(str(user_id))
 
-    async def get_following(self, user_id: int):
+    async def get_following(self, user_id: Union[int, str]):
         """|coro|
 
         Retrieves the list of users who this user is following.
 
         Parameters
         ------------
-        user_id: int
+        user_id: Union[int, str]
             The user to retrieve the list of followed users for.
 
         Returns
