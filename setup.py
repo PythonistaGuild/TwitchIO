@@ -74,8 +74,8 @@ with open('README.rst') as f:
     readme = f.read()
 
 setup(name='twitchio',
-      author='EvieePy',
-      url='https://github.com/EvieePy/TwitchIO',
+      author='TwitchIO',
+      url='https://github.com/TwitchIO/TwitchIO',
       version=version,
       packages=['twitchio', 'twitchio.ext.commands'],
       license='MIT',
