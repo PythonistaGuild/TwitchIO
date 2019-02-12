@@ -74,8 +74,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'TwitchIO'
-copyright = '2017-2019, EvieePy'
-author = 'EvieePy'
+copyright = '2017-2019, TwitchIO'
+author = 'TwitchIO'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
