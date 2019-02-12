@@ -17,13 +17,13 @@ The following commands are currently the valid ways of installing TwitchIO.
 
 .. code:: sh
 
-    py -version -m pip install git+https://github.com/MysterialPy/TwitchIO.git
+    py -version -m pip install git+https://github.com/TwitchIO/TwitchIO.git
 
 **Linux**
 
 .. code:: sh
 
-    python3 -m pip install git+https://github.com/MysterialPy/TwitchIO.git
+    python3 -m pip install git+https://github.com/TwitchIO/TwitchIO.git
 
 Getting Started
 ----------------------------
