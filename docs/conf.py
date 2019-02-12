@@ -184,7 +184,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'TwitchIO', 'TwitchIO Documentation',
-     author, 'TwitchIO', 'One line description of project.',
+     author, 'TwitchIO', 'A Python IRC and API wrapper for Twitch.',
      'Miscellaneous'),
 ]
 
