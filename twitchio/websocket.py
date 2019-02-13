@@ -295,8 +295,8 @@ class WebsocketConnection:
                 retry = backoff.delay()
                 log.info('Websocket closed: Retrying connection in %s seconds...', retry)
 
-                await self._connect()
                 await asyncio.sleep(retry)
+                await self._connect()
                 continue
 
             await self._dispatch('raw_data', data)
