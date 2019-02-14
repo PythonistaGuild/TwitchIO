@@ -238,7 +238,7 @@ class Client:
             secret=secret,
         )
 
-    async def get_followers(self, user_id: Union[int, str]):
+    async def get_followers(self, user_id: Union[int, str], *, count: bool=False):
         """|coro|
 
         Retrieves the list of users who are following a user.
@@ -247,11 +247,15 @@ class Client:
         ------------
         user_id: Union[int, str]
             The user to retrieve the list of followers for.
+        count: bool
+            Whether to return only the total count of followers or not. Defaults to False.
 
         Returns
         ---------
         list
             List containing users following this user.
+        int
+            An int of the total count of followers. Only available when ``count``=True
 
         Raises
         --------
@@ -259,9 +263,9 @@ class Client:
             Bad request while fetching users.
         """
 
-        return await self.http.get_followers(str(user_id))
+        return await self.http.get_followers(str(user_id), count=count)
 
-    async def get_following(self, user_id: Union[int, str]):
+    async def get_following(self, user_id: Union[int, str], count: bool=False):
         """|coro|
 
         Retrieves the list of users who this user is following.
@@ -270,11 +274,15 @@ class Client:
         ------------
         user_id: Union[int, str]
             The user to retrieve the list of followed users for.
+        count: bool
+            Whether to return only the total count of followers or not. Defaults to False.
 
         Returns
         ---------
         list
             List containing users that the user is following.
+        int
+            An int of the total count of followers. Only available when ``count``=True
 
         Raises
         --------
@@ -282,7 +290,7 @@ class Client:
             Bad request while fetching users.
         """
 
-        return await self.http.get_following(str(user_id))
+        return await self.http.get_following(str(user_id), count=count)
 
     async def get_chatters(self, channel: str):
         """|coro|

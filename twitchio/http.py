@@ -48,6 +48,8 @@ class HTTPSession:
         self._session = aiohttp.ClientSession(loop=loop)
 
     async def request(self, method, url, *, params=None, limit=None, **kwargs):
+        count = kwargs.pop('count', False)
+
         data = []
 
         params = params or []
@@ -81,8 +83,8 @@ class HTTPSession:
             if is_text:
                 return body
 
-            if not body['data']:
-                break
+            if count:
+                return body['total']
 
             params.pop()  # remove the first param
 
@@ -95,6 +97,9 @@ class HTTPSession:
                 cursor = body['pagination'].get('cursor', None)
             except KeyError:
                 break
+            else:
+                if not cursor:
+                    break
 
         return data
 
@@ -166,13 +171,13 @@ class HTTPSession:
 
         return await self.request('GET', '/users', params=params)
 
-    async def get_followers(self, user_id: str):
+    async def get_followers(self, user_id: str, *, count):
         params = [('to_id', user_id)]
-        return await self.request('GET', '/users/follows', params=params)
+        return await self.request('GET', '/users/follows', params=params, count=count)
 
-    async def get_following(self, user_id: str):
+    async def get_following(self, user_id: str, *, count):
         params = [('from_id', user_id)]
-        return await self.request('GET', '/users/follows', params=params)
+        return await self.request('GET', '/users/follows', params=params, count=count)
 
     async def get_streams(self, *, game_id=None, language=None, channels, limit=None):
         if channels:
