@@ -55,10 +55,12 @@ class HTTPSession:
         params = params or []
         url = f'{self.BASE}{url}'
 
-        headers = {}
+        # headers = {}
 
-        if self.client_id:
-            headers['Client-ID'] = self.client_id
+        headers = kwargs.pop('headers', {})
+
+        if self.client_id is not None:
+            headers['Client-ID'] = str(self.client_id)
 
         cursor = None
 
