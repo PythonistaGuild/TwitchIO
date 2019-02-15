@@ -281,3 +281,38 @@ class Messageable(metaclass=abc.ABCMeta):
         self.check_content(channel, content)
 
         await ws.send_privmsg(channel, content=f'.me {content}')
+
+    async def colour(self, colour: str):
+        """Send a colour change request to Twitch.
+
+        Parameters
+        ------------
+        colour: str
+            A predefined colour listed below. Turbo Users may use a valid hex code. e.g #233233
+
+            Blue
+            BlueViolet
+            CadetBlue
+            Chocolate
+            Coral
+            DodgerBlue
+            FireBrick
+            GoldenRod
+            Green
+            HotPink
+            OrangeRed
+            Red
+            SeaGreen
+            SpringGreen
+            YellowGreen
+        """
+        ws = self._get_socket
+        channel, _ = self._get_channel()
+
+        self.check_bucket(channel)
+        await ws.send_privmsg(channel, content=f'.color {colour}')
+
+    async def color(self, colour: str):
+        """An alias to colour."""
+        await self.colour(colour)
+
