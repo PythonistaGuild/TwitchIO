@@ -275,14 +275,14 @@ class Client:
         user_id: Union[int, str]
             The user to retrieve the list of followed users for.
         count: bool
-            Whether to return only the total count of followers or not. Defaults to False.
+            Whether to return only the total count of followed users or not. Defaults to False.
 
         Returns
         ---------
         list
             List containing users that the user is following.
         int
-            An int of the total count of followers. Only available when ``count``=True
+            An int of the total count of followed users. Only available when ``count``=True
 
         Raises
         --------
