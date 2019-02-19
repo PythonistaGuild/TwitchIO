@@ -173,6 +173,10 @@ class HTTPSession:
 
         return await self.request('GET', '/users', params=params)
 
+    async def get_follow(self, from_id: str, to_id: str):
+        params = [('from_id', from_id), ('to_id', to_id)]
+        return await self.request('GET', '/users/follows', params=params)
+
     async def get_followers(self, user_id: str, *, count):
         params = [('to_id', user_id)]
         return await self.request('GET', '/users/follows', params=params, count=count)
