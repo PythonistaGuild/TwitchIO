@@ -74,43 +74,15 @@ class Client:
 
         return [User(*user.values()) for user in data]
 
-    async def get_stream_by_name(self, channel: str):
+    async def get_stream(self, channel: Union[int, str]):
         """|coro|
 
         Method which retrieves stream information on the channel, provided it is active (Live).
 
         Parameters
         ------------
-        channel: str
-            The channel name to retrieve data for.
-
-        Returns
-        ---------
-        dict
-            Dict containing active streamer data. Could be None if the stream is not live.
-
-        Raises
-        --------
-        HTTPException
-            Bad request while fetching stream.
-        """
-
-        data = await self.http.get_streams(channels=[channel])
-
-        try:
-            return data[0]
-        except IndexError:
-            pass
-
-    async def get_stream_by_id(self, channel: int):
-        """|coro|
-
-        Method which retrieves stream information on the channel, provided it is active (Live).
-
-        Parameters
-        ------------
-        channel: int
-            The channel id to retrieve data for.
+        channel: Union[int, str]
+            The channel id or name to retrieve data for.
 
         Returns
         ---------
