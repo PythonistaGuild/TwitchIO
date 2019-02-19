@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 import aiohttp
 import asyncio
 import logging
-from typing import Union
+
 
 from .cooldowns import RateBucket
 from .errors import HTTPException, Unauthorized
@@ -147,29 +147,17 @@ class HTTPSession:
 
         raise HTTPException('Failed to reach Twitch API', reason)
 
-    @staticmethod
-    def _populate_entries(*channels: Union[str, int]):
-        names = set()
-        ids = set()
+    def _kwarg_params(self, names, ids, name_param, id_param):
+        names = set(names) or set()
+        ids = set(ids) or set()
 
-        for channel in channels:
-            if isinstance(channel, str):
-                if channel.isdigit():
-                    # Handle ids in the string form
-                    ids.add(int(channel))
-                else:
-                    names.add(channel)
-            elif isinstance(channel, int):
-                ids.add(str(channel))
-
-        if len(names | ids) > 100:
+        if len(names) + len(ids) > 100:
             raise HTTPException('Bad Request - Total entries must not exceed 100.')
 
-        return names, ids
+        return [(id_param, x) for x in ids] + [(name_param, x) for x in names]
 
-    async def get_users(self, *users: Union[str, int]):
-        names, ids = self._populate_entries(*users)
-        params = [('id', x) for x in ids] + [('login', x) for x in names]
+    async def get_users(self, user_names=None, user_ids=None):
+        params = self._kwarg_params(user_names, user_ids, 'login', 'id')
 
         return await self.request('GET', '/users', params=params)
 
@@ -181,12 +169,8 @@ class HTTPSession:
         params = [('from_id', user_id)]
         return await self.request('GET', '/users/follows', params=params, count=count)
 
-    async def get_streams(self, *, game_id=None, language=None, channels, limit=None):
-        if channels:
-            names, ids = self._populate_entries(*channels)
-            params = [('user_id', x) for x in ids] + [('user_login', x) for x in names]
-        else:
-            params = []
+    async def get_streams(self, *, game_id=None, language=None, channel_names=None, channel_ids=None, limit=None):
+        params = self._kwarg_params(channel_names, channel_ids, 'user_login', 'user_id')
 
         if game_id is not None:
             params.append(('game_id', str(game_id)))
@@ -196,9 +180,8 @@ class HTTPSession:
 
         return await self.request('GET', '/streams', params=params, limit=limit)
 
-    async def get_games(self, *games: Union[str, int]):
-        names, ids = self._populate_entries(*games)
-        params = [('id', x) for x in ids] + [('name', x) for x in names]
+    async def get_games(self, game_names=None, game_ids=None):
+        params = self._kwarg_params(game_names, game_ids, 'name', 'id')
 
         return await self.request('GET', '/games', params=params)
 

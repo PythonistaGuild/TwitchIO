@@ -44,15 +44,17 @@ class Client:
         loop = loop or asyncio.get_event_loop()
         self.http = HTTPSession(loop=loop, client_id=client_id)
 
-    async def get_users(self, *users: Union[str, int]) -> list:
+    async def get_users(self, user_names=None, user_ids=None) -> list:
         """|coro|
 
         Method which retrieves user information on the specified names/ids.
 
         Parameters
         ------------
-        \*users: str
-            The user name(s)/id(s) to retrieve data for.
+        user_names: Optional[List[str]]
+            The users in name form, to retrieve information for.
+        user_ids: Optional[List[str]]
+            The users in id form, to retrieve information for.
 
         Returns
         ---------
@@ -70,67 +72,11 @@ class Client:
             This method accepts both user ids or names, or a combination of both. Multiple names/ids may be passed.
         """
 
-        data = await self.http.get_users(*users)
+        data = await self.http.get_users(user_names, user_ids)
 
         return [User(*user.values()) for user in data]
 
-    async def get_stream_by_name(self, channel: str):
-        """|coro|
-
-        Method which retrieves stream information on the channel, provided it is active (Live).
-
-        Parameters
-        ------------
-        channel: str
-            The channel name to retrieve data for.
-
-        Returns
-        ---------
-        dict
-            Dict containing active streamer data. Could be None if the stream is not live.
-
-        Raises
-        --------
-        HTTPException
-            Bad request while fetching stream.
-        """
-
-        data = await self.http.get_streams(channels=[channel])
-
-        try:
-            return data[0]
-        except IndexError:
-            pass
-
-    async def get_stream_by_id(self, channel: int):
-        """|coro|
-
-        Method which retrieves stream information on the channel, provided it is active (Live).
-
-        Parameters
-        ------------
-        channel: int
-            The channel id to retrieve data for.
-
-        Returns
-        ---------
-        dict
-            Dict containing active streamer data. Could be None if the stream is not live.
-
-        Raises
-        --------
-        HTTPException
-            Bad request while fetching stream.
-        """
-
-        data = await self.http.get_streams(channels=[channel])
-
-        try:
-            return data[0]
-        except IndexError:
-            pass
-
-    async def get_streams(self, *, game_id=None, language=None, channels=None, limit=None):
+    async def get_streams(self, *, game_id=None, language=None, channel_names=None, channel_ids=None, limit=None):
         """|coro|
 
         Method which retrieves multiple stream information on the given channels, provided they are active (Live).
@@ -141,8 +87,10 @@ class Client:
             The game to filter streams for.
         language: Optional[str]
             The language to filter streams for.
-        channels: Optional[Union[int, str]]
-            The channels in id or name form, to retrieve information for.
+        channel_names: Optional[List[str]]
+            The channels in name form, to retrieve information for.
+        channel_ids: Optional[List[str]]
+            The channels in id form, to retrieve information for.
         limit: Optional[int]
             Maximum number of results to return.
 
@@ -157,17 +105,20 @@ class Client:
             Bad request while fetching streams.
         """
 
-        return await self.http.get_streams(game_id=game_id, language=language, channels=channels, limit=limit)
+        return await self.http.get_streams(game_id=game_id, language=language, channel_names=channel_names,
+                                           channel_ids=channel_ids, limit=limit)
 
-    async def get_games(self, *games: Union[str, int]):
+    async def get_games(self, game_names=None, game_ids=None):
         """|coro|
 
         Method which retrieves games information on the given game ID(s)/Name(s).
 
         Parameters
         ------------
-        \*games: Union[str, int]
-            The games in either id or name form to retrieve information for.
+        game_names: Optional[List[str]]
+            The games in name form, to retrieve information for.
+        game_ids: Optional[List[str]]
+            The games in id form, to retrieve information for.
 
         Returns
         ---------
@@ -180,7 +131,7 @@ class Client:
             Bad request while fetching games.
         """
 
-        return await self.http.get_games(*games)
+        return await self.http.get_games(game_names=game_names, game_ids=game_ids)
 
     async def get_top_games(self, limit=None):
         """|coro|
@@ -238,7 +189,7 @@ class Client:
             secret=secret,
         )
 
-    async def get_followers(self, user_id: Union[int, str], *, count: bool=False):
+    async def get_followers(self, user_id: Union[int, str], *, count: bool = False):
         """|coro|
 
         Retrieves the list of users who are following a user.
@@ -265,7 +216,7 @@ class Client:
 
         return await self.http.get_followers(str(user_id), count=count)
 
-    async def get_following(self, user_id: Union[int, str], count: bool=False):
+    async def get_following(self, user_id: Union[int, str], count: bool = False):
         """|coro|
 
         Retrieves the list of users who this user is following.
