@@ -26,7 +26,6 @@ DEALINGS IN THE SOFTWARE.
 
 __all__ = ('Message', 'Channel', 'User', 'Context', 'NoticeSubscription')
 
-
 import datetime
 from typing import *
 
@@ -35,7 +34,6 @@ from .errors import EchoMessageWarning
 
 
 class Message:
-
     __slots__ = ('_author', '_channel', '_raw_data', 'content', 'clean_content', '_tags', '_timestamp', 'echo')
 
     def __init__(self, **attrs):
@@ -85,13 +83,12 @@ class Message:
         timestamp:
             UTC datetime object of the Twitch timestamp.
         """
-        timestamp = datetime.datetime.utcfromtimestamp(self._timestamp/1000)
+        timestamp = datetime.datetime.utcfromtimestamp(self._timestamp / 1000)
         return timestamp
 
 
 class Channel(Messageable):
-
-    __slots__ = ('_channel', '_ws', '_http', '_echo', )
+    __slots__ = ('_channel', '_ws', '_http', '_echo',)
 
     def __init__(self, name, ws, http):
         self._channel = name
@@ -141,7 +138,6 @@ class Channel(Messageable):
 
 
 class User:
-
     __slots__ = ('_name', '_channel', '_tags', 'display_name', '_id', 'type',
                  '_colour', 'subscriber', 'turbo', '_badges', '_ws', '_mod')
 

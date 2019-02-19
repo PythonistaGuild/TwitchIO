@@ -25,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import async_timeout
 import functools
 import itertools
 import json
@@ -34,19 +33,18 @@ import re
 import secrets
 import sys
 import traceback
+
+import async_timeout
 import websockets
-from typing import Union
 
 from .backoff import ExponentialBackoff
 from .dataclasses import *
 from .errors import WSConnectionFailure, AuthenticationError, ClientError
 
-
 log = logging.getLogger(__name__)
 
 
 class PubSubPool:
-
     POOL_MAX = 10
 
     def __init__(self, loop: asyncio.BaseEventLoop, base):
@@ -78,7 +76,7 @@ class PubSubPool:
 
 class WebsocketConnection:
 
-    def __init__(self, bot, *, loop: asyncio.BaseEventLoop=None, **attrs):
+    def __init__(self, bot, *, loop: asyncio.BaseEventLoop = None, **attrs):
         self._bot = bot
         self.loop = loop or asyncio.get_event_loop()
 
@@ -191,7 +189,7 @@ class WebsocketConnection:
         log.debug('Sending CAP REQ: %s', cap)
         await self._websocket.send(f'CAP REQ :twitch.tv/{cap}')
 
-    async def auth_seq(self, channels: Union[list, tuple]=None):
+    async def auth_seq(self, channels: Union[list, tuple] = None):
         """|coro|
 
         Automated Authentication process.
@@ -344,7 +342,7 @@ class WebsocketConnection:
             await self._dispatch('ready')
             self.is_ready.set()
 
-        elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed' or\
+        elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed' or \
                 data == ':tmi.twitch.tv NOTICE * :Improperly formatted auth':
             log.warning('Authentication failed | %s', self._token)
             raise AuthenticationError('Websocket Authentication Failure... Check your token and nick.')
@@ -386,7 +384,7 @@ class WebsocketConnection:
 
         await self.process_actions(data, _groupsdict, badges, tags)
 
-    async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict=None):
+    async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict = None):
         # todo add remaining actions, docs
 
         action = groups.pop('action', None)
@@ -521,7 +519,7 @@ class WebsocketConnection:
             if isinstance(e, Exception):
                 self.loop.create_task(self.event_error(e))
 
-    async def event_error(self, error: Exception, data: str=None):
+    async def event_error(self, error: Exception, data: str = None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     def teardown(self):
@@ -532,7 +530,6 @@ class WebsocketConnection:
 
 
 class PubSub:
-
     __slots__ = ('loop', '_pool', '_node', '_subscriptions', '_topics', '_websocket', '_timeout', '_last_result',
                  '_listener')
 
@@ -648,4 +645,3 @@ class PubSub:
                             "auth_token": token}}
 
         await self._websocket.send(json.dumps(payload))
-

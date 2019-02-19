@@ -26,7 +26,6 @@ DEALINGS IN THE SOFTWARE.
 
 __all__ = ('WebhookMode',)
 
-
 import enum
 
 

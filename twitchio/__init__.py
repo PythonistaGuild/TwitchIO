@@ -32,10 +32,10 @@ __version__ = '0.0.4a'
 
 import logging
 
-from .dataclasses import *
-from .errors import *
-from .enums import *
 from .client import Client
+from .dataclasses import *
+from .enums import *
+from .errors import *
 from .webhook import *
 
 try:

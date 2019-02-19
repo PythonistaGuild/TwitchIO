@@ -66,7 +66,7 @@ class Command:
             argument = converter(parsed)
         except Exception:
             raise BadArgument(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
-                                    f' Expected type {converter} got {type(parsed)}.')
+                              f' Expected type {converter} got {type(parsed)}.')
 
         return argument
 
@@ -165,7 +165,7 @@ class Command:
         return func
 
 
-def command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
+def command(*, name: str = None, aliases: Union[list, tuple] = None, cls=None):
     if cls and not inspect.isclass(cls):
         raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
@@ -179,6 +179,7 @@ def command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
         command = cls(name=fname, func=func, aliases=aliases)
 
         return command
+
     return decorator
 
 
@@ -186,7 +187,7 @@ class AutoCog:
     pass
 
 
-def cog(*, name: str=None, **attrs):
+def cog(*, name: str = None, **attrs):
     def wrapper(klass):
         class Cog(AutoCog, klass):
 
@@ -213,4 +214,5 @@ def cog(*, name: str=None, **attrs):
                 bot.cogs[self.__name__] = self
 
         return Cog
+
     return wrapper

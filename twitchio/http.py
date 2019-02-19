@@ -23,14 +23,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-import aiohttp
 import asyncio
 import logging
 from typing import Union
 
+import aiohttp
+
 from .cooldowns import RateBucket
 from .errors import HTTPException, Unauthorized
-
 
 log = logging.getLogger(__name__)
 

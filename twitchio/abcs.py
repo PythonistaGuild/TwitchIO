@@ -59,7 +59,6 @@ limiter = IRCLimiterMapping()
 
 
 class Messageable(metaclass=abc.ABCMeta):
-
     __slots__ = ()
 
     __invalid__ = ('ban', 'unban', 'timeout', 'w', 'colour', 'color', 'mod',
@@ -198,7 +197,7 @@ class Messageable(metaclass=abc.ABCMeta):
         """
         await self.unslow()
 
-    async def timeout(self, user: str, duration: int=600, reason: str=''):
+    async def timeout(self, user: str, duration: int = 600, reason: str = ''):
         """|coro|
 
         Method which sends a .timeout command to Twitch.
@@ -220,7 +219,7 @@ class Messageable(metaclass=abc.ABCMeta):
 
         await ws.send_privmsg(channel, content=f'.timeout {user} {duration} {reason}')
 
-    async def ban(self, user: str, reason: str=''):
+    async def ban(self, user: str, reason: str = ''):
         """|coro|
 
         Method which sends a .ban command to Twitch.
@@ -315,4 +314,3 @@ class Messageable(metaclass=abc.ABCMeta):
     async def color(self, colour: str):
         """An alias to colour."""
         await self.colour(colour)
-

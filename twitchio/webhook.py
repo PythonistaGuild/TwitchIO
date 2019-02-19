@@ -34,7 +34,6 @@ __all__ = (
     'TwitchWebhookServer',
 )
 
-
 import abc
 import asyncio
 import json
@@ -47,7 +46,7 @@ from twitchio.errors import HTTPException
 
 class TwitchWebhookServer:
 
-    def __init__(self, *, bot, local: str, external: str, port: int, callback: str=None):
+    def __init__(self, *, bot, local: str, external: str, port: int, callback: str = None):
         self._bot = bot
         self.local = local
         self.external = external

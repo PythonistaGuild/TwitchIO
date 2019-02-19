@@ -26,8 +26,8 @@ DEALINGS IN THE SOFTWARE.
 
 import os
 import re
-from setuptools import setup
 
+from setuptools import setup
 
 on_rtd = os.getenv('READTHEDOCS') == 'True'
 
@@ -53,6 +53,7 @@ if version.endswith(('a', 'b', 'rc')):
     # append version identifier based on commit count
     try:
         import subprocess
+
         p = subprocess.Popen(['git', 'rev-list', '--count', 'HEAD'],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
@@ -84,16 +85,16 @@ setup(name='twitchio',
       include_package_data=True,
       install_requires=requirements,
       classifiers=[
-        'Development Status :: 2 - Beta',
-        'License :: OSI Approved :: MIT License',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Topic :: Internet',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Utilities',
+          'Development Status :: 2 - Beta',
+          'License :: OSI Approved :: MIT License',
+          'Intended Audience :: Developers',
+          'Natural Language :: English',
+          'Operating System :: OS Independent',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Topic :: Internet',
+          'Topic :: Software Development :: Libraries',
+          'Topic :: Software Development :: Libraries :: Python Modules',
+          'Topic :: Utilities',
       ]
-)
+      )
