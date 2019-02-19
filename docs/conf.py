@@ -19,6 +19,7 @@
 #
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath('..'))
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
@@ -26,7 +27,6 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 # html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
 html_theme = 'basic'
 html_logo = 'logo.png'
-
 
 # -- General configuration ------------------------------------------------
 
@@ -42,16 +42,15 @@ extensions = ['sphinx.ext.autodoc',
               'sphinxcontrib.asyncio']
 
 if on_rtd:
-  extensions.append('sphinxcontrib.napoleon')
+    extensions.append('sphinxcontrib.napoleon')
 else:
-  extensions.append('sphinx.ext.napoleon')
+    extensions.append('sphinx.ext.napoleon')
 
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = False
 autodoc_member_order = 'groupwise'
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -104,7 +103,6 @@ pygments_style = 'friendly'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -131,12 +129,10 @@ html_sidebars = {
     ]
 }
 
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'TwitchIOdoc'
-
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -166,7 +162,6 @@ latex_documents = [
      'TwitchIO', 'manual'),
 ]
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
@@ -175,7 +170,6 @@ man_pages = [
     (master_doc, 'twitchio', 'TwitchIO Documentation',
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output -------------------------------------------
 
