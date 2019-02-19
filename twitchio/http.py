@@ -184,7 +184,7 @@ class HTTPSession:
     async def get_streams(self, *, game_id=None, language=None, channels, limit=None):
         if channels:
             names, ids = self._populate_entries(*channels)
-            params = [('id', x) for x in ids] + [('user_login', x) for x in names]
+            params = [('user_id', x) for x in ids] + [('user_login', x) for x in names]
         else:
             params = []
 
