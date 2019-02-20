@@ -110,7 +110,7 @@ class Channel(Messageable):
 
     @property
     def chatters(self) -> list:
-        """The channels chatters."""
+        """The channel's chatters."""
         return self._users
 
     def _get_channel(self) -> Tuple[str, None]:
