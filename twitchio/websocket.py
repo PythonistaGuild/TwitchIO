@@ -128,7 +128,9 @@ class WebsocketConnection:
                                  r"user-type=(?P<type>[^\s]+)\s:tmi.twitch.tv\s(?P<action>[A-Z]*)\s"
                                  r"#(?P<channel>[a-z0-9A-Z]+)"),
             "batches": re.compile(r":(?P<author>[a-zA-Z0-9_]+)!(?P=author)@(?P=author).tmi.twitch.tv"
-                                  r"\s(?P<action>[A-Z()-]+)(?:\s#)(?P<channel>\S+)")}
+                                  r"\s(?P<action>[A-Z()-]+)(?:\s#)(?P<channel>\S+)"),
+            "nameslist": re.compile(r"(?P<author>[a-zA-Z0-9_]+).tmi.twitch.tv\s(?P<code>\S+)\s(?P=author)"
+                                 r"\s=\s#(?P<channel>\S+)\s:(?P<names>.+)")}
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
         self._http = attrs.get('http')
@@ -391,11 +393,19 @@ class WebsocketConnection:
     async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict=None):
         # todo add remaining actions, docs
 
+        # Make sure the batched JOIN and PART events get sent...
         for match in self.regex['batches'].finditer(raw):
             if match.groups()[1] == 'JOIN':
                 self.loop.create_task(self.join_action(match.groups()[2], match.groups()[0], tags))
             elif match.groups()[1] == 'PART':
                 self.loop.create_task(self.part_action(match.groups()[2], match.groups()[0], tags))
+
+        # Fill the channel cache with initial viewers...
+        names = self.regex['nameslist'].finditer(raw)
+        for match in names:
+            if match.group('code') == '353':
+                for name in match.group('names').split(' '):
+                    self.loop.create_task(self.join_action(match.groups()[2], name, tags))
 
         action = groups.pop('action', None)
         data = groups.pop('data', None)
@@ -501,35 +511,48 @@ class WebsocketConnection:
     async def join_action(self, channel: str, author: str, tags):
         log.debug('ACTION:: JOIN: %s', channel)
 
-        channel = Channel(name=channel, ws=self, http=self._http)
-        user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
-
         if author.lower() == self.nick.lower():
-            self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
+            chan_ = Channel(name=channel, ws=self, http=self._http)
+            user = User(author=author, channel=chan_, tags=tags, ws=self._websocket)
+
+            self._channel_cache[channel] = {'channel': chan_, 'bot': user}
 
             if self._pending_joins:
-                self._pending_joins[channel.name].set_result(None)
-                self._pending_joins.pop(channel.name)
+                self._pending_joins[channel].set_result(None)
+                self._pending_joins.pop(channel)
 
             self._channel_token += 1
 
-        if user not in self._channel_cache[channel.name]['channel']._users:
-            self._channel_cache[channel.name]['channel']._users.append(user)
+        cache = self._channel_cache[channel]['channel']._users
+
+        try:
+            user = cache[author.lower()]
+        except KeyError:
+            channel = self._channel_cache[channel]['channel']
+            user = User(author=author, channel=channel, tags=tags, ws=self._websocket)
+
+            cache[author.lower()] = user
 
         await self._dispatch('join', user)
 
     async def part_action(self, channel: str, author: str, tags):
         log.debug('ACTION:: PART: %s', channel)
 
-        channel = Channel(name=channel, ws=self, http=self._http)
-        user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
-
         if author == self.nick:
-            del self._channel_cache[channel.name]
+            self._channel_cache.pop(channel)
             self._channel_token -= 1
 
-        if user in self._channel_cache[channel.name]['channel']._users:
-            self._channel_cache[channel.name]['channel']._users.remove(user)
+        try:
+            cache = self._channel_cache[channel]['channel']._users
+        except KeyError:
+            channel = Channel(name=channel, ws=self, http=self._http)
+            user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
+        else:
+            try:
+                user = cache.pop(author.lower())
+            except KeyError:
+                channel = Channel(name=channel, ws=self, http=self._http)
+                user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
 
         await self._dispatch('part', user)
 
