@@ -126,7 +126,9 @@ class WebsocketConnection:
                                  r"mod=(?P<mod>[^;]*);"
                                  r"subscriber=(?P<subscriber>[^;]*);"
                                  r"user-type=(?P<type>[^\s]+)\s:tmi.twitch.tv\s(?P<action>[A-Z]*)\s"
-                                 r"#(?P<channel>[a-z0-9A-Z]+)")}
+                                 r"#(?P<channel>[a-z0-9A-Z]+)"),
+            "batches": re.compile(r":(?P<author>[a-zA-Z0-9_]+)!(?P=author)@(?P=author).tmi.twitch.tv"
+                                  r"\s(?P<action>[A-Z()-]+)(?:\s#)(?P<channel>\S+)")}
 
         self._groups = ('action', 'data', 'content', 'channel', 'author')
         self._http = attrs.get('http')
@@ -389,6 +391,14 @@ class WebsocketConnection:
     async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict=None):
         # todo add remaining actions, docs
 
+        batches = self.regex['batches'].finditer(raw)
+        if batches:
+            for match in batches:
+                if match.groups()[1] == 'JOIN':
+                    self.loop.create_task(self.join_action(match.groups()[2], match.groups()[0], tags))
+                elif match.groups()[1] == 'PART':
+                    self.loop.create_task(self.part_action(match.groups()[2], match.groups()[0], tags))
+
         action = groups.pop('action', None)
         data = groups.pop('data', None)
         content = groups.pop('content', None)
@@ -422,27 +432,10 @@ class WebsocketConnection:
             return
 
         elif action == 'JOIN':
-            log.debug('ACTION:: JOIN: %s', channel.name)
-
-            if author.lower() == self.nick.lower():
-                self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
-
-                if self._pending_joins:
-                    self._pending_joins[channel.name].set_result(None)
-                    self._pending_joins.pop(channel.name)
-
-                self._channel_token += 1
-
-            await self._dispatch('join', user)
+            pass
 
         elif action == 'PART':
-            log.debug('ACTION:: PART: %s', channel.name)
-
-            if author == self.nick:
-                del self._channel_cache[channel.name]
-                self._channel_token -= 1
-
-            await self._dispatch('part', user)
+            pass
 
         elif action == 'PING':
             log.debug('ACTION:: PING')
@@ -503,6 +496,41 @@ class WebsocketConnection:
                     self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
 
             await self._dispatch('mode', channel, user, mstatus)
+
+    async def join_action(self, channel: str, author: str, tags):
+        log.debug('ACTION:: JOIN: %s', channel)
+
+        channel = Channel(name=channel, ws=self, http=self._http)
+        user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
+
+        if author.lower() == self.nick.lower():
+            self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
+
+            if self._pending_joins:
+                self._pending_joins[channel.name].set_result(None)
+                self._pending_joins.pop(channel.name)
+
+            self._channel_token += 1
+
+        if user not in self._channel_cache[channel.name]['channel']._users:
+            self._channel_cache[channel.name]['channel']._users.append(user)
+
+        await self._dispatch('join', user)
+
+    async def part_action(self, channel: str, author: str, tags):
+        log.debug('ACTION:: PART: %s', channel)
+
+        channel = Channel(name=channel, ws=self, http=self._http)
+        user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
+
+        if author == self.nick:
+            del self._channel_cache[channel.name]
+            self._channel_token -= 1
+
+        if user in self._channel_cache[channel.name]['channel']._users:
+            self._channel_cache[channel.name]['channel']._users.remove(user)
+
+        await self._dispatch('part', user)
 
     async def _dispatch(self, event: str, *args, **kwargs):
         log.debug('Dispatching event: %s', event)

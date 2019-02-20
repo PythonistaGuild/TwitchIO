@@ -91,13 +91,14 @@ class Message:
 
 class Channel(Messageable):
 
-    __slots__ = ('_channel', '_ws', '_http', '_echo', )
+    __slots__ = ('_channel', '_ws', '_http', '_echo', '_users')
 
     def __init__(self, name, ws, http):
         self._channel = name
         self._http = http
         self._ws = ws
         self._echo = False
+        self._users = []
 
     def __str__(self):
         return self._channel
@@ -106,6 +107,11 @@ class Channel(Messageable):
     def name(self) -> str:
         """The channel name."""
         return self._channel
+
+    @property
+    def chatters(self) -> list:
+        """The channels chatters."""
+        return self._users
 
     def _get_channel(self) -> Tuple[str, None]:
         return self.name, None
@@ -172,6 +178,12 @@ class User:
 
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)
+
+    def __eq__(self, other):
+        return other == self.name
+
+    def __hash__(self):
+        return hash(self.name)
 
     @property
     def name(self) -> str:
