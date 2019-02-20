@@ -413,7 +413,10 @@ class WebsocketConnection:
             author = None
 
         if channel:
-            channel = Channel(name=channel, ws=self, http=self._http)
+            try:
+                channel = self._channel_cache[channel]['channel']
+            except KeyError:
+                channel = Channel(name=channel, ws=self, http=self._http)
 
         try:
             user = User(author=author, channel=channel or None, tags=tags, ws=self._websocket)
