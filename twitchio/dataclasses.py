@@ -98,7 +98,7 @@ class Channel(Messageable):
         self._http = http
         self._ws = ws
         self._echo = False
-        self._users = []
+        self._users = {}
 
     def __str__(self):
         return self._channel
@@ -111,7 +111,7 @@ class Channel(Messageable):
     @property
     def chatters(self) -> list:
         """The channel's chatters."""
-        return self._users
+        return list(self._users.values())
 
     def _get_channel(self) -> Tuple[str, None]:
         return self.name, None
