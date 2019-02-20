@@ -391,13 +391,11 @@ class WebsocketConnection:
     async def process_actions(self, raw: str, groups: dict, badges: dict, tags: dict=None):
         # todo add remaining actions, docs
 
-        batches = self.regex['batches'].finditer(raw)
-        if batches:
-            for match in batches:
-                if match.groups()[1] == 'JOIN':
-                    self.loop.create_task(self.join_action(match.groups()[2], match.groups()[0], tags))
-                elif match.groups()[1] == 'PART':
-                    self.loop.create_task(self.part_action(match.groups()[2], match.groups()[0], tags))
+        for match in self.regex['batches'].finditer(raw):
+            if match.groups()[1] == 'JOIN':
+                self.loop.create_task(self.join_action(match.groups()[2], match.groups()[0], tags))
+            elif match.groups()[1] == 'PART':
+                self.loop.create_task(self.part_action(match.groups()[2], match.groups()[0], tags))
 
         action = groups.pop('action', None)
         data = groups.pop('data', None)
