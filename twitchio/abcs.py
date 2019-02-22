@@ -134,23 +134,17 @@ class Messageable(metaclass=abc.ABCMeta):
 
         self.check_content(channel, content)
 
-        original = content
-
-        if content.startswith('.') or content.startswith('/'):
-            content = content.lstrip('.').lstrip('/')
-
-            if content.startswith(self.__invalid__):
+        if content.startswith(('.', '/')):
+            if content.lstrip('./').startswith(self.__invalid__):
                 raise InvalidContent('UnAuthorised chat command for send. Use built in method(s).')
-            else:
-                content = original
 
         ws = self._get_socket
         self.check_bucket(channel)
 
-        if method != 'User':
-            await ws.send_privmsg(channel, content=content)
-        else:
-            await ws.send_privmsg(channel, content=f'.w {user} {content}')
+        if method == 'User':
+            content = f'.w {user} {content}'
+
+        await ws.send_privmsg(channel, content=content)
 
     async def clear(self):
         """|coro|
