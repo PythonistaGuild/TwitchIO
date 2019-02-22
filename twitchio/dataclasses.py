@@ -143,7 +143,11 @@ class Channel(Messageable):
         """
 
         data = await self._http.get_streams(channels=[self.name])
-        return data[0]
+
+        try:
+            return data[0]
+        except IndexError:
+            pass
 
 
 class User:
