@@ -454,7 +454,7 @@ class WebsocketConnection:
             await self._dispatch('message', message)
 
         elif action == 'USERNOTICE':
-            await self._dispatch('raw_usernotice', tags)
+            await self._dispatch('raw_usernotice', channel, tags)
 
             if tags['msg-id'] in ('sub', 'resub'):
                 user = User(author=tags['login'], channel=channel, tags=tags, ws=self._websocket)
