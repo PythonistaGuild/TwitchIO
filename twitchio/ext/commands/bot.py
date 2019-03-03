@@ -27,6 +27,7 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import importlib
 import inspect
+import itertools
 import sys
 import threading
 import traceback
@@ -34,7 +35,7 @@ import uuid
 from typing import Union, List, Tuple
 
 from .core import Command, AutoCog
-from .errors import CommandError, CommandNotFound
+from .errors import *
 from .stringparser import StringParser
 from twitchio.client import Client
 from twitchio.dataclasses import Context
@@ -114,6 +115,7 @@ class Bot(Client):
         self.modules = {}
         self.cogs = {}
         self._aliases = {}
+        self._checks = []
         self.prefixes = None
 
         self._init_methods()
@@ -264,6 +266,28 @@ class Bot(Client):
 
         del cog
 
+    def add_check(self, func):
+        """Adds a global check to the bot.
+
+        Parameters
+        ------------
+        func : callable
+            The function or coroutine to add as a global check to the bot.
+        """
+
+        self._checks.append(func)
+
+    def remove_check(self, func):
+        """Remove a global check from the bot.
+
+        Parameters
+        ------------
+        func : callable
+            The function to remove as a global check from the bot.
+        """
+
+        self._checks.remove(func)
+
     def run(self):
         """A blocking call that initializes the IRC Bot event loop.
 
@@ -401,6 +425,30 @@ class Bot(Client):
         ctx = cls(message=message, channel=message.channel, user=message.author, prefix=prefix)
         return ctx
 
+    async def _dispatch(self, event: str, *args, **kwargs):
+        await self._ws._dispatch(event, *args, **kwargs)
+
+    async def _handle_checks(self, ctx, no_global_checks=False):
+        command = ctx.command
+
+        if no_global_checks:
+            checks = [predicate for predicate in command._checks]
+        else:
+            checks = [predicate for predicate in itertools.chain(self._checks, command._checks)]
+
+        if not checks:
+            return True
+
+        for predicate in checks:
+            if inspect.iscoroutinefunction(predicate):
+                result = await predicate(ctx)
+            else:
+                result = predicate(ctx)
+            if not result:
+                return predicate
+
+            return result
+
     async def handle_commands(self, message, ctx=None):
         if ctx is None:
             try:
@@ -442,6 +490,17 @@ class Bot(Client):
         instance = ctx.command.instance
 
         try:
+            result = await self._handle_checks(ctx, command.no_global_checks)
+        except Exception as e:
+            return await self.event_command_error(ctx, e)
+        else:
+            if inspect.isfunction(result):
+                return await self.event_command_error(ctx, CheckFailure(f'The command <{command.name}> failed to invoke'
+                                                                        f' due to checks:: {result.__name__}'))
+            elif not result:
+                raise CheckFailure(f'The command <{command.name}> failed to invoke due to checks.')
+
+        try:
             ctx.args, ctx.kwargs = await command.parse_args(instance, parsed)
 
             await self.global_before_hook(ctx)
@@ -457,6 +516,14 @@ class Bot(Client):
             if ctx.command.on_error:
                 await ctx.command.on_error(instance, ctx, e)
 
+            await self.event_command_error(ctx, e)
+
+        try:
+            # Invoke our after command hooks...
+            if command._after_invoke:
+                await ctx.command._after_invoke(ctx)
+            await self.global_after_hook(ctx)
+        except Exception as e:
             await self.event_command_error(ctx, e)
 
     async def global_before_hook(self, ctx):
@@ -488,6 +555,24 @@ class Bot(Client):
         Note
         ------
             The global_before_hook is called before any other command specific hooks.
+        """
+        pass
+
+    async def global_after_hook(self, ctx):
+        """|coro|
+
+        Method which is called after any command is invoked regardless if it failed or not.
+
+        This method is useful for cleaning up things after command invocation. E.g Database connections.
+
+        Parameters
+        ------------
+        ctx:
+            The context used for command invocation.
+
+        Note
+        ------
+            The global_after_hook is called after the command successfully invokes.
         """
         pass
 
@@ -737,7 +822,7 @@ class Bot(Client):
     def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Command):
         """Decorator which registers a command on the bot.
 
-        Commands must be coroutines.
+        Commands must be a coroutine.
 
         Parameters
         ------------
@@ -747,6 +832,13 @@ class Bot(Client):
             The command aliases. This must be a list or tuple.
         cls: class [Optional]
             The custom command class to override the default class. This must be similar to :class:`.Command`.
+        no_global_checks : Optional[bool]
+            Whether or not the command should abide by global checks. Defaults to False, which checks global checks.
+
+        Raises
+        --------
+        TypeError
+            Cls is not a class.
         """
 
         if not inspect.isclass(cls):
@@ -759,7 +851,6 @@ class Bot(Client):
             self.add_command(command)
 
             return command
-
         return decorator
 
     def event(self, func):
@@ -782,6 +873,30 @@ class Bot(Client):
             raise TypeError('Events must be coroutines.')
 
         setattr(self, func.__name__, func)
+        return func
+
+    def check(self, func):
+        """A decorator that adds a global check to the bot.
+
+        This decorator allows regular functions or coroutines to be added to the bot.
+        Global checks are ran before any other command specific checks.
+
+        As with all other checks, the check(predicate), must contain a sole parametere of Context.
+
+        Parameters
+        ------------
+        func : callable
+            A regular function or coroutine to add as a global check.
+
+        Examples
+        ----------
+        .. code::
+
+            @bot.check
+            async def my_global_check(self, ctx):
+                return ctx.author.is_mod
+        """
+        self._checks.append(func)
         return func
 
     def add_listener(self, func, name: str=None):
