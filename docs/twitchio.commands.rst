@@ -16,6 +16,16 @@ Command
     :members:
 
 
+Decorators
+-----------------------------
+
+.. autodecorator:: twitchio.ext.commands.core.cog
+
+.. autodecorator:: twitchio.ext.commands.core.check
+
+.. autodecorator:: twitchio.ext.commands.core.command
+
+
 Errors
 -------------------------------
 
