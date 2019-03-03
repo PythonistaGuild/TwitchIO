@@ -707,6 +707,8 @@ class Bot(Client):
 
         Parameters
         ------------
+        channel: :class:`.Channel`	
+            Channel object relevant to the USERNOTICE event.
         tags : dict
             A dictionary with the relevant information associated with the USERNOTICE.
             This could vary depending on the event.
