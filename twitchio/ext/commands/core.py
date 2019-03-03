@@ -33,8 +33,19 @@ from .errors import *
 class Command:
 
     def __init__(self, name: str, func, **attrs):
+        if not inspect.iscoroutinefunction(func):
+            raise TypeError('Command callback must be a coroutine.')
+
         self._name = name
         self._callback = func
+
+        self._checks = []
+
+        try:
+            self._checks.extend(func.__checks__)
+        except AttributeError:
+            pass
+
         self.aliases = attrs.get('aliases', None)
         sig = inspect.signature(func)
         self.params = sig.parameters.copy()
@@ -42,6 +53,7 @@ class Command:
         self.on_error = None
         self._before_invoke = None
         self._after_invoke = None
+        self.no_global_checks = attrs.get('no_global_checks', False)
 
         self.instance = None
 
@@ -51,6 +63,7 @@ class Command:
 
     @property
     def name(self):
+        """Returns the name of the command."""
         return self._name
 
     async def _convert_types(self, param, parsed):
@@ -66,7 +79,7 @@ class Command:
             argument = converter(parsed)
         except Exception:
             raise BadArgument(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
-                                    f' Expected type {converter} got {type(parsed)}.')
+                              f' Expected type {converter} got {type(parsed)}.')
 
         return argument
 
@@ -164,21 +177,76 @@ class Command:
         self._before_invoke = func
         return func
 
+    def after_invoke(self, func):
+        """Decorator which registers a coroutine as a after invocation hook.
 
-def command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None):
+        The hook will be called after a command is successfully invoked.
+        The hook must take ctx as a sole parameter.
+
+        Parameters
+        ------------
+        func: :ref:`coroutine <coroutine>`
+            The coroutine function to register as an after invocation hook.
+
+        Raises
+        --------
+        twitchio.TwitchIOBException
+            The func is not a coroutine function.
+        """
+        if not inspect.iscoroutinefunction(func):
+            raise CommandError('After invoke func must be a coroutine.')
+
+        self._after_invoke = func
+        return func
+
+
+def command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None, no_global_checks=False):
+    """Decorator that turns a coroutine into a Command.
+
+    Parameters
+    ------------
+    name : Optional[str]
+        The name of the command.
+    aliases : Optional[Union[list, tuple]]
+        The aliases of the command.
+    cls : Optional[class]
+        The class to build the command from. This must be compatible as a Command E.g A subclass.
+
+    Raises
+    --------
+    TypeError
+        cls was not type class.
+    """
     if cls and not inspect.isclass(cls):
         raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
     cls = cls or Command
 
     def decorator(func):
-        if not inspect.iscoroutinefunction(func):
-            raise TypeError('Command callback must be a coroutine.')
-
         fname = name or func.__name__
-        command = cls(name=fname, func=func, aliases=aliases)
+        command = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks)
 
         return command
+    return decorator
+
+
+def check(predicate):
+    """A decorator that adds a check to a command.
+
+    Parameters
+    ------------
+    predicate : bool
+        The predicate to check. This must return True, False or raise. A truth value means the check has passed.
+    """
+    # todo Better docstrings/examples
+    def decorator(func):
+        if isinstance(func, Command):
+            func._checks.append(predicate)
+        elif not hasattr(func, '__checks__'):
+            func.__checks__ = [predicate]
+        else:
+            func.__checks__.append(predicate)
+        return func
     return decorator
 
 
@@ -187,6 +255,15 @@ class AutoCog:
 
 
 def cog(*, name: str=None, **attrs):
+    """A decorator that turns a class into a Cog.
+
+    Parameters
+    ------------
+    name : Optional[str]
+        The name of the cog. If no name was passed, the class name will be used in place.
+    \*\*attrs:
+        Extra attributes to set to the class, as kwargs.
+    """
     def wrapper(klass):
         class Cog(AutoCog, klass):
 
