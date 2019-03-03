@@ -689,7 +689,7 @@ class Bot(Client):
         """
         pass
 
-    async def event_raw_usernotice(self, tags: dict):
+    async def event_raw_usernotice(self, channel, tags: dict):
         """|coro|
 
         Event called when a USERNOTICE is received from Twitch.
