@@ -494,7 +494,7 @@ class Bot(Client):
         except Exception as e:
             return await self.event_command_error(ctx, e)
         else:
-            if inspect.isfunction(result):
+            if callable(result):
                 return await self.event_command_error(ctx, CheckFailure(f'The command <{command.name}> failed to invoke'
                                                                         f' due to checks:: {result.__name__}'))
             elif not result:
