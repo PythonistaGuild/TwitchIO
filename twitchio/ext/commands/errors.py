@@ -24,7 +24,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ('CommandError', 'CommandNotFound', 'MissingRequiredArgument', 'BadArgument',)
+__all__ = ('CommandError', 'CommandNotFound', 'MissingRequiredArgument', 'BadArgument', 'CheckFailure',)
 
 
 from twitchio.errors import TwitchIOBException
@@ -38,6 +38,10 @@ class CommandError(TwitchIOBException):
 class CommandNotFound(CommandError):
     """Exception raised when a command is not found."""
     pass
+
+
+class CheckFailure(CommandError):
+    """Exception raised when a check fails."""
 
 
 class MissingRequiredArgument(CommandError):
