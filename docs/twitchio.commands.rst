@@ -19,11 +19,11 @@ Command
 Decorators
 -----------------------------
 
-.. autodecorator:: twitchio.ext.commands.core.cog
+.. autofunction:: twitchio.ext.commands.core.cog
 
-.. autodecorator:: twitchio.ext.commands.core.check
+.. autofunction:: twitchio.ext.commands.core.check
 
-.. autodecorator:: twitchio.ext.commands.core.command
+.. autofunction:: twitchio.ext.commands.core.command
 
 
 Errors
