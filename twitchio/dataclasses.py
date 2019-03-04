@@ -143,7 +143,11 @@ class Channel(Messageable):
         """
 
         data = await self._http.get_streams(channels=[self.name])
-        return data[0]
+
+        try:
+            return data[0]
+        except IndexError:
+            pass
 
 
 class User:
@@ -294,6 +298,7 @@ class Context(Messageable):
         self.author = user
         self.prefix = attrs.get('prefix', None)
 
+        self._echo = self.channel._echo
         self._ws = self.channel._ws
 
         self.command = attrs.get('Command', None)
@@ -308,6 +313,9 @@ class Context(Messageable):
 
     @property
     def _get_socket(self):  # stub
+        if self._echo is True:
+            raise EchoMessageWarning('Unable to respond to Echo-Messages.')
+
         return self._ws
 
     async def get_stream(self) -> dict:

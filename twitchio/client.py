@@ -210,6 +210,36 @@ class Client:
             secret=secret,
         )
 
+    async def get_follow(self, from_id: Union[int, str], to_id: Union[int, str]):
+        """|coro|
+
+        Retrieves the follow relationship between two users, provided it exists.
+
+        Parameters
+        ------------
+        from_id: Union[int, str]
+            The user who is following.
+        to_id: Union[int, str]
+            The user being followed.
+
+        Returns
+        ---------
+        dict
+            Dict containing follow relationship data. Could be None if there is no follow relationship.
+
+        Raises
+        --------
+        HTTPException
+            Bad request while fetching follow relationship.
+        """
+
+        data = await self.http.get_follow(str(from_id), str(to_id))
+
+        try:
+            return data[0]
+        except IndexError:
+            pass
+
     async def get_followers(self, user_id: Union[int, str], *, count: bool=False):
         """|coro|
 

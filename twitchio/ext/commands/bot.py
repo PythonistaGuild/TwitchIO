@@ -494,7 +494,7 @@ class Bot(Client):
         except Exception as e:
             return await self.event_command_error(ctx, e)
         else:
-            if inspect.isfunction(result):
+            if callable(result):
                 return await self.event_command_error(ctx, CheckFailure(f'The command <{command.name}> failed to invoke'
                                                                         f' due to checks:: {result.__name__}'))
             elif not result:
@@ -689,7 +689,7 @@ class Bot(Client):
         """
         pass
 
-    async def event_raw_usernotice(self, tags: dict):
+    async def event_raw_usernotice(self, channel, tags: dict):
         """|coro|
 
         Event called when a USERNOTICE is received from Twitch.
@@ -707,6 +707,8 @@ class Bot(Client):
 
         Parameters
         ------------
+        channel: :class:`.Channel`	
+            Channel object relevant to the USERNOTICE event.
         tags : dict
             A dictionary with the relevant information associated with the USERNOTICE.
             This could vary depending on the event.

@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import async_timeout
+import copy
 import functools
 import itertools
 import json
@@ -456,13 +457,14 @@ class WebsocketConnection:
             await self._dispatch('message', message)
         elif action == 'PRIVMSG(ECHO-MESSAGE)':
             message.echo = True
+            message._channel = copy.copy(message.channel)
             message.channel._echo = True
 
             await self._dispatch('raw_data', raw)
             await self._dispatch('message', message)
 
         elif action == 'USERNOTICE':
-            await self._dispatch('raw_usernotice', tags)
+            await self._dispatch('raw_usernotice', channel, tags)
 
             if tags['msg-id'] in ('sub', 'resub'):
                 user = User(author=tags['login'], channel=channel, tags=tags, ws=self._websocket)
