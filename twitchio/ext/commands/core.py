@@ -180,7 +180,7 @@ class Command:
     def after_invoke(self, func):
         """Decorator which registers a coroutine as a after invocation hook.
 
-        The hook will be called after a command is successfully invoked.
+        The hook will be called after a command is invoked.
         The hook must take ctx as a sole parameter.
 
         Parameters
