@@ -102,6 +102,7 @@ class WebsocketConnection:
         self._rate_status = None
 
         self._pending_joins = {}
+        self._pending_parts = {}
         self._authentication_error = False
 
         self.is_ready = asyncio.Event()
@@ -282,6 +283,35 @@ class WebsocketConnection:
 
             raise asyncio.TimeoutError(
                 f'Request to join the "{channel}" channel has timed out. Make sure the channel exists.')
+
+    async def part_channels(self, *channels: str):
+        """|coro|
+
+        Attempt to part the provided channels.
+
+        Parameters
+        ------------
+        *channels : str
+            An argument list of channels to attempt parting.
+        """
+
+        await asyncio.gather(*[self._part_channel(x) for x in channels])
+
+    async def _part_channel(self, entry):
+        channel = re.sub('[#\s]', '', entry).lower()
+
+        if channel not in self._channel_cache:
+            raise ClientError(f'Request to leave the "{channel}" channel failed. You are not in that channel.')
+
+        await self._websocket.send(f'PART #{channel}\r\n')
+
+        self._pending_parts[channel] = fut = self.loop.create_future()
+
+        try:
+            await asyncio.wait_for(fut, timeout=10)
+        except asyncio.TimeoutError:
+            raise asyncio.TimeoutError(
+                f'Request to part the "{channel}" channel has timed out.')
 
     async def _listen(self):
         backoff = ExponentialBackoff()
@@ -540,10 +570,13 @@ class WebsocketConnection:
     async def part_action(self, channel: str, author: str, tags):
         log.debug('ACTION:: PART: %s', channel)
 
-        if author == self.nick:
+        if author.lower() == self.nick.lower():
             self._channel_cache.pop(channel)
             self._channel_token -= 1
 
+            if self._pending_parts:
+                self._pending_parts[channel].set_result(None)
+                self._pending_parts.pop(channel)
         try:
             cache = self._channel_cache[channel]['channel']._users
         except KeyError:
