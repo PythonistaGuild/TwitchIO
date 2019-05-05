@@ -301,7 +301,7 @@ class WebsocketConnection:
         channel = re.sub('[#\s]', '', entry).lower()
 
         if channel not in self._channel_cache:
-            raise ClientError(f'Request to leave the "{channel}" channel failed. You are not in that channel.')
+            raise ClientError(f'Request to leave the channel "{channel}" failed.')
 
         await self._websocket.send(f'PART #{channel}\r\n')
 
@@ -311,7 +311,7 @@ class WebsocketConnection:
             await asyncio.wait_for(fut, timeout=10)
         except asyncio.TimeoutError:
             raise asyncio.TimeoutError(
-                f'Request to part the "{channel}" channel has timed out.')
+                f'Request to leave the channel "{channel}" has timed out.')
 
     async def _listen(self):
         backoff = ExponentialBackoff()
