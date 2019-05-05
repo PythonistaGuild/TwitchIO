@@ -93,7 +93,7 @@ class WebsocketConnection:
         self._channel_cache = {}
         self._initial_channels = attrs.get('initial_channels')
 
-        self.nick = attrs.get('nick')
+        self.nick = attrs.get('nick').lower()
         self.extra_listeners = {}
 
         self.modes = attrs.pop('modes', ("commands", "tags", "membership"))
@@ -543,7 +543,7 @@ class WebsocketConnection:
     async def join_action(self, channel: str, author: str, tags):
         log.debug('ACTION:: JOIN: %s', channel)
 
-        if author.lower() == self.nick.lower():
+        if author == self.nick:
             chan_ = Channel(name=channel, ws=self, http=self._http)
             user = User(author=author, channel=chan_, tags=tags, ws=self._websocket)
 
@@ -570,7 +570,7 @@ class WebsocketConnection:
     async def part_action(self, channel: str, author: str, tags):
         log.debug('ACTION:: PART: %s', channel)
 
-        if author.lower() == self.nick.lower():
+        if author == self.nick:
             self._channel_cache.pop(channel)
             self._channel_token -= 1
 
