@@ -28,6 +28,7 @@ __all__ = ('Message', 'Channel', 'User', 'Context', 'NoticeSubscription')
 
 
 import datetime
+import time
 from typing import *
 
 from .abcs import Messageable
@@ -47,11 +48,10 @@ class Message:
         self._tags = attrs.pop('tags', None)
         self.echo = False
 
-        if self._tags:
-            try:
-                self._timestamp = self.tags['sent-ts']
-            except KeyError:
-                self._timestamp = self.tags['tmi-sent-ts']
+        try:
+            self._timestamp = self._tags['tmi-sent-ts']
+        except (TypeError, KeyError):
+            self._timestamp = time.time()
 
     @property
     def author(self) -> 'User':  # stub
@@ -85,7 +85,7 @@ class Message:
         timestamp:
             UTC datetime object of the Twitch timestamp.
         """
-        timestamp = datetime.datetime.utcfromtimestamp(self._timestamp/1000)
+        timestamp = datetime.datetime.utcfromtimestamp(int(self._timestamp) / 1000)
         return timestamp
 
 
