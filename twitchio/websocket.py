@@ -273,6 +273,7 @@ class WSConnection:
 
     async def _ping(self):
         log.debug('ACTION: Sending PONG reply.')
+        self._last_ping = time.time()
         await self._websocket.send('PONG :tmi.twitch.tv\r\n')
 
     async def _part(self, parsed):   # TODO
