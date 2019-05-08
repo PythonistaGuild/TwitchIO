@@ -88,13 +88,14 @@ class WSConnection:
         await self.is_ready.wait()
 
     async def _connect(self):
+        """Attempt to connect to Twitch's Websocket."""
         self.is_ready.clear()
 
         if self._keeper:
-            self._keeper.cancel()
+            self._keeper.cancel()    # Stop our current keep alive.
 
         if self.is_alive:
-            await self._websocket.close()
+            await self._websocket.close()   # If for some reason we are in a weird state, close it before retrying.
 
         try:
             self._websocket = await websockets.connect(HOST)
@@ -106,9 +107,9 @@ class WSConnection:
             return asyncio.create_task(self._connect())
 
         if time.time() > self._last_ping + 240:
-            await self.authenticate(self._initial_channels)
+            await self.authenticate(self._initial_channels)   # Re-authenticate as we have surpassed a PING request.
 
-        self._keeper = asyncio.create_task(self._keep_alive())
+        self._keeper = asyncio.create_task(self._keep_alive())   # Create our keep alive.
         self._ws_ready_event.set()
 
     async def _keep_alive(self):
@@ -266,10 +267,10 @@ class WSConnection:
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
                     self._join_load.pop(channel)
-                    asyncio.create_task(self._update_cache(parsed))
+                    self._update_cache(parsed)
                 self.is_ready.set()
             else:
-                asyncio.create_task(self._update_cache(parsed))
+                self._update_cache(parsed)
 
     async def _ping(self):
         log.debug('ACTION: Sending PONG reply.')
@@ -280,14 +281,14 @@ class WSConnection:
         log.debug(f'ACTION: PART:: {parsed["channel"]}')
         pass
 
-    async def _privmsg(self, parsed):   # TODO(Update Cache)
+    async def _privmsg(self, parsed):   # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
 
         try:
             channel = self._channel_cache[parsed['channel']]
         except KeyError:
             channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self)
-            await self._update_cache(parsed)
+            self._update_cache(parsed)
 
         user = User(tags=parsed['badges'], name=parsed['user'], channel=channel,
                     bot=self._bot, websocket=self)
@@ -321,7 +322,7 @@ class WSConnection:
             else:
                 self._join_pending.pop(channel)
 
-        await self._update_cache(parsed)
+        self._update_cache(parsed)
 
         users = self._channel_cache[channel]
 
@@ -330,7 +331,7 @@ class WSConnection:
 
         await self.dispatch('join', channel, user)
 
-    async def _update_cache(self, parsed: dict):
+    def _update_cache(self, parsed: dict):
         channel = parsed['channel'].lstrip('#')
 
         if channel not in self._channel_cache:
