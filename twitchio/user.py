@@ -13,7 +13,7 @@ class PartialUser(Messageable):
         return self._name
 
     def __repr__(self):
-        return f'<User: {self._name}, Channel: {self._channel}>'
+        return f'(PartialUser)<User: {self._name}, Channel: {self._channel}>'
 
     def _fetch_channel(self):
         return self._name   # Abstract method
@@ -51,7 +51,7 @@ class User(Messageable):
         return self._name
 
     def __repr__(self):
-        return f'<User: {self._name}, Channel: {self._channel}>'
+        return f'(User)<User: {self._name}, Channel: {self._channel}>'
 
     def _fetch_channel(self):
         return self._name   # Abstract method
