@@ -284,14 +284,10 @@ class WSConnection:
     async def _privmsg(self, parsed):   # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
 
-        try:
-            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
-        except KeyError:
-            self._cache_add(parsed)
-            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
+        channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
+        self._cache_add(parsed)
 
-        user = User(tags=parsed['badges'], name=parsed['user'], channel=channel,
-                    bot=self._bot, websocket=self)
+        user = User(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._bot, websocket=self)
 
         message = Message(raw_data=parsed['data'], content=parsed['message'],
                           author=user, channel=channel, tags=parsed['badges'], )
@@ -304,7 +300,12 @@ class WSConnection:
 
     async def _userstate(self, parsed):   # TODO
         log.debug(f'ACTION: USERSTATE:: {parsed["channel"]}')
-        pass
+        self._cache_add(parsed)
+
+        channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
+        user = User(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._bot, websocket=self)
+
+        await self.dispatch('userstate', user)
 
     async def _usernotice(self, parsed):   # TODO
         log.debug(f'ACTION: USERNOTICE:: {parsed["channel"]}')
@@ -322,7 +323,8 @@ class WSConnection:
             else:
                 self._join_pending.pop(channel)
 
-        self._cache_add(parsed)
+        if not parsed['user'] == self._bot.nick:
+            self._cache_add(parsed)
 
         channel = Channel(name=channel, bot=self._bot, websocket=self)
         user = User(name=parsed['user'], bot=self._bot, websocket=self, channel=channel, tags=parsed['badges'])
