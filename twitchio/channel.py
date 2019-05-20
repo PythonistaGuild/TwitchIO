@@ -1,5 +1,5 @@
 from typing import Optional
-from .meta import Messageable
+from .abcs import Messageable
 
 
 class Channel(Messageable):
@@ -19,6 +19,15 @@ class Channel(Messageable):
 
     def __repr__(self):
         return f'<Channel name: {self.name}>'
+
+    def _fetch_channel(self):
+        return self   # Abstract method
+
+    def _fetch_websocket(self):
+        return self._ws     # Abstract method
+
+    def _fetch_bot(self):
+        return self._bot    # Abstract method
 
     @property
     def name(self) -> str:
@@ -62,12 +71,3 @@ class Channel(Messageable):
                 return user
 
         return None
-
-    def _fetch_channel(self):
-        return self._name   # Abstract method
-
-    def _fetch_websocket(self):
-        return self._ws     # Abstract method
-
-    def _fetch_bot(self):
-        return self._bot    # Abstract method

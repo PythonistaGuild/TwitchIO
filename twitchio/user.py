@@ -1,4 +1,4 @@
-from .meta import Messageable
+from .abcs import Messageable
 
 
 class PartialUser(Messageable):
@@ -13,7 +13,21 @@ class PartialUser(Messageable):
         return self._name
 
     def __repr__(self):
-        return f'(PartialUser)<User: {self._name}, Channel: {self._channel}>'
+        return f'<PartialUser name: {self._name}, channel: {self._channel}>'
+
+    def __eq__(self, other):
+        return other.name == self.name and other.channel.name == other.channel.name
+
+    def __hash__(self):
+        return hash(self.name + self.channel.name)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def channel(self):
+        return self._channel
 
     def _fetch_channel(self):
         return self._name   # Abstract method
@@ -51,10 +65,16 @@ class User(Messageable):
         return self._name
 
     def __repr__(self):
-        return f'(User)<User: {self._name}, Channel: {self._channel}>'
+        return f'<User name: {self._name}, channel: {self._channel}>'
+
+    def __eq__(self, other):
+        return other.name == self.name and other.channel.name == other.channel.name
+
+    def __hash__(self):
+        return hash(self.name + self.channel.name)
 
     def _fetch_channel(self):
-        return self._name   # Abstract method
+        return self   # Abstract method
 
     def _fetch_websocket(self):
         return self._ws    # Abstract method
@@ -76,10 +96,12 @@ class User(Messageable):
 
     @property
     def colour(self):
+        """The users colour. Alias to color."""
         return self._colour
 
     @property
     def color(self):
+        """The users color."""
         return self.colour
 
     @property
