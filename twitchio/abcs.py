@@ -75,6 +75,23 @@ class Messageable(abc.ABC):
                 raise InvalidContent('Unauthorised chat command. Use built-in methods.')
 
     async def send(self, content: str):
+        """|coro|
+
+        Send a message to the destination associated with the dataclass.
+
+        Destination will either be a channel or user.
+        Chat commands are not allowed to be invoked with this method.
+
+        Parameters
+        ------------
+        content: str
+            The content you wish to send as a message. The content must be a string.
+
+        Raises
+        --------
+        InvalidContent
+            Invalid content.
+        """
         entity = self._fetch_channel()
         ws = self._fetch_websocket()
 
