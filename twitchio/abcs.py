@@ -1,0 +1,87 @@
+import abc
+import time
+from .cooldowns import RateBucket
+from .errors import *
+
+
+class IRCLimiterMapping:
+
+    def __init__(self):
+        self.buckets = {}
+
+    def get_bucket(self, channel: str, method: str) -> RateBucket:
+        try:
+            bucket = self.buckets[channel]
+        except KeyError:
+            bucket = RateBucket(method=method)
+            self.buckets[channel] = bucket
+
+        if bucket.method != method:
+            bucket.method = method
+            if method == 'mod':
+                bucket.limit = bucket.MODLIMIT
+            else:
+                bucket.limit = bucket.IRCLIMIT
+
+            self.buckets[channel] = bucket
+
+        return bucket
+
+
+limiter = IRCLimiterMapping()
+
+
+class Messageable(abc.ABC):
+
+    __slots__ = ()
+
+    __invalid__ = ('ban', 'unban', 'timeout', 'w', 'colour', 'color', 'mod',
+                   'unmod', 'clear', 'subscribers', 'subscriberoff', 'slow', 'slowoff',
+                   'r9k', 'r9koff', 'emoteonly', 'emoteonlyoff', 'host', 'unhost')
+
+    @abc.abstractmethod
+    def _fetch_channel(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _fetch_websocket(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def _bot_is_mod(self):
+        raise NotImplementedError
+
+    def check_bucket(self, channel):
+        mod = self._bot_is_mod()
+
+        if mod:
+            bucket = limiter.get_bucket(channel=channel, method='mod')
+        else:
+            bucket = limiter.get_bucket(channel=channel, method='irc')
+
+        now = time.time()
+        bucket.update()
+
+        if bucket.limited:
+            raise IRCCooldownError(f'IRC Message rate limit reached for channel <{channel}>.'
+                                   f' Please try again in {bucket._reset - now:.2f}s')
+
+    def check_content(self, content: str):
+        if len(content) > 500:
+            raise InvalidContent('Content must not exceed 500 characters.')
+
+        if content.startswith(('.', '/')):
+            if content.lstrip('./').startswith(self.__invalid__):
+                raise InvalidContent('Unauthorised chat command. Use built-in methods.')
+
+    async def send(self, content: str):
+        entity = self._fetch_channel()
+        ws = self._fetch_websocket()
+
+        self.check_content(content)
+        self.check_bucket(channel=entity.name)
+
+        if not entity.__messageable_channel__:
+            await ws._websocket.send(f'PRIVMSG #jtv :/w {entity.name} {content}')
+        else:
+            await ws._websocket.send(f'PRIVMSG #{entity.name} :{content}\r\n')
