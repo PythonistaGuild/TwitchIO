@@ -267,10 +267,10 @@ class WSConnection:
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
                     self._join_load.pop(channel)
-                    self._update_cache(parsed)
+                    self._cache_add(parsed)
                 self.is_ready.set()
             else:
-                self._update_cache(parsed)
+                self._cache_add(parsed)
 
     async def _ping(self):
         log.debug('ACTION: Sending PONG reply.')
@@ -285,12 +285,10 @@ class WSConnection:
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
 
         try:
-            users = self._cache[parsed['channel']]
-            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot, users=users)
+            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
         except KeyError:
-            self._update_cache(parsed)
-            users = self._cache[parsed['channel']]
-            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot, users=users)
+            self._cache_add(parsed)
+            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
 
         user = User(tags=parsed['badges'], name=parsed['user'], channel=channel,
                     bot=self._bot, websocket=self)
@@ -324,16 +322,14 @@ class WSConnection:
             else:
                 self._join_pending.pop(channel)
 
-        self._update_cache(parsed)
+        self._cache_add(parsed)
 
-        users = self._cache[channel]
-
-        channel = Channel(name=channel, bot=self._bot, users=users, websocket=self)
+        channel = Channel(name=channel, bot=self._bot, websocket=self)
         user = User(name=parsed['user'], bot=self._bot, websocket=self, channel=channel, tags=parsed['badges'])
 
         await self.dispatch('join', channel, user)
 
-    def _update_cache(self, parsed: dict):
+    def _cache_add(self, parsed: dict):
         channel = parsed['channel'].lstrip('#')
 
         if channel not in self._cache:
