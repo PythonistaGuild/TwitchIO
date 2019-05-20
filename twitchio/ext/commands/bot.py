@@ -89,7 +89,7 @@ class Bot(Client):
         except KeyError:
             return None
 
-        # Basically the cache doesn't store channels naturally, instead if stores a channel key
+        # Basically the cache doesn't store channels naturally, instead it stores a channel key
         # With the associated users as a set.
         # We create a Channel here and return it only if the cache has that channel key.
 
