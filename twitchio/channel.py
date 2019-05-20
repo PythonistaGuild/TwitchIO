@@ -6,6 +6,8 @@ class Channel(Messageable):
 
     __slots__ = ('_name', '_ws', '_bot')
 
+    __messageable_channel__ = True
+
     def __init__(self, **kwargs):
         self._name = kwargs.get('name')
         self._ws = kwargs.get('websocket')
@@ -26,8 +28,16 @@ class Channel(Messageable):
     def _fetch_websocket(self):
         return self._ws     # Abstract method
 
-    def _fetch_bot(self):
-        return self._bot    # Abstract method
+    def _bot_is_mod(self):
+        cache = self._ws._cache[self.name]
+        for user in cache:
+            if user.name == self._bot.nick:
+                try:
+                    mod = user.is_mod
+                except AttributeError:
+                    return False
+
+                return mod
 
     @property
     def name(self) -> str:

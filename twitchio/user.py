@@ -3,6 +3,8 @@ from .abcs import Messageable
 
 class PartialUser(Messageable):
 
+    __messageable_channel__ = False
+
     def __init__(self, websocket, **kwargs):
         self._name = kwargs.get('name')
         self._ws = websocket
@@ -23,26 +25,29 @@ class PartialUser(Messageable):
 
     @property
     def name(self):
+        """The users name"""
         return self._name
 
     @property
     def channel(self):
+        """The channel associated with the user."""
         return self._channel
 
     def _fetch_channel(self):
-        return self._name   # Abstract method
+        return self._name  # Abstract method
 
     def _fetch_websocket(self):
-        return self._ws    # Abstract method
+        return self._ws  # Abstract method
 
-    def _fetch_bot(self):
-        return self._bot   # Abstract method
+    def _bot_is_mod(self):
+        return False
 
 
 class User(Messageable):
-
     __slots__ = ('_name', '_channel', '_tags', '_ws', '_bot', 'id', '_turbo', '_sub', '_mod',
                  '_display_name', '_colour')
+
+    __messageable_channel__ = False
 
     def __init__(self, websocket, **kwargs):
         self._name = kwargs.get('name')
@@ -54,15 +59,15 @@ class User(Messageable):
         if not self._tags:
             return
 
-        self.id = self._tags['user-id']
-        self._turbo = self._tags['turbo']
+        self.id = self._tags.get('user-id')
+        self._turbo = self._tags.get('turbo')
         self._sub = self._tags['subscriber']
-        self._mod = self._tags['mod']
+        self._mod = int(self._tags['mod'])
         self._display_name = self._tags['display-name']
         self._colour = self._tags['color']
 
     def __str__(self):
-        return self._name
+        return self._name or self.display_name.lower()
 
     def __repr__(self):
         return f'<User name: {self._name}, channel: {self._channel}>'
@@ -74,24 +79,35 @@ class User(Messageable):
         return hash(self.name + self.channel.name)
 
     def _fetch_channel(self):
-        return self   # Abstract method
+        return self  # Abstract method
 
     def _fetch_websocket(self):
-        return self._ws    # Abstract method
+        return self._ws  # Abstract method
 
-    def _fetch_bot(self):
-        return self._bot   # Abstract method
+    def _bot_is_mod(self):
+        cache = self._ws._cache[self._channel.name]
+        for user in cache:
+            if user.name == self._bot.nick:
+                try:
+                    mod = user.is_mod
+                except AttributeError:
+                    return False
+
+                return mod
 
     @property
     def channel(self):
+        """The channel the user is associated with."""
         return self._channel
 
     @property
     def name(self):
-        return self._name
+        """The users name. This may be formatted differently than display name."""
+        return self._name or self.display_name.lower()
 
     @property
     def display_name(self):
+        """The users display name."""
         return self._display_name
 
     @property
