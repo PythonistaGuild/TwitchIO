@@ -60,7 +60,7 @@ class WSConnection:
         self._join_load = {}
         self._init = False
 
-        self._channel_cache = {}
+        self._cache = {}
         self._actions = {'PING': self._ping,
                          'PART': self._part,
                          'PRIVMSG': self._privmsg,
@@ -285,16 +285,18 @@ class WSConnection:
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
 
         try:
-            channel = self._channel_cache[parsed['channel']]
+            users = self._cache[parsed['channel']]
+            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot, users=users)
         except KeyError:
-            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self)
             self._update_cache(parsed)
+            users = self._cache[parsed['channel']]
+            channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot, users=users)
 
         user = User(tags=parsed['badges'], name=parsed['user'], channel=channel,
                     bot=self._bot, websocket=self)
 
         message = Message(raw_data=parsed['data'], content=parsed['message'],
-                          author=user, channel='Test', tags=parsed['badges'], )
+                          author=user, channel=channel, tags=parsed['badges'], )
 
         await self.dispatch('message', message)
 
@@ -324,26 +326,29 @@ class WSConnection:
 
         self._update_cache(parsed)
 
-        users = self._channel_cache[channel]
+        users = self._cache[channel]
 
-        user = PartialUser(name=parsed['user'], bot=self._bot, websocket=self, channel=channel)
         channel = Channel(name=channel, bot=self._bot, users=users, websocket=self)
+        user = User(name=parsed['user'], bot=self._bot, websocket=self, channel=channel, tags=parsed['badges'])
 
         await self.dispatch('join', channel, user)
 
     def _update_cache(self, parsed: dict):
         channel = parsed['channel'].lstrip('#')
 
-        if channel not in self._channel_cache:
-            self._channel_cache[channel] = set()
+        if channel not in self._cache:
+            self._cache[channel] = set()
+
+        channel_ = Channel(name=channel, bot=self._bot, websocket=self)
 
         if parsed['batches']:
             for u in parsed['batches']:
-                user = PartialUser(name=u, bot=self._bot, websocket=self, channel=channel)
-                self._channel_cache[channel].add(user)
+                user = PartialUser(name=u, bot=self._bot, websocket=self, channel=channel_)
+                self._cache[channel].add(user)
         else:
-            user = PartialUser(bot=self._bot, name=parsed['user'], websocket=self, channel=channel)
-            self._channel_cache[channel].add(user)
+            user = User(bot=self._bot, name=parsed['user'], websocket=self, channel=channel_, tags=parsed['badges'])
+            self._cache[channel].discard(user)
+            self._cache[channel].add(user)
 
     async def _mode(self, parsed):   # TODO
         pass
