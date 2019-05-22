@@ -4,7 +4,7 @@ TwitchIO
 Support
 ---------------------------
 For support using TwitchIO, please join the official `support server
-<https://discord.me/twitch-api>`_ on `Discord <https://discordapp.com/>`_.
+<http://discord.gg/JhW28zp>`_ on `Discord <https://discordapp.com/>`_.
 
 Installation
 ---------------------------
