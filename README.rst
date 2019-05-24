@@ -1,4 +1,4 @@
-.. image:: logo.png?raw=true
+.. image:: https://i.imgur.com/B0nvk2w.png?raw=true
     :align: center
 
 .. image:: https://img.shields.io/badge/Python-3.6%20%7C%203.7-blue.svg
@@ -92,3 +92,5 @@ A quick and easy bot example:
 
     bot = Bot()
     bot.run()
+
+All Twitch logos used are owned by Twitch.tv respectively. Use of the Twitch logos does not imply any affiliation with or endorsement by them.
