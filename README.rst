@@ -92,5 +92,8 @@ A quick and easy bot example:
 
     bot = Bot()
     bot.run()
+    
+    
+`Become a patreon <https://twitchio.readthedocs.io/en/rewrite/twitchio.html>`_ and help support TwitchIO's development <3.
 
 All Twitch logos used are owned by Twitch.tv respectively. Use of the Twitch logos does not imply any affiliation with or endorsement by them.
