@@ -24,7 +24,7 @@ Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/rewrite
 Support
 ---------------------------
 For support using TwitchIO, please join the official `support server
-<http://discord.gg/JhW28zp>`_ on `Discord <https://discordapp.com/>`_.
+<https://discord.gg/RAKc3HF>`_ on `Discord <https://discordapp.com/>`_.
 
 Installation
 ---------------------------
