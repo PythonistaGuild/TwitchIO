@@ -21,3 +21,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+
+
+class TwitchCommandError(Exception):
+    pass
+
+
+class InvalidCogMethod(TwitchCommandError):
+    pass
+
+
+class MissingRequiredArgument(TwitchCommandError):
+    pass
+
+
+class BadArgument(TwitchCommandError):
+    pass
+
+
+class CommandNotFound(TwitchCommandError):
+    pass
+
+
+class CommandOnCooldown(TwitchCommandError):
+
+    def __init__(self, command, retry_after):
+        self.command = command
+        self.retry_after = retry_after
+        super().__init__(f'Command <{command.name}> is on cooldown. Try again in ({retry_after:.2f})s')
+
+
+class CheckFailure(TwitchCommandError):
+    pass
