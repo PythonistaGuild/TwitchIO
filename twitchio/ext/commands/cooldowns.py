@@ -69,13 +69,13 @@ class Cooldown:
         now = time.time()
 
         self._tokens = self.get_tokens(now)
-        
+
         if self._tokens == 0:
             self._window = now
 
         if self._tokens == self._rate:
             retry = self._per - (now - self._window)
-            return CommandOnCooldown(command=ctx.command, retry_after=retry)
+            raise CommandOnCooldown(command=ctx.command, retry_after=retry)
 
         self._tokens += 1
 
