@@ -93,8 +93,10 @@ class Bot(Client):
             for prefix in prefixes:
                 if message.content.startswith(prefix):
                     return prefix
-
-        return prefixes
+        elif message.content.startswith(prefixes):
+            return prefixes
+        else:
+            return None
 
     def add_command(self, command: Command):
         # TODO Docs
