@@ -159,6 +159,7 @@ class Context(Messageable):
         self.args = attrs.get('args')
         self.kwargs = attrs.get('kwargs')
 
+        self.bot = self.channel._bot
         self._ws = self.channel._ws
 
     def _fetch_channel(self):

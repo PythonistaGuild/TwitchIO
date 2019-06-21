@@ -554,3 +554,6 @@ class Bot(Client):
             pass
         finally:
             self._connection._close()
+
+    def close(self):
+        self._connection._close()
