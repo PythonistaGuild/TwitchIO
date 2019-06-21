@@ -122,7 +122,12 @@ class Messageable(abc.ABC):
         self.check_content(content)
         self.check_bucket(channel=entity.name)
 
+        try:
+            name = entity.channel.name
+        except AttributeError:
+            name = entity.name
+
         if not entity.__messageable_channel__:
-            await ws._websocket.send(f'PRIVMSG #jtv :/w {entity.name} {content}')
+            await ws._websocket.send(f'PRIVMSG #jtv :/w {name} {content}')
         else:
-            await ws._websocket.send(f'PRIVMSG #{entity.name} :{content}\r\n')
+            await ws._websocket.send(f'PRIVMSG #{name} :{content}\r\n')
