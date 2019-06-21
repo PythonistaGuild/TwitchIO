@@ -56,6 +56,8 @@ class Bot(Client):
 
         self._checks = []
 
+        self.__init__commands__()
+
     def __init__commands__(self):
         commands = inspect.getmembers(self)
 
