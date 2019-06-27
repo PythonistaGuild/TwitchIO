@@ -34,6 +34,7 @@ from twitchio.websocket import WSConnection
 from .core import Command, Context
 from .errors import *
 from .stringparser import StringParser
+from .utils import _CaseInsensitiveDict
 
 
 class Bot(Client):
@@ -49,8 +50,13 @@ class Bot(Client):
         self._prefix = prefix
         self._nick = nick.lower()
 
-        self._commands = {}
-        self._command_aliases = {}
+        if kwargs.get('case_insensitive', False):
+            self._commands = _CaseInsensitiveDict()
+            self._command_aliases = _CaseInsensitiveDict()
+        else:
+            self._commands = {}
+            self._command_aliases = {}
+
         self._events = {}
         self._cogs = {}
 
