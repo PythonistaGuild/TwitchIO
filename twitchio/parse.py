@@ -47,7 +47,7 @@ def parser(data: str, nick: str):
     elif groups[2] == 'PRIVMSG' or groups[2] == 'PRIVMSG(ECHO)':
         action = groups[2]
         channel = groups[3].lstrip('#')
-        message = ''.join(groups[4:]).lstrip(':')
+        message = ' '.join(groups[4:]).lstrip(':')
         user = re.search(USER_SUB, groups[1]).group('user')
 
     elif action in ACTIONS:
