@@ -463,7 +463,7 @@ class Bot(Client):
         message: :class:`.Message`
             Message object containing relevant information.
         """
-        pass   # TODO
+        await self.handle_commands(message)
 
     async def event_error(self, error: Exception, data=None):
         """|coro|
