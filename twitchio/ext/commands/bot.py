@@ -356,7 +356,7 @@ class Bot(Client):
         error: :class:`.Exception`
             The exception raised while trying to invoke the command.
         """
-        print('Ignoring exception in command: {0}:'.format(error), file=sys.stderr)
+        print(f'Ignoring exception in command: {error}:', file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     async def event_mode(self, channel, user, status):
@@ -563,7 +563,8 @@ class Bot(Client):
         except KeyboardInterrupt:
             pass
         finally:
-            self._connection._close()
+            self.loop.create_task(self.close())
 
-    def close(self):
+    async def close(self):
+        # TODO session close
         self._connection._close()
