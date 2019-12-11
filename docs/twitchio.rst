@@ -4,26 +4,25 @@ TwitchIO
 Support
 ---------------------------
 For support using TwitchIO, please join the official `support server
-<http://discord.gg/JhW28zp>`_ on `Discord <https://discordapp.com/>`_.
+<https://discord.gg/RAKc3HF>`_ on `Discord <https://discordapp.com/>`_.
+
+`Become a patreon <https://twitchio.readthedocs.io/en/rewrite/twitchio.html>`_ and help support TwitchIO's development <3.
 
 Installation
 ---------------------------
-TwitchIO is currently not on PyPI and thus needs to be installed using git.
-The following commands are currently the valid ways of installing TwitchIO.
-
 **TwitchIO requires Python 3.6 or higher.**
 
 **Windows**
 
 .. code:: sh
 
-    py -version -m pip install git+https://github.com/TwitchIO/TwitchIO.git
+    py -version -m pip install twitchio
 
 **Linux**
 
 .. code:: sh
 
-    python3 -m pip install git+https://github.com/TwitchIO/TwitchIO.git
+    python3 -m pip install twitchio
 
 Getting Started
 ----------------------------
@@ -73,6 +72,8 @@ A quick and easy bot example:
 
     bot = Bot()
     bot.run()
+
+*All Twitch logos used are owned by Twitch.tv respectively. Use of the Twitch logos does not imply any affiliation with or endorsement by them.*
 
 Client
 ----------------------------
