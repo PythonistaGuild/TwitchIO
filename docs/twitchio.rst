@@ -6,7 +6,7 @@ Support
 For support using TwitchIO, please join the official `support server
 <https://discord.gg/RAKc3HF>`_ on `Discord <https://discordapp.com/>`_.
 
-`Become a patreon <https://www.patreon.com/twitchio>`_ and help support TwitchIO's development <3.
+`Become a patron <https://www.patreon.com/twitchio>`_ and help support TwitchIO's development <3.
 
 Installation
 ---------------------------
