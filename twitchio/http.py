@@ -74,14 +74,15 @@ class HTTPSession:
             to_get = limit - len(data)
             return str(to_get) if to_get < 100 else '100'
 
-        while not reached_limit():
-            if cursor is not None:
-                params.append(('after', cursor))
+        is_finished = False
+        while not is_finished:
+            if limit is not None:
+                if cursor is not None:
+                    params.append(('after', cursor))
 
-            params.append(('first', get_limit()))
+                params.append(('first', get_limit()))
 
             body, is_text = await self._request(method, url, params=params, headers=headers, **kwargs)
-
             if is_text:
                 return body
 
@@ -102,6 +103,8 @@ class HTTPSession:
             else:
                 if not cursor:
                     break
+
+            is_finished = reached_limit() if limit is not None else True
 
         return data
 
