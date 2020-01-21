@@ -59,7 +59,11 @@ def parser(data: str, nick: str):
 
         for badge in prebadge:
             badge = badge.split('=')
-            badges[badge[0]] = badge[1]
+
+            try:
+                badges[badge[0]] = badge[1]
+            except IndexError:
+                pass
 
     if action not in ACTIONS and action not in ACTIONS2:
         action = None
