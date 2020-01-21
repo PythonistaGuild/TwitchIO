@@ -47,6 +47,9 @@ class Command:
         self._cooldowns = []
         self._name = name
 
+        self._instance = None
+        self.cog = None
+
         try:
             self._checks.extend(func.__checks__)
         except AttributeError:
@@ -65,8 +68,6 @@ class Command:
         self._before_invoke = None
         self._after_invoke = None
         self.no_global_checks = attrs.get('no_global_checks', False)
-
-        self._instance = None
 
         for key, value in self.params.items():
             if isinstance(value.annotation, str):
@@ -156,7 +157,9 @@ class Context(Messageable):
         self.prefix = attrs.get('prefix')
 
         self.command = attrs.get('command')
-        self.cog = attrs.get('cog')
+        if self.command:
+            self.cog = self.command.cog
+
         self.args = attrs.get('args')
         self.kwargs = attrs.get('kwargs')
 

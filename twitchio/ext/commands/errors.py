@@ -31,6 +31,10 @@ class InvalidCogMethod(TwitchCommandError):
     pass
 
 
+class InvalidCog(TwitchCommandError):
+    pass
+
+
 class MissingRequiredArgument(TwitchCommandError):
     pass
 
