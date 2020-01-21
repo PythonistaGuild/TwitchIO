@@ -86,6 +86,15 @@ class Cooldown:
         self._tokens = 0
         self._window = time.time()
 
+    def edit_rate(self, rate):
+        self._rate = rate
+
+    def edit_per(self, per):
+        self._per = per
+
+    def edit_bucket(self, bucket):
+        self.bucket = bucket
+
     def _bucket_keys(self, ctx):
         buckets = []
 

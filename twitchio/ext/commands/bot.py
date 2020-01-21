@@ -23,7 +23,6 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import importlib
 import inspect
 import itertools
 import sys
@@ -34,7 +33,6 @@ from twitchio.client import Client
 from twitchio.websocket import WSConnection
 from .core import *
 from .errors import *
-from .meta import Cog
 from .stringparser import StringParser
 from .utils import _CaseInsensitiveDict
 
@@ -59,9 +57,9 @@ class Bot(Client):
             self._commands = {}
             self._command_aliases = {}
 
-        self._modules = {}
-        self._cogs = {}
         self._events = {}
+        self._cogs = {}
+
         self._checks = []
 
         self.__init__commands__()
@@ -210,6 +208,15 @@ class Bot(Client):
         except Exception as e:
             await self.event_command_error(context, e)
 
+    async def edit_command_cooldown_rate(self, context, command, rate):
+        pass
+
+    async def edit_command_cooldown_per(self, context, command, per):
+        pass
+
+    async def edit_command_cooldown_bucket(self, context, command, bucket):
+        pass
+
     def _run_cooldowns(self, context):
         try:
             buckets = context.command._cooldowns[0].get_buckets(context)
@@ -251,34 +258,6 @@ class Bot(Client):
             return True
         except Exception as e:
             return e
-
-    def load_module(self, name: str):
-        """Method which loads a module and it's cogs.
-        Parameters
-        ------------
-        name: str
-            The name of the module to load in dot.path format.
-        """
-        if name in self._modules:
-            return
-
-        module = importlib.import_module(name)
-
-        if hasattr(module, 'prepare'):
-            module.prepare(self)
-        else:
-            del module
-            del sys.modules[name]
-            raise ImportError(f'Module <{name}> is missing a prepare method')
-
-        if name not in self._modules:
-            self._modules[name] = module
-
-    def add_cog(self, cog):
-        if not isinstance(cog, Cog):
-            raise InvalidCog('Cogs must derive from "commands.Cog".')
-
-        cog._load_methods(self)
 
     async def global_before_invoke(self, ctx):
         """|coro|
