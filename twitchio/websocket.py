@@ -78,9 +78,7 @@ class WSConnection:
         
         if callable(self._initial_channels):
             _temp_initial_channels = self._initial_channels()
-            # If the result of the function is a list or tuple, assign it
-            # Otherwise turn it into a list and assign it
-            if type(_temp_initial_channels) == list or type(_temp_initial_channels) == tuple:
+            if isinstance(_temp_initial_channels, (list, tuple)):
                 self._initial_channels = _temp_initial_channels
             else:
                 self._initial_channels = [_temp_initial_channels]
