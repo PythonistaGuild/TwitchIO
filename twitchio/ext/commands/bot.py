@@ -28,7 +28,7 @@ import inspect
 import itertools
 import sys
 import traceback
-from typing import Union
+from typing import Callable, Union
 from twitchio.channel import Channel
 from twitchio.client import Client
 from twitchio.websocket import WSConnection
@@ -42,7 +42,7 @@ from .utils import _CaseInsensitiveDict
 class Bot(Client):
 
     def __init__(self, irc_token: str, *, nick: str, prefix: Union[str, list, tuple],
-                 initial_channels: Union[list, tuple] = None, **kwargs):
+                 initial_channels: Union[list, tuple, Callable] = None, **kwargs):
         super().__init__(client_id=kwargs.get('client_id'))
 
         self.loop = kwargs.get('loop', asyncio.get_event_loop())
