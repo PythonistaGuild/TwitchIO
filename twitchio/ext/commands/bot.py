@@ -254,6 +254,7 @@ class Bot(Client):
 
     def load_module(self, name: str):
         """Method which loads a module and it's cogs.
+
         Parameters
         ------------
         name: str
@@ -278,7 +279,11 @@ class Bot(Client):
         if not isinstance(cog, Cog):
             raise InvalidCog('Cogs must derive from "commands.Cog".')
 
+        if cog.name in self._cogs:
+            raise InvalidCog(f'Cog "{cog.name}" has already been loaded.')
+
         cog._load_methods(self)
+        self._cogs[cog.name] = cog
 
     async def global_before_invoke(self, ctx):
         """|coro|
