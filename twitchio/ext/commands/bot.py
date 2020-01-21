@@ -135,6 +135,7 @@ class Bot(Client):
 
         prefix = await self.get_prefix(message)
 
+
         context = cls(message=message, prefix=prefix)
         return context
 
@@ -195,7 +196,7 @@ class Bot(Client):
 
         except Exception as e:
             if context.command.event_error:
-                await content.command.on_error(instance, context, e)
+                await context.command.on_error(instance, context, e)
 
             await self.event_command_error(context, e)
 
