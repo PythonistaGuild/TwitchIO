@@ -161,6 +161,7 @@ class Context(Messageable):
         self.kwargs = attrs.get('kwargs')
 
         self.view = attrs.get('view')
+        self.is_valid = attrs.get('valid')
 
         self.bot = self.channel._bot
         self._ws = self.channel._ws

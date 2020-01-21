@@ -134,9 +134,31 @@ class Bot(Client):
             cls = Context
 
         prefix = await self.get_prefix(message)
+        if not prefix:
+            return cls(message=message, prefix=prefix, valid=False)
 
+        content = message.content[len(prefix)::].lstrip(' ')  # Strip prefix and remainder whitespace
+        parsed = StringParser().process_string(content)  # Return the string as a dict view
 
-        context = cls(message=message, prefix=prefix)
+        try:
+            command_ = parsed.pop(0)
+        except KeyError:
+            raise CommandNotFound(f'No valid command was passed.')
+
+        try:
+            command_ = self._command_aliases[command_]
+        except KeyError:
+            pass
+
+        if command_ in self.commands:
+            command_ = self.commands[command_]
+        else:
+            raise CommandNotFound(f'No command "{command_}" was found.')
+
+        args, kwargs = command_.parse_args(command_._instance, parsed)
+
+        context = cls(message=message, prefix=prefix, command=command_, args=args, kwargs=kwargs,
+                      valid=True)
         return context
 
     async def handle_commands(self, message):
@@ -149,28 +171,6 @@ class Bot(Client):
         if not context.prefix:
             return
 
-        content = context.message.content[len(context.prefix)::].lstrip(' ')  # Strip prefix and remainder whitespace
-        parsed = StringParser().process_string(content)  # Return the string as a dict view
-
-        try:
-            command_ = parsed.pop(0)
-        except KeyError:
-            return  # No command was found
-
-        try:
-            command_ = self._command_aliases[command_]
-        except KeyError:
-            pass
-
-        if command_ in self.commands:
-            command_ = self.commands[command_]
-        else:
-            context.command = None
-            return await self.event_command_error(context, CommandNotFound(f'Command <{command_}> was not found.'))
-
-        context.command = command_
-        instance = command_._instance
-
         check_result = await self.handle_checks(context)
 
         if check_result is not True:
@@ -181,9 +181,9 @@ class Bot(Client):
         if limited:
             return await self.event_command_error(context, limited[0])
 
-        try:
-            context.args, context.kwargs = command_.parse_args(instance, parsed)
+        instance = context.command._instance
 
+        try:
             await self.global_before_invoke(context)
 
             if context.command._before_invoke:
