@@ -31,7 +31,7 @@ from typing import Union
 from twitchio.channel import Channel
 from twitchio.client import Client
 from twitchio.websocket import WSConnection
-from .core import Command, Context
+from .core import *
 from .errors import *
 from .stringparser import StringParser
 from .utils import _CaseInsensitiveDict
@@ -40,7 +40,7 @@ from .utils import _CaseInsensitiveDict
 class Bot(Client):
 
     def __init__(self, irc_token: str, *, nick: str, prefix: Union[str, list, tuple],
-                 initial_channels: Union[list, tuple]=None, **kwargs):
+                 initial_channels: Union[list, tuple] = None, **kwargs):
         super().__init__(client_id=kwargs.get('client_id'))
 
         self.loop = kwargs.get('loop', asyncio.get_event_loop())
@@ -106,27 +106,27 @@ class Bot(Client):
         else:
             return None
 
-    def add_command(self, command: Command):
+    def add_command(self, command_: Command):
         # TODO Docs
-        if not isinstance(command, Command):
+        if not isinstance(command_, Command):
             raise TypeError('Commands passed must be a subclass of Command.')
-        elif command.name in self.commands:
-            raise TwitchCommandError(f'Failed to load command <{command.name}>, a command with that name already exists.')
-        elif not inspect.iscoroutinefunction(command._callback):
-            raise TwitchCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines.')
+        elif command_.name in self.commands:
+            raise TwitchCommandError(f'Failed to load command <{command_.name}>, a command with that name already exists.')
+        elif not inspect.iscoroutinefunction(command_._callback):
+            raise TwitchCommandError(f'Failed to load command <{command_.name}>. Commands must be coroutines.')
 
-        self.commands[command.name] = command
+        self.commands[command_.name] = command_
 
-        if not command.aliases:
+        if not command_.aliases:
             return
 
-        for alias in command.aliases:
+        for alias in command_.aliases:
             if alias in self.commands:
-                del self.commands[command.name]
+                del self.commands[command_.name]
                 raise TwitchCommandError(
-                    f'Failed to load command <{command.name}>, a command with that name/alias already exists.')
+                    f'Failed to load command <{command_.name}>, a command with that name/alias already exists.')
 
-            self._command_aliases[alias] = command.name
+            self._command_aliases[alias] = command_.name
 
     async def get_context(self, message, *, cls=None):
         # TODO Docs
@@ -152,23 +152,23 @@ class Bot(Client):
         parsed = StringParser().process_string(content)  # Return the string as a dict view
 
         try:
-            command = parsed.pop(0)
+            command_ = parsed.pop(0)
         except KeyError:
             return  # No command was found
 
         try:
-            command = self._command_aliases[command]
+            command_ = self._command_aliases[command_]
         except KeyError:
             pass
 
-        if command in self.commands:
-            command = self.commands[command]
+        if command_ in self.commands:
+            command_ = self.commands[command_]
         else:
             context.command = None
-            return await self.event_command_error(context, CommandNotFound(f'Command <{command}> was not found.'))
+            return await self.event_command_error(context, CommandNotFound(f'Command <{command_}> was not found.'))
 
-        context.command = command
-        instance = command._instance
+        context.command = command_
+        instance = command_._instance
 
         check_result = await self.handle_checks(context)
 
@@ -181,7 +181,7 @@ class Bot(Client):
             return await self.event_command_error(context, limited[0])
 
         try:
-            context.args, context.kwargs = command.parse_args(instance, parsed)
+            context.args, context.kwargs = command_.parse_args(instance, parsed)
 
             await self.global_before_invoke(context)
 
@@ -225,12 +225,12 @@ class Bot(Client):
 
     async def handle_checks(self, context):
         # TODO Docs
-        command = context.command
+        command_ = context.command
 
-        if not command.no_global_checks:
-            checks = [predicate for predicate in itertools.chain(self._checks, command._checks)]
+        if not command_.no_global_checks:
+            checks = [predicate for predicate in itertools.chain(self._checks, command_._checks)]
         else:
-            checks = command._checks
+            checks = command_._checks
 
         if not checks:
             return True
@@ -243,7 +243,7 @@ class Bot(Client):
                     result = predicate(context)
 
                 if result is False:
-                    raise CheckFailure(f'The check <{predicate}> for command <{command.name}> failed.')
+                    raise CheckFailure(f'The check <{predicate}> for command <{command_.name}> failed.')
 
             return True
         except Exception as e:
@@ -344,14 +344,14 @@ class Bot(Client):
         channel = Channel(name=name, websocket=self._connection, bot=self)
         return channel
 
-    async def event_command_error(self, ctx, error):
+    async def event_command_error(self, context, error):
         """|coro|
 
         Event called when an error occurs during command invocation.
 
         Parameters
         ------------
-        ctx: :class:`.Context`
+        context: :class:`.Context`
             The command context.
         error: :class:`.Exception`
             The exception raised while trying to invoke the command.
