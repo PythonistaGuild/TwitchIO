@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2019 TwitchIO
+Copyright (c) 2017-2020 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -290,7 +290,7 @@ class WSConnection:
         user = User(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._bot, websocket=self)
 
         message = Message(raw_data=parsed['data'], content=parsed['message'],
-                          author=user, channel=channel, tags=parsed['badges'], )
+                          author=user, channel=channel, tags=parsed['badges'])
 
         await self.dispatch('message', message)
 
