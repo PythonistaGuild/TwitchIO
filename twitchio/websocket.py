@@ -75,6 +75,13 @@ class WSConnection:
         self.nick = kwargs.get('nick').lower()
         self.modes = kwargs.pop('modes', ("commands", "tags", "membership"))
         self._initial_channels = kwargs.get('initial_channels')
+        
+        if callable(self._initial_channels):
+            _temp_initial_channels = self._initial_channels()
+            if isinstance(_temp_initial_channels, (list, tuple)):
+                self._initial_channels = _temp_initial_channels
+            else:
+                self._initial_channels = [_temp_initial_channels]
 
         self._last_ping = 0
 
