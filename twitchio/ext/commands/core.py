@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2019 TwitchIO
+Copyright (c) 2017-2020 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -156,6 +156,7 @@ class Context(Messageable):
         self.prefix = attrs.get('prefix')
 
         self.command = attrs.get('command')
+        self.cog = attrs.get('cog')
         self.args = attrs.get('args')
         self.kwargs = attrs.get('kwargs')
 
@@ -218,7 +219,7 @@ class Context(Messageable):
         return None
 
 
-def command(*, name: str=None, aliases: Union[list, tuple]=None, cls=None, no_global_checks=False):
+def command(*, name: str = None, aliases: Union[list, tuple] = None, cls=None, no_global_checks=False):
     if cls and not inspect.isclass(cls):
         raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
