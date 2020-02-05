@@ -28,7 +28,7 @@ import inspect
 import itertools
 import sys
 import traceback
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 from twitchio.channel import Channel
 from twitchio.client import Client
 from twitchio.websocket import WSConnection
@@ -108,27 +108,49 @@ class Bot(Client):
         else:
             return None
 
-    def add_command(self, command_: Command):
-        # TODO Docs
-        if not isinstance(command_, Command):
+    def add_command(self, command: Command):
+        """Method which registers a command for use by the bot.
+
+        Parameters
+        ------------
+        command: :class:`.Command`
+            The command to register.
+        """
+        if not isinstance(command, Command):
             raise TypeError('Commands passed must be a subclass of Command.')
-        elif command_.name in self.commands:
-            raise TwitchCommandError(f'Failed to load command <{command_.name}>, a command with that name already exists.')
-        elif not inspect.iscoroutinefunction(command_._callback):
-            raise TwitchCommandError(f'Failed to load command <{command_.name}>. Commands must be coroutines.')
+        elif command.name in self.commands:
+            raise TwitchCommandError(f'Failed to load command <{command.name}>, a command with that name already exists.')
+        elif not inspect.iscoroutinefunction(command._callback):
+            raise TwitchCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines.')
 
-        self.commands[command_.name] = command_
+        self.commands[command.name] = command
 
-        if not command_.aliases:
+        if not command.aliases:
             return
 
-        for alias in command_.aliases:
+        for alias in command.aliases:
             if alias in self.commands:
-                del self.commands[command_.name]
+                del self.commands[command.name]
                 raise TwitchCommandError(
-                    f'Failed to load command <{command_.name}>, a command with that name/alias already exists.')
+                    f'Failed to load command <{command.name}>, a command with that name/alias already exists.')
 
-            self._command_aliases[alias] = command_.name
+            self._command_aliases[alias] = command.name
+
+    def get_command(self, name: str) -> Optional[Command]:
+        """Method which retrieves a registered command.
+
+        Parameters
+        ------------
+        name: str
+            The name or alias of the command to retrieve.
+
+        Returns
+        ---------
+        Optional[:class:`.Command`]
+        """
+        name = self._command_aliases.get(name, name)
+
+        return self._commands.get(name, None)
 
     async def get_context(self, message, *, cls=None):
         # TODO Docs
