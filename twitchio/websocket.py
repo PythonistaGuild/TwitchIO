@@ -104,6 +104,7 @@ class WebsocketConnection:
         self._pending_joins = {}
         self._pending_parts = {}
         self._authentication_error = False
+        self._tearingdown = False
 
         self.is_ready = asyncio.Event()
 
@@ -327,6 +328,9 @@ class WebsocketConnection:
             try:
                 data = await self._websocket.recv()
             except websockets.ConnectionClosed:
+                if self._tearingdown:
+                    break
+
                 retry = backoff.delay()
                 log.info('Websocket closed: Retrying connection in %s seconds...', retry)
 
@@ -612,10 +616,12 @@ class WebsocketConnection:
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     def teardown(self):
+        self._tearingdown = True
+
         if self._bot._webhook_server:
             self._bot._webhook_server.stop()
 
-        self._websocket.close()
+        self.loop.run_until_complete(self.loop.create_task(self._websocket.close()))
 
 
 class PubSub:
