@@ -40,12 +40,41 @@ class HTTPSession:
 
     def __init__(self, loop, **attrs):
         self.client_id = client_id = attrs.get('client_id', None)
+        self.client_secret = attrs.get("client_secret", None)
+        self.token = attrs.get("api_token", None)
+        self.scopes = attrs.get("scopes", [])
 
         if not client_id:
-            log.warning('Running without client ID, some HTTP endpoints may not work without authentication.')
+            log.warning('Running without client ID, HTTP endpoints will not work without authentication.')
+
+        if not self.token and not client_id:
+            log.warning("Running without client ID or bearer token, HTTP endpoints will not work without authentication.")
 
         self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop)
+        self._refresh_token = None
+
+    async def generate_token(self):
+        if not self.client_id or not self.client_secret:
+            raise Exception("unable to generate a token")
+
+        if self._refresh_token:
+            url = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token={0}&client_id={1}&client_secret={2}".format(
+                self._refresh_token, self.client_id, self.client_secret)
+
+        else:
+            url = "https://id.twitch.tv/oauth2/token?client_id={0}&client_secret={1}&grant_type=client_credentials".format(self.client_id, self.client_secret)
+            if self.scopes:
+                url += "&scope=" + " ".join(self.scopes)
+
+        async with self._session.post(url) as resp:
+            if 300 < resp.status or resp.status < 200:
+                raise Exception("unable to generate a token: " + await resp.text())
+
+            data = await resp.json()
+            self.token = data['access_token']
+            self._refresh_token = data.get('refresh_token', None)
+            logging.warning("invalid or no token found, generated new token: %s", self.token)
 
     async def request(self, method, url, *, params=None, limit=None, **kwargs):
         count = kwargs.pop('count', False)
@@ -61,6 +90,14 @@ class HTTPSession:
 
         if self.client_id is not None:
             headers['Client-ID'] = str(self.client_id)
+
+        if self.token is not None:
+            headers['Authorization'] = "Bearer " + self.token
+
+        elif self.client_secret and self.client_id:
+            await self.generate_token()
+
+        #else: we'll probably get a 401, but whatever
 
         cursor = None
 
@@ -135,7 +172,13 @@ class HTTPSession:
 
                 if resp.status == 401:
                     if self.client_id is None:
-                        raise Unauthorized('A client ID or other authorization is needed to use this route.')
+                        raise Unauthorized('A client ID and/or Bearer token is needed to use this route.')
+
+                    if "WWW-Authenticate header" in resp.headers:
+                        try:
+                            await self.generate_token()
+                        except:
+                            raise Unauthorized("Your oauth token is invalid, and a new one could not be generated")
 
                     raise Unauthorized('You\'re not authorized to use this route.')
 
