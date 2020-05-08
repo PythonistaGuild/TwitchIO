@@ -56,7 +56,7 @@ class HTTPSession:
 
     async def generate_token(self):
         if not self.client_id or not self.client_secret:
-            raise Exception("unable to generate a token")
+            raise HTTPException("unable to generate a token")
 
         if self._refresh_token:
             url = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token={0}&client_id={1}&client_secret={2}".format(
@@ -69,7 +69,7 @@ class HTTPSession:
 
         async with self._session.post(url) as resp:
             if 300 < resp.status or resp.status < 200:
-                raise Exception("unable to generate a token: " + await resp.text())
+                raise HTTPException("unable to generate a token: " + await resp.text())
 
             data = await resp.json()
             self.token = data['access_token']
@@ -97,7 +97,7 @@ class HTTPSession:
         if self.token is not None:
             headers['Authorization'] = "Bearer " + self.token
 
-        #else: we'll probably get a 401, but whatever
+        #else: we'll probably get a 401, but we can check this in the response
 
         cursor = None
 
@@ -172,9 +172,9 @@ class HTTPSession:
 
                 if resp.status == 401:
                     if self.client_id is None:
-                        raise Unauthorized('A client ID and/or Bearer token is needed to use this route.')
+                        raise Unauthorized('A client ID and Bearer token is needed to use this route.')
 
-                    if "WWW-Authenticate header" in resp.headers:
+                    if "WWW-Authenticate" in resp.headers:
                         try:
                             await self.generate_token()
                         except:
