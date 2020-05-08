@@ -163,6 +163,11 @@ class Messageable(metaclass=abc.ABCMeta):
         """|coro|
 
         Method which sends a .slow to Twitch and sets the channel to a slowmode of a specific time.
+
+        Parameters
+        ------------
+        time: Optional[int]
+            The amount of time to set the slowmode to.
         """
 
         ws = self._get_socket
