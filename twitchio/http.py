@@ -91,11 +91,11 @@ class HTTPSession:
         if self.client_id is not None:
             headers['Client-ID'] = str(self.client_id)
 
+        if self.client_secret and self.client_id and not self.token:
+            await self.generate_token()
+
         if self.token is not None:
             headers['Authorization'] = "Bearer " + self.token
-
-        elif self.client_secret and self.client_id:
-            await self.generate_token()
 
         #else: we'll probably get a 401, but whatever
 
