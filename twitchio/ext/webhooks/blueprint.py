@@ -6,7 +6,7 @@ import sanic
 from sanic import request
 from sanic import response
 
-from twitchio.ext.webhooks.utils import remove_duplicates  # , verify_payload
+from twitchio.ext.webhooks.utils import remove_duplicates, verify_payload
 from twitchio.ext.webhooks.utils import Topic, StreamChangedNotification, UserChangedNotification, UserFollowsNotification
 
 log = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ async def handle_stream_changed_get(request):
 
 @bp.route('/streams', ['POST'])
 @remove_duplicates
-# @verify_payload
+@verify_payload
 async def handle_stream_changed_post(request):
     try:
         params = {'user_id': request.args['user_id']}
@@ -139,7 +139,7 @@ async def handle_user_changed_get(request):
 
 @bp.route('/users', ['POST'])
 @remove_duplicates
-# @verify_payload
+@verify_payload
 async def handle_user_changed_post(request):
     try:
         params = {'id': request.args['id']}
@@ -157,7 +157,7 @@ async def handle_user_follows_get(request):
 
 @bp.route('/user/follows', ['POST'])
 @remove_duplicates
-# @verify_payload
+@verify_payload
 async def handle_user_follows_post(request):
 
     params = {'from_id': request.args.get('from_id'), 'to_id': request.args.get('to_id')}

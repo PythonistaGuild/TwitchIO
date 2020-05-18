@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import logging
 
-from sanic import response
+from sanic import response, router, request
 
 log = logging.getLogger(__name__)
 
@@ -33,23 +33,28 @@ UserFollowsNotification = collections.namedtuple('UserFollowsNotification',
                                                  ["from_id", "from_name", "to_id", "to_name", "followed_at"])
 
 
-# def verify_payload(route):
-#     """
-#     Decorator which verifies that a request was been sent from Twitch by comparing the 'X-Hub-Signature'
-#     header.
-#     """
-#
-#     async def inner(bp, request, *args, **kwargs):
-#         secret = config['WEBHOOK_SECRET'].encode('utf-8')
-#         digest = hmac.new(secret, msg=request.body, digestmod=hashlib.sha256).hexdigest()
-#
-#         if hmac.compare_digest(digest, request.headers.get('X-Hub-Signature', '')[7:]):
-#             return await route(bp, request, *args, **kwargs)
-#
-#         log.warning("The hash for this notification is invalid")
-#         return response.text(None, status=403)
-#
-#     return inner
+def verify_payload(route: router.Route):
+    """
+    Decorator which verifies that a request was been sent from Twitch by comparing the 'X-Hub-Signature'
+    header.
+    """
+
+    async def inner(request: request.Request, *args, **kwargs):
+
+        secret = getattr(request.app.config, 'TWITCH_WEBHOOK_SECRET', None)
+
+        if secret:
+
+            secret = secret.encode('utf-8')
+            digest = hmac.new(secret, msg=request.body, digestmod=hashlib.sha256).hexdigest()
+
+            if not hmac.compare_digest(digest, request.headers.get('X-Hub-Signature', '')[7:]):
+                log.warning("The hash for this notification is invalid")
+                return response.text(None, status=403)
+
+        return await route(request, *args, **kwargs)
+
+    return inner
 
 
 def remove_duplicates(route):
