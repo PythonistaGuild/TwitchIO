@@ -37,6 +37,7 @@ log = logging.getLogger(__name__)
 
 class HTTPSession:
     BASE = 'https://api.twitch.tv/helix'
+    TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
     def __init__(self, loop, **attrs):
         self.client_id = client_id = attrs.get('client_id', None)
@@ -56,25 +57,25 @@ class HTTPSession:
 
     async def generate_token(self):
         if not self.client_id or not self.client_secret:
-            raise HTTPException("unable to generate a token")
+            raise HTTPException("Unable to generate a token, client id and/or client secret not given")
 
         if self._refresh_token:
-            url = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token={0}&client_id={1}&client_secret={2}".format(
+            url = self.TOKEN_BASE + "?grant_type=refresh_token&refresh_token={0}&client_id={1}&client_secret={2}".format(
                 self._refresh_token, self.client_id, self.client_secret)
 
         else:
-            url = "https://id.twitch.tv/oauth2/token?client_id={0}&client_secret={1}&grant_type=client_credentials".format(self.client_id, self.client_secret)
+            url = self.TOKEN_BASE + "?client_id={0}&client_secret={1}&grant_type=client_credentials".format(self.client_id, self.client_secret)
             if self.scopes:
                 url += "&scope=" + " ".join(self.scopes)
 
         async with self._session.post(url) as resp:
             if 300 < resp.status or resp.status < 200:
-                raise HTTPException("unable to generate a token: " + await resp.text())
+                raise HTTPException("Unable to generate a token: " + await resp.text())
 
             data = await resp.json()
             self.token = data['access_token']
             self._refresh_token = data.get('refresh_token', None)
-            logging.warning("invalid or no token found, generated new token: %s", self.token)
+            logging.info("Invalid or no token found, generated new token: %s", self.token)
 
     async def request(self, method, url, *, params=None, limit=None, **kwargs):
         count = kwargs.pop('count', False)
@@ -92,6 +93,7 @@ class HTTPSession:
             headers['Client-ID'] = str(self.client_id)
 
         if self.client_secret and self.client_id and not self.token:
+            logging.info("No token passed, generating new token under client id {0} and client secret {1}")
             await self.generate_token()
 
         if self.token is not None:
