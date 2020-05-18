@@ -72,7 +72,7 @@ class WebhookEventDispatcher:
         except KeyError:
             return response.HTTPResponse(status=400)
 
-    async def bulk_process_notification(self, topic: Topic, data: dict, params: dict):
+    async def bulk_process_notification(self, topic: enum.Enum, data: dict, params: dict):
         """Process the received notification.
 
         - Check if the related topic is supported.
@@ -94,7 +94,7 @@ class WebhookEventDispatcher:
         for instance in self.__class__.__instances:
             self.loop.create_task(instance.process_notification(topic, data, params))
 
-    async def process_notification(self, topic: Topic, data: dict, params: dict):
+    async def process_notification(self, topic: enum.Enum, data: dict, params: dict):
         """Filter the notification and call the related callback.
 
         Parameters
