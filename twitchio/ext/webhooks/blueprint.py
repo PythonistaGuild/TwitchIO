@@ -66,28 +66,24 @@ class WebhookEventDispatcher:
 
     async def process_notification(self, topic: Topic, data: dict, params: dict):
 
+        cls = NOTIFICATION_TYPE_BY_TOPIC[topic]
+        notification = cls(**{field: data.get(field) for field in cls._fields})
         try:
-            cls = NOTIFICATION_TYPE_BY_TOPIC[topic]
-        except KeyError:
-            log.error(f'Invalid topic "{topic.name}" with params "{params}", the notification has been ignored')
-        else:
-            notification = cls(**{field: data.get(field) for field in cls._fields})
-            try:
-                if cls == StreamChangedNotification:
-                    if data:
-                        await self.event_stream_online(params, notification)
-                    else:
-                        await self.event_stream_offline(params, notification)
-                elif cls == UserChangedNotification:
-                    await self.event_user_changed(params, notification)
-                elif cls == UserFollowsNotification:
-                    if 'from_id' not in params:
-                        await self.event_following_user(params, notification)
-                    else:
-                        await self.event_followed_by_user(params, notification)
+            if cls == StreamChangedNotification:
+                if data:
+                    await self.event_stream_online(params, notification)
+                else:
+                    await self.event_stream_offline(params, notification)
+            elif cls == UserChangedNotification:
+                await self.event_user_changed(params, notification)
+            elif cls == UserFollowsNotification:
+                if 'from_id' not in params:
+                    await self.event_following_user(params, notification)
+                else:
+                    await self.event_followed_by_user(params, notification)
 
-            except Exception as error:
-                self.loop.create_task(self.webhook_notification_error(topic, data, params, error))
+        except Exception as error:
+            self.loop.create_task(self.webhook_notification_error(topic, data, params, error))
 
     async def webhook_notification_error(self, topic: enum.Enum, data: dict, params: dict, error: Exception):
         log.error(f"Exception '{type(error).__name__}' raised for topic  '{topic.name}' (params={params})",
