@@ -72,7 +72,7 @@ class WebhookEventDispatcher:
         except KeyError:
             return response.HTTPResponse(status=400)
 
-    async def bulk_process_notification(self, topic: enum.Enum, data: dict, params: dict):
+    async def bulk_process_notification(self, request: request.Request, topic: enum.Enum):
         """Process the received notification.
 
         - Check if the related topic is supported.
@@ -80,48 +80,61 @@ class WebhookEventDispatcher:
 
         Parameters
         ----------
+        request: sanic.request.Request
+            The challenge request received from Twitch
         topic: enum.Enum
             Topic whose notification is being processed
-        data: dict
-            Notification content
-        params: dict
-            Topic parameters
+
+        Returns
+        -------
+
+        response.HTTPResponse
+            status code: 202 if the request has correctly been processed
+            status code: 400 otherwise
         """
         if topic not in NOTIFICATION_TYPE_BY_TOPIC:
-            log.error(f'Invalid topic "{topic.name}" with params "{params}", the notification has been ignored')
+            log.error(f'Invalid topic "{topic.name}", the notification has been ignored')
             return
 
-        for instance in self.__class__.__instances:
-            self.loop.create_task(instance.process_notification(topic, data, params))
+        try:
+            params = {param: request.args[param] for param in NOTIFICATION_TYPE_BY_TOPIC[topic].valid_params}
+            data = request.json['data'][0]
 
-    async def process_notification(self, topic: enum.Enum, data: dict, params: dict):
+            for instance in self.__class__.__instances:
+                self.loop.create_task(instance.process_notification(data, topic, params))
+
+            return response.HTTPResponse(status=202)
+
+        except KeyError:
+            return response.HTTPResponse(status=400)
+
+    async def process_notification(self, data: dict, topic: enum.Enum, params: dict):
         """Filter the notification and call the related callback.
 
         Parameters
         ----------
-        topic: enum.Enum
-            Topic whose notification is being processed
         data: dict
             Notification content
+        topic: enum.Enum
+            Topic whose notification is being processed
         params: dict
             Topic parameters
         """
-
-        cls = NOTIFICATION_TYPE_BY_TOPIC[topic]
-        notification = cls(**{field: data.get(field) for field in cls._fields})
         try:
+            cls = NOTIFICATION_TYPE_BY_TOPIC[topic]
+            notification = cls(**data)
             if cls == StreamChangedNotification:
                 if data:
-                    await self.event_stream_online(params, notification)
+                    self.loop.create_task(self.event_stream_online(params, notification))
                 else:
-                    await self.event_stream_offline(params, notification)
+                    self.loop.create_task(self.event_stream_offline(params, notification))
             elif cls == UserChangedNotification:
-                await self.event_user_changed(params, notification)
+                self.loop.create_task(self.event_user_changed(params, notification))
             elif cls == UserFollowsNotification:
                 if 'from_id' not in params:
-                    await self.event_following_user(params, notification)
+                    self.loop.create_task(self.event_following_user(params, notification))
                 else:
-                    await self.event_followed_by_user(params, notification)
+                    self.loop.create_task(self.event_followed_by_user(params, notification))
 
         except Exception as error:
             self.loop.create_task(self.webhook_notification_error(topic, data, params, error))
@@ -226,13 +239,7 @@ async def handle_stream_changed_post(request: request.Request):
     request: sanic.request.Request
         The challenge request received from Twitch
     """
-    try:
-        params = {'user_id': request.args['user_id']}
-        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0],
-                                                                            params))
-        return response.HTTPResponse(status=202)
-    except KeyError:
-        return response.HTTPResponse(status=400)
+    return await dispatcher().bulk_process_notification(request, Topic.stream_changed)
 
 
 @bp.route('/users', ['GET'])
@@ -258,13 +265,7 @@ async def handle_user_changed_post(request: request.Request):
     request: sanic.request.Request
         The challenge request received from Twitch
     """
-    try:
-        params = {'id': request.args['id']}
-        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0],
-                                                                            params))
-        return response.HTTPResponse(status=202)
-    except KeyError:
-        return response.HTTPResponse(status=400)
+    return await dispatcher().bulk_process_notification(request, Topic.user_changed)
 
 
 @bp.route('/user/follows', ['GET'])
@@ -290,14 +291,4 @@ async def handle_user_follows_post(request: request.Request):
     request: sanic.request.Request
         The challenge request received from Twitch
     """
-    try:
-        params = {'from_id': request.args['from_id'], 'to_id': request.args['to_id']}
-        if not (params['from_id'] or params['to_id']):
-            # One of them needs to be set at least
-            return response.HTTPResponse(status=400)
-
-        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_follows, request.json['data'][0],
-                                                                            params))
-        return response.HTTPResponse(status=202)
-    except KeyError:
-        return response.HTTPResponse(status=400)
+    return await dispatcher().bulk_process_notification(request, Topic.user_follows)

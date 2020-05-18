@@ -19,18 +19,38 @@ class Topic(enum.Enum):
     user_follows = 'UserFollows'
 
 
-StreamChangedNotification = collections.namedtuple('StreamChangedNotification',
-                                                   ['community_ids', 'game_id', 'id', 'language', 'started_at',
-                                                    'tag_ids', 'thumbnail_url', 'title', 'type', 'user_id', 'user_name',
-                                                    'viewer_count'])
+class Notification:
+    """Twitch webhook notification dataclass."""
 
-UserChangedNotification = collections.namedtuple('UserChangedNotification',
-                                                 ['id', 'login', 'display_name', 'type', 'broadcaster_type',
-                                                  'description', 'profile_image_url', 'offline_image_url',
-                                                  'view_count'])
+    __slots__ = ()
+    valid_params = ()
 
-UserFollowsNotification = collections.namedtuple('UserFollowsNotification',
-                                                 ["from_id", "from_name", "to_id", "to_name", "followed_at"])
+    def __init__(self, **params):
+        for param, value in params.items():
+            setattr(self, param, value)
+
+
+class StreamChangedNotification(Notification):
+    """Twitch 'StreamChanged' webhook notification dataclass."""
+
+    __slots__ = ('id', 'login', 'display_name', 'type', 'broadcaster_type', 'description', 'profile_image_url',
+                 'offline_image_url', 'view_count')
+    valid_params = ('user_id',)
+
+
+class UserChangedNotification(Notification):
+    """Twitch 'UserChanged' webhook notification dataclass."""
+
+    __slots__ = ('id', 'login', 'display_name', 'type', 'broadcaster_type', 'description', 'profile_image_url',
+                 'offline_image_url', 'view_count')
+    valid_params = ('id',)
+
+
+class UserFollowsNotification(Notification):
+    """Twitch 'UserFollows' webhook notification dataclass."""
+
+    __slots__ = ("from_id", "from_name", "to_id", "to_name", "followed_at")
+    valid_params = ('from_id', 'to_id')
 
 
 def verify_payload(route: blueprints.FutureRoute):
@@ -38,7 +58,6 @@ def verify_payload(route: blueprints.FutureRoute):
     Decorator which verifies that a request was been sent from Twitch by comparing the 'X-Hub-Signature'
     header.
     """
-
     async def inner(request: request.Request, *args, **kwargs):
 
         secret = getattr(request.app.config, 'TWITCH_WEBHOOK_SECRET', None)
