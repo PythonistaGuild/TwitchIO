@@ -6,8 +6,8 @@ import sanic
 from sanic import request
 from sanic import response
 
-from twitchio.ext.webhooks.utils import remove_duplicates, verify_payload
-from twitchio.ext.webhooks.utils import Topic, StreamChangedNotification, UserChangedNotification, UserFollowsNotification
+from twitchio.ext.webhooks.utils import remove_duplicates, verify_payload, Topic, StreamChangedNotification, \
+    UserChangedNotification, UserFollowsNotification
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class WebhookEventDispatcher:
     __instances = set()
     __dispatcher = None
 
-    def __init__(self, loop=None):
+    def __init__(self, loop: asyncio.AbstractEventLoop = None):
         self.__instances.add(self)
         self.loop = loop or asyncio.get_event_loop()
 
@@ -58,8 +58,7 @@ class WebhookEventDispatcher:
     @classmethod
     async def bulk_process_notification(cls, topic: Topic, data: dict, params: dict):
         if topic not in NOTIFICATION_TYPE_BY_TOPIC:
-            log.error(f'Invalid topic "{topic.name}" with params "{params}", '
-                      f'the notification has been ignored')
+            log.error(f'Invalid topic "{topic.name}" with params "{params}", the notification has been ignored')
             return
 
         for instance in cls.__instances:
@@ -90,23 +89,23 @@ class WebhookEventDispatcher:
             except Exception as error:
                 self.loop.create_task(self.webhook_notification_error(topic, data, params, error))
 
-    async def webhook_notification_error(self, topic: Topic, data: dict, params: dict, error: Exception):
+    async def webhook_notification_error(self, topic: enum.Enum, data: dict, params: dict, error: Exception):
         log.error(f"Exception '{type(error).__name__}' raised for topic  '{topic.name}' (params={params})",
                   exc_info=(type(error), error, error.__traceback__))
 
-    async def event_stream_online(self, params, notification):
+    async def event_stream_online(self, params: dict, notification: StreamChangedNotification):
         pass
 
-    async def event_stream_offline(self, params, notification):
+    async def event_stream_offline(self, params: dict, notification: StreamChangedNotification):
         pass
 
-    async def event_user_changed(self, params, notification):
+    async def event_user_changed(self, params: dict, notification: UserChangedNotification):
         pass
 
-    async def event_following_user(self, params, notification):
+    async def event_following_user(self, params: dict, notification: UserFollowsNotification):
         pass
 
-    async def event_followed_by_user(self, params, notification):
+    async def event_followed_by_user(self, params: dict, notification: UserFollowsNotification):
         pass
 
 
@@ -115,17 +114,18 @@ bp = sanic.Blueprint("Twitchio Webhooks", url_prefix="/webhooks")
 
 
 @bp.route('/streams', ['GET'])
-async def handle_stream_changed_get(request):
+async def handle_stream_changed_get(request: request.Request):
     return dispatcher().accept_subscription(request, Topic.stream_changed)
 
 
 @bp.route('/streams', ['POST'])
 @remove_duplicates
 @verify_payload
-async def handle_stream_changed_post(request):
+async def handle_stream_changed_post(request: request.Request):
     try:
         params = {'user_id': request.args['user_id']}
-        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0], params))
+        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0],
+                                                                            params))
     except KeyError:
         return response.HTTPResponse(status=400)
 
@@ -133,17 +133,18 @@ async def handle_stream_changed_post(request):
 
 
 @bp.route('/users', ['GET'])
-async def handle_user_changed_get(request):
+async def handle_user_changed_get(request: request.Request):
     return dispatcher().accept_subscription(request, Topic.user_changed)
 
 
 @bp.route('/users', ['POST'])
 @remove_duplicates
 @verify_payload
-async def handle_user_changed_post(request):
+async def handle_user_changed_post(request: request.Request):
     try:
         params = {'id': request.args['id']}
-        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0], params))
+        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0],
+                                                                            params))
     except KeyError:
         return response.HTTPResponse(status=400)
 
@@ -151,14 +152,14 @@ async def handle_user_changed_post(request):
 
 
 @bp.route('/user/follows', ['GET'])
-async def handle_user_follows_get(request):
+async def handle_user_follows_get(request: request.Request):
     return dispatcher().accept_subscription(request, Topic.user_follows)
 
 
 @bp.route('/user/follows', ['POST'])
 @remove_duplicates
 @verify_payload
-async def handle_user_follows_post(request):
+async def handle_user_follows_post(request: request.Request):
 
     params = {'from_id': request.args.get('from_id'), 'to_id': request.args.get('to_id')}
     if not (params['from_id'] or params['to_id']):
@@ -166,7 +167,8 @@ async def handle_user_follows_post(request):
         return response.HTTPResponse(status=400)
 
     try:
-        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_follows, request.json['data'][0], params))
+        request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_follows, request.json['data'][0],
+                                                                            params))
     except KeyError:
         return response.HTTPResponse(status=400)
 

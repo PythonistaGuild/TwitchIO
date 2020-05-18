@@ -4,7 +4,7 @@ import hashlib
 import hmac
 import logging
 
-from sanic import response, router, request
+from sanic import response, blueprints, request
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ UserFollowsNotification = collections.namedtuple('UserFollowsNotification',
                                                  ["from_id", "from_name", "to_id", "to_name", "followed_at"])
 
 
-def verify_payload(route: router.Route):
+def verify_payload(route: blueprints.FutureRoute):
     """
     Decorator which verifies that a request was been sent from Twitch by comparing the 'X-Hub-Signature'
     header.
@@ -57,10 +57,10 @@ def verify_payload(route: router.Route):
     return inner
 
 
-def remove_duplicates(route):
+def remove_duplicates(route: blueprints.FutureRoute):
     """Decorator which prevents duplicate notifications being processed more than once."""
 
-    async def inner(request, *args, **kwargs):
+    async def inner(request: request.Request, *args, **kwargs):
         notification_id = request.headers.get('Twitch-Notification-ID')
 
         if notification_id in recent_notification_ids:
