@@ -41,28 +41,26 @@ class WebhookEventDispatcher:
     def accept_subscription(request: request.Request, topic: enum.Enum):
         try:
             mode = request.args['hub.mode'][0]
+
+            if mode == 'subscribe' or mode == 'unsubscribe':
+                return response.HTTPResponse(body=request.args['hub.challenge'][0], status=200)
+
+            elif mode == 'denied':
+                reason = request.args.get('hub.reason', 'no reason')
+                log.warning(f'{topic.name} webhook subscribe request denied ({request.args}) , reason: {reason}.')
+
+            return response.HTTPResponse(status=200)
+
         except KeyError:
             return response.HTTPResponse(status=400)
 
-        if mode == 'subscribe' or mode == 'unsubscribe':
-            try:
-                return response.text(request.args['hub.challenge'][0], status=200)
-            except KeyError:
-                return response.HTTPResponse(status=400)
-        elif mode == 'denied':
-            reason = request.args.get('hub.reason', 'no reason')
-            log.warning(f'{topic.name} webhook subscribe request denied ({request.args}) , reason: {reason}.')
-
-            return response.HTTPResponse(status=204)
-
-    @classmethod
-    async def bulk_process_notification(cls, topic: Topic, data: dict, params: dict):
+    async def bulk_process_notification(self, topic: Topic, data: dict, params: dict):
         if topic not in NOTIFICATION_TYPE_BY_TOPIC:
             log.error(f'Invalid topic "{topic.name}" with params "{params}", the notification has been ignored')
             return
 
-        for instance in cls.__instances:
-            await instance.process_notification(topic, data, params)
+        for instance in self.__class__.__instances:
+            self.loop.create_task(instance.process_notification(topic, data, params))
 
     async def process_notification(self, topic: Topic, data: dict, params: dict):
 
@@ -122,10 +120,9 @@ async def handle_stream_changed_post(request: request.Request):
         params = {'user_id': request.args['user_id']}
         request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0],
                                                                             params))
+        return response.HTTPResponse(status=202)
     except KeyError:
         return response.HTTPResponse(status=400)
-
-    return response.HTTPResponse(status=202)
 
 
 @bp.route('/users', ['GET'])
@@ -141,10 +138,9 @@ async def handle_user_changed_post(request: request.Request):
         params = {'id': request.args['id']}
         request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_changed, request.json['data'][0],
                                                                             params))
+        return response.HTTPResponse(status=202)
     except KeyError:
         return response.HTTPResponse(status=400)
-
-    return response.HTTPResponse(status=202)
 
 
 @bp.route('/user/follows', ['GET'])
@@ -157,15 +153,15 @@ async def handle_user_follows_get(request: request.Request):
 @verify_payload
 async def handle_user_follows_post(request: request.Request):
 
-    params = {'from_id': request.args.get('from_id'), 'to_id': request.args.get('to_id')}
-    if not (params['from_id'] or params['to_id']):
-        # One of them needs to be set at least
-        return response.HTTPResponse(status=400)
-
     try:
+        params = {'from_id': request.args['from_id'], 'to_id': request.args['to_id']}
+        if not (params['from_id'] or params['to_id']):
+            # One of them needs to be set at least
+            return response.HTTPResponse(status=400)
+
         request.app.loop.create_task(dispatcher().bulk_process_notification(Topic.user_follows, request.json['data'][0],
                                                                             params))
+        return response.HTTPResponse(status=202)
     except KeyError:
         return response.HTTPResponse(status=400)
 
-    return response.HTTPResponse(status=202)
