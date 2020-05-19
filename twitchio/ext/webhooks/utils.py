@@ -37,8 +37,8 @@ class Notification:
 class StreamChangedNotification(Notification):
     """Twitch 'StreamChanged' webhook notification dataclass."""
 
-    __slots__ = ('id', 'login', 'display_name', 'type', 'broadcaster_type', 'description', 'profile_image_url',
-                 'offline_image_url', 'view_count')
+    __slots__ = ('game_id', 'id', 'language', 'started_at', 'tag_ids', 'thumbnail_url', 'title', 'type', 'user_id',
+                 'user_name', 'viewer_count')
     valid_params = ('user_id',)
 
 
