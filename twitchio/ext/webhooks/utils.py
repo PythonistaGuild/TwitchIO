@@ -97,7 +97,7 @@ def verify_payload(route: blueprints.FutureRoute):
 
             if not hmac.compare_digest(digest, request.headers.get('X-Hub-Signature', '')[7:]):
                 log.warning("The hash for this notification is invalid")
-                return response.text(None, status=403)
+                return response.HTTPResponse(status=403)
 
         return await route(request, *args, **kwargs)
 
@@ -113,7 +113,7 @@ def remove_duplicates(route: blueprints.FutureRoute):
         if notification_id in recent_notification_ids:
             log.warning(f'Received duplicate notification with ID {notification_id}, discarding.')
 
-            return response.text(None, status=204)
+            return response.HTTPResponse(status=200)
 
         recent_notification_ids.append(notification_id)
         return await route(request, *args, **kwargs)
