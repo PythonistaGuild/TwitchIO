@@ -158,7 +158,7 @@ class WebhookEventDispatcher:
                   exc_info=(type(error), error, error.__traceback__))
 
     async def event_stream_online(self, params: dict, notification: StreamChangedNotification):
-        """Callback called when a user start a stream.
+        """Callback called when a user starts or updates a stream.
 
         Parameters
         ----------
@@ -191,7 +191,7 @@ class WebhookEventDispatcher:
         """
 
     async def event_following_user(self, params: dict, notification: UserFollowsNotification):
-        """Callback called when a user is following someone
+        """Callback called when a user is being followed by someone
 
         Parameters
         ----------
@@ -202,7 +202,7 @@ class WebhookEventDispatcher:
         """
 
     async def event_followed_by_user(self, params: dict, notification: UserFollowsNotification):
-        """Callback called when a user is being followed someone
+        """Callback called when a user is following someone
 
         Parameters
         ----------
