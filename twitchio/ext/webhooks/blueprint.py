@@ -269,7 +269,7 @@ async def handle_user_changed_post(request: request.Request):
     return await dispatcher().bulk_process_notification(request, Topic.user_changed)
 
 
-@bp.route('/user/follows', ['GET'])
+@bp.route('/users/follows', ['GET'])
 async def handle_user_follows_get(request: request.Request):
     """Route receiving the challenge requests for the topic UserFollows
 
@@ -281,7 +281,7 @@ async def handle_user_follows_get(request: request.Request):
     return dispatcher().accept_subscription(request, Topic.user_follows)
 
 
-@bp.route('/user/follows', ['POST'])
+@bp.route('/users/follows', ['POST'])
 @remove_duplicates
 @verify_payload
 async def handle_user_follows_post(request: request.Request):
