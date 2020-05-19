@@ -29,6 +29,10 @@ class Notification:
         for param, value in params.items():
             setattr(self, param, value)
 
+    def __repr__(self):
+        formatted_params = [f"{param}={getattr(self, param)}" for param in self.__slots__]
+        return f"<{self.__class__.__name__} {', '.join(formatted_params)}>"
+
 
 class StreamChangedNotification(Notification):
     """Twitch 'StreamChanged' webhook notification dataclass."""
