@@ -26,8 +26,8 @@ class Notification:
     valid_params = ()
 
     def __init__(self, **params):
-        for param, value in params.items():
-            setattr(self, param, value)
+        for slot in self.__slots__:
+            setattr(self, slot, params.get(slot))
 
     def __repr__(self):
         formatted_params = [f"{param}={getattr(self, param)}" for param in self.__slots__]

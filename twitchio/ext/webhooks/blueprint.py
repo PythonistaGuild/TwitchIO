@@ -99,7 +99,7 @@ class WebhookEventDispatcher:
 
         try:
             params = {param: request.args.get(param) for param in NOTIFICATION_TYPE_BY_TOPIC[topic].valid_params}
-            data = request.json['data'][0]
+            data = request.json['data'][0] if request.json['data'] else {}
 
             for instance in cls.__instances:
                 await instance.process_notification(data, topic, params)
