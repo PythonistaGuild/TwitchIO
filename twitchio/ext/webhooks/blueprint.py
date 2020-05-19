@@ -126,11 +126,11 @@ class WebhookEventDispatcher:
             notification = cls(**data)
             if cls == StreamChangedNotification:
                 if data:
-                    await self.event_stream_online(params, notification)
+                    await self.event_stream_updated(params, notification)
                 else:
                     await self.event_stream_offline(params, notification)
             elif cls == UserChangedNotification:
-                await self.event_user_changed(params, notification)
+                await self.event_user_updated(params, notification)
             elif cls == UserFollowsNotification:
                 if not params['from_id']:
                     await self.event_following_user(params, notification)
@@ -157,7 +157,7 @@ class WebhookEventDispatcher:
         log.error(f"Exception '{type(error).__name__}' raised for topic  '{topic.name}' (params={params})",
                   exc_info=(type(error), error, error.__traceback__))
 
-    async def event_stream_online(self, params: dict, notification: StreamChangedNotification):
+    async def event_stream_updated(self, params: dict, notification: StreamChangedNotification):
         """Callback called when a user starts or updates a stream.
 
         Parameters
@@ -179,7 +179,7 @@ class WebhookEventDispatcher:
             Topic data object
         """
 
-    async def event_user_changed(self, params: dict, notification: UserChangedNotification):
+    async def event_user_updated(self, params: dict, notification: UserChangedNotification):
         """Callback called when a user's data is updated.
 
         Parameters
