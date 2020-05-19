@@ -72,7 +72,8 @@ class WebhookEventDispatcher:
         except KeyError:
             return response.HTTPResponse(status=400)
 
-    async def bulk_process_notification(self, request: request.Request, topic: enum.Enum):
+    @classmethod
+    async def bulk_process_notification(cls, request: request.Request, topic: enum.Enum):
         """Process the received notification.
 
         - Check if the related topic is supported.
@@ -97,11 +98,11 @@ class WebhookEventDispatcher:
             return
 
         try:
-            params = {param: request.args[param] for param in NOTIFICATION_TYPE_BY_TOPIC[topic].valid_params}
+            params = {param: request.args.get(param) for param in NOTIFICATION_TYPE_BY_TOPIC[topic].valid_params}
             data = request.json['data'][0]
 
-            for instance in self.__class__.__instances:
-                self.loop.create_task(instance.process_notification(data, topic, params))
+            for instance in cls.__instances:
+                await instance.process_notification(data, topic, params)
 
             return response.HTTPResponse(status=202)
 
@@ -125,19 +126,19 @@ class WebhookEventDispatcher:
             notification = cls(**data)
             if cls == StreamChangedNotification:
                 if data:
-                    self.loop.create_task(self.event_stream_online(params, notification))
+                    await self.event_stream_online(params, notification)
                 else:
-                    self.loop.create_task(self.event_stream_offline(params, notification))
+                    await self.event_stream_offline(params, notification)
             elif cls == UserChangedNotification:
-                self.loop.create_task(self.event_user_changed(params, notification))
+                await self.event_user_changed(params, notification)
             elif cls == UserFollowsNotification:
-                if 'from_id' not in params:
-                    self.loop.create_task(self.event_following_user(params, notification))
+                if not params['from_id']:
+                    await self.event_following_user(params, notification)
                 else:
-                    self.loop.create_task(self.event_followed_by_user(params, notification))
+                    await self.event_followed_by_user(params, notification)
 
         except Exception as error:
-            self.loop.create_task(self.webhook_notification_error(topic, data, params, error))
+            await self.webhook_notification_error(topic, data, params, error)
 
     async def webhook_notification_error(self, topic: enum.Enum, data: dict, params: dict, error: Exception):
         """Handle the error raised during the notification processing
