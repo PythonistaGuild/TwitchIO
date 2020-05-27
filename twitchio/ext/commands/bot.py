@@ -84,13 +84,13 @@ class Bot(Client):
         A long random string, such as hex, is advised e.g `2t389hth892t3h898hweiogtieo`
     """
 
-    def __init__(self, irc_token: str, api_token: str=None, *, client_id: str=None, prefix: Union[list, tuple, str],
+    def __init__(self, irc_token: str, api_token: str=None, *, client_id: str=None, client_secret: str=None, prefix: Union[list, tuple, str],
                  nick: str, loop: asyncio.BaseEventLoop=None, initial_channels: Union[list, tuple]=None,
                  webhook_server: bool=False, local_host: str=None, external_host: str=None, callback: str=None,
                  port: int=None, **attrs):
 
         self.loop = loop or asyncio.get_event_loop()
-        super().__init__(loop=self.loop, client_id=client_id, **attrs)
+        super().__init__(loop=self.loop, client_id=client_id, api_token=api_token, client_secret=client_secret, **attrs)
         self.nick = nick
         self.initial_channels = initial_channels
 
@@ -381,7 +381,7 @@ class Bot(Client):
         name: str
             The channel name to retrieve from cache.
         """
-        cache = self._ws._channel_cache.get(name)#.lower()
+        cache = self._ws._channel_cache.get(name.lower())
         if cache:
             return cache['channel']
 
