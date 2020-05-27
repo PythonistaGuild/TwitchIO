@@ -40,9 +40,9 @@ Chatters = namedtuple('Chatters', ('count', 'all', 'broadcaster', 'vips', 'moder
 
 class Client:
 
-    def __init__(self, *, loop=None, client_id=None, client_secret=None, api_token=None, scopes: list=None, **kwargs):
+    def __init__(self, *, loop=None, client_id=None, **kwargs):
         loop = loop or asyncio.get_event_loop()
-        self.http = HTTPSession(loop=loop, client_id=client_id, client_secret=client_secret, api_token=api_token, scopes=scopes)
+        self.http = HTTPSession(loop=loop, client_id=client_id)
 
     async def get_users(self, *users: Union[str, int]) -> list:
         """|coro|
