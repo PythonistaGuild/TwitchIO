@@ -397,7 +397,7 @@ class WebsocketConnection:
 
         if badges:
             badges = {'name': badges.group('name'), 'mod': badges.group('mod'), 'action': badges.group('action'),
-                        'channel': badges.group('channel')}
+                      'channel': badges.group('channel')}
 
         try:
             tags = result.group("tags")
@@ -405,8 +405,7 @@ class WebsocketConnection:
             tagdict = {}
             for tag in str(tags).split(";"):
                 t = tag.split("=")
-                # if t[1].isnumeric():
-                if t[1].isdecimal():
+                if t[1].isdecimal(): # t[1].isnumeric():
                     t[1] = int(t[1])
                 tagdict[t[0]] = t[1]
             tags = tagdict
@@ -541,14 +540,12 @@ class WebsocketConnection:
 
             await self._dispatch('mode', channel, user, mstatus)
 
-        #新增 被ban事件
-        elif action == 'CLEARCHAT':
+        elif action == 'CLEARCHAT': #新增 被ban事件
             log.debug('ACTION:: CLEARCHAT')
-            
+
             user = User(author=content, channel=channel, tags=tags, ws=self._websocket)
             notice = ClearChat(channel=channel, user=user, tags=tags)
-            # user = User(author=user, channel=channel, tags=tags, ws=self._websocket)
-            #event_ban()
+
             await self._dispatch('ban', notice)
 
     async def join_action(self, channel: str, author: str, tags):

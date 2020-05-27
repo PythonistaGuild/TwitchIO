@@ -37,15 +37,45 @@ log = logging.getLogger(__name__)
 
 class HTTPSession:
     BASE = 'https://api.twitch.tv/helix'
+    TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
     def __init__(self, loop, **attrs):
         self.client_id = client_id = attrs.get('client_id', None)
+        self.client_secret = attrs.get("client_secret", None)
+        self.token = attrs.get("api_token", None)
+        self.scopes = attrs.get("scopes", [])
 
         if not client_id:
-            log.warning('Running without client ID, some HTTP endpoints may not work without authentication.')
+            log.warning('Running without client ID, HTTP endpoints will not work without authentication.')
+
+        if not self.token and not client_id:
+            log.warning("Running without client ID or bearer token, HTTP endpoints will not work without authentication.")
 
         self._bucket = RateBucket(method='http')
         self._session = aiohttp.ClientSession(loop=loop)
+        self._refresh_token = None
+
+    async def generate_token(self):
+        if not self.client_id or not self.client_secret:
+            raise HTTPException("Unable to generate a token, client id and/or client secret not given")
+
+        if self._refresh_token:
+            url = self.TOKEN_BASE + "?grant_type=refresh_token&refresh_token={0}&client_id={1}&client_secret={2}".format(
+                self._refresh_token, self.client_id, self.client_secret)
+
+        else:
+            url = self.TOKEN_BASE + "?client_id={0}&client_secret={1}&grant_type=client_credentials".format(self.client_id, self.client_secret)
+            if self.scopes:
+                url += "&scope=" + " ".join(self.scopes)
+
+        async with self._session.post(url) as resp:
+            if 300 < resp.status or resp.status < 200:
+                raise HTTPException("Unable to generate a token: " + await resp.text())
+
+            data = await resp.json()
+            self.token = data['access_token']
+            self._refresh_token = data.get('refresh_token', None)
+            logging.info("Invalid or no token found, generated new token: %s", self.token)
 
     async def request(self, method, url, *, params=None, limit=None, **kwargs):
         count = kwargs.pop('count', False)
@@ -62,6 +92,15 @@ class HTTPSession:
         if self.client_id is not None:
             headers['Client-ID'] = str(self.client_id)
 
+        if self.client_secret and self.client_id and not self.token:
+            logging.info("No token passed, generating new token under client id {0} and client secret {1}")
+            await self.generate_token()
+
+        if self.token is not None:
+            headers['Authorization'] = "Bearer " + self.token
+
+        #else: we'll probably get a 401, but we can check this in the response
+
         cursor = None
 
         def reached_limit():
@@ -74,14 +113,15 @@ class HTTPSession:
             to_get = limit - len(data)
             return str(to_get) if to_get < 100 else '100'
 
-        while not reached_limit():
+        is_finished = False
+        while not is_finished:
+            # if limit is not None:
             if cursor is not None:
                 params.append(('after', cursor))
 
-            params.append(('first', get_limit()))
+                params.append(('first', get_limit()))
 
             body, is_text = await self._request(method, url, params=params, headers=headers, **kwargs)
-
             if is_text:
                 return body
 
@@ -102,6 +142,8 @@ class HTTPSession:
             else:
                 if not cursor:
                     break
+
+            # is_finished = reached_limit() if limit is not None else True
 
         return data
 
@@ -132,7 +174,13 @@ class HTTPSession:
 
                 if resp.status == 401:
                     if self.client_id is None:
-                        raise Unauthorized('A client ID or other authorization is needed to use this route.')
+                        raise Unauthorized('A client ID and Bearer token is needed to use this route.')
+
+                    if "WWW-Authenticate" in resp.headers:
+                        try:
+                            await self.generate_token()
+                        except:
+                            raise Unauthorized("Your oauth token is invalid, and a new one could not be generated")
 
                     raise Unauthorized('You\'re not authorized to use this route.')
 

@@ -384,11 +384,10 @@ class NoticeSubscription:
         self.sub_plan = tags['msg-param-sub-plan']
         self.sub_plan_name = tags['msg-param-sub-plan-name']
 
-#新增class for event_ban
+# Add class for event_ban
 class ClearChat:
     """
     The Dataclass sent to `event_ban` events.
-
     Attributes
     ------------
     channel : :class:`.Channel`
