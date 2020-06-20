@@ -405,7 +405,7 @@ class WebsocketConnection:
             tagdict = {}
             for tag in str(tags).split(";"):
                 t = tag.split("=")
-                if t[1].isnumeric():
+                if t[1].isdecimal():
                     t[1] = int(t[1])
                 tagdict[t[0]] = t[1]
             tags = tagdict
