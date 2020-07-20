@@ -77,7 +77,7 @@ class HTTPSession:
             self._refresh_token = data.get('refresh_token', None)
             logging.info("Invalid or no token found, generated new token: %s", self.token)
 
-    async def request(self, method, url, *, params=None, limit=None, **kwargs):
+    async def request(self, method, url, *, params=None, limit=None, full_reply=False, **kwargs):
         count = kwargs.pop('count', False)
 
         data = []
@@ -99,9 +99,12 @@ class HTTPSession:
         if self.token is not None:
             headers['Authorization'] = "Bearer " + self.token
 
-        #else: we'll probably get a 401, but we can check this in the response
+        # else: we'll probably get a 401, but we can check this in the response
 
         cursor = None
+
+        if limit == 0:  # Guard - assumes that if given limit was zero, then client wanted all results
+            limit = None
 
         def reached_limit():
             return limit and len(data) >= limit
@@ -109,17 +112,16 @@ class HTTPSession:
         def get_limit():
             if limit is None:
                 return '100'
-
+    
             to_get = limit - len(data)
             return str(to_get) if to_get < 100 else '100'
 
-        is_finished = False
-        while not is_finished:
-            if limit is not None:
-                if cursor is not None:
-                    params.append(('after', cursor))
-
-                params.append(('first', get_limit()))
+        total = 0
+        while not reached_limit():
+            if cursor is not None:
+                params.append(('after', cursor))
+    
+            params.append(('first', get_limit()))
 
             body, is_text = await self._request(method, url, params=params, headers=headers, **kwargs)
             if is_text:
@@ -127,7 +129,12 @@ class HTTPSession:
 
             if count:
                 return body['total']
-
+            
+            try:
+                total = body['total']
+            except KeyError:
+                pass
+            
             params.pop()  # remove the first param
 
             if cursor is not None:
@@ -143,13 +150,14 @@ class HTTPSession:
                 if not cursor:
                     break
 
-            is_finished = reached_limit() if limit is not None else True
+            if full_reply:
+                return {'data': data, 'total': total, 'cursor': cursor}
 
         return data
 
     async def _request(self, method, url, utilize_bucket=True, **kwargs):
         reason = None
-
+    
         for attempt in range(5):
             if utilize_bucket and self._bucket.limited:
                 await self._bucket.wait_reset()
@@ -159,17 +167,17 @@ class HTTPSession:
                     reason = resp.reason
                     await asyncio.sleep(2 ** attempt + 1)
                     continue
-
+    
                 if utilize_bucket:
                     reset = resp.headers.get('Ratelimit-Reset')
                     remaining = resp.headers.get('Ratelimit-Remaining')
-
+        
                     self._bucket.update(reset=reset, remaining=remaining)
 
                 if 200 <= resp.status < 300:
                     if resp.content_type == 'application/json':
                         return await resp.json(), False
-
+    
                     return await resp.text(encoding='utf-8'), True
 
                 if resp.status == 401:
@@ -218,7 +226,6 @@ class HTTPSession:
     async def get_users(self, *users: Union[str, int]):
         names, ids = self._populate_entries(*users)
         params = [('id', x) for x in ids] + [('login', x) for x in names]
-
         return await self.request('GET', '/users', params=params)
 
     async def get_follow(self, from_id: str, to_id: str):
