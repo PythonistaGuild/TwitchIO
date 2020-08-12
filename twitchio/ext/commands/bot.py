@@ -214,6 +214,8 @@ class Bot(Client):
 
         try:
             module.breakdown(self)
+        except AttributeError:
+            pass
         finally:
             del module
             del sys.modules[name]
