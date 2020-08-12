@@ -93,7 +93,7 @@ class HTTPSession:
             headers['Client-ID'] = str(self.client_id)
 
         if self.client_secret and self.client_id and not self.token:
-            logging.info("No token passed, generating new token under client id {0} and client secret {1}")
+            logging.info("No token passed, generating new token under client id {0} and client secret {1}".format(self.client_id, self.client_secret))
             await self.generate_token()
 
         if self.token is not None:
