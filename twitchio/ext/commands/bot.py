@@ -196,7 +196,7 @@ class Bot(Client):
         if name not in self.modules:
             self.modules[name] = module
 
-    def unload_module(self, name: str):
+    async def unload_module(self, name: str):
         """Method which unloads a module and it's cogs/commands/events.
 
         Parameters
@@ -213,7 +213,7 @@ class Bot(Client):
                 self.remove_cog(cogname)
 
         try:
-            module.breakdown(self)
+            await module.breakdown(self)
         except AttributeError:
             pass
         finally:
