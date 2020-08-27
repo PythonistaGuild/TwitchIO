@@ -44,6 +44,7 @@ class HTTPSession:
         self.client_secret = attrs.get("client_secret", None)
         self.token = attrs.get("api_token", None)
         self.scopes = attrs.get("scopes", [])
+        self.count_success_resp = 0
 
         if not client_id:
             log.warning('Running without client ID, HTTP endpoints will not work without authentication.')
@@ -77,17 +78,13 @@ class HTTPSession:
             self._refresh_token = data.get('refresh_token', None)
             logging.info("Invalid or no token found, generated new token: %s", self.token)
 
-    async def request(self, method, url, *, params=None, limit=None, full_reply=False, **kwargs):
-        count = kwargs.pop('count', False)
-
-        data = []
-
-        params = params or []
+    async def request(self, method, url, *, params=None, limit=None, **kwargs):
         url = f'{self.BASE}{url}'
-
-        # headers = {}
-
+        params = params or []
+        count = kwargs.pop('count', False)
         headers = kwargs.pop('headers', {})
+        data = []
+        total = -1
 
         if self.client_id is not None:
             headers['Client-ID'] = str(self.client_id)
@@ -98,13 +95,11 @@ class HTTPSession:
 
         if self.token is not None:
             headers['Authorization'] = "Bearer " + self.token
-
         # else: we'll probably get a 401, but we can check this in the response
-
-        cursor = None
 
         if limit == 0:  # Guard - assumes that if given limit was zero, then client wanted all results
             limit = None
+
 
         def reached_limit():
             return limit and len(data) >= limit
@@ -112,11 +107,12 @@ class HTTPSession:
         def get_limit():
             if limit is None:
                 return '100'
-    
+
             to_get = limit - len(data)
             return str(to_get) if to_get < 100 else '100'
 
-        total = 0
+
+        cursor = kwargs.pop('cursor', None)
         while not reached_limit():
             if cursor is not None:
                 params.append(('after', cursor))
@@ -150,7 +146,7 @@ class HTTPSession:
                 if not cursor:
                     break
 
-            if full_reply:
+            if isinstance(kwargs.get('full_reply', False), bool) and kwargs.pop('full_reply', False):
                 return {'data': data, 'total': total, 'cursor': cursor}
 
         return data
@@ -175,6 +171,7 @@ class HTTPSession:
                     self._bucket.update(reset=reset, remaining=remaining)
 
                 if 200 <= resp.status < 300:
+                    self.count_success_resp += 1
                     if resp.content_type == 'application/json':
                         return await resp.json(), False
     
