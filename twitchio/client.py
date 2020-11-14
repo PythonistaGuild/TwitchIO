@@ -33,7 +33,7 @@ from twitchio.http import HTTPSession
 
 
 User = namedtuple('User', ('id', 'login', 'display_name', 'type', 'broadcaster_type', 'description',
-                           'profile_image', 'offline_image', 'view_count'))
+                           'profile_image', 'offline_image', 'view_count', 'created_at'))
 Chatters = namedtuple('Chatters', ('count', 'all', 'broadcaster', 'vips', 'moderators', 'staff',
                                    'admins', 'global_mods', 'viewers'))
 
