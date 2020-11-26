@@ -32,7 +32,7 @@ import time
 from typing import *
 
 from .abcs import Messageable
-from .errors import EchoMessageWarning
+from .errors import EchoMessageWarning, HTTPException, Unauthorized
 
 
 class Message:
@@ -149,6 +149,20 @@ class Channel(Messageable):
         except IndexError:
             pass
 
+    async def get_custom_rewards(self, token: str, broadcaster_id: int, *, only_manageable=False, ids: List[int]=None) -> List["CustomReward"]:
+        try:
+            data = await self._http.get_rewards(token, broadcaster_id, only_manageable, ids)
+        except Unauthorized as error:
+            raise Unauthorized("The given token is invalid", "", 401) from error
+        except HTTPException as error:
+            status = error.args[2]
+            if status == 403:
+                raise HTTPException("The custom reward was created by a different application, or channel points are "
+                                    "not available for the broadcaster (403)", error.args[1], 403) from error
+            raise
+        else:
+            return [CustomReward(self._http, x, self) for x in data['data']]
+
 
 class User:
 
@@ -176,9 +190,9 @@ class User:
         if badges:
             for chunk in badges.split(','):
                 k, _, v = chunk.partition('/')
-                self._badges[k] = int(v)
+                self._badges[k] = v
 
-        self._mod = self._tags.get('mod', 0) if self._tags else attrs.get('mod', 0)
+        self._mod = int(self._tags.get('mod', 0)) if self._tags else attrs.get('mod', 0)
 
     def __repr__(self):
         return '<User name={0.name} channel={0._channel}>'.format(self)
@@ -257,6 +271,22 @@ class User:
         Could be an empty Dict if no tags were received.
         """
         return self._tags
+
+    @property
+    def prediction(self) -> Optional[str]:
+        """
+        the chatters current prediction.
+
+        Returns
+        --------
+        Optional[:class:`str`] Either blue, pink, or None
+        """
+        if "blue-1" in self._badges:
+            return "blue"
+        elif "pink-2" in self._badges:
+            return "pink"
+
+        return None
 
     @property
     def is_mod(self) -> bool:
@@ -383,3 +413,322 @@ class NoticeSubscription:
 
         self.sub_plan = tags['msg-param-sub-plan']
         self.sub_plan_name = tags['msg-param-sub-plan-name']
+
+class CustomReward:
+    __slots__ = "_http", "_channel", "_id", "_image", "_background_color", "_enabled", "_cost", "_title", "_prompt", \
+                "_input_required", "_max_per_stream", "_max_per_user_stream", "_cooldown", "_paused", "_in_stock", \
+                "_redemptions_skip_queue", "_redemptions_current_stream", "_cooldown_until", "_broadcaster_id"
+
+    def __init__(self, http, obj: dict, channel: Channel):
+        self._http = http
+        self._channel = channel
+        self._broadcaster_id = obj['broadcaster_id']
+        
+        self._id = obj['id']
+        self._image = obj['image']['url_1x'] if obj['image'] else obj['default_image']['url_1x']
+        self._background_color = obj['background_color']
+        self._enabled = obj['is_enabled']
+        self._cost = obj['cost']
+        self._title = obj['title']
+        self._prompt = obj['prompt']
+        self._input_required = obj['is_user_input_required']
+        self._max_per_stream = obj['max_per_stream_setting']['is_enabled'], obj['max_per_stream_setting']['max_per_stream']
+        self._max_per_user_stream = obj['max_per_user_per_stream_setting']['is_enabled'], \
+                                    obj['max_per_user_per_stream_setting']['max_per_user_per_stream']
+        self._cooldown = obj['global_cooldown_setting']['is_enabled'], obj['global_cooldown_setting']['global_cooldown_seconds']
+        self._paused = obj['paused']
+        self._in_stock = obj['is_in_stock']
+        self._redemptions_skip_queue = obj['should_redemptions_skip_request_queue']
+        self._redemptions_current_stream = obj['redemptions_redeemed_current_stream']
+        self._cooldown_until = obj['cooldown_expires_at']
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def image(self):
+        return self._image
+
+    @property
+    def background_colour(self):
+        return self._background_color
+
+    @property
+    def background_color(self):
+        return self._background_color
+
+    @property
+    def enabled(self):
+        return self._enabled
+
+    @property
+    def cost(self):
+        return self._cost
+
+    @property
+    def title(self):
+        return self._title
+
+    @property
+    def prompt(self):
+        return self._prompt
+
+    @property
+    def input_required(self):
+        return self._input_required
+
+    @property
+    def max_per_stream(self):
+        return self._max_per_stream
+
+    @property
+    def max_per_user_stream(self):
+        return self._max_per_user_stream
+
+    @property
+    def cooldown(self):
+        return self._cooldown
+
+    @property
+    def paused(self):
+        return self._paused
+
+    @property
+    def in_stock(self):
+        return self._in_stock
+
+    @property
+    def redemptions_skip_queue(self):
+        return self._redemptions_skip_queue
+
+    @property
+    def redemptions_current_stream(self):
+        return self._redemptions_current_stream
+
+    @property
+    def is_on_cooldown(self):
+        return self._cooldown
+
+    async def edit(
+            self,
+            token: str,
+            title: str = None,
+            prompt: str = None,
+            cost: int = None,
+            background_color: str = None,
+            enabled: bool = None,
+            input_required: bool = None,
+            max_per_stream_enabled: bool = None,
+            max_per_stream: int = None,
+            max_per_user_per_stream_enabled: bool = None,
+            max_per_user_per_stream: int = None,
+            global_cooldown_enabled: bool = None,
+            global_cooldown: int = None,
+            paused: bool = None,
+            redemptions_skip_queue: bool = None
+    ):
+        """
+        Edits the reward. Note that apps can only modify rewards they have made.
+        
+        Parameters
+        -----------
+        token: the bearer token for the channel of the reward
+        title: the new title of the reward
+        prompt: the new prompt for the reward
+        cost: the new cost for the reward
+        background_color: the new background color for the reward
+        enabled: whether the reward is enabled or not
+        input_required: whether user input is required or not
+        max_per_stream_enabled: whether the stream limit should be enabled
+        max_per_stream: how many times this can be redeemed per stream
+        max_per_user_per_stream_enabled: whether the user stream limit should be enabled
+        max_per_user_per_stream: how many times a user can redeem this reward per stream
+        global_cooldown_enabled: whether the global cooldown should be enabled
+        global_cooldown: how many seconds the global cooldown should be
+        paused: whether redemptions on this reward should be paused or not
+        redemptions_skip_queue: whether redemptions skip the request queue or not
+
+        Returns
+        --------
+        :class:`CustomReward` itself.
+        """
+
+        try:
+            data = await self._http.update_reward(
+                token,
+                self._broadcaster_id,
+                self._id,
+                title,
+                prompt,
+                cost,
+                background_color,
+                enabled,
+                input_required,
+                max_per_stream_enabled,
+                max_per_stream,
+                max_per_user_per_stream_enabled,
+                max_per_user_per_stream,
+                global_cooldown_enabled,
+                global_cooldown,
+                paused,
+                redemptions_skip_queue
+            )
+        except Unauthorized as error:
+            raise Unauthorized("The given token is invalid", "", 401) from error
+        except HTTPException as error:
+            status = error.args[2]
+            if status == 403:
+                raise HTTPException("The custom reward was created by a different application, or channel points are "
+                                    "not available for the broadcaster (403)", error.args[1], 403) from error
+            raise
+        else:
+            for reward in data['data']:
+                if reward['id'] == self._id:
+                    self.__init__(self._http, reward, self._channel)
+                    break
+
+        return self
+
+    async def delete(self, token: str):
+        """
+        Deletes the custom reward
+
+        Parameters
+        ----------
+        token: :class:`str` the oauth token of the target channel
+
+        Returns
+        --------
+        None
+        """
+        try:
+            await self._http.delete_reward(token, self._broadcaster_id, self._id)
+        except Unauthorized as error:
+            raise Unauthorized("The given token is invalid", "", 401) from error
+        except HTTPException as error:
+            status = error.args[2]
+            if status == 403:
+                raise HTTPException("The custom reward was created by a different application, or channel points are "
+                                    "not available for the broadcaster (403)", error.args[1], 403) from error
+            raise
+
+    async def get_redemptions(self, token: str, status: str, sort: str = None):
+        """
+        Gets redemptions for this reward
+
+        Parameters
+        -----------
+        token: :class:`str` the oauth token of the target channel
+        status: :class:`str` one of UNFULFILLED, FULFILLED or CANCELED
+        sort: :class:`str` the order redemptions are returned in. One of OLDEST, NEWEST. Default: OLDEST.
+        """
+        try:
+            data = await self._http.get_reward_redemptions(token, self._broadcaster_id, self._id, status=status, sort=sort)
+        except Unauthorized as error:
+            raise Unauthorized("The given token is invalid", "", 401) from error
+        except HTTPException as error:
+            status = error.args[2]
+            if status == 403:
+                raise HTTPException("The custom reward was created by a different application, or channel points are "
+                                    "not available for the broadcaster (403)", error.args[1], 403) from error
+            raise
+        else:
+            return [CustomRewardRedemption(x, self._http, self) for x in data['data']]
+
+
+class CustomRewardRedemption:
+    __slots__ = "_http", "_broadcaster_id", "_id", "_user_id", "_user_name", "_input", "_status", "_redeemed_at", "_reward"
+    def __init__(self, obj, http, parent):
+        self._http = http
+        self._broadcaster_id = obj['broadcaster_id']
+        self._id = obj['id']
+        self._user_id = int(obj['user_id'])
+        self._user_name = obj['user_name']
+        self._input = obj['user_input']
+        self._status = obj['status']
+        self._redeemed_at = datetime.datetime.fromisoformat(obj['redeemed_at'])
+        self._reward = parent or obj['reward']
+
+    @property
+    def id(self) -> str:
+        return self._id
+
+    @property
+    def user_id(self) -> int:
+        return self._user_id
+
+    @property
+    def user_name(self) -> str:
+        return self._user_name
+
+    @property
+    def input(self) -> str:
+        return self._input
+
+    @property
+    def status(self) -> str:
+        return self._status
+
+    @property
+    def redeemed_at(self) -> datetime.datetime:
+        return self._redeemed_at
+
+    @property
+    def reward(self) -> Union[dict, CustomReward]:
+        return self._reward
+
+    async def fulfill(self, token: str):
+        """
+        marks the redemption as fulfilled
+
+        Parameters
+        ----------
+        token: :class:`str` the token of the target channel
+
+        Returns
+        --------
+        itself.
+        """
+        reward_id = self._reward.id if isinstance(self._reward, CustomReward) else self._reward['id']
+        try:
+            data = await self._http.update_reward_redemption_status(token, self._broadcaster_id, self._id, reward_id, "FULFILLED")
+        except Unauthorized as error:
+            raise Unauthorized("The given token is invalid", "", 401) from error
+        except HTTPException as error:
+            status = error.args[2]
+            if status == 403:
+                raise HTTPException("The custom reward was created by a different application, or channel points are "
+                                    "not available for the broadcaster (403)", error.args[1], 403) from error
+            raise
+        else:
+            self.__init__(data['data'], self._http, self._reward if isinstance(self._reward, CustomReward) else None)
+            return self
+
+    async def refund(self, token: str):
+        """
+        marks the redemption as cancelled
+
+        Parameters
+        ----------
+        token: :class:`str` the token of the target channel
+
+        Returns
+        --------
+        itself.
+        """
+        reward_id = self._reward.id if isinstance(self._reward, CustomReward) else self._reward['id']
+        try:
+            data = await self._http.update_reward_redemption_status(token, self._broadcaster_id, self._id, reward_id,
+                                                                    "CANCELLED")
+        except Unauthorized as error:
+            raise Unauthorized("The given token is invalid", "", 401) from error
+        except HTTPException as error:
+            status = error.args[2]
+            if status == 403:
+                raise HTTPException("The custom reward was created by a different application, or channel points are "
+                                    "not available for the broadcaster (403)", error.args[1], 403) from error
+            raise
+        else:
+            self.__init__(data['data'], self._http, self._reward if isinstance(self._reward, CustomReward) else None)
+            return self
