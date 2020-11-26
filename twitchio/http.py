@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 import aiohttp
 import asyncio
 import logging
-from typing import Union
+from typing import Union, List
 
 from .cooldowns import RateBucket
 from .errors import HTTPException, Unauthorized
@@ -93,10 +93,10 @@ class HTTPSession:
             headers['Client-ID'] = str(self.client_id)
 
         if self.client_secret and self.client_id and not self.token:
-            logging.info("No token passed, generating new token under client id {0} and client secret {1}")
+            logging.info("No token passed, generating new token under client id {0} and client secret {1}".format(self.client_id, self.client_secret))
             await self.generate_token()
 
-        if self.token is not None:
+        if self.token is not None and "Authorization" not in headers:
             headers['Authorization'] = "Bearer " + self.token
 
         #else: we'll probably get a 401, but we can check this in the response
@@ -191,9 +191,9 @@ class HTTPSession:
                         await asyncio.sleep(3 ** attempt + 1)
                     continue
 
-                raise HTTPException(f'Failed to fulfil request ({resp.status}).', resp.reason)
+                raise HTTPException(f'Failed to fulfil request ({resp.status}).', resp.reason, resp.status)
 
-        raise HTTPException('Failed to reach Twitch API', reason)
+        raise HTTPException('Failed to reach Twitch API', reason, resp.status)
 
     @staticmethod
     def _populate_entries(*channels: Union[str, int]):
@@ -273,3 +273,146 @@ class HTTPSession:
     async def create_clip(self, token: str, broadcaster_id: int):
         params = [('broadcaster_id', str(broadcaster_id))]
         return await self.request('POST', '/clips', params=params, headers={'Authorization': f'Bearer {token}'})
+
+    async def create_reward(self,
+                            token: str,
+                            broadcaster_id: int,
+                            title: str,
+                            cost: int,
+                            prompt: str = None,
+                            is_enabled: bool = True,
+                            background_color: str = None,
+                            user_input_required: bool = False,
+                            max_per_stream: int = None,
+                            max_per_user: int = None,
+                            global_cooldown: int = None,
+                            fufill_immediatly: bool = False
+                            ):
+        params = [("broadcaster_id", str(broadcaster_id))]
+        data = {
+            "title": title,
+            "cost": cost,
+            "prompt": prompt,
+            "is_enabled": is_enabled,
+            "is_user_input_required": user_input_required,
+            "should_redemptions_skip_request_queue": fufill_immediatly
+        }
+        if max_per_stream:
+            data['max_per_stream'] = max_per_stream
+            data['max_per_stream_enabled'] = True
+
+        if max_per_user:
+            data['max_per_user_per_stream'] = max_per_user
+            data['max_per_user_per_stream_enabled'] = True
+
+        if background_color:
+            data['background_color'] = background_color
+
+        if global_cooldown:
+            data['global_cooldown_seconds'] = global_cooldown
+            data['is_global_cooldown_enabled'] = True
+
+        return await self.request('POST', '/channel_points/custom_rewards', params=params, json=data, headers={"Authorization": f"Bearer {token}"})
+
+    async def get_rewards(self, token: str, broadcaster_id: int, only_manageable: bool = False, ids: List[int]=None):
+        params = [("broadcaster_id", str(broadcaster_id)), ("only_manageable_rewards", str(only_manageable))]
+
+        if ids:
+            for id in ids:
+                params.append(("id", str(id)))
+
+        return await self.request("GET", "/channel_points/custom_rewards", params=params, headers={"Authorization": f"Bearer {token}"})
+
+    async def update_reward(
+                            self,
+                            token: str,
+                            broadcaster_id: int,
+                            reward_id: str,
+                            title: str = None,
+                            prompt: str = None,
+                            cost: int = None,
+                            background_color: str = None,
+                            enabled: bool = None,
+                            input_required: bool = None,
+                            max_per_stream_enabled: bool = None,
+                            max_per_stream: int = None,
+                            max_per_user_per_stream_enabled: bool = None,
+                            max_per_user_per_stream: int = None,
+                            global_cooldown_enabled: bool = None,
+                            global_cooldown: int = None,
+                            paused: bool = None,
+                            redemptions_skip_queue: bool = None
+                            ):
+        data = {}
+        if title:
+            data['title'] = title
+
+        if prompt:
+            data['prompt'] = prompt
+
+        if cost:
+            data['cost'] = cost
+
+        if background_color:
+            data['background_color'] = background_color
+
+        if enabled is not None:
+            data['enabled'] = enabled
+
+        if input_required is not None:
+            data['is_user_input_required'] = input_required
+
+        if max_per_stream_enabled is not None:
+            data['is_max_per_stream_enabled'] = max_per_stream_enabled
+
+        if max_per_stream is not None:
+            data['max_per_stream'] = max_per_stream
+
+        if max_per_user_per_stream_enabled is not None:
+            data['is_max_per_user_per_stream_enabled'] = max_per_user_per_stream_enabled
+
+        if max_per_user_per_stream is not None:
+            data['max_per_user_per_stream'] = max_per_user_per_stream
+
+        if global_cooldown_enabled is not None:
+            data['is_global_cooldown_enabled'] = global_cooldown_enabled
+
+        if global_cooldown is not None:
+            data['global_cooldown_seconds'] = global_cooldown
+
+        if paused is not None:
+            data['is_paused'] = paused
+
+        if redemptions_skip_queue is not None:
+            data['should_redemptions_skip_request_queue'] = redemptions_skip_queue
+
+        if not data:
+            raise ValueError("Nothing changed!")
+
+        params = [("broadcaster_id", str(broadcaster_id)), ("id", str(reward_id))]
+        return await self.request("PATCH", "/channel_points/custom_rewards", params=params, headers={"Authorization": f"Bearer {token}"}, json=data)
+
+    async def delete_custom_reward(self, token: str, broadcaster_id: int, reward_id: str):
+        params = [("broadcaster_id", str(broadcaster_id), ("id", reward_id))]
+        await self.request("DELETE", "channel_points/custom_rewards", params=params, headers={"Authorization": f"Bearer {token}"})
+
+    async def get_reward_redemptions(self, token: str, broadcaster_id: int, reward_id: str,
+                                           redemption_id: str = None, status: str = None, sort: str = None, limit: int = 100):
+        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
+
+        if redemption_id:
+            params.append(("id", redemption_id))
+
+        if status:
+            params.append(("status", status))
+
+        if sort:
+            params.append(("sort", sort))
+
+        return await self.request("GET", "channel_points/custom_rewards/redemptions", params=params, headers={"Authorization": f"Bearer {token}"}, limit=limit)
+
+    async def update_reward_redemption_status(self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool):
+        params = [("id", custom_reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
+        status = "FULFILLED" if status else "CANCELLED"
+        return await self.request("PATCH", "/channel_points/custom_rewards/redemptions", params=params,
+                                  json={"status": status}, headers={"Authorization": f"Bearer {token}"})
