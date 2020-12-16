@@ -28,7 +28,7 @@ __title__ = 'twitchio'
 __author__ = 'TwitchIO'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2017-2020 TwitchIO'
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 import logging
 
