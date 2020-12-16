@@ -141,6 +141,16 @@ Dataclasses belonging to TwitchIO.
     :inherited-members:
     :show-inheritance:
 
+.. autoclass:: twitchio.dataclasses.CustomReward
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
+.. autoclass:: twitchio.dataclasses.CustomRewardRedemption
+    :members:
+    :inherited-members:
+    :show-inheritance:
+
 Errors
 -----------------------
 

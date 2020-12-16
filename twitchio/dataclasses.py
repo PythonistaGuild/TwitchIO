@@ -150,6 +150,23 @@ class Channel(Messageable):
             pass
 
     async def get_custom_rewards(self, token: str, broadcaster_id: int, *, only_manageable=False, ids: List[int]=None) -> List["CustomReward"]:
+        """
+        Fetches the channels custom rewards (aka channel points) from the api.
+        Parameters
+        ----------
+        token : :class:`str`
+            The users oauth token.
+        broadcaster_id : :class:`int`
+            The id of the broadcaster.
+        only_manageable : :class:`bool`
+            Whether to fetch all rewards or only ones you can manage. Defaults to false.
+        ids : List[:class:`int`]
+            An optional list of reward ids
+
+        Returns
+        -------
+
+        """
         try:
             data = await self._http.get_rewards(token, broadcaster_id, only_manageable, ids)
         except Unauthorized as error:
@@ -415,100 +432,36 @@ class NoticeSubscription:
         self.sub_plan_name = tags['msg-param-sub-plan-name']
 
 class CustomReward:
-    __slots__ = "_http", "_channel", "_id", "_image", "_background_color", "_enabled", "_cost", "_title", "_prompt", \
-                "_input_required", "_max_per_stream", "_max_per_user_stream", "_cooldown", "_paused", "_in_stock", \
-                "_redemptions_skip_queue", "_redemptions_current_stream", "_cooldown_until", "_broadcaster_id"
+    """
+    Represents a Custom Reward object, as given by the api. Use :ref:`User.get_custom_rewards` to fetch these
+    """
+    __slots__ = "_http", "_channel", "id", "image", "background_color", "enabled", "cost", "title", "prompt", \
+                "input_required", "max_per_stream", "max_per_user_stream", "cooldown", "paused", "in_stock", \
+                "redemptions_skip_queue", "redemptions_current_stream", "cooldown_until", "_broadcaster_id"
 
     def __init__(self, http, obj: dict, channel: Channel):
         self._http = http
         self._channel = channel
         self._broadcaster_id = obj['broadcaster_id']
         
-        self._id = obj['id']
-        self._image = obj['image']['url_1x'] if obj['image'] else obj['default_image']['url_1x']
-        self._background_color = obj['background_color']
-        self._enabled = obj['is_enabled']
-        self._cost = obj['cost']
-        self._title = obj['title']
-        self._prompt = obj['prompt']
-        self._input_required = obj['is_user_input_required']
-        self._max_per_stream = obj['max_per_stream_setting']['is_enabled'], obj['max_per_stream_setting']['max_per_stream']
-        self._max_per_user_stream = obj['max_per_user_per_stream_setting']['is_enabled'], \
+        self.id = obj['id']
+        self.image = obj['image']['url_1x'] if obj['image'] else obj['default_image']['url_1x']
+        self.background_color = obj['background_color']
+        self.enabled = obj['is_enabled']
+        self.cost = obj['cost']
+        self.title = obj['title']
+        self.prompt = obj['prompt']
+        self.input_required = obj['is_user_input_required']
+        self.max_per_stream = obj['max_per_stream_setting']['is_enabled'], obj['max_per_stream_setting']['max_per_stream']
+        self.max_per_user_stream = obj['max_per_user_per_stream_setting']['is_enabled'], \
                                     obj['max_per_user_per_stream_setting']['max_per_user_per_stream']
-        self._cooldown = obj['global_cooldown_setting']['is_enabled'], obj['global_cooldown_setting']['global_cooldown_seconds']
-        self._paused = obj['paused']
-        self._in_stock = obj['is_in_stock']
-        self._redemptions_skip_queue = obj['should_redemptions_skip_request_queue']
-        self._redemptions_current_stream = obj['redemptions_redeemed_current_stream']
-        self._cooldown_until = obj['cooldown_expires_at']
+        self.cooldown = obj['global_cooldown_setting']['is_enabled'], obj['global_cooldown_setting']['global_cooldown_seconds']
+        self.paused = obj['paused']
+        self.in_stock = obj['is_in_stock']
+        self.redemptions_skip_queue = obj['should_redemptions_skip_request_queue']
+        self.redemptions_current_stream = obj['redemptions_redeemed_current_stream']
+        self.cooldown_until = obj['cooldown_expires_at']
 
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def image(self):
-        return self._image
-
-    @property
-    def background_colour(self):
-        return self._background_color
-
-    @property
-    def background_color(self):
-        return self._background_color
-
-    @property
-    def enabled(self):
-        return self._enabled
-
-    @property
-    def cost(self):
-        return self._cost
-
-    @property
-    def title(self):
-        return self._title
-
-    @property
-    def prompt(self):
-        return self._prompt
-
-    @property
-    def input_required(self):
-        return self._input_required
-
-    @property
-    def max_per_stream(self):
-        return self._max_per_stream
-
-    @property
-    def max_per_user_stream(self):
-        return self._max_per_user_stream
-
-    @property
-    def cooldown(self):
-        return self._cooldown
-
-    @property
-    def paused(self):
-        return self._paused
-
-    @property
-    def in_stock(self):
-        return self._in_stock
-
-    @property
-    def redemptions_skip_queue(self):
-        return self._redemptions_skip_queue
-
-    @property
-    def redemptions_current_stream(self):
-        return self._redemptions_current_stream
-
-    @property
-    def is_on_cooldown(self):
-        return self._cooldown
 
     async def edit(
             self,
@@ -638,45 +591,17 @@ class CustomReward:
 
 
 class CustomRewardRedemption:
-    __slots__ = "_http", "_broadcaster_id", "_id", "_user_id", "_user_name", "_input", "_status", "_redeemed_at", "_reward"
+    __slots__ = "_http", "_broadcaster_id", "id", "user_id", "user_name", "input", "status", "redeemed_at", "reward"
     def __init__(self, obj, http, parent):
         self._http = http
         self._broadcaster_id = obj['broadcaster_id']
-        self._id = obj['id']
-        self._user_id = int(obj['user_id'])
-        self._user_name = obj['user_name']
-        self._input = obj['user_input']
-        self._status = obj['status']
-        self._redeemed_at = datetime.datetime.fromisoformat(obj['redeemed_at'])
-        self._reward = parent or obj['reward']
-
-    @property
-    def id(self) -> str:
-        return self._id
-
-    @property
-    def user_id(self) -> int:
-        return self._user_id
-
-    @property
-    def user_name(self) -> str:
-        return self._user_name
-
-    @property
-    def input(self) -> str:
-        return self._input
-
-    @property
-    def status(self) -> str:
-        return self._status
-
-    @property
-    def redeemed_at(self) -> datetime.datetime:
-        return self._redeemed_at
-
-    @property
-    def reward(self) -> Union[dict, CustomReward]:
-        return self._reward
+        self.id = obj['id']
+        self.user_id = int(obj['user_id'])
+        self.user_name = obj['user_name']
+        self.input = obj['user_input']
+        self.status = obj['status']
+        self.redeemed_at = datetime.datetime.fromisoformat(obj['redeemed_at'])
+        self.reward = parent or obj['reward']
 
     async def fulfill(self, token: str):
         """
@@ -690,9 +615,9 @@ class CustomRewardRedemption:
         --------
         itself.
         """
-        reward_id = self._reward.id if isinstance(self._reward, CustomReward) else self._reward['id']
+        reward_id = self.reward.id if isinstance(self.reward, CustomReward) else self.reward['id']
         try:
-            data = await self._http.update_reward_redemption_status(token, self._broadcaster_id, self._id, reward_id, "FULFILLED")
+            data = await self._http.update_reward_redemption_status(token, self._broadcaster_id, self.id, reward_id, "FULFILLED")
         except Unauthorized as error:
             raise Unauthorized("The given token is invalid", "", 401) from error
         except HTTPException as error:
@@ -702,7 +627,7 @@ class CustomRewardRedemption:
                                     "not available for the broadcaster (403)", error.args[1], 403) from error
             raise
         else:
-            self.__init__(data['data'], self._http, self._reward if isinstance(self._reward, CustomReward) else None)
+            self.__init__(data['data'], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
             return self
 
     async def refund(self, token: str):
@@ -717,9 +642,9 @@ class CustomRewardRedemption:
         --------
         itself.
         """
-        reward_id = self._reward.id if isinstance(self._reward, CustomReward) else self._reward['id']
+        reward_id = self.reward.id if isinstance(self.reward, CustomReward) else self.reward['id']
         try:
-            data = await self._http.update_reward_redemption_status(token, self._broadcaster_id, self._id, reward_id,
+            data = await self._http.update_reward_redemption_status(token, self._broadcaster_id, self.id, reward_id,
                                                                     "CANCELLED")
         except Unauthorized as error:
             raise Unauthorized("The given token is invalid", "", 401) from error
@@ -730,5 +655,5 @@ class CustomRewardRedemption:
                                     "not available for the broadcaster (403)", error.args[1], 403) from error
             raise
         else:
-            self.__init__(data['data'], self._http, self._reward if isinstance(self._reward, CustomReward) else None)
+            self.__init__(data['data'], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
             return self
