@@ -134,7 +134,8 @@ class WSConnection:
                 return asyncio.create_task(self._connect())
 
             if data:
-                await self.dispatch('raw_data', data)   # Dispatch our event_raw_data event...
+                log.debug(f" < {data}")
+                self.dispatch('raw_data', data)   # Dispatch our event_raw_data event...
 
                 task = asyncio.create_task(self._process_data(data))
                 task.add_done_callback(partial(self._task_callback, data))   # Process our raw data
@@ -149,6 +150,11 @@ class WSConnection:
             self._close()
         elif exc:
             asyncio.create_task(self.event_error(exc, data))
+
+    async def send(self, message: str):
+        message = message.strip()
+        log.debug(f" > {message}")
+        await self._websocket.send(message + "\r\n")
 
     async def authenticate(self, channels: typing.Union[list, tuple]):
         """|coro|
@@ -168,11 +174,11 @@ class WSConnection:
         if not self.is_alive:
             return
 
-        await self._websocket.send(f'PASS {self._token}\r\n')
-        await self._websocket.send(f'NICK {self.nick}\r\n')
+        await self.send(f'PASS {self._token}\r\n')
+        await self.send(f'NICK {self.nick}\r\n')
 
         for cap in self.modes:
-            await self._websocket.send(f'CAP REQ :twitch.tv/{cap}')   # Ideally no one should overwrite defaults...
+            await self.send(f'CAP REQ :twitch.tv/{cap}')   # Ideally no one should overwrite defaults...
 
         if not channels and not self._initial_channels:
             return
@@ -205,7 +211,7 @@ class WSConnection:
 
     async def _join_channel(self, entry):
         channel = re.sub('[#]', '', entry).lower()
-        await self._websocket.send(f'JOIN #{channel}\r\n')
+        await self.send(f'JOIN #{channel}\r\n')
 
         self._join_pending[channel] = fut = self._loop.create_future()
         asyncio.create_task(self._join_future_handle(fut, channel))
@@ -261,7 +267,7 @@ class WSConnection:
 
             await self._await_futures()
             await self.is_ready.wait()
-            await self.dispatch('ready')
+            self.dispatch('ready')
             self._init = True
 
         elif code == 353:
@@ -282,7 +288,7 @@ class WSConnection:
     async def _ping(self):
         log.debug('ACTION: Sending PONG reply.')
         self._last_ping = time.time()
-        await self._websocket.send('PONG :tmi.twitch.tv\r\n')
+        await self.send('PONG :tmi.twitch.tv\r\n')
 
     async def _part(self, parsed):   # TODO
         log.debug(f'ACTION: PART:: {parsed["channel"]}')
@@ -299,7 +305,7 @@ class WSConnection:
         message = Message(raw_data=parsed['data'], content=parsed['message'],
                           author=user, channel=channel, tags=parsed['badges'])
 
-        await self.dispatch('message', message)
+        self.dispatch('message', message)
 
     async def _privmsg_echo(self, parsed):   # TODO
         log.debug(f'ACTION: PRIVMSG(ECHO):: {parsed["channel"]}')
@@ -312,7 +318,7 @@ class WSConnection:
         channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
         user = User(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._bot, websocket=self)
 
-        await self.dispatch('userstate', user)
+        self.dispatch('userstate', user)
 
     async def _usernotice(self, parsed):   # TODO
         log.debug(f'ACTION: USERNOTICE:: {parsed["channel"]}')
@@ -336,7 +342,7 @@ class WSConnection:
         channel = Channel(name=channel, bot=self._bot, websocket=self)
         user = User(name=parsed['user'], bot=self._bot, websocket=self, channel=channel, tags=parsed['badges'])
 
-        await self.dispatch('join', channel, user)
+        self.dispatch('join', channel, user)
 
     def _cache_add(self, parsed: dict):
         channel = parsed['channel'].lstrip('#')
@@ -361,22 +367,10 @@ class WSConnection:
     async def _reconnect(self, parsed):  # TODO
         pass
 
-    async def dispatch(self, event: str, *args, **kwargs):
+    def dispatch(self, event: str, *args, **kwargs):
         log.debug(f'Dispatching event: {event}')
 
-        func = getattr(self._bot, f'event_{event}')
-        asyncio.create_task(func(*args, **kwargs))
-
-        listeners = getattr(self._bot, 'extra_listeners', None)
-        if not listeners:
-            return
-
-        extras = listeners.get(f'event_{event}', [])
-        ret = await asyncio.gather(*[e(*args, **kwargs) for e in extras])
-
-        for e in ret:
-            if isinstance(e, Exception):
-                asyncio.create_task(self.event_error(e))
+        self._bot.run_event(event, *args, **kwargs)
 
     async def event_error(self, error: Exception, data: str=None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
@@ -385,7 +379,7 @@ class WSConnection:
         return [fut for chan, fut in self._join_pending.items() if chan.lower() in
                 [re.sub('[#]', '', c).lower() for c in self._initial_channels]]
 
-    def _close(self):
+    async def _close(self):
         self._keeper.cancel()
         self.is_ready.clear()
 

@@ -22,8 +22,16 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from .abcs import Messageable
+from typing import Optional
 
+from .abcs import Messageable
+from .enums import PredictionEnum
+
+
+__all__ = (
+    "PartialUser",
+    "User"
+)
 
 class PartialUser(Messageable):
 
@@ -32,7 +40,6 @@ class PartialUser(Messageable):
     def __init__(self, websocket, **kwargs):
         self._name = kwargs.get('name')
         self._ws = websocket
-        self._bot = kwargs.get('bot')
         self._channel = kwargs.get('channel', self._name)
 
     def __str__(self):
@@ -68,7 +75,7 @@ class PartialUser(Messageable):
 
 
 class User(Messageable):
-    __slots__ = ('_name', '_channel', '_tags', '_ws', '_bot', 'id', '_turbo', '_sub', '_mod',
+    __slots__ = ('_name', '_channel', '_tags', '_badges', '_ws', 'id', '_turbo', '_sub', '_mod',
                  '_display_name', '_colour')
 
     __messageable_channel__ = False
@@ -77,8 +84,8 @@ class User(Messageable):
         self._name = kwargs.get('name')
         self._channel = kwargs.get('channel', self._name)
         self._tags = kwargs.get('tags', None)
+        self._badges = kwargs.get("badges", {})
         self._ws = websocket
-        self._bot = kwargs.get('bot')
 
         if not self._tags:
             return
@@ -111,7 +118,7 @@ class User(Messageable):
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]
         for user in cache:
-            if user.name == self._bot.nick:
+            if user.name == self._ws.nick:
                 try:
                     mod = user.is_mod
                 except AttributeError:
@@ -155,7 +162,7 @@ class User(Messageable):
             return False
 
     @property
-    def is_turbo(self) -> bool:
+    def is_turbo(self) -> Optional[bool]:
         """A boolean indicating whether the User is Turbo.
 
         Could be None if no Tags were received.
@@ -163,9 +170,26 @@ class User(Messageable):
         return self._turbo
 
     @property
-    def is_subscriber(self) -> bool:
+    def is_subscriber(self) -> Optional[bool]:
         """A boolean indicating whether the User is a subscriber of the current channel.
 
         Could be None if no Tags were received.
         """
         return self._sub
+
+    @property
+    def prediction(self) -> Optional[PredictionEnum]:
+        """
+        The users current prediction, if one exists.
+
+        Returns
+        --------
+        Optional[:class:`twitchio.enums.PredictionEnum`]
+        """
+        if 'blue-1' in self._badges:
+            return PredictionEnum('blue-1')
+
+        elif 'pink-2' in self._badges:
+            return PredictionEnum('pink-2')
+
+        return None

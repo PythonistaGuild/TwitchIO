@@ -21,6 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .channel import Channel
+    from .user import User
 
 import datetime
 import time
@@ -44,12 +49,12 @@ class Message:
             self._timestamp = time.time()
 
     @property
-    def author(self):
+    def author(self) -> "User":
         """The User object associated with the Message."""
         return self._author
 
     @property
-    def channel(self):  # stub
+    def channel(self) -> "Channel":
         """The Channel object associated with the Message."""
         return self._channel
 
@@ -59,7 +64,7 @@ class Message:
         return self._raw_data
 
     @property
-    def tags(self):
+    def tags(self) -> dict:
         """The tags associated with the Message.
 
         Could be None.
@@ -67,7 +72,7 @@ class Message:
         return self._tags
 
     @property
-    def timestamp(self) -> datetime.datetime.timestamp:
+    def timestamp(self) -> datetime.datetime:
         """The Twitch timestamp for this Message.
 
         Returns

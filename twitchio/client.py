@@ -22,8 +22,41 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+import asyncio
+from typing import Union, Callable
+
+from twitchio.websocket import WSConnection
+
 
 class Client:
 
-    def __init__(self, client_id: str):
-        pass
+    def __init__(self,
+                 irc_token: str,
+                 *,
+                 nick: str,
+                 api_token: str = None,
+                 client_id: str = None,
+                 client_secret: str = None,
+                 initial_channels: Union[list, tuple, Callable] = None,
+                 loop: asyncio.AbstractEventLoop = None,
+                 **kwargs
+                 ):
+
+        self._nick = nick.lower()
+        self.loop = loop or asyncio.get_event_loop()
+        self._connection = WSConnection(bot=self, token=irc_token, nick=nick.lower(), loop=self.loop,
+                                        initial_channels=initial_channels)
+
+
+    def run(self):
+        try:
+            self.loop.create_task(self._connection._connect())
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.loop.create_task(self.close())
+
+    async def close(self):
+        # TODO session close
+        self._connection._close()

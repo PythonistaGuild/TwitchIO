@@ -28,14 +28,13 @@ from .abcs import Messageable
 
 class Channel(Messageable):
 
-    __slots__ = ('_name', '_ws', '_bot')
+    __slots__ = ('_name', '_ws')
 
     __messageable_channel__ = True
 
     def __init__(self, **kwargs):
         self._name = kwargs.get('name')
         self._ws = kwargs.get('websocket')
-        self._bot = kwargs.get('bot')
 
     def __eq__(self, other):
         return other.name == self._name
@@ -55,7 +54,7 @@ class Channel(Messageable):
     def _bot_is_mod(self):
         cache = self._ws._cache[self.name]
         for user in cache:
-            if user.name == self._bot.nick:
+            if user.name == self._ws.nick:
                 try:
                     mod = user.is_mod
                 except AttributeError:

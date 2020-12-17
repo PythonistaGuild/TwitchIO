@@ -149,7 +149,7 @@ class Context(Messageable):
 
     __messageable_channel__ = True
 
-    def __init__(self, message, **attrs):
+    def __init__(self, message, bot, **attrs):
         self.message = message
         self.channel = message.channel
         self.author = message.author
@@ -166,7 +166,7 @@ class Context(Messageable):
         self.view = attrs.get('view')
         self.is_valid = attrs.get('valid')
 
-        self.bot = self.channel._bot
+        self.bot = bot
         self._ws = self.channel._ws
 
     def _fetch_channel(self):
@@ -178,7 +178,7 @@ class Context(Messageable):
     def _bot_is_mod(self):
         cache = self._ws._cache[self.channel._name]
         for user in cache:
-            if user.name == self.channel._bot.nick:
+            if user.name == self._ws.nick:
                 try:
                     mod = user.is_mod
                 except AttributeError:
