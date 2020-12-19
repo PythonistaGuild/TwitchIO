@@ -29,7 +29,7 @@ import itertools
 import sys
 import traceback
 import warnings
-from typing import Callable, Optional, Union, Dict
+from typing import Callable, Optional, Union, Coroutine
 from twitchio.channel import Channel
 from twitchio.client import Client
 from .core import *
@@ -45,7 +45,7 @@ class Bot(Client):
                  irc_token: str,
                  *,
                  nick: str,
-                 prefix: Union[str, list, tuple, Callable],
+                 prefix: Union[str, list, tuple, set, Callable, Coroutine],
                  api_token: str = None,
                  client_id: str = None,
                  client_secret: str = None,
