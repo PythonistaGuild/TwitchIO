@@ -30,7 +30,7 @@ import time
 
 class RateBucket:
 
-    HTTPLIMIT = 30
+    HTTPLIMIT = 800
     IRCLIMIT = 20
     MODLIMIT = 100
 
@@ -52,14 +52,23 @@ class RateBucket:
 
         self.tokens = 0
         self._reset = time.time() + self.reset_time
+        self._event = asyncio.Event()
+        self._event.set()
 
     @property
     def limited(self):
-        return self.tokens == self.limit
+        return self.tokens >= self.limit
 
     def reset(self):
         self.tokens = 0
         self._reset = time.time() + self.reset_time
+
+    def limit_until(self, t):
+        """
+        artificially causes a limit until t
+        """
+        self.tokens = self.limit
+        self._reset = t
 
     def update(self, *, reset=None, remaining=None):
         now = time.time()
@@ -76,7 +85,23 @@ class RateBucket:
             self.tokens += 1
 
     async def wait_reset(self):
-        now = time.time()
+        await self._wait()
 
-        await asyncio.sleep(self._reset - now)
-        self.reset()
+    def __await__(self):
+        return self._wait()
+
+    async def _wait(self):
+        if self.tokens < self.limit:
+            if self._event.is_set():
+                self._event.clear()
+
+            return
+
+        if not self._event.is_set():
+            await self._event.wait()
+            return
+        else:
+            now = time.time()
+            await asyncio.sleep(self._reset - now)
+            self.reset()
+            self._event.set()

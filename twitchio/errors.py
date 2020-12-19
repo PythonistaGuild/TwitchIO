@@ -16,3 +16,15 @@ class IRCCooldownError(TwitchIOException):
 
 class EchoMessageWarning(TwitchIOException):
     pass
+
+class NoClientID(TwitchIOException):
+    pass
+
+class NoToken(TwitchIOException):
+    pass
+
+class HTTPException(TwitchIOException):
+    pass
+
+class Unauthorized(HTTPException):
+    pass

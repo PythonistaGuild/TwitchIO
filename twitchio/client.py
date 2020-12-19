@@ -25,7 +25,8 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 from typing import Union, Callable
 
-from twitchio.websocket import WSConnection
+from .websocket import WSConnection
+from .http import TwitchHTTP
 
 
 class Client:
@@ -46,6 +47,7 @@ class Client:
         self.loop = loop or asyncio.get_event_loop()
         self._connection = WSConnection(bot=self, token=irc_token, nick=nick.lower(), loop=self.loop,
                                         initial_channels=initial_channels)
+        self._http = TwitchHTTP(self, nick, api_token=api_token, client_id=client_id, client_secret=client_secret)
 
 
     def run(self):
