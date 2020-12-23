@@ -30,15 +30,19 @@ import re
 import sys
 import time
 import traceback
-import typing
 import websockets
 from functools import partial
+from typing import Union, Optional, List, TYPE_CHECKING
+
 from .backoff import ExponentialBackoff
 from .channel import Channel
 from .errors import AuthenticationError
 from .message import Message
 from .parse import parser
-from .user import User, PartialUser
+from .chatter import Chatter, PartialChatter
+
+if TYPE_CHECKING:
+    from .client import Client
 
 log = logging.getLogger(__name__)
 HOST = 'wss://irc-ws.chat.twitch.tv:443'
@@ -46,10 +50,10 @@ HOST = 'wss://irc-ws.chat.twitch.tv:443'
 
 class WSConnection:
 
-    def __init__(self, **kwargs):
-        self._loop: asyncio.AbstractEventLoop = kwargs.get('loop', asyncio.get_event_loop())
+    def __init__(self, *, nick: str, loop: asyncio.AbstractEventLoop, client: "Client", token: str=None, modes: tuple=None, initial_channels: List[str]=None):
+        self._loop = loop
         self._backoff = ExponentialBackoff()
-        self._keeper: asyncio.Task = None
+        self._keeper: Optional[asyncio.Task] = None
         self._websocket = None
         self._ws_ready_event: asyncio.Event = asyncio.Event()
         self.is_ready: asyncio.Event = asyncio.Event()
@@ -71,10 +75,10 @@ class WSConnection:
                          'MODE': self._mode,
                          'RECONNECT': self._reconnect}
 
-        self._token = kwargs.get('token')
-        self.nick = kwargs.get('nick').lower()
-        self.modes = kwargs.pop('modes', ("commands", "tags", "membership"))
-        self._initial_channels = kwargs.get('initial_channels')
+        self._token = token
+        self.nick = nick.lower()
+        self.modes = modes or ("commands", "tags", "membership")
+        self._initial_channels = initial_channels or []
         
         if callable(self._initial_channels):
             _temp_initial_channels = self._initial_channels()
@@ -85,7 +89,7 @@ class WSConnection:
 
         self._last_ping = 0
 
-        self._bot = kwargs.get('bot')
+        self._client = client
 
     @property
     def is_alive(self) -> bool:
@@ -156,7 +160,7 @@ class WSConnection:
         log.debug(f" > {message}")
         await self._websocket.send(message + "\r\n")
 
-    async def authenticate(self, channels: typing.Union[list, tuple]):
+    async def authenticate(self, channels: Union[list, tuple]):
         """|coro|
 
         Automated Authentication process.
@@ -196,7 +200,7 @@ class WSConnection:
         *channels : str
             An argument list of channels to attempt joining.
         """
-        async with self._join_lock as lock:   # acquire a lock, allowing only one join_channels at once...
+        async with self._join_lock:   # acquire a lock, allowing only one join_channels at once...
             for channel in channels:
                 if self._join_handle < time.time():   # Handle is less than the current time
                     self._join_tick = 50              # So lets start a new rate limit bucket..
@@ -284,8 +288,11 @@ class WSConnection:
                 self.is_ready.set()
             else:
                 self._cache_add(parsed)
+        else:
+            self.is_ready.set()
+            self.dispatch("ready")
 
-    async def _ping(self):
+    async def _ping(self, _=None):
         log.debug('ACTION: Sending PONG reply.')
         self._last_ping = time.time()
         await self.send('PONG :tmi.twitch.tv\r\n')
@@ -297,10 +304,10 @@ class WSConnection:
     async def _privmsg(self, parsed):   # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
 
-        channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
+        channel = Channel(name=parsed['channel'], websocket=self)
         self._cache_add(parsed)
 
-        user = User(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._bot, websocket=self)
+        user = Chatter(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._client, websocket=self)
 
         message = Message(raw_data=parsed['data'], content=parsed['message'],
                           author=user, channel=channel, tags=parsed['badges'])
@@ -315,8 +322,8 @@ class WSConnection:
         log.debug(f'ACTION: USERSTATE:: {parsed["channel"]}')
         self._cache_add(parsed)
 
-        channel = Channel(name=parsed['channel'], echo=False, websocket=self, bot=self._bot)
-        user = User(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._bot, websocket=self)
+        channel = Channel(name=parsed['channel'], websocket=self)
+        user = Chatter(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._client, websocket=self)
 
         self.dispatch('userstate', user)
 
@@ -336,11 +343,11 @@ class WSConnection:
             else:
                 self._join_pending.pop(channel)
 
-        if not parsed['user'] == self._bot.nick:
+        if not parsed['user'] == self._client.nick:
             self._cache_add(parsed)
 
-        channel = Channel(name=channel, bot=self._bot, websocket=self)
-        user = User(name=parsed['user'], bot=self._bot, websocket=self, channel=channel, tags=parsed['badges'])
+        channel = Channel(name=channel, websocket=self)
+        user = Chatter(name=parsed['user'], bot=self._client, websocket=self, channel=channel, tags=parsed['badges'])
 
         self.dispatch('join', channel, user)
 
@@ -350,14 +357,14 @@ class WSConnection:
         if channel not in self._cache:
             self._cache[channel] = set()
 
-        channel_ = Channel(name=channel, bot=self._bot, websocket=self)
+        channel_ = Channel(name=channel, websocket=self)
 
         if parsed['batches']:
             for u in parsed['batches']:
-                user = PartialUser(name=u, bot=self._bot, websocket=self, channel=channel_)
+                user = PartialChatter(name=u, bot=self._client, websocket=self, channel=channel_)
                 self._cache[channel].add(user)
         else:
-            user = User(bot=self._bot, name=parsed['user'], websocket=self, channel=channel_, tags=parsed['badges'])
+            user = Chatter(bot=self._client, name=parsed['user'], websocket=self, channel=channel_, tags=parsed['badges'])
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
 
@@ -370,7 +377,7 @@ class WSConnection:
     def dispatch(self, event: str, *args, **kwargs):
         log.debug(f'Dispatching event: {event}')
 
-        self._bot.run_event(event, *args, **kwargs)
+        self._client.run_event(event, *args, **kwargs)
 
     async def event_error(self, error: Exception, data: str=None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)

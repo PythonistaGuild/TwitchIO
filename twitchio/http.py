@@ -45,11 +45,12 @@ logger = logging.getLogger("twitchio.http")
 
 class Route:
     __slots__ = "path", "body", "headers", "query", "method"
-    base_url = "https://twitch.tv/api/helix"
+    base_url = "https://api.twitch.tv/helix"
 
     def __init__(self, method: str, path: Union[str, URL], body: Union[str, dict]=None, query: List[Tuple[str, Any]]=None, headers: dict=None, token: str=None):
         self.headers = headers or {}
         self.method = method
+        self.query = query
 
         if token:
             self.headers['Authorization'] = "Bearer " + token
@@ -57,7 +58,7 @@ class Route:
         if isinstance(path, URL):
             self.path = path
         else:
-            self.path = URL(self.base_url + path)
+            self.path = URL(self.base_url + "/" + path.rstrip("/"))
 
         if query:
             self.path = self.path.with_query(query)
@@ -123,14 +124,22 @@ class TwitchHTTP:
         is_finished = False
         while not is_finished:
             path = copy.copy(route.path)
-            if not paginate:
-                is_finished = True
 
             if limit is not None and paginate:
                 if cursor is not None:
-                    path = path.with_query(('after', cursor))
+                    if route.query:
+                        q = [('after', cursor), *route.query]
+                    else:
+                        q = [('after', cursor)]
+                    path = path.with_query(q)
 
-                path = path.with_query(('first', get_limit()))
+                if route.query:
+                    q = [('first', get_limit()), *route.query]
+                else:
+                    q = [('first', get_limit())]
+
+                path = path.with_query(q)
+
 
             body, is_text = await self._request(route, path, headers)
             if is_text:
@@ -146,7 +155,7 @@ class TwitchHTTP:
                 if not cursor:
                     break
 
-            is_finished = reached_limit() if limit is not None else True
+            is_finished = reached_limit() if limit is not None else True if paginate else True
 
         return data
 
@@ -209,6 +218,9 @@ class TwitchHTTP:
             url = self.TOKEN_BASE + "?client_id={0}&client_secret={1}&grant_type=client_credentials".format(self.client_id, self.client_secret)
             if self.scopes:
                 url += "&scope=" + " ".join(self.scopes)
+
+        if not self.session:
+            self.session = aiohttp.ClientSession()
 
         async with self.session.post(url) as resp:
             if 300 < resp.status or resp.status < 200:
@@ -517,7 +529,7 @@ class TwitchHTTP:
     async def delete_unfollow_channel(self, token: str, from_id: str, to_id: str):
         return await self.request(Route("DELETE", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token))
 
-    async def get_users(self, ids: List[str], logins: List[str], token: str=None):
+    async def get_users(self, ids: List[int], logins: List[str], token: str=None):
         q = []
         if ids:
             for id in ids:

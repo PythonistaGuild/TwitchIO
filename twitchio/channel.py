@@ -22,8 +22,16 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from typing import Optional
+from typing import Optional, Union, Set, TYPE_CHECKING
 from .abcs import Messageable
+from .chatter import Chatter, PartialChatter
+
+if TYPE_CHECKING:
+    from .websocket import WSConnection
+
+__all__ = (
+    "Channel",
+)
 
 
 class Channel(Messageable):
@@ -32,9 +40,9 @@ class Channel(Messageable):
 
     __messageable_channel__ = True
 
-    def __init__(self, **kwargs):
-        self._name = kwargs.get('name')
-        self._ws = kwargs.get('websocket')
+    def __init__(self, name: str, websocket: "WSConnection"):
+        self._name = name
+        self._ws = websocket
 
     def __eq__(self, other):
         return other.name == self._name
@@ -52,7 +60,7 @@ class Channel(Messageable):
         return self._ws     # Abstract method
 
     def _bot_is_mod(self):
-        cache = self._ws._cache[self.name]
+        cache = self._ws._cache[self.name] # noqa
         for user in cache:
             if user.name == self._ws.nick:
                 try:
@@ -68,39 +76,45 @@ class Channel(Messageable):
         return self._name
 
     @property
-    def chatters(self) -> Optional[set]:
+    def chatters(self) -> Optional[Set[Union[Chatter, PartialChatter]]]:
         """The channels current chatters."""
         try:
-            users = self._ws._cache[self._name]
+            chatters = self._ws._cache[self._name] # noqa
         except KeyError:
             return None
 
-        return users
+        return chatters
 
-    @property
-    def users(self) -> Optional[set]:   # Alias to chatters
-        """Alias to chatters."""
-        return self.chatters
-
-    def get_user(self, name: str):
-        """Retrieve a user from the channels user cache.
+    def get_chatter(self, name: str) -> Optional[Union[Chatter, PartialChatter]]:
+        """Retrieve a chatter from the channels user cache.
 
         Parameters
         -----------
         name: str
-            The user's name to try and retrieve.
+            The chatter's name to try and retrieve.
 
         Returns
         --------
-        Union[:class:`twitchio.user.User`, :class:`twitchio.user.PartialUser`]
-            Could be a :class:`twitchio.user.PartialUser` depending on how the user joined the channel.
+        Union[:class:`twitchio.chatter.Chatter`, :class:`twitchio.chatter.PartialChatter`]
+            Could be a :class:`twitchio.user.PartialChatter` depending on how the user joined the channel.
             Returns None if no user was found.
         """
         name = name.lower()
 
-        cache = self._ws._cache[self._name]
-        for user in cache:
-            if user.name == name:
-                return user
+        try:
+            cache = self._ws._cache[self._name] # noqa
+            for chatter in cache:
+                if chatter.name == name:
+                    return chatter
 
-        return None
+            return None
+        except KeyError:
+            return None
+
+    async def user(self, force=False):
+        """
+        Fetches the User from the api.
+        :param force:
+        :return:
+        """
+        http = self._ws.http

@@ -27,12 +27,13 @@ import inspect
 import warnings
 import traceback
 import sys
-from typing import Union, Callable
+from typing import Union, Callable, List, Optional
 
 from .websocket import WSConnection
 from .http import TwitchHTTP
 from .channel import Channel
 from .message import Message
+from .user import User
 
 
 class Client:
@@ -51,7 +52,7 @@ class Client:
 
         self._nick = nick.lower()
         self.loop = loop or asyncio.get_event_loop()
-        self._connection = WSConnection(bot=self, token=irc_token, nick=nick.lower(), loop=self.loop,
+        self._connection = WSConnection(client=self, token=irc_token, nick=nick.lower(), loop=self.loop,
                                         initial_channels=initial_channels)
         self._http = TwitchHTTP(self, nick, api_token=api_token, client_id=client_id, client_secret=client_secret)
 
@@ -159,6 +160,11 @@ class Client:
     @property
     def nick(self):
         return self._nick
+
+    async def fetch_users(self, names: List[str]=None, ids: List[int]=None) -> List[User]:
+        assert names or ids
+        data = await self._http.get_users(ids, names)
+        return [User(self._http, x) for x in data]
 
     async def event_mode(self, channel, user, status):
         """|coro|
