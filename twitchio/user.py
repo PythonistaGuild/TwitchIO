@@ -64,7 +64,7 @@ class PartialUser:
             return Channel(self.name, self._http.client._connection)
 
     async def fetch(self, token: str=None, force=False) -> "User":
-        """
+        """|coro|
         Fetches the full user from the api or cache
 
         Parameters
@@ -82,7 +82,7 @@ class PartialUser:
         return data[0]
 
     async def get_custom_rewards(self, token: str, *, only_manageable=False, ids: List[int]=None, force=False) -> List["CustomReward"]:
-        """
+        """|coro|
         Fetches the channels custom rewards (aka channel points) from the api.
         Parameters
         ----------
@@ -120,7 +120,7 @@ class PartialUser:
 
 
     async def fetch_bits_leaderboard(self, token: str, period: str="all", user_id: int=None, started_at: datetime.datetime=None):
-        """
+        """|coro|
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 
         Parameters
@@ -136,6 +136,24 @@ class PartialUser:
         """
         data = await self._http.get_bits_board(token, period, user_id, started_at)
         return BitsLeaderboard(self._http, data)
+
+    async def start_commercial(self, token: str, length: int) -> dict:
+        """|coro|
+        Starts a commercial on the channel. Requires an OAuth token with the `channel:edit:commercial` scope.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            the OAuth token
+        length: :class:`int`
+            the length of the commercial. Should be one of `30`, `60`, `90`, `120`, `150`, `180`
+
+        Returns
+        --------
+        :class:`dict` a dictionary with `length`, `message`, and `retry_after`
+        """
+        data = await self._http.post_commericial(token, str(self.id), length)
+        return data[0]
 
 class BitLeaderboardUser(PartialUser):
     __slots__ = "rank", "score"
