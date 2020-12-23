@@ -540,6 +540,14 @@ class WebsocketConnection:
 
             await self._dispatch('mode', channel, user, mstatus)
 
+        elif action == 'CLEARCHAT': #新增 被ban事件
+            log.debug('ACTION:: CLEARCHAT')
+
+            user = User(author=content, channel=channel, tags=tags, ws=self._websocket)
+            notice = ClearChat(channel=channel, user=user, tags=tags)
+
+            await self._dispatch('clearchat', notice)
+
     async def join_action(self, channel: str, author: str, tags):
         log.debug('ACTION:: JOIN: %s', channel)
 

@@ -109,3 +109,11 @@ class NoticeSubscription:
         self.streak_months: Optional[int] = tags.get('msg-param-streak-months', None)
         self.sub_plan: str = tags['msg-param-sub-plan']
         self.sub_plan_name: str = tags['msg-param-sub-plan-name']
+
+class ClearChat:
+
+    def __init__(self, *, channel: Channel, user: User, tags: dict):
+        self.channel: Channel = channel
+        self.user: User = user
+        self.tags: dict = tags
+        self.ban_duration: Optional[int] = tags.get('ban-duration', None)
