@@ -155,6 +155,25 @@ class PartialUser:
         data = await self._http.post_commericial(token, str(self.id), length)
         return data[0]
 
+    async def create_clip(self, token: str, has_delay=False) -> dict:
+        """|coro|
+        Creates a clip on the channel. Note that clips are not created instantly, so you will have to query
+        :ref:`~.get_clips` to confirm the clip was created. Requires an OAuth token with the `clips:edit` scope
+
+        Parameters
+        -----------
+        token: :class:`str`
+            the OAuth token
+        has_delay: :class:`bool`
+            Whether the clip should have a delay to match that of a viewer. Defaults to False
+
+        Returns
+        --------
+        :class:`dict` a dictionary with `id` and `edit_url`
+        """
+        data = await self._http.post_create_clip(token, self.id, has_delay)
+        return data[0]
+
 class BitLeaderboardUser(PartialUser):
     __slots__ = "rank", "score"
     def __init__(self, http: "TwitchHTTP", data: dict):

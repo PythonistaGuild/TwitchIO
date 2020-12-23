@@ -404,8 +404,8 @@ class TwitchHTTP:
         return await self.request(Route("PATCH", "/channel_points/custom_rewards/redemptions", query=params,
                                   body={"status": status}, token=token))
 
-    async def post_create_clip(self, token: str, broadcaster_id: str):
-        return await self.request(Route("POST", "clips", query=[("broadcaster_id", broadcaster_id)], token=token), paginate=False)
+    async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
+        return await self.request(Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", has_delay)], token=token), paginate=False)
 
     async def get_clips(self, token: str, broadcaster_id: str, game_id: str, ids: List[str], started_at: datetime.datetime=None, ended_at: datetime.datetime=None):
         q = [("broadcaster_id", broadcaster_id), ("game_id", game_id), ("started_at", started_at.isoformat() if started_at else None), ("ended_at", ended_at.isoformat() if ended_at else None)]
