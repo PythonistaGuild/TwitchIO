@@ -56,7 +56,7 @@ def user_cache(timer=300):
     cache = TimedCache(timer)
     def wraps(func):
         @functools.wraps(func)
-        async def _wraps(cls, names: list=None, ids: list=None, force=False):
+        async def _wraps(cls, names: list=None, ids: list=None, force=False, token=None):
             if not force:
                 existing = []
                 if names:
@@ -68,7 +68,7 @@ def user_cache(timer=300):
                 if len(existing) == (len(names) if names else 0) + (len(ids) if ids else 0):
                     return existing
 
-            values = await func(cls, names=names, ids=ids)
+            values = await func(cls, names=names, ids=ids, token=token)
             for v in values:
                 cache[v.id] = v
                 cache[v.name] = v

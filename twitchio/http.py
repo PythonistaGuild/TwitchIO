@@ -85,7 +85,24 @@ class TwitchHTTP:
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
 
-    async def request(self, route: Route, *, paginate = True, limit = 100):
+    async def request(self, route: Route, *, paginate = True, limit = 100, full_body=False):
+        """
+        Fulfills an API request
+
+        Parameters
+        -----------
+        route : :class:`twitchio.http.Route`
+            The route to follow
+        paginate : :class:`bool`
+            whether or not to paginate the requests where possible. Defaults to True
+        limit : :class:`int`
+            The data limit per request when paginating. Defaults to 100
+        full_body : class:`bool`
+            Whether to return the full response body or to accumulate the `data` key. Defaults to False. `paginate` must be False if this is True.
+        """
+        if full_body:
+            assert not paginate
+
         if not self.client_id:
             raise errors.NoClientID("A Client ID is required to use the Twitch API")
 
@@ -143,6 +160,9 @@ class TwitchHTTP:
 
             body, is_text = await self._request(route, path, headers)
             if is_text:
+                return body
+
+            if full_body:
                 return body
 
             data += body['data']
@@ -247,7 +267,10 @@ class TwitchHTTP:
 
     async def get_bits_board(self, token: str, period: str="all", user_id: str=None, started_at: datetime.datetime=None):
         assert period in ("all", "day", "week", "month", "year")
-        return await self.request(Route("GET", "bits/leaderboard", "", query=[("period", period), ("started_at", started_at.isoformat() if started_at else None), ("user_id", user_id)], token=token))
+        route = Route("GET", "bits/leaderboard", "", query=[
+            ("period", period), ("started_at", started_at.isoformat() if started_at else None), ("user_id", user_id)
+        ], token=token)
+        return await self.request(route, full_body=True, paginate=False)
 
     async def get_cheermotes(self, broadcaster_id: str):
         return await self.request(Route("GET", "bits/cheermotes", "", query=[("broadcaster_id", broadcaster_id)]))

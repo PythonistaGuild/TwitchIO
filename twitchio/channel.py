@@ -22,9 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+import datetime
 from typing import Optional, Union, Set, TYPE_CHECKING
+
 from .abcs import Messageable
 from .chatter import Chatter, PartialChatter
+from .models import BitsLeaderboard
 
 if TYPE_CHECKING:
     from .websocket import WSConnection
@@ -125,3 +128,21 @@ class Channel(Messageable):
         :class:`twitchio.User` the user associated with the channel
         """
         return (await self._ws._client.fetch_users(login=[self._name], force=force))[0]
+
+    async def fetch_bits_leaderboard(self, token: str, period: str="all", user_id: int=None, started_at: datetime.datetime=None):
+        """
+        Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            the OAuth token with the bits:read scope
+        period: Optional[:class:`str`]
+            one of `day`, `week`, `month`, `year`, or `all`, defaults to `all`
+        started_at: Optional[:class:`datetime.datetime`]
+            the timestamp to start the period at. This is ignored if the period is `all`
+        user_id: Optional[:class:`int`]
+            the id of the user to fetch for
+        """
+        data = await self._ws._client._http.get_bits_board(token, period, user_id, started_at)
+        return BitsLeaderboard(self._ws._client._http, data)

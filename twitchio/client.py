@@ -163,7 +163,7 @@ class Client:
         return self._nick
 
     @user_cache()
-    async def fetch_users(self, names: List[str]=None, ids: List[int]=None, force=False) -> List[User]:
+    async def fetch_users(self, names: List[str]=None, ids: List[int]=None, token: str=None, force=False) -> List[User]:
         """|coro|
         Fetches users from the helix API
 
@@ -173,6 +173,8 @@ class Client:
             usernames of people to fetch
         ids: Optional[List[:class:`str`]]
             ids of people to fetch
+        token: Optional[:class:`str`]
+            An optional OAuth token to use instead of the bot OAuth token
         force: :class:`bool`
             whether to force a fetch from the api, or check the cache first. Defaults to False
 
@@ -180,8 +182,10 @@ class Client:
         --------
         List[:class:`twitchio.User`]
         """
+        # the forced argument doesnt actually get used here, it gets used by the cache wrapper.
+        # But we'll include it in the args here so that sphinx catches it
         assert names or ids
-        data = await self._http.get_users(ids, names)
+        data = await self._http.get_users(ids, names, token=token)
         return [User(self._http, x) for x in data]
 
     async def event_mode(self, channel, user, status):

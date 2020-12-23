@@ -31,7 +31,7 @@ from .errors import HTTPException, Unauthorized
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
-    from .user import User
+    from .user import PartialUser
 
 
 class CustomReward:
@@ -42,7 +42,7 @@ class CustomReward:
                 "input_required", "max_per_stream", "max_per_user_stream", "cooldown", "paused", "in_stock", \
                 "redemptions_skip_queue", "redemptions_current_stream", "cooldown_until", "_broadcaster_id"
 
-    def __init__(self, http: "TwitchHTTP", obj: dict, channel: "User"):
+    def __init__(self, http: "TwitchHTTP", obj: dict, channel: "PartialUser"):
         self._http = http
         self._channel = channel
         self._broadcaster_id = obj['broadcaster_id']
