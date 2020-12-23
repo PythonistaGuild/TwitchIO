@@ -29,6 +29,7 @@ import traceback
 import sys
 from typing import Union, Callable, List, Optional
 
+from . import models
 from .websocket import WSConnection
 from .http import TwitchHTTP
 from .channel import Channel
@@ -187,6 +188,23 @@ class Client:
         assert names or ids
         data = await self._http.get_users(ids, names, token=token)
         return [User(self._http, x) for x in data]
+
+    async def fetch_cheermotes(self, user_id: int=None):
+        """|coro|
+
+        Fetches cheermotes from the twitch API
+
+        Parameters
+        -----------
+        user_id: Optional[:class:`int`]
+            The channel id to fetch from.
+
+        Returns
+        --------
+            List[:class:`twitchio.CheerEmote`]
+        """
+        data = await self._http.get_cheermotes(str(user_id) if user_id else None)
+        return [models.CheerEmote(self._http, x) for x in data]
 
     async def event_mode(self, channel, user, status):
         """|coro|

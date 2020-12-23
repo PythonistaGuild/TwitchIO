@@ -44,3 +44,24 @@ class BitsLeaderboard:
         self.started_at = datetime.datetime.fromisoformat(data['date_range']['started_at'])
         self.ended_at = datetime.datetime.fromisoformat(data['date_range']['ended_at'])
         self.leaders = [BitLeaderboardUser(http, x) for x in data['data']]
+
+class CheerEmoteTier:
+    __slots__ = "min_bits", "id", "colour", "images", "can_cheer", "show_in_bits_card"
+    def __init__(self, data: dict):
+        self.min_bits: int = data['min_bits']
+        self.id: str = data['id']
+        self.colour: str = data['colour']
+        self.images = data['images']
+        self.can_cheer: bool = data['can_cheer']
+        self.show_in_bits_card: bool = data['show_in_bits_card']
+
+class CheerEmote:
+    __slots__ = "_http", "prefix", "tiers", "type", "order", "last_updated", "charitable"
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self._http = http
+        self.prefix = data['prefix']
+        self.tiers = [CheerEmoteTier(x) for x in data['tiers']]
+        self.type = data['type']
+        self.order = data['order']
+        self.last_updated = datetime.datetime.fromisoformat(data['last_updated'])
+        self.charitable = data['is_charitable']
