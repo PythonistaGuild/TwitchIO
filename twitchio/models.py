@@ -25,13 +25,16 @@ DEALINGS IN THE SOFTWARE.
 import datetime
 from typing import Optional, Union, TYPE_CHECKING
 
-from .user import BitLeaderboardUser
+from .user import BitLeaderboardUser, PartialUser
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
 
 __all__ = (
     "BitsLeaderboard",
+    "Clip",
+    "CheerEmote",
+    "CheerEmoteTier"
 )
 
 class BitsLeaderboard:
@@ -65,3 +68,20 @@ class CheerEmote:
         self.order = data['order']
         self.last_updated = datetime.datetime.fromisoformat(data['last_updated'])
         self.charitable = data['is_charitable']
+
+class Clip:
+    __slots__ = "id", "url", "embed_url", "broadcaster", "creator", "video_id", "game_id", "language",\
+                "title", "views", "created_at", "thumbnail_url"
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.id = data['id']
+        self.url = data['url']
+        self.embed_url = data['embed_url']
+        self.broadcaster = PartialUser(http, data['broadcaster_id'], data['broadcaster_name'])
+        self.creator = PartialUser(http, data['creator_id'], data['creator_name'])
+        self.video_id = data['video_id']
+        self.game_id = data['game_id']
+        self.language = data['language']
+        self.title = data['title']
+        self.views = data['view_count']
+        self.created_at = datetime.datetime.fromisoformat(data['created_at'])
+        self.thumbnail_url = data['thumbnail_url']

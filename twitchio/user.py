@@ -30,7 +30,7 @@ from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
 from .rewards import CustomReward
 from .channel import Channel
-from .models import BitsLeaderboard
+from .models import BitsLeaderboard, Clip
 
 
 if TYPE_CHECKING:
@@ -173,6 +173,30 @@ class PartialUser:
         """
         data = await self._http.post_create_clip(token, self.id, has_delay)
         return data[0]
+
+    async def get_clips(self, ids: List[str]=None, game_id: str=None):
+        """|coro|
+        Fetches clips from the api. You may specify either `ids` or `game_id`, or neither.
+
+        Parameters
+        -----------
+        ids: List[:class:`str`]
+            a list of clip ids
+        game_id: :class:`str`
+            the game id to fetch clips from. Note that this will return clips from any channel.
+
+        Returns
+        --------
+        List[:class:`twitchio.Clip`]
+        """
+        if not ids and not game_id:
+            data = await self._http.get_clips(self.id)
+        elif ids:
+            data = await self._http.get_clips(ids=ids)
+        else:
+            data = await self._http.get_clips(game_id=game_id)
+
+        return [Clip(self._http, x) for x in data]
 
 class BitLeaderboardUser(PartialUser):
     __slots__ = "rank", "score"
