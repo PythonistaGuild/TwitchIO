@@ -33,8 +33,11 @@ TMI = 'tmi.twitch.tv'
 
 
 def parser(data: str, nick: str):
-    groups = data.split(' ')
-    action = groups[-2]
+    groups = data.split()
+    if groups[1] == "JOIN":
+        action = groups[1]
+    else:
+        action = groups[-2]
 
     channel = None
     message = None
