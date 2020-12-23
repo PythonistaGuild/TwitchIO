@@ -114,7 +114,14 @@ class Channel(Messageable):
     async def user(self, force=False):
         """
         Fetches the User from the api.
-        :param force:
-        :return:
+
+        Parameters
+        -----------
+        force: bool
+            Whether to force a fetch from the api, or try and pull from the cache. Defaults to False
+
+        Returns
+        --------
+        :class:`twitchio.User` the user associated with the channel
         """
-        http = self._ws.http
+        return (await self._ws._client.fetch_users(login=[self._name], force=force))[0]

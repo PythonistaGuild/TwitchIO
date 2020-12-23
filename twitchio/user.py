@@ -22,11 +22,13 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from typing import TYPE_CHECKING, List
+import time
+from typing import TYPE_CHECKING, List, Optional
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
 from .rewards import CustomReward
+from .channel import Channel
 
 
 if TYPE_CHECKING:
@@ -37,7 +39,7 @@ __all__ = (
 )
 
 class User:
-    __slots__ = ("_http", "id", "name", "display_name", "type", "broadcaster_type", "description", "profile_image", "offline_image", "view_count", "email")
+    __slots__ = ("_http", "id", "name", "display_name", "type", "broadcaster_type", "description", "profile_image", "offline_image", "view_count", "email", "_cached_rewards")
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
         self.id = int(data['id'])
@@ -50,8 +52,21 @@ class User:
         self.offline_image = data['offline_image_url']
         self.view_count = data['view_count'],
         self.email = data.get("email", None)
+        self._cached_rewards = None
 
-    async def get_custom_rewards(self, token: str, *, only_manageable=False, ids: List[int]=None) -> List["CustomReward"]:
+    @property
+    def channel(self) -> Optional[Channel]:
+        """
+        Returns the :class:`twitchio.Channel` associated with this user. Could be None if you are not part of the channel's chat
+
+        Returns
+        --------
+        Optional[:class:`twitchio.Channel`]
+        """
+        if self.name in self._http.client._connection._cache:
+            return Channel(self.name, self._http.client._connection)
+
+    async def get_custom_rewards(self, token: str, *, only_manageable=False, ids: List[int]=None, force=False) -> List["CustomReward"]:
         """
         Fetches the channels custom rewards (aka channel points) from the api.
         Parameters
@@ -62,11 +77,17 @@ class User:
             Whether to fetch all rewards or only ones you can manage. Defaults to false.
         ids : List[:class:`int`]
             An optional list of reward ids
+        force : :class:`bool`
+            Whether to force a fetch or try to get from cache. Defaults to False
 
         Returns
         -------
 
         """
+        if not force and self._cached_rewards:
+            if self._cached_rewards[0]+300 > time.monotonic():
+                return self._cached_rewards[1]
+
         try:
             data = await self._http.get_rewards(token, self.id, only_manageable, ids)
         except Unauthorized as error:
@@ -78,4 +99,6 @@ class User:
                                     "not available for the broadcaster (403)", error.args[1], 403) from error
             raise
         else:
-            return [CustomReward(self._http, x, self) for x in data]
+            values = [CustomReward(self._http, x, self) for x in data]
+            self._cached_rewards = time.monotonic(), values
+            return values

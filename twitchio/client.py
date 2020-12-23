@@ -34,6 +34,7 @@ from .http import TwitchHTTP
 from .channel import Channel
 from .message import Message
 from .user import User
+from .cache import user_cache
 
 
 class Client:
@@ -150,7 +151,7 @@ class Client:
         # With the associated users as a set.
         # We create a Channel here and return it only if the cache has that channel key.
 
-        channel = Channel(name=name, websocket=self._connection, bot=self)
+        channel = Channel(name=name, websocket=self._connection)
         return channel
 
     @property
@@ -161,7 +162,24 @@ class Client:
     def nick(self):
         return self._nick
 
-    async def fetch_users(self, names: List[str]=None, ids: List[int]=None) -> List[User]:
+    @user_cache()
+    async def fetch_users(self, names: List[str]=None, ids: List[int]=None, force=False) -> List[User]:
+        """|coro|
+        Fetches users from the helix API
+
+        Parameters
+        -----------
+        names: Optional[List[:class:`str`]]
+            usernames of people to fetch
+        ids: Optional[List[:class:`str`]]
+            ids of people to fetch
+        force: :class:`bool`
+            whether to force a fetch from the api, or check the cache first. Defaults to False
+
+        Returns
+        --------
+        List[:class:`twitchio.User`]
+        """
         assert names or ids
         data = await self._http.get_users(ids, names)
         return [User(self._http, x) for x in data]

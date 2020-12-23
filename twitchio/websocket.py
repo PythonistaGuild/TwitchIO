@@ -270,7 +270,7 @@ class WSConnection:
             log.info(f'Successfully logged onto Twitch WS: {self.nick}')
 
             await self._await_futures()
-            await self.is_ready.wait()
+            #await self.is_ready.wait()
             self.dispatch('ready')
             self._init = True
 
