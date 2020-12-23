@@ -22,15 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import asyncio
 import importlib
 import inspect
 import itertools
 import sys
 import traceback
-import warnings
 from typing import Callable, Optional, Union, Coroutine
-from twitchio.channel import Channel
 from twitchio.client import Client
 from .core import *
 from .errors import *
@@ -65,7 +62,6 @@ class Bot(Client):
 
         self._modules = {}
         self._cogs = {}
-        self._events = {}
         self._checks = []
 
         self.__init__commands__()
@@ -446,98 +442,13 @@ class Bot(Client):
         """
         pass
 
-    def run_event(self, name, *args, **kwargs):
-        name = f"event_{name}"
-
-        async def wrapped(func):
-            try:
-                await func(*args, **kwargs)
-            except Exception as e:
-                self.run_event("error", e)
-
-        inner_cb = getattr(self, name, None)
-        if inner_cb is not None:
-            if inspect.iscoroutinefunction(inner_cb):
-                self.loop.create_task(wrapped(inner_cb))
-            else:
-                warnings.warn(f"event '{name}' callback is not a coroutine", category=RuntimeWarning)
-
-        if name in self._events:
-            for event in self._events[name]:
-                self.loop.create_task(wrapped(event))
-
-    def event(self, name: str = None) -> Callable:
-
-        def decorator(func: Callable) -> Callable:
-            self.add_event(func, name)
-            return func
-
-        return decorator
-
-    def add_event(self, callback: Callable, name: str = None) -> None:
-        if not inspect.iscoroutine(callback):
-            raise ValueError("callback must be a coroutine")
-
-        event_name = name or callback.__name__
-        callback._event = event_name  # used to remove the event
-
-        if event_name in self._events:
-            self._events[event_name].append(callback)
-
-        else:
-            self._events[event_name] = [callback]
-
-    def remove_event(self, callback: Callable) -> bool:
-        if not hasattr(callback, "_event"):
-            raise ValueError("callback is not a registered event")
-
-        if callback in self._events[callback._event]:
-            self._events[callback._event].remove(callback)
-            return True
-
-        return False
-
-    @property
-    def nick(self):
-        return self._nick
-
     @property
     def commands(self):
         return self._commands
 
     @property
-    def events(self):
-        return self._events
-
-    @property
     def cogs(self):
         return self._cogs
-
-    def get_channel(self, name: str):
-        """Retrieve a channel from the cache.
-
-        Parameters
-        -----------
-        name: str
-            The channel name to retrieve from cache. Returns None if no channel was found.
-
-        Returns
-        --------
-            :class:`.Channel`
-        """
-        name = name.lower()
-
-        try:
-            self._connection._cache[name]  # this is a bit silly, but for now it'll do...
-        except KeyError:
-            return None
-
-        # Basically the cache doesn't store channels naturally, instead it stores a channel key
-        # With the associated users as a set.
-        # We create a Channel here and return it only if the cache has that channel key.
-
-        channel = Channel(name=name, websocket=self._connection, bot=self)
-        return channel
 
     async def event_command_error(self, context, error):
         """|coro|
@@ -554,100 +465,6 @@ class Bot(Client):
         print(f'Ignoring exception in command: {error}:', file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
-    async def event_mode(self, channel, user, status):
-        """|coro|
-
-        Event called when a MODE is received from Twitch.
-
-        Parameters
-        ------------
-        channel: :class:`.Channel`
-            Channel object relevant to the MODE event.
-        user: :class:`.User`
-            User object containing relevant information to the MODE.
-        status: str
-            The JTV status received by Twitch. Could be either o+ or o-.
-            Indicates a moderation promotion/demotion to the :class:`.User`
-        """
-        pass
-
-    async def event_userstate(self, user):
-        """|coro|
-
-        Event called when a USERSTATE is received from Twitch.
-
-        Parameters
-        ------------
-        user: :class:`.User`
-            User object containing relevant information to the USERSTATE.
-        """
-        pass
-
-    async def event_raw_usernotice(self, channel, tags: dict):
-        """|coro|
-
-        Event called when a USERNOTICE is received from Twitch.
-        Since USERNOTICE's can be fairly complex and vary, the following sub-events are available:
-
-            :meth:`event_usernotice_subscription` :
-            Called when a USERNOTICE Subscription or Re-subscription event is received.
-
-
-        .. seealso::
-
-            For more information on how to handle USERNOTICE's visit:
-            https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
-
-
-        Parameters
-        ------------
-        channel: :class:`.Channel`
-            Channel object relevant to the USERNOTICE event.
-        tags : dict
-            A dictionary with the relevant information associated with the USERNOTICE.
-            This could vary depending on the event.
-        """
-        pass
-
-    async def event_usernotice_subscription(self, metadata):
-        """|coro|
-
-        Event called when a USERNOTICE subscription or re-subscription event is received from Twitch.
-
-        Parameters
-        ------------
-        metadata: :class:`twitchio.dataclasses.NoticeSubscription`
-            The object containing various metadata about the subscription event.
-            For ease of use, this contains a :class:`.User` and :class:`.Channel`.
-        """
-        pass
-
-    async def event_part(self, user):
-        """|coro|
-
-        Event called when a PART is received from Twitch.
-
-        Parameters
-        ------------
-        user: :class:`.User`
-            User object containing relevant information to the PART.
-        """
-        pass
-
-    async def event_join(self, channel, user):
-        """|coro|
-
-        Event called when a JOIN is received from Twitch.
-
-        Parameters
-        ------------
-        channel: :class:`.Channel`
-            The channel associated with the JOIN.
-        user: :class:`.User`
-            User object containing relevant information to the JOIN.
-        """
-        pass
-
     async def event_message(self, message):
         """|coro|
 
@@ -659,63 +476,6 @@ class Bot(Client):
             Message object containing relevant information.
         """
         await self.handle_commands(message)
-
-    async def event_error(self, error: Exception, data=None):
-        """|coro|
-
-        Event called when an error occurs while processing data.
-
-        Parameters
-        ------------
-        error: Exception
-            The exception raised.
-        data: str
-            The raw data received from Twitch. Depending on how this is called, this could be None.
-
-        Example
-        ---------
-        .. code:: py
-
-            @bot.event
-            async def event_error(error, data):
-                traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-        """
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
-    async def event_ready(self):
-        """|coro|
-
-        Event called when the Bot has logged in and is ready.
-
-        Example
-        ---------
-        .. code:: py
-
-            @bot.event
-            async def event_ready():
-                print(f'Logged into Twitch | {bot.nick}')
-        """
-        pass
-
-    async def event_raw_data(self, data):
-        """|coro|
-
-        Event called with the raw data received by Twitch.
-
-        Parameters
-        ------------
-        data: str
-            The raw data received from Twitch.
-
-        Example
-        ---------
-        .. code:: py
-
-            @bot.event
-            async def event_raw_data(data):
-                print(data)
-        """
-        pass
 
     def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Command, no_global_checks=False):
         """Decorator which registers a command with the bot.
