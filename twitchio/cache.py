@@ -25,9 +25,12 @@ DEALINGS IN THE SOFTWARE.
 import time
 import functools
 
+from typing import Hashable
+
 __all__ = (
     "TimedCache",
-    "user_cache"
+    "user_cache",
+    "id_cache"
 )
 
 class TimedCache(dict):
@@ -76,4 +79,20 @@ def user_cache(timer=300):
             return values
 
         return _wraps
+    return wraps
+
+def id_cache(timer=300):
+    cache = TimedCache(timer)
+    def wraps(func):
+        @functools.wraps(func)
+        def _wraps(cls, id: Hashable):
+            if id in cache:
+                return cache[id]
+
+            value = func(cls, id)
+            cache[id] = value
+            return value
+
+        return _wraps
+
     return wraps

@@ -35,7 +35,9 @@ from .http import TwitchHTTP
 from .channel import Channel
 from .message import Message
 from .user import User
-from .cache import user_cache
+from .cache import user_cache, id_cache
+
+__all__ = "Client",
 
 
 class Client:
@@ -129,7 +131,8 @@ class Client:
 
         return decorator
 
-    def get_channel(self, name: str):
+    @id_cache()
+    def get_channel(self, name: str) -> Optional[Channel]:
         """Retrieve a channel from the cache.
 
         Parameters
@@ -143,17 +146,17 @@ class Client:
         """
         name = name.lower()
 
-        try:
-            self._connection._cache[name]  # this is a bit silly, but for now it'll do...
-        except KeyError:
-            return None
+        if name in self._connection._cache:
+            # Basically the cache doesn't store channels naturally, instead it stores a channel key
+            # With the associated users as a set.
+            # We create a Channel here and return it only if the cache has that channel key.
 
-        # Basically the cache doesn't store channels naturally, instead it stores a channel key
-        # With the associated users as a set.
-        # We create a Channel here and return it only if the cache has that channel key.
+            channel = Channel(name=name, websocket=self._connection)
+            return channel
 
-        channel = Channel(name=name, websocket=self._connection)
-        return channel
+    @property
+    def connected_channels(self) -> List[Channel]:
+        return [self.get_channel(x) for x in self._connection._cache.keys()]
 
     @property
     def events(self):

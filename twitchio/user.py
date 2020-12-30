@@ -29,12 +29,12 @@ from typing import TYPE_CHECKING, List, Optional
 from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
 from .rewards import CustomReward
-from .channel import Channel
-from .models import BitsLeaderboard, Clip
 
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
+    from .channel import Channel
+    from .models import BitsLeaderboard, Clip
 
 __all__ = (
     "PartialUser",
@@ -52,7 +52,7 @@ class PartialUser:
         self._cached_rewards = None
 
     @property
-    def channel(self) -> Optional[Channel]:
+    def channel(self) -> Optional["Channel"]:
         """
         Returns the :class:`twitchio.Channel` associated with this user. Could be None if you are not part of the channel's chat
 
@@ -60,6 +60,7 @@ class PartialUser:
         --------
         Optional[:class:`twitchio.Channel`]
         """
+        from .channel import Channel
         if self.name in self._http.client._connection._cache:
             return Channel(self.name, self._http.client._connection)
 
@@ -119,7 +120,7 @@ class PartialUser:
             return values
 
 
-    async def fetch_bits_leaderboard(self, token: str, period: str="all", user_id: int=None, started_at: datetime.datetime=None):
+    async def fetch_bits_leaderboard(self, token: str, period: str="all", user_id: int=None, started_at: datetime.datetime=None) -> "BitsLeaderboard":
         """|coro|
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 
@@ -134,6 +135,7 @@ class PartialUser:
         user_id: Optional[:class:`int`]
             the id of the user to fetch for
         """
+        from .models import BitsLeaderboard
         data = await self._http.get_bits_board(token, period, user_id, started_at)
         return BitsLeaderboard(self._http, data)
 
@@ -174,7 +176,7 @@ class PartialUser:
         data = await self._http.post_create_clip(token, self.id, has_delay)
         return data[0]
 
-    async def get_clips(self, ids: List[str]=None, game_id: str=None):
+    async def get_clips(self, ids: List[str]=None, game_id: str=None) -> List["Clip"]:
         """|coro|
         Fetches clips from the api. You may specify either `ids` or `game_id`, or neither.
 
@@ -189,6 +191,8 @@ class PartialUser:
         --------
         List[:class:`twitchio.Clip`]
         """
+        from .models import Clip
+
         if not ids and not game_id:
             data = await self._http.get_clips(self.id)
         elif ids:
