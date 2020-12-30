@@ -405,7 +405,7 @@ class WebsocketConnection:
             tagdict = {}
             for tag in str(tags).split(";"):
                 t = tag.split("=")
-                if t[1].isnumeric():
+                if t[1].isdecimal():
                     t[1] = int(t[1])
                 tagdict[t[0]] = t[1]
             tags = tagdict
@@ -539,6 +539,14 @@ class WebsocketConnection:
                     self._channel_cache[channel.name] = {'channel': channel, 'bot': user}
 
             await self._dispatch('mode', channel, user, mstatus)
+
+        elif action == 'CLEARCHAT': #新增 被ban事件
+            log.debug('ACTION:: CLEARCHAT')
+
+            user = User(author=content, channel=channel, tags=tags, ws=self._websocket)
+            notice = ClearChat(channel=channel, user=user, tags=tags)
+
+            await self._dispatch('clearchat', notice)
 
     async def join_action(self, channel: str, author: str, tags):
         log.debug('ACTION:: JOIN: %s', channel)

@@ -24,7 +24,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ('Message', 'Channel', 'User', 'Context', 'NoticeSubscription')
+__all__ = ('Message', 'Channel', 'User', 'Context', 'NoticeSubscription', 'ClearChat')
 
 
 import datetime
@@ -310,7 +310,7 @@ class User:
         """A boolean indicating whether the User is a moderator of the current channel."""
         if self._mod == 1:
             return True
-        if self.channel.name == self.display_name.lower():
+        if self.channel.name == self.name.lower():
             return True
         else:
             return False
@@ -657,3 +657,28 @@ class CustomRewardRedemption:
         else:
             self.__init__(data['data'], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
             return self
+
+class ClearChat: # Add class for event_ban
+    """
+    The Dataclass sent to `event_ban` events.
+    Attributes
+    ------------
+    channel : :class:`.Channel`
+        The channel associated with the subscription event.
+    user : :class:`.User`
+        The user associated with the subscription event.
+    tags : dict
+        The raw tags dict associated with the subscription event.
+    ban_duration : Optional[int]
+        Duration of the timeout, in seconds.Could be None if the ban is permanent.
+    """
+
+    def __init__(self, *, channel: Channel, user: User, tags: dict):
+        self.channel = channel
+        self.user = user
+
+        self.tags = tags
+
+        self.ban_duration = tags.get('ban-duration', None)
+        if self.ban_duration:
+            self.ban_duration = int(self.ban_duration)
