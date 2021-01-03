@@ -33,8 +33,8 @@ class Twitch(discord_commands.Cog):
         self.discord_bot = bot
         self.bot = commands.Bot(
             # set up the bot
-            irc_token='oauth:rj10n005jqcat6fep7unuphbd4fq5q',
-            client_id='00kow3uk6sskn0m47n5r3z7lfekeev',
+            irc_token='',
+            client_id='',
             nick='ArthritisAC',
             prefix='--',
             initial_channels=['#ArthritisAC']
