@@ -51,7 +51,7 @@ class Twitch(discord_commands.Cog):
     # TwitchIO event
     async def event_message(self, message):
         print(message.content)
-        await self.handle_commands(message)
+        await self.bot.handle_commands(message)
 
     # Discord command
     @discord_commands.command(name='test')
