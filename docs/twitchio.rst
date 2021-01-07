@@ -4,22 +4,27 @@ TwitchIO
 Support
 ---------------------------
 For support using TwitchIO, please join the official `support server
-<http://discord.gg/JhW28zp>`_ on `Discord <https://discordapp.com/>`_.
+<http://discord.gg/JhW28zp>`_ on `Discord <https://discord.com/>`_.
 
 Installation
 ---------------------------
-TwitchIO is currently not on PyPI and thus needs to be installed using git.
 The following commands are currently the valid ways of installing TwitchIO.
 
-**TwitchIO requires Python 3.6 or higher.**
+**TwitchIO requires Python 3.6 or higher.** (3.9 has not been tested)
 
 **Windows**
 
 .. code:: sh
 
-    py -version -m pip install git+https://github.com/TwitchIO/TwitchIO.git
+    py -version -m pip install twitchio
 
 **Linux**
+
+.. code:: sh
+
+    python3 -m pip install twitchio
+
+**Dev build**
 
 .. code:: sh
 
@@ -41,8 +46,8 @@ TwitchIO uses many endpoints which may require different tokens and IDs.
 
 All 3 endpoints may be used at the same time. Otherwise, you may choose to use any or some of the endpoints.
 
-Currently, TwitchIO's development is at a phase which has emphasis on the IRC endpoint and creating a framework around it.
-Once this is implemented, the other 2 endpoints will be developed further.
+Currently, TwitchIO's development is focused on V2. This version will contain better support for the twitch API, IRC,
+pubsub, and webhook systems. V1 will still be updated for breaking changes from twitch
 
 A quick and easy bot example:
 
