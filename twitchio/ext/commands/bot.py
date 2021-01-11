@@ -833,6 +833,21 @@ class Bot(Client):
         """
         pass
 
+    async def event_clearchat(self, notice):
+        """|coro|
+
+        Event called when the message in the chat be cleard.
+
+        Example
+        ---------
+        .. code:: py
+
+            @bot.event
+            async def event_clearchat(notice):
+                print(f'{notice.user.name}'s message has been cleard.')
+        """
+        pass
+
     def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Command):
         """Decorator which registers a command on the bot.
 
