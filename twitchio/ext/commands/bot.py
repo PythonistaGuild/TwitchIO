@@ -208,9 +208,10 @@ class Bot(Client):
         if not module:
             return
 
-        for cogname, _ in inspect.getmembers(module):
-            if cogname in self.cogs:
-                self.remove_cog(cogname)
+        cogs = []
+        for cogname, c in self.cogs.copy().items():
+            if c.__module__ == name:
+                cogs.append(c.__name__)
 
         try:
             module.breakdown(self)
