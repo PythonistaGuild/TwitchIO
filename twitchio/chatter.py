@@ -44,9 +44,6 @@ class PartialChatter(Messageable):
         self._ws = websocket
         self._channel = kwargs.get('channel', self._name)
 
-    def __str__(self):
-        return self._name
-
     def __repr__(self):
         return f'<PartialChatter name: {self._name}, channel: {self._channel}>'
 
@@ -98,9 +95,6 @@ class Chatter(Messageable):
         self._mod = int(self._tags['mod'])
         self._display_name = self._tags['display-name']
         self._colour = self._tags['color']
-
-    def __str__(self):
-        return self._name or self.display_name.lower()
 
     def __repr__(self):
         return f'<Chatter name: {self._name}, channel: {self._channel}>'
