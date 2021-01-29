@@ -207,10 +207,11 @@ class Bot(Client):
         else:
             raise CommandNotFound(f'No command "{command_}" was found.')
 
-        args, kwargs = command_.parse_args(command_._instance, parsed)
 
-        context = cls(message=message, bot=self, prefix=prefix, command=command_, args=args, kwargs=kwargs,
-                      valid=True)
+        context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True)
+        args, kwargs = await command_.parse_args(context, command_._instance, parsed)
+        context.args, context.kwargs = args, kwargs
+
         return context
 
     async def handle_commands(self, message):

@@ -23,10 +23,11 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import inspect
-from typing import Union, Optional
+from typing import Union, Optional, Callable, Awaitable
 from twitchio.abcs import Messageable
 from .cooldowns import *
 from .errors import *
+from . import builtin_converter
 
 
 __all__ = ('Command', 'command', 'Context', 'cooldown')
@@ -77,8 +78,14 @@ class Command:
     def name(self):
         return self._name
 
-    def _convert_types(self, param, parsed):
+    def _resolve_converter(self, converter: Union[Callable, Awaitable, type]):
+        if isinstance(converter, type) and converter.__module__.startswith("twitchio"):
+            if converter in builtin_converter._mapping:
+                return builtin_converter._mapping[converter]
 
+        return converter
+
+    async def _convert_types(self, context, param, parsed):
         converter = param.annotation
         if converter is param.empty:
             if param.default in (param.empty, None):
@@ -86,15 +93,22 @@ class Command:
             else:
                 converter = type(param.default)
 
+        true_converter = self._resolve_converter(converter)
+
         try:
-            argument = converter(parsed)
-        except Exception:
-            raise BadArgument(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
-                              f' Expected type {converter} got {type(parsed)}.')
+            argument = true_converter(context, parsed)
+            if inspect.iscoroutine(argument):
+                argument = await argument
+        except BadArgument:
+            raise
+
+        except Exception as e:
+            raise ArgumentParsingFailed(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
+                              f' Expected type {converter} got {type(parsed)}.', e) from e
 
         return argument
 
-    def parse_args(self, instance, parsed):
+    async def parse_args(self, context, instance, parsed):
         iterator = iter(self.params.items())
         index = 0
         args = []
@@ -117,7 +131,7 @@ class Command:
                         raise MissingRequiredArgument(param)
                     args.append(param.default)
                 else:
-                    argument = self._convert_types(param, argument)
+                    argument = await self._convert_types(context, param, argument)
                     args.append(argument)
 
             elif param.kind == param.KEYWORD_ONLY:
@@ -126,7 +140,7 @@ class Command:
                     rest = rest.lstrip(' ')
 
                 if rest:
-                    rest = self._convert_types(param, rest)
+                    rest = await self._convert_types(context, param, rest)
                 elif param.default is param.empty:
                     raise MissingRequiredArgument(param)
                 else:

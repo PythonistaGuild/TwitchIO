@@ -40,7 +40,15 @@ class MissingRequiredArgument(TwitchCommandError):
 
 
 class BadArgument(TwitchCommandError):
-    pass
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
+
+class ArgumentParsingFailed(BadArgument):
+    def __init__(self, message: str, original: Exception):
+        self.original = original
+        super().__init__(message)
 
 
 class CommandNotFound(TwitchCommandError):
