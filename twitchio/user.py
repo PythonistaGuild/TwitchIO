@@ -176,16 +176,10 @@ class PartialUser:
         data = await self._http.post_create_clip(token, self.id, has_delay)
         return data[0]
 
-    async def get_clips(self, ids: List[str]=None, game_id: str=None) -> List["Clip"]:
+    async def fetch_clips(self) -> List["Clip"]:
         """|coro|
-        Fetches clips from the api. You may specify either `ids` or `game_id`, or neither.
-
-        Parameters
-        -----------
-        ids: List[:class:`str`]
-            a list of clip ids
-        game_id: :class:`str`
-            the game id to fetch clips from. Note that this will return clips from any channel.
+        Fetches clips from the api. This will only return clips from the specified user.
+        Use :ref:`twitchio.Client` to fetch clips by id
 
         Returns
         --------
@@ -193,12 +187,7 @@ class PartialUser:
         """
         from .models import Clip
 
-        if not ids and not game_id:
-            data = await self._http.get_clips(self.id)
-        elif ids:
-            data = await self._http.get_clips(ids=ids)
-        else:
-            data = await self._http.get_clips(game_id=game_id)
+        data = await self._http.get_clips(self.id)
 
         return [Clip(self._http, x) for x in data]
 
