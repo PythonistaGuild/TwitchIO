@@ -192,6 +192,24 @@ class Client:
         data = await self._http.get_users(ids, names, token=token)
         return [User(self._http, x) for x in data]
 
+    async def fetch_clips(self, ids: List[str]):
+        """|coro|
+
+        Fetches clips by clip id.
+        To fetch clips by user id, use :ref:`twitchio.User.fetch_clips`
+
+        Parameters
+        -----------
+        ids: List[:class:`str`]
+            A list of clip ids
+
+        Returns
+        --------
+            List[:class:`twitchio.Clip`]
+        """
+        data = await self._http.get_clips(ids=ids)
+        return [models.Clip(self._http, d) for d in data]
+
     async def fetch_cheermotes(self, user_id: int=None):
         """|coro|
 

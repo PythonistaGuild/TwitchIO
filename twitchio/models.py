@@ -66,7 +66,7 @@ class CheerEmote:
         self.tiers = [CheerEmoteTier(x) for x in data['tiers']]
         self.type = data['type']
         self.order = data['order']
-        self.last_updated = datetime.datetime.fromisoformat(data['last_updated'])
+        self.last_updated = datetime.datetime.strptime(data['last_updated'], "%Y-%m-%dT%H:%M:%SZ")
         self.charitable = data['is_charitable']
 
 class Clip:
@@ -83,5 +83,5 @@ class Clip:
         self.language = data['language']
         self.title = data['title']
         self.views = data['view_count']
-        self.created_at = datetime.datetime.fromisoformat(data['created_at'])
+        self.created_at = datetime.datetime.strptime(data['created_at'], "%Y-%m-%dT%H:%M:%SZ")
         self.thumbnail_url = data['thumbnail_url']

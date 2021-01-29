@@ -412,7 +412,9 @@ class TwitchHTTP:
         for id in ids:
             q.append(("id", id))
 
-        return await self.request(Route("GET", "clips", query=q, token=token))
+        query = [x for x in q if x[1] is not None]
+
+        return await self.request(Route("GET", "clips", query=query, token=token))
 
     async def post_entitlements_upload(self, manifest_id: str, type="bulk_drops_grant"):
         return await self.request(Route("POST", "entitlements/upload", query=[("manifest_id", manifest_id), ("type", type)]))
