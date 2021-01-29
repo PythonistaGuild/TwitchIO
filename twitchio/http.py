@@ -409,7 +409,7 @@ class HTTPSession:
         if sort:
             params.append(("sort", sort))
 
-        return await self.request("GET", "channel_points/custom_rewards/redemptions", params=params, headers={"Authorization": f"Bearer {token}"}, limit=limit)
+        return await self.request("GET", "/channel_points/custom_rewards/redemptions", params=params, headers={"Authorization": f"Bearer {token}"}, limit=limit)
 
     async def update_reward_redemption_status(self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool):
         params = [("id", custom_reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]

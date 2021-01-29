@@ -645,7 +645,7 @@ class CustomRewardRedemption:
         reward_id = self.reward.id if isinstance(self.reward, CustomReward) else self.reward['id']
         try:
             data = await self._http.update_reward_redemption_status(token, self._broadcaster_id, self.id, reward_id,
-                                                                    "CANCELLED")
+                                                                    False)
         except Unauthorized as error:
             raise Unauthorized("The given token is invalid", "", 401) from error
         except HTTPException as error:
