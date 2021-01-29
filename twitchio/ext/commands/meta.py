@@ -65,8 +65,8 @@ class Cog:
             try:
                 await func(self, *args, **kwargs)
             except Exception as e:
-                bot.loop.create_task(self.cog_error(e))
                 bot.run_event("event_error", e)
+                await self.cog_error(e)
 
         if event in self._events:
             for fun in self._events[event]:
