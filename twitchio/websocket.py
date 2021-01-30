@@ -30,9 +30,10 @@ import re
 import sys
 import time
 import traceback
-import websockets
 from functools import partial
 from typing import Union, Optional, List, TYPE_CHECKING
+
+import aiohttp
 
 from .backoff import ExponentialBackoff
 from .channel import Channel
@@ -93,7 +94,7 @@ class WSConnection:
 
     @property
     def is_alive(self) -> bool:
-        return self._websocket and self._websocket.open
+        return self._websocket is not None and not self._websocket.closed
 
     async def wait_until_ready(self):
         await self.is_ready.wait()
@@ -112,8 +113,10 @@ class WSConnection:
             data = await self._client._http.validate(token=self._token)
             self.nick = data['login']
 
+        session = self._client._http.session
+
         try:
-            self._websocket = await websockets.connect(HOST)
+            self._websocket = await session.ws_connect(url=HOST)
         except Exception as e:
             retry = self._backoff.delay()
             log.error(f'Websocket connection failure: {e}:: Attempting reconnect in {retry} seconds.')
@@ -135,12 +138,13 @@ class WSConnection:
             self._last_ping = time.time()
 
         while not self._websocket.closed:
-            try:
-                data = await self._websocket.recv()   # Receive data...
-            except websockets.ConnectionClosed as e:
-                log.error(f'Websocket connection was closed: {e}')
-                return asyncio.create_task(self._connect())
+            msg = await self._websocket.receive()  # Receive data...
 
+            if msg.type is aiohttp.WSMsgType.CLOSED:
+                log.error(f'Websocket connection was closed: {msg.extra}')
+                break
+
+            data = msg.data
             if data:
                 log.debug(f" < {data}")
                 self.dispatch('raw_data', data)   # Dispatch our event_raw_data event...
@@ -162,7 +166,7 @@ class WSConnection:
     async def send(self, message: str):
         message = message.strip()
         log.debug(f" > {message}")
-        await self._websocket.send(message + "\r\n")
+        await self._websocket.send_str(message + "\r\n")
 
     async def authenticate(self, channels: Union[list, tuple]):
         """|coro|
@@ -399,5 +403,5 @@ class WSConnection:
         for fut in futures:
             fut.cancel()
 
-        self._websocket.close()
+        await self._websocket.close()
         self._loop.stop()
