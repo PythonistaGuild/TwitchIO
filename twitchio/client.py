@@ -43,26 +43,25 @@ __all__ = "Client",
 class Client:
 
     def __init__(self,
-                 irc_token: str,
+                 token: str,
                  *,
-                 nick: str,
-                 api_token: str = None,
-                 client_id: str = None,
                  client_secret: str = None,
                  initial_channels: Union[list, tuple, Callable] = None,
-                 loop: asyncio.AbstractEventLoop = None,
-                 **kwargs
+                 loop: asyncio.AbstractEventLoop = None
                  ):
 
-        self._nick = nick.lower()
         self.loop = loop or asyncio.get_event_loop()
-        self._connection = WSConnection(client=self, token=irc_token, nick=nick.lower(), loop=self.loop,
+
+        token = token.replace('oauth:', '')
+
+        self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret)
+        self._connection = WSConnection(client=self,
+                                        token=token,
+                                        loop=self.loop,
                                         initial_channels=initial_channels)
-        self._http = TwitchHTTP(self, nick, api_token=api_token, client_id=client_id, client_secret=client_secret)
 
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
-
 
     def run(self):
         try:
@@ -195,7 +194,7 @@ class Client:
 
     @property
     def nick(self):
-        return self._nick
+        return self._http.nick or self._connection.nick
 
     @user_cache()
     async def fetch_users(self, names: List[str]=None, ids: List[int]=None, token: str=None, force=False) -> List[User]:

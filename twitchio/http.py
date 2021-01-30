@@ -77,14 +77,15 @@ class TwitchHTTP:
 
     TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
-    def __init__(self, client: "Client", nick: str, *, api_token: str=None, client_id: str=None, client_secret: str=None, **kwargs):
+    def __init__(self, client: "Client", *, api_token: str = None, client_secret: str = None, **kwargs):
         self.client = client
         self.session = None
-        self.nick = nick
         self.token = api_token
         self._refresh_token = None
-        self.client_id = client_id
         self.client_secret = client_secret
+
+        self.nick = None
+        self.client_id = None
 
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
@@ -106,6 +107,9 @@ class TwitchHTTP:
         """
         if full_body:
             assert not paginate
+
+        if not self.client_id or not self.nick:
+            await self.validate(token=self.token)
 
         if not self.client_id:
             raise errors.NoClientID("A Client ID is required to use the Twitch API")
@@ -253,6 +257,30 @@ class TwitchHTTP:
             self.token = data['access_token']
             self._refresh_token = data.get('refresh_token', None)
             logger.info("Invalid or no token found, generated new token: %s", self.token)
+
+    async def validate(self, *, token: str = None) -> dict:
+        if not token:
+            token = self.token
+        if not self.session:
+            self.session = aiohttp.ClientSession()
+
+        url = 'https://id.twitch.tv/oauth2/validate'
+        headers = {"Authorization": f"OAuth {token}"}
+
+        async with self.session.get(url, headers=headers) as resp:
+            if resp.status == 401:
+                raise errors.AuthenticationError("Invalid or unauthorized Access Token passed.")
+
+            if 300 < resp.status or resp.status < 200:
+                raise errors.HTTPException('Unable to validate Access Token: ' + await resp.text())
+
+            data = await resp.json()
+
+        if not self.nick:
+            self.nick = data['login']
+            self.client_id = data['client_id']
+
+        return data
 
     async def post_commericial(self, token: str, broadcaster_id: str, length: int):
         assert length in (30, 60, 90, 120, 150, 180)

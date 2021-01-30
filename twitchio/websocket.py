@@ -50,7 +50,7 @@ HOST = 'wss://irc-ws.chat.twitch.tv:443'
 
 class WSConnection:
 
-    def __init__(self, *, nick: str, loop: asyncio.AbstractEventLoop, client: "Client", token: str=None, modes: tuple=None, initial_channels: List[str]=None):
+    def __init__(self, *, loop: asyncio.AbstractEventLoop, client: "Client", token: str=None, modes: tuple=None, initial_channels: List[str]=None):
         self._loop = loop
         self._backoff = ExponentialBackoff()
         self._keeper: Optional[asyncio.Task] = None
@@ -75,8 +75,8 @@ class WSConnection:
                          'MODE': self._mode,
                          'RECONNECT': self._reconnect}
 
+        self.nick = None
         self._token = token
-        self.nick = nick.lower()
         self.modes = modes or ("commands", "tags", "membership")
         self._initial_channels = initial_channels or []
         
@@ -107,6 +107,10 @@ class WSConnection:
 
         if self.is_alive:
             await self._websocket.close()   # If for some reason we are in a weird state, close it before retrying.
+
+        if not self._client._http.nick:
+            data = await self._client._http.validate(token=self._token)
+            self.nick = data['login']
 
         try:
             self._websocket = await websockets.connect(HOST)
@@ -178,7 +182,7 @@ class WSConnection:
         if not self.is_alive:
             return
 
-        await self.send(f'PASS {self._token}\r\n')
+        await self.send(f'PASS oauth:{self._token}\r\n')
         await self.send(f'NICK {self.nick}\r\n')
 
         for cap in self.modes:
