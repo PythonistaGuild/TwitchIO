@@ -187,7 +187,7 @@ class Bot(Client):
 
         prefix = await self.get_prefix(message)
         if not prefix:
-            return cls(message=message, prefix=prefix, valid=False)
+            return cls(message=message, prefix=prefix, valid=False, bot=self)
 
         content = message.content[len(prefix)::].lstrip()  # Strip prefix and remainder whitespace
         parsed = StringParser().process_string(content)  # Return the string as a dict view
