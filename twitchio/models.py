@@ -34,7 +34,9 @@ __all__ = (
     "BitsLeaderboard",
     "Clip",
     "CheerEmote",
-    "CheerEmoteTier"
+    "CheerEmoteTier",
+    "HypeTrainContribution",
+    "HypeTrainEvent"
 )
 
 class BitsLeaderboard:
@@ -85,3 +87,30 @@ class Clip:
         self.views = data['view_count']
         self.created_at = datetime.datetime.strptime(data['created_at'], "%Y-%m-%dT%H:%M:%SZ")
         self.thumbnail_url = data['thumbnail_url']
+
+class HypeTrainContribution:
+    __slots__ = "total", "type", "user"
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.total: int = data['total']
+        self.type: str = data['type']
+        self.user = PartialUser(http, id=data['user'], name=None) # we'll see how this goes
+
+class HypeTrainEvent:
+    __slots__ = "id", "type", "timestamp", "version", "broadcaster", "expiry", "event_id", "goal", "level",\
+                "started_at", "top_contributions", "contributions_total", "cooldown_end_time", "last_contribution"
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.id: str = data['id']
+        self.event_id: str = data['event_data']['id']
+        self.type: str = data['event_type']
+        self.version: str = data['version']
+        self.broadcaster = PartialUser(http, id=data['event_data']['broadcaster_id'], name=None)
+        self.timestamp = datetime.datetime.strptime(data['event_timestamp'], "%Y-%m-%dT%H:%M:%SZ")
+        self.cooldown_end_time = datetime.datetime.strptime(data['event_data']['cooldown_end_time'], "%Y-%m-%dT%H:%M:%SZ")
+        self.expiry = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ")
+        self.started_at = datetime.datetime.strptime(data['event_data']['started_at'], "%Y-%m-%dT%H:%M:%SZ")
+        self.last_contribution = HypeTrainContribution(http, data['event_data']['last_contribution'])
+        self.level: int = data['event_data']['level']
+        self.top_contributions = [HypeTrainContribution(http, x) for x in data['event_data']['top_contributions']]
+        self.contributions_total: int = data['event_data']['total']

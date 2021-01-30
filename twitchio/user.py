@@ -191,6 +191,26 @@ class PartialUser:
 
         return [Clip(self._http, x) for x in data]
 
+    async def fetch_hypetrain_events(self, id: str=None, token: str=None):
+        """|coro|
+        Fetches hypetrain event from the api. Needs a token with the channel:read:hype_train scope.
+
+        Parameters
+        -----------
+        id: Optional[:class:`str`]
+            The hypetrain id, if known, to fetch for
+        token: Optional[:class:`str`]
+            The oauth token to use. Will default to the one passed to the bot/client.
+
+        Returns
+        --------
+            List[:class:`twitchio.HypeTrainEvent`]
+            A list of hypetrain events
+        """
+        from .models import HypeTrainEvent
+        data = await self._http.get_hype_train(self.id, id=id, token=token)
+        return [HypeTrainEvent(self._http, d) for d in data]
+
 class BitLeaderboardUser(PartialUser):
     __slots__ = "rank", "score"
     def __init__(self, http: "TwitchHTTP", data: dict):

@@ -449,7 +449,9 @@ class TwitchHTTP:
         return await self.request(Route("GET", "games", query=q))
 
     async def get_hype_train(self, broadcaster_id: str, id: str=None, token: str=None):
-        return await self.request(Route("GET", "hypetrain/events", query=[("broadcaster_id", broadcaster_id), ("id", id)], token=token))
+        return await self.request(Route("GET", "hypetrain/events", query=[x for x in [
+                ("broadcaster_id", broadcaster_id), ("id", id)] if x[1] is not None
+            ], token=token))
 
     async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]]):
         return await self.request(Route("POST", "moderation/enforcements/status", query=[("broadcaster_id", broadcaster_id)], body={"data": msgs}, token=token))
