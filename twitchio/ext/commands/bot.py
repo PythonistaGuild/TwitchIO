@@ -39,17 +39,14 @@ from .utils import _CaseInsensitiveDict
 class Bot(Client):
 
     def __init__(self,
-                 irc_token: str,
+                 token: str,
                  *,
-                 nick: str,
                  prefix: Union[str, list, tuple, set, Callable, Coroutine],
-                 api_token: str = None,
-                 client_id: str = None,
                  client_secret: str = None,
                  initial_channels: Union[list, tuple, Callable] = None,
                  **kwargs
                  ):
-        super().__init__(irc_token, nick=nick, api_token=api_token, client_id=client_id, client_secret=client_secret, initial_channels=initial_channels)
+        super().__init__(token=token, client_secret=client_secret, initial_channels=initial_channels)
 
         self._prefix = prefix
 

@@ -42,8 +42,11 @@ __all__ = (
     "User",
 )
 
+
 class PartialUser:
+
     __slots__ = "id", "name", "_http", "_cached_rewards"
+
     def __init__(self, http: "TwitchHTTP", id: str, name: str):
         self.id = int(id)
         self.name = name
@@ -118,7 +121,6 @@ class PartialUser:
             values = [CustomReward(self._http, x, self) for x in data]
             self._cached_rewards = time.monotonic(), values
             return values
-
 
     async def fetch_bits_leaderboard(self, token: str, period: str="all", user_id: int=None, started_at: datetime.datetime=None) -> "BitsLeaderboard":
         """|coro|
@@ -212,14 +214,30 @@ class PartialUser:
         return [HypeTrainEvent(self._http, d) for d in data]
 
 class BitLeaderboardUser(PartialUser):
+
     __slots__ = "rank", "score"
+
     def __init__(self, http: "TwitchHTTP", data: dict):
         super(BitLeaderboardUser, self).__init__(http, id=data['user_id'], name=data['user_name'])
         self.rank: int = data['rank']
         self.score: int = data['score']
 
+
 class User(PartialUser):
-    __slots__ = ("_http", "id", "name", "display_name", "type", "broadcaster_type", "description", "profile_image", "offline_image", "view_count", "email", "_cached_rewards")
+
+    __slots__ = ("_http",
+                 "id",
+                 "name",
+                 "display_name",
+                 "type",
+                 "broadcaster_type",
+                 "description",
+                 "profile_image",
+                 "offline_image",
+                 "view_count",
+                 "email",
+                 "_cached_rewards")
+
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
         self.id = int(data['id'])
