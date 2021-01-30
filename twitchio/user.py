@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 __all__ = (
     "PartialUser",
     "BitLeaderboardUser",
+    "UserBan",
     "User",
 )
 
@@ -213,6 +214,20 @@ class PartialUser:
         data = await self._http.get_hype_train(self.id, id=id, token=token)
         return [HypeTrainEvent(self._http, d) for d in data]
 
+    async def fetch_bans(self, token: str, userids: List[Union[str, int]]=None) -> List["UserBan"]:
+        """|coro|
+        Fetches a list of people the User has banned from their channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The oauth token with the moderation:read scope.
+        userids: List[Union[:class:`str`, :class:`int`]]
+            An optional list of userids to fetch. Will fetch all bans if this is not passed
+        """
+        data = await self._http.get_channel_bans(token, str(self.id), user_ids=userids)
+        return [UserBan(self._http, d) for d in data]
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"
@@ -222,6 +237,13 @@ class BitLeaderboardUser(PartialUser):
         self.rank: int = data['rank']
         self.score: int = data['score']
 
+class UserBan(PartialUser):
+
+    __slots__ = "expires_at",
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        super(UserBan, self).__init__(http, name=data['user_login'], id=data['user_id'])
+        self.expires_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if data['expires_at'] else None
 
 class User(PartialUser):
 

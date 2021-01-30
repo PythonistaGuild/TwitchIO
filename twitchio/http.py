@@ -220,6 +220,7 @@ class TwitchHTTP:
                             raise errors.Unauthorized(
                                 "Your oauth token is invalid, and a new one could not be generated")
 
+                    print(resp.reason, await resp.json(), resp)
                     raise errors.Unauthorized("You're not authorized to use this route.")
 
                 if resp.status == 429:
@@ -495,8 +496,9 @@ class TwitchHTTP:
 
     async def get_channel_bans(self, token: str, broadcaster_id: str, user_ids: List[str]=None):
         q = [("broadcaster_id", broadcaster_id)]
-        for id in user_ids:
-            q.append(("user_id", id))
+        if user_ids:
+            for id in user_ids:
+                q.append(("user_id", id))
 
         return await self.request(Route("GET", "moderation/banned", query=q, token=token))
 
