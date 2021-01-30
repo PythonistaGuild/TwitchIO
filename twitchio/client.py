@@ -27,7 +27,7 @@ import inspect
 import warnings
 import traceback
 import sys
-from typing import Union, Callable, List, Optional
+from typing import Union, Callable, List, Optional, Tuple, Any
 
 from . import models
 from .websocket import WSConnection
@@ -61,6 +61,7 @@ class Client:
         self._http = TwitchHTTP(self, nick, api_token=api_token, client_id=client_id, client_secret=client_secret)
 
         self._events = {}
+        self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
 
 
     def run(self):
@@ -76,12 +77,12 @@ class Client:
         # TODO session close
         await self._connection._close()
 
-    def run_event(self, name, *args, **kwargs):
-        name = f"event_{name}"
+    def run_event(self, event_name, *args):
+        name = f"event_{event_name}"
 
         async def wrapped(func):
             try:
-                await func(*args, **kwargs)
+                await func(*args)
             except Exception as e:
                 if name == "event_error":
                     # don't enter a dispatch loop!
@@ -99,6 +100,11 @@ class Client:
         if name in self._events:
             for event in self._events[name]:
                 self.loop.create_task(wrapped(event))
+
+        for e, check, future in self._waiting:
+            if e == event_name:
+                if check(*args):
+                    future.set_result(args)
 
     def add_event(self, callback: Callable, name: str = None) -> None:
         if not inspect.iscoroutine(callback) and not inspect.iscoroutinefunction(callback):
@@ -130,6 +136,31 @@ class Client:
             return func
 
         return decorator
+
+    async def wait_for(self, event: str, predicate: Callable[[], bool]=lambda *a: True, *, timeout=60.0) -> Tuple[Any]:
+        """|coro|
+
+        Waits for an event to be dispatched, then returns the events data
+
+        Parameters
+        -----------
+        event: :class:`str`
+            The event to wait for. Do not include the `event_` prefix
+        predicate: Callable[[...], bool]
+            A check that is fired when the desired event is dispatched. if the check returns false,
+            the waiting will continue until the timeout.
+        timeout: :class:`int`
+            How long to wait before timing out and raising an error.
+
+        Returns
+        --------
+            The arguments passed to the event.
+        """
+        fut = self.loop.create_future()
+        tup = (event, predicate, fut)
+        self._waiting.append(tup)
+        values = await asyncio.wait_for(fut, timeout, loop=self.loop)
+        return values
 
     @id_cache()
     def get_channel(self, name: str) -> Optional[Channel]:
