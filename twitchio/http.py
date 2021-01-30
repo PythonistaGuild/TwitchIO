@@ -45,8 +45,10 @@ logger = logging.getLogger("twitchio.http")
 
 
 class Route:
+
+    BASE_URL = "https://api.twitch.tv/helix"
+
     __slots__ = "path", "body", "headers", "query", "method"
-    base_url = "https://api.twitch.tv/helix"
 
     def __init__(self, method: str, path: Union[str, URL], body: Union[str, dict]=None, query: List[Tuple[str, Any]]=None, headers: dict=None, token: str=None):
         self.headers = headers or {}
@@ -59,7 +61,7 @@ class Route:
         if isinstance(path, URL):
             self.path = path
         else:
-            self.path = URL(self.base_url + "/" + path.rstrip("/"))
+            self.path = URL(self.BASE_URL + "/" + path.rstrip("/"))
 
         if query:
             self.path = self.path.with_query(query)
@@ -72,6 +74,7 @@ class Route:
 
 
 class TwitchHTTP:
+
     TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
     def __init__(self, client: "Client", nick: str, *, api_token: str=None, client_id: str=None, client_secret: str=None, **kwargs):
