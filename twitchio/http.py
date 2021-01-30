@@ -43,6 +43,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("twitchio.http")
 
+
 class Route:
     __slots__ = "path", "body", "headers", "query", "method"
     base_url = "https://api.twitch.tv/helix"
@@ -179,7 +180,6 @@ class TwitchHTTP:
 
         return data
 
-
     async def _request(self, route, path, headers, utilize_bucket=True):
         reason = None
 
@@ -250,7 +250,6 @@ class TwitchHTTP:
             self.token = data['access_token']
             self._refresh_token = data.get('refresh_token', None)
             logger.info("Invalid or no token found, generated new token: %s", self.token)
-
 
     async def post_commericial(self, token: str, broadcaster_id: str, length: int):
         assert length in (30, 60, 90, 120, 150, 180)
