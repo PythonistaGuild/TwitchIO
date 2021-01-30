@@ -25,3 +25,10 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from .client import Client
+from .user import User, PartialUser, BitLeaderboardUser
+from .channel import Channel
+from .chatter import Chatter, PartialChatter
+from .enums import *
+from .message import Message
+from .models import *
+from .rewards import *
