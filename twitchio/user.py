@@ -48,7 +48,7 @@ class PartialUser:
 
     __slots__ = "id", "name", "_http", "_cached_rewards"
 
-    def __init__(self, http: "TwitchHTTP", id: str, name: str):
+    def __init__(self, http: "TwitchHTTP", id: Union[int, str], name: str):
         self.id = int(id)
         self.name = name
         self._http = http

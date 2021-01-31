@@ -34,7 +34,7 @@ from .websocket import WSConnection
 from .http import TwitchHTTP
 from .channel import Channel
 from .message import Message
-from .user import User
+from .user import User, PartialUser
 from .cache import user_cache, id_cache
 
 __all__ = "Client",
@@ -195,6 +195,23 @@ class Client:
     @property
     def nick(self):
         return self._http.nick or self._connection.nick
+
+    def create_user(self, user_id: int, user_name: str) -> PartialUser:
+        """
+        A helper method to create a :class:`twitchio.PartialUser` from a user id and user name.
+
+        Parameters
+        -----------
+        user_id: :class:`int`
+            The id of the user
+        user_name: :class:`str`
+            The name of the user
+
+        Returns
+        --------
+            :class:`twitchio.PartialUser`
+        """
+        return PartialUser(self._http, user_id, user_name)
 
     @user_cache()
     async def fetch_users(self, names: List[str]=None, ids: List[int]=None, token: str=None, force=False) -> List[User]:
