@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -41,6 +41,25 @@ __all__ = "Client",
 
 
 class Client:
+    """TwitchIO Client object that is used to interact with the Twitch API and connect to Twitch IRC over websocket.
+
+    Parameters
+    ------------
+    token: str
+        An OAuth Access Token to login with on IRC and interact with the API.
+    client_secret: Optional[str]
+        An optional application Client Secret used to generate Access Tokens automatically.
+    initial_channels: Optional[Union[list, tuple, Callable]]
+        An optional list, tuple or callable which contains channel names to connect to on startup.
+        If this is a callable, it must return a list or tuple.
+    loop: Optional[:class:`asyncio.AbstractEventLoop`]
+        The event loop the client will use to run.
+
+    Attributes
+    ------------
+    loop: :class:`asyncio.AbstractEventLoop`
+        The event loop the Client uses.
+    """
 
     def __init__(self,
                  token: str,
@@ -186,14 +205,17 @@ class Client:
 
     @property
     def connected_channels(self) -> List[Channel]:
+        """A list of currently connected :class:`.Channel`"""
         return [self.get_channel(x) for x in self._connection._cache.keys()]
 
     @property
     def events(self):
+        """A mapping of events name to coroutine."""
         return self._events
 
     @property
     def nick(self):
+        """The IRC bots nick."""
         return self._http.nick or self._connection.nick
 
     def create_user(self, user_id: int, user_name: str) -> PartialUser:
@@ -312,8 +334,7 @@ class Client:
             :meth:`event_usernotice_subscription` :
             Called when a USERNOTICE Subscription or Re-subscription event is received.
 
-
-        .. seealso::
+        .. tip::
 
             For more information on how to handle USERNOTICE's visit:
             https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
@@ -396,7 +417,7 @@ class Client:
         ---------
         .. code:: py
 
-            @bot.event
+            @bot.event()
             async def event_error(error, data):
                 traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
         """
@@ -411,7 +432,7 @@ class Client:
         ---------
         .. code:: py
 
-            @bot.event
+            @bot.event()
             async def event_ready():
                 print(f'Logged into Twitch | {bot.nick}')
         """
@@ -431,7 +452,7 @@ class Client:
         ---------
         .. code:: py
 
-            @bot.event
+            @bot.event()
             async def event_raw_data(data):
                 print(data)
         """

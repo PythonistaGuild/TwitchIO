@@ -34,11 +34,12 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 if on_rtd:
-    requirements.append('sphinx==1.7.4')
+    requirements.append('sphinx==3.4.3')
     requirements.append('sphinxcontrib-napoleon')
     requirements.append('sphinxcontrib-asyncio')
     requirements.append('sphinxcontrib-websupport')
     requirements.append('Pygments')
+    requirements.append('karma_sphinx_theme')
 
 version = '2.0.0a1'
 
