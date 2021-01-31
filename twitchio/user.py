@@ -261,7 +261,7 @@ class PartialUser:
             List[:class:`twitchio.FollowEvent`]
         """
         from .models import FollowEvent
-        data = await self._http.get_user_follows(from_id=str(self.id))
+        data = await self._http.get_user_follows(token=token, from_id=str(self.id))
         return [FollowEvent(self._http, d, from_=self) for d in data]
 
     async def fetch_followers(self, token: str=None):
