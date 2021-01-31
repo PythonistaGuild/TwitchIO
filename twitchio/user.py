@@ -247,6 +247,39 @@ class PartialUser:
         data = await self._http.get_channel_ban_unban_events(token, str(self.id), userids)
         return [BanEvent(self._http, x, self) for x in data]
 
+    async def get_following(self, token: str=None):
+        """|coro|
+        Fetches a list of users that this user is following.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+            List[:class:`twitchio.FollowEvent`]
+        """
+        from .models import FollowEvent
+        data = await self._http.get_user_follows(from_id=str(self.id))
+        return [FollowEvent(self._http, d, from_=self) for d in data]
+
+    async def get_followers(self, token: str=None):
+        """|coro|
+        Fetches a list of users that are following this user.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+            List[:class:`twitchio.FollowEvent`]
+        """
+        from .models import FollowEvent
+        data = await self._http.get_user_follows(from_id=str(self.id))
+        return [FollowEvent(self._http, d, to=self) for d in data]
 
 class BitLeaderboardUser(PartialUser):
 

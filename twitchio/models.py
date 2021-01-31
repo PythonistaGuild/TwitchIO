@@ -37,7 +37,8 @@ __all__ = (
     "CheerEmoteTier",
     "HypeTrainContribution",
     "HypeTrainEvent",
-    "BanEvent"
+    "BanEvent",
+    "FollowEvent"
 )
 
 class BitsLeaderboard:
@@ -119,7 +120,7 @@ class HypeTrainEvent:
 class BanEvent:
     __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at"
 
-    def __init__(self, http, data: dict, broadcaster: Optional[Union[PartialUser, User]]):
+    def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Optional[Union[PartialUser, User]]):
         self.id: str = data['id']
         self.type: str = data['event_type']
         self.timestamp = datetime.datetime.strptime(data['event_timestamp'], "%Y-%m-%dT%H:%M:%SZ")
@@ -129,3 +130,11 @@ class BanEvent:
         self.user = PartialUser(http, data['event_data']['user_id'], data['event_data']['user_name'])
         self.expires_at = datetime.datetime.strptime(data['event_data']['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if \
             data['event_data']['expires_at'] else None
+
+class FollowEvent:
+    __slots__ = "from_user", "to_user", "followed_at"
+
+    def __init__(self, http: "TwitchHTTP", data: dict, from_: Union[User, PartialUser]=None, to: Union[User, PartialUser]=None):
+        self.from_user = from_ or PartialUser(http, data['from_id'], data['from_name'])
+        self.to_user = to or PartialUser(http, data['to_id'], data['to_id'])
+        self.followed_at = datetime.datetime.strptime(data['followed_at'], "%Y-%m-%dT%H:%M:%SZ")

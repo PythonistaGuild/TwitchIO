@@ -602,7 +602,7 @@ class TwitchHTTP:
         return await self.request(Route("GET", "users", query=q, token=token))
 
     async def get_user_follows(self, from_id: str=None, to_id: str=None, token: str=None):
-        return await self.request(Route("GET", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token))
+        return await self.request(Route("GET", "users/follows", query=[x for x in [("from_id", from_id), ("to_id", to_id)] if x[1] is not None], token=token))
 
     async def put_update_user(self, token: str, description: str):
         return await self.request(Route("PUT", "users", query=[("description", description)], token=token))
