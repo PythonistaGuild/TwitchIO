@@ -547,10 +547,13 @@ class TwitchHTTP:
         return await self.request(Route("GET", "streams", query=q, token=token))
 
     async def post_stream_marker(self, token: str, user_id: str, description: str=None):
-        return await self.request(Route("POST", "streams/markers", body={"user_id": user_id, "description": description}, token=token))
+        return await self.request(Route("POST", "streams/markers", body={"user_id": user_id, "description": description},
+                                        token=token))
 
     async def get_stream_markers(self, token: str, user_id: str=None, video_id: str=None):
-        return await self.request(Route("GET", "streams/markers", query=[("user_id", user_id), ("video_id", video_id)], token=token))
+        return await self.request(Route("GET", "streams/markers",
+                                        query=[x for x in [("user_id", user_id), ("video_id", video_id)] if x[1] is not None],
+                                        token=token))
 
     async def get_channels(self, broadcaster_id: str, token: str=None):
         return await self.request(Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token))
@@ -559,7 +562,8 @@ class TwitchHTTP:
         assert any((game_id, language, title))
         body = {k: v for k, v in {"game_id": game_id, "broadcaster_language": language, "title": title}.items() if v is not None}
 
-        return await self.request(Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body, token=token))
+        return await self.request(Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body,
+                                        token=token))
 
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str]=None):
         q = [("broadcaster_id", broadcaster_id)]

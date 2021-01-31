@@ -39,7 +39,9 @@ __all__ = (
     "HypeTrainEvent",
     "BanEvent",
     "FollowEvent",
-    "SubscriptionEvent"
+    "SubscriptionEvent",
+    "Marker",
+    "VideoMarkers"
 )
 
 class BitsLeaderboard:
@@ -149,3 +151,20 @@ class SubscriptionEvent:
         self.tier = int(data['tier']) / 1000
         self.plan_name: str = data['plan_name']
         self.gift: bool = data['is_gift']
+
+class Marker:
+    __slots__ = "id", "created_at", "description", "position", "url"
+
+    def __init__(self, data: dict):
+        self.id: int = data['id']
+        self.created_at = datetime.datetime.strptime(data['created_at'], "%Y-%m-%dT%H:%M:%SZ")
+        self.description: str = data['description']
+        self.position: int = data['position_seconds']
+        self.url: Optional[str] = data.get("URL", None)
+
+class VideoMarkers:
+    __slots__ = "id", "markers"
+
+    def __init__(self, data: dict):
+        self.id: str = data['video_id']
+        self.markers = [Marker(d) for d in data]

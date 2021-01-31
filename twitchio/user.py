@@ -328,6 +328,47 @@ class PartialUser:
         data = await self._http.get_channel_subscriptions(token, str(self.id), user_ids=userids)
         return [SubscriptionEvent(self._http, d, broadcaster=self) for d in data]
 
+    async def create_marker(self, token: str, description: str=None):
+        """|coro|
+        Creates a marker on the stream. This only works if the channel is live (among other conditions)
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:edit:broadcast scope
+        description: :class:`str`
+            An optional description of the marker
+
+        Returns
+        --------
+            :class:`twitchio.Marker`
+        """
+        from .models import Marker
+        data = await self._http.post_stream_marker(token, user_id=str(self.id), description=description)
+        return Marker(data[0])
+
+    async def fetch_markers(self, token: str, video_id: str=None):
+        """|coro|
+        Fetches markers from the given video id, or the most recent video.
+        The Twitch api will only return markers created by the user of the authorized token
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:edit:broadcast scope
+        video_id: :class:`str`
+            A specific video o fetch from. Defaults to the most recent stream if not passed
+
+        Returns
+        --------
+            Optional[:class:`twitchio.VideoMarkers`]
+        """
+        from .models import VideoMarkers
+        data = await self._http.get_stream_markers(token, user_id=str(self.id), video_id=video_id)
+        if data:
+            return VideoMarkers(data[0]['videos'])
+
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"
