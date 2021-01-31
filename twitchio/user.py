@@ -309,6 +309,25 @@ class PartialUser:
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
+    async def fetch_subscriptions(self, token: str, userids: List[int]=None):
+        """|coro|
+        Fetches the subscriptions for this channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:read:subscriptions scope
+        userids: Optional[List[:class:`int`]]
+            An optional list of userids to look for
+
+        Returns
+        --------
+            List[:class:`twitchio.SubscriptionEvent`]
+        """
+        from .models import SubscriptionEvent
+        data = await self._http.get_channel_subscriptions(token, str(self.id), user_ids=userids)
+        return [SubscriptionEvent(self._http, d, broadcaster=self) for d in data]
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"

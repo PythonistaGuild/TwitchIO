@@ -38,7 +38,8 @@ __all__ = (
     "HypeTrainContribution",
     "HypeTrainEvent",
     "BanEvent",
-    "FollowEvent"
+    "FollowEvent",
+    "SubscriptionEvent"
 )
 
 class BitsLeaderboard:
@@ -138,3 +139,13 @@ class FollowEvent:
         self.from_user = from_ or PartialUser(http, data['from_id'], data['from_name'])
         self.to_user = to or PartialUser(http, data['to_id'], data['to_id'])
         self.followed_at = datetime.datetime.strptime(data['followed_at'], "%Y-%m-%dT%H:%M:%SZ")
+
+class SubscriptionEvent:
+    __slots__ = "broadcaster", "gift", "tier", "plan_name", "user"
+
+    def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Union[User, PartialUser]=None, user: Union[User, PartialUser]=None):
+        self.broadcaster = broadcaster or PartialUser(http, data['broadcaster_id'], data['broadcaster_name'])
+        self.user = user or PartialUser(http, data['user_id'], data['user_name'])
+        self.tier = int(data['tier']) / 1000
+        self.plan_name: str = data['plan_name']
+        self.gift: bool = data['is_gift']
