@@ -489,8 +489,9 @@ class TwitchHTTP:
 
     async def get_channel_ban_unban_events(self, token: str, broadcaster_id: str, user_ids: List[str]=None):
         q = [("broadcaster_id", broadcaster_id)]
-        for id in user_ids:
-            q.append(("user_id", id))
+        if user_ids:
+            for id in user_ids:
+                q.append(("user_id", id))
 
         return await self.request(Route("GET", "moderation/banned/events", query=q, token=token))
 

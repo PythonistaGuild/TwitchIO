@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 import datetime
 from typing import Optional, Union, TYPE_CHECKING
 
-from .user import BitLeaderboardUser, PartialUser
+from .user import BitLeaderboardUser, PartialUser, User
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
@@ -36,7 +36,8 @@ __all__ = (
     "CheerEmote",
     "CheerEmoteTier",
     "HypeTrainContribution",
-    "HypeTrainEvent"
+    "HypeTrainEvent",
+    "BanEvent"
 )
 
 class BitsLeaderboard:
@@ -114,3 +115,17 @@ class HypeTrainEvent:
         self.level: int = data['event_data']['level']
         self.top_contributions = [HypeTrainContribution(http, x) for x in data['event_data']['top_contributions']]
         self.contributions_total: int = data['event_data']['total']
+
+class BanEvent:
+    __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at"
+
+    def __init__(self, http, data: dict, broadcaster: Optional[Union[PartialUser, User]]):
+        self.id: str = data['id']
+        self.type: str = data['event_type']
+        self.timestamp = datetime.datetime.strptime(data['event_timestamp'], "%Y-%m-%dT%H:%M:%SZ")
+        self.version: float = float(data['version'])
+        self.broadcaster = broadcaster or PartialUser(http, data['event_data']['broadcaster_id'],
+                                                      data['event_data']['broadcaster_name'])
+        self.user = PartialUser(http, data['event_data']['user_id'], data['event_data']['user_name'])
+        self.expires_at = datetime.datetime.strptime(data['event_data']['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if \
+            data['event_data']['expires_at'] else None

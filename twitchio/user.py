@@ -228,6 +228,26 @@ class PartialUser:
         data = await self._http.get_channel_bans(token, str(self.id), user_ids=userids)
         return [UserBan(self._http, d) for d in data]
 
+    async def fetch_ban_events(self, token: str, userids: List[int]=None):
+        """|coro|
+        Fetches ban/unban events from the User's channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The oauth token with the moderation:read scope.
+        userids: List[:class:`int`]
+            An optional list of users to fetch ban/unban events for
+
+        Returns
+        --------
+            List[:class:`twitchio.BanEvent`]
+        """
+        from .models import BanEvent
+        data = await self._http.get_channel_ban_unban_events(token, str(self.id), userids)
+        return [BanEvent(self._http, x, self) for x in data]
+
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"
