@@ -296,7 +296,7 @@ class Client:
         data = await self._http.get_cheermotes(str(user_id) if user_id else None)
         return [models.CheerEmote(self._http, x) for x in data]
 
-    async def event_mode(self, channel, user, status):
+    async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|
 
         Event called when a MODE is received from Twitch.
@@ -313,7 +313,7 @@ class Client:
         """
         pass
 
-    async def event_userstate(self, user):
+    async def event_userstate(self, user: User):
         """|coro|
 
         Event called when a USERSTATE is received from Twitch.
@@ -325,7 +325,7 @@ class Client:
         """
         pass
 
-    async def event_raw_usernotice(self, channel, tags: dict):
+    async def event_raw_usernotice(self, channel: Channel, tags: dict):
         """|coro|
 
         Event called when a USERNOTICE is received from Twitch.
@@ -363,7 +363,7 @@ class Client:
         """
         pass
 
-    async def event_part(self, user):
+    async def event_part(self, user: User):
         """|coro|
 
         Event called when a PART is received from Twitch.
@@ -375,7 +375,7 @@ class Client:
         """
         pass
 
-    async def event_join(self, channel, user):
+    async def event_join(self, channel: Channel, user: User):
         """|coro|
 
         Event called when a JOIN is received from Twitch.
@@ -401,7 +401,7 @@ class Client:
         """
         pass
 
-    async def event_error(self, error: Exception, data=None):
+    async def event_error(self, error: Exception, data: str = None):
         """|coro|
 
         Event called when an error occurs while processing data.
@@ -438,7 +438,7 @@ class Client:
         """
         pass
 
-    async def event_raw_data(self, data):
+    async def event_raw_data(self, data: str):
         """|coro|
 
         Event called with the raw data received by Twitch.
