@@ -281,6 +281,34 @@ class PartialUser:
         data = await self._http.get_user_follows(from_id=str(self.id))
         return [FollowEvent(self._http, d, to=self) for d in data]
 
+    async def follow(self, userid: int, token: str, *, notifications=False):
+        """|coro|
+        Follows the user
+
+        Parameters
+        -----------
+        userid: :class:`int`
+            The user id to follow this user with
+        token: :class:`str`
+            An oauth token with the user:edit:follows scope
+        notifications: :class:`bool`
+            Whether to allow push notifications when this user goes live. Defaults to False
+        """
+        await self._http.post_follow_channel(token, from_id=str(userid), to_id=str(self.id), notifications=notifications)
+
+    async def unfollow(self, userid: int, token: str):
+        """|coro|
+        Unfollows the user
+
+        Parameters
+        -----------
+        userid: :class:`int`
+            The user id to unfollow this user with
+        token: :class:`str`
+            An oauth token with the user:edit:follows scope
+        """
+        await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"

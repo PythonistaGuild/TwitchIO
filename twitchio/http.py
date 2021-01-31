@@ -584,7 +584,7 @@ class TwitchHTTP:
         return await self.request(Route("PUT", "streams/tags", query=[("broadcaster_id", broadcaster_id)], body={"tag_ids": tag_ids}, token=token))
 
     async def post_follow_channel(self, token: str, from_id: str, to_id: str, notifications=False):
-        return await self.request(Route("POST", "users/follows", query=[("from_id", from_id), ("to_id", to_id), ("allow_notifications", notifications)], token=token))
+        return await self.request(Route("POST", "users/follows", query=[("from_id", from_id), ("to_id", to_id), ("allow_notifications", str(notifications))], token=token))
 
     async def delete_unfollow_channel(self, token: str, from_id: str, to_id: str):
         return await self.request(Route("DELETE", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token))
