@@ -3,6 +3,10 @@
 TwitchIO 2
 ============
 
+.. note::
+
+    For the **command extension** see: :any:`commands-ref`
+
 Client
 --------
 .. autoclass:: Client
@@ -28,3 +32,15 @@ Event Reference
 .. automethod:: Client.event_raw_usernotice(channel: Channel, tags: dict)
 .. automethod:: Client.event_usernotice_subscription(metadata)
 .. automethod:: Client.event_error(error: Exception, data: str = None)
+
+Exceptions
+------------
+.. autoexception:: TwitchIOException
+.. autoexception:: AuthenticationError
+.. autoexception:: InvalidContent
+.. autoexception:: IRCCooldownError
+.. autoexception:: EchoMessageWarning
+.. autoexception:: NoClientID
+.. autoexception:: NoToken
+.. autoexception:: HTTPException
+.. autoexception:: Unauthorized
