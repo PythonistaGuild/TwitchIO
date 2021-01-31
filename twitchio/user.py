@@ -247,6 +247,24 @@ class PartialUser:
         data = await self._http.get_channel_ban_unban_events(token, str(self.id), userids)
         return [BanEvent(self._http, x, self) for x in data]
 
+    async def fetch_moderators(self, token: str, userids: List[int]=None):
+        """|coro|
+        Fetches the moderators for this channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The oauth token with the moderation:read scope.
+        userids: List[:class:`int`]
+            An optional list of users to check mod status of
+
+        Returns
+        --------
+            List[:class:`twitchio.PartialUser`]
+        """
+        data = await self._http.get_channel_moderators(token, str(self.id), user_ids=userids)
+        return [PartialUser(self._http, d['user_id'], d['user_name']) for d in data]
+
     async def fetch_following(self, token: str=None):
         """|coro|
         Fetches a list of users that this user is following.
