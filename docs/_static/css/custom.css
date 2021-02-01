@@ -2,4 +2,17 @@
 .sig-param {
     color: rgba(19, 102, 173, .9);
 }
+
+.site-nav-tree {
+    overflow-y: auto;
+    position: sticky;
+    align-self: start;
+    max-height: 75vh;
+    top: 15vh
+}
+
+div[role=search] {
+    position: sticky;
+    top: 5vh;
+}
 /*# sourceMappingURL=custom.css.map */

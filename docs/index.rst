@@ -9,8 +9,8 @@ Welcome to TwitchIO 2!
 TwitchIO 2 is a fully async wrapper for the Twitch API and IRC, made in Python.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Table of Contents:
 
    twitchio
    twitchio.commands
