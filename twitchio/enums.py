@@ -3,7 +3,8 @@ import enum
 __all__ = (
     "PredictionEnum",
     "BroadcasterTypeEnum",
-    "UserTypeEnum"
+    "UserTypeEnum",
+    "ModEventEnum"
 )
 
 class PredictionEnum(enum.Enum):
@@ -20,3 +21,7 @@ class UserTypeEnum(enum.Enum):
     admin = "admin"
     global_mod = "global_mod"
     none = ""
+
+class ModEventEnum(enum.Enum):
+    moderator_remove = "moderation.moderator.remove"
+    moderator_add    = "moderation.moderator.add"

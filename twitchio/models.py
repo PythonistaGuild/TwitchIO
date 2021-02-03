@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 import datetime
 from typing import Optional, Union, TYPE_CHECKING
 
+from . import enums
 from .user import BitLeaderboardUser, PartialUser, User
 
 if TYPE_CHECKING:
@@ -42,7 +43,8 @@ __all__ = (
     "SubscriptionEvent",
     "Marker",
     "VideoMarkers",
-    "Game"
+    "Game",
+    "ModEvent"
 )
 
 class BitsLeaderboard:
@@ -194,3 +196,14 @@ class Game:
             :class:`str`
         """
         return self.box_art_url.format(width=width, height=height)
+
+class ModEvent:
+    __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user"
+
+    def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Union[PartialUser, User]):
+        self.id: int = data['id']
+        self.type = enums.ModEventEnum(value=data['event_type'])
+        self.timestamp = datetime.datetime.strptime(data['event_timestamp'], "%Y-%m-%dT%H:%M:%SZ")
+        self.version: str = data['version']
+        self.broadcaster = broadcaster
+        self.user = PartialUser(http, data['event_data']['user_id'], data['event_data']['user_name'])

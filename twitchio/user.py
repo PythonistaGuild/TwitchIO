@@ -26,7 +26,7 @@ import datetime
 import time
 from typing import TYPE_CHECKING, List, Optional, Union
 
-from .enums import BroadcasterTypeEnum, UserTypeEnum
+from .enums import BroadcasterTypeEnum, UserTypeEnum, ModEventEnum
 from .errors import HTTPException, Unauthorized
 from .rewards import CustomReward
 
@@ -264,6 +264,23 @@ class PartialUser:
         """
         data = await self._http.get_channel_moderators(token, str(self.id), user_ids=userids)
         return [PartialUser(self._http, d['user_id'], d['user_name']) for d in data]
+
+    async def fetch_mod_events(self, token: str):
+        """|coro|
+        Fetches mod events (moderators being added and removed) for this channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The oauth token with the moderation:read scope.
+
+        Returns
+        --------
+            List[:class:`twitchio.ModEvent`]
+        """
+        from .models import ModEvent
+        data = await self._http.get_channel_mod_events(token, str(self.id))
+        return [ModEvent(self._http, d, self) for d in data]
 
     async def fetch_following(self, token: str=None):
         """|coro|
