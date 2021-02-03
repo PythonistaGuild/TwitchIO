@@ -41,7 +41,8 @@ __all__ = (
     "FollowEvent",
     "SubscriptionEvent",
     "Marker",
-    "VideoMarkers"
+    "VideoMarkers",
+    "Game"
 )
 
 class BitsLeaderboard:
@@ -168,3 +169,28 @@ class VideoMarkers:
     def __init__(self, data: dict):
         self.id: str = data['video_id']
         self.markers = [Marker(d) for d in data]
+
+class Game:
+    __slots__ = "id", "name", "box_art_url"
+
+    def __init__(self, data: dict):
+        self.id: int = int(data['id'])
+        self.name: str = data['name']
+        self.box_art_url: str = data['box_art_url']
+
+    def art_url(self, width: int, height: int) -> str:
+        """
+        Adds width and height into the box art url
+
+        Parameters
+        -----------
+        width: :class:`int`
+            The width of the image
+        height: :class:`int`
+            The height of the image
+
+        Returns
+        --------
+            :class:`str`
+        """
+        return self.box_art_url.format(width=width, height=height)

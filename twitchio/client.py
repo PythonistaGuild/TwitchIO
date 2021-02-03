@@ -296,6 +296,36 @@ class Client:
         data = await self._http.get_cheermotes(str(user_id) if user_id else None)
         return [models.CheerEmote(self._http, x) for x in data]
 
+    async def fetch_top_games(self) -> List[models.Game]:
+        """|coro|
+        Fetches the top games from the api
+
+        Returns
+        --------
+            List[:class:`twitchio.Game`]
+        """
+        data = await self._http.get_top_games()
+        return [models.Game(d) for d in data]
+
+    async def fetch_games(self, ids: List[int]=None, names: List[str]=None) -> List[models.Game]:
+        """|coro|
+        Fetches games by id or name.
+        At least one id or name must be provided
+
+        Parameters
+        -----------
+        ids: Optional[List[:class:`int`]]
+            An optional list of game ids
+        names: Optional[List[:class:`str`]]
+            An optional list of game names
+
+        Returns
+        --------
+            List[:class:`twitchio.Game`]
+        """
+        data = await self._http.get_games(ids, names)
+        return [models.Game(d) for d in data]
+
     async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|
 

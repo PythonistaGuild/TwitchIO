@@ -472,10 +472,12 @@ class TwitchHTTP:
 
     async def get_games(self, game_ids: List[Any], game_names: List[str]):
         q = []
-        for id in game_ids:
-            q.append(("id", id))
-        for name in game_names:
-            q.append(("name", name))
+        if game_ids:
+            for id in game_ids:
+                q.append(("id", id))
+        if game_names:
+            for name in game_names:
+                q.append(("name", name))
 
         return await self.request(Route("GET", "games", query=q))
 
