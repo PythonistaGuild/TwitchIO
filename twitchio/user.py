@@ -282,6 +282,22 @@ class PartialUser:
         data = await self._http.get_channel_mod_events(token, str(self.id))
         return [ModEvent(self._http, d, self) for d in data]
 
+    async def fetch_stream_key(self, token: str):
+        """|coro|
+        Fetches the users stream key
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The oauth token with the channel:read:stream_key scope
+
+        Returns
+        --------
+            :class:`str`
+        """
+        data = await self._http.get_stream_key(token, str(self.id))
+        return data
+
     async def fetch_following(self, token: str=None):
         """|coro|
         Fetches a list of users that this user is following.
