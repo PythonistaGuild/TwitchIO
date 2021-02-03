@@ -487,6 +487,7 @@ class TwitchHTTP:
             ], token=token))
 
     async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]]):
+        print(msgs)
         return await self.request(Route("POST", "moderation/enforcements/status", query=[("broadcaster_id", broadcaster_id)], body={"data": msgs}, token=token))
 
     async def get_channel_ban_unban_events(self, token: str, broadcaster_id: str, user_ids: List[str]=None):

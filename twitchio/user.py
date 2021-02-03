@@ -282,6 +282,25 @@ class PartialUser:
         data = await self._http.get_channel_mod_events(token, str(self.id))
         return [ModEvent(self._http, d, self) for d in data]
 
+    async def automod_check(self, token: str, query: list):
+        """|coro|
+        Checks if a string passes the automod filter
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The oauth token with the moderation:read scope.
+        query: List[:class:`AutomodCheckMessage`]
+            A list of :class:`twitchio.AutomodCheckMessage`s
+
+        Returns
+        --------
+            List[:class:`twitchio.AutomodCheckResponse`]
+        """
+        from .models import AutomodCheckResponse
+        data = await self._http.post_automod_check(token, str(self.id), *[x._to_dict() for x in query])
+        return [AutomodCheckResponse(d) for d in data]
+
     async def fetch_stream_key(self, token: str):
         """|coro|
         Fetches the users stream key

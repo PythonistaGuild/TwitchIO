@@ -44,7 +44,9 @@ __all__ = (
     "Marker",
     "VideoMarkers",
     "Game",
-    "ModEvent"
+    "ModEvent",
+    "AutomodCheckMessage",
+    "AutomodCheckResponse"
 )
 
 class BitsLeaderboard:
@@ -207,3 +209,25 @@ class ModEvent:
         self.version: str = data['version']
         self.broadcaster = broadcaster
         self.user = PartialUser(http, data['event_data']['user_id'], data['event_data']['user_name'])
+
+class AutomodCheckMessage:
+    __slots__ = "id", "text", "user_id"
+
+    def __init__(self, id: str, text: str, user: Union[PartialUser, int]):
+        self.id = id
+        self.text = text
+        self.user_id = user.id if isinstance(user, PartialUser) else user
+
+    def _to_dict(self):
+        return {
+            "msg_id": self.id,
+            "msg_text": self.text,
+            "user_id": str(self.user_id)
+        }
+
+class AutomodCheckResponse:
+    __slots__ = "id", "permitted"
+
+    def __init__(self, data: dict):
+        self.id: str = data['msg_id']
+        self.permitted: bool = data['is_permitted']
