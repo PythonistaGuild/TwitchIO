@@ -616,13 +616,13 @@ class TwitchHTTP:
         return await self.request(Route("PUT", "users", query=[("description", description)], token=token))
 
     async def get_channel_extensions(self, token: str):
-        return await self.request(Route("GET", "users/eextensions/list", token=token))
+        return await self.request(Route("GET", "users/extensions/list", token=token))
 
     async def get_user_active_extensions(self, token: str, user_id: str=None):
-        return await self.request(Route("GET", "users/extensions", query=[("user_id", user_id)], token=token))
+        return (await self.request(Route("GET", "users/extensions", query=[("user_id", user_id)], token=token), paginate=False, full_body=True))['data']
 
-    async def put_user_extensions(self, token: str):
-        pass # TODO
+    async def put_user_extensions(self, token: str, data: Dict[str, Any]):
+        return (await self.request(Route("PUT", "users/extensions", token=token, body={"data": data}), paginate=False, full_body=True))['data']
 
     async def get_videos(self, ids: List[str]=None, user_id: str=None, game_id: str=None, sort: str="time",
                          type: str="all", period: str="all", language: str=None, token: str=None):

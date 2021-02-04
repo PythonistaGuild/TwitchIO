@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING, List
 
 from . import enums
 from .user import BitLeaderboardUser, PartialUser, User
@@ -46,7 +46,11 @@ __all__ = (
     "Game",
     "ModEvent",
     "AutomodCheckMessage",
-    "AutomodCheckResponse"
+    "AutomodCheckResponse",
+    "Extension",
+    "MaybeActiveExtension",
+    "ActiveExtension",
+    "ExtensionBuilder"
 )
 
 class BitsLeaderboard:
@@ -231,3 +235,77 @@ class AutomodCheckResponse:
     def __init__(self, data: dict):
         self.id: str = data['msg_id']
         self.permitted: bool = data['is_permitted']
+
+class Extension:
+    __slots__ = "id", "active", "version", "_x", "_y"
+
+    def __init__(self, data):
+        self.id: str = data['id']
+        self.version: str = data['version']
+        self.active: bool = data['active']
+        self._x = None
+        self._y = None
+
+    @classmethod
+    def new(cls, active: bool, version: str, id: str, x: int=None, y: int=None) -> "Extension":
+        self = cls.__new__(cls)
+        self.active = active
+        self.version = version
+        self.id = id
+        self._x = x
+        self._y = y
+        return self
+
+    def _to_dict(self):
+        v = {
+            "active": self.active,
+            "id": self.id,
+            "version": self.version
+        }
+        if self._x is not None:
+            v['x'] = self._x
+        if self._y is not None:
+            v['y'] = self._y
+        return v
+
+class MaybeActiveExtension(Extension):
+    __slots__ = "id", "version", "name", "can_activate", "types"
+
+    def __init__(self, data):
+        self.id: str = data['id']
+        self.version: str = data['version']
+        self.name: str = data['name']
+        self.can_activate: bool = data['can_activate']
+        self.types: List[str] = data['type']
+
+class ActiveExtension(Extension):
+    __slots__ = "id", "active", "name", "version", "x", "y"
+
+    def __init__(self, data):
+        self.active: bool = data['active']
+        self.id: Optional[str] = data.get("id", None)
+        self.version: Optional[str] = data.get("version", None)
+        self.name: Optional[str] = data.get("name", None)
+        self.x: Optional[int] = data.get("x", None) # x and y only show for component extensions.
+        self.y: Optional[int] = data.get("y", None)
+
+class ExtensionBuilder:
+    __slots__ = "panels", "overlays", "components"
+
+    def __init__(self, panels: List[Extension]=None, overlays: List[Extension]=None, components: List[Extension]=None):
+        self.panels = panels or []
+        self.overlays = overlays or []
+        self.components = components or []
+
+    def _to_dict(self):
+        return {
+            "panel": {
+                str(x): y._to_dict() for x, y in enumerate(self.panels)
+            },
+            "overlay": {
+                str(x): y._to_dict() for x, y in enumerate(self.overlays)
+            },
+            "component": {
+                str(x): y._to_dict() for x, y in enumerate(self.components)
+            }
+        }

@@ -26,7 +26,7 @@ import datetime
 import time
 from typing import TYPE_CHECKING, List, Optional, Union
 
-from .enums import BroadcasterTypeEnum, UserTypeEnum, ModEventEnum
+from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
 from .rewards import CustomReward
 
@@ -34,7 +34,7 @@ from .rewards import CustomReward
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
-    from .models import BitsLeaderboard, Clip
+    from .models import BitsLeaderboard, Clip, ExtensionBuilder
 
 __all__ = (
     "PartialUser",
@@ -438,6 +438,67 @@ class PartialUser:
         if data:
             return VideoMarkers(data[0]['videos'])
 
+    async def fetch_extensions(self, token: str):
+        """|coro|
+        Fetches extensions the user has (active and inactive)
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:read:broadcast scope
+
+        Returns
+        --------
+            List[:class:`twitchio.Extension`]
+        """
+        from .models import Extension
+        data = await self._http.get_channel_extensions(token)
+        return [Extension(d) for d in data]
+
+    async def fetch_active_extensions(self, token: str=None):
+        """|coro|
+        Fetches active extensions the user has.
+        Returns a dictionary containing the following keys: `panel`, `overlay`, `component`.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token with the user:read:broadcast *or* user:edit:broadcast scope
+
+        Returns
+        --------
+            Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
+        """
+        from .models import ActiveExtension
+        data = await self._http.get_user_active_extensions(token, str(self.id))
+        return {
+            typ: {
+                int(n): ActiveExtension(d) for n, d in vals.items()
+            } for typ, vals in data.items()
+        }
+
+    async def update_extensions(self, token: str, extensions: "ExtensionBuilder"):
+        """|coro|
+        Updates a users extensions. See the :class:`twitchio.ExtensionBuilder`
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with user:edit:broadcast scope
+        extensions: :class:`twitchio.ExtensionBuilder`
+            A :class:`twitchio.ExtensionBuilder` to be given to the twitch api
+
+        Returns
+        --------
+            Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
+        """
+        from .models import ActiveExtension
+        data = await self._http.put_user_extensions(token, extensions._to_dict())
+        return {
+            typ: {
+                int(n): ActiveExtension(d) for n, d in vals.items()
+            } for typ, vals in data.items()
+        }
 
 class BitLeaderboardUser(PartialUser):
 
