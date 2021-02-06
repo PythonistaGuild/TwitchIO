@@ -50,7 +50,8 @@ __all__ = (
     "Extension",
     "MaybeActiveExtension",
     "ActiveExtension",
-    "ExtensionBuilder"
+    "ExtensionBuilder",
+    "Video"
 )
 
 class BitsLeaderboard:
@@ -309,3 +310,33 @@ class ExtensionBuilder:
                 str(x): y._to_dict() for x, y in enumerate(self.components)
             }
         }
+
+class Video:
+    __slots__ = "_http", "id", "user", "title", "description", "created_at", "published_at", "url", "thumbnail_url", "viewable", "view_count", "language", "type", "duration"
+
+    def __init__(self, http: "TwitchHTTP", data: dict, user: Union[PartialUser, User]=None):
+        self._http = http
+        self.id: id = int(data['id'])
+        self.user = user or PartialUser(http, data['user_id'], data['user_name'])
+        self.title: str = data['title']
+        self.description: str = data['description']
+        self.created_at = datetime.datetime.strptime(data['created_at'], "%Y-%m-%dT%H:%M:%SZ")
+        self.published_at = datetime.datetime.strptime(data['published_at'], "%Y-%m-%dT%H:%M:%SZ")
+        self.url: str = data['url']
+        self.thumbnail_url: str = data['thumbnail_url']
+        self.viewable: str = data['viewable']
+        self.view_count: int = data['view_count']
+        self.language: str = data['language']
+        self.type: str = data['type']
+        self.duration: str = data['duration']
+
+    async def delete(self, token: str):
+        """|coro|
+        Deletes the video. For bulk deletion see :ref:`twitchio.Client.delete_videos`
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The users oauth token with the channel:manage:videos
+        """
+        await self._http.delete_videos(token, ids=[str(self.id)])

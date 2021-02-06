@@ -279,6 +279,42 @@ class Client:
         data = await self._http.get_clips(ids=ids)
         return [models.Clip(self._http, d) for d in data]
 
+    async def fetch_videos(
+            self, ids: List[int]=None, game_id: int=None, user_id: int=None,
+            period=None, sort=None, type=None, language=None
+    ):
+        """|coro|
+        Fetches videos by id, game id, or user id. If you have specific video ids use :ref:`twitchio.Client.fetch_videos`
+
+        Parameters
+        -----------
+        ids: Optional[List[:class:`int`]]
+            A list of video ids
+        game_id: Optional[:class:`int`]
+            A game to fetch videos from
+        user_id: Optional[:class:`int`]
+            A user to fetch videos from. See :ref:`twitchio.PartialUser.fetch_videos`
+        period: Optional[:class:`str`]
+            The period for which to fetch videos. Valid values are `all`, `day`, `week`, `month`. Defaults to `all`.
+            Cannot be used when video id(s) are passed
+        sort: :class:`str`
+            Sort orders of the videos. Valid values are `time`, `trending`, `views`, Defaults to `time`.
+            Cannot be used when video id(s) are passed
+        type: Optional[:class:`str`]
+            Type of the videos to fetch. Valid values are `upload`, `archive`, `highlight`. Defaults to `all`.
+            Cannot be used when video id(s) are passed
+        language: Optional[:class:`str`]
+            Language of the videos to fetch. Must be an `ISO-639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ two letter code.
+            Cannot be used when video id(s) are passed
+
+        Returns
+        --------
+            List[:class:`twitchio.Video`]
+        """
+        from .models import Video
+        data = await self._http.get_videos(ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type, language=language)
+        return [Video(self._http, x) for x in data]
+
     async def fetch_cheermotes(self, user_id: int=None):
         """|coro|
 

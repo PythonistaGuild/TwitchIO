@@ -500,6 +500,29 @@ class PartialUser:
             } for typ, vals in data.items()
         }
 
+    async def fetch_videos(self, period="all", sort="time", type="all", language=None):
+        """|coro|
+        Fetches videos that belong to the user. If you have specific video ids use :ref:`twitchio.Client.fetch_videos`
+
+        Parameters
+        -----------
+        period: :class:`str`
+            The period for which to fetch videos. Valid values are `all`, `day`, `week`, `month`. Defaults to `all`
+        sort: :class:`str`
+            Sort orders of the videos. Valid values are `time`, `trending`, `views`, Defaults to `time`
+        type: Optional[:class:`str`]
+            Type of the videos to fetch. Valid values are `upload`, `archive`, `highlight`. Defaults to `all`
+        language: Optional[:class:`str`]
+            Language of the videos to fetch. Must be an `ISO-639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ two letter code.
+
+        Returns
+        --------
+            List[:class:`twitchio.Video`]
+        """
+        from models import Video
+        data = await self._http.get_videos(user_id=str(self.id), period=period, sort=sort, type=type, language=language)
+        return [Video(self._http, x, self) for x in data]
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"

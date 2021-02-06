@@ -626,13 +626,25 @@ class TwitchHTTP:
 
     async def get_videos(self, ids: List[str]=None, user_id: str=None, game_id: str=None, sort: str="time",
                          type: str="all", period: str="all", language: str=None, token: str=None):
-        q = [("user_id", user_id), ("game_id", game_id), ("sort", sort), ("type", type), ("period", period), ("lanaguage", language)]
+        q = [
+            x for x in [
+                ("user_id", user_id), ("game_id", game_id), ("sort", sort), ("type", type), ("period", period), ("lanaguage", language)
+                ]
+            if x[1] is not None
+            ]
 
         if ids:
             for id in ids:
                 q.append(("id", id))
 
         return await self.request(Route("GET", "videos", query=q, token=token))
+
+    async def delete_videos(self, token: str, ids: List[str]=None):
+        q = None
+        if ids:
+            q = [("id", x) for x in ids]
+
+        return await self.request(Route("DELETE", "videos", query=q, token=token))
 
     async def get_webhook_subs(self):
         return await self.request(Route("GET", "webhooks/subscriptions"))
