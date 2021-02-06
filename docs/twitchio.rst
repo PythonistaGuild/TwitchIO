@@ -18,6 +18,7 @@ Client
               create_user,
               fetch_users,
               fetch_clips,
+              fetch_videos,
               fetch_cheermotes,
 
 Event Reference

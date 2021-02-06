@@ -33,7 +33,9 @@ release = '2.0.0a'
 # ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.extlinks',
-              'sphinxcontrib.asyncio']
+              'sphinxcontrib.asyncio',
+              'sphinx.ext.intersphinx'
+              ]
 
 if on_rtd:
     extensions.append('sphinxcontrib.napoleon')
@@ -61,6 +63,10 @@ rst_prolog = """
 #
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
+
+intersphinx_mapping = {
+  'py': ('https://docs.python.org/3', None)
+}
 
 
 # List of patterns, relative to source directory, that match files and
