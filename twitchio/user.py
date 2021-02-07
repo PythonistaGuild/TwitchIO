@@ -86,6 +86,19 @@ class PartialUser:
         data = await self._http.client.fetch_users(ids=[self.id], force=force, token=token)
         return data[0]
 
+    async def edit(self, token: str, description: str):
+        """|coro|
+        Edits a channels description
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token for the user with the user:edit scope
+        description: :class:`str`
+            The new description for the user
+        """
+        await self._http.put_update_user(token, description)
+
     async def get_custom_rewards(self, token: str, *, only_manageable=False, ids: List[int]=None, force=False) -> List["CustomReward"]:
         """|coro|
         Fetches the channels custom rewards (aka channel points) from the api.
