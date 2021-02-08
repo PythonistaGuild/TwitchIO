@@ -433,6 +433,17 @@ class Client:
 
         return resp
 
+    async def get_webhook_subscriptions(self):
+        """|coro|
+        Fetches your current webhook subscriptions. Requires your bot to be logged in with an app access token.
+
+        Returns
+        --------
+            List[:class:`twitchio.WebhookSubscription`]
+        """
+        data = await self._http.get_webhook_subs()
+        return [models.WebhookSubscription(x) for x in data]
+
     async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|
 

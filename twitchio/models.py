@@ -52,7 +52,8 @@ __all__ = (
     "ActiveExtension",
     "ExtensionBuilder",
     "Video",
-    "Tag"
+    "Tag",
+    "WebhookSubscription"
 )
 
 class BitsLeaderboard:
@@ -350,3 +351,11 @@ class Tag:
         self.auto: bool = data['is_auto']
         self.localization_names: Dict[str, str] = data['localization_names']
         self.localization_descriptions: Dict[str, str] = data['localization_descriptions']
+
+class WebhookSubscription:
+    __slots__ = "callback", "expires_at", "topic"
+
+    def __init__(self, data: dict):
+        self.callback: str = data['callback']
+        self.expires_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ")
+        self.topic: str = data['topic']
