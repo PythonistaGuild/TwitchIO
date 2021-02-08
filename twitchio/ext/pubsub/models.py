@@ -4,6 +4,9 @@ from typing import List, Optional
 from twitchio import PartialUser, Client, Channel, CustomReward
 
 __all__ = (
+    "PoolError",
+    "PoolFull",
+
     "PubSubMessage",
     "PubSubBitsMessage",
     "PubSubBitsBadgeMessage",
@@ -12,6 +15,12 @@ __all__ = (
     "PubSubChannelPointsMessage",
     "PubSubModerationAction"
 )
+
+class PoolError(Exception):
+    pass
+
+class PoolFull(PoolError):
+    pass
 
 class PubSubChatMessage:
     __slots__ = "content", "id", "type"

@@ -16,11 +16,14 @@ except:
 
 logger = logging.getLogger("twitchio.ext.pubsub.websocket")
 
+__all__ = "PubSubWebsocket",
+
 class PubSubWebsocket:
-    __slots__ = "session", "topics", "client", "connection", "_latency", "timeout", "_task", "_poll"
+    __slots__ = "session", "topics", "client", "connection", "_latency", "timeout", "_task", "_poll", "max_topics"
     ENDPOINT = "wss://pubsub-edge.twitch.tv"
 
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, *, max_topics=50):
+        self.max_topics = max_topics
         self.session = None
         self.connection: aiohttp.ClientWebSocketResponse = None
         self.topics: List[Topic] = []
@@ -56,10 +59,10 @@ class PubSubWebsocket:
     async def _send_initial_topics(self):
         await self._send_topics(self.topics)
 
-    async def _send_topics(self, topics: List[Topic]):
+    async def _send_topics(self, topics: List[Topic], type="LISTEN"):
         for tok, _topics in groupby(topics, key=lambda val: val.token):
             payload = {
-                "type": "LISTEN",
+                "type": type,
                 "data": {
                     "topics": [x.present for x in _topics],
                     "auth_token": tok
@@ -68,14 +71,22 @@ class PubSubWebsocket:
             await self.send(payload)
 
     async def subscribe_topic(self, topics: List[Topic]):
-        if len(self.topics) + len(topics) > 50:
-            raise ValueError("Cannot have more than 50 topics on one websocket")
+        if len(self.topics) + len(topics) > self.max_topics:
+            raise ValueError(f"Cannot have more than {self.max_topics} topics on one websocket")
 
         self.topics += topics
         if not self.connection or self.connection.closed:
             return
 
         await self._send_topics(topics)
+
+    async def unsubscribe_topic(self, topics: List[Topic]):
+        if not all([t in self.topics for t in topics]):
+            raise ValueError("Topics were given that have not been subscribed to")
+
+        await self._send_topics(topics, type="UNLISTEN")
+        for t in topics:
+            self.topics.remove(t)
 
     async def poll(self):
         while not self.connection.closed:
