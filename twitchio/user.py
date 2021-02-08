@@ -40,6 +40,7 @@ __all__ = (
     "PartialUser",
     "BitLeaderboardUser",
     "UserBan",
+    "SearchUser",
     "User",
 )
 
@@ -579,6 +580,22 @@ class UserBan(PartialUser):
     def __init__(self, http: "TwitchHTTP", data: dict):
         super(UserBan, self).__init__(http, name=data['user_login'], id=data['user_id'])
         self.expires_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if data['expires_at'] else None
+
+class SearchUser(PartialUser):
+
+    __slots__ = "game_id", "name", "display_name", "language", "title", "thumbnail_url", "live", "started_at", "tag_ids"
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self._http = http
+        self.display_name: str = data['display_name']
+        self.name: str = data['broadcaster_login']
+        self.id: int = int(data['id'])
+        self.game_id: str = data['game_id']
+        self.title: str = data['title']
+        self.thumbnail_url: str = data['thumbnail_url']
+        self.live: bool = data['is_live']
+        self.started_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
+        self.tag_ids: List[str] = data['tag_ids']
 
 class User(PartialUser):
 

@@ -34,7 +34,7 @@ from .websocket import WSConnection
 from .http import TwitchHTTP
 from .channel import Channel
 from .message import Message
-from .user import User, PartialUser
+from .user import User, PartialUser, SearchUser
 from .cache import user_cache, id_cache
 
 __all__ = "Client",
@@ -377,6 +377,40 @@ class Client:
         """
         data = await self._http.get_stream_tags(ids)
         return [models.Tag(x) for x in data]
+
+    async def search_categories(self, query: str):
+        """|coro|
+        Searches twitches categories
+
+        Parameters
+        -----------
+        query: :class:`str`
+            The query to search for
+
+        Returns
+        --------
+            List[:class:`twitchio.Game`]
+        """
+        data = await self._http.get_search_categories(query)
+        return [models.Game(x) for x in data]
+
+    async def search_channels(self, query: str, *, live_only=False):
+        """|coro|
+        Searches channels for the given query
+
+        Parameters
+        -----------
+        query: :class:`str`
+            The query to search for
+        live_only: :class:`bool`
+            Only search live channels. Defaults to False
+
+        Returns
+        --------
+            List[:class:`twitchio.SearchUser`]
+        """
+        data = await self._http.get_search_channels(query, live=live_only)
+        return [SearchUser(self._http, x) for x in data]
 
     async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|

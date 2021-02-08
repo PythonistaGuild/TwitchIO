@@ -525,7 +525,7 @@ class TwitchHTTP:
         return await self.request(Route("GET", "search/categories", query=[("query", query)], token=token))
 
     async def get_search_channels(self, query: str, token: str=None, live: bool=False):
-        return await self.request(Route("GET", "search/channels", query=[("query", query), ("live_only", live)], token=token))
+        return await self.request(Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token))
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
         return await self.request(Route("GET", "streams/key", query=[("broadcaster_id", broadcaster_id)], token=token), paginate=False)
