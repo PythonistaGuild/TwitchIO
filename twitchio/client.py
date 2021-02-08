@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import inspect
 import warnings
+import logging
 import traceback
 import sys
 from typing import Union, Callable, List, Optional, Tuple, Any
@@ -39,6 +40,7 @@ from .cache import user_cache, id_cache
 
 __all__ = "Client",
 
+logger = logging.getLogger("twitchio.client")
 
 class Client:
     """TwitchIO Client object that is used to interact with the Twitch API and connect to Twitch IRC over websocket.
@@ -97,6 +99,7 @@ class Client:
 
     def run_event(self, event_name, *args):
         name = f"event_{event_name}"
+        logger.debug(f"dispatching event {event_name}")
 
         async def wrapped(func):
             try:

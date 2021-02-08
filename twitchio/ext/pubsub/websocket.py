@@ -7,6 +7,7 @@ from typing import Optional, List
 import aiohttp
 from twitchio import Client
 from .topics import Topic
+from . import models
 
 try:
     import ujson as json
@@ -79,7 +80,7 @@ class PubSubWebsocket:
     async def poll(self):
         while not self.connection.closed:
             data = await self.connection.receive_json(loads=json.loads)
-            handle = getattr(self, "handle_"+data['type'].lower(), None)
+            handle = getattr(self, "handle_"+data['type'].lower().replace("-", "_"), None)
             if handle:
                 self.client.loop.create_task(handle(data))
             else:
@@ -105,3 +106,15 @@ class PubSubWebsocket:
 
     async def handle_pong(self, msg: dict):
         self.timeout.set()
+
+    async def handle_message(self, message):
+        message['data']['message'] = json.loads(message['data']['message'])
+        msg = models.PubSubMessage(self.client, message['data']['topic'], message['data']['message'])
+        self.client.run_event("pubsub_message", msg) # generic one
+
+        self.client.run_event(*models.create_message(self.client, message))
+
+    async def handle_reward_redeem(self, message):
+        msg = models.PubSubChannelPointsMessage(self.client, message['data'])
+        self.client.run_event("pubsub_message", msg) # generic one
+        self.client.run_event("pubsub_channel_points", msg)
