@@ -69,7 +69,7 @@ class Client:
                  loop: asyncio.AbstractEventLoop = None
                  ):
 
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
 
         token = token.replace('oauth:', '')
 
