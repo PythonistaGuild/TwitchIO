@@ -412,6 +412,27 @@ class Client:
         data = await self._http.get_search_channels(query, live=live_only)
         return [SearchUser(self._http, x) for x in data]
 
+    async def delete_videos(self, token: str, ids: List[int]) -> List[int]:
+        """|coro|
+        Delete videos from the api. Returns the video ids that were successfully deleted.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:videos scope
+        ids: List[:class:`int`]
+            A list of video ids from the channel of the oauth token to delete
+
+        Returns
+        --------
+            List[:class:`int`]
+        """
+        resp = []
+        for chunk in [ids[x:x + 3] for x in range(0, len(ids), 3)]:
+            resp.append(await self._http.delete_videos(token, chunk))
+
+        return resp
+
     async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|
 

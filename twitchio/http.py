@@ -639,12 +639,10 @@ class TwitchHTTP:
 
         return await self.request(Route("GET", "videos", query=q, token=token))
 
-    async def delete_videos(self, token: str, ids: List[str]=None):
-        q = None
-        if ids:
-            q = [("id", x) for x in ids]
+    async def delete_videos(self, token: str, ids: List[int]):
+        q = [("id", str(x)) for x in ids]
 
-        return await self.request(Route("DELETE", "videos", query=q, token=token))
+        return (await self.request(Route("DELETE", "videos", query=q, token=token), paginate=False, full_body=True))['data']
 
     async def get_webhook_subs(self):
         return await self.request(Route("GET", "webhooks/subscriptions"))
