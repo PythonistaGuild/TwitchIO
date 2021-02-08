@@ -444,6 +444,19 @@ class Client:
         data = await self._http.get_webhook_subs()
         return [models.WebhookSubscription(x) for x in data]
 
+    async def event_token_expired(self):
+        """|coro|
+
+        A special event called when the oauth token expires. This is a hook into the http system, it will call this
+        when a call to the api fails due to a token expiry. This function should return either a new token, or `None`.
+        Returning `None` will cause the client to attempt an automatic token generation.
+
+        .. note::
+            This event is a callback hook. It is not a dispatched event. Any errors raised will be passed to the
+            :ref:`~event_error` event.
+        """
+        return None
+
     async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|
 

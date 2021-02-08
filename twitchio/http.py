@@ -235,6 +235,15 @@ class TwitchHTTP:
         raise errors.HTTPException("Failed to reach Twitch API", reason, resp.status)
 
     async def _generate_login(self):
+        try:
+            token = await self.client.event_token_expired()
+            if token is not None:
+                assert isinstance(token, str), TypeError(f"Expected a string, got {type(token)}")
+                self.token = token
+                return
+        except Exception as e:
+            self.client.run_event("error", e)
+
         if not self.client_id or not self.client_secret:
             raise errors.HTTPException("Unable to generate a token, client id and/or client secret not given")
 
