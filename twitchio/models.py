@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import datetime
-from typing import Optional, Union, TYPE_CHECKING, List
+from typing import Optional, Union, TYPE_CHECKING, List, Dict
 
 from . import enums
 from .user import BitLeaderboardUser, PartialUser, User
@@ -51,7 +51,8 @@ __all__ = (
     "MaybeActiveExtension",
     "ActiveExtension",
     "ExtensionBuilder",
-    "Video"
+    "Video",
+    "Tag"
 )
 
 class BitsLeaderboard:
@@ -340,3 +341,12 @@ class Video:
             The users oauth token with the channel:manage:videos
         """
         await self._http.delete_videos(token, ids=[str(self.id)])
+
+class Tag:
+    __slots__ = "id", "auto", "localization_names", "localization_descriptions"
+
+    def __init__(self, data: dict):
+        self.id: str = data['tag_id']
+        self.auto: bool = data['is_auto']
+        self.localization_names: Dict[str, str] = data['localization_names']
+        self.localization_descriptions: Dict[str, str] = data['localization_descriptions']

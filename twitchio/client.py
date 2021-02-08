@@ -362,6 +362,22 @@ class Client:
         data = await self._http.get_games(ids, names)
         return [models.Game(d) for d in data]
 
+    async def fetch_tags(self, ids: List[str]=None):
+        """|coro|
+        Fetches stream tags.
+
+        Parameters
+        -----------
+        ids: Optional[List[:class:`str`]]
+            The ids of the tags to fetch
+
+        Returns
+        --------
+            List[:class:`twitchio.Tag`]
+        """
+        data = await self._http.get_stream_tags(ids)
+        return [models.Tag(x) for x in data]
+
     async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|
 

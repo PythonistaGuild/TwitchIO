@@ -34,7 +34,7 @@ from .rewards import CustomReward
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
-    from .models import BitsLeaderboard, Clip, ExtensionBuilder
+    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag
 
 __all__ = (
     "PartialUser",
@@ -86,7 +86,7 @@ class PartialUser:
         data = await self._http.client.fetch_users(ids=[self.id], force=force, token=token)
         return data[0]
 
-    async def edit(self, token: str, description: str):
+    async def edit(self, token: str, description: str) -> None:
         """|coro|
         Edits a channels description
 
@@ -98,6 +98,33 @@ class PartialUser:
             The new description for the user
         """
         await self._http.put_update_user(token, description)
+
+    async def fetch_tags(self):
+        """|coro|
+        Fetches tags the user currently has active.
+
+        Returns
+        --------
+            List[:class:`twitchio.Tag`]
+        """
+        from .models import Tag
+        data = await self._http.get_channel_tags(str(self.id))
+        return [Tag(x) for x in data]
+
+    async def replace_tags(self, token: str, tags: List[Union[str, "Tag"]]):
+        """|coro|
+        Replaces the channels active tags. Tags expire 72 hours after being applied,
+        unless the stream is live during that time period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:edit:broadcast scope
+        tags: List[Union[:class:`twitchio.Tag`, :class:`str`]]
+            A list of :class:`twitchio.Tag` or tag ids to put on the channel. Max 100
+        """
+        tags = [x if isinstance(x, str) else x.id for x in tags]
+        await self._http.put_replace_channel_tags(token, str(self.id), tags)
 
     async def get_custom_rewards(self, token: str, *, only_manageable=False, ids: List[int]=None, force=False) -> List["CustomReward"]:
         """|coro|
