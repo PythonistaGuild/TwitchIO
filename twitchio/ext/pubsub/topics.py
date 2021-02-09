@@ -47,6 +47,9 @@ class Topic(_topic):
     def __eq__(self, other):
         return other is self or (isinstance(other, Topic) and other.present == self.present)
 
+    def __hash__(self):
+        return hash(self.present)
+
 bits = _topic("channel-bits-events-v2.{0}", [int])
 bits_badge = _topic("channel-bits-badge-unlocks.{0}", [int])
 channel_points = _topic("channel-points-v1.{0}", [int])
