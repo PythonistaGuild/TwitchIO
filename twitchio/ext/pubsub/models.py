@@ -16,7 +16,13 @@ __all__ = (
     "PubSubModerationAction"
 )
 
-class PoolError(Exception):
+class PubSubError(Exception):
+    pass
+
+class ConnectionFailure(PubSubError):
+    pass
+
+class PoolError(PubSubError):
     pass
 
 class PoolFull(PoolError):

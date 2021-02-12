@@ -1,7 +1,8 @@
 import asyncio
 import logging
-from itertools import groupby
 import time
+import uuid
+from itertools import groupby
 from typing import Optional, List
 
 import aiohttp
@@ -19,16 +20,17 @@ logger = logging.getLogger("twitchio.ext.pubsub.websocket")
 __all__ = "PubSubWebsocket",
 
 class PubSubWebsocket:
-    __slots__ = "session", "topics", "client", "connection", "_latency", "timeout", "_task", "_poll", "max_topics"
+    __slots__ = "session", "topics", "client", "connection", "_latency", "timeout", "_task", "_poll", "max_topics", "_closing"
     ENDPOINT = "wss://pubsub-edge.twitch.tv"
 
     def __init__(self, client: Client, *, max_topics=50):
         self.max_topics = max_topics
         self.session = None
-        self.connection: aiohttp.ClientWebSocketResponse = None
+        self.connection: Optional[aiohttp.ClientWebSocketResponse] = None
         self.topics: List[Topic] = []
         self.client = client
         self._latency = None
+        self._closing = False
         self.timeout = asyncio.Event(loop=self.client.loop)
 
     @property
@@ -36,10 +38,24 @@ class PubSubWebsocket:
         return self._latency
 
     async def connect(self):
+        self.connection = None
         if self.session is None:
             self.session = aiohttp.ClientSession()
 
-        self.connection = await self.session.ws_connect(self.ENDPOINT)
+        logger.debug(f"Websocket connecting to {self.ENDPOINT}")
+        backoff = 2
+        for attempt in range(5):
+            try:
+                self.connection = await self.session.ws_connect(self.ENDPOINT)
+                break
+            except aiohttp.ClientConnectionError:
+                logger.warning(f"Failed to connect to pubsub edge. Retrying in {backoff} seconds (attempt {attempt}/5)")
+                await asyncio.sleep(backoff)
+                backoff **= 2
+
+        if not self.connection:
+            raise models.ConnectionFailure("Failed to connect to pubsub edge")
+
         self._task = self.client.loop.create_task(self.ping_pong())
         self._poll = self.client.loop.create_task(self.poll())
         await self._send_initial_topics()
@@ -61,6 +77,7 @@ class PubSubWebsocket:
 
     async def _send_topics(self, topics: List[Topic], type="LISTEN"):
         for tok, _topics in groupby(topics, key=lambda val: val.token):
+            nonce = ('%032x' % uuid.uuid4().int)[:8]
             payload = {
                 "type": type,
                 "data": {
@@ -68,9 +85,10 @@ class PubSubWebsocket:
                     "auth_token": tok
                 }
             }
+            logger.debug(f"Sending {type} payload with nonce '{nonce}': {payload}")
             await self.send(payload)
 
-    async def subscribe_topic(self, topics: List[Topic]):
+    async def subscribe_topics(self, topics: List[Topic]):
         if len(self.topics) + len(topics) > self.max_topics:
             raise ValueError(f"Cannot have more than {self.max_topics} topics on one websocket")
 
@@ -97,6 +115,11 @@ class PubSubWebsocket:
             else:
                 print(data)
                 logger.debug(f"Pubsub event referencing unknown event '{data['type']}'. Discarding")
+
+        if not self._closing:
+            logger.warning("Unexpected disconnect from pubsub edge! Attempting to reconnect")
+            self._task.cancel()
+            await self.connect()
 
     async def ping_pong(self):
         while self.connection and not self.connection.closed:
@@ -129,3 +152,9 @@ class PubSubWebsocket:
         msg = models.PubSubChannelPointsMessage(self.client, message['data'])
         self.client.run_event("pubsub_message", msg) # generic one
         self.client.run_event("pubsub_channel_points", msg)
+
+    async def handle_response(self, message):
+        if message['error']:
+            logger.error(f"Recieved errored response for nonce {message['nonce']}: {message['error']}")
+        elif message['nonce']:
+            logger.debug(f"Recieved OK response for nonce {message['nonce']}")

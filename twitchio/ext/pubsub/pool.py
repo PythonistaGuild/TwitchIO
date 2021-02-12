@@ -1,3 +1,4 @@
+import itertools
 from typing import List, Optional
 
 from twitchio import Client
@@ -11,7 +12,7 @@ class PubSubPool:
     def __init__(self, client: Client, *, max_pool_size=10, max_connection_topics=50, mode="group"):
         self.client = client
         self._pool: List[PubSubWebsocket] = []
-        self.map = {}
+        self._topics = {}
         self._mode = mode
         self._max_size = max_pool_size
         self._max_connection_topics = max_connection_topics
@@ -22,10 +23,15 @@ class PubSubPool:
             node = PubSubWebsocket(self.client, max_topics=self._max_connection_topics)
             await node.connect()
 
-        await node.subscribe_topic(topics)
+        await node.subscribe_topics(topics)
+        self._topics.update({t: node for t in topics})
 
     async def unsubscribe_topics(self, topics: List[Topic]):
-        ... # todo
+        for node, vals in itertools.groupby(topics, lambda t: self._topics[t]):
+            await node.unsubscribe_topics(vals)
+            if not node.topics:
+                await node.disconnect()
+                self._pool.remove(node)
 
     def _find_node(self, topics: List[Topic]) -> Optional[PubSubWebsocket]:
         if self._mode == "group":
