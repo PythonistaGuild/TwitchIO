@@ -46,14 +46,14 @@ class TimedCache(dict):
 
     def __getitem__(self, key):
         self._verify_cache()
-        return super().__getitem__(key)
+        return super().__getitem__(key)[0]
 
     def __setitem__(self, key, value):
         super().__setitem__(key, (value, time.monotonic()))
 
     def __contains__(self, key):
         self._verify_cache()
-        return super().__contains__(key)
+        return {a: b[0] for a, b in self.items()}.__contains__(key)
 
 def user_cache(timer=300):
     cache = TimedCache(timer)
