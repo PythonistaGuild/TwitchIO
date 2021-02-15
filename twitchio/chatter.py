@@ -29,6 +29,8 @@ from .enums import PredictionEnum
 
 if TYPE_CHECKING:
     from .channel import Channel
+    from .user import User
+    from .websocket import WSConnection
 
 __all__ = (
     "PartialChatter",
@@ -53,6 +55,16 @@ class PartialChatter(Messageable):
     def __hash__(self):
         return hash(self.name + self.channel.name)
 
+    async def user(self) -> "User":
+        """|coro|
+        Fetches a :class:`twitchio.User` object based off the chatters channel name
+
+        Returns
+        --------
+            :class:`twitchio.User`
+        """
+        return (await self._ws._client.fetch_users(names=[self.name]))[0]
+
     @property
     def name(self):
         """The users name"""
@@ -64,7 +76,7 @@ class PartialChatter(Messageable):
         return self._channel
 
     def _fetch_channel(self):
-        return self._name  # Abstract method
+        return self  # Abstract method
 
     def _fetch_websocket(self):
         return self._ws  # Abstract method
@@ -73,20 +85,25 @@ class PartialChatter(Messageable):
         return False
 
 
-class Chatter(Messageable):
+class Chatter(PartialChatter):
     __slots__ = ('_name', '_channel', '_tags', '_badges', '_ws', 'id', '_turbo', '_sub', '_mod',
                  '_display_name', '_colour')
 
     __messageable_channel__ = False
 
-    def __init__(self, websocket, **kwargs):
-        self._name = kwargs.get('name')
-        self._channel = kwargs.get('channel', self._name)
+    def __init__(self, websocket: "WSConnection", **kwargs):
+        super(Chatter, self).__init__(websocket, **kwargs)
         self._tags = kwargs.get('tags', None)
         self._badges = kwargs.get("badges", {})
         self._ws = websocket
 
         if not self._tags:
+            self.id = None
+            self._turbo = None
+            self._sub = None
+            self._mod = None
+            self._display_name = None
+            self._colour = None
             return
 
         self.id = self._tags.get('user-id')
@@ -95,21 +112,6 @@ class Chatter(Messageable):
         self._mod = int(self._tags['mod'])
         self._display_name = self._tags['display-name']
         self._colour = self._tags['color']
-
-    def __repr__(self):
-        return f'<Chatter name: {self._name}, channel: {self._channel}>'
-
-    def __eq__(self, other):
-        return other.name == self.name and other.channel.name == other.channel.name
-
-    def __hash__(self):
-        return hash(self.name + self.channel.name)
-
-    def _fetch_channel(self):
-        return self  # Abstract method
-
-    def _fetch_websocket(self):
-        return self._ws  # Abstract method
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name] # noqa
@@ -123,14 +125,9 @@ class Chatter(Messageable):
                 return mod
 
     @property
-    def channel(self) -> "Channel":
-        """The channel the user is associated with."""
-        return self._channel
-
-    @property
     def name(self) -> str:
         """The users name. This may be formatted differently than display name."""
-        return self._name or self.display_name.lower()
+        return self._name or (self.display_name and self.display_name.lower())
 
     @property
     def display_name(self) -> str:

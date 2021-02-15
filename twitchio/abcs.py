@@ -128,6 +128,6 @@ class Messageable(abc.ABC):
             name = entity.name
 
         if not entity.__messageable_channel__:
-            await ws._websocket.send_str(f'PRIVMSG #jtv :/w {name} {content}')
+            await ws.send(f'PRIVMSG #jtv :/w {name} {content}')
         else:
-            await ws._websocket.send_str(f'PRIVMSG #{name} :{content}\r\n')
+            await ws.send(f'PRIVMSG #{name} :{content}\r\n')

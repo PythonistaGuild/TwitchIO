@@ -24,7 +24,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+import typing
 import re
+
+if typing.TYPE_CHECKING:
+    from .websocket import WSConnection
 
 ACTIONS = ('JOIN', 'PART', 'PING', 'PRIVMSG', 'USERSTATE', 'MODE', 'RECONNECT')
 ACTIONS2 = ('USERSTATE', 'ROOMSTATE', 'PRIVMSG')
@@ -98,3 +102,22 @@ def parser(data: str, nick: str):
 
     return dict(data=data, nick=nick, groups=groups, action=action, channel=channel, user=user,
                 badges=badges, code=code, message=message, batches=batches)
+
+def parse(data: str, ws: "WSConnection"):
+    messages = data.split("\r\n")
+    output = []
+
+    for msg in messages:
+        if not msg:
+            continue
+
+        if msg == "PING :tmi.twitch.tv":
+            output.append(dict(action="PING"))
+            continue
+
+        msg = msg.replace(":tmi.twitch.tv ", "")
+        groups = msg.split()
+        length = len(groups)
+
+        if length > 2 and groups[1] == "JOIN":
+            pass

@@ -149,8 +149,13 @@ class WSConnection:
                 log.debug(f" < {data}")
                 self.dispatch('raw_data', data)   # Dispatch our event_raw_data event...
 
-                task = asyncio.create_task(self._process_data(data))
-                task.add_done_callback(partial(self._task_callback, data))   # Process our raw data
+                events = data.split("\r\n")
+                for event in events:
+                    if not event:
+                        continue
+
+                    task = asyncio.create_task(self._process_data(event))
+                    task.add_done_callback(partial(self._task_callback, event))   # Process our raw data
 
         asyncio.create_task(self._connect())
 
@@ -274,11 +279,11 @@ class WSConnection:
             await asyncio.wait(futures)
 
     async def _code(self, parsed, code: int):
-        if code == 1 or code == 376:
+        if code == 1:
             log.info(f'Successfully logged onto Twitch WS: {self.nick}')
 
             await self._await_futures()
-            #await self.is_ready.wait()
+            await self.is_ready.wait()
             self.dispatch('ready')
             self._init = True
 
@@ -292,13 +297,17 @@ class WSConnection:
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
                     self._join_load.pop(channel)
+                    print(parsed)
                     self._cache_add(parsed)
                 self.is_ready.set()
             else:
                 self._cache_add(parsed)
         else:
+            if self.is_ready.is_set():
+                return
+
             self.is_ready.set()
-            self.dispatch("ready")
+            #self.dispatch("ready")
 
     async def _ping(self, _=None):
         log.debug('ACTION: Sending PONG reply.')
@@ -331,7 +340,7 @@ class WSConnection:
         self._cache_add(parsed)
 
         channel = Channel(name=parsed['channel'], websocket=self)
-        user = Chatter(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._client, websocket=self)
+        user = Chatter(tags=parsed['badges'], name=parsed['nick'], channel=channel, bot=self._client, websocket=self)
 
         self.dispatch('userstate', user)
 
@@ -372,7 +381,7 @@ class WSConnection:
                 user = PartialChatter(name=u, bot=self._client, websocket=self, channel=channel_)
                 self._cache[channel].add(user)
         else:
-            user = Chatter(bot=self._client, name=parsed['user'], websocket=self, channel=channel_, tags=parsed['badges'])
+            user = Chatter(bot=self._client, name=parsed['nick'], websocket=self, channel=channel_, tags=parsed['badges'])
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
 
