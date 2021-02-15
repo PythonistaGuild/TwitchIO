@@ -297,7 +297,6 @@ class WSConnection:
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
                     self._join_load.pop(channel)
-                    print(parsed)
                     self._cache_add(parsed)
                 self.is_ready.set()
             else:
