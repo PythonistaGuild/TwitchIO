@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from .client import Client
-from .user import User, PartialUser, BitLeaderboardUser
+from .user import *
 from .channel import Channel
 from .chatter import Chatter, PartialChatter
 from .enums import *

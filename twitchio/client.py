@@ -268,7 +268,7 @@ class Client:
         """|coro|
 
         Fetches clips by clip id.
-        To fetch clips by user id, use :ref:`twitchio.User.fetch_clips`
+        To fetch clips by user id, use :meth:`twitchio.PartialUser.fetch_clips`
 
         Parameters
         -----------
@@ -287,7 +287,7 @@ class Client:
             period=None, sort=None, type=None, language=None
     ):
         """|coro|
-        Fetches videos by id, game id, or user id. If you have specific video ids use :ref:`twitchio.Client.fetch_videos`
+        Fetches videos by id, game id, or user id
 
         Parameters
         -----------
@@ -296,7 +296,7 @@ class Client:
         game_id: Optional[:class:`int`]
             A game to fetch videos from
         user_id: Optional[:class:`int`]
-            A user to fetch videos from. See :ref:`twitchio.PartialUser.fetch_videos`
+            A user to fetch videos from. See :meth:`twitchio.PartialUser.fetch_videos`
         period: Optional[:class:`str`]
             The period for which to fetch videos. Valid values are `all`, `day`, `week`, `month`. Defaults to `all`.
             Cannot be used when video id(s) are passed

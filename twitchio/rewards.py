@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .user import PartialUser
 
+__all__ = "CustomReward", "CustomRewardRedemption"
 
 class CustomReward:
     """
