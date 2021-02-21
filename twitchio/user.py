@@ -198,7 +198,7 @@ class PartialUser:
         --------
         :class:`dict` a dictionary with `length`, `message`, and `retry_after`
         """
-        data = await self._http.post_commericial(token, str(self.id), length)
+        data = await self._http.post_commercial(token, str(self.id), length)
         return data[0]
 
     async def create_clip(self, token: str, has_delay=False) -> dict:
