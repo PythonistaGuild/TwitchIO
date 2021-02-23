@@ -292,7 +292,7 @@ class TwitchHTTP:
 
         return data
 
-    async def post_commericial(self, token: str, broadcaster_id: str, length: int):
+    async def post_commercial(self, token: str, broadcaster_id: str, length: int):
         assert length in (30, 60, 90, 120, 150, 180)
         data = await self.request(Route("POST", "channels/commercial", body={"broadcaster_id": broadcaster_id, "length": length}, token=token), paginate=False)
         data = data[0]
