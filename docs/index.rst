@@ -13,8 +13,8 @@ TwitchIO 2 is a fully async wrapper for the Twitch API and IRC, made in Python.
    :caption: Table of Contents:
 
    twitchio
-   twitchio.commands
    reference
+   exts/index
 
 
 

@@ -10,16 +10,12 @@ TwitchIO 2
 Client
 --------
 .. autoclass:: Client
-    :members: wait_for,
-              get_channel,
-              connected_channels,
-              events,
-              nick,
-              create_user,
-              fetch_users,
-              fetch_clips,
-              fetch_videos,
-              fetch_cheermotes,
+    :members:
+    :noindex: event_ready,
+        event_raw_data,
+        event_message,
+        event_join, event_part, event_mode, event_userstate, event_raw_usernotice,
+        event_usernotice_subscription, event_error
 
 Event Reference
 -----------------

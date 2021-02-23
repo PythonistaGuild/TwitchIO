@@ -521,9 +521,10 @@ class Client:
 
         Parameters
         ------------
-        metadata: :class:`twitchio.dataclasses.NoticeSubscription`
+        metadata: :class:`NoticeSubscription`
             The object containing various metadata about the subscription event.
-            For ease of use, this contains a :class:`.User` and :class:`.Channel`.
+            For ease of use, this contains a :class:`User` and :class:`Channel`.
+
         """
         pass
 

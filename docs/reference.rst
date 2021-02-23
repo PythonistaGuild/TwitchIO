@@ -80,7 +80,7 @@ Dataclass Reference
     :inherited-members:
 
 User/Channel/Chatter classes
---------------
+------------------------------
 
 .. autoclass:: PartialUser
     :members:
@@ -95,8 +95,10 @@ User/Channel/Chatter classes
     :members:
 .. autoclass:: PartialChatter
     :members:
+    :inherited-members:
 .. autoclass:: Chatter
     :members:
 .. autoclass:: Channel
     :members:
+    :inherited-members:
 
