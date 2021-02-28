@@ -77,15 +77,14 @@ class TwitchHTTP:
 
     TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
-    def __init__(self, client: "Client", *, api_token: str = None, client_secret: str = None, **kwargs):
+    def __init__(self, client: "Client", *, api_token: str = None, client_secret: str = None, client_id: str = None, **kwargs):
         self.client = client
         self.session = None
         self.token = api_token
         self._refresh_token = None
         self.client_secret = client_secret
-
+        self.client_id = client_id
         self.nick = None
-        self.client_id = None
 
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
@@ -108,7 +107,7 @@ class TwitchHTTP:
         if full_body:
             assert not paginate
 
-        if not self.client_id or not self.nick:
+        if not self.client_id or not self.nick and self.token:
             await self.validate(token=self.token)
 
         if not self.client_id:

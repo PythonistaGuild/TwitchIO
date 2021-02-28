@@ -47,11 +47,11 @@ class Client:
 
     Parameters
     ------------
-    token: str
+    token: :class:`str`
         An OAuth Access Token to login with on IRC and interact with the API.
-    client_secret: Optional[str]
+    client_secret: Optional[:class:`str`]
         An optional application Client Secret used to generate Access Tokens automatically.
-    initial_channels: Optional[Union[list, tuple, Callable]]
+    initial_channels: Optional[Union[:class:`list`, :class:`tuple`, Callable]]
         An optional list, tuple or callable which contains channel names to connect to on startup.
         If this is a callable, it must return a list or tuple.
     loop: Optional[:class:`asyncio.AbstractEventLoop`]
@@ -83,6 +83,42 @@ class Client:
 
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
+
+    @classmethod
+    def from_client_credentials(cls, client_id: str, client_secret: str, *, loop: asyncio.AbstractEventLoop=None) -> "Client":
+        """
+        creates a client application token from your client credentials.
+
+        .. warning:
+
+            this is not suitable for logging in to IRC.
+
+        .. note:
+
+            This classmethod skips :meth:`~.__init__`
+
+        Parameters
+        ------------
+        client_id: :class`str`
+
+        client_secret: :class:`str`
+            An application Client Secret used to generate Access Tokens automatically.
+        loop: Optional[:class:`asyncio.AbstractEventLoop`]
+            The event loop the client will use to run.
+
+        Returns
+        --------
+        A new :class:`Client` instance
+        """
+        self = cls.__new__(cls)
+        self.loop = loop or asyncio.get_event_loop()
+        self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
+        self._connection = WSConnection(client=self,
+                                        loop=self.loop,
+                                        initial_channels=None) # The only reason we're even creating this is to avoid attribute errors
+        self._events = {}
+        self._waiting = []
+        return self
 
     def run(self):
         try:
