@@ -13,6 +13,32 @@
 
 div[role=search] {
     position: sticky;
-    top: 5vh;
+    top: 6vh;
 }
+
+#logo {
+    width: 18rem;
+}
+
+#sidebar-logo {
+    width: 12rem;
+    padding-bottom: 2rem;
+    position: sticky;
+    top: 2vh;
+}
+
+.header {
+    background-color: #19171C;
+}
+
+a {
+    color: #473fc7;
+}
+
+dl:not(.docutils) dt {
+    background-color: rgba(0, 105, 138, 0.1);
+    border-top: 3px solid #6498a9;
+    color: #5084d2;
+}
+
 /*# sourceMappingURL=custom.css.map */
