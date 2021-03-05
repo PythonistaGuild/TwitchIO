@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2019 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -34,12 +34,8 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 if on_rtd:
-    requirements.append('sphinx==3.4.3')
-    requirements.append('sphinxcontrib-napoleon')
-    requirements.append('sphinxcontrib-asyncio')
-    requirements.append('sphinxcontrib-websupport')
-    requirements.append('Pygments')
-    requirements.append('karma_sphinx_theme')
+    with open('rtd-requirements.txt') as f:
+        requirements.extend(f.read().splitlines())
 
 version = '2.0.0a1'
 
@@ -64,6 +60,7 @@ setup(name='twitchio',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Internet',
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
