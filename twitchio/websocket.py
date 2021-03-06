@@ -51,11 +51,18 @@ HOST = 'wss://irc-ws.chat.twitch.tv:443'
 
 class WSConnection:
 
-    def __init__(self, *, loop: asyncio.AbstractEventLoop, client: "Client", token: str=None, modes: tuple=None, initial_channels: List[str]=None):
+    def __init__(self, *, loop: asyncio.AbstractEventLoop,
+                 heartbeat: Optional[float],
+                 client: "Client",
+                 token: str = None,
+                 modes: tuple = None,
+                 initial_channels: List[str] = None,
+                 ):
         self._loop = loop
         self._backoff = ExponentialBackoff()
         self._keeper: Optional[asyncio.Task] = None
         self._websocket = None
+        self._heartbeat = heartbeat
         self._ws_ready_event: asyncio.Event = asyncio.Event()
         self.is_ready: asyncio.Event = asyncio.Event()
         self._join_lock: asyncio.Lock = asyncio.Lock()
@@ -116,7 +123,7 @@ class WSConnection:
         session = self._client._http.session
 
         try:
-            self._websocket = await session.ws_connect(url=HOST)
+            self._websocket = await session.ws_connect(url=HOST, heartbeat=self._heartbeat)
         except Exception as e:
             retry = self._backoff.delay()
             log.error(f'Websocket connection failure: {e}:: Attempting reconnect in {retry} seconds.')

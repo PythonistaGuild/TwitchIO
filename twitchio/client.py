@@ -56,6 +56,8 @@ class Client:
         If this is a callable, it must return a list or tuple.
     loop: Optional[:class:`asyncio.AbstractEventLoop`]
         The event loop the client will use to run.
+    heartbeat: Optional[float]
+        An optional float in seconds to send a PING message to the server. Defaults to 30.0.
 
     Attributes
     ------------
@@ -68,7 +70,8 @@ class Client:
                  *,
                  client_secret: str = None,
                  initial_channels: Union[list, tuple, Callable] = None,
-                 loop: asyncio.AbstractEventLoop = None
+                 loop: asyncio.AbstractEventLoop = None,
+                 heartbeat: Optional[float] = 30.0,
                  ):
 
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
@@ -79,7 +82,8 @@ class Client:
         self._connection = WSConnection(client=self,
                                         token=token,
                                         loop=self.loop,
-                                        initial_channels=initial_channels)
+                                        initial_channels=initial_channels,
+                                        heartbeat=heartbeat)
 
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
