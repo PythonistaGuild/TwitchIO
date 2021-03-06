@@ -177,6 +177,19 @@ class Bot(Client):
         except KeyError:
             raise CommandNotFound(f"The command '{name}` was not found")
 
+    def get_cog(self, name: str) -> Optional[Cog]:
+        """Retrieve a Cog from the bots loaded Cogs.
+
+        Could be None if the Cog was not found.
+
+        Returns
+        ---------
+        Optional[:class:`.Cog`]
+        """
+        cog = self.cogs.get('name', None)
+
+        return Cog
+
     async def get_context(self, message, *, cls=None):
         # TODO Docs
         if not cls:
