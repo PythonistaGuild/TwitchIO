@@ -152,7 +152,6 @@ class WSConnection:
                 break
 
             data = msg.data
-            print(data)
             if data:
                 log.debug(f" < {data}")
                 self.dispatch('raw_data', data)   # Dispatch our event_raw_data event...
