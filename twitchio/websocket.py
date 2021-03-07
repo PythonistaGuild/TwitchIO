@@ -152,6 +152,7 @@ class WSConnection:
                 break
 
             data = msg.data
+            print(data)
             if data:
                 log.debug(f" < {data}")
                 self.dispatch('raw_data', data)   # Dispatch our event_raw_data event...
@@ -260,10 +261,9 @@ class WSConnection:
             return await self._ping()
         elif parsed['code'] != 0:
             return await self._code(parsed, parsed['code'])
-        elif data == ':tmi.twitch.tv NOTICE * :Login authentication failed' or\
-             data == ':tmi.twitch.tv NOTICE * :Improperly formatted auth':
-
-            log.error(f'Authentication failed with | {self._token} | {self.nick}')
+        elif data.startswith(':tmi.twitch.tv NOTICE * :Login unsuccessful'):
+            log.error(f'Login unsuccessful with token "{self._token}". '
+                      f'Check your scopes for "chat_login" and try again.')
             return await self._close()
 
         partial_ = self._actions.get(parsed['action'])
