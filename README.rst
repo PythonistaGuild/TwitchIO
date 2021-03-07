@@ -1,0 +1,79 @@
+.. image:: ./logo.png?raw=true
+    :align: center
+    
+    
+.. image:: https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue.svg
+    :target: https://www.python.org
+
+
+.. image:: https://img.shields.io/github/license/TwitchIO/TwitchIO.svg
+    :target: ./LICENSE
+    
+The currently in development version of TwitchIO, which will eventually supersede `1.x`
+
+Although not classified as Stable you should be able to use this release for testing purposes. **Use in production is at your own risk**.
+
+TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots. TwitchIO 2 will cover 100% of the new Twitch API and will feature support for commands, PubSub and Webhooks.
+
+Documentation
+---------------------------
+For the Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/2.0/index.html>`_
+
+Support
+---------------------------
+For support using TwitchIO, please join the official `support server
+<https://discord.gg/RAKc3HF>`_ on `Discord <https://discordapp.com/>`_.
+
+|Discord|
+
+.. |Discord| image:: https://img.shields.io/discord/490948346773635102?color=%237289DA&label=Pythonista&logo=discord&logoColor=white
+   :target: https://discord.gg/RAKc3HF
+   
+Installation
+---------------------------
+TwitchIO 2 requires **Python 3.7+**. You can download the latest version of Python  `here <https://www.python.org/downloads/>`_.
+Make sure you have Git installed on your system, as TwitchIO 2 is not currently on PyPi and requires Git to install.
+
+**Windows**
+
+.. code:: sh
+
+    py -3.9 -m pip install git+https://github.com/TwitchIO/TwitchIO.git@2.0
+
+**Linux**
+
+.. code:: sh
+
+    python3.9 -m pip install git+https://github.com/TwitchIO/TwitchIO.git@2.0
+
+Access Tokens
+---------------------------
+Visit `Token Generator <https://twitchtokengenerator.com/>`_ for a simple way to generate tokens for use with TwitchIO.
+
+Getting Started
+---------------------------
+A simple Chat Bot.
+
+.. code:: python
+
+    from twitchio.ext import commands
+
+
+    class Bot(commands.Bot):
+
+        def __init__(self):
+            # Initialise our Bot with our access token, prefix and a list of channels to join on boot...
+            super().__init__(token='ACCESS_TOKEN', prefix='?', initial_channels=['...'])
+
+        async def event_ready(self):
+            # We are logged in and ready to chat and use commands...
+            print(f'Logged in as | {self.nick}')
+
+        @commands.command()
+        async def hello(self, ctx: commands.Context):
+            # Send a hello back!
+            await ctx.send(f'Hello {ctx.author.name}!')
+
+
+    bot = Bot()
+    bot.run()
