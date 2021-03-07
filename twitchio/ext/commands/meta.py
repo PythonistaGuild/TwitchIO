@@ -21,19 +21,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-
 import inspect
+from functools import partial
+
 from .core import *
 from .errors import *
 
+
 __all__ = ("Cog",)
+
 
 class Cog:
 
     __valid_slots__ = ('cog_unload', 'cog_check', 'cog_error', 'cog_command_error')
 
     def __init_subclass__(cls, *args, **kwargs):
-        cls.__cogname__  = kwargs.get("name", cls.__name__)
+        cls.__cogname__ = kwargs.get("name", cls.__name__)
 
         for name, mem in inspect.getmembers(cls):
             if name.startswith(('cog', 'bot')) and name not in cls.__valid_slots__:  # Invalid method prefixes
@@ -51,27 +54,35 @@ class Cog:
                 self._commands[name] = method
                 bot.add_command(method)
 
+        events = self._events.copy()
+        self._events = {}
+
+        for event, callbacks in events.items():
+            for callback in callbacks:
+
+                callback = partial(callback, self)
+
+                if event in self._events:
+                    self._events[event].append(callback)
+                else:
+                    self._events[event] = [callback]
+
+                bot.add_event(callback=callback, name=event)
+
     def _unload_methods(self, bot):
         for name in self._commands:
             bot.remove_command(name)
 
+        for event, callbacks in self._events.items():
+            for callback in callbacks:
+                bot.remove_event(callback=callback)
+
+        self._events = {}
+
         try:
             self.cog_unload()
-        except:
+        except Exception as e:
             pass
-
-    def _run_events(self, bot, event, *args, **kwargs):
-        async def wrapped(func):
-            try:
-                await func(self, *args, **kwargs)
-            except Exception as e:
-                bot.run_event("event_error", e)
-                await self.cog_error(e)
-
-        if event in self._events:
-            for fun in self._events[event]:
-                bot.loop.create_task(wrapped(fun))
-
 
     @classmethod
     def event(cls, event: str = None):
@@ -81,7 +92,7 @@ class Cog:
         def decorator(func):
             event_name = event or func.__name__
             if event_name in cls.__valid_slots__:
-                raise ValueError(f"{event_name} cannot be a decorated event")
+                raise ValueError(f"{event_name} cannot be a decorated event.")
 
             if event_name in cls._events:
                 cls._events[event_name].append(func)
@@ -89,7 +100,6 @@ class Cog:
                 cls._events[event_name] = [func]
 
             return func
-
         return decorator
 
     @property
@@ -109,5 +119,5 @@ class Cog:
     async def cog_check(self, ctx: Context) -> bool:
         return True
 
-    async def cog_unload(self):
+    def cog_unload(self):
         pass
