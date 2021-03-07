@@ -1,7 +1,7 @@
 .. image:: https://i.imgur.com/B0nvk2w.png?raw=true
     :align: center
 
-.. image:: https://img.shields.io/badge/Python-3.6%20%7C%203.7-blue.svg
+.. image:: https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9-blue.svg
     :target: https://www.python.org
 
 .. image:: https://img.shields.io/github/license/TwitchIO/TwitchIO.svg
@@ -19,7 +19,7 @@ An Asynchronous IRC/API Wrapper currently in Development for TwitchBots made in 
 
 Documentation
 ---------------------------
-Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/rewrite/twitchio.html>`_
+Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/latest/>`_
 
 Support
 ---------------------------
