@@ -40,7 +40,7 @@ from .channel import Channel
 from .errors import AuthenticationError
 from .message import Message
 from .parse import parser
-from .chatter import Chatter, PartialChatter
+from .chatter import Chatter, PartialChatter, WhisperChatter
 
 if TYPE_CHECKING:
     from .client import Client
@@ -81,7 +81,8 @@ class WSConnection:
                          'USERNOTICE': self._usernotice,
                          'JOIN': self._join,
                          'MODE': self._mode,
-                         'RECONNECT': self._reconnect}
+                         'RECONNECT': self._reconnect,
+                         'WHISPER': self._privmsg}
 
         self.nick = None
         self._token = token
@@ -326,10 +327,14 @@ class WSConnection:
     async def _privmsg(self, parsed):   # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
 
-        channel = Channel(name=parsed['channel'], websocket=self)
-        self._cache_add(parsed)
-
-        user = Chatter(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._client, websocket=self)
+        if parsed['channel'] is None:
+            log.debug(f'ACTION: WHISPER:: {parsed["user"]}')
+            channel = None
+            user = WhisperChatter(websocket=self, name=parsed['user'])
+        else:
+            channel = Channel(name=parsed['channel'], websocket=self)
+            self._cache_add(parsed)
+            user = Chatter(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._client, websocket=self)
 
         message = Message(raw_data=parsed['data'], content=parsed['message'],
                           author=user, channel=channel, tags=parsed['badges'])

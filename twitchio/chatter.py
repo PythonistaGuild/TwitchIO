@@ -37,6 +37,7 @@ __all__ = (
     "Chatter"
 )
 
+
 class PartialChatter(Messageable):
 
     __messageable_channel__ = False
@@ -186,3 +187,27 @@ class Chatter(PartialChatter):
             return PredictionEnum('pink-2')
 
         return None
+
+
+class WhisperChatter(PartialChatter):
+
+    __messageable_channel__ = False
+
+    def __init__(self, websocket: "WSConnection", **kwargs):
+        super().__init__(websocket, **kwargs)
+
+    def __repr__(self):
+        return f'<WhisperChatter name: {self._name}>'
+
+    @property
+    def channel(self):
+        return None
+
+    def _fetch_channel(self):
+        return self  # Abstract method
+
+    def _fetch_websocket(self):
+        return self._ws  # Abstract method
+
+    def _bot_is_mod(self):
+        return False

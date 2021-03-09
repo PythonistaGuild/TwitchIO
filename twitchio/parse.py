@@ -30,8 +30,8 @@ import re
 if typing.TYPE_CHECKING:
     from .websocket import WSConnection
 
-ACTIONS = ('JOIN', 'PART', 'PING', 'PRIVMSG', 'USERSTATE', 'MODE', 'RECONNECT')
-ACTIONS2 = ('USERSTATE', 'ROOMSTATE', 'PRIVMSG')
+ACTIONS = ('JOIN', 'PART', 'PING', 'PRIVMSG', 'USERSTATE', 'MODE', 'RECONNECT', 'WHISPER')
+ACTIONS2 = ('USERSTATE', 'ROOMSTATE', 'PRIVMSG', 'WHISPER')
 USER_SUB = re.compile(r':(?P<user>.*)!')
 TMI = 'tmi.twitch.tv'
 
@@ -54,6 +54,11 @@ def parser(data: str, nick: str):
     elif groups[2] == 'PRIVMSG' or groups[2] == 'PRIVMSG(ECHO)':
         action = groups[2]
         channel = groups[3].lstrip('#')
+        message = ' '.join(groups[4:]).lstrip(':')
+        user = re.search(USER_SUB, groups[1]).group('user')
+
+    elif groups[2] == 'WHISPER':
+        action = groups[2]
         message = ' '.join(groups[4:]).lstrip(':')
         user = re.search(USER_SUB, groups[1]).group('user')
 
@@ -102,6 +107,7 @@ def parser(data: str, nick: str):
 
     return dict(data=data, nick=nick, groups=groups, action=action, channel=channel, user=user,
                 badges=badges, code=code, message=message, batches=batches)
+
 
 def parse(data: str, ws: "WSConnection"):
     messages = data.split("\r\n")
