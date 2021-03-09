@@ -190,9 +190,9 @@ class Bot(Client):
         ---------
         Optional[:class:`.Cog`]
         """
-        cog = self.cogs.get('name', None)
+        cog = self.cogs.get(name, None)
 
-        return Cog
+        return cog
 
     async def get_context(self, message, *, cls=None):
         # TODO Docs
