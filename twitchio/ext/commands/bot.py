@@ -222,7 +222,7 @@ class Bot(Client):
             context = cls(message=message, bot=self, prefix=prefix, command=None, valid=False)
             error = CommandNotFound(f'No command "{command_}" was found.')
 
-            await self.run_event('command_error', context, error)
+            self.run_event('command_error', context, error)
             return
 
         context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True)
