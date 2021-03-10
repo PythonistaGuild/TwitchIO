@@ -223,7 +223,7 @@ class Bot(Client):
             error = CommandNotFound(f'No command "{command_}" was found.')
 
             self.run_event('command_error', context, error)
-            return
+            return context
 
         context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True)
         args, kwargs = await command_.parse_args(context, command_._instance, parsed)
@@ -238,7 +238,7 @@ class Bot(Client):
 
     async def invoke(self, context):
         # TODO Docs
-        if not context.prefix:
+        if not context.prefix or not context.is_valid:
             return
 
         async def try_run(func, *, to_command=False):
