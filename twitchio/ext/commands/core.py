@@ -290,7 +290,6 @@ class Group(Command):
         if not context.view.words:
             return await self.invoke(context, index=index)
 
-        print(context.view.words)
         arg = list(context.view.words.items())[0]
         if arg[1] in self._sub_commands:
             _ctx = copy.copy(context)
