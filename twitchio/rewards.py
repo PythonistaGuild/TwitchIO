@@ -35,10 +35,12 @@ if TYPE_CHECKING:
 
 __all__ = "CustomReward", "CustomRewardRedemption"
 
+
 class CustomReward:
     """
     Represents a Custom Reward object, as given by the api. Use :ref:`User.get_custom_rewards` to fetch these
     """
+
     __slots__ = "_http", "_channel", "id", "image", "background_color", "enabled", "cost", "title", "prompt", \
                 "input_required", "max_per_stream", "max_per_user_stream", "cooldown", "paused", "in_stock", \
                 "redemptions_skip_queue", "redemptions_current_stream", "cooldown_until", "_broadcaster_id"
@@ -154,7 +156,8 @@ class CustomReward:
 
         Parameters
         ----------
-        token: :class:`str` the oauth token of the target channel
+        token:
+            :class:`str` the oauth token of the target channel
 
         Returns
         --------
@@ -177,9 +180,12 @@ class CustomReward:
 
         Parameters
         -----------
-        token: :class:`str` the oauth token of the target channel
-        status: :class:`str` one of UNFULFILLED, FULFILLED or CANCELED
-        sort: :class:`str` the order redemptions are returned in. One of OLDEST, NEWEST. Default: OLDEST.
+        token:
+            :class:`str` the oauth token of the target channel
+        status:
+            :class:`str` one of UNFULFILLED, FULFILLED or CANCELED
+        sort:
+            :class:`str` the order redemptions are returned in. One of OLDEST, NEWEST. Default: OLDEST.
         """
         try:
             data = await self._http.get_reward_redemptions(token, self._broadcaster_id, self.id, status=status,
@@ -197,6 +203,7 @@ class CustomReward:
 
 
 class CustomRewardRedemption:
+
     __slots__ = "_http", "_broadcaster_id", "id", "user_id", "user_name", "input", "status", "redeemed_at", "reward"
 
     def __init__(self, obj: dict, http: "TwitchHTTP", parent: Optional[CustomReward]):
@@ -216,7 +223,8 @@ class CustomRewardRedemption:
 
         Parameters
         ----------
-        token: :class:`str` the token of the target channel
+        token:
+            :class:`str` the token of the target channel
 
         Returns
         --------
@@ -243,7 +251,8 @@ class CustomRewardRedemption:
 
         Parameters
         ----------
-        token: :class:`str` the token of the target channel
+        token:
+            :class:`str` the token of the target channel
 
         Returns
         --------

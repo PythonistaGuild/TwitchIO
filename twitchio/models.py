@@ -56,19 +56,25 @@ __all__ = (
     "WebhookSubscription"
 )
 
+
 class BitsLeaderboard:
     """
     Represents a Bits leaderboard from the twitch API.
     """
+
     __slots__ = "_http", "leaders", "started_at", "ended_at"
+
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
         self.started_at = datetime.datetime.fromisoformat(data['date_range']['started_at'])
         self.ended_at = datetime.datetime.fromisoformat(data['date_range']['ended_at'])
         self.leaders = [BitLeaderboardUser(http, x) for x in data['data']]
 
+
 class CheerEmoteTier:
+
     __slots__ = "min_bits", "id", "colour", "images", "can_cheer", "show_in_bits_card"
+
     def __init__(self, data: dict):
         self.min_bits: int = data['min_bits']
         self.id: str = data['id']
@@ -77,8 +83,11 @@ class CheerEmoteTier:
         self.can_cheer: bool = data['can_cheer']
         self.show_in_bits_card: bool = data['show_in_bits_card']
 
+
 class CheerEmote:
+
     __slots__ = "_http", "prefix", "tiers", "type", "order", "last_updated", "charitable"
+
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
         self.prefix = data['prefix']
@@ -88,9 +97,12 @@ class CheerEmote:
         self.last_updated = datetime.datetime.strptime(data['last_updated'], "%Y-%m-%dT%H:%M:%SZ")
         self.charitable = data['is_charitable']
 
+
 class Clip:
+
     __slots__ = "id", "url", "embed_url", "broadcaster", "creator", "video_id", "game_id", "language",\
                 "title", "views", "created_at", "thumbnail_url"
+
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.id = data['id']
         self.url = data['url']
@@ -105,7 +117,9 @@ class Clip:
         self.created_at = datetime.datetime.strptime(data['created_at'], "%Y-%m-%dT%H:%M:%SZ")
         self.thumbnail_url = data['thumbnail_url']
 
+
 class HypeTrainContribution:
+
     __slots__ = "total", "type", "user"
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -113,7 +127,9 @@ class HypeTrainContribution:
         self.type: str = data['type']
         self.user = PartialUser(http, id=data['user'], name=None) # we'll see how this goes
 
+
 class HypeTrainEvent:
+
     __slots__ = "id", "type", "timestamp", "version", "broadcaster", "expiry", "event_id", "goal", "level",\
                 "started_at", "top_contributions", "contributions_total", "cooldown_end_time", "last_contribution"
 
@@ -132,7 +148,9 @@ class HypeTrainEvent:
         self.top_contributions = [HypeTrainContribution(http, x) for x in data['event_data']['top_contributions']]
         self.contributions_total: int = data['event_data']['total']
 
+
 class BanEvent:
+
     __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at"
 
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Optional[Union[PartialUser, User]]):
@@ -146,7 +164,9 @@ class BanEvent:
         self.expires_at = datetime.datetime.strptime(data['event_data']['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if \
             data['event_data']['expires_at'] else None
 
+
 class FollowEvent:
+
     __slots__ = "from_user", "to_user", "followed_at"
 
     def __init__(self, http: "TwitchHTTP", data: dict, from_: Union[User, PartialUser]=None, to: Union[User, PartialUser]=None):
@@ -154,7 +174,9 @@ class FollowEvent:
         self.to_user = to or PartialUser(http, data['to_id'], data['to_id'])
         self.followed_at = datetime.datetime.strptime(data['followed_at'], "%Y-%m-%dT%H:%M:%SZ")
 
+
 class SubscriptionEvent:
+
     __slots__ = "broadcaster", "gift", "tier", "plan_name", "user"
 
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Union[User, PartialUser]=None, user: Union[User, PartialUser]=None):
@@ -164,7 +186,9 @@ class SubscriptionEvent:
         self.plan_name: str = data['plan_name']
         self.gift: bool = data['is_gift']
 
+
 class Marker:
+
     __slots__ = "id", "created_at", "description", "position", "url"
 
     def __init__(self, data: dict):
@@ -174,14 +198,18 @@ class Marker:
         self.position: int = data['position_seconds']
         self.url: Optional[str] = data.get("URL", None)
 
+
 class VideoMarkers:
+
     __slots__ = "id", "markers"
 
     def __init__(self, data: dict):
         self.id: str = data['video_id']
         self.markers = [Marker(d) for d in data]
 
+
 class Game:
+
     __slots__ = "id", "name", "box_art_url"
 
     def __init__(self, data: dict):
@@ -206,7 +234,9 @@ class Game:
         """
         return self.box_art_url.format(width=width, height=height)
 
+
 class ModEvent:
+
     __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user"
 
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Union[PartialUser, User]):
@@ -217,7 +247,9 @@ class ModEvent:
         self.broadcaster = broadcaster
         self.user = PartialUser(http, data['event_data']['user_id'], data['event_data']['user_name'])
 
+
 class AutomodCheckMessage:
+
     __slots__ = "id", "text", "user_id"
 
     def __init__(self, id: str, text: str, user: Union[PartialUser, int]):
@@ -232,14 +264,18 @@ class AutomodCheckMessage:
             "user_id": str(self.user_id)
         }
 
+
 class AutomodCheckResponse:
+
     __slots__ = "id", "permitted"
 
     def __init__(self, data: dict):
         self.id: str = data['msg_id']
         self.permitted: bool = data['is_permitted']
 
+
 class Extension:
+
     __slots__ = "id", "active", "version", "_x", "_y"
 
     def __init__(self, data):
@@ -271,7 +307,9 @@ class Extension:
             v['y'] = self._y
         return v
 
+
 class MaybeActiveExtension(Extension):
+
     __slots__ = "id", "version", "name", "can_activate", "types"
 
     def __init__(self, data):
@@ -281,7 +319,9 @@ class MaybeActiveExtension(Extension):
         self.can_activate: bool = data['can_activate']
         self.types: List[str] = data['type']
 
+
 class ActiveExtension(Extension):
+
     __slots__ = "id", "active", "name", "version", "x", "y"
 
     def __init__(self, data):
@@ -292,7 +332,9 @@ class ActiveExtension(Extension):
         self.x: Optional[int] = data.get("x", None) # x and y only show for component extensions.
         self.y: Optional[int] = data.get("y", None)
 
+
 class ExtensionBuilder:
+
     __slots__ = "panels", "overlays", "components"
 
     def __init__(self, panels: List[Extension]=None, overlays: List[Extension]=None, components: List[Extension]=None):
@@ -313,7 +355,9 @@ class ExtensionBuilder:
             }
         }
 
+
 class Video:
+
     __slots__ = "_http", "id", "user", "title", "description", "created_at", "published_at", "url", "thumbnail_url", "viewable", "view_count", "language", "type", "duration"
 
     def __init__(self, http: "TwitchHTTP", data: dict, user: Union[PartialUser, User]=None):
@@ -343,7 +387,9 @@ class Video:
         """
         await self._http.delete_videos(token, ids=[str(self.id)])
 
+
 class Tag:
+
     __slots__ = "id", "auto", "localization_names", "localization_descriptions"
 
     def __init__(self, data: dict):
@@ -352,7 +398,9 @@ class Tag:
         self.localization_names: Dict[str, str] = data['localization_names']
         self.localization_descriptions: Dict[str, str] = data['localization_descriptions']
 
+
 class WebhookSubscription:
+
     __slots__ = "callback", "expires_at", "topic"
 
     def __init__(self, data: dict):
