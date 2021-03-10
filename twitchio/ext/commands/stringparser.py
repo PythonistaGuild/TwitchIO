@@ -24,16 +24,13 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from collections import OrderedDict
-
-
 class StringParser:
     def __init__(self):
         self.count = 0
         self.index = 0
         self.eof = 0
         self.start = 0
-        self.words = OrderedDict()
+        self.words = {}
         self.ignore = False
 
     def process_string(self, msg: str):
@@ -67,3 +64,12 @@ class StringParser:
 
             self.count += 1
         return self.words
+
+    def copy(self):
+        new = self.__class__()
+        new.count = self.count
+        new.start = self.start
+        new.words = self.words.copy()
+        new.index = self.index
+        new.ignore = self.ignore
+        return new

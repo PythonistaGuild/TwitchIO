@@ -204,7 +204,8 @@ class Bot(Client):
             return cls(message=message, prefix=prefix, valid=False, bot=self)
 
         content = message.content[len(prefix)::].lstrip()  # Strip prefix and remainder whitespace
-        parsed = StringParser().process_string(content)  # Return the string as a dict view
+        view = StringParser()
+        parsed = view.process_string(content)  # Return the string as a dict view
 
         try:
             command_ = parsed.pop(0)
@@ -219,116 +220,25 @@ class Bot(Client):
         if command_ in self.commands:
             command_ = self.commands[command_]
         else:
-            context = cls(message=message, bot=self, prefix=prefix, command=None, valid=False)
+            context = cls(message=message, bot=self, prefix=prefix, command=None, valid=False, view=view)
             error = CommandNotFound(f'No command "{command_}" was found.')
 
             await self.run_event('command_error', context, error)
             return
 
-        context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True)
-        args, kwargs = await command_.parse_args(context, command_._instance, parsed)
-        context.args, context.kwargs = args, kwargs
+        context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True, view=view)
 
         return context
 
     async def handle_commands(self, message):
         context = await self.get_context(message)
-
         await self.invoke(context)
 
     async def invoke(self, context):
-        # TODO Docs
         if not context.prefix:
             return
 
-        async def try_run(func, *, to_command=False):
-            try:
-                await func
-            except Exception as _e:
-                if not to_command:
-                    self.run_event("error", _e)
-                else:
-                    self.run_event("command_error", context, _e)
-
-        check_result = await self.handle_checks(context)
-
-        if check_result is not True:
-            self.run_event("command_error", context, check_result)
-            return
-
-        limited = self._run_cooldowns(context)
-
-        if limited:
-            self.run_event("command_error", context, limited[0])
-            return
-
-        instance = context.command._instance
-        if instance:
-            args = [instance, context]
-        else:
-            args = [context]
-
-        await try_run(self.global_before_invoke(context))
-
-        if context.command._before_invoke:
-            await try_run(context.command._before_invoke(*args), to_command=True)
-
-        try:
-            await context.command._callback(*args, *context.args, **context.kwargs)
-
-        except Exception as e:
-            if context.command.event_error:
-                await try_run(context.command.event_error(*args, e))
-
-            self.run_event("command_error", context, e)
-
-        # Invoke our after command hooks...
-        if context.command._after_invoke:
-            await try_run(context.command._after_invoke(*args), to_command=True)
-
-        await try_run(self.global_after_invoke(context))
-
-    def _run_cooldowns(self, context):
-        try:
-            buckets = context.command._cooldowns[0].get_buckets(context)
-        except IndexError:
-            return None
-
-        expired = []
-
-        try:
-            for bucket in buckets:
-                bucket.update_bucket(context)
-        except CommandOnCooldown as e:
-            expired.append(e)
-
-        return expired
-
-    async def handle_checks(self, context):
-        # TODO Docs
-        command_ = context.command
-
-        if not command_.no_global_checks:
-            checks = [predicate for predicate in itertools.chain(self._checks, command_._checks)]
-        else:
-            checks = command_._checks
-
-        if not checks:
-            return True
-
-        try:
-            for predicate in checks:
-                if inspect.isawaitable(predicate):
-                    result = await predicate(context)
-                else:
-                    result = predicate(context)
-
-                if result is False:
-                    raise CheckFailure(f'The check <{predicate}> for command <{command_.name}> failed.')
-
-            return True
-        except Exception as e:
-            return e
+        await context.command(context)
 
     def load_module(self, name: str):
         """Method which loads a module and it's cogs.
@@ -495,7 +405,7 @@ class Bot(Client):
         """
         await self.handle_commands(message)
 
-    def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Command, no_global_checks=False):
+    def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Command, no_global_checks=False) -> Callable[[Callable], Command]:
         """Decorator which registers a command with the bot.
 
         Commands must be a coroutine.
@@ -520,10 +430,23 @@ class Bot(Client):
         if not inspect.isclass(cls):
             raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
 
-        def decorator(func):
+        def decorator(func: Callable):
             cmd_name = name or func.__name__
 
-            cmd = cls(name=cmd_name, func=func, aliases=aliases, instance=None)
+            cmd = cls(name=cmd_name, func=func, aliases=aliases, instance=None, no_global_checks=no_global_checks)
+            self.add_command(cmd)
+
+            return cmd
+        return decorator
+
+    def group(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Group, no_global_checks=False) -> Callable[[Callable], Group]:
+        if not inspect.isclass(cls):
+            raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+
+        def decorator(func: Callable):
+            cmd_name = name or func.__name__
+
+            cmd = cls(name=cmd_name, func=func, aliases=aliases, instance=None, no_global_checks=no_global_checks)
             self.add_command(cmd)
 
             return cmd
