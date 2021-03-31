@@ -1,12 +1,36 @@
+"""
+The MIT License (MIT)
+
+Copyright (c) 2017-2021 TwitchIO
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 import re
 from typing import TYPE_CHECKING
 
 from twitchio import User, PartialUser, Chatter, PartialChatter, Channel, Clip
-
 from .errors import BadArgument
 
 if TYPE_CHECKING:
     from .core import Context
+
 
 __all__ = (
     "convert_Chatter",
@@ -16,6 +40,7 @@ __all__ = (
     "convert_PartialUser",
     "convert_User"
 )
+
 
 async def convert_Chatter(ctx: "Context", arg: str):
     """
@@ -28,11 +53,13 @@ async def convert_Chatter(ctx: "Context", arg: str):
 
     return resp[0]
 
+
 async def convert_PartialChatter(ctx: "Context", arg: str):
     """
     Actually a shorthand to :ref:`~convert_Chatter`
     """
     return convert_Chatter(ctx, arg)
+
 
 async def convert_Clip(ctx: "Context", arg: str):
     finder = re.search(r"(https://clips.twitch.tv/)?(?P<slug>.*)", arg)
@@ -42,6 +69,7 @@ async def convert_Clip(ctx: "Context", arg: str):
         raise BadArgument(f"Clip '{slug}' was not found")
 
     return clips[0]
+
 
 async def convert_User(ctx: "Context", arg: str):
     """
@@ -55,11 +83,13 @@ async def convert_User(ctx: "Context", arg: str):
         raise BadArgument(f"User '{arg}' was not found.")
     return user[0]
 
+
 async def convert_PartialUser(ctx: "Context", arg: str):
     """
     This is simply a shorthand to :ref:`~convert_User`, as fetching from the api will return a full user model
     """
     return await convert_User(ctx, arg)
+
 
 async def convert_Channel(ctx: "Context", arg: str):
     if arg not in ctx.bot._connection._cache:

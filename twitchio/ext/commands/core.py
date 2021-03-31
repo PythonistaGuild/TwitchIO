@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 import inspect
 from typing import Union, Optional, Callable, Awaitable
+
 from twitchio.abcs import Messageable
 from .cooldowns import *
 from .errors import *

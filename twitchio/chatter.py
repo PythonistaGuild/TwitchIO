@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from .channel import Channel
     from .user import User
     from .websocket import WSConnection
+
 
 __all__ = (
     "PartialChatter",
@@ -87,8 +88,18 @@ class PartialChatter(Messageable):
 
 
 class Chatter(PartialChatter):
-    __slots__ = ('_name', '_channel', '_tags', '_badges', '_ws', 'id', '_turbo', '_sub', '_mod',
-                 '_display_name', '_colour')
+
+    __slots__ = ('_name',
+                 '_channel',
+                 '_tags',
+                 '_badges',
+                 '_ws',
+                 'id',
+                 '_turbo',
+                 '_sub',
+                 '_mod',
+                 '_display_name',
+                 '_colour')
 
     __messageable_channel__ = False
 

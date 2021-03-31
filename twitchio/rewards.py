@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -32,6 +32,7 @@ from .errors import HTTPException, Unauthorized
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .user import PartialUser
+
 
 __all__ = "CustomReward", "CustomRewardRedemption"
 

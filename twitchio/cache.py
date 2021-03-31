@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -24,8 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 import time
 import functools
-
 from typing import Hashable
+
 
 __all__ = (
     "TimedCache",
@@ -33,7 +33,9 @@ __all__ = (
     "id_cache"
 )
 
+
 class TimedCache(dict):
+
     def __init__(self, seconds: int):
         self.__timeout = seconds
         super().__init__()
@@ -54,6 +56,7 @@ class TimedCache(dict):
     def __contains__(self, key):
         self._verify_cache()
         return {a: b[0] for a, b in self.items()}.__contains__(key)
+
 
 def user_cache(timer=300):
     cache = TimedCache(timer)
@@ -81,8 +84,10 @@ def user_cache(timer=300):
         return _wraps
     return wraps
 
+
 def id_cache(timer=300):
     cache = TimedCache(timer)
+
     def wraps(func):
         @functools.wraps(func)
         def _wraps(cls, id: Hashable):

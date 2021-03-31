@@ -1,7 +1,32 @@
+"""
+The MIT License (MIT)
+
+Copyright (c) 2017-2021 TwitchIO
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 import datetime
 from typing import List, Optional
 
 from twitchio import PartialUser, Client, Channel, CustomReward
+
 
 __all__ = (
     "PoolError",
@@ -16,19 +41,25 @@ __all__ = (
     "PubSubModerationAction"
 )
 
+
 class PubSubError(Exception):
     pass
+
 
 class ConnectionFailure(PubSubError):
     pass
 
+
 class PoolError(PubSubError):
     pass
+
 
 class PoolFull(PoolError):
     pass
 
+
 class PubSubChatMessage:
+
     __slots__ = "content", "id", "type"
 
     def __init__(self, content: str, id: str, type: str):
@@ -36,24 +67,32 @@ class PubSubChatMessage:
         self.id = int(id)
         self.type = type
 
+
 class PubSubBadgeEntitlement:
+
     __slots__ = "new", "old"
+
     def __init__(self, new: int, old: int):
         self.new = new
         self.old = old
 
+
 class PubSubMessage:
+
     __slots__ = "topic", "_data"
 
     def __init__(self, client: Client, topic: Optional[str], data: dict):
         self.topic = topic
         self._data = data
 
+
 class PubSubBitsMessage(PubSubMessage):
+
     __slots__ = "badge_entitlement", "bits_used", "channel_id", "context", "anonymous", "message", "user", "version"
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
+
         self.message = PubSubChatMessage(data['chat_message'], data['message_id'], data['message_type'])
         self.badge_entitlement = PubSubBadgeEntitlement(
             data['badge_entitlement']['new_version'],
@@ -64,7 +103,9 @@ class PubSubBitsMessage(PubSubMessage):
         self.user = PartialUser(client._http, data['user_id'], data['user_name']) if data['user_id'] is not None else None
         self.version: str = data['version']
 
+
 class PubSubBitsBadgeMessage(PubSubMessage):
+
     __slots__ = "user", "channel", "badge_tier", "message", "timestamp"
 
     def __init__(self, client: Client, topic: str, data: dict):
@@ -75,7 +116,9 @@ class PubSubBitsBadgeMessage(PubSubMessage):
         self.message = data['chat_message']
         self.timestamp = datetime.datetime.strptime(data['time'], "%Y-%m-%dT%H:%M:%SZ")
 
+
 class PubSubChannelPointsMessage(PubSubMessage):
+
     __slots__ = "timestamp", "channel_id", "user", "id", "reward", "input", "status"
 
     def __init__(self, client: Client, data: dict):
@@ -88,7 +131,9 @@ class PubSubChannelPointsMessage(PubSubMessage):
         self.input: str = data['redemption']['user_input']
         self.status: str = data['redemption']['status']
 
+
 class PubSubModerationAction(PubSubMessage):
+
     __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
 
     def __init__(self, client: Client, topic: str, data: dict):
@@ -104,6 +149,7 @@ class PubSubModerationAction(PubSubMessage):
             if data['message']['data']['target_user_id'] else None
         self.from_automod: bool = data['message']['data']['from_automod']
 
+
 _mapping = {
     "channel-bits-events-v2": ("pubsub_bits", PubSubBitsMessage),
     "channel-bits-badge-unlocks": ("pubsub_bits_badge", PubSubBitsBadgeMessage),
@@ -111,6 +157,7 @@ _mapping = {
     "chat_moderator_actions": ("pubsub_moderation", PubSubModerationAction),
     "whispers": ("pubsub_whisper", None)
 }
+
 
 def create_message(client, msg: dict):
     topic = msg['data']['topic'].split('.')[0]

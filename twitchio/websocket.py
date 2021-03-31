@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -44,6 +44,7 @@ from .chatter import Chatter, PartialChatter, WhisperChatter
 
 if TYPE_CHECKING:
     from .client import Client
+
 
 log = logging.getLogger(__name__)
 HOST = 'wss://irc-ws.chat.twitch.tv:443'

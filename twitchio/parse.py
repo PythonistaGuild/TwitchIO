@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -24,11 +24,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import typing
 import re
+import typing
 
 if typing.TYPE_CHECKING:
     from .websocket import WSConnection
+
 
 ACTIONS = ('JOIN', 'PART', 'PING', 'PRIVMSG', 'USERSTATE', 'MODE', 'RECONNECT', 'WHISPER')
 ACTIONS2 = ('USERSTATE', 'ROOMSTATE', 'PRIVMSG', 'WHISPER')

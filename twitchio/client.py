@@ -42,6 +42,7 @@ __all__ = "Client",
 
 logger = logging.getLogger("twitchio.client")
 
+
 class Client:
     """TwitchIO Client object that is used to interact with the Twitch API and connect to Twitch IRC over websocket.
 
@@ -75,6 +76,7 @@ class Client:
                  ):
 
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+        self._heartbeat = heartbeat
 
         token = token.replace('oauth:', '')
 
@@ -89,7 +91,8 @@ class Client:
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
 
     @classmethod
-    def from_client_credentials(cls, client_id: str, client_secret: str, *, loop: asyncio.AbstractEventLoop=None) -> "Client":
+    def from_client_credentials(cls, client_id: str, client_secret: str, *,
+                                loop: asyncio.AbstractEventLoop = None) -> "Client":
         """
         creates a client application token from your client credentials.
 
@@ -119,7 +122,8 @@ class Client:
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
         self._connection = WSConnection(client=self,
                                         loop=self.loop,
-                                        initial_channels=None) # The only reason we're even creating this is to avoid attribute errors
+                                        initial_channels=None,
+                                        heartbeat=self._heartbeat)  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
         return self
@@ -198,7 +202,8 @@ class Client:
 
         return decorator
 
-    async def wait_for(self, event: str, predicate: Callable[[], bool]=lambda *a: True, *, timeout=60.0) -> Tuple[Any]:
+    async def wait_for(self, event: str, predicate: Callable[[], bool] = lambda *a: True, *, timeout=60.0) -> Tuple[
+        Any]:
         """|coro|
 
         Waits for an event to be dispatched, then returns the events data
@@ -279,7 +284,8 @@ class Client:
         return PartialUser(self._http, user_id, user_name)
 
     @user_cache()
-    async def fetch_users(self, names: List[str]=None, ids: List[int]=None, token: str=None, force=False) -> List[User]:
+    async def fetch_users(self, names: List[str] = None, ids: List[int] = None, token: str = None, force=False) -> List[
+        User]:
         """|coro|
         Fetches users from the helix API
 
@@ -323,7 +329,7 @@ class Client:
         return [models.Clip(self._http, d) for d in data]
 
     async def fetch_videos(
-            self, ids: List[int]=None, game_id: int=None, user_id: int=None,
+            self, ids: List[int] = None, game_id: int = None, user_id: int = None,
             period=None, sort=None, type=None, language=None
     ):
         """|coro|
@@ -355,10 +361,11 @@ class Client:
             List[:class:`twitchio.Video`]
         """
         from .models import Video
-        data = await self._http.get_videos(ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type, language=language)
+        data = await self._http.get_videos(ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type,
+                                           language=language)
         return [Video(self._http, x) for x in data]
 
-    async def fetch_cheermotes(self, user_id: int=None):
+    async def fetch_cheermotes(self, user_id: int = None):
         """|coro|
 
         Fetches cheermotes from the twitch API
@@ -386,7 +393,7 @@ class Client:
         data = await self._http.get_top_games()
         return [models.Game(d) for d in data]
 
-    async def fetch_games(self, ids: List[int]=None, names: List[str]=None) -> List[models.Game]:
+    async def fetch_games(self, ids: List[int] = None, names: List[str] = None) -> List[models.Game]:
         """|coro|
         Fetches games by id or name.
         At least one id or name must be provided
@@ -405,7 +412,7 @@ class Client:
         data = await self._http.get_games(ids, names)
         return [models.Game(d) for d in data]
 
-    async def fetch_tags(self, ids: List[str]=None):
+    async def fetch_tags(self, ids: List[str] = None):
         """|coro|
         Fetches stream tags.
 

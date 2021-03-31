@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
     from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag
+
 
 __all__ = (
     "PartialUser",
@@ -564,6 +565,7 @@ class PartialUser:
         data = await self._http.get_videos(user_id=str(self.id), period=period, sort=sort, type=type, language=language)
         return [Video(self._http, x, self) for x in data]
 
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"
@@ -573,6 +575,7 @@ class BitLeaderboardUser(PartialUser):
         self.rank: int = data['rank']
         self.score: int = data['score']
 
+
 class UserBan(PartialUser):
 
     __slots__ = "expires_at",
@@ -580,6 +583,7 @@ class UserBan(PartialUser):
     def __init__(self, http: "TwitchHTTP", data: dict):
         super(UserBan, self).__init__(http, name=data['user_login'], id=data['user_id'])
         self.expires_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if data['expires_at'] else None
+
 
 class SearchUser(PartialUser):
 
@@ -596,6 +600,7 @@ class SearchUser(PartialUser):
         self.live: bool = data['is_live']
         self.started_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data['tag_ids']
+
 
 class User(PartialUser):
 

@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 import enum
 import time
+
 from .errors import *
 
 

@@ -28,6 +28,7 @@ import itertools
 import sys
 import traceback
 from typing import Callable, Optional, Union, Coroutine
+
 from twitchio.client import Client
 from .core import *
 from .errors import *
