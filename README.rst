@@ -82,3 +82,28 @@ A simple Chat Bot.
 
     bot = Bot()
     bot.run()
+
+
+Contributing
+---------------------------
+TwitchIO 2.0 currently uses the `Black <https://black.readthedocs.io/en/stable/index.html/>`_ formatter to enforce sensible style formatting.
+
+Before creating a Pull Request it is encouraged you install and run black on your code.
+The Line Length limit for TwitchIO 2.0 is **120**.
+
+For installation and usage of Black visit: `Black Formatter <https://black.readthedocs.io/en/stable/installation_and_usage.html/>`_
+For integrating Black into your IDE visit: `Black IDE Usage <https://black.readthedocs.io/en/stable/editor_integration.html/>`_
+
+Special Thanks
+---------------------------
+Thank you to all those who contribute and help TwitchIO grow.
+
+Special thanks to:
+`SnowyLuma <https://github.com/SnowyLuma>`_
+`Harmon <https://github.com/Harmon758>`_
+`Tom <https://github.com/IAmTomahawkx>`_
+`Tesence <https://github.com/tesence>`_
+`Adure <https://github.com/orgs/TwitchIO/people/Adure>`_
+`Scragly <https://github.com/scragly>`_
+
+If I have forgotten anyone please let me know <3: `EvieePy <https://github.com/EvieePy>`_
