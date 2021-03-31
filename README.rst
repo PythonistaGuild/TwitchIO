@@ -8,7 +8,12 @@
 
 .. image:: https://img.shields.io/github/license/TwitchIO/TwitchIO.svg
     :target: ./LICENSE
-    
+
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/psf/black
+
+
 The currently in development version of TwitchIO, which will eventually supersede `1.x`
 
 Although not classified as Stable you should be able to use this release for testing purposes. **Use in production is at your own risk**.
