@@ -103,7 +103,7 @@ Special thanks to:
 `Harmon <https://github.com/Harmon758>`_
 `Tom <https://github.com/IAmTomahawkx>`_
 `Tesence <https://github.com/tesence>`_
-`Adure <https://github.com/orgs/TwitchIO/people/Adure>`_
+`Adure <https://github.com/Adure>`_
 `Scragly <https://github.com/scragly>`_
 
 If I have forgotten anyone please let me know <3: `EvieePy <https://github.com/EvieePy>`_
