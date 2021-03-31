@@ -99,11 +99,18 @@ Special Thanks
 Thank you to all those who contribute and help TwitchIO grow.
 
 Special thanks to:
+
 `SnowyLuma <https://github.com/SnowyLuma>`_
+
 `Harmon <https://github.com/Harmon758>`_
+
 `Tom <https://github.com/IAmTomahawkx>`_
+
 `Tesence <https://github.com/tesence>`_
+
 `Adure <https://github.com/Adure>`_
+
 `Scragly <https://github.com/scragly>`_
+
 
 If I have forgotten anyone please let me know <3: `EvieePy <https://github.com/EvieePy>`_
