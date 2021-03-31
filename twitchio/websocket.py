@@ -47,18 +47,20 @@ if TYPE_CHECKING:
 
 
 log = logging.getLogger(__name__)
-HOST = 'wss://irc-ws.chat.twitch.tv:443'
+HOST = "wss://irc-ws.chat.twitch.tv:443"
 
 
 class WSConnection:
-
-    def __init__(self, *, loop: asyncio.AbstractEventLoop,
-                 heartbeat: Optional[float],
-                 client: "Client",
-                 token: str = None,
-                 modes: tuple = None,
-                 initial_channels: List[str] = None,
-                 ):
+    def __init__(
+        self,
+        *,
+        loop: asyncio.AbstractEventLoop,
+        heartbeat: Optional[float],
+        client: "Client",
+        token: str = None,
+        modes: tuple = None,
+        initial_channels: List[str] = None,
+    ):
         self._loop = loop
         self._backoff = ExponentialBackoff()
         self._keeper: Optional[asyncio.Task] = None
@@ -74,22 +76,24 @@ class WSConnection:
         self._init = False
 
         self._cache = {}
-        self._actions = {'PING': self._ping,
-                         'PART': self._part,
-                         'PRIVMSG': self._privmsg,
-                         'PRIVMSG(ECHO)': self._privmsg_echo,
-                         'USERSTATE': self._userstate,
-                         'USERNOTICE': self._usernotice,
-                         'JOIN': self._join,
-                         'MODE': self._mode,
-                         'RECONNECT': self._reconnect,
-                         'WHISPER': self._privmsg}
+        self._actions = {
+            "PING": self._ping,
+            "PART": self._part,
+            "PRIVMSG": self._privmsg,
+            "PRIVMSG(ECHO)": self._privmsg_echo,
+            "USERSTATE": self._userstate,
+            "USERNOTICE": self._usernotice,
+            "JOIN": self._join,
+            "MODE": self._mode,
+            "RECONNECT": self._reconnect,
+            "WHISPER": self._privmsg,
+        }
 
         self.nick = None
         self._token = token
         self.modes = modes or ("commands", "tags", "membership")
         self._initial_channels = initial_channels or []
-        
+
         if callable(self._initial_channels):
             _temp_initial_channels = self._initial_channels()
             if isinstance(_temp_initial_channels, (list, tuple)):
@@ -98,6 +102,7 @@ class WSConnection:
                 self._initial_channels = [_temp_initial_channels]
 
         self._last_ping = 0
+        self._reconnect_requested = False
 
         self._client = client
 
@@ -113,14 +118,14 @@ class WSConnection:
         self.is_ready.clear()
 
         if self._keeper:
-            self._keeper.cancel()    # Stop our current keep alive.
+            self._keeper.cancel()  # Stop our current keep alive.
 
         if self.is_alive:
-            await self._websocket.close()   # If for some reason we are in a weird state, close it before retrying.
+            await self._websocket.close()  # If for some reason we are in a weird state, close it before retrying.
 
         if not self._client._http.nick:
             data = await self._client._http.validate(token=self._token)
-            self.nick = data['login']
+            self.nick = data["login"]
 
         session = self._client._http.session
 
@@ -128,15 +133,17 @@ class WSConnection:
             self._websocket = await session.ws_connect(url=HOST, heartbeat=self._heartbeat)
         except Exception as e:
             retry = self._backoff.delay()
-            log.error(f'Websocket connection failure: {e}:: Attempting reconnect in {retry} seconds.')
+            log.error(f"Websocket connection failure: {e}:: Attempting reconnect in {retry} seconds.")
 
             await asyncio.sleep(retry)
             return asyncio.create_task(self._connect())
 
-        if time.time() > self._last_ping + 240:
-            await self.authenticate(self._initial_channels)   # Re-authenticate as we have surpassed a PING request.
+        if time.time() > self._last_ping + 240 or self._reconnect_requested:
+            # Re-authenticate as we have surpassed a PING request or Twitch issued a RECONNECT.
+            await self.authenticate(self._initial_channels)
+            self._reconnect_requested = False
 
-        self._keeper = asyncio.create_task(self._keep_alive())   # Create our keep alive.
+        self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
         self._ws_ready_event.set()
 
     async def _keep_alive(self):
@@ -150,13 +157,13 @@ class WSConnection:
             msg = await self._websocket.receive()  # Receive data...
 
             if msg.type is aiohttp.WSMsgType.CLOSED:
-                log.error(f'Websocket connection was closed: {msg.extra}')
+                log.error(f"Websocket connection was closed: {msg.extra}")
                 break
 
             data = msg.data
             if data:
                 log.debug(f" < {data}")
-                self.dispatch('raw_data', data)   # Dispatch our event_raw_data event...
+                self.dispatch("raw_data", data)  # Dispatch our event_raw_data event...
 
                 events = data.split("\r\n")
                 for event in events:
@@ -164,15 +171,15 @@ class WSConnection:
                         continue
 
                     task = asyncio.create_task(self._process_data(event))
-                    task.add_done_callback(partial(self._task_callback, event))   # Process our raw data
+                    task.add_done_callback(partial(self._task_callback, event))  # Process our raw data
 
         asyncio.create_task(self._connect())
 
     def _task_callback(self, data, task):
         exc = task.exception()
 
-        if isinstance(exc, AuthenticationError):   # Check if we failed to log in...
-            log.error('Authentication error. Please check your credentials and try again.')
+        if isinstance(exc, AuthenticationError):  # Check if we failed to log in...
+            log.error("Authentication error. Please check your credentials and try again.")
             self._close()
         elif exc:
             asyncio.create_task(self.event_error(exc, data))
@@ -200,11 +207,11 @@ class WSConnection:
         if not self.is_alive:
             return
 
-        await self.send(f'PASS oauth:{self._token}\r\n')
-        await self.send(f'NICK {self.nick}\r\n')
+        await self.send(f"PASS oauth:{self._token}\r\n")
+        await self.send(f"NICK {self.nick}\r\n")
 
         for cap in self.modes:
-            await self.send(f'CAP REQ :twitch.tv/{cap}')   # Ideally no one should overwrite defaults...
+            await self.send(f"CAP REQ :twitch.tv/{cap}")  # Ideally no one should overwrite defaults...
 
         if not channels and not self._initial_channels:
             return
@@ -222,13 +229,13 @@ class WSConnection:
         *channels : str
             An argument list of channels to attempt joining.
         """
-        async with self._join_lock:   # acquire a lock, allowing only one join_channels at once...
+        async with self._join_lock:  # acquire a lock, allowing only one join_channels at once...
             for channel in channels:
-                if self._join_handle < time.time():   # Handle is less than the current time
-                    self._join_tick = 50              # So lets start a new rate limit bucket..
-                    self._join_handle = time.time() + 15   # Set the handle timeout time
+                if self._join_handle < time.time():  # Handle is less than the current time
+                    self._join_tick = 50  # So lets start a new rate limit bucket..
+                    self._join_handle = time.time() + 15  # Set the handle timeout time
 
-                if self._join_tick == 0:   # We have exhausted the bucket, wait so we can make a new one...
+                if self._join_tick == 0:  # We have exhausted the bucket, wait so we can make a new one...
                     await asyncio.sleep(self._join_handle - time.time())
                     continue
 
@@ -236,8 +243,8 @@ class WSConnection:
                 self._join_tick -= 1
 
     async def _join_channel(self, entry):
-        channel = re.sub('[#]', '', entry).lower()
-        await self.send(f'JOIN #{channel}\r\n')
+        channel = re.sub("[#]", "", entry).lower()
+        await self.send(f"JOIN #{channel}\r\n")
 
         self._join_pending[channel] = fut = self._loop.create_future()
         asyncio.create_task(self._join_future_handle(fut, channel))
@@ -249,8 +256,10 @@ class WSConnection:
             log.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
             self._join_pending.pop(channel)
 
-            data = f':{self.nick}.tmi.twitch.tv 353 {self.nick} = #TWITCHIOFAILURE :{channel}\r\n' \
-                   f':{self.nick}.tmi.twitch.tv 366 {self.nick} #TWITCHIOFAILURE :End of /NAMES list'
+            data = (
+                f":{self.nick}.tmi.twitch.tv 353 {self.nick} = #TWITCHIOFAILURE :{channel}\r\n"
+                f":{self.nick}.tmi.twitch.tv 366 {self.nick} #TWITCHIOFAILURE :End of /NAMES list"
+            )
 
             await self._process_data(data)
 
@@ -258,16 +267,17 @@ class WSConnection:
         data = data.rstrip()
         parsed = parser(data, self.nick)
 
-        if parsed['action'] == 'PING':
+        if parsed["action"] == "PING":
             return await self._ping()
-        elif parsed['code'] != 0:
-            return await self._code(parsed, parsed['code'])
-        elif data.startswith(':tmi.twitch.tv NOTICE * :Login unsuccessful'):
-            log.error(f'Login unsuccessful with token "{self._token}". '
-                      f'Check your scopes for "chat_login" and try again.')
+        elif parsed["code"] != 0:
+            return await self._code(parsed, parsed["code"])
+        elif data.startswith(":tmi.twitch.tv NOTICE * :Login unsuccessful"):
+            log.error(
+                f'Login unsuccessful with token "{self._token}". ' f'Check your scopes for "chat_login" and try again.'
+            )
             return await self._close()
 
-        partial_ = self._actions.get(parsed['action'])
+        partial_ = self._actions.get(parsed["action"])
         if partial_:
             await partial_(parsed)
 
@@ -288,19 +298,19 @@ class WSConnection:
 
     async def _code(self, parsed, code: int):
         if code == 1:
-            log.info(f'Successfully logged onto Twitch WS: {self.nick}')
+            log.info(f"Successfully logged onto Twitch WS: {self.nick}")
 
             await self._await_futures()
             await self.is_ready.wait()
-            self.dispatch('ready')
+            self.dispatch("ready")
             self._init = True
 
         elif code == 353:
-            if parsed['channel'] == 'TWITCHIOFAILURE':
-                self._initial_channels.remove(parsed['batches'][0])
+            if parsed["channel"] == "TWITCHIOFAILURE":
+                self._initial_channels.remove(parsed["batches"][0])
 
-            if parsed['channel'] in self._initial_channels and not self._init:
-                self._join_load[parsed['channel']] = None
+            if parsed["channel"] in self._initial_channels and not self._init:
+                self._join_load[parsed["channel"]] = None
 
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
@@ -314,54 +324,57 @@ class WSConnection:
                 return
 
             self.is_ready.set()
-            #self.dispatch("ready")
+            # self.dispatch("ready")
 
     async def _ping(self, _=None):
-        log.debug('ACTION: Sending PONG reply.')
+        log.debug("ACTION: Sending PONG reply.")
         self._last_ping = time.time()
-        await self.send('PONG :tmi.twitch.tv\r\n')
+        await self.send("PONG :tmi.twitch.tv\r\n")
 
-    async def _part(self, parsed):   # TODO
+    async def _part(self, parsed):  # TODO
         log.debug(f'ACTION: PART:: {parsed["channel"]}')
         pass
 
-    async def _privmsg(self, parsed):   # TODO(Update Cache properly)
+    async def _privmsg(self, parsed):  # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
 
-        if parsed['channel'] is None:
+        if parsed["channel"] is None:
             log.debug(f'ACTION: WHISPER:: {parsed["user"]}')
             channel = None
-            user = WhisperChatter(websocket=self, name=parsed['user'])
+            user = WhisperChatter(websocket=self, name=parsed["user"])
         else:
-            channel = Channel(name=parsed['channel'], websocket=self)
+            channel = Channel(name=parsed["channel"], websocket=self)
             self._cache_add(parsed)
-            user = Chatter(tags=parsed['badges'], name=parsed['user'], channel=channel, bot=self._client, websocket=self)
+            user = Chatter(
+                tags=parsed["badges"], name=parsed["user"], channel=channel, bot=self._client, websocket=self
+            )
 
-        message = Message(raw_data=parsed['data'], content=parsed['message'],
-                          author=user, channel=channel, tags=parsed['badges'])
+        message = Message(
+            raw_data=parsed["data"], content=parsed["message"], author=user, channel=channel, tags=parsed["badges"]
+        )
 
-        self.dispatch('message', message)
+        self.dispatch("message", message)
 
-    async def _privmsg_echo(self, parsed):   # TODO
+    async def _privmsg_echo(self, parsed):  # TODO
         log.debug(f'ACTION: PRIVMSG(ECHO):: {parsed["channel"]}')
         pass
 
-    async def _userstate(self, parsed):   # TODO
+    async def _userstate(self, parsed):  # TODO
         log.debug(f'ACTION: USERSTATE:: {parsed["channel"]}')
         self._cache_add(parsed)
 
-        channel = Channel(name=parsed['channel'], websocket=self)
-        user = Chatter(tags=parsed['badges'], name=parsed['nick'], channel=channel, bot=self._client, websocket=self)
+        channel = Channel(name=parsed["channel"], websocket=self)
+        user = Chatter(tags=parsed["badges"], name=parsed["nick"], channel=channel, bot=self._client, websocket=self)
 
-        self.dispatch('userstate', user)
+        self.dispatch("userstate", user)
 
-    async def _usernotice(self, parsed):   # TODO
+    async def _usernotice(self, parsed):  # TODO
         log.debug(f'ACTION: USERNOTICE:: {parsed["channel"]}')
         pass
 
     async def _join(self, parsed):
         log.debug(f'ACTION: JOIN:: {parsed["channel"]}')
-        channel = parsed['channel']
+        channel = parsed["channel"]
 
         if self._join_pending:
             try:
@@ -371,48 +384,54 @@ class WSConnection:
             else:
                 self._join_pending.pop(channel)
 
-        if not parsed['user'] == self._client.nick:
+        if not parsed["user"] == self._client.nick:
             self._cache_add(parsed)
 
         channel = Channel(name=channel, websocket=self)
-        user = Chatter(name=parsed['user'], bot=self._client, websocket=self, channel=channel, tags=parsed['badges'])
+        user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
 
-        self.dispatch('join', channel, user)
+        self.dispatch("join", channel, user)
 
     def _cache_add(self, parsed: dict):
-        channel = parsed['channel'].lstrip('#')
+        channel = parsed["channel"].lstrip("#")
 
         if channel not in self._cache:
             self._cache[channel] = set()
 
         channel_ = Channel(name=channel, websocket=self)
 
-        if parsed['batches']:
-            for u in parsed['batches']:
+        if parsed["batches"]:
+            for u in parsed["batches"]:
                 user = PartialChatter(name=u, bot=self._client, websocket=self, channel=channel_)
                 self._cache[channel].add(user)
         else:
-            user = Chatter(bot=self._client, name=parsed['nick'], websocket=self, channel=channel_, tags=parsed['badges'])
+            user = Chatter(
+                bot=self._client, name=parsed["nick"], websocket=self, channel=channel_, tags=parsed["badges"]
+            )
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
 
-    async def _mode(self, parsed):   # TODO
+    async def _mode(self, parsed):  # TODO
         pass
 
-    async def _reconnect(self, parsed):  # TODO
-        pass
+    async def _reconnect(self, parsed):
+        log.debug(f"ACTION: RECONNECT:: Twitch has gracefully closed the connection and will reconnect.")
+        self._reconnect_requested = True
 
     def dispatch(self, event: str, *args, **kwargs):
-        log.debug(f'Dispatching event: {event}')
+        log.debug(f"Dispatching event: {event}")
 
         self._client.run_event(event, *args, **kwargs)
 
-    async def event_error(self, error: Exception, data: str=None):
+    async def event_error(self, error: Exception, data: str = None):
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     def _fetch_futures(self):
-        return [fut for chan, fut in self._join_pending.items() if chan.lower() in
-                [re.sub('[#]', '', c).lower() for c in self._initial_channels]]
+        return [
+            fut
+            for chan, fut in self._join_pending.items()
+            if chan.lower() in [re.sub("[#]", "", c).lower() for c in self._initial_channels]
+        ]
 
     async def _close(self):
         self._keeper.cancel()
