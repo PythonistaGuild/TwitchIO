@@ -187,6 +187,17 @@ class WSConnection:
     async def send(self, message: str):
         message = message.strip()
         log.debug(f" > {message}")
+
+        if message.startswith("PRIVMSG #"):
+            data = message.replace("PRIVMSG #", "", 1).split(" ")
+            channel = data.pop(0)
+            content = " ".join(data)
+
+            dummy = f"> :{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO) #{channel} {content}\r\n"
+
+            task = asyncio.create_task(self._process_data(dummy))
+            task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
+
         await self._websocket.send_str(message + "\r\n")
 
     async def authenticate(self, channels: Union[list, tuple]):
@@ -357,7 +368,13 @@ class WSConnection:
 
     async def _privmsg_echo(self, parsed):  # TODO
         log.debug(f'ACTION: PRIVMSG(ECHO):: {parsed["channel"]}')
-        pass
+
+        channel = Channel(name=parsed["channel"], websocket=self)
+        message = Message(
+            raw_data=parsed["data"], content=parsed["message"], author=None, channel=channel, tags={}, echo=True
+        )
+
+        self.dispatch("message", message)
 
     async def _userstate(self, parsed):  # TODO
         log.debug(f'ACTION: USERSTATE:: {parsed["channel"]}')

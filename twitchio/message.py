@@ -33,18 +33,18 @@ if TYPE_CHECKING:
 
 class Message:
 
-    __slots__ = ('_raw_data', 'content', '_author', 'echo', '_timestamp', '_channel', '_tags')
+    __slots__ = ("_raw_data", "content", "_author", "echo", "_timestamp", "_channel", "_tags")
 
     def __init__(self, **kwargs):
-        self._raw_data = kwargs.get('raw_data')
-        self.content = kwargs.get('content')
-        self._author = kwargs.get('author')
-        self._channel = kwargs.get('channel')
-        self._tags = kwargs.get('tags')
-        self.echo = False
+        self._raw_data = kwargs.get("raw_data")
+        self.content = kwargs.get("content")
+        self._author = kwargs.get("author")
+        self._channel = kwargs.get("channel")
+        self._tags = kwargs.get("tags")
+        self.echo = kwargs.get("echo", False)
 
         try:
-            self._timestamp = self._tags['tmi-sent-ts']
+            self._timestamp = self._tags["tmi-sent-ts"]
         except KeyError:
             self._timestamp = time.time()
 

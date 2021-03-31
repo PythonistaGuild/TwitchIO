@@ -31,10 +31,10 @@ if typing.TYPE_CHECKING:
     from .websocket import WSConnection
 
 
-ACTIONS = ('JOIN', 'PART', 'PING', 'PRIVMSG', 'USERSTATE', 'MODE', 'RECONNECT', 'WHISPER')
-ACTIONS2 = ('USERSTATE', 'ROOMSTATE', 'PRIVMSG', 'WHISPER')
-USER_SUB = re.compile(r':(?P<user>.*)!')
-TMI = 'tmi.twitch.tv'
+ACTIONS = ("JOIN", "PART", "PING", "PRIVMSG", "PRIVMSG(ECHO)", "USERSTATE", "MODE", "RECONNECT", "WHISPER")
+ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "WHISPER")
+USER_SUB = re.compile(r":(?P<user>.*)!")
+TMI = "tmi.twitch.tv"
 
 
 def parser(data: str, nick: str):
@@ -49,29 +49,29 @@ def parser(data: str, nick: str):
     user = None
     badges = None
 
-    if action == 'PING':
-        return dict(action='PING')
+    if action == "PING":
+        return dict(action="PING")
 
-    elif groups[2] == 'PRIVMSG' or groups[2] == 'PRIVMSG(ECHO)':
+    elif groups[2] == "PRIVMSG" or groups[2] == "PRIVMSG(ECHO)":
         action = groups[2]
-        channel = groups[3].lstrip('#')
-        message = ' '.join(groups[4:]).lstrip(':')
-        user = re.search(USER_SUB, groups[1]).group('user')
+        channel = groups[3].lstrip("#")
+        message = " ".join(groups[4:]).lstrip(":")
+        user = re.search(USER_SUB, groups[1]).group("user")
 
-    elif groups[2] == 'WHISPER':
+    elif groups[2] == "WHISPER":
         action = groups[2]
-        message = ' '.join(groups[4:]).lstrip(':')
-        user = re.search(USER_SUB, groups[1]).group('user')
+        message = " ".join(groups[4:]).lstrip(":")
+        user = re.search(USER_SUB, groups[1]).group("user")
 
     elif action in ACTIONS:
-        channel = groups[-1].lstrip('#')
+        channel = groups[-1].lstrip("#")
 
     if action in ACTIONS2:
-        prebadge = groups[0].split(';')
+        prebadge = groups[0].split(";")
         badges = {}
 
         for badge in prebadge:
-            badge = badge.split('=')
+            badge = badge.split("=")
 
             try:
                 badges[badge[0]] = badge[1]
@@ -83,7 +83,7 @@ def parser(data: str, nick: str):
 
     if not user:
         try:
-            user = re.search(USER_SUB, groups[0]).group('user')
+            user = re.search(USER_SUB, groups[0]).group("user")
         except (AttributeError, ValueError):
             pass
 
@@ -95,19 +95,29 @@ def parser(data: str, nick: str):
     batches = []
     if code == 353:
         if not channel:
-            channel = groups[4].lstrip('#')
+            channel = groups[4].lstrip("#")
 
         for b in groups[5:-1]:
-            b = b.lstrip(':')
+            b = b.lstrip(":")
 
-            if '\r\n:' in b:
-                batches.append(b.split('\r\n:')[0])
+            if "\r\n:" in b:
+                batches.append(b.split("\r\n:")[0])
                 break
             else:
                 batches.append(b)
 
-    return dict(data=data, nick=nick, groups=groups, action=action, channel=channel, user=user,
-                badges=badges, code=code, message=message, batches=batches)
+    return dict(
+        data=data,
+        nick=nick,
+        groups=groups,
+        action=action,
+        channel=channel,
+        user=user,
+        badges=badges,
+        code=code,
+        message=message,
+        batches=batches,
+    )
 
 
 def parse(data: str, ws: "WSConnection"):
