@@ -31,7 +31,6 @@ jobs:
       with:
         find: "{{__VERSION__}}"
         replace: ${{ env.TWITCHIO_VERSION }}
-        include: "*.py"
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
