@@ -25,6 +25,10 @@
     margin-left: .75rem;
 }
 
+.site-nav-tree > p {
+    margin-left: .75rem;
+}
+
 div[role=search] {
     position: sticky;
     top: 6vh;
