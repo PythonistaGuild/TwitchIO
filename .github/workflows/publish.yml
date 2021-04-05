@@ -1,0 +1,49 @@
+name: Publish to PyPi (Pre-Release)
+
+on:
+  push:
+    branches:
+      - "2.0"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests setuptools wheel twine
+    - name: Get Latest Pre-Release
+      run: |
+        resp = requests.get("https://pypi.org/pypi/TwitchIO/json")
+        data = resp.json()["releases"]
+
+        pre = max(data).split("b")
+        final = f"{pre[0]}b{int(pre[1]) + 1}"
+
+        echo "TWITCHIO_VERSION=${{ final }}" >> $GITHUB_ENV
+    - name: Find and Replace
+      uses: jacobtomlinson/gha-find-replace@master
+      with:
+        find: "{{__VERSION__}}"
+        replace: ${{ env.TWITCHIO_VERSION }}
+        include: "*.py"
+    - name: Build and publish
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload dist/*
+
+
