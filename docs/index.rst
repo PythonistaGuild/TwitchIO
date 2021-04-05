@@ -35,7 +35,9 @@ Getting Started
    :maxdepth: 2
    :caption: Extensions API's:
 
-   exts/index
+   exts/commands
+   exts/pubsub
+   exts/webhooks
 
 
 
