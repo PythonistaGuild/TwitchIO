@@ -22,11 +22,11 @@
 }
 
 .site-nav-tree > ul {
-    margin-left: .75rem;
+    margin-left: 1rem;
 }
 
 .site-nav-tree > p {
-    margin-left: .75rem;
+    margin-bottom: .75rem;
 }
 
 div[role=search] {
