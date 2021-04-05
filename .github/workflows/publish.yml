@@ -21,6 +21,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests setuptools wheel twine
     - name: Get Latest Pre-Release
+      working-directory: .github/workflows/
       run: |
         final=$(python get_revision.py)
 
