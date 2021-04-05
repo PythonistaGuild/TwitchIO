@@ -11,4 +11,4 @@ def getrev():
     return final
 
 
-getrev()
+print(getrev())
