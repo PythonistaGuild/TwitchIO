@@ -89,6 +89,7 @@ html_logo = "logo.png"
 html_theme = "karma_sphinx_theme"
 html_static_path = ["./_static"]
 html_js_files = []
+html_css_files = ["css/custom.css"]
 needs_sphinx = "3.4.3"
 
 # The master toctree document.
