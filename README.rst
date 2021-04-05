@@ -14,11 +14,13 @@
     :target: https://github.com/psf/black
 
 
-The currently in development version of TwitchIO, which will eventually supersede `1.x`
+TwitchIO 2.0 is currently in BETA stage looking for testers and users. 2.0 supercedes the current 1.x version.
 
 Although not classified as Stable you should be able to use this release for testing purposes. **Use in production is at your own risk**.
 
 TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots. TwitchIO 2 will cover 100% of the new Twitch API and will feature support for commands, PubSub and Webhooks.
+
+TwitcHIO 2.0 will be buggy, will be lacking some features and you will run into problems here and there, that is the nature of BETA software, by using 2.0 you are helping test and develop TwitchIO by providing us with valuable feedback, feature requests and bug reports.
 
 Documentation
 ---------------------------
@@ -88,10 +90,14 @@ Contributing
 ---------------------------
 TwitchIO 2.0 currently uses the `Black <https://black.readthedocs.io/en/stable/index.html/>`_ formatter to enforce sensible style formatting.
 
+
 Before creating a Pull Request it is encouraged you install and run black on your code.
+
 The Line Length limit for TwitchIO 2.0 is **120**.
 
+
 For installation and usage of Black visit: `Black Formatter <https://black.readthedocs.io/en/stable/installation_and_usage.html/>`_
+
 For integrating Black into your IDE visit: `Black IDE Usage <https://black.readthedocs.io/en/stable/editor_integration.html/>`_
 
 Special Thanks
