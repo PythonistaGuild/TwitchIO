@@ -28,42 +28,43 @@ import os
 from setuptools import setup
 
 
-on_rtd = os.getenv('READTHEDOCS') == 'True'
+on_rtd = os.getenv("READTHEDOCS") == "True"
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
 if on_rtd:
-    with open('rtd-requirements.txt') as f:
+    with open("docs/requirements.txt") as f:
         requirements.extend(f.read().splitlines())
 
-version = '2.0.0a1'
+version = "2.0.0a1"
 
-readme = ''
-with open('README.rst') as f:
+readme = ""
+with open("README.rst") as f:
     readme = f.read()
 
-setup(name='twitchio',
-      author='TwitchIO',
-      url='https://github.com/TwitchIO/TwitchIO',
-      version=version,
-      packages=['twitchio', 'twitchio.ext.commands', 'twitchio.ext.pubsub'],
-      license='MIT',
-      description='A Python IRC and API wrapper for Twitch.',
-      long_description=readme,
-      include_package_data=True,
-      install_requires=requirements,
-      classifiers=[
-        'License :: OSI Approved :: MIT License',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Topic :: Internet',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Utilities',
-      ]
+setup(
+    name="twitchio",
+    author="TwitchIO",
+    url="https://github.com/TwitchIO/TwitchIO",
+    version=version,
+    packages=["twitchio", "twitchio.ext.commands", "twitchio.ext.pubsub"],
+    license="MIT",
+    description="A Python IRC and API wrapper for Twitch.",
+    long_description=readme,
+    include_package_data=True,
+    install_requires=requirements,
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Internet",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Utilities",
+    ],
 )
