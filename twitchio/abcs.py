@@ -30,7 +30,6 @@ from .errors import *
 
 
 class IRCLimiterMapping:
-
     def __init__(self):
         self.buckets = {}
 
@@ -43,7 +42,7 @@ class IRCLimiterMapping:
 
         if bucket.method != method:
             bucket.method = method
-            if method == 'mod':
+            if method == "mod":
                 bucket.limit = bucket.MODLIMIT
             else:
                 bucket.limit = bucket.IRCLIMIT
@@ -60,9 +59,27 @@ class Messageable(abc.ABC):
 
     __slots__ = ()
 
-    __invalid__ = ('ban', 'unban', 'timeout', 'w', 'colour', 'color', 'mod',
-                   'unmod', 'clear', 'subscribers', 'subscriberoff', 'slow', 'slowoff',
-                   'r9k', 'r9koff', 'emoteonly', 'emoteonlyoff', 'host', 'unhost')
+    __invalid__ = (
+        "ban",
+        "unban",
+        "timeout",
+        "w",
+        "colour",
+        "color",
+        "mod",
+        "unmod",
+        "clear",
+        "subscribers",
+        "subscriberoff",
+        "slow",
+        "slowoff",
+        "r9k",
+        "r9koff",
+        "emoteonly",
+        "emoteonlyoff",
+        "host",
+        "unhost",
+    )
 
     @abc.abstractmethod
     def _fetch_channel(self):
@@ -80,24 +97,26 @@ class Messageable(abc.ABC):
         mod = self._bot_is_mod()
 
         if mod:
-            bucket = limiter.get_bucket(channel=channel, method='mod')
+            bucket = limiter.get_bucket(channel=channel, method="mod")
         else:
-            bucket = limiter.get_bucket(channel=channel, method='irc')
+            bucket = limiter.get_bucket(channel=channel, method="irc")
 
         now = time.time()
         bucket.update()
 
         if bucket.limited:
-            raise IRCCooldownError(f'IRC Message rate limit reached for channel <{channel}>.'
-                                   f' Please try again in {bucket._reset - now:.2f}s')
+            raise IRCCooldownError(
+                f"IRC Message rate limit reached for channel <{channel}>."
+                f" Please try again in {bucket._reset - now:.2f}s"
+            )
 
     def check_content(self, content: str):
         if len(content) > 500:
-            raise InvalidContent('Content must not exceed 500 characters.')
+            raise InvalidContent("Content must not exceed 500 characters.")
 
-        if content.startswith(('.', '/')):
-            if content.lstrip('./').startswith(self.__invalid__):
-                raise InvalidContent('Unauthorised chat command. Use built-in methods.')
+        if content.startswith((".", "/")):
+            if content.lstrip("./").startswith(self.__invalid__):
+                raise InvalidContent("Unauthorised chat command. Use built-in methods.")
 
     async def send(self, content: str):
         """|coro|
@@ -129,6 +148,6 @@ class Messageable(abc.ABC):
             name = entity.name
 
         if not entity.__messageable_channel__:
-            await ws.send(f'PRIVMSG #jtv :/w {name} {content}')
+            await ws.send(f"PRIVMSG #jtv :/w {name} {content}")
         else:
-            await ws.send(f'PRIVMSG #{name} :{content}\r\n')
+            await ws.send(f"PRIVMSG #{name} :{content}\r\n")

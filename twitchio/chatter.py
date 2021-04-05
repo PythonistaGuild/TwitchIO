@@ -33,10 +33,7 @@ if TYPE_CHECKING:
     from .websocket import WSConnection
 
 
-__all__ = (
-    "PartialChatter",
-    "Chatter"
-)
+__all__ = ("PartialChatter", "Chatter")
 
 
 class PartialChatter(Messageable):
@@ -44,12 +41,12 @@ class PartialChatter(Messageable):
     __messageable_channel__ = False
 
     def __init__(self, websocket, **kwargs):
-        self._name = kwargs.get('name')
+        self._name = kwargs.get("name")
         self._ws = websocket
-        self._channel = kwargs.get('channel', self._name)
+        self._channel = kwargs.get("channel", self._name)
 
     def __repr__(self):
-        return f'<PartialChatter name: {self._name}, channel: {self._channel}>'
+        return f"<PartialChatter name: {self._name}, channel: {self._channel}>"
 
     def __eq__(self, other):
         return other.name == self.name and other.channel.name == other.channel.name
@@ -89,23 +86,25 @@ class PartialChatter(Messageable):
 
 class Chatter(PartialChatter):
 
-    __slots__ = ('_name',
-                 '_channel',
-                 '_tags',
-                 '_badges',
-                 '_ws',
-                 'id',
-                 '_turbo',
-                 '_sub',
-                 '_mod',
-                 '_display_name',
-                 '_colour')
+    __slots__ = (
+        "_name",
+        "_channel",
+        "_tags",
+        "_badges",
+        "_ws",
+        "id",
+        "_turbo",
+        "_sub",
+        "_mod",
+        "_display_name",
+        "_colour",
+    )
 
     __messageable_channel__ = False
 
     def __init__(self, websocket: "WSConnection", **kwargs):
         super(Chatter, self).__init__(websocket, **kwargs)
-        self._tags = kwargs.get('tags', None)
+        self._tags = kwargs.get("tags", None)
         self._badges = kwargs.get("badges", {})
         self._ws = websocket
 
@@ -118,15 +117,15 @@ class Chatter(PartialChatter):
             self._colour = None
             return
 
-        self.id = self._tags.get('user-id')
-        self._turbo = self._tags.get('turbo')
-        self._sub = self._tags['subscriber']
-        self._mod = int(self._tags['mod'])
-        self._display_name = self._tags['display-name']
-        self._colour = self._tags['color']
+        self.id = self._tags.get("user-id")
+        self._turbo = self._tags.get("turbo")
+        self._sub = self._tags["subscriber"]
+        self._mod = int(self._tags["mod"])
+        self._display_name = self._tags["display-name"]
+        self._colour = self._tags["color"]
 
     def _bot_is_mod(self):
-        cache = self._ws._cache[self._channel.name] # noqa
+        cache = self._ws._cache[self._channel.name]  # noqa
         for user in cache:
             if user.name == self._ws.nick:
                 try:
@@ -191,11 +190,11 @@ class Chatter(PartialChatter):
         --------
         Optional[:class:`twitchio.enums.PredictionEnum`]
         """
-        if 'blue-1' in self._badges:
-            return PredictionEnum('blue-1')
+        if "blue-1" in self._badges:
+            return PredictionEnum("blue-1")
 
-        elif 'pink-2' in self._badges:
-            return PredictionEnum('pink-2')
+        elif "pink-2" in self._badges:
+            return PredictionEnum("pink-2")
 
         return None
 
@@ -208,7 +207,7 @@ class WhisperChatter(PartialChatter):
         super().__init__(websocket, **kwargs)
 
     def __repr__(self):
-        return f'<WhisperChatter name: {self._name}>'
+        return f"<WhisperChatter name: {self._name}>"
 
     @property
     def channel(self):

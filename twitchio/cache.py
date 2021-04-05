@@ -27,15 +27,10 @@ import functools
 from typing import Hashable
 
 
-__all__ = (
-    "TimedCache",
-    "user_cache",
-    "id_cache"
-)
+__all__ = ("TimedCache", "user_cache", "id_cache")
 
 
 class TimedCache(dict):
-
     def __init__(self, seconds: int):
         self.__timeout = seconds
         super().__init__()
@@ -60,9 +55,10 @@ class TimedCache(dict):
 
 def user_cache(timer=300):
     cache = TimedCache(timer)
+
     def wraps(func):
         @functools.wraps(func)
-        async def _wraps(cls, names: list=None, ids: list=None, force=False, token=None):
+        async def _wraps(cls, names: list = None, ids: list = None, force=False, token=None):
             if not force:
                 existing = []
                 if names:
@@ -82,6 +78,7 @@ def user_cache(timer=300):
             return values
 
         return _wraps
+
     return wraps
 
 

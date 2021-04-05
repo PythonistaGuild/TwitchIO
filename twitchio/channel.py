@@ -33,14 +33,12 @@ if TYPE_CHECKING:
     from .websocket import WSConnection
 
 
-__all__ = (
-    "Channel",
-)
+__all__ = ("Channel",)
 
 
 class Channel(Messageable):
 
-    __slots__ = ('_name', '_ws')
+    __slots__ = ("_name", "_ws")
 
     __messageable_channel__ = True
 
@@ -55,16 +53,16 @@ class Channel(Messageable):
         return hash(self.name)
 
     def __repr__(self):
-        return f'<Channel name: {self.name}>'
+        return f"<Channel name: {self.name}>"
 
     def _fetch_channel(self):
-        return self   # Abstract method
+        return self  # Abstract method
 
     def _fetch_websocket(self):
-        return self._ws     # Abstract method
+        return self._ws  # Abstract method
 
     def _bot_is_mod(self):
-        cache = self._ws._cache[self.name] # noqa
+        cache = self._ws._cache[self.name]  # noqa
         for user in cache:
             if user.name == self._ws.nick:
                 try:
@@ -83,7 +81,7 @@ class Channel(Messageable):
     def chatters(self) -> Optional[Set[Union[Chatter, PartialChatter]]]:
         """The channels current chatters."""
         try:
-            chatters = self._ws._cache[self._name] # noqa
+            chatters = self._ws._cache[self._name]  # noqa
         except KeyError:
             return None
 
@@ -106,7 +104,7 @@ class Channel(Messageable):
         name = name.lower()
 
         try:
-            cache = self._ws._cache[self._name] # noqa
+            cache = self._ws._cache[self._name]  # noqa
             for chatter in cache:
                 if chatter.name == name:
                     return chatter
@@ -130,7 +128,9 @@ class Channel(Messageable):
         """
         return (await self._ws._client.fetch_users(login=[self._name], force=force))[0]
 
-    async def fetch_bits_leaderboard(self, token: str, period: str="all", user_id: int=None, started_at: datetime.datetime=None) -> BitsLeaderboard:
+    async def fetch_bits_leaderboard(
+        self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
+    ) -> BitsLeaderboard:
         """|coro|
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 

@@ -32,7 +32,7 @@ __all__ = (
     "channel_points",
     "channel_subscriptions",
     "moderation_user_action",
-    "whispers"
+    "whispers",
 )
 
 
@@ -64,7 +64,7 @@ class Topic(_topic):
 
     def __getitem__(self, item):
         assert len(self.args) < len(self.__args__), ValueError("Too many arguments")
-        assert isinstance(item, self.__args__[len(self.args)]) # noqa
+        assert isinstance(item, self.__args__[len(self.args)])  # noqa
         self.args.append(item)
         return self
 

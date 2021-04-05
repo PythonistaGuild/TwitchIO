@@ -38,24 +38,23 @@ from .utils import _CaseInsensitiveDict
 
 
 class Bot(Client):
-
-    def __init__(self,
-                 token: str,
-                 *,
-                 prefix: Union[str, list, tuple, set, Callable, Coroutine],
-                 client_secret: str = None,
-                 initial_channels: Union[list, tuple, Callable] = None,
-                 heartbeat: Optional[float] = 30.0,
-                 **kwargs
-                 ):
-        super().__init__(token=token,
-                         client_secret=client_secret,
-                         initial_channels=initial_channels,
-                         heartbeat=heartbeat)
+    def __init__(
+        self,
+        token: str,
+        *,
+        prefix: Union[str, list, tuple, set, Callable, Coroutine],
+        client_secret: str = None,
+        initial_channels: Union[list, tuple, Callable] = None,
+        heartbeat: Optional[float] = 30.0,
+        **kwargs,
+    ):
+        super().__init__(
+            token=token, client_secret=client_secret, initial_channels=initial_channels, heartbeat=heartbeat
+        )
 
         self._prefix = prefix
 
-        if kwargs.get('case_insensitive', False):
+        if kwargs.get("case_insensitive", False):
             self._commands = _CaseInsensitiveDict()
             self._command_aliases = _CaseInsensitiveDict()
         else:
@@ -93,7 +92,7 @@ class Bot(Client):
                 ret = self._prefix(self, message)
 
         if not isinstance(ret, (list, tuple, set, str)):
-            raise TypeError(f'Prefix must be of either class <list, tuple, set, str> not <{type(ret)}>')
+            raise TypeError(f"Prefix must be of either class <list, tuple, set, str> not <{type(ret)}>")
 
         return ret
 
@@ -119,11 +118,13 @@ class Bot(Client):
             The command to register.
         """
         if not isinstance(command, Command):
-            raise TypeError('Commands passed must be a subclass of Command.')
+            raise TypeError("Commands passed must be a subclass of Command.")
         elif command.name in self.commands:
-            raise TwitchCommandError(f'Failed to load command <{command.name}>, a command with that name already exists.')
+            raise TwitchCommandError(
+                f"Failed to load command <{command.name}>, a command with that name already exists."
+            )
         elif not inspect.iscoroutinefunction(command._callback):
-            raise TwitchCommandError(f'Failed to load command <{command.name}>. Commands must be coroutines.')
+            raise TwitchCommandError(f"Failed to load command <{command.name}>. Commands must be coroutines.")
 
         self.commands[command.name] = command
 
@@ -134,7 +135,8 @@ class Bot(Client):
             if alias in self.commands:
                 del self.commands[command.name]
                 raise TwitchCommandError(
-                    f'Failed to load command <{command.name}>, a command with that name/alias already exists.')
+                    f"Failed to load command <{command.name}>, a command with that name/alias already exists."
+                )
 
             self._command_aliases[alias] = command.name
 
@@ -204,14 +206,14 @@ class Bot(Client):
         if not prefix:
             return cls(message=message, prefix=prefix, valid=False, bot=self)
 
-        content = message.content[len(prefix)::].lstrip()  # Strip prefix and remainder whitespace
+        content = message.content[len(prefix) : :].lstrip()  # Strip prefix and remainder whitespace
         view = StringParser()
         parsed = view.process_string(content)  # Return the string as a dict view
 
         try:
             command_ = parsed.pop(0)
         except KeyError:
-            raise CommandNotFound(f'No valid command was passed.')
+            raise CommandNotFound(f"No valid command was passed.")
 
         try:
             command_ = self._command_aliases[command_]
@@ -224,7 +226,7 @@ class Bot(Client):
             context = cls(message=message, bot=self, prefix=prefix, command=None, valid=False, view=view)
             error = CommandNotFound(f'No command "{command_}" was found.')
 
-            self.run_event('command_error', context, error)
+            self.run_event("command_error", context, error)
             return context
 
         context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True, view=view)
@@ -255,12 +257,12 @@ class Bot(Client):
 
         module = importlib.import_module(name)
 
-        if hasattr(module, 'prepare'):
+        if hasattr(module, "prepare"):
             module.prepare(self)
         else:
             del module
             del sys.modules[name]
-            raise ImportError(f'Module <{name}> is missing a prepare method')
+            raise ImportError(f"Module <{name}> is missing a prepare method")
 
         self._modules[name] = module
 
@@ -294,7 +296,11 @@ class Bot(Client):
 
         module = self._modules.pop(name)
 
-        modules = {name: m for name, m in sys.modules.items() if name == module.__name__ or name.startswith(module.__name__ + ".")}
+        modules = {
+            name: m
+            for name, m in sys.modules.items()
+            if name == module.__name__ or name.startswith(module.__name__ + ".")
+        }
 
         try:
             self.unload_module(name)
@@ -392,7 +398,7 @@ class Bot(Client):
         error: :class:`.Exception`
             The exception raised while trying to invoke the command.
         """
-        print(f'Ignoring exception in command: {error}:', file=sys.stderr)
+        print(f"Ignoring exception in command: {error}:", file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     async def event_message(self, message):
@@ -407,7 +413,9 @@ class Bot(Client):
         """
         await self.handle_commands(message)
 
-    def command(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Command, no_global_checks=False) -> Callable[[Callable], Command]:
+    def command(
+        self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
+    ) -> Callable[[Callable], Command]:
         """Decorator which registers a command with the bot.
 
         Commands must be a coroutine.
@@ -430,7 +438,7 @@ class Bot(Client):
         """
 
         if not inspect.isclass(cls):
-            raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+            raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
         def decorator(func: Callable):
             cmd_name = name or func.__name__
@@ -439,11 +447,14 @@ class Bot(Client):
             self.add_command(cmd)
 
             return cmd
+
         return decorator
 
-    def group(self, *, name: str=None, aliases: Union[list, tuple]=None, cls=Group, no_global_checks=False) -> Callable[[Callable], Group]:
+    def group(
+        self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Group, no_global_checks=False
+    ) -> Callable[[Callable], Group]:
         if not inspect.isclass(cls):
-            raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+            raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
         def decorator(func: Callable):
             cmd_name = name or func.__name__
@@ -452,4 +463,5 @@ class Bot(Client):
             self.add_command(cmd)
 
             return cmd
+
         return decorator

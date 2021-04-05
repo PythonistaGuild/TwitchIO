@@ -40,10 +40,10 @@ class RateBucket:
     def __init__(self, *, method: str):
         self.method = method
 
-        if method == 'irc':
+        if method == "irc":
             self.reset_time = self.IRC
             self.limit = self.IRCLIMIT
-        elif method == 'mod':
+        elif method == "mod":
             self.reset_time = self.IRC
             self.limit = self.MODLIMIT
         else:

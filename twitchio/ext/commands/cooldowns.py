@@ -30,22 +30,25 @@ import time
 from .errors import *
 
 
-__all__ = ('Bucket', 'Cooldown', )
+__all__ = (
+    "Bucket",
+    "Cooldown",
+)
 
 
 class Bucket(enum.Enum):
 
-    default    = 0
-    channel    = 1
-    member     = 2
-    user       = 3
+    default = 0
+    channel = 1
+    member = 2
+    user = 3
     subscriber = 4
-    mod        = 5
+    mod = 5
 
 
 class Cooldown:
 
-    __slots__ = ('_rate', '_per', 'bucket', '_window', '_tokens', '_cache')
+    __slots__ = ("_rate", "_per", "bucket", "_window", "_tokens", "_cache")
 
     def __init__(self, rate: int, per: float, bucket: Bucket):
         self._rate = rate
@@ -92,7 +95,7 @@ class Cooldown:
 
         for bucket in ctx.command._cooldowns:
             if bucket.bucket == Bucket.default:
-                buckets.append('default')
+                buckets.append("default")
 
             if bucket.bucket == Bucket.channel:
                 buckets.append(ctx.channel.name)

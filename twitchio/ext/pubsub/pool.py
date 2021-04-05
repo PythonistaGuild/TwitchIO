@@ -31,11 +31,10 @@ from .topics import Topic
 from . import models
 
 
-__all__ = "PubSubPool",
+__all__ = ("PubSubPool",)
 
 
 class PubSubPool:
-
     def __init__(self, client: Client, *, max_pool_size=10, max_connection_topics=50, mode="group"):
         self.client = client
         self._pool: List[PubSubWebsocket] = []
@@ -69,7 +68,9 @@ class PubSubPool:
             if len(self._pool) < self._max_size:
                 return None
             else:
-                raise models.PoolFull(f"The pubsub pool has reached maximum topics. Unable to allocate a group of {len(topics)} topics.")
+                raise models.PoolFull(
+                    f"The pubsub pool has reached maximum topics. Unable to allocate a group of {len(topics)} topics."
+                )
 
         else:
             raise ValueError("group is the only supported mode.")

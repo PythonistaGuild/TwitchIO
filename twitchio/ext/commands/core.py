@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from .stringparser import StringParser
 
 
-__all__ = ('Command', 'command', 'Group', 'Context', 'cooldown')
+__all__ = ("Command", "command", "Group", "Context", "cooldown")
 
 
 def _boolconverter(param: str):
@@ -54,7 +54,6 @@ def _boolconverter(param: str):
 
 
 class Command:
-
     def __init__(self, name: str, func: Callable, **attrs):
         if not inspect.iscoroutinefunction(func):
             raise TypeError("Command callback must be a coroutine.")
@@ -277,7 +276,7 @@ class Command:
                     result = predicate(context)
 
                 if result is False:
-                    raise CheckFailure(f'The check <{predicate}> for command <{self.name}> failed.')
+                    raise CheckFailure(f"The check <{predicate}> for command <{self.name}> failed.")
 
             return True
         except Exception as e:
@@ -310,9 +309,11 @@ class Group(Command):
         else:
             await self.invoke(context, index=index)
 
-    def command(self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False) -> Callable[[Callable], Command]:
+    def command(
+        self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
+    ) -> Callable[[Callable], Command]:
         if cls and not inspect.isclass(cls):
-            raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+            raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
         def decorator(func: Callable):
             fname = name or func.__name__
@@ -326,14 +327,29 @@ class Group(Command):
 
         return decorator
 
-    def group(self, *, name: str = None, aliases: Union[list, tuple] = None, cls=None, no_global_checks=False, invoke_with_subcommand=False) -> Callable[[Callable], "Group"]:
+    def group(
+        self,
+        *,
+        name: str = None,
+        aliases: Union[list, tuple] = None,
+        cls=None,
+        no_global_checks=False,
+        invoke_with_subcommand=False,
+    ) -> Callable[[Callable], "Group"]:
         cls = cls or Group
         if cls and not inspect.isclass(cls):
-            raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+            raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
         def decorator(func: Callable):
             fname = name or func.__name__
-            cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks, parent=self, invoke_with_subcommand=invoke_with_subcommand)
+            cmd = cls(
+                name=fname,
+                func=func,
+                aliases=aliases,
+                no_global_checks=no_global_checks,
+                parent=self,
+                invoke_with_subcommand=invoke_with_subcommand,
+            )
             self._sub_commands[cmd.name] = cmd
             if cmd.aliases:
                 for a in cmd.aliases:
@@ -342,6 +358,7 @@ class Group(Command):
             return cmd
 
         return decorator
+
 
 class Context(Messageable):
 
@@ -352,23 +369,23 @@ class Context(Messageable):
         self.channel = message.channel
         self.author = message.author
 
-        self.prefix: Optional[str] = attrs.get('prefix')
+        self.prefix: Optional[str] = attrs.get("prefix")
 
-        self.command: Optional[Command] = attrs.get('command')
+        self.command: Optional[Command] = attrs.get("command")
         if self.command:
             self.cog: Optional["Cog"] = self.command.cog
 
-        self.args: Optional[list] = attrs.get('args')
-        self.kwargs: Optional[dict] = attrs.get('kwargs')
+        self.args: Optional[list] = attrs.get("args")
+        self.kwargs: Optional[dict] = attrs.get("kwargs")
 
-        self.view: Optional["StringParser"] = attrs.get('view')
-        self.is_valid: bool = attrs.get('valid')
+        self.view: Optional["StringParser"] = attrs.get("view")
+        self.is_valid: bool = attrs.get("valid")
 
         self.bot: "Bot" = bot
         self._ws = self.channel._ws
 
     def _fetch_channel(self):
-        return self.channel         # Abstract method
+        return self.channel  # Abstract method
 
     def _fetch_websocket(self):
         return self._ws  # Abstract method
@@ -423,7 +440,9 @@ class Context(Messageable):
         return None
 
 
-def command(*, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False) -> Callable[[Callable], Command]:
+def command(
+    *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
+) -> Callable[[Callable], Command]:
     if cls and not inspect.isclass(cls):
         raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
@@ -432,17 +451,33 @@ def command(*, name: str = None, aliases: Union[list, tuple] = None, cls=Command
         cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks)
 
         return cmd
+
     return decorator
 
-def group(*, name: str = None, aliases: Union[list, tuple] = None, cls=Group, no_global_checks=False, invoke_with_subcommand=False) -> Callable[[Callable], Group]:
+
+def group(
+    *,
+    name: str = None,
+    aliases: Union[list, tuple] = None,
+    cls=Group,
+    no_global_checks=False,
+    invoke_with_subcommand=False,
+) -> Callable[[Callable], Group]:
     if cls and not inspect.isclass(cls):
-        raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+        raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
     def decorator(func: Callable):
         fname = name or func.__name__
-        cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks, invoke_with_subcommand=invoke_with_subcommand)
+        cmd = cls(
+            name=fname,
+            func=func,
+            aliases=aliases,
+            no_global_checks=no_global_checks,
+            invoke_with_subcommand=invoke_with_subcommand,
+        )
 
         return cmd
+
     return decorator
 
 
@@ -453,5 +488,5 @@ def cooldown(rate, per, bucket=Bucket.default):
         else:
             func.__cooldowns__ = [Cooldown(rate, per, bucket)]
         return func
-    return decorator
 
+    return decorator

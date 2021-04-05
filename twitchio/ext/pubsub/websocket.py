@@ -44,21 +44,23 @@ except:
 logger = logging.getLogger("twitchio.ext.pubsub.websocket")
 
 
-__all__ = "PubSubWebsocket",
+__all__ = ("PubSubWebsocket",)
 
 
 class PubSubWebsocket:
 
-    __slots__ = ("session",
-                 "topics",
-                 "client",
-                 "connection",
-                 "_latency",
-                 "timeout",
-                 "_task",
-                 "_poll",
-                 "max_topics",
-                 "_closing")
+    __slots__ = (
+        "session",
+        "topics",
+        "client",
+        "connection",
+        "_latency",
+        "timeout",
+        "_task",
+        "_poll",
+        "max_topics",
+        "_closing",
+    )
 
     ENDPOINT = "wss://pubsub-edge.twitch.tv"
 
@@ -116,14 +118,8 @@ class PubSubWebsocket:
 
     async def _send_topics(self, topics: List[Topic], type="LISTEN"):
         for tok, _topics in groupby(topics, key=lambda val: val.token):
-            nonce = ('%032x' % uuid.uuid4().int)[:8]
-            payload = {
-                "type": type,
-                "data": {
-                    "topics": [x.present for x in _topics],
-                    "auth_token": tok
-                }
-            }
+            nonce = ("%032x" % uuid.uuid4().int)[:8]
+            payload = {"type": type, "data": {"topics": [x.present for x in _topics], "auth_token": tok}}
             logger.debug(f"Sending {type} payload with nonce '{nonce}': {payload}")
             await self.send(payload)
 
@@ -148,7 +144,7 @@ class PubSubWebsocket:
     async def poll(self):
         while not self.connection.closed:
             data = await self.connection.receive_json(loads=json.loads)
-            handle = getattr(self, "handle_"+data['type'].lower().replace("-", "_"), None)
+            handle = getattr(self, "handle_" + data["type"].lower().replace("-", "_"), None)
             if handle:
                 self.client.loop.create_task(handle(data))
             else:
@@ -169,7 +165,7 @@ class PubSubWebsocket:
             try:
                 await asyncio.wait_for(self.timeout.wait(), 10)
             except asyncio.TimeoutError:
-                await asyncio.shield(self.reconnect()) # we're going to get cancelled, so shield the coro
+                await asyncio.shield(self.reconnect())  # we're going to get cancelled, so shield the coro
             else:
                 self._latency = time.time() - t
 
@@ -181,19 +177,19 @@ class PubSubWebsocket:
         self.timeout.set()
 
     async def handle_message(self, message):
-        message['data']['message'] = json.loads(message['data']['message'])
-        msg = models.PubSubMessage(self.client, message['data']['topic'], message['data']['message'])
-        self.client.run_event("pubsub_message", msg) # generic one
+        message["data"]["message"] = json.loads(message["data"]["message"])
+        msg = models.PubSubMessage(self.client, message["data"]["topic"], message["data"]["message"])
+        self.client.run_event("pubsub_message", msg)  # generic one
 
         self.client.run_event(*models.create_message(self.client, message))
 
     async def handle_reward_redeem(self, message):
-        msg = models.PubSubChannelPointsMessage(self.client, message['data'])
-        self.client.run_event("pubsub_message", msg) # generic one
+        msg = models.PubSubChannelPointsMessage(self.client, message["data"])
+        self.client.run_event("pubsub_message", msg)  # generic one
         self.client.run_event("pubsub_channel_points", msg)
 
     async def handle_response(self, message):
-        if message['error']:
+        if message["error"]:
             logger.error(f"Recieved errored response for nonce {message['nonce']}: {message['error']}")
-        elif message['nonce']:
+        elif message["nonce"]:
             logger.debug(f"Recieved OK response for nonce {message['nonce']}")

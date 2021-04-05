@@ -67,10 +67,11 @@ class PartialUser:
         Optional[:class:`twitchio.Channel`]
         """
         from .channel import Channel
+
         if self.name in self._http.client._connection._cache:
             return Channel(self.name, self._http.client._connection)
 
-    async def fetch(self, token: str=None, force=False) -> "User":
+    async def fetch(self, token: str = None, force=False) -> "User":
         """|coro|
         Fetches the full user from the api or cache
 
@@ -110,6 +111,7 @@ class PartialUser:
             List[:class:`twitchio.Tag`]
         """
         from .models import Tag
+
         data = await self._http.get_channel_tags(str(self.id))
         return [Tag(x) for x in data]
 
@@ -128,7 +130,9 @@ class PartialUser:
         tags = [x if isinstance(x, str) else x.id for x in tags]
         await self._http.put_replace_channel_tags(token, str(self.id), tags)
 
-    async def get_custom_rewards(self, token: str, *, only_manageable=False, ids: List[int]=None, force=False) -> List["CustomReward"]:
+    async def get_custom_rewards(
+        self, token: str, *, only_manageable=False, ids: List[int] = None, force=False
+    ) -> List["CustomReward"]:
         """|coro|
         Fetches the channels custom rewards (aka channel points) from the api.
         Parameters
@@ -147,7 +151,7 @@ class PartialUser:
 
         """
         if not force and self._cached_rewards:
-            if self._cached_rewards[0]+300 > time.monotonic():
+            if self._cached_rewards[0] + 300 > time.monotonic():
                 return self._cached_rewards[1]
 
         try:
@@ -157,15 +161,21 @@ class PartialUser:
         except HTTPException as error:
             status = error.args[2]
             if status == 403:
-                raise HTTPException("The custom reward was created by a different application, or channel points are "
-                                    "not available for the broadcaster (403)", error.args[1], 403) from error
+                raise HTTPException(
+                    "The custom reward was created by a different application, or channel points are "
+                    "not available for the broadcaster (403)",
+                    error.args[1],
+                    403,
+                ) from error
             raise
         else:
             values = [CustomReward(self._http, x, self) for x in data]
             self._cached_rewards = time.monotonic(), values
             return values
 
-    async def fetch_bits_leaderboard(self, token: str, period: str="all", user_id: int=None, started_at: datetime.datetime=None) -> "BitsLeaderboard":
+    async def fetch_bits_leaderboard(
+        self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
+    ) -> "BitsLeaderboard":
         """|coro|
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 
@@ -181,6 +191,7 @@ class PartialUser:
             the id of the user to fetch for
         """
         from .models import BitsLeaderboard
+
         data = await self._http.get_bits_board(token, period, user_id, started_at)
         return BitsLeaderboard(self._http, data)
 
@@ -236,7 +247,7 @@ class PartialUser:
 
         return [Clip(self._http, x) for x in data]
 
-    async def fetch_hypetrain_events(self, id: str=None, token: str=None):
+    async def fetch_hypetrain_events(self, id: str = None, token: str = None):
         """|coro|
         Fetches hypetrain event from the api. Needs a token with the channel:read:hype_train scope.
 
@@ -253,10 +264,11 @@ class PartialUser:
             A list of hypetrain events
         """
         from .models import HypeTrainEvent
+
         data = await self._http.get_hype_train(self.id, id=id, token=token)
         return [HypeTrainEvent(self._http, d) for d in data]
 
-    async def fetch_bans(self, token: str, userids: List[Union[str, int]]=None) -> List["UserBan"]:
+    async def fetch_bans(self, token: str, userids: List[Union[str, int]] = None) -> List["UserBan"]:
         """|coro|
         Fetches a list of people the User has banned from their channel.
 
@@ -270,7 +282,7 @@ class PartialUser:
         data = await self._http.get_channel_bans(token, str(self.id), user_ids=userids)
         return [UserBan(self._http, d) for d in data]
 
-    async def fetch_ban_events(self, token: str, userids: List[int]=None):
+    async def fetch_ban_events(self, token: str, userids: List[int] = None):
         """|coro|
         Fetches ban/unban events from the User's channel.
 
@@ -286,10 +298,11 @@ class PartialUser:
             List[:class:`twitchio.BanEvent`]
         """
         from .models import BanEvent
+
         data = await self._http.get_channel_ban_unban_events(token, str(self.id), userids)
         return [BanEvent(self._http, x, self) for x in data]
 
-    async def fetch_moderators(self, token: str, userids: List[int]=None):
+    async def fetch_moderators(self, token: str, userids: List[int] = None):
         """|coro|
         Fetches the moderators for this channel.
 
@@ -305,7 +318,7 @@ class PartialUser:
             List[:class:`twitchio.PartialUser`]
         """
         data = await self._http.get_channel_moderators(token, str(self.id), user_ids=userids)
-        return [PartialUser(self._http, d['user_id'], d['user_name']) for d in data]
+        return [PartialUser(self._http, d["user_id"], d["user_name"]) for d in data]
 
     async def fetch_mod_events(self, token: str):
         """|coro|
@@ -321,6 +334,7 @@ class PartialUser:
             List[:class:`twitchio.ModEvent`]
         """
         from .models import ModEvent
+
         data = await self._http.get_channel_mod_events(token, str(self.id))
         return [ModEvent(self._http, d, self) for d in data]
 
@@ -340,6 +354,7 @@ class PartialUser:
             List[:class:`twitchio.AutomodCheckResponse`]
         """
         from .models import AutomodCheckResponse
+
         data = await self._http.post_automod_check(token, str(self.id), *[x._to_dict() for x in query])
         return [AutomodCheckResponse(d) for d in data]
 
@@ -359,7 +374,7 @@ class PartialUser:
         data = await self._http.get_stream_key(token, str(self.id))
         return data
 
-    async def fetch_following(self, token: str=None):
+    async def fetch_following(self, token: str = None):
         """|coro|
         Fetches a list of users that this user is following.
 
@@ -373,10 +388,11 @@ class PartialUser:
             List[:class:`twitchio.FollowEvent`]
         """
         from .models import FollowEvent
+
         data = await self._http.get_user_follows(token=token, from_id=str(self.id))
         return [FollowEvent(self._http, d, from_=self) for d in data]
 
-    async def fetch_followers(self, token: str=None):
+    async def fetch_followers(self, token: str = None):
         """|coro|
         Fetches a list of users that are following this user.
 
@@ -390,6 +406,7 @@ class PartialUser:
             List[:class:`twitchio.FollowEvent`]
         """
         from .models import FollowEvent
+
         data = await self._http.get_user_follows(from_id=str(self.id))
         return [FollowEvent(self._http, d, to=self) for d in data]
 
@@ -406,7 +423,9 @@ class PartialUser:
         notifications: :class:`bool`
             Whether to allow push notifications when this user goes live. Defaults to False
         """
-        await self._http.post_follow_channel(token, from_id=str(userid), to_id=str(self.id), notifications=notifications)
+        await self._http.post_follow_channel(
+            token, from_id=str(userid), to_id=str(self.id), notifications=notifications
+        )
 
     async def unfollow(self, userid: int, token: str):
         """|coro|
@@ -421,7 +440,7 @@ class PartialUser:
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
-    async def fetch_subscriptions(self, token: str, userids: List[int]=None):
+    async def fetch_subscriptions(self, token: str, userids: List[int] = None):
         """|coro|
         Fetches the subscriptions for this channel.
 
@@ -437,10 +456,11 @@ class PartialUser:
             List[:class:`twitchio.SubscriptionEvent`]
         """
         from .models import SubscriptionEvent
+
         data = await self._http.get_channel_subscriptions(token, str(self.id), user_ids=userids)
         return [SubscriptionEvent(self._http, d, broadcaster=self) for d in data]
 
-    async def create_marker(self, token: str, description: str=None):
+    async def create_marker(self, token: str, description: str = None):
         """|coro|
         Creates a marker on the stream. This only works if the channel is live (among other conditions)
 
@@ -456,10 +476,11 @@ class PartialUser:
             :class:`twitchio.Marker`
         """
         from .models import Marker
+
         data = await self._http.post_stream_marker(token, user_id=str(self.id), description=description)
         return Marker(data[0])
 
-    async def fetch_markers(self, token: str, video_id: str=None):
+    async def fetch_markers(self, token: str, video_id: str = None):
         """|coro|
         Fetches markers from the given video id, or the most recent video.
         The Twitch api will only return markers created by the user of the authorized token
@@ -476,9 +497,10 @@ class PartialUser:
             Optional[:class:`twitchio.VideoMarkers`]
         """
         from .models import VideoMarkers
+
         data = await self._http.get_stream_markers(token, user_id=str(self.id), video_id=video_id)
         if data:
-            return VideoMarkers(data[0]['videos'])
+            return VideoMarkers(data[0]["videos"])
 
     async def fetch_extensions(self, token: str):
         """|coro|
@@ -494,10 +516,11 @@ class PartialUser:
             List[:class:`twitchio.Extension`]
         """
         from .models import Extension
+
         data = await self._http.get_channel_extensions(token)
         return [Extension(d) for d in data]
 
-    async def fetch_active_extensions(self, token: str=None):
+    async def fetch_active_extensions(self, token: str = None):
         """|coro|
         Fetches active extensions the user has.
         Returns a dictionary containing the following keys: `panel`, `overlay`, `component`.
@@ -512,12 +535,9 @@ class PartialUser:
             Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
         """
         from .models import ActiveExtension
+
         data = await self._http.get_user_active_extensions(token, str(self.id))
-        return {
-            typ: {
-                int(n): ActiveExtension(d) for n, d in vals.items()
-            } for typ, vals in data.items()
-        }
+        return {typ: {int(n): ActiveExtension(d) for n, d in vals.items()} for typ, vals in data.items()}
 
     async def update_extensions(self, token: str, extensions: "ExtensionBuilder"):
         """|coro|
@@ -535,12 +555,9 @@ class PartialUser:
             Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
         """
         from .models import ActiveExtension
+
         data = await self._http.put_user_extensions(token, extensions._to_dict())
-        return {
-            typ: {
-                int(n): ActiveExtension(d) for n, d in vals.items()
-            } for typ, vals in data.items()
-        }
+        return {typ: {int(n): ActiveExtension(d) for n, d in vals.items()} for typ, vals in data.items()}
 
     async def fetch_videos(self, period="all", sort="time", type="all", language=None):
         """|coro|
@@ -562,6 +579,7 @@ class PartialUser:
             List[:class:`twitchio.Video`]
         """
         from models import Video
+
         data = await self._http.get_videos(user_id=str(self.id), period=period, sort=sort, type=type, language=language)
         return [Video(self._http, x, self) for x in data]
 
@@ -571,18 +589,20 @@ class BitLeaderboardUser(PartialUser):
     __slots__ = "rank", "score"
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        super(BitLeaderboardUser, self).__init__(http, id=data['user_id'], name=data['user_name'])
-        self.rank: int = data['rank']
-        self.score: int = data['score']
+        super(BitLeaderboardUser, self).__init__(http, id=data["user_id"], name=data["user_name"])
+        self.rank: int = data["rank"]
+        self.score: int = data["score"]
 
 
 class UserBan(PartialUser):
 
-    __slots__ = "expires_at",
+    __slots__ = ("expires_at",)
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        super(UserBan, self).__init__(http, name=data['user_login'], id=data['user_id'])
-        self.expires_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if data['expires_at'] else None
+        super(UserBan, self).__init__(http, name=data["user_login"], id=data["user_id"])
+        self.expires_at = (
+            datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ") if data["expires_at"] else None
+        )
 
 
 class SearchUser(PartialUser):
@@ -591,41 +611,43 @@ class SearchUser(PartialUser):
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
-        self.display_name: str = data['display_name']
-        self.name: str = data['broadcaster_login']
-        self.id: int = int(data['id'])
-        self.game_id: str = data['game_id']
-        self.title: str = data['title']
-        self.thumbnail_url: str = data['thumbnail_url']
-        self.live: bool = data['is_live']
-        self.started_at = datetime.datetime.strptime(data['expires_at'], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
-        self.tag_ids: List[str] = data['tag_ids']
+        self.display_name: str = data["display_name"]
+        self.name: str = data["broadcaster_login"]
+        self.id: int = int(data["id"])
+        self.game_id: str = data["game_id"]
+        self.title: str = data["title"]
+        self.thumbnail_url: str = data["thumbnail_url"]
+        self.live: bool = data["is_live"]
+        self.started_at = datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
+        self.tag_ids: List[str] = data["tag_ids"]
 
 
 class User(PartialUser):
 
-    __slots__ = ("_http",
-                 "id",
-                 "name",
-                 "display_name",
-                 "type",
-                 "broadcaster_type",
-                 "description",
-                 "profile_image",
-                 "offline_image",
-                 "view_count",
-                 "email",
-                 "_cached_rewards")
+    __slots__ = (
+        "_http",
+        "id",
+        "name",
+        "display_name",
+        "type",
+        "broadcaster_type",
+        "description",
+        "profile_image",
+        "offline_image",
+        "view_count",
+        "email",
+        "_cached_rewards",
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
-        self.id = int(data['id'])
-        self.name = data['login']
-        self.display_name = data['display_name']
-        self.type = UserTypeEnum(data['type'])
-        self.broadcaster_type = BroadcasterTypeEnum(data['broadcaster_type'])
-        self.description = data['description']
-        self.profile_image = data['profile_image_url']
-        self.offline_image = data['offline_image_url']
-        self.view_count = data['view_count'],
+        self.id = int(data["id"])
+        self.name = data["login"]
+        self.display_name = data["display_name"]
+        self.type = UserTypeEnum(data["type"])
+        self.broadcaster_type = BroadcasterTypeEnum(data["broadcaster_type"])
+        self.description = data["description"]
+        self.profile_image = data["profile_image_url"]
+        self.offline_image = data["offline_image_url"]
+        self.view_count = (data["view_count"],)
         self.email = data.get("email", None)
