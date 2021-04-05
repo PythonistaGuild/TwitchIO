@@ -20,7 +20,7 @@ Although not classified as Stable you should be able to use this release for tes
 
 TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots. TwitchIO 2 will cover 100% of the new Twitch API and will feature support for commands, PubSub and Webhooks.
 
-TwitcHIO 2.0 will be buggy, will be lacking some features and you will run into problems here and there, that is the nature of BETA software, by using 2.0 you are helping test and develop TwitchIO by providing us with valuable feedback, feature requests and bug reports.
+TwitchIO 2.0 will be buggy, will be lacking some features and you will run into problems here and there, that is the nature of BETA software, by using 2.0 you are helping test and develop TwitchIO by providing us with valuable feedback, feature requests and bug reports.
 
 Documentation
 ---------------------------

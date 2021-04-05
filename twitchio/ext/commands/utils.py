@@ -24,7 +24,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 class _CaseInsensitiveDict(dict):
-
     def __getitem__(self, key):
         return super().__getitem__(key.lower())
 

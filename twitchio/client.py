@@ -38,7 +38,7 @@ from .message import Message
 from .user import User, PartialUser, SearchUser
 from .cache import user_cache, id_cache
 
-__all__ = "Client",
+__all__ = ("Client",)
 
 logger = logging.getLogger("twitchio.client")
 
@@ -66,33 +66,33 @@ class Client:
         The event loop the Client uses.
     """
 
-    def __init__(self,
-                 token: str,
-                 *,
-                 client_secret: str = None,
-                 initial_channels: Union[list, tuple, Callable] = None,
-                 loop: asyncio.AbstractEventLoop = None,
-                 heartbeat: Optional[float] = 30.0,
-                 ):
+    def __init__(
+        self,
+        token: str,
+        *,
+        client_secret: str = None,
+        initial_channels: Union[list, tuple, Callable] = None,
+        loop: asyncio.AbstractEventLoop = None,
+        heartbeat: Optional[float] = 30.0,
+    ):
 
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
         self._heartbeat = heartbeat
 
-        token = token.replace('oauth:', '')
+        token = token.replace("oauth:", "")
 
         self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret)
-        self._connection = WSConnection(client=self,
-                                        token=token,
-                                        loop=self.loop,
-                                        initial_channels=initial_channels,
-                                        heartbeat=heartbeat)
+        self._connection = WSConnection(
+            client=self, token=token, loop=self.loop, initial_channels=initial_channels, heartbeat=heartbeat
+        )
 
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
 
     @classmethod
-    def from_client_credentials(cls, client_id: str, client_secret: str, *,
-                                loop: asyncio.AbstractEventLoop = None) -> "Client":
+    def from_client_credentials(
+        cls, client_id: str, client_secret: str, *, loop: asyncio.AbstractEventLoop = None
+    ) -> "Client":
         """
         creates a client application token from your client credentials.
 
@@ -120,10 +120,9 @@ class Client:
         self = cls.__new__(cls)
         self.loop = loop or asyncio.get_event_loop()
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
-        self._connection = WSConnection(client=self,
-                                        loop=self.loop,
-                                        initial_channels=None,
-                                        heartbeat=self._heartbeat)  # The only reason we're even creating this is to avoid attribute errors
+        self._connection = WSConnection(
+            client=self, loop=self.loop, initial_channels=None, heartbeat=self._heartbeat
+        )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
         return self
@@ -195,15 +194,15 @@ class Client:
         return False
 
     def event(self, name: str = None) -> Callable:
-
         def decorator(func: Callable) -> Callable:
             self.add_event(func, name)
             return func
 
         return decorator
 
-    async def wait_for(self, event: str, predicate: Callable[[], bool] = lambda *a: True, *, timeout=60.0) -> Tuple[
-        Any]:
+    async def wait_for(
+        self, event: str, predicate: Callable[[], bool] = lambda *a: True, *, timeout=60.0
+    ) -> Tuple[Any]:
         """|coro|
 
         Waits for an event to be dispatched, then returns the events data
@@ -284,8 +283,9 @@ class Client:
         return PartialUser(self._http, user_id, user_name)
 
     @user_cache()
-    async def fetch_users(self, names: List[str] = None, ids: List[int] = None, token: str = None, force=False) -> List[
-        User]:
+    async def fetch_users(
+        self, names: List[str] = None, ids: List[int] = None, token: str = None, force=False
+    ) -> List[User]:
         """|coro|
         Fetches users from the helix API
 
@@ -329,8 +329,14 @@ class Client:
         return [models.Clip(self._http, d) for d in data]
 
     async def fetch_videos(
-            self, ids: List[int] = None, game_id: int = None, user_id: int = None,
-            period=None, sort=None, type=None, language=None
+        self,
+        ids: List[int] = None,
+        game_id: int = None,
+        user_id: int = None,
+        period=None,
+        sort=None,
+        type=None,
+        language=None,
     ):
         """|coro|
         Fetches videos by id, game id, or user id
@@ -361,8 +367,10 @@ class Client:
             List[:class:`twitchio.Video`]
         """
         from .models import Video
-        data = await self._http.get_videos(ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type,
-                                           language=language)
+
+        data = await self._http.get_videos(
+            ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type, language=language
+        )
         return [Video(self._http, x) for x in data]
 
     async def fetch_cheermotes(self, user_id: int = None):
@@ -478,7 +486,7 @@ class Client:
             List[:class:`int`]
         """
         resp = []
-        for chunk in [ids[x:x + 3] for x in range(0, len(ids), 3)]:
+        for chunk in [ids[x : x + 3] for x in range(0, len(ids), 3)]:
             resp.append(await self._http.delete_videos(token, chunk))
 
         return resp

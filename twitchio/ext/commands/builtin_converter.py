@@ -38,7 +38,7 @@ __all__ = (
     "convert_Channel",
     "convert_PartialChatter",
     "convert_PartialUser",
-    "convert_User"
+    "convert_User",
 )
 
 
@@ -63,7 +63,7 @@ async def convert_PartialChatter(ctx: "Context", arg: str):
 
 async def convert_Clip(ctx: "Context", arg: str):
     finder = re.search(r"(https://clips.twitch.tv/)?(?P<slug>.*)", arg)
-    slug = finder.group('slug')
+    slug = finder.group("slug")
     clips = await ctx.bot.fetch_clips([slug])
     if not clips:
         raise BadArgument(f"Clip '{slug}' was not found")
@@ -97,11 +97,12 @@ async def convert_Channel(ctx: "Context", arg: str):
 
     return ctx.bot.get_channel(arg)
 
+
 _mapping = {
     User: convert_User,
     PartialUser: convert_PartialUser,
     Channel: convert_Channel,
     Chatter: convert_Chatter,
     PartialChatter: convert_PartialChatter,
-    Clip: convert_Clip
+    Clip: convert_Clip,
 }

@@ -24,6 +24,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
 class StringParser:
     def __init__(self):
         self.count = 0
@@ -40,14 +41,14 @@ class StringParser:
                 loc = msg[self.count]
             except IndexError:
                 self.eof = self.count
-                word = msg[self.start:self.eof]
+                word = msg[self.start : self.eof]
                 if not word:
                     break
-                self.words[self.index] = msg[self.start:self.eof]
+                self.words[self.index] = msg[self.start : self.eof]
                 break
 
             if loc.isspace() and not self.ignore:
-                self.words[self.index] = msg[self.start:self.count].replace(' ', '', 1)
+                self.words[self.index] = msg[self.start : self.count].replace(" ", "", 1)
                 self.index += 1
                 self.start = self.count + 1
 
@@ -56,7 +57,7 @@ class StringParser:
                     self.start = self.count + 1
                     self.ignore = True
                 else:
-                    self.words[self.index] = msg[self.start:self.count]
+                    self.words[self.index] = msg[self.start : self.count]
                     self.index += 1
                     self.count += 1
                     self.start = self.count
