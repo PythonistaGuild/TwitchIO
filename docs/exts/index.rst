@@ -3,7 +3,7 @@
 Twitchio External Modules
 ==========================
 
-The external modules (exts) are addons that aim to provide ease of use, but aren't directly related to the twitch API
+External modules (exts) are add-ons that aim to provide ease of use, but aren't directly related to the twitch API.
 
 .. toctree::
     :maxdepth: 2

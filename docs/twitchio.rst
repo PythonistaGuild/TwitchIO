@@ -1,7 +1,8 @@
-.. py:currentmodule:: twitchio
+Client Reference
+================
+Event, Client and Exceptions API reference.
 
-TwitchIO 2
-============
+.. py:currentmodule:: twitchio
 
 .. note::
 
@@ -9,16 +10,18 @@ TwitchIO 2
 
 Client
 --------
+
+.. attributetable:: Client
+
 .. autoclass:: Client
     :members:
-    :noindex: event_ready,
-        event_raw_data,
-        event_message,
-        event_join, event_part, event_mode, event_userstate, event_raw_usernotice,
-        event_usernotice_subscription, event_error
+    :exclude-members: event_ready, event_raw_data, event_message,
+                      event_join, event_part, event_mode, event_userstate,
+                      event_raw_usernotice, event_usernotice_subscription, event_error
 
 Event Reference
 -----------------
+
 .. automethod:: Client.event_ready()
 .. automethod:: Client.event_raw_data(data: str)
 .. automethod:: Client.event_message(message: Message)
