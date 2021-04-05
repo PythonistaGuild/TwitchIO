@@ -31,7 +31,7 @@ from .errors import *
 from . import builtin_converter
 
 
-__all__ = ('Command', 'command', 'Context', 'cooldown')
+__all__ = ("Command", "command", "Context", "cooldown")
 
 
 class Event:
@@ -39,10 +39,9 @@ class Event:
 
 
 class Command:
-
     def __init__(self, name: str, func, **attrs):
         if not inspect.iscoroutinefunction(func):
-            raise TypeError('Command callback must be a coroutine.')
+            raise TypeError("Command callback must be a coroutine.")
 
         self._callback = func
         self._checks = []
@@ -62,14 +61,14 @@ class Command:
         except AttributeError:
             pass
 
-        self.aliases = attrs.get('aliases', None)
+        self.aliases = attrs.get("aliases", None)
         sig = inspect.signature(func)
         self.params = sig.parameters.copy()
 
         self.event_error = None
         self._before_invoke = None
         self._after_invoke = None
-        self.no_global_checks = attrs.get('no_global_checks', False)
+        self.no_global_checks = attrs.get("no_global_checks", False)
 
         for key, value in self.params.items():
             if isinstance(value.annotation, str):
@@ -104,8 +103,11 @@ class Command:
             raise
 
         except Exception as e:
-            raise ArgumentParsingFailed(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
-                              f' Expected type {converter} got {type(parsed)}.', e) from e
+            raise ArgumentParsingFailed(
+                f"Invalid argument parsed at `{param.name}` in command `{self.name}`."
+                f" Expected type {converter} got {type(parsed)}.",
+                e,
+            ) from e
 
         return argument
 
@@ -120,7 +122,7 @@ class Command:
             if instance:
                 next(iterator)
         except StopIteration:
-            raise TwitchCommandError(f'self or ctx is a required argument which is missing.')
+            raise TwitchCommandError(f"self or ctx is a required argument which is missing.")
 
         for _, param in iterator:
             index += 1
@@ -136,9 +138,9 @@ class Command:
                     args.append(argument)
 
             elif param.kind == param.KEYWORD_ONLY:
-                rest = ' '.join(parsed.values())
-                if rest.startswith(' '):
-                    rest = rest.lstrip(' ')
+                rest = " ".join(parsed.values())
+                if rest.startswith(" "):
+                    rest = rest.lstrip(" ")
 
                 if rest:
                     rest = await self._convert_types(context, param, rest)
@@ -161,6 +163,32 @@ class Command:
 
 
 class Context(Messageable):
+    """Context around the command invocation.
+
+    Attributes
+    ------------
+    message: :class:`twitchio.Message`
+        The Message used to invoke the command and create Context.
+    channel
+        The channel the original message was sent.
+    author
+        The author of the original message.
+    prefix
+        The prefix used to invoke the command.
+    command
+        The command that was invoked.
+    cog
+        The cog the command belongs to.
+    args
+        A tuple of arguments passed to the command.
+    kwargs
+        A dict of keyword arguments passed to the command.
+    is_valid
+        Whether or not this context is valid. Could be False if no or an incorrect prefix was used, or if
+        the command being invoked doesn't exist.
+    bot
+        The bot object.
+    """
 
     __messageable_channel__ = True
 
@@ -169,26 +197,26 @@ class Context(Messageable):
         self.channel = message.channel
         self.author = message.author
 
-        self.prefix = attrs.get('prefix')
+        self.prefix = attrs.get("prefix")
 
-        self.command = attrs.get('command')
+        self.command = attrs.get("command")
         if self.command:
             self.cog = self.command.cog
 
-        self.args = attrs.get('args')
-        self.kwargs = attrs.get('kwargs')
+        self.args = attrs.get("args")
+        self.kwargs = attrs.get("kwargs")
 
-        self.view = attrs.get('view')
-        self.is_valid = attrs.get('valid')
+        self.view = attrs.get("view")
+        self.is_valid = attrs.get("valid")
 
         self.bot = bot
         self._ws = self.channel._ws
 
     def _fetch_channel(self):
-        return self.channel         # Abstract method
+        return self.channel  # Abstract method
 
     def _fetch_websocket(self):
-        return self._ws             # Abstract method
+        return self._ws  # Abstract method
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self.channel._name]
@@ -212,7 +240,7 @@ class Context(Messageable):
         return users
 
     @property
-    def users(self) -> Optional[set]:   # Alias to chatters
+    def users(self) -> Optional[set]:  # Alias to chatters
         """Alias to chatters."""
         return self.chatters
 
@@ -242,7 +270,7 @@ class Context(Messageable):
 
 def command(*, name: str = None, aliases: Union[list, tuple] = None, cls=None, no_global_checks=False):
     if cls and not inspect.isclass(cls):
-        raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+        raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
     cls = cls or Command
 
@@ -251,6 +279,7 @@ def command(*, name: str = None, aliases: Union[list, tuple] = None, cls=None, n
         cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks)
 
         return cmd
+
     return decorator
 
 
@@ -261,5 +290,5 @@ def cooldown(rate, per, bucket=Bucket.default):
         else:
             func.__cooldowns__ = [Cooldown(rate, per, bucket)]
         return func
-    return decorator
 
+    return decorator
