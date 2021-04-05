@@ -31,7 +31,7 @@ jobs:
         pre = max(data).split("b")
         final = f"{pre[0]}b{int(pre[1]) + 1}"
 
-        echo "TWITCHIO_VERSION=${{ final }}" >> $GITHUB_ENV
+        echo "TWITCHIO_VERSION=$final" >> $GITHUB_ENV
     - name: Find and Replace
       uses: jacobtomlinson/gha-find-replace@master
       with:
