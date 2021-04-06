@@ -56,11 +56,10 @@ class CommandNotFound(TwitchCommandError):
 
 
 class CommandOnCooldown(TwitchCommandError):
-
     def __init__(self, command, retry_after):
         self.command = command
         self.retry_after = retry_after
-        super().__init__(f'Command <{command.name}> is on cooldown. Try again in ({retry_after:.2f})s')
+        super().__init__(f"Command <{command.name}> is on cooldown. Try again in ({retry_after:.2f})s")
 
 
 class CheckFailure(TwitchCommandError):
