@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -24,32 +24,37 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import time
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .channel import Channel
+    from .user import User
 
 
 class Message:
 
-    __slots__ = ('_raw_data', 'content', '_author', 'echo', '_timestamp', '_channel', '_tags')
+    __slots__ = ("_raw_data", "content", "_author", "echo", "_timestamp", "_channel", "_tags")
 
     def __init__(self, **kwargs):
-        self._raw_data = kwargs.get('raw_data')
-        self.content = kwargs.get('content')
-        self._author = kwargs.get('author')
-        self._channel = kwargs.get('channel')
-        self._tags = kwargs.get('tags')
-        self.echo = False
+        self._raw_data = kwargs.get("raw_data")
+        self.content = kwargs.get("content")
+        self._author = kwargs.get("author")
+        self._channel = kwargs.get("channel")
+        self._tags = kwargs.get("tags")
+        self.echo = kwargs.get("echo", False)
 
         try:
-            self._timestamp = self._tags['tmi-sent-ts']
+            self._timestamp = self._tags["tmi-sent-ts"]
         except KeyError:
             self._timestamp = time.time()
 
     @property
-    def author(self):
+    def author(self) -> "User":
         """The User object associated with the Message."""
         return self._author
 
     @property
-    def channel(self):  # stub
+    def channel(self) -> "Channel":
         """The Channel object associated with the Message."""
         return self._channel
 
@@ -59,7 +64,7 @@ class Message:
         return self._raw_data
 
     @property
-    def tags(self):
+    def tags(self) -> dict:
         """The tags associated with the Message.
 
         Could be None.
@@ -67,7 +72,7 @@ class Message:
         return self._tags
 
     @property
-    def timestamp(self) -> datetime.datetime.timestamp:
+    def timestamp(self) -> datetime.datetime:
         """The Twitch timestamp for this Message.
 
         Returns

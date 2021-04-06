@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2019 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,44 +28,43 @@ import os
 from setuptools import setup
 
 
-on_rtd = os.getenv('READTHEDOCS') == 'True'
+on_rtd = os.getenv("READTHEDOCS") == "True"
 
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
 if on_rtd:
-    requirements.append('sphinx==1.7.4')
-    requirements.append('sphinxcontrib-napoleon')
-    requirements.append('sphinxcontrib-asyncio')
-    requirements.append('sphinxcontrib-websupport')
-    requirements.append('Pygments')
+    with open("docs/requirements.txt") as f:
+        requirements.extend(f.read().splitlines())
 
-version = '2.0.0a1'
+version = "{{__VERSION__}}"
 
-readme = ''
-with open('README.md') as f:
+readme = ""
+with open("README.rst") as f:
     readme = f.read()
 
-setup(name='twitchio',
-      author='TwitchIO',
-      url='https://github.com/TwitchIO/TwitchIO',
-      version=version,
-      packages=['twitchio', 'twitchio.ext.commands', 'twitchio.ext.webhooks'],
-      license='MIT',
-      description='A Python IRC and API wrapper for Twitch.',
-      long_description=readme,
-      include_package_data=True,
-      install_requires=requirements,
-      classifiers=[
-        'License :: OSI Approved :: MIT License',
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Topic :: Internet',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Utilities',
-      ]
+setup(
+    name="twitchio",
+    author="TwitchIO",
+    url="https://github.com/TwitchIO/TwitchIO",
+    version=version,
+    packages=["twitchio", "twitchio.ext.commands", "twitchio.ext.pubsub", "twitchio.ext.webhooks"],
+    license="MIT",
+    description="A Python IRC and API wrapper for Twitch.",
+    long_description=readme,
+    include_package_data=True,
+    install_requires=requirements,
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Internet",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Utilities",
+    ],
 )

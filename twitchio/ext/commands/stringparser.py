@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2019 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -24,8 +24,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from collections import OrderedDict
-
 
 class StringParser:
     def __init__(self):
@@ -33,7 +31,7 @@ class StringParser:
         self.index = 0
         self.eof = 0
         self.start = 0
-        self.words = OrderedDict()
+        self.words = {}
         self.ignore = False
 
     def process_string(self, msg: str):
@@ -43,14 +41,14 @@ class StringParser:
                 loc = msg[self.count]
             except IndexError:
                 self.eof = self.count
-                word = msg[self.start:self.eof]
+                word = msg[self.start : self.eof]
                 if not word:
                     break
-                self.words[self.index] = msg[self.start:self.eof]
+                self.words[self.index] = msg[self.start : self.eof]
                 break
 
             if loc.isspace() and not self.ignore:
-                self.words[self.index] = msg[self.start:self.count].replace(' ', '', 1)
+                self.words[self.index] = msg[self.start : self.count].replace(" ", "", 1)
                 self.index += 1
                 self.start = self.count + 1
 
@@ -59,7 +57,7 @@ class StringParser:
                     self.start = self.count + 1
                     self.ignore = True
                 else:
-                    self.words[self.index] = msg[self.start:self.count]
+                    self.words[self.index] = msg[self.start : self.count]
                     self.index += 1
                     self.count += 1
                     self.start = self.count
@@ -67,3 +65,12 @@ class StringParser:
 
             self.count += 1
         return self.words
+
+    def copy(self):
+        new = self.__class__()
+        new.count = self.count
+        new.start = self.start
+        new.words = self.words.copy()
+        new.index = self.index
+        new.ignore = self.ignore
+        return new

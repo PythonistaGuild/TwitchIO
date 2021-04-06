@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2019 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -40,7 +40,15 @@ class MissingRequiredArgument(TwitchCommandError):
 
 
 class BadArgument(TwitchCommandError):
-    pass
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
+
+class ArgumentParsingFailed(BadArgument):
+    def __init__(self, message: str, original: Exception):
+        self.original = original
+        super().__init__(message)
 
 
 class CommandNotFound(TwitchCommandError):
@@ -48,11 +56,10 @@ class CommandNotFound(TwitchCommandError):
 
 
 class CommandOnCooldown(TwitchCommandError):
-
     def __init__(self, command, retry_after):
         self.command = command
         self.retry_after = retry_after
-        super().__init__(f'Command <{command.name}> is on cooldown. Try again in ({retry_after:.2f})s')
+        super().__init__(f"Command <{command.name}> is on cooldown. Try again in ({retry_after:.2f})s")
 
 
 class CheckFailure(TwitchCommandError):

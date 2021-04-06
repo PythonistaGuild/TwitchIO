@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2020 TwitchIO
+Copyright (c) 2017-2021 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -23,24 +23,40 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import inspect
-from typing import Union, Optional
+from typing import Union, Optional, Callable, Awaitable
+
+import itertools
+import copy
+from typing import Any, Union, Optional, Callable, Awaitable, Tuple, TYPE_CHECKING
+
 from twitchio.abcs import Messageable
 from .cooldowns import *
 from .errors import *
+from . import builtin_converter
+
+if TYPE_CHECKING:
+    from twitchio import Message
+    from . import Cog, Bot
+    from .stringparser import StringParser
 
 
-__all__ = ('Command', 'command', 'Context', 'cooldown')
+__all__ = ("Command", "command", "Group", "Context", "cooldown")
 
 
-class Event:
-    pass
+def _boolconverter(param: str):
+    param = param.lower()
+    if param in ("yes", "y", "1", "true", "on"):
+        return True
+    elif param in ("no", "n", "0", "false", "off"):
+        return False
+
+    raise BadArgument(f"Expected a boolean value, got {param}")
 
 
 class Command:
-
-    def __init__(self, name: str, func, **attrs):
+    def __init__(self, name: str, func: Callable, **attrs):
         if not inspect.iscoroutinefunction(func):
-            raise TypeError('Command callback must be a coroutine.')
+            raise TypeError("Command callback must be a coroutine.")
 
         self._callback = func
         self._checks = []
@@ -49,6 +65,7 @@ class Command:
 
         self._instance = None
         self.cog = None
+        self.parent: Optional[Group] = attrs.get("parent")
 
         try:
             self._checks.extend(func.__checks__)
@@ -60,14 +77,14 @@ class Command:
         except AttributeError:
             pass
 
-        self.aliases = attrs.get('aliases', None)
+        self.aliases = attrs.get("aliases", None)
         sig = inspect.signature(func)
         self.params = sig.parameters.copy()
 
         self.event_error = None
         self._before_invoke = None
         self._after_invoke = None
-        self.no_global_checks = attrs.get('no_global_checks', False)
+        self.no_global_checks = attrs.get("no_global_checks", False)
 
         for key, value in self.params.items():
             if isinstance(value.annotation, str):
@@ -77,8 +94,21 @@ class Command:
     def name(self):
         return self._name
 
-    def _convert_types(self, param, parsed):
+    @property
+    def full_name(self):
+        if not self.parent:
+            return self._name
 
+        return f"{self.parent.full_name} {self._name}"
+
+    def _resolve_converter(self, converter: Union[Callable, Awaitable, type]) -> Callable:
+        if isinstance(converter, type) and converter.__module__.startswith("twitchio"):
+            if converter in builtin_converter._mapping:
+                return builtin_converter._mapping[converter]
+
+        return converter
+
+    async def _convert_types(self, context: "Context", param: inspect.Parameter, parsed: str) -> Any:
         converter = param.annotation
         if converter is param.empty:
             if param.default in (param.empty, None):
@@ -86,17 +116,33 @@ class Command:
             else:
                 converter = type(param.default)
 
+        true_converter = self._resolve_converter(converter)
+
         try:
-            argument = converter(parsed)
-        except Exception:
-            raise BadArgument(f'Invalid argument parsed at `{param.name}` in command `{self.name}`.'
-                              f' Expected type {converter} got {type(parsed)}.')
+            if true_converter in (int, str):
+                argument = true_converter(parsed)
+            elif true_converter is bool:
+                argument = _boolconverter(parsed)
+            else:
+                argument = true_converter(context, parsed)
+            if inspect.iscoroutine(argument):
+                argument = await argument
+        except BadArgument:
+            raise
+
+        except Exception as e:
+            raise ArgumentParsingFailed(
+                f"Invalid argument parsed at `{param.name}` in command `{self.name}`."
+                f" Expected type {converter} got {type(parsed)}.",
+                e,
+            ) from e
 
         return argument
 
-    def parse_args(self, instance, parsed):
+    async def parse_args(self, context: "Context", instance: "Cog", parsed: dict, index=0) -> Tuple[list, dict]:
+        if isinstance(self, Group):
+            parsed = parsed.copy()
         iterator = iter(self.params.items())
-        index = 0
         args = []
         kwargs = {}
 
@@ -105,7 +151,7 @@ class Command:
             if instance:
                 next(iterator)
         except StopIteration:
-            raise TwitchCommandError(f'self or ctx is a required argument which is missing.')
+            raise TwitchCommandError(f"self or ctx is a required argument which is missing.")
 
         for _, param in iterator:
             index += 1
@@ -117,16 +163,16 @@ class Command:
                         raise MissingRequiredArgument(param)
                     args.append(param.default)
                 else:
-                    argument = self._convert_types(param, argument)
+                    argument = await self._convert_types(context, param, argument)
                     args.append(argument)
 
             elif param.kind == param.KEYWORD_ONLY:
-                rest = ' '.join(parsed.values())
-                if rest.startswith(' '):
-                    rest = rest.lstrip(' ')
+                rest = " ".join(parsed.values())
+                if rest.startswith(" "):
+                    rest = rest.lstrip(" ")
 
                 if rest:
-                    rest = self._convert_types(param, rest)
+                    rest = await self._convert_types(context, param, rest)
                 elif param.default is param.empty:
                     raise MissingRequiredArgument(param)
                 else:
@@ -144,41 +190,210 @@ class Command:
 
         return args, kwargs
 
+    async def invoke(self, context: "Context", *, index=0):
+        # TODO Docs
+        args, kwargs = await self.parse_args(context, self._instance, context.view.words, index=index)
+        context.args, context.kwargs = args, kwargs
+
+        async def try_run(func, *, to_command=False):
+            try:
+                await func
+            except Exception as _e:
+                if not to_command:
+                    context.bot.run_event("error", _e)
+                else:
+                    context.bot.run_event("command_error", context, _e)
+
+        check_result = await self.handle_checks(context)
+
+        if check_result is not True:
+            context.bot.run_event("command_error", context, check_result)
+            return
+
+        limited = self._run_cooldowns(context)
+
+        if limited:
+            context.bot.run_event("command_error", context, limited[0])
+            return
+
+        instance = self._instance
+        if instance:
+            args = [instance, context]
+        else:
+            args = [context]
+
+        await try_run(context.bot.global_before_invoke(context))
+
+        if self._before_invoke:
+            await try_run(self._before_invoke(*args), to_command=True)
+
+        try:
+            await self._callback(*args, *context.args, **context.kwargs)
+        except Exception as e:
+            if self.event_error:
+                await try_run(self.event_error(*args, e))
+
+            context.bot.run_event("command_error", context, e)
+
+        # Invoke our after command hooks
+        if self._after_invoke:
+            await try_run(self._after_invoke(*args), to_command=True)
+
+        await try_run(context.bot.global_after_invoke(context))
+
+    def _run_cooldowns(self, context):
+        try:
+            buckets = self._cooldowns[0].get_buckets(context)
+        except IndexError:
+            return None
+
+        expired = []
+
+        try:
+            for bucket in buckets:
+                bucket.update_bucket(context)
+        except CommandOnCooldown as e:
+            expired.append(e)
+
+        return expired
+
+    async def handle_checks(self, context):
+        # TODO Docs
+
+        if not self.no_global_checks:
+            checks = [predicate for predicate in itertools.chain(context.bot._checks, self._checks)]
+        else:
+            checks = self._checks
+
+        if not checks:
+            return True
+
+        try:
+            for predicate in checks:
+                if inspect.isawaitable(predicate):
+                    result = await predicate(context)
+                else:
+                    result = predicate(context)
+
+                if result is False:
+                    raise CheckFailure(f"The check <{predicate}> for command <{self.name}> failed.")
+
+            return True
+        except Exception as e:
+            return e
+
+    async def __call__(self, context: "Context", *, index=0):
+        await self.invoke(context, index=index)
+
+
+class Group(Command):
+    def __init__(self, *args, invoke_with_subcommand=False, **kwargs):
+        super(Group, self).__init__(*args, **kwargs)
+        self._sub_commands = {}
+        self._invoke_with_subcommand = invoke_with_subcommand
+
+    async def __call__(self, context: "Context", *, index=0):
+        if not context.view.words:
+            return await self.invoke(context, index=index)
+
+        arg = list(context.view.words.items())[0]
+        if arg[1] in self._sub_commands:
+            _ctx = copy.copy(context)
+            _ctx.view = _ctx.view.copy()
+            _ctx.view.words.pop(arg[0])
+            await self._sub_commands[arg[1]](_ctx, index=arg[0])
+
+            if self._invoke_with_subcommand:
+                await self.invoke(context, index=index)
+
+        else:
+            await self.invoke(context, index=index)
+
+    def command(
+        self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
+    ) -> Callable[[Callable], Command]:
+        if cls and not inspect.isclass(cls):
+            raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
+
+        def decorator(func: Callable):
+            fname = name or func.__name__
+            cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks, parent=self)
+            self._sub_commands[cmd.name] = cmd
+            if cmd.aliases:
+                for a in cmd.aliases:
+                    self._sub_commands[a] = cmd
+
+            return cmd
+
+        return decorator
+
+    def group(
+        self,
+        *,
+        name: str = None,
+        aliases: Union[list, tuple] = None,
+        cls=None,
+        no_global_checks=False,
+        invoke_with_subcommand=False,
+    ) -> Callable[[Callable], "Group"]:
+        cls = cls or Group
+        if cls and not inspect.isclass(cls):
+            raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
+
+        def decorator(func: Callable):
+            fname = name or func.__name__
+            cmd = cls(
+                name=fname,
+                func=func,
+                aliases=aliases,
+                no_global_checks=no_global_checks,
+                parent=self,
+                invoke_with_subcommand=invoke_with_subcommand,
+            )
+            self._sub_commands[cmd.name] = cmd
+            if cmd.aliases:
+                for a in cmd.aliases:
+                    self._sub_commands[a] = cmd
+
+            return cmd
+
+        return decorator
+
 
 class Context(Messageable):
 
     __messageable_channel__ = True
 
-    def __init__(self, message, **attrs):
+    def __init__(self, message: "Message", bot: "Bot", **attrs):
         self.message = message
         self.channel = message.channel
         self.author = message.author
 
-        self.prefix = attrs.get('prefix')
+        self.prefix: Optional[str] = attrs.get("prefix")
 
-        self.command = attrs.get('command')
+        self.command: Optional[Command] = attrs.get("command")
         if self.command:
-            self.cog = self.command.cog
+            self.cog: Optional["Cog"] = self.command.cog
 
-        self.args = attrs.get('args')
-        self.kwargs = attrs.get('kwargs')
+        self.args: Optional[list] = attrs.get("args")
+        self.kwargs: Optional[dict] = attrs.get("kwargs")
 
-        self.view = attrs.get('view')
-        self.is_valid = attrs.get('valid')
+        self.view: Optional["StringParser"] = attrs.get("view")
+        self.is_valid: bool = attrs.get("valid")
 
-        self.bot = self.channel._bot
+        self.bot: "Bot" = bot
         self._ws = self.channel._ws
 
     def _fetch_channel(self):
-        return self.channel         # Abstract method
+        return self.channel  # Abstract method
 
     def _fetch_websocket(self):
-        return self._ws             # Abstract method
+        return self._ws  # Abstract method
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self.channel._name]
         for user in cache:
-            if user.name == self.channel._bot.nick:
+            if user.name == self._ws.nick:
                 try:
                     mod = user.is_mod
                 except AttributeError:
@@ -197,7 +412,7 @@ class Context(Messageable):
         return users
 
     @property
-    def users(self) -> Optional[set]:   # Alias to chatters
+    def users(self) -> Optional[set]:  # Alias to chatters
         """Alias to chatters."""
         return self.chatters
 
@@ -225,17 +440,44 @@ class Context(Messageable):
         return None
 
 
-def command(*, name: str = None, aliases: Union[list, tuple] = None, cls=None, no_global_checks=False):
+def command(
+    *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
+) -> Callable[[Callable], Command]:
     if cls and not inspect.isclass(cls):
-        raise TypeError(f'cls must be of type <class> not <{type(cls)}>')
+        raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
-    cls = cls or Command
-
-    def decorator(func):
+    def decorator(func: Callable):
         fname = name or func.__name__
         cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks)
 
         return cmd
+
+    return decorator
+
+
+def group(
+    *,
+    name: str = None,
+    aliases: Union[list, tuple] = None,
+    cls=Group,
+    no_global_checks=False,
+    invoke_with_subcommand=False,
+) -> Callable[[Callable], Group]:
+    if cls and not inspect.isclass(cls):
+        raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
+
+    def decorator(func: Callable):
+        fname = name or func.__name__
+        cmd = cls(
+            name=fname,
+            func=func,
+            aliases=aliases,
+            no_global_checks=no_global_checks,
+            invoke_with_subcommand=invoke_with_subcommand,
+        )
+
+        return cmd
+
     return decorator
 
 
@@ -246,5 +488,5 @@ def cooldown(rate, per, bucket=Bucket.default):
         else:
             func.__cooldowns__ = [Cooldown(rate, per, bucket)]
         return func
-    return decorator
 
+    return decorator

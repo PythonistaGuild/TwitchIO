@@ -1,0 +1,6 @@
+sphinx==3.4.3
+sphinxcontrib-napoleon
+sphinxcontrib-asyncio
+sphinxcontrib-websupport
+Pygments
+karma_sphinx_theme

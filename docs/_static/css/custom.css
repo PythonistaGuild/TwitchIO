@@ -1,0 +1,112 @@
+/* SIGNATURE */
+.sig-param {
+    color: #505050;
+    font-weight: normal;
+}
+
+.sig-paren {
+    color: #505050;
+    font-weight: bold;
+}
+
+.site-nav-tree {
+    overflow-y: auto;
+    position: sticky;
+    align-self: start;
+    max-height: 75vh;
+    top: 15vh
+}
+
+.site-nav-tree > .caption {
+    margin-bottom: .5rem;
+}
+
+.site-nav-tree > ul {
+    margin-left: 1rem;
+}
+
+.site-nav-tree > p {
+    margin-bottom: .75rem;
+}
+
+div[role=search] {
+    position: sticky;
+    top: 6vh;
+}
+
+#logo {
+    width: 19rem;
+}
+
+#sidebar-logo {
+    width: 12rem;
+    padding-bottom: 2rem;
+    position: sticky;
+    top: 2vh;
+}
+
+.header {
+    background-color: #19171C;
+}
+
+a {
+    color: #473fc7;
+}
+
+dl:not(.docutils) dt {
+    background: #eaeaea;
+    color: #505050;
+    border-left: 2px #88C2FC solid;
+    border-top: none;
+    font-size: 1.5rem;
+}
+
+dl:not(.docutils) dt > .property {
+    font-weight: normal;
+    font-style: italic;
+}
+
+dl:not(.docutils) dt > .sig-prename {
+    font-weight: normal;
+}
+
+
+dl:not(.docutils) dl dt {
+    border: none;
+    color: #5f5f5f;
+}
+
+.py-attribute-table {
+    display: flex;
+    flex-wrap: wrap;
+    background: #eaeaea;
+    padding-left: 1rem;
+    border-left:  2px #88C2FC solid;
+    margin-bottom: -0.6rem;
+}
+
+.py-attribute-table-column {
+    flex: .5;
+}
+
+.py-attribute-table-column > ul {
+    list-style: none;
+}
+
+.py-attribute-table-badge {
+    padding-right: .5rem;
+}
+
+.py-attribute-table-column > span {
+    font-weight: bold;
+}
+
+.attr-table-title {
+    flex: 0 0 100%;
+    padding-bottom: 1rem;
+}
+
+.attr-table-title > .attr-table-title-qualified {
+    font-weight: bold;
+}
+/*# sourceMappingURL=custom.css.map */
