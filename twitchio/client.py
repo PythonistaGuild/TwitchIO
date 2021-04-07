@@ -271,7 +271,7 @@ class Client:
             The channels in either a list or tuple form to join.
         """
         await self._connection.part_channels(*channels)
-        
+
     @property
     def connected_channels(self) -> List[Channel]:
         """A list of currently connected :class:`.Channel`"""
