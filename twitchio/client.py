@@ -250,6 +250,18 @@ class Client:
             channel = Channel(name=name, websocket=self._connection)
             return channel
 
+    async def join_channels(self, channels: Union[List[str], Tuple[str]]):
+        """|coro|
+
+        Join the specified channels.
+
+        Parameters
+        ------------
+        channels: Union[List[str], Tuple[str]]
+            The channels in either a list or tuple form to join.
+        """
+        await self._connection.join_channels(*channels)
+
     @property
     def connected_channels(self) -> List[Channel]:
         """A list of currently connected :class:`.Channel`"""
