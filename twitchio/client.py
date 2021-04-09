@@ -265,10 +265,11 @@ class Client:
     async def part_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
         Part the specified channels.
+
         Parameters
         ------------
         channels: Union[List[str], Tuple[str]]
-            The channels in either a list or tuple form to join.
+            The channels in either a list or tuple form to part.
         """
         await self._connection.part_channels(*channels)
 
