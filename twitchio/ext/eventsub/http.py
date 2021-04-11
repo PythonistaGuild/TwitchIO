@@ -1,9 +1,13 @@
 from typing import TYPE_CHECKING, Tuple, Dict, Type
 from ...http import Route
 
+from . import models
+
 if TYPE_CHECKING:
     from .server import EventSubClient
     from .models import EventData
+
+__all__ = "EventSubHTTP",
 
 class EventSubHTTP:
     URL = "https://api.twitch.tv/helix/eventsub/"
@@ -25,3 +29,23 @@ class EventSubHTTP:
         }
         route = Route("POST", self.URL + "subscriptions", body=payload)
         return await self._http.request(route)
+
+    async def delete_subscription(self, sub_id: str):
+        return await self._http.request(Route("DELETE", self.URL+"subscriptions", query=[("id", sub_id)]))
+
+    async def get_subscriptions(self, status: str=None):
+        qs = []
+        if status:
+            qs.append(("status", status))
+
+        return [models.Subscription(d) for d in await self._http.request(Route("GET", self.URL+"subscriptions", query=qs))]
+
+    async def get_status(self, status: str=None):
+        qs = []
+        if status:
+            qs.append(("status", status))
+
+        v = await self._http.request(Route("GET", self.URL + "subscriptions", query=qs), full_body=True)
+        del v['data']
+        del v['pagination']
+        return v
