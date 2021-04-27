@@ -16,7 +16,7 @@ class EventSubHTTP:
         self._client = client
         self._http = client.client._http
 
-    async def create_subscription(self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str]):
+    async def create_subscription(self, event_type: Tuple[str, int, Type["EventData"]], condition: Dict[str, str]):
         payload = {
             "type": event_type[0],
             "version": str(event_type[1]),
