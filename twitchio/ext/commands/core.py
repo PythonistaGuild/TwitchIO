@@ -265,18 +265,19 @@ class Command:
         else:
             checks = self._checks
 
-        if not checks:
-            return True
-
         try:
             for predicate in checks:
-                if inspect.isawaitable(predicate):
-                    result = await predicate(context)
-                else:
-                    result = predicate(context)
+                result = predicate(context)
 
-                if result is False:
-                    raise CheckFailure(f"The check <{predicate}> for command <{self.name}> failed.")
+                if inspect.isawaitable(result):
+                    result = await result
+
+                if not result:
+                    raise CheckFailure(f"The check {predicate} for command {self.name} failed.")
+
+            if self.cog:
+                if not await self.cog.cog_check(context):
+                    raise CheckFailure(f"The cog check for command <{self.name}> failed.")
 
             return True
         except Exception as e:

@@ -465,3 +465,11 @@ class Bot(Client):
             return cmd
 
         return decorator
+
+    def check(self, func: Callable[[Context], bool]) -> Callable:
+        if func in self._checks:
+            raise ValueError("The function is already registered as a bot check")
+
+        self._checks.append(func)
+        return func
+
