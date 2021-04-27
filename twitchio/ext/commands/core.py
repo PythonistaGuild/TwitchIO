@@ -234,6 +234,8 @@ class Command:
                 await try_run(self.event_error(*args, e))
 
             context.bot.run_event("command_error", context, e)
+        else:
+            context.bot.run_event("command_complete", context)
 
         # Invoke our after command hooks
         if self._after_invoke:

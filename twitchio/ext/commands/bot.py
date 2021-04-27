@@ -242,6 +242,7 @@ class Bot(Client):
         if not context.prefix or not context.is_valid:
             return
 
+        self.run_event("command_invoke", context)
         await context.command(context)
 
     def load_module(self, name: str):
