@@ -271,7 +271,7 @@ class User:
 
         Could be None if no Tags were received.
         """
-        return self.subscriber
+        return self.subscriber or 'founder' in self._tags
 
     @property
     def badges(self) -> dict:
