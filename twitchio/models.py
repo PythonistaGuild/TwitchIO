@@ -240,7 +240,7 @@ class FollowEvent:
         to: Union[User, PartialUser] = None,
     ):
         self.from_user = from_ or PartialUser(http, data["from_id"], data["from_name"])
-        self.to_user = to or PartialUser(http, data["to_id"], data["to_id"])
+        self.to_user = to or PartialUser(http, data["to_id"], data["to_name"])
         self.followed_at = datetime.datetime.strptime(data["followed_at"], "%Y-%m-%dT%H:%M:%SZ")
 
     def __repr__(self):
