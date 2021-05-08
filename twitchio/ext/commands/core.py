@@ -35,7 +35,7 @@ from .errors import *
 from . import builtin_converter
 
 if TYPE_CHECKING:
-    from twitchio import Message
+    from twitchio import Message, Chatter, PartialChatter
     from . import Cog, Bot
     from .stringparser import StringParser
 
@@ -370,7 +370,7 @@ class Context(Messageable):
     def __init__(self, message: "Message", bot: "Bot", **attrs):
         self.message = message
         self.channel = message.channel
-        self.author = message.author
+        self.author: Union["Chatter", "PartialChatter"] = message.author
 
         self.prefix: Optional[str] = attrs.get("prefix")
 
