@@ -24,7 +24,6 @@ DEALINGS IN THE SOFTWARE.
 
 import importlib
 import inspect
-import itertools
 import sys
 import traceback
 from typing import Callable, Optional, Union, Coroutine
@@ -198,7 +197,24 @@ class Bot(Client):
         return cog
 
     async def get_context(self, message, *, cls=None):
-        # TODO Docs
+        """Get a Context object from a message.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The message object to get context for.
+        cls
+            The class to return. Defaults to Context. Its constructor must take message, prefix, valid, and bot
+            as arguments.
+
+        Returns
+        ---------
+        An instance of cls.
+
+        Raises
+        ---------
+        :class:`.CommandNotFound` No valid command was passed
+        """
         if not cls:
             cls = Context
 
