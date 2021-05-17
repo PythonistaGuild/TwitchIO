@@ -137,11 +137,7 @@ class PubSubChannelPointsMessage(PubSubMessage):
         self.id: str = redemption["id"]
         self.user = PartialUser(client._http, redemption["user"]["id"], redemption["user"]["display_name"])
         self.reward = CustomReward(client._http, redemption["reward"], PartialUser(client._http, self.channel_id, None))
-        if "user_input" in redemption:
-            self.input: str = redemption["user_input"]
-        else:
-            self.input: str = ""
-
+        self.input = redemption.get("user_input")
         self.status: str = redemption["status"]
 
 
