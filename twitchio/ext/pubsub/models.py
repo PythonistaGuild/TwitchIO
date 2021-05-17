@@ -125,17 +125,24 @@ class PubSubChannelPointsMessage(PubSubMessage):
 
     __slots__ = "timestamp", "channel_id", "user", "id", "reward", "input", "status"
 
-    def __init__(self, client: Client, data: dict):
-        super().__init__(client, None, data)
-        self.timestamp = datetime.datetime.strptime(data["redemption"]["redeemed_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.channel_id: int = int(data["redemption"]["channel_id"])
-        self.id: str = data["redemption"]["id"]
-        self.user = PartialUser(client._http, data["user"]["id"], data["user"]["display_name"])
-        self.reward = CustomReward(
-            client._http, data["redemption"]["reward"], PartialUser(client._http, self.channel_id, None)
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+
+        redemption = data["message"]["data"]["redemption"]
+
+        self.timestamp = datetime.datetime.strptime(
+            redemption["redeemed_at"][0:25] + redemption["redeemed_at"][28:], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
-        self.input: str = data["redemption"]["user_input"]
-        self.status: str = data["redemption"]["status"]
+        self.channel_id: int = int(redemption["channel_id"])
+        self.id: str = redemption["id"]
+        self.user = PartialUser(client._http, redemption["user"]["id"], redemption["user"]["display_name"])
+        self.reward = CustomReward(client._http, redemption["reward"], PartialUser(client._http, self.channel_id, None))
+        if "user_input" in redemption:
+            self.input: str = redemption["user_input"]
+        else:
+            self.input: str = ""
+
+        self.status: str = redemption["status"]
 
 
 class PubSubModerationAction(PubSubMessage):
@@ -165,6 +172,7 @@ _mapping = {
     "channel-bits-badge-unlocks": ("pubsub_bits_badge", PubSubBitsBadgeMessage),
     "channel-subscribe-events-v1": ("pubsub_subscription", None),
     "chat_moderator_actions": ("pubsub_moderation", PubSubModerationAction),
+    "channel-points-channel-v1": ("pubsub_channel_points", PubSubChannelPointsMessage),
     "whispers": ("pubsub_whisper", None),
 }
 
