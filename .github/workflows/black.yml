@@ -22,3 +22,4 @@ jobs:
         with:
           black: true
           black_args: ". --check --line-length 120"
+          auto_fix: true
