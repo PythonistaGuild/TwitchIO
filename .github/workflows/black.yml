@@ -14,9 +14,11 @@ jobs:
         with:
           python-version: 3.8
 
+      - name: install black
+        run: pip install black
+
       - name: run linter
         uses: wearerequired/lint-action@v1
         with:
           black: true
-          flake8: false
           black_args: ". --check --line-length 120"
