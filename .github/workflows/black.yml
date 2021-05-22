@@ -21,5 +21,5 @@ jobs:
         uses: wearerequired/lint-action@v1
         with:
           black: true
-          black_args: ". --check --line-length 120"
+          black_args: ". --line-length 120"
           auto_fix: true
