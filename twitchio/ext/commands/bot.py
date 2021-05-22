@@ -489,4 +489,3 @@ class Bot(Client):
 
         self._checks.append(func)
         return func
-

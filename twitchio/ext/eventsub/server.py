@@ -15,16 +15,14 @@ try:
 except:
     SSLContext = Any
 
-__all__ = (
-    "EventSubClient",
-)
+__all__ = ("EventSubClient",)
 
 logger = logging.getLogger("twitchio.ext.eventsub")
 
 _message_types = {
     "webhook_callback_verification": models.ChallengeEvent,
     "notification": models.NotificationEvent,
-    "revokation": models.RevokationEvent
+    "revokation": models.RevokationEvent,
 }
 
 
@@ -48,7 +46,7 @@ class EventSubClient(web.Application):
     async def delete_subscription(self, subscription_id: str):
         await self._http.delete_subscription(subscription_id)
 
-    async def get_subscriptions(self, status: str=None):
+    async def get_subscriptions(self, status: str = None):
         # All possible statuses are:
         #
         #     enabled: designates that the subscription is in an operable state and is valid.
@@ -66,7 +64,9 @@ class EventSubClient(web.Application):
         user = str(user)
         return await self._http.create_subscription(models.SubscriptionTypes.user_update, {"user_id": user})
 
-    async def subscribe_channel_raid(self, from_broadcaster: Union[PartialUser, str, int]=None, to_broadcaster: Union[PartialUser, str, int]=None):
+    async def subscribe_channel_raid(
+        self, from_broadcaster: Union[PartialUser, str, int] = None, to_broadcaster: Union[PartialUser, str, int] = None
+    ):
         if (not from_broadcaster and not to_broadcaster) or (from_broadcaster and to_broadcaster):
             raise ValueError("Expected 1 of from_broadcaster or to_broadcaster")
 
@@ -83,19 +83,21 @@ class EventSubClient(web.Application):
         broadcaster = str(broadcaster)
         return await self._http.create_subscription(models.SubscriptionTypes.raid, {who: broadcaster})
 
-    async def _subscribe_channel_points_reward(self, event, broadcaster: Union[PartialUser, str, int], reward_id: str=None):
+    async def _subscribe_channel_points_reward(
+        self, event, broadcaster: Union[PartialUser, str, int], reward_id: str = None
+    ):
         if isinstance(broadcaster, PartialUser):
             broadcaster = broadcaster.id
 
         broadcaster = str(broadcaster)
         data = {"broadcaster_user_id": broadcaster}
         if reward_id:
-            data['reward_id'] = reward_id
+            data["reward_id"] = reward_id
 
         return await self._http.create_subscription(event, data)
 
     async def _subscribe_with_broadcaster(
-            self, event: Tuple[str, int, Type[models._DataType]], broadcaster: Union[PartialUser, str, int]
+        self, event: Tuple[str, int, Type[models._DataType]], broadcaster: Union[PartialUser, str, int]
     ):
         if isinstance(broadcaster, PartialUser):
             broadcaster = broadcaster.id
@@ -143,22 +145,34 @@ class EventSubClient(web.Application):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.stream_end, broadcaster)
 
     def subscribe_channel_points_reward_added(self, broadcaster: Union[PartialUser, str, int], reward_id: str):
-        return self._subscribe_channel_points_reward(models.SubscriptionTypes.channel_reward_add, broadcaster, reward_id)
+        return self._subscribe_channel_points_reward(
+            models.SubscriptionTypes.channel_reward_add, broadcaster, reward_id
+        )
 
     def subscribe_channel_points_reward_updated(self, broadcaster: Union[PartialUser, str, int], reward_id: str):
-        return self._subscribe_channel_points_reward(models.SubscriptionTypes.channel_reward_update, broadcaster, reward_id)
+        return self._subscribe_channel_points_reward(
+            models.SubscriptionTypes.channel_reward_update, broadcaster, reward_id
+        )
 
     def subscribe_channel_points_reward_removed(self, broadcaster: Union[PartialUser, str, int], reward_id: str):
-        return self._subscribe_channel_points_reward(models.SubscriptionTypes.channel_reward_remove, broadcaster, reward_id)
+        return self._subscribe_channel_points_reward(
+            models.SubscriptionTypes.channel_reward_remove, broadcaster, reward_id
+        )
 
-    def subscribe_channel_points_redeemed(self, broadcaster: Union[PartialUser, str, int], reward_id: str=None):
-        return self._subscribe_channel_points_reward(models.SubscriptionTypes.channel_reward_redeem, broadcaster, reward_id)
+    def subscribe_channel_points_redeemed(self, broadcaster: Union[PartialUser, str, int], reward_id: str = None):
+        return self._subscribe_channel_points_reward(
+            models.SubscriptionTypes.channel_reward_redeem, broadcaster, reward_id
+        )
 
-    def subscribe_channel_points_redeem_updated(self, broadcaster: Union[PartialUser, str, int], reward_id: str=None):
-        return self._subscribe_channel_points_reward(models.SubscriptionTypes.channel_reward_redeem_updated, broadcaster, reward_id)
+    def subscribe_channel_points_redeem_updated(self, broadcaster: Union[PartialUser, str, int], reward_id: str = None):
+        return self._subscribe_channel_points_reward(
+            models.SubscriptionTypes.channel_reward_redeem_updated, broadcaster, reward_id
+        )
 
     async def subscribe_user_authorization_revoked(self):
-        return await self._http.create_subscription(models.SubscriptionTypes.user_authorization_revoke, {"client_id": self.client._http.client_id})
+        return await self._http.create_subscription(
+            models.SubscriptionTypes.user_authorization_revoke, {"client_id": self.client._http.client_id}
+        )
 
     async def _callback(self, request: web.Request) -> web.Response:
         payload = await request.text()
@@ -174,29 +188,31 @@ class EventSubClient(web.Application):
         response = event.verify()
 
         if typ == "notification":
-            self.client.run_event(f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}", event)
+            self.client.run_event(
+                f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}", event
+            )
         elif typ == "revokation":
             self.client.run_event("eventsub_revokation", event)
 
         return response
 
     async def _run_app(
-            self,
-            *,
-            host: Optional[Union[str, web.HostSequence]] = None,
-            port: Optional[int] = None,
-            path: Optional[str] = None,
-            sock: Optional[socket.socket] = None,
-            shutdown_timeout: float = 60.0,
-            ssl_context: Optional[SSLContext] = None,
-            backlog: int = 128,
-            access_log_class: Type[web.AbstractAccessLogger] = web.AccessLogger,
-            access_log_format: str = web.AccessLogger.LOG_FORMAT,
-            access_log: Optional[logging.Logger] = web.access_logger,
-            handle_signals: bool = True,
-            reuse_address: Optional[bool] = None,
-            reuse_port: Optional[bool] = None,
-        ) -> None:
+        self,
+        *,
+        host: Optional[Union[str, web.HostSequence]] = None,
+        port: Optional[int] = None,
+        path: Optional[str] = None,
+        sock: Optional[socket.socket] = None,
+        shutdown_timeout: float = 60.0,
+        ssl_context: Optional[SSLContext] = None,
+        backlog: int = 128,
+        access_log_class: Type[web.AbstractAccessLogger] = web.AccessLogger,
+        access_log_format: str = web.AccessLogger.LOG_FORMAT,
+        access_log: Optional[logging.Logger] = web.access_logger,
+        handle_signals: bool = True,
+        reuse_address: Optional[bool] = None,
+        reuse_port: Optional[bool] = None,
+    ) -> None:
         # This function is pulled from aiohttp.web._run_app
         app = self
 

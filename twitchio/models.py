@@ -265,8 +265,10 @@ class SubscriptionEvent:
         self.gift: bool = data["is_gift"]
 
     def __repr__(self):
-        return f"<SubscriptionEvent broadcaster={self.broadcaster} user={self.user} tier={self.tier} " \
-               f"plan_name={self.plan_name} gift={self.gift}>"
+        return (
+            f"<SubscriptionEvent broadcaster={self.broadcaster} user={self.user} tier={self.tier} "
+            f"plan_name={self.plan_name} gift={self.gift}>"
+        )
 
 
 class Marker:
