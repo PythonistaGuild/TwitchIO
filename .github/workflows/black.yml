@@ -1,6 +1,6 @@
 name: Lint
 
-on: [pull_request]
+on: [push, pull_request]
 
 jobs:
   lint:
@@ -8,6 +8,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-      - uses: psf/black@main
+      with:
+        - python-version: 3.8
+      - uses: wearerequired/lint-action@v1
         with:
-          args: ". --check --line-length 120"
+          black: true
+          flake8: false
+          black_args: ". --check --line-length 120"
