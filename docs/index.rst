@@ -38,6 +38,7 @@ Getting Started
    exts/commands
    exts/pubsub
    exts/webhooks
+   exts/routines
 
 
 
