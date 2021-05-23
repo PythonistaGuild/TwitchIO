@@ -171,8 +171,8 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
         self.id: str = data["message"]["data"]["id"]
         self.text: str = data["message"]["data"]["text"]
         self.requester = PartialUser(
-                client._http, data["message"]["data"]["requester_id"], data["message"]["data"]["requester_login"]
-            )
+            client._http, data["message"]["data"]["requester_id"], data["message"]["data"]["requester_login"]
+        )
 
         self.expires_at = self.updated_at = None
         if data["message"]["data"]["expires_at"]:
@@ -193,11 +193,11 @@ class PubSubModerationActionModeratorAdd(PubSubMessage):
         self.channel_id = int(data["message"]["data"]["channel_id"])
         self.moderation_action: str = data["message"]["data"]["moderation_action"]
         self.target = PartialUser(
-                client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
-            )
+            client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
+        )
         self.created_by = PartialUser(
-                client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
-            )
+            client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
+        )
 
 
 def _find_mod_action(client: Client, topic: str, data: dict):
@@ -213,6 +213,7 @@ def _find_mod_action(client: Client, topic: str, data: dict):
 
     else:
         raise ValueError(f"unknown pubsub moderation action '{typ}'")
+
 
 _mapping = {
     "channel-bits-events-v2": ("pubsub_bits", PubSubBitsMessage),
