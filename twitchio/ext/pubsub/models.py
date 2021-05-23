@@ -37,7 +37,9 @@ __all__ = (
     "PubSubChatMessage",
     "PubSubBadgeEntitlement",
     "PubSubChannelPointsMessage",
-    "PubSubModerationAction",
+    "PubSubModerationActionModeratorAdd",
+    "PubSubModerationActionBanRequest",
+    "PubSubModerationActionChannelTerms",
 )
 
 
