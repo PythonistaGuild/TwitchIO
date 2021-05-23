@@ -1,13 +1,25 @@
 name: Lint
 
-on: [pull_request]
+on: [push]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - uses: psf/black@master
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v1
         with:
-          args: ". --check --line-length 120"
+          python-version: 3.8
+
+      - name: install black
+        run: pip install black
+
+      - name: run linter
+        uses: wearerequired/lint-action@v1
+        with:
+          black: true
+          black_args: ". --line-length 120"
+          auto_fix: true

@@ -144,6 +144,7 @@ class PubSubWebsocket:
     async def poll(self):
         while not self.connection.closed:
             data = await self.connection.receive_json(loads=json.loads)
+
             handle = getattr(self, "handle_" + data["type"].lower().replace("-", "_"), None)
             if handle:
                 self.client.loop.create_task(handle(data))
@@ -173,22 +174,23 @@ class PubSubWebsocket:
         data = json.dumps(data)
         await self.connection.send_str(data)
 
-    async def handle_pong(self, msg: dict):
+    async def handle_pong(self, _):
         self.timeout.set()
+        self.client.run_event("pubsub_pong")
 
-    async def handle_message(self, message):
+    async def handle_message(self, message: dict):
         message["data"]["message"] = json.loads(message["data"]["message"])
         msg = models.PubSubMessage(self.client, message["data"]["topic"], message["data"]["message"])
         self.client.run_event("pubsub_message", msg)  # generic one
 
         self.client.run_event(*models.create_message(self.client, message))
 
-    async def handle_reward_redeem(self, message):
+    async def handle_reward_redeem(self, message: dict):
         msg = models.PubSubChannelPointsMessage(self.client, message["data"])
         self.client.run_event("pubsub_message", msg)  # generic one
         self.client.run_event("pubsub_channel_points", msg)
 
-    async def handle_response(self, message):
+    async def handle_response(self, message: dict):
         if message["error"]:
             logger.error(f"Recieved errored response for nonce {message['nonce']}: {message['error']}")
         elif message["nonce"]:
