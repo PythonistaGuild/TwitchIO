@@ -187,14 +187,14 @@ class Routine:
             else:
                 self.stop()
 
-    def before_loop(self, coro: Callable) -> None:
+    def before_routine(self, coro: Callable) -> None:
         """A decorator to assign a coroutine to run before the routine starts."""
         if not asyncio.iscoroutinefunction(coro):
             raise TypeError(f"Expected coroutine function not type, {type(coro).__name__!r}.")
 
         self._before = coro
 
-    def after_loop(self, coro: Callable) -> None:
+    def after_routine(self, coro: Callable) -> None:
         """A decorator to assign a coroutine to run after the routine has ended."""
         if not asyncio.iscoroutinefunction(coro):
             raise TypeError(f"Expected coroutine function not type, {type(coro).__name__!r}.")
@@ -217,7 +217,7 @@ class Routine:
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
     @property
-    def completed_loops(self) -> int:
+    def completed_iterations(self) -> int:
         """A count of completed iterations."""
         return self._completed_loops
 
