@@ -30,7 +30,7 @@ import traceback
 from typing import Callable, Optional
 
 
-__all__ = ('Routine', 'routine')
+__all__ = ("Routine", "routine")
 
 
 def compute_timedelta(dt: datetime.datetime) -> float:
