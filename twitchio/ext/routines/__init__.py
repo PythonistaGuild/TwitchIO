@@ -30,6 +30,9 @@ import traceback
 from typing import Callable, Optional
 
 
+__all__ = ('Routine', 'routine')
+
+
 def compute_timedelta(dt: datetime.datetime) -> float:
     if dt.tzinfo is None:
         dt = dt.astimezone()
