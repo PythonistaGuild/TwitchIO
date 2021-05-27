@@ -84,7 +84,7 @@ class Topic(_topic):
 
 bits = _topic("channel-bits-events-v2.{0}", [int])
 bits_badge = _topic("channel-bits-badge-unlocks.{0}", [int])
-channel_points = _topic("channel-points-v1.{0}", [int])
+channel_points = _topic("channel-points-channel-v1.{0}", [int])
 channel_subscriptions = _topic("channel-subscribe-events-v1.{0}", [int])
 moderation_user_action = _topic("chat_moderator_actions.{0}.{1}", [int, int])
 whispers = _topic("whispers.{0}", [int])
