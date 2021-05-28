@@ -336,13 +336,14 @@ def routine(
     """
 
     def decorator(coro: Callable) -> Routine:
+        time_ = time
 
-        if any((seconds, minutes, hours)) and time:
+        if any((seconds, minutes, hours)) and time_:
             raise RuntimeError(
                 "Argument <time> can not be used in conjunction with any <seconds>, <minutes> or <hours> argument(s)."
             )
 
-        if not time:
+        if not time_:
             delta = compute_timedelta(
                 datetime.datetime.now(datetime.timezone.utc)
                 + datetime.timedelta(seconds=seconds, minutes=minutes, hours=hours)
@@ -350,9 +351,12 @@ def routine(
         else:
             delta = None
 
+            if time_ < datetime.datetime.now(time_.tzinfo):
+                time_ = time_ + datetime.timedelta(days=1)
+
         if not asyncio.iscoroutinefunction(coro):
             raise TypeError(f"Expected coroutine function not type, {type(coro).__name__!r}.")
 
-        return Routine(coro=coro, time=time, delta=delta, iterations=iterations)
+        return Routine(coro=coro, time=time_, delta=delta, iterations=iterations)
 
     return decorator
