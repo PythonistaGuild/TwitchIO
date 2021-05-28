@@ -44,13 +44,58 @@ routine.
     async def hello():
         print('Hello World!)
 
-    @hello.before_routine()
+    @hello.before_routine
     async def hello_before():
         print('I am run first!')
 
 
     @hello.start()
 
+
+**Routine with an error handler:**
+
+This example shows a routine with a non-default error handler; by default all routines will stop on error.
+You can change this behaviour by adding `stop_on_error=False` to your routine start function.
+
+
+.. code-block:: python3
+
+    from twitchio.ext import routines
+
+
+    @routines.routine(minutes=10)
+    async def hello(arg: str):
+        raise RuntimeError
+
+    @hello.error
+    async def hello_on_error(error: Exception):
+        print(f'Hello routine raised: {error}.')
+
+
+    hello.start('World', stop_on_error=True)
+
+
+**Routine which runs at a specific time:**
+
+This routine will run at the same time everyday.
+If a naive datetime is provided, your system local time is used.
+
+The below example shows a routine which will first be ran on the **6th, June 2021 at 9:30am** system local time.
+It will then be ran every 24 hours after the initial date, until stopped.
+
+.. code-block:: python3
+
+    import datetime
+
+    from twitchio.ext import routines
+
+
+    @routines.routine(time=datetime.datetime(year=2021, month=6, day=1, hour=9, minute=30))
+    async def hello(arg: str):
+        print(f'Hello {arg}!')
+
+
+    hello.start('World')
 
 API Reference
 ---------------------------
