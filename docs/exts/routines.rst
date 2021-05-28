@@ -83,6 +83,15 @@ If a naive datetime is provided, your system local time is used.
 The below example shows a routine which will first be ran on the **1st, June 2021 at 9:30am** system local time.
 It will then be ran every 24 hours after the initial date, until stopped.
 
+
+If the **date** has already passed, the routine will run at the next specified time.
+For example: If today was the **2nd, June 2021 8:30am** and your datetime was scheduled to run on the
+**1st, June 2021 at 9:30am**, you routine will first run on **2nd, June 2021 at 9:30am**.
+
+In simpler terms, datetimes in the past only care about the time, not the date. This can be useful when scheduling
+routines that don't need to be started on a specific date.
+
+
 .. code-block:: python3
 
     import datetime
