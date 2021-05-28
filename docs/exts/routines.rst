@@ -80,7 +80,7 @@ You can change this behaviour by adding `stop_on_error=False` to your routine st
 This routine will run at the same time everyday.
 If a naive datetime is provided, your system local time is used.
 
-The below example shows a routine which will first be ran on the **6th, June 2021 at 9:30am** system local time.
+The below example shows a routine which will first be ran on the **1st, June 2021 at 9:30am** system local time.
 It will then be ran every 24 hours after the initial date, until stopped.
 
 .. code-block:: python3
