@@ -37,7 +37,9 @@ __all__ = (
     "PubSubChatMessage",
     "PubSubBadgeEntitlement",
     "PubSubChannelPointsMessage",
-    "PubSubModerationAction",
+    "PubSubModerationActionModeratorAdd",
+    "PubSubModerationActionBanRequest",
+    "PubSubModerationActionChannelTerms",
 )
 
 
@@ -141,7 +143,7 @@ class PubSubChannelPointsMessage(PubSubMessage):
         self.status: str = redemption["status"]
 
 
-class PubSubModerationAction(PubSubMessage):
+class PubSubModerationActionBanRequest(PubSubMessage):
 
     __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
 
@@ -163,11 +165,66 @@ class PubSubModerationAction(PubSubMessage):
         self.from_automod: bool = data["message"]["data"]["from_automod"]
 
 
+class PubSubModerationActionChannelTerms(PubSubMessage):
+
+    __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at", "from_automod"
+
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+        self.type: str = data["message"]["type"]
+        self.channel_id = int(data["message"]["data"]["channel_id"])
+        self.id: str = data["message"]["data"]["id"]
+        self.text: str = data["message"]["data"]["text"]
+        self.requester = PartialUser(
+            client._http, data["message"]["data"]["requester_id"], data["message"]["data"]["requester_login"]
+        )
+
+        self.expires_at = self.updated_at = None
+        if data["message"]["data"]["expires_at"]:
+            self.expires_at = datetime.datetime.strptime(data["message"]["data"]["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
+
+        if data["message"]["data"]["updated_at"]:
+            self.updated_at = datetime.datetime.strptime(data["message"]["data"]["updated_at"], "%Y-%m-%dT%H:%M:%SZ")
+
+        self.from_automod: bool = data["message"]["data"]["from_automod"]
+
+
+class PubSubModerationActionModeratorAdd(PubSubMessage):
+
+    __slots__ = "channel_id", "target", "moderation_action", "created_by"
+
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+        self.channel_id = int(data["message"]["data"]["channel_id"])
+        self.moderation_action: str = data["message"]["data"]["moderation_action"]
+        self.target = PartialUser(
+            client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
+        )
+        self.created_by = PartialUser(
+            client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
+        )
+
+
+def _find_mod_action(client: Client, topic: str, data: dict):
+    typ = data["message"]["type"]
+    if typ in ("approve_unban_request", "deny_unban_request"):
+        return PubSubModerationActionBanRequest(client, topic, data)
+
+    elif typ == "channel_terms_action":
+        return PubSubModerationActionChannelTerms(client, topic, data)
+
+    elif typ == "moderator_added":
+        return PubSubModerationActionModeratorAdd(client, topic, data)
+
+    else:
+        raise ValueError(f"unknown pubsub moderation action '{typ}'")
+
+
 _mapping = {
     "channel-bits-events-v2": ("pubsub_bits", PubSubBitsMessage),
     "channel-bits-badge-unlocks": ("pubsub_bits_badge", PubSubBitsBadgeMessage),
     "channel-subscribe-events-v1": ("pubsub_subscription", None),
-    "chat_moderator_actions": ("pubsub_moderation", PubSubModerationAction),
+    "chat_moderator_actions": ("pubsub_moderation", _find_mod_action),
     "channel-points-channel-v1": ("pubsub_channel_points", PubSubChannelPointsMessage),
     "whispers": ("pubsub_whisper", None),
 }
