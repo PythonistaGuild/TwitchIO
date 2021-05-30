@@ -321,8 +321,6 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
         The text of the modified Term.
     requester: :class:`twitchio.PartialUser`
         The requester of this Term.
-    from_automod: :class:`bool`
-        Whether this action was done automatically or not.
     """
 
     __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at", "from_automod"
@@ -343,8 +341,6 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
 
         if data["message"]["data"]["updated_at"]:
             self.updated_at = datetime.datetime.strptime(data["message"]["data"]["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        self.from_automod: bool = data["message"]["data"]["from_automod"]
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
