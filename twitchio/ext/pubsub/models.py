@@ -110,6 +110,7 @@ class PubSubMessage:
     topic: :class:`str`
         The topic subscribed to
     """
+
     __slots__ = "topic", "_data"
 
     def __init__(self, client: Client, topic: Optional[str], data: dict):
@@ -208,6 +209,7 @@ class PubSubChannelPointsMessage(PubSubMessage):
     status: :class:`str`
         The status of the reward.
     """
+
     __slots__ = "timestamp", "channel_id", "user", "id", "reward", "input", "status"
 
     def __init__(self, client: Client, topic: str, data: dict):
@@ -283,6 +285,7 @@ class PubSubModerationActionBanRequest(PubSubMessage):
     from_automod: :class:`bool`
         Whether this action was done automatically or not.
     """
+
     __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
 
     def __init__(self, client: Client, topic: str, data: dict):
@@ -321,6 +324,7 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
     from_automod: :class:`bool`
         Whether this action was done automatically or not.
     """
+
     __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at", "from_automod"
 
     def __init__(self, client: Client, topic: str, data: dict):

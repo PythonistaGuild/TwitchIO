@@ -43,6 +43,7 @@ class PubSubPool:
     client: :class:`twitchio.Client`
         The client that the pool will dispatch events to.
     """
+
     def __init__(self, client: Client, *, max_pool_size=10, max_connection_topics=50, mode="group"):
         self.client = client
         self._pool: List[PubSubWebsocket] = []
