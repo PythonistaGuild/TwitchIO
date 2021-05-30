@@ -142,6 +142,7 @@ class PubSubChannelPointsMessage(PubSubMessage):
         self.input = redemption.get("user_input")
         self.status: str = redemption["status"]
 
+
 class PubSubModerationAction(PubSubMessage):
 
     __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
@@ -162,6 +163,7 @@ class PubSubModerationAction(PubSubMessage):
             else None
         )
         self.from_automod: bool = data["message"]["data"]["from_automod"]
+
 
 class PubSubModerationActionBanRequest(PubSubMessage):
 
@@ -223,13 +225,15 @@ class PubSubModerationActionModeratorAdd(PubSubMessage):
             client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
         )
 
+
 _mod_actions = {
     "approve_unban_request": PubSubModerationActionBanRequest,
     "deny_unban_request": PubSubModerationActionBanRequest,
     "channel_terms_action": PubSubModerationActionChannelTerms,
     "moderator_added": PubSubModerationActionModeratorAdd,
-    "moderation_action": PubSubModerationAction
+    "moderation_action": PubSubModerationAction,
 }
+
 
 def _find_mod_action(client: Client, topic: str, data: dict):
     typ = data["message"]["type"]
