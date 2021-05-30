@@ -142,8 +142,7 @@ class PubSubChannelPointsMessage(PubSubMessage):
         self.input = redemption.get("user_input")
         self.status: str = redemption["status"]
 
-
-class PubSubModerationActionBanRequest(PubSubMessage):
+class PubSubModerationAction(PubSubMessage):
 
     __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
 
@@ -155,6 +154,26 @@ class PubSubModerationActionBanRequest(PubSubMessage):
             client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
         )
         self.message_id: str = data["message"]["data"]["msg_id"]
+        self.target = (
+            PartialUser(
+                client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
+            )
+            if data["message"]["data"]["target_user_id"]
+            else None
+        )
+        self.from_automod: bool = data["message"]["data"]["from_automod"]
+
+class PubSubModerationActionBanRequest(PubSubMessage):
+
+    __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
+
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+        self.action: str = data["message"]["data"]["moderation_action"]
+        self.args: List[str] = data["message"]["data"]["moderator_message"]
+        self.created_by = PartialUser(
+            client._http, data["message"]["data"]["created_by_id"], data["message"]["data"]["created_by_login"]
+        )
         self.target = (
             PartialUser(
                 client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
@@ -204,18 +223,18 @@ class PubSubModerationActionModeratorAdd(PubSubMessage):
             client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
         )
 
+_mod_actions = {
+    "approve_unban_request": PubSubModerationActionBanRequest,
+    "deny_unban_request": PubSubModerationActionBanRequest,
+    "channel_terms_action": PubSubModerationActionChannelTerms,
+    "moderator_added": PubSubModerationActionModeratorAdd,
+    "moderation_action": PubSubModerationAction
+}
 
 def _find_mod_action(client: Client, topic: str, data: dict):
     typ = data["message"]["type"]
-    if typ in ("approve_unban_request", "deny_unban_request"):
-        return PubSubModerationActionBanRequest(client, topic, data)
-
-    elif typ == "channel_terms_action":
-        return PubSubModerationActionChannelTerms(client, topic, data)
-
-    elif typ == "moderator_added":
-        return PubSubModerationActionModeratorAdd(client, topic, data)
-
+    if typ in _mod_actions:
+        return _mod_actions[typ](client, topic, data)
     else:
         raise ValueError(f"unknown pubsub moderation action '{typ}'")
 
