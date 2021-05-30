@@ -54,6 +54,10 @@ class _topic:
 
 
 class Topic(_topic):
+    """
+    Represents a PubSub Topic. This should not be created manually,
+    use the provided methods to create these.
+    """
 
     __slots__ = "token", "args"
 
