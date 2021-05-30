@@ -337,10 +337,16 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
 
         self.expires_at = self.updated_at = None
         if data["message"]["data"]["expires_at"]:
-            self.expires_at = datetime.datetime.strptime(data["message"]["data"]["expires_at"][0:25] + data["message"]["data"]["expires_at"][28:], "%Y-%m-%dT%H:%M:%S.%fZ")
+            self.expires_at = datetime.datetime.strptime(
+                data["message"]["data"]["expires_at"][0:25] + data["message"]["data"]["expires_at"][28:],
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            )
 
         if data["message"]["data"]["updated_at"]:
-            self.updated_at = datetime.datetime.strptime(data["message"]["data"]["updated_at"][0:25] + data["message"]["data"]["updated_at"][28:], "%Y-%m-%dT%H:%M:%S.%fZ")
+            self.updated_at = datetime.datetime.strptime(
+                data["message"]["data"]["updated_at"][0:25] + data["message"]["data"]["updated_at"][28:],
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            )
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
