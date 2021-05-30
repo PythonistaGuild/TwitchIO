@@ -146,8 +146,10 @@ class Client:
         Connects to the twitch IRC server, and cleanly disconnects when done.
         """
         if self.loop is not asyncio.get_running_loop():
-            raise RuntimeError(f"Attempted to start a {self.__class__.__name__} instance on a different loop "
-                               f"than the one it was initialized with.")
+            raise RuntimeError(
+                f"Attempted to start a {self.__class__.__name__} instance on a different loop "
+                f"than the one it was initialized with."
+            )
         try:
             await self.connect()
         finally:
