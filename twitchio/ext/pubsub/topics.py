@@ -57,6 +57,13 @@ class Topic(_topic):
     """
     Represents a PubSub Topic. This should not be created manually,
     use the provided methods to create these.
+
+    Attributes
+    -----------
+    token: :class:`str`
+        The token to use to authorize this topic
+    args: List[Union[:class:`int`, Any]]
+        The arguments to substitute in to the topic string
     """
 
     __slots__ = "token", "args"
@@ -74,6 +81,10 @@ class Topic(_topic):
 
     @property
     def present(self) -> Optional[str]:
+        """
+        Returns a websocket-ready topic string, if all the arguments needed have been provided.
+        Otherwise returns ``None``
+        """
         try:
             return self.__topic__.format(*self.args)
         except:

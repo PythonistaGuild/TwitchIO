@@ -37,7 +37,7 @@ Getting Started
 
    exts/commands
    exts/pubsub
-   exts/webhooks
+   exts/eventsub
    exts/routines
 
 

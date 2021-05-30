@@ -11,5 +11,5 @@ External modules (exts) are add-ons that aim to provide ease of use, but aren't 
 
     commands
     pubsub
-    webhooks
+    eventsub
     routines

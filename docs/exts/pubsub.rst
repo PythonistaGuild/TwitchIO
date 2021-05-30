@@ -219,6 +219,12 @@ If the topic requires multiple channel ids, they should be passed as such:
 Api Reference
 --------------
 
+.. attributetable:: Topic
+
+.. autoclass:: Topic
+    :members:
+    :inherited-members:
+
 .. attributetable:: PubSubPool
 
 .. autoclass:: PubSubPool

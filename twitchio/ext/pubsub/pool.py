@@ -35,6 +35,14 @@ __all__ = ("PubSubPool",)
 
 
 class PubSubPool:
+    """
+    The pool that manages connections to the pubsub server, and handles distributing topics across the connections.
+
+    Attributes
+    -----------
+    client: :class:`twitchio.Client`
+        The client that the pool will dispatch events to.
+    """
     def __init__(self, client: Client, *, max_pool_size=10, max_connection_topics=50, mode="group"):
         self.client = client
         self._pool: List[PubSubWebsocket] = []
@@ -44,6 +52,15 @@ class PubSubPool:
         self._max_connection_topics = max_connection_topics
 
     async def subscribe_topics(self, topics: List[Topic]):
+        """|coro|
+        Subscribes to a list of topics.
+
+        Parameters
+        -----------
+        topics: List[:class:`Topic`]
+            The topics to subscribe to
+
+        """
         node = self._find_node(topics)
         if node is None:
             node = PubSubWebsocket(self.client, max_topics=self._max_connection_topics)
@@ -53,6 +70,15 @@ class PubSubPool:
         self._topics.update({t: node for t in topics})
 
     async def unsubscribe_topics(self, topics: List[Topic]):
+        """|coro|
+        Unsubscribes from a list of topics.
+
+        Parameters
+        -----------
+        topics: List[:class:`Topic`]
+            The topics to unsubscribe from
+
+        """
         for node, vals in itertools.groupby(topics, lambda t: self._topics[t]):
             await node.unsubscribe_topics(vals)
             if not node.topics:
