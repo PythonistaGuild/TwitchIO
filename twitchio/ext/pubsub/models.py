@@ -120,7 +120,7 @@ class PubSubBitsBadgeMessage(PubSubMessage):
         )
         self.badge_tier: int = data["badge_tier"]
         self.message = data["chat_message"]
-        self.timestamp = datetime.datetime.strptime(data["time"], "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = datetime.datetime.strptime(data["time"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 class PubSubChannelPointsMessage(PubSubMessage):
@@ -181,10 +181,10 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
 
         self.expires_at = self.updated_at = None
         if data["message"]["data"]["expires_at"]:
-            self.expires_at = datetime.datetime.strptime(data["message"]["data"]["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
+            self.expires_at = datetime.datetime.strptime(data["message"]["data"]["expires_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
         if data["message"]["data"]["updated_at"]:
-            self.updated_at = datetime.datetime.strptime(data["message"]["data"]["updated_at"], "%Y-%m-%dT%H:%M:%SZ")
+            self.updated_at = datetime.datetime.strptime(data["message"]["data"]["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
 
         self.from_automod: bool = data["message"]["data"]["from_automod"]
 
