@@ -392,6 +392,7 @@ def _find_mod_action(client: Client, topic: str, data: dict):
     typ = data["message"]["type"]
     if typ in _mod_actions:
         return _mod_actions[typ](client, topic, data)
+
     else:
         raise ValueError(f"unknown pubsub moderation action '{typ}'")
 
