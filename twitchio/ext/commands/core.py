@@ -385,15 +385,18 @@ class Context(Messageable):
         self.is_valid: bool = attrs.get("valid")
 
         self.bot: "Bot" = bot
-        self._ws = self.channel._ws
+        self._ws = self.author._ws
 
     def _fetch_channel(self):
-        return self.channel  # Abstract method
+        return self.channel or self.author  # Abstract method
 
     def _fetch_websocket(self):
         return self._ws  # Abstract method
 
     def _bot_is_mod(self):
+        if not self.channel:
+            return False
+
         cache = self._ws._cache[self.channel._name]
         for user in cache:
             if user.name == self._ws.nick:
@@ -409,7 +412,7 @@ class Context(Messageable):
         """The channels current chatters."""
         try:
             users = self._ws._cache[self.channel._name]
-        except KeyError:
+        except (KeyError, AttributeError):
             return None
 
         return users
@@ -434,6 +437,9 @@ class Context(Messageable):
             Returns None if no user was found.
         """
         name = name.lower()
+
+        if not self.channel:
+            return None
 
         cache = self._ws._cache[self.channel._name]
         for user in cache:
