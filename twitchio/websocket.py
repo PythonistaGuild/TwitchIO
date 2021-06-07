@@ -361,7 +361,7 @@ class WSConnection:
             )
 
         message = Message(
-            raw_data=parsed["data"], content=parsed["message"], author=user, channel=channel, tags=parsed["badges"]
+            raw_data=parsed["data"], content=parsed["message"], author=user, channel=channel, tags=parsed["badges"], echo="echo" in parsed['action']
         )
 
         self.dispatch("message", message)
