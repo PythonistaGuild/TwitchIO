@@ -98,7 +98,7 @@ class Client:
 
         .. warning:
 
-            this is not suitable for logging in to IRC.
+            This is not suitable for logging in to IRC.
 
         .. note:
 
@@ -121,7 +121,7 @@ class Client:
         self.loop = loop or asyncio.get_event_loop()
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
         self._connection = WSConnection(
-            client=self, loop=self.loop, initial_channels=None, heartbeat=self._heartbeat
+            client=self, loop=self.loop, initial_channels=None, heartbeat=None
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
@@ -525,7 +525,7 @@ class Client:
             List[:class:`int`]
         """
         resp = []
-        for chunk in [ids[x : x + 3] for x in range(0, len(ids), 3)]:
+        for chunk in [ids[x: x + 3] for x in range(0, len(ids), 3)]:
             resp.append(await self._http.delete_videos(token, chunk))
 
         return resp

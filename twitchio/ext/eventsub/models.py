@@ -24,9 +24,12 @@ except ModuleNotFoundError:
     def _loads(s: str) -> dict:
         return json.loads(s)
 
-
 logger = logging.getLogger("twitchio.ext.eventsub")
 
+
+def _parse_datetime(time: str) -> datetime.datetime:
+    # Exemple time: 2021-06-19T04:12:39.407371633Z
+    return datetime.datetime.strptime(time[:26], "%Y-%m-%dT%H:%M:%S.%f")
 
 class EmptyObject:
     def __init__(self, **kwargs):
@@ -34,7 +37,7 @@ class EmptyObject:
 
 
 class Subscription:
-    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at"
+    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at", "_raw_data"
 
     def __init__(self, data: dict):
         self.id: str = data["id"]
@@ -43,10 +46,11 @@ class Subscription:
         self.version = int(data["version"])
         self.cost: int = data["cost"]
         self.condition: Dict[str, str] = data["condition"]
-        self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.created_at = _parse_datetime(data["created_at"])
         self.transport = EmptyObject()
         self.transport.method: str = data["transport"]["method"]  # noqa
         self.transport.callback: str = data["transport"]["callback"]  # noqa
+        self._raw_data = data
 
 
 class Headers:
@@ -57,8 +61,8 @@ class Headers:
         self.signature: str = request.headers["Twitch-Eventsub-Message-Signature"]
         self.subscription_type: str = request.headers["Twitch-Eventsub-Subscription-Type"]
         self.subscription_version: str = request.headers["Twitch-Eventsub-Subscription-Version"]
-        self.timestamp = datetime.datetime.strptime(
-            request.headers["Twitch-Eventsub-Message-Timestamp"], "%Y-%m-%dT%H:%M:%SZ"
+        self.timestamp = _parse_datetime(
+            request.headers["Twitch-Eventsub-Message-Timestamp"]
         )
         self._raw_timestamp = request.headers["Twitch-Eventsub-Message-Timestamp"]
 
@@ -69,7 +73,7 @@ class BaseEvent:
     def __init__(self, client: "EventSubClient", data: str, request: web.Request):
         self._client = client
         self._raw_data = data
-        data = _loads(data)
+        data: dict = _loads(data)
         self.subscription = Subscription(data["subscription"])
         self.headers = Headers(request)
         self.setup(data)
@@ -78,7 +82,7 @@ class BaseEvent:
         pass
 
     def verify(self):
-        hmac_message = self.headers.message_id + self.headers._raw_timestamp + self._raw_data
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -100,7 +104,7 @@ class ChallengeEvent(BaseEvent):
         self.challenge: str = data["challenge"]
 
     def verify(self):
-        hmac_message = self.headers.message_id + self.headers._raw_timestamp + self._raw_data
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -115,6 +119,7 @@ class NotificationEvent(BaseEvent):
     __slots__ = ("data",)
 
     def setup(self, data: dict):
+        data: dict = data["event"]
         typ = self.subscription.type
         if typ not in SubscriptionTypes._type_map:
             raise ValueError(f"Unexpected subscription type '{typ}'")
@@ -138,8 +143,8 @@ class ChannelBanData(EventData):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.moderator = _transform_user(client, data, "moderator_user")
         self.reason: str = data["reason"]
-        self.ends_at: Optional[datetime.datetime] = data["ends_at"] and datetime.datetime.strptime(
-            data["ends_at"], "%Y-%m-%dT%H:%M:%SZ"
+        self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(
+            data["ends_at"]
         )
         self.permenant: bool = data["permenant"]
 
@@ -192,7 +197,7 @@ class ChannelFollowData(EventData):
     def __init__(self, client: "EventSubClient", data: dict):
         self.user = _transform_user(client, data, "user")
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
-        self.followed_at = datetime.datetime.strptime(data["followed_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.followed_at = _parse_datetime(data["followed_at"])
 
 
 class ChannelRaidData(EventData):
@@ -230,7 +235,7 @@ class CustomRewardRedemptionAddUpdateData(EventData):
         self.id: str = data["id"]
         self.input: str = data["user_input"]
         self.status: str = data["status"]  # "Possible values are unknown, unfulfilled, fulfilled, and canceled."
-        self.redeemed_at = datetime.datetime.strptime(data["redeemed_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.redeemed_at = _parse_datetime(data["redeemed_at"])
         self.reward = CustomReward(client.client._http, data["reward"], self.broadcaster)
 
 
@@ -260,8 +265,8 @@ class HypeTrainBeginProgressData(EventData):
         self.total_points: int = data["total"]
         self.progress: int = data["progress"]
         self.goal: int = data["goal"]
-        self.started = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.expires = datetime.datetime.strptime(data["expire_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.started = _parse_datetime(data["started_at"])
+        self.expires = _parse_datetime(data["expire_at"])
         self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
         self.last_contribution = HypeTrainContributor(client, data["last_contribution"])
 
@@ -273,9 +278,9 @@ class HypeTrainEndData(EventData):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.total_points: int = data["total"]
         self.level: int = data["level"]
-        self.started = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.ended = datetime.datetime.strptime(data["ended_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.cooldown_ends_at = datetime.datetime.strptime(data["cooldown_ends_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.started = _parse_datetime(data["started_at"])
+        self.ended = _parse_datetime(data["ended_at"])
+        self.cooldown_ends_at = _parse_datetime(data["cooldown_ends_at"])
         self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
 
 
@@ -286,7 +291,7 @@ class StreamOnlineData(EventData):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
         self.type: str = data["type"]  # Valid values are: live, playlist, watch_party, premiere, rerun.
-        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.started_at = _parse_datetime(data["started_at"])
 
 
 class StreamOfflineData(EventData):
@@ -336,7 +341,7 @@ _DataType = Union[
 class _SubTypesMeta(type):
     def __new__(mcs, clsname, bases, attributes):
         attributes["_type_map"] = {args[0]: args[2] for name, args in attributes.items() if not name.startswith("_")}
-        attributes["_name_map"] = {args[0]: args[2] for name, args in attributes.items() if not name.startswith("_")}
+        attributes["_name_map"] = {args[0]: name for name, args in attributes.items() if not name.startswith("_")}
         return super().__new__(mcs, clsname, bases, attributes)
 
 
