@@ -121,7 +121,7 @@ class Client:
         self.loop = loop or asyncio.get_event_loop()
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
         self._connection = WSConnection(
-            client=self, loop=self.loop, initial_channels=None, heartbeat=None
+            client=self, loop=self.loop, initial_channels=None, heartbeat=self._heartbeat
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
