@@ -98,7 +98,7 @@ class Client:
 
         .. warning:
 
-            This is not suitable for logging in to IRC.
+            this is not suitable for logging in to IRC.
 
         .. note:
 
@@ -525,7 +525,7 @@ class Client:
             List[:class:`int`]
         """
         resp = []
-        for chunk in [ids[x: x + 3] for x in range(0, len(ids), 3)]:
+        for chunk in [ids[x : x + 3] for x in range(0, len(ids), 3)]:
             resp.append(await self._http.delete_videos(token, chunk))
 
         return resp

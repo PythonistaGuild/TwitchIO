@@ -5,8 +5,7 @@ from . import models
 
 if TYPE_CHECKING:
     from .server import EventSubClient
-    from .models import EventData
-    from .models import Subscription
+    from .models import EventData, Subscription
 
 __all__ = ("EventSubHTTP",)
 

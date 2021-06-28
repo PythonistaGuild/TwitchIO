@@ -37,7 +37,7 @@ class EmptyObject:
 
 
 class Subscription:
-    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at", "_raw_data"
+    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at"
 
     def __init__(self, data: dict):
         self.id: str = data["id"]
@@ -50,7 +50,6 @@ class Subscription:
         self.transport = EmptyObject()
         self.transport.method: str = data["transport"]["method"]  # noqa
         self.transport.callback: str = data["transport"]["callback"]  # noqa
-        self._raw_data = data
 
 
 class Headers:
