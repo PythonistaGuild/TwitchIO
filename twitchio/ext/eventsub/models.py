@@ -24,12 +24,14 @@ except ModuleNotFoundError:
     def _loads(s: str) -> dict:
         return json.loads(s)
 
+
 logger = logging.getLogger("twitchio.ext.eventsub")
 
 
 def _parse_datetime(time: str) -> datetime.datetime:
     # Exemple time: 2021-06-19T04:12:39.407371633Z
     return datetime.datetime.strptime(time[:26], "%Y-%m-%dT%H:%M:%S.%f")
+
 
 class EmptyObject:
     def __init__(self, **kwargs):
@@ -60,9 +62,7 @@ class Headers:
         self.signature: str = request.headers["Twitch-Eventsub-Message-Signature"]
         self.subscription_type: str = request.headers["Twitch-Eventsub-Subscription-Type"]
         self.subscription_version: str = request.headers["Twitch-Eventsub-Subscription-Version"]
-        self.timestamp = _parse_datetime(
-            request.headers["Twitch-Eventsub-Message-Timestamp"]
-        )
+        self.timestamp = _parse_datetime(request.headers["Twitch-Eventsub-Message-Timestamp"])
         self._raw_timestamp = request.headers["Twitch-Eventsub-Message-Timestamp"]
 
 
@@ -142,9 +142,7 @@ class ChannelBanData(EventData):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.moderator = _transform_user(client, data, "moderator_user")
         self.reason: str = data["reason"]
-        self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(
-            data["ends_at"]
-        )
+        self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(data["ends_at"])
         self.permenant: bool = data["permenant"]
 
 

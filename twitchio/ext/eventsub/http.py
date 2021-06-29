@@ -40,9 +40,8 @@ class EventSubHTTP:
             qs.append(("status", status))
 
         return [
-            models.Subscription(d) for d in await self._http.request(
-                Route("GET", "eventsub/subscriptions", query=qs), paginate=False
-            )
+            models.Subscription(d)
+            for d in await self._http.request(Route("GET", "eventsub/subscriptions", query=qs), paginate=False)
         ]
 
     async def get_status(self, status: str = None):
