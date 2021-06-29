@@ -119,7 +119,7 @@ class TwitchHTTP:
         if full_body:
             assert not paginate
 
-        if not self.client_id or not self.nick and self.token:
+        if (not self.client_id or not self.nick) and self.token:
             await self.validate(token=self.token)
 
         if not self.client_id:
@@ -207,6 +207,11 @@ class TwitchHTTP:
                 await self.bucket.wait_reset()
 
             async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
+                try:
+                    logger.debug(f"Recived a response from a request with status {resp.status}: {await resp.json()}")
+                except Exception:
+                    logger.debug(f"Recived a response from a request with status {resp.status} and without body")
+
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
                     await asyncio.sleep(2 ** attempt + 1)
@@ -303,11 +308,11 @@ class TwitchHTTP:
             if 300 < resp.status or resp.status < 200:
                 raise errors.HTTPException("Unable to validate Access Token: " + await resp.text())
 
-            data = await resp.json()
+            data: dict = await resp.json()
 
         if not self.nick:
-            self.nick = data["login"]
-            self.client_id = data["client_id"]
+            self.nick = data.get("login")
+            self.client_id = data.get("client_id")
 
         return data
 
@@ -331,7 +336,7 @@ class TwitchHTTP:
         started_at: datetime.datetime = None,
         ended_at: datetime.datetime = None,
     ):
-        pass  # TODO
+        raise NotImplementedError  # TODO
 
     async def get_game_analytics(
         self,
@@ -341,7 +346,7 @@ class TwitchHTTP:
         started_at: datetime.datetime = None,
         ended_at: datetime.datetime = None,
     ):
-        pass  # TODO
+        raise NotImplementedError  # TODO
 
     async def get_bits_board(
         self, token: str, period: str = "all", user_id: str = None, started_at: datetime.datetime = None
