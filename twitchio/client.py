@@ -171,7 +171,7 @@ class Client:
                     future.set_result(args)
 
     def add_event(self, callback: Callable, name: str = None) -> None:
-        if not inspect.iscoroutine(callback) and not inspect.iscoroutinefunction(callback):
+        if not inspect.iscoroutine(callback) and not inspect.iscoroutinefunction(callback.func):
             raise ValueError("callback must be a coroutine")
 
         event_name = name or callback.__name__
