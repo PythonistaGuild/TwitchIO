@@ -54,6 +54,17 @@ class _topic:
 
 
 class Topic(_topic):
+    """
+    Represents a PubSub Topic. This should not be created manually,
+    use the provided methods to create these.
+
+    Attributes
+    -----------
+    token: :class:`str`
+        The token to use to authorize this topic
+    args: List[Union[:class:`int`, Any]]
+        The arguments to substitute in to the topic string
+    """
 
     __slots__ = "token", "args"
 
@@ -70,6 +81,10 @@ class Topic(_topic):
 
     @property
     def present(self) -> Optional[str]:
+        """
+        Returns a websocket-ready topic string, if all the arguments needed have been provided.
+        Otherwise returns ``None``
+        """
         try:
             return self.__topic__.format(*self.args)
         except:
@@ -84,7 +99,7 @@ class Topic(_topic):
 
 bits = _topic("channel-bits-events-v2.{0}", [int])
 bits_badge = _topic("channel-bits-badge-unlocks.{0}", [int])
-channel_points = _topic("channel-points-v1.{0}", [int])
+channel_points = _topic("channel-points-channel-v1.{0}", [int])
 channel_subscriptions = _topic("channel-subscribe-events-v1.{0}", [int])
 moderation_user_action = _topic("chat_moderator_actions.{0}.{1}", [int, int])
 whispers = _topic("whispers.{0}", [int])

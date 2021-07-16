@@ -37,6 +37,7 @@ __all__ = (
     "PubSubChatMessage",
     "PubSubBadgeEntitlement",
     "PubSubChannelPointsMessage",
+    "PubSubModerationAction",
     "PubSubModerationActionModeratorAdd",
     "PubSubModerationActionBanRequest",
     "PubSubModerationActionChannelTerms",
@@ -60,6 +61,18 @@ class PoolFull(PoolError):
 
 
 class PubSubChatMessage:
+    """
+    A message received from twitch.
+
+    Attributes
+    -----------
+    content: :class:`str`
+        The content received
+    id: :class:`str`
+        The id of the payload
+    type: :class:`str`
+        The payload type
+    """
 
     __slots__ = "content", "id", "type"
 
@@ -70,6 +83,16 @@ class PubSubChatMessage:
 
 
 class PubSubBadgeEntitlement:
+    """
+    A badge entitlement
+
+    Attributes
+    -----------
+    new: :class:`int`
+        The new badge
+    old: :class:`int`
+        The old badge
+    """
 
     __slots__ = "new", "old"
 
@@ -79,6 +102,14 @@ class PubSubBadgeEntitlement:
 
 
 class PubSubMessage:
+    """
+    A message from the pubsub websocket
+
+    Attributes
+    -----------
+    topic: :class:`str`
+        The topic subscribed to
+    """
 
     __slots__ = "topic", "_data"
 
@@ -88,6 +119,24 @@ class PubSubMessage:
 
 
 class PubSubBitsMessage(PubSubMessage):
+    """
+    A Bits message
+
+    Attributes
+    -----------
+    message: :class:`PubSubChatMessage`
+        The message sent along with the bits.
+    badge_entitlement: Optional[:class:`PubSubBadgeEntitlement`]
+        The badges received, if any.
+    bits_used: :class:`int`
+        The amount of bits used.
+    channel_id: :class:`int`
+        The channel the bits were given to.
+    user: :class:`twitchio.PartialUser`
+        The user giving the bits.
+    version: :class:`str`
+        The event version.
+    """
 
     __slots__ = "badge_entitlement", "bits_used", "channel_id", "context", "anonymous", "message", "user", "version"
 
@@ -109,6 +158,22 @@ class PubSubBitsMessage(PubSubMessage):
 
 
 class PubSubBitsBadgeMessage(PubSubMessage):
+    """
+    A Badge message
+
+    Attributes
+    -----------
+    user: :class:`twitchio.PartialUser`
+        The user receiving the badge.
+    channel: :class:`twitchio.Channel`
+        The channel the user received the badge on.
+    badge_tier: :class:`int`
+        The tier of the badge
+    message: :class:`str`
+        The message sent in chat.
+    timestamp: :class:`datetime.datetime`
+        The time the event happened
+    """
 
     __slots__ = "user", "channel", "badge_tier", "message", "timestamp"
 
@@ -119,28 +184,69 @@ class PubSubBitsBadgeMessage(PubSubMessage):
             name=data["channel_name"], websocket=client._connection
         )
         self.badge_tier: int = data["badge_tier"]
-        self.message = data["chat_message"]
-        self.timestamp = datetime.datetime.strptime(data["time"], "%Y-%m-%dT%H:%M:%SZ")
+        self.message: str = data["chat_message"]
+        self.timestamp = datetime.datetime.strptime(data["time"][0:25] + data["time"][28:], "%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 class PubSubChannelPointsMessage(PubSubMessage):
+    """
+    A Channel points redemption
+
+    Attributes
+    -----------
+    timestamp: :class:`datetime.datetime`
+        The timestamp the event happened.
+    channel_id: :class:`int`
+        The channel the reward was redeemed on.
+    id: :class:`str`
+        The id of the reward redemption.
+    user: :class:`twitchio.PartialUser`
+        The user redeeming the reward.
+    reward: :class:`twitchio.CustomReward`
+        The reward being redeemed.
+    input: Optional[:class:`str`]
+        The input the user gave, if any.
+    status: :class:`str`
+        The status of the reward.
+    """
 
     __slots__ = "timestamp", "channel_id", "user", "id", "reward", "input", "status"
 
-    def __init__(self, client: Client, data: dict):
-        super().__init__(client, None, data)
-        self.timestamp = datetime.datetime.strptime(data["redemption"]["redeemed_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.channel_id: int = int(data["redemption"]["channel_id"])
-        self.id: str = data["redemption"]["id"]
-        self.user = PartialUser(client._http, data["user"]["id"], data["user"]["display_name"])
-        self.reward = CustomReward(
-            client._http, data["redemption"]["reward"], PartialUser(client._http, self.channel_id, None)
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+
+        redemption = data["message"]["data"]["redemption"]
+
+        self.timestamp = datetime.datetime.strptime(
+            redemption["redeemed_at"][0:25] + redemption["redeemed_at"][28:], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
-        self.input: str = data["redemption"]["user_input"]
-        self.status: str = data["redemption"]["status"]
+        self.channel_id: int = int(redemption["channel_id"])
+        self.id: str = redemption["id"]
+        self.user = PartialUser(client._http, redemption["user"]["id"], redemption["user"]["display_name"])
+        self.reward = CustomReward(client._http, redemption["reward"], PartialUser(client._http, self.channel_id, None))
+        self.input: Optional[str] = redemption.get("user_input")
+        self.status: str = redemption["status"]
 
 
-class PubSubModerationActionBanRequest(PubSubMessage):
+class PubSubModerationAction(PubSubMessage):
+    """
+    A basic moderation action.
+
+    Attributes
+    -----------
+    action: :class:`str`
+        The action taken.
+    args: List[:class:`str`]
+        The arguments given to the command.
+    created_by: :class:`twitchio.PartialUser`
+        The user that created the action.
+    message_id: :class:`str`
+        The id of the message that created this action.
+    target: :class:`twitchio.PartialUser`
+        The target of this action.
+    from_automod: :class:`bool`
+        Whether this action was done automatically or not.
+    """
 
     __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
 
@@ -162,7 +268,60 @@ class PubSubModerationActionBanRequest(PubSubMessage):
         self.from_automod: bool = data["message"]["data"]["from_automod"]
 
 
+class PubSubModerationActionBanRequest(PubSubMessage):
+    """
+    A Ban/Unban event
+
+    Attributes
+    -----------
+    action: :class:`str`
+        The action taken.
+    args: List[:class:`str`]
+        The arguments given to the command.
+    created_by: :class:`twitchio.PartialUser`
+        The user that created the action.
+    target: :class:`twitchio.PartialUser`
+        The target of this action.
+    from_automod: :class:`bool`
+        Whether this action was done automatically or not.
+    """
+
+    __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
+
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+        self.action: str = data["message"]["data"]["moderation_action"]
+        self.args: List[str] = data["message"]["data"]["moderator_message"]
+        self.created_by = PartialUser(
+            client._http, data["message"]["data"]["created_by_id"], data["message"]["data"]["created_by_login"]
+        )
+        self.target = (
+            PartialUser(
+                client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
+            )
+            if data["message"]["data"]["target_user_id"]
+            else None
+        )
+        self.from_automod: bool = data["message"]["data"]["from_automod"]
+
+
 class PubSubModerationActionChannelTerms(PubSubMessage):
+    """
+    A channel Terms update.
+
+    Attributes
+    -----------
+    type: :class:`str`
+        The type of action taken.
+    channel_id: :class:`int`
+        The channel id the action occurred on.
+    id: :class:`str`
+        The id of the Term.
+    text: :class:`str`
+        The text of the modified Term.
+    requester: :class:`twitchio.PartialUser`
+        The requester of this Term.
+    """
 
     __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at", "from_automod"
 
@@ -178,15 +337,33 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
 
         self.expires_at = self.updated_at = None
         if data["message"]["data"]["expires_at"]:
-            self.expires_at = datetime.datetime.strptime(data["message"]["data"]["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
+            self.expires_at = datetime.datetime.strptime(
+                data["message"]["data"]["expires_at"][0:25] + data["message"]["data"]["expires_at"][28:],
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            )
 
         if data["message"]["data"]["updated_at"]:
-            self.updated_at = datetime.datetime.strptime(data["message"]["data"]["updated_at"], "%Y-%m-%dT%H:%M:%SZ")
-
-        self.from_automod: bool = data["message"]["data"]["from_automod"]
+            self.updated_at = datetime.datetime.strptime(
+                data["message"]["data"]["updated_at"][0:25] + data["message"]["data"]["updated_at"][28:],
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            )
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
+    """
+    A moderator add event.
+
+    Attributes
+    -----------
+    channel_id: :class:`int`
+        The channel id the moderator was added to.
+    moderation_action: :class:`str`
+        Redundant.
+    target: :class:`twitchio.PartialUser`
+        The person who was added as a mod.
+    created_by: :class:`twitchio.PartialUser`
+        The person who added the mod.
+    """
 
     __slots__ = "channel_id", "target", "moderation_action", "created_by"
 
@@ -202,16 +379,19 @@ class PubSubModerationActionModeratorAdd(PubSubMessage):
         )
 
 
+_mod_actions = {
+    "approve_unban_request": PubSubModerationActionBanRequest,
+    "deny_unban_request": PubSubModerationActionBanRequest,
+    "channel_terms_action": PubSubModerationActionChannelTerms,
+    "moderator_added": PubSubModerationActionModeratorAdd,
+    "moderation_action": PubSubModerationAction,
+}
+
+
 def _find_mod_action(client: Client, topic: str, data: dict):
     typ = data["message"]["type"]
-    if typ in ("approve_unban_request", "deny_unban_request"):
-        return PubSubModerationActionBanRequest(client, topic, data)
-
-    elif typ == "channel_terms_action":
-        return PubSubModerationActionChannelTerms(client, topic, data)
-
-    elif typ == "moderator_added":
-        return PubSubModerationActionModeratorAdd(client, topic, data)
+    if typ in _mod_actions:
+        return _mod_actions[typ](client, topic, data)
 
     else:
         raise ValueError(f"unknown pubsub moderation action '{typ}'")
@@ -222,6 +402,7 @@ _mapping = {
     "channel-bits-badge-unlocks": ("pubsub_bits_badge", PubSubBitsBadgeMessage),
     "channel-subscribe-events-v1": ("pubsub_subscription", None),
     "chat_moderator_actions": ("pubsub_moderation", _find_mod_action),
+    "channel-points-channel-v1": ("pubsub_channel_points", PubSubChannelPointsMessage),
     "whispers": ("pubsub_whisper", None),
 }
 
