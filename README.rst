@@ -42,13 +42,13 @@ TwitchIO 2 requires **Python 3.7+**. You can download the latest version of Pyth
 
 .. code:: sh
 
-    py -3.9 -m pip install -U twitchio --pre
+    py -3.9 -m pip install -U twitchio
 
 **Linux**
 
 .. code:: sh
 
-    python3.9 -m pip install -U twitchio --pre
+    python3.9 -m pip install -U twitchio
 
 Access Tokens
 ---------------------------
