@@ -1,2 +1,2 @@
-Webhooks - Coming Soon
+EventSub - Coming Soon
 ===========================

@@ -128,16 +128,43 @@ class Client:
         return self
 
     def run(self):
+        """
+        A blocking function that starts the asyncio event loop,
+        connects to the twitch IRC server, and cleans up when done.
+        """
         try:
-            self.loop.create_task(self._connection._connect())
+            self.loop.create_task(self.connect())
             self.loop.run_forever()
         except KeyboardInterrupt:
             pass
         finally:
-            self.loop.create_task(self.close())
+            self.loop.run_until_complete(self.close())
+            self.loop.close()
+
+    async def start(self):
+        """|coro|
+        Connects to the twitch IRC server, and cleanly disconnects when done.
+        """
+        if self.loop is not asyncio.get_running_loop():
+            raise RuntimeError(
+                f"Attempted to start a {self.__class__.__name__} instance on a different loop "
+                f"than the one it was initialized with."
+            )
+        try:
+            await self.connect()
+        finally:
+            await self.close()
+
+    async def connect(self):
+        """|coro|
+        Connects to the twitch IRC server
+        """
+        await self._connection._connect()
 
     async def close(self):
-        # TODO session close
+        """|coro|
+        Cleanly disconnects from the twitch IRC server
+        """
         await self._connection._close()
 
     def run_event(self, event_name, *args):

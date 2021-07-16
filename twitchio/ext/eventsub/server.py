@@ -118,7 +118,7 @@ class EventSubClient(web.Application):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.cheer, broadcaster)
 
     def subscribe_channel_update(self, broadcaster: Union[PartialUser, str, int]):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.user_update, broadcaster)
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_update, broadcaster)
 
     def subscribe_channel_follows(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.follow, broadcaster)
@@ -184,6 +184,7 @@ class EventSubClient(web.Application):
             logger.warning(f"Unexpected message type: {typ}")
             return web.Response(status=400)
 
+        logger.debug(f"Recived a message type: {typ}")
         event = _message_types[typ](self, payload, request)
         response = event.verify()
 

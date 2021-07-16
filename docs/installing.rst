@@ -18,7 +18,7 @@ You can download the latest version of Python `here <https://www.python.org/down
 
 
 Debugging
---------
+----------
 Make sure you have the latest version of Python installed, or if you prefer, a Python version of 3.7 or greater.
 
 If you have have any other issues feel free to search for duplicates and then create a new issue on GitHub with as much detail as

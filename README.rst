@@ -95,9 +95,9 @@ Before creating a Pull Request it is encouraged you install and run black on you
 The Line Length limit for TwitchIO 2.0 is **120**.
 
 
-For installation and usage of Black visit: `Black Formatter <https://black.readthedocs.io/en/stable/installation_and_usage.html/>`_
+For installation and usage of Black visit: `Black Formatter <https://black.readthedocs.io/en/stable/usage_and_configuration/index.html/>`_
 
-For integrating Black into your IDE visit: `Black IDE Usage <https://black.readthedocs.io/en/stable/editor_integration.html/>`_
+For integrating Black into your IDE visit: `Black IDE Usage <https://black.readthedocs.io/en/stable/integrations/editors.html>`_
 
 Special Thanks
 ---------------------------
