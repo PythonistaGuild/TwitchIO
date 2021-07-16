@@ -14,9 +14,7 @@
     :target: https://github.com/psf/black
 
 
-TwitchIO 2.0 is currently in BETA stage looking for testers and users. 2.0 supercedes the current 1.x version.
-
-Although not classified as Stable you should be able to use this release for testing purposes. **Use in production is at your own risk**.
+TwitchIO 2.0 is currently in a BETA stage looking for testers and users. 2.0 supercedes the current 1.2.3 version.
 
 TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots. TwitchIO 2 will cover 100% of the new Twitch API and will feature support for commands, PubSub and Webhooks.
 
