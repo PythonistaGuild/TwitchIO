@@ -284,6 +284,13 @@ class Bot(Client):
         self._modules[name] = module
 
     def unload_module(self, name: str):
+        """Method which unloads a module and it's cogs.
+
+        Parameters
+        ----------
+        name: str
+            The name of the module to unload in dot.path format.
+        """
         if name not in self._modules:
             raise ValueError(f"Module <{name}> is not loaded")
 
@@ -308,6 +315,18 @@ class Bot(Client):
                 del sys.modules[m]
 
     def reload_module(self, name: str):
+        """Method which reloads a module and it's cogs.
+
+        Parameters
+        ----------
+        name: str
+            The name of the module to unload in dot.path format.
+
+
+        .. note::
+
+            This is roughly equivalent to `bot.unload_module(...)` then `bot.load_module(...)`.
+        """
         if name not in self._modules:
             raise ValueError(f"Module <{name}> is not loaded")
 
@@ -327,7 +346,19 @@ class Bot(Client):
             module.prepare(self)
             raise
 
-    def add_cog(self, cog):
+    def add_cog(self, cog: Cog):
+        """Method which adds a cog to the bot.
+
+        Parameters
+        ----------
+        cog: :class:`Cog`
+            The cog instance to add to the bot.
+
+
+        .. warning::
+
+            This must be an instance of :class:`Cog`.
+        """
         if not isinstance(cog, Cog):
             raise InvalidCog('Cogs must derive from "commands.Cog".')
 
@@ -338,6 +369,13 @@ class Bot(Client):
         self._cogs[cog.name] = cog
 
     def remove_cog(self, cog_name: str):
+        """Method which removes a cog from the bot.
+
+        Parameters
+        ----------
+        cog_name: str
+            The name of the cog to remove.
+        """
         if cog_name not in self._cogs:
             raise InvalidCog(f"Cog '{cog_name}' not found")
 
@@ -397,10 +435,12 @@ class Bot(Client):
 
     @property
     def commands(self):
+        """The currently loaded commands."""
         return self._commands
 
     @property
     def cogs(self):
+        """The currently loaded cogs."""
         return self._cogs
 
     async def event_command_error(self, context, error):

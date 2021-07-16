@@ -24,6 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 class TwitchCommandError(Exception):
+    """Base TwitchIO Command Error. All command errors derive from this error."""
+
     pass
 
 
