@@ -22,7 +22,7 @@ TwitchIO 2.0 will be buggy, will be lacking some features and you will run into 
 
 Documentation
 ---------------------------
-For the Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/2.0/index.html>`_
+For the Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/latest/>`_
 
 Support
 ---------------------------
