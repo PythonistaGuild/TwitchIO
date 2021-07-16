@@ -1,36 +1,24 @@
-name: Publish to PyPi (Pre-Release)
+name: Publish to PyPI
 
 on:
-  push:
-    branches:
-      - "2.0"
+  release:
+    types: [published]
 
 jobs:
-  build:
-
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v1
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v1
       with:
         python-version: '3.9'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests setuptools wheel twine
-    - name: Get Latest Pre-Release
-      working-directory: .github/workflows/
-      run: |
-        final=$(python get_revision.py)
-
-        echo "TWITCHIO_VERSION=$final" >> $GITHUB_ENV
-    - name: Find and Replace
-      uses: jacobtomlinson/gha-find-replace@master
-      with:
-        find: "{{__VERSION__}}"
-        replace: ${{ env.TWITCHIO_VERSION }}
+        pip install setuptools wheel twine
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
@@ -38,5 +26,3 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
         twine upload dist/*
-
-

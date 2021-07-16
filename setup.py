@@ -25,9 +25,12 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import os
+import pathlib
+import re
 from setuptools import setup
 
 
+ROOT = pathlib.Path(__file__).parent
 on_rtd = os.getenv("READTHEDOCS") == "True"
 
 with open("requirements.txt") as f:
@@ -37,7 +40,8 @@ if on_rtd:
     with open("docs/requirements.txt") as f:
         requirements.extend(f.read().splitlines())
 
-version = "{{__VERSION__}}"
+with open(ROOT / "twitchio" / "__init__.py", encoding="utf-8") as f:
+    VERSION = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE).group(1)
 
 readme = ""
 with open("README.rst") as f:
@@ -47,10 +51,10 @@ setup(
     name="twitchio",
     author="TwitchIO",
     url="https://github.com/TwitchIO/TwitchIO",
-    version=version,
+    version=VERSION,
     packages=["twitchio", "twitchio.ext.commands", "twitchio.ext.pubsub", "twitchio.ext.routines"],
     license="MIT",
-    description="A Python IRC and API wrapper for Twitch.",
+    description="An asynchronous Python IRC and API wrapper for Twitch.",
     long_description=readme,
     include_package_data=True,
     install_requires=requirements,
