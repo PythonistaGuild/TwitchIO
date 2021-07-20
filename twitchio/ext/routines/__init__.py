@@ -68,6 +68,7 @@ class Routine:
         iterations: Optional[int] = None,
         time: Optional[datetime.datetime] = None,
         delta: Optional[float] = None,
+        wait_first: Optional[bool] = False
     ):
         self._coro = coro
         self._loop = loop or asyncio.get_event_loop()
@@ -90,6 +91,7 @@ class Routine:
 
         self._stop_set = False
         self._restarting = False
+        self._wait_first = wait_first
 
         self._stop_on_error = True
 
@@ -257,6 +259,9 @@ class Routine:
             wait = compute_timedelta(self._time)
             await asyncio.sleep(wait)
 
+        if self._wait_first and not self._time:
+            await asyncio.sleep(self._delta)
+
         while True:
             start = datetime.datetime.now(datetime.timezone.utc)
 
@@ -285,8 +290,8 @@ class Routine:
             else:
                 sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
 
-            await asyncio.sleep(sleep)
             self._completed_loops += 1
+            await asyncio.sleep(sleep)
 
         try:
             if self._after:
@@ -304,6 +309,7 @@ def routine(
     hours: Optional[float] = 0,
     time: Optional[datetime.datetime] = None,
     iterations: Optional[int] = None,
+    wait_first: Optional[bool] = False
 ):
     """A decorator to assign a coroutine as a :class:`Routine`.
 
@@ -320,6 +326,9 @@ def routine(
     iterations: Optional[int]
         The amount of iterations to run this routine before stopping.
         If set to None or 0, the routine will run indefinitely.
+    wait_first: Optional[bool]
+        Whether to wait the specified time before running the first iteration.
+        This has no effect when the time argument is used. Defaults to False.
 
     Raises
     ------
@@ -357,6 +366,6 @@ def routine(
         if not asyncio.iscoroutinefunction(coro):
             raise TypeError(f"Expected coroutine function not type, {type(coro).__name__!r}.")
 
-        return Routine(coro=coro, time=time_, delta=delta, iterations=iterations)
+        return Routine(coro=coro, time=time_, delta=delta, iterations=iterations, wait_first=wait_first)
 
     return decorator
