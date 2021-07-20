@@ -198,8 +198,13 @@ class Client:
                     future.set_result(args)
 
     def add_event(self, callback: Callable, name: str = None) -> None:
-        if not inspect.iscoroutine(callback) and not inspect.iscoroutinefunction(callback.func):
-            raise ValueError("callback must be a coroutine")
+        try:
+            func = callback.func
+        except AttributeError:
+            func = callback
+
+        if not inspect.iscoroutine(func) and not inspect.iscoroutinefunction(func):
+            raise ValueError("Event callback must be a coroutine")
 
         event_name = name or callback.__name__
         callback._event = event_name  # used to remove the event
@@ -212,7 +217,7 @@ class Client:
 
     def remove_event(self, callback: Callable) -> bool:
         if not hasattr(callback, "_event"):
-            raise ValueError("callback is not a registered event")
+            raise ValueError("Event callback is not a registered event")
 
         if callback in self._events[callback._event]:
             self._events[callback._event].remove(callback)
