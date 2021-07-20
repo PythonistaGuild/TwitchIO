@@ -68,7 +68,7 @@ class Routine:
         iterations: Optional[int] = None,
         time: Optional[datetime.datetime] = None,
         delta: Optional[float] = None,
-        wait_first: Optional[bool] = False
+        wait_first: Optional[bool] = False,
     ):
         self._coro = coro
         self._loop = loop or asyncio.get_event_loop()
@@ -309,7 +309,7 @@ def routine(
     hours: Optional[float] = 0,
     time: Optional[datetime.datetime] = None,
     iterations: Optional[int] = None,
-    wait_first: Optional[bool] = False
+    wait_first: Optional[bool] = False,
 ):
     """A decorator to assign a coroutine as a :class:`Routine`.
 
