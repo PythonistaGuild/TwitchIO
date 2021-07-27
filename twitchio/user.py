@@ -410,7 +410,7 @@ class PartialUser:
         """
         from .models import FollowEvent
 
-        data = await self._http.get_user_follows(from_id=str(self.id))
+        data = await self._http.get_user_follows(to_id=str(self.id))
         return [FollowEvent(self._http, d, to=self) for d in data]
 
     async def follow(self, userid: int, token: str, *, notifications=False):
