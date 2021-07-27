@@ -468,6 +468,9 @@ class Bot(Client):
         message: :class:`.Message`
             Message object containing relevant information.
         """
+        if message.echo:
+            return
+
         await self.handle_commands(message)
 
     def command(
