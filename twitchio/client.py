@@ -509,8 +509,6 @@ class Client:
             language for the stream(s). ISO 639-1 or two letter code for supported stream language
         token: Optional[:class:`str`]
             An optional OAuth token to use instead of the bot OAuth token
-        force: :class:`bool`
-            whether to force a fetch from the api, or check the cache first. Defaults to False
 
         Returns
         --------
@@ -518,8 +516,6 @@ class Client:
         """
         from .models import Stream
 
-        # the forced argument doesnt actually get used here, it gets used by the cache wrapper.
-        # But we'll include it in the args here so that sphinx catches it
         assert user_ids or game_ids or user_logins
         data = await self._http.get_streams(
             game_ids=game_ids,
@@ -528,7 +524,6 @@ class Client:
             languages=languages,
             token=token,
         )
-        print(data)
         return [Stream(self._http, x) for x in data]
 
     async def search_categories(self, query: str):
