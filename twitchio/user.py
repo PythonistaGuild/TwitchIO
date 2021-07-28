@@ -48,12 +48,11 @@ __all__ = (
 
 class PartialUser:
 
-    __slots__ = "id", "name", "login", "_http", "_cached_rewards"
+    __slots__ = "id", "name", "_http", "_cached_rewards"
 
-    def __init__(self, http: "TwitchHTTP", id: Union[int, str], name: Optional[str], login: Optional[str]):
+    def __init__(self, http: "TwitchHTTP", id: Union[int, str], name: Optional[str]):
         self.id = int(id)
         self.name = name
-        self.login = login
         self._http = http
 
         self._cached_rewards = None
@@ -622,7 +621,7 @@ class SearchUser(PartialUser):
         self.title: str = data["title"]
         self.thumbnail_url: str = data["thumbnail_url"]
         self.live: bool = data["is_live"]
-        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
+        self.started_at = datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data["tag_ids"]
 
 

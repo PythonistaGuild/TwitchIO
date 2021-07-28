@@ -550,17 +550,17 @@ class Stream:
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        self.id: str = (data["id"],)
+        self.id: int = data["id"]
         self.user = PartialUser(http, data["user_id"], data["user_name"], data["user_login"])
-        self.game_id: str = (data["game_id"],)
-        self.game_name: str = (data["game_name"],)
-        self.type: str = (data["type"],)
-        self.title: str = (data["title"],)
-        self.viewer_count: int = (data["viewer_count"],)
+        self.game_id: int = data["game_id"]
+        self.game_name: str = data["game_name"]
+        self.type: str = data["type"]
+        self.title: str = data["title"]
+        self.viewer_count: int = data["viewer_count"]
         self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.language: str = (data["language"],)
-        self.thumbnail_url: str = (data["thumbnail_url"],)
-        self.tag_ids: List[str] = (data["tag_ids"],)
+        self.language: str = data["language"]
+        self.thumbnail_url: str = data["thumbnail_url"]
+        self.tag_ids: List[str] = data["tag_ids"]
         self.is_mature: bool = data["is_mature"]
 
     def __repr__(self):
