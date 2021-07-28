@@ -26,13 +26,41 @@ import inspect
 from functools import partial
 
 from .core import *
-from .errors import *
 
 
 __all__ = ("Cog",)
 
 
-class Cog:
+class CogEvent:
+    def __init__(self, *, name: str, func):
+        self.name = name
+        self.func = func
+
+
+class CogMeta(type):
+    def __new__(mcs, *args, **kwargs):
+        name, bases, attrs = args
+        attrs["__cogname__"] = kwargs.pop("name", name)
+
+        self = super().__new__(mcs, name, bases, attrs, **kwargs)
+        self._events = {}
+        self._commands = {}
+
+        for name, mem in inspect.getmembers(self):
+            if isinstance(mem, (CogEvent, Command)):
+                if name.startswith(("cog_", "bot_")):  # Invalid method prefixes
+                    raise RuntimeError(f'The event or command "{name}" starts with an invalid prefix (cog_ or bot_).')
+
+            if isinstance(mem, CogEvent):
+                try:
+                    self._events[mem.name].append(mem.func)
+                except KeyError:
+                    self._events[mem.name] = [mem.func]
+
+        return self
+
+
+class Cog(metaclass=CogMeta):
     """Class used for creating a TwitchIO Cog.
 
     Cogs help organise code and provide powerful features for creating bots.
@@ -74,18 +102,6 @@ class Cog:
             bot.add_cog(MyCog(bot))
     """
 
-    __valid_slots__ = ("cog_unload", "cog_check", "cog_error", "cog_command_error")
-
-    def __init_subclass__(cls, *args, **kwargs):
-        cls.__cogname__ = kwargs.get("name", cls.__name__)
-
-        for name, mem in inspect.getmembers(cls):
-            if name.startswith(("cog", "bot")) and name not in cls.__valid_slots__:  # Invalid method prefixes
-                raise InvalidCogMethod(f'The method "{name}" starts with an invalid prefix (cog or bot).')
-
-        cls._events = getattr(cls, "_events", {})
-        cls._commands = {}
-
     def _load_methods(self, bot):
         for name, method in inspect.getmembers(self):
             if isinstance(method, Command):
@@ -102,12 +118,6 @@ class Cog:
             for callback in callbacks:
 
                 callback = partial(callback, self)
-
-                if event in self._events:
-                    self._events[event].append(callback)
-                else:
-                    self._events[event] = [callback]
-
                 bot.add_event(callback=callback, name=event)
 
     def _unload_methods(self, bot):
@@ -147,20 +157,11 @@ class Cog:
                 async def bot_is_ready(self):
                     print('Bot is ready!')
         """
-        if not hasattr(cls, "_events"):
-            cls._events = {}
 
         def decorator(func):
             event_name = event or func.__name__
-            if event_name in cls.__valid_slots__:
-                raise ValueError(f"{event_name} cannot be a decorated event.")
 
-            if event_name in cls._events:
-                cls._events[event_name].append(func)
-            else:
-                cls._events[event_name] = [func]
-
-            return func
+            return CogEvent(name=event_name, func=func)
 
         return decorator
 
