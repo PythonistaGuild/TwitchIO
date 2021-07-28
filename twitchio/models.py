@@ -102,15 +102,7 @@ class CheerEmoteTier:
 
 class CheerEmote:
 
-    __slots__ = (
-        "_http",
-        "prefix",
-        "tiers",
-        "type",
-        "order",
-        "last_updated",
-        "charitable",
-    )
+    __slots__ = "_http", "prefix", "tiers", "type", "order", "last_updated", "charitable"
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
@@ -215,30 +207,15 @@ class HypeTrainEvent:
 
 class BanEvent:
 
-    __slots__ = (
-        "id",
-        "type",
-        "timestamp",
-        "version",
-        "broadcaster",
-        "user",
-        "expires_at",
-    )
+    __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at"
 
-    def __init__(
-        self,
-        http: "TwitchHTTP",
-        data: dict,
-        broadcaster: Optional[Union[PartialUser, User]],
-    ):
+    def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Optional[Union[PartialUser, User]]):
         self.id: str = data["id"]
         self.type: str = data["event_type"]
         self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
         self.version: float = float(data["version"])
         self.broadcaster = broadcaster or PartialUser(
-            http,
-            data["event_data"]["broadcaster_id"],
-            data["event_data"]["broadcaster_name"],
+            http, data["event_data"]["broadcaster_id"], data["event_data"]["broadcaster_name"]
         )
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
         self.expires_at = (
@@ -464,10 +441,7 @@ class ExtensionBuilder:
     __slots__ = "panels", "overlays", "components"
 
     def __init__(
-        self,
-        panels: List[Extension] = None,
-        overlays: List[Extension] = None,
-        components: List[Extension] = None,
+        self, panels: List[Extension] = None, overlays: List[Extension] = None, components: List[Extension] = None
     ):
         self.panels = panels or []
         self.overlays = overlays or []

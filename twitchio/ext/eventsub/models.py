@@ -39,16 +39,7 @@ class EmptyObject:
 
 
 class Subscription:
-    __slots__ = (
-        "id",
-        "status",
-        "type",
-        "version",
-        "cost",
-        "condition",
-        "transport",
-        "created_at",
-    )
+    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at"
 
     def __init__(self, data: dict):
         self.id: str = data["id"]
@@ -177,14 +168,7 @@ class ChannelCheerData(EventData):
 
 
 class ChannelUpdateData(EventData):
-    __slots__ = (
-        "broadcaster",
-        "title",
-        "language",
-        "category_id",
-        "category_name",
-        "is_mature",
-    )
+    __slots__ = "broadcaster", "title", "language", "category_id", "category_name", "is_mature"
 
     def __init__(self, client: "EventSubClient", data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
@@ -285,15 +269,7 @@ class HypeTrainBeginProgressData(EventData):
 
 
 class HypeTrainEndData(EventData):
-    __slots__ = (
-        "broadcaster",
-        "level",
-        "total_points",
-        "top_contributions",
-        "started",
-        "ended",
-        "cooldown_ends_at",
-    )
+    __slots__ = "broadcaster", "level", "total_points", "top_contributions", "started", "ended", "cooldown_ends_at"
 
     def __init__(self, client: "EventSubClient", data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
@@ -379,26 +355,10 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
     channel_update = "channel.update", 1, ChannelUpdateData
     channel_moderator_add = "channel.moderator.add", 1, ChannelModeratorAddRemoveData
-    channel_moderator_remove = (
-        "channel.moderator.remove",
-        1,
-        ChannelModeratorAddRemoveData,
-    )
-    channel_reward_add = (
-        "channel.channel_points_custom_reward.add",
-        1,
-        CustomRewardAddUpdateRemoveData,
-    )
-    channel_reward_update = (
-        "channel.channel_points_custom_reward.update",
-        1,
-        CustomRewardAddUpdateRemoveData,
-    )
-    channel_reward_remove = (
-        "channel.channel_points_custom_reward.remove",
-        1,
-        CustomRewardAddUpdateRemoveData,
-    )
+    channel_moderator_remove = "channel.moderator.remove", 1, ChannelModeratorAddRemoveData
+    channel_reward_add = "channel.channel_points_custom_reward.add", 1, CustomRewardAddUpdateRemoveData
+    channel_reward_update = "channel.channel_points_custom_reward.update", 1, CustomRewardAddUpdateRemoveData
+    channel_reward_remove = "channel.channel_points_custom_reward.remove", 1, CustomRewardAddUpdateRemoveData
     channel_reward_redeem = (
         "channel.channel_points_custom_reward_redemption.add",
         1,
@@ -417,11 +377,7 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     stream_start = "stream.online", 1, StreamOnlineData
     stream_end = "stream.offline", 1, StreamOfflineData
 
-    user_authorization_revoke = (
-        "user.authorization.revoke",
-        1,
-        UserAuthorizationRevokedData,
-    )
+    user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
 
     user_update = "user.update", 1, UserUpdateData
 

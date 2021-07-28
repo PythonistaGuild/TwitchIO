@@ -65,9 +65,7 @@ class EventSubClient(web.Application):
         return await self._http.create_subscription(models.SubscriptionTypes.user_update, {"user_id": user})
 
     async def subscribe_channel_raid(
-        self,
-        from_broadcaster: Union[PartialUser, str, int] = None,
-        to_broadcaster: Union[PartialUser, str, int] = None,
+        self, from_broadcaster: Union[PartialUser, str, int] = None, to_broadcaster: Union[PartialUser, str, int] = None
     ):
         if (not from_broadcaster and not to_broadcaster) or (from_broadcaster and to_broadcaster):
             raise ValueError("Expected 1 of from_broadcaster or to_broadcaster")
@@ -99,9 +97,7 @@ class EventSubClient(web.Application):
         return await self._http.create_subscription(event, data)
 
     async def _subscribe_with_broadcaster(
-        self,
-        event: Tuple[str, int, Type[models._DataType]],
-        broadcaster: Union[PartialUser, str, int],
+        self, event: Tuple[str, int, Type[models._DataType]], broadcaster: Union[PartialUser, str, int]
     ):
         if isinstance(broadcaster, PartialUser):
             broadcaster = broadcaster.id
@@ -170,15 +166,12 @@ class EventSubClient(web.Application):
 
     def subscribe_channel_points_redeem_updated(self, broadcaster: Union[PartialUser, str, int], reward_id: str = None):
         return self._subscribe_channel_points_reward(
-            models.SubscriptionTypes.channel_reward_redeem_updated,
-            broadcaster,
-            reward_id,
+            models.SubscriptionTypes.channel_reward_redeem_updated, broadcaster, reward_id
         )
 
     async def subscribe_user_authorization_revoked(self):
         return await self._http.create_subscription(
-            models.SubscriptionTypes.user_authorization_revoke,
-            {"client_id": self.client._http.client_id},
+            models.SubscriptionTypes.user_authorization_revoke, {"client_id": self.client._http.client_id}
         )
 
     async def _callback(self, request: web.Request) -> web.Response:
@@ -197,8 +190,7 @@ class EventSubClient(web.Application):
 
         if typ == "notification":
             self.client.run_event(
-                f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}",
-                event,
+                f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}", event
             )
         elif typ == "revokation":
             self.client.run_event("eventsub_revokation", event)

@@ -138,26 +138,14 @@ class PubSubBitsMessage(PubSubMessage):
         The event version.
     """
 
-    __slots__ = (
-        "badge_entitlement",
-        "bits_used",
-        "channel_id",
-        "context",
-        "anonymous",
-        "message",
-        "user",
-        "version",
-    )
+    __slots__ = "badge_entitlement", "bits_used", "channel_id", "context", "anonymous", "message", "user", "version"
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
 
         self.message = PubSubChatMessage(data["chat_message"], data["message_id"], data["message_type"])
         self.badge_entitlement = (
-            PubSubBadgeEntitlement(
-                data["badge_entitlement"]["new_version"],
-                data["badge_entitlement"]["old_version"],
-            )
+            PubSubBadgeEntitlement(data["badge_entitlement"]["new_version"], data["badge_entitlement"]["old_version"])
             if data["badge_entitlement"]
             else None
         )
@@ -230,17 +218,12 @@ class PubSubChannelPointsMessage(PubSubMessage):
         redemption = data["message"]["data"]["redemption"]
 
         self.timestamp = datetime.datetime.strptime(
-            redemption["redeemed_at"][0:25] + redemption["redeemed_at"][28:],
-            "%Y-%m-%dT%H:%M:%S.%fZ",
+            redemption["redeemed_at"][0:25] + redemption["redeemed_at"][28:], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
         self.channel_id: int = int(redemption["channel_id"])
         self.id: str = redemption["id"]
         self.user = PartialUser(client._http, redemption["user"]["id"], redemption["user"]["display_name"])
-        self.reward = CustomReward(
-            client._http,
-            redemption["reward"],
-            PartialUser(client._http, self.channel_id, None),
-        )
+        self.reward = CustomReward(client._http, redemption["reward"], PartialUser(client._http, self.channel_id, None))
         self.input: Optional[str] = redemption.get("user_input")
         self.status: str = redemption["status"]
 
@@ -272,16 +255,12 @@ class PubSubModerationAction(PubSubMessage):
         self.action: str = data["message"]["data"]["moderation_action"]
         self.args: List[str] = data["message"]["data"]["args"]
         self.created_by = PartialUser(
-            client._http,
-            data["message"]["data"]["created_by_user_id"],
-            data["message"]["data"]["created_by"],
+            client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
         )
         self.message_id: str = data["message"]["data"]["msg_id"]
         self.target = (
             PartialUser(
-                client._http,
-                data["message"]["data"]["target_user_id"],
-                data["message"]["data"]["target_user_login"],
+                client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
             )
             if data["message"]["data"]["target_user_id"]
             else None
@@ -314,15 +293,11 @@ class PubSubModerationActionBanRequest(PubSubMessage):
         self.action: str = data["message"]["data"]["moderation_action"]
         self.args: List[str] = data["message"]["data"]["moderator_message"]
         self.created_by = PartialUser(
-            client._http,
-            data["message"]["data"]["created_by_id"],
-            data["message"]["data"]["created_by_login"],
+            client._http, data["message"]["data"]["created_by_id"], data["message"]["data"]["created_by_login"]
         )
         self.target = (
             PartialUser(
-                client._http,
-                data["message"]["data"]["target_user_id"],
-                data["message"]["data"]["target_user_login"],
+                client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
             )
             if data["message"]["data"]["target_user_id"]
             else None
@@ -348,16 +323,7 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
         The requester of this Term.
     """
 
-    __slots__ = (
-        "type",
-        "channel_id",
-        "id",
-        "text",
-        "requester",
-        "expires_at",
-        "updated_at",
-        "from_automod",
-    )
+    __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at", "from_automod"
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
@@ -366,9 +332,7 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
         self.id: str = data["message"]["data"]["id"]
         self.text: str = data["message"]["data"]["text"]
         self.requester = PartialUser(
-            client._http,
-            data["message"]["data"]["requester_id"],
-            data["message"]["data"]["requester_login"],
+            client._http, data["message"]["data"]["requester_id"], data["message"]["data"]["requester_login"]
         )
 
         self.expires_at = self.updated_at = None
@@ -408,14 +372,10 @@ class PubSubModerationActionModeratorAdd(PubSubMessage):
         self.channel_id = int(data["message"]["data"]["channel_id"])
         self.moderation_action: str = data["message"]["data"]["moderation_action"]
         self.target = PartialUser(
-            client._http,
-            data["message"]["data"]["target_user_id"],
-            data["message"]["data"]["target_user_login"],
+            client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
         )
         self.created_by = PartialUser(
-            client._http,
-            data["message"]["data"]["created_by_user_id"],
-            data["message"]["data"]["created_by"],
+            client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
         )
 
 

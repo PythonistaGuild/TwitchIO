@@ -357,11 +357,7 @@ class WSConnection:
             channel = Channel(name=parsed["channel"], websocket=self)
             self._cache_add(parsed)
             user = Chatter(
-                tags=parsed["badges"],
-                name=parsed["user"],
-                channel=channel,
-                bot=self._client,
-                websocket=self,
+                tags=parsed["badges"], name=parsed["user"], channel=channel, bot=self._client, websocket=self
             )
 
         message = Message(
@@ -380,12 +376,7 @@ class WSConnection:
 
         channel = Channel(name=parsed["channel"], websocket=self)
         message = Message(
-            raw_data=parsed["data"],
-            content=parsed["message"],
-            author=None,
-            channel=channel,
-            tags={},
-            echo=True,
+            raw_data=parsed["data"], content=parsed["message"], author=None, channel=channel, tags={}, echo=True
         )
 
         self.dispatch("message", message)
@@ -395,13 +386,7 @@ class WSConnection:
         self._cache_add(parsed)
 
         channel = Channel(name=parsed["channel"], websocket=self)
-        user = Chatter(
-            tags=parsed["badges"],
-            name=parsed["nick"],
-            channel=channel,
-            bot=self._client,
-            websocket=self,
-        )
+        user = Chatter(tags=parsed["badges"], name=parsed["nick"], channel=channel, bot=self._client, websocket=self)
 
         self.dispatch("userstate", user)
 
@@ -425,13 +410,7 @@ class WSConnection:
             self._cache_add(parsed)
 
         channel = Channel(name=channel, websocket=self)
-        user = Chatter(
-            name=parsed["user"],
-            bot=self._client,
-            websocket=self,
-            channel=channel,
-            tags=parsed["badges"],
-        )
+        user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
 
         self.dispatch("join", channel, user)
 
@@ -449,11 +428,7 @@ class WSConnection:
                 self._cache[channel].add(user)
         else:
             user = Chatter(
-                bot=self._client,
-                name=parsed["nick"],
-                websocket=self,
-                channel=channel_,
-                tags=parsed["badges"],
+                bot=self._client, name=parsed["nick"], websocket=self, channel=channel_, tags=parsed["badges"]
             )
             self._cache[channel].discard(user)
             self._cache[channel].add(user)

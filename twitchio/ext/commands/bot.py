@@ -48,10 +48,7 @@ class Bot(Client):
         **kwargs,
     ):
         super().__init__(
-            token=token,
-            client_secret=client_secret,
-            initial_channels=initial_channels,
-            heartbeat=heartbeat,
+            token=token, client_secret=client_secret, initial_channels=initial_channels, heartbeat=heartbeat
         )
 
         self._prefix = prefix
@@ -242,27 +239,13 @@ class Bot(Client):
         if command_ in self.commands:
             command_ = self.commands[command_]
         else:
-            context = cls(
-                message=message,
-                bot=self,
-                prefix=prefix,
-                command=None,
-                valid=False,
-                view=view,
-            )
+            context = cls(message=message, bot=self, prefix=prefix, command=None, valid=False, view=view)
             error = CommandNotFound(f'No command "{command_}" was found.')
 
             self.run_event("command_error", context, error)
             return context
 
-        context = cls(
-            message=message,
-            bot=self,
-            prefix=prefix,
-            command=command_,
-            valid=True,
-            view=view,
-        )
+        context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True, view=view)
 
         return context
 
@@ -488,12 +471,7 @@ class Bot(Client):
         await self.handle_commands(message)
 
     def command(
-        self,
-        *,
-        name: str = None,
-        aliases: Union[list, tuple] = None,
-        cls=Command,
-        no_global_checks=False,
+        self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
     ) -> Callable[[Callable], Command]:
         """Decorator which registers a command with the bot.
 
@@ -522,13 +500,7 @@ class Bot(Client):
         def decorator(func: Callable):
             cmd_name = name or func.__name__
 
-            cmd = cls(
-                name=cmd_name,
-                func=func,
-                aliases=aliases,
-                instance=None,
-                no_global_checks=no_global_checks,
-            )
+            cmd = cls(name=cmd_name, func=func, aliases=aliases, instance=None, no_global_checks=no_global_checks)
             self.add_command(cmd)
 
             return cmd
@@ -536,12 +508,7 @@ class Bot(Client):
         return decorator
 
     def group(
-        self,
-        *,
-        name: str = None,
-        aliases: Union[list, tuple] = None,
-        cls=Group,
-        no_global_checks=False,
+        self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Group, no_global_checks=False
     ) -> Callable[[Callable], Group]:
         if not inspect.isclass(cls):
             raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
@@ -549,13 +516,7 @@ class Bot(Client):
         def decorator(func: Callable):
             cmd_name = name or func.__name__
 
-            cmd = cls(
-                name=cmd_name,
-                func=func,
-                aliases=aliases,
-                instance=None,
-                no_global_checks=no_global_checks,
-            )
+            cmd = cls(name=cmd_name, func=func, aliases=aliases, instance=None, no_global_checks=no_global_checks)
             self.add_command(cmd)
 
             return cmd

@@ -50,13 +50,7 @@ class PartialUser:
 
     __slots__ = "id", "name", "login", "_http", "_cached_rewards"
 
-    def __init__(
-        self,
-        http: "TwitchHTTP",
-        id: Union[int, str],
-        name: Optional[str],
-        login: Optional[str],
-    ):
+    def __init__(self, http: "TwitchHTTP", id: Union[int, str], name: Optional[str], login: Optional[str]):
         self.id = int(id)
         self.name = name
         self.login = login
@@ -184,11 +178,7 @@ class PartialUser:
             return values
 
     async def fetch_bits_leaderboard(
-        self,
-        token: str,
-        period: str = "all",
-        user_id: int = None,
-        started_at: datetime.datetime = None,
+        self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
     ) -> "BitsLeaderboard":
         """|coro|
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
@@ -621,17 +611,7 @@ class UserBan(PartialUser):
 
 class SearchUser(PartialUser):
 
-    __slots__ = (
-        "game_id",
-        "name",
-        "display_name",
-        "language",
-        "title",
-        "thumbnail_url",
-        "live",
-        "started_at",
-        "tag_ids",
-    )
+    __slots__ = "game_id", "name", "display_name", "language", "title", "thumbnail_url", "live", "started_at", "tag_ids"
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
@@ -642,7 +622,7 @@ class SearchUser(PartialUser):
         self.title: str = data["title"]
         self.thumbnail_url: str = data["thumbnail_url"]
         self.live: bool = data["is_live"]
-        self.started_at = datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
+        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data["tag_ids"]
 
 

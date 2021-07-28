@@ -83,11 +83,7 @@ class Client:
 
         self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret)
         self._connection = WSConnection(
-            client=self,
-            token=token,
-            loop=self.loop,
-            initial_channels=initial_channels,
-            heartbeat=heartbeat,
+            client=self, token=token, loop=self.loop, initial_channels=initial_channels, heartbeat=heartbeat
         )
 
         self._events = {}
@@ -131,10 +127,7 @@ class Client:
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
         self._heartbeat = heartbeat
         self._connection = WSConnection(
-            client=self,
-            loop=self.loop,
-            initial_channels=None,
-            heartbeat=self._heartbeat,
+            client=self, loop=self.loop, initial_channels=None, heartbeat=self._heartbeat
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
@@ -199,10 +192,7 @@ class Client:
             if inspect.iscoroutinefunction(inner_cb):
                 self.loop.create_task(wrapped(inner_cb))
             else:
-                warnings.warn(
-                    f"event '{name}' callback is not a coroutine",
-                    category=RuntimeWarning,
-                )
+                warnings.warn(f"event '{name}' callback is not a coroutine", category=RuntimeWarning)
 
         if name in self._events:
             for event in self._events[name]:
@@ -249,11 +239,7 @@ class Client:
         return decorator
 
     async def wait_for(
-        self,
-        event: str,
-        predicate: Callable[[], bool] = lambda *a: True,
-        *,
-        timeout=60.0,
+        self, event: str, predicate: Callable[[], bool] = lambda *a: True, *, timeout=60.0
     ) -> Tuple[Any]:
         """|coro|
 
@@ -348,11 +334,7 @@ class Client:
 
     @user_cache()
     async def fetch_users(
-        self,
-        names: List[str] = None,
-        ids: List[int] = None,
-        token: str = None,
-        force=False,
+        self, names: List[str] = None, ids: List[int] = None, token: str = None, force=False
     ) -> List[User]:
         """|coro|
         Fetches users from the helix API
@@ -437,13 +419,7 @@ class Client:
         from .models import Video
 
         data = await self._http.get_videos(
-            ids,
-            user_id=user_id,
-            game_id=game_id,
-            period=period,
-            sort=sort,
-            type=type,
-            language=language,
+            ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type, language=language
         )
         return [Video(self._http, x) for x in data]
 

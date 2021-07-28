@@ -88,13 +88,7 @@ class TwitchHTTP:
     TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
     def __init__(
-        self,
-        client: "Client",
-        *,
-        api_token: str = None,
-        client_secret: str = None,
-        client_id: str = None,
-        **kwargs,
+        self, client: "Client", *, api_token: str = None, client_secret: str = None, client_id: str = None, **kwargs
     ):
         self.client = client
         self.session = None
@@ -254,12 +248,7 @@ class TwitchHTTP:
                         await asyncio.sleep(3 ** attempt + 1)
                     continue
 
-                print(resp.reason, await resp.json(), resp)
-                raise errors.HTTPException(
-                    f"Failed to fulfil request ({resp.status}).",
-                    resp.reason,
-                    resp.status,
-                )
+                raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).", resp.reason, resp.status)
 
         raise errors.HTTPException("Failed to reach Twitch API", reason, resp.status)
 
@@ -331,10 +320,7 @@ class TwitchHTTP:
         assert length in (30, 60, 90, 120, 150, 180)
         data = await self.request(
             Route(
-                "POST",
-                "channels/commercial",
-                body={"broadcaster_id": broadcaster_id, "length": length},
-                token=token,
+                "POST", "channels/commercial", body={"broadcaster_id": broadcaster_id, "length": length}, token=token
             ),
             paginate=False,
         )
@@ -363,11 +349,7 @@ class TwitchHTTP:
         raise NotImplementedError  # TODO
 
     async def get_bits_board(
-        self,
-        token: str,
-        period: str = "all",
-        user_id: str = None,
-        started_at: datetime.datetime = None,
+        self, token: str, period: str = "all", user_id: str = None, started_at: datetime.datetime = None
     ):
         assert period in ("all", "day", "week", "month", "year")
         route = Route(
@@ -433,27 +415,10 @@ class TwitchHTTP:
             data["global_cooldown_seconds"] = global_cooldown
             data["is_global_cooldown_enabled"] = True
 
-        return await self.request(
-            Route(
-                "POST",
-                "channel_points/custom_rewards",
-                query=params,
-                body=data,
-                token=token,
-            )
-        )
+        return await self.request(Route("POST", "channel_points/custom_rewards", query=params, body=data, token=token))
 
-    async def get_rewards(
-        self,
-        token: str,
-        broadcaster_id: int,
-        only_manageable: bool = False,
-        ids: List[int] = None,
-    ):
-        params = [
-            ("broadcaster_id", str(broadcaster_id)),
-            ("only_manageable_rewards", str(only_manageable)),
-        ]
+    async def get_rewards(self, token: str, broadcaster_id: int, only_manageable: bool = False, ids: List[int] = None):
+        params = [("broadcaster_id", str(broadcaster_id)), ("only_manageable_rewards", str(only_manageable))]
 
         if ids:
             for id in ids:
@@ -538,28 +503,12 @@ class TwitchHTTP:
         if sort:
             params.append(("sort", sort))
 
-        return await self.request(
-            Route(
-                "GET",
-                "channel_points/custom_rewards/redemptions",
-                query=params,
-                token=token,
-            )
-        )
+        return await self.request(Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token))
 
     async def update_reward_redemption_status(
-        self,
-        token: str,
-        broadcaster_id: int,
-        reward_id: str,
-        custom_reward_id: str,
-        status: bool,
+        self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool
     ):
-        params = [
-            ("id", custom_reward_id),
-            ("broadcaster_id", str(broadcaster_id)),
-            ("reward_id", reward_id),
-        ]
+        params = [("id", custom_reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
         status = "FULFILLED" if status else "CANCELLED"
         return await self.request(
             Route(
@@ -573,12 +522,7 @@ class TwitchHTTP:
 
     async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
         return await self.request(
-            Route(
-                "POST",
-                "clips",
-                query=[("broadcaster_id", broadcaster_id), ("has_delay", has_delay)],
-                token=token,
-            ),
+            Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", has_delay)], token=token),
             paginate=False,
         )
 
@@ -606,20 +550,12 @@ class TwitchHTTP:
 
     async def post_entitlements_upload(self, manifest_id: str, type="bulk_drops_grant"):
         return await self.request(
-            Route(
-                "POST",
-                "entitlements/upload",
-                query=[("manifest_id", manifest_id), ("type", type)],
-            )
+            Route("POST", "entitlements/upload", query=[("manifest_id", manifest_id), ("type", type)])
         )
 
     async def get_entitlements(self, id: str = None, user_id: str = None, game_id: str = None):
         return await self.request(
-            Route(
-                "GET",
-                "entitlements/drops",
-                query=[("id", id), ("user_id", user_id), ("game_id", game_id)],
-            )
+            Route("GET", "entitlements/drops", query=[("id", id), ("user_id", user_id), ("game_id", game_id)])
         )
 
     async def get_code_status(self, codes: List[str], user_id: int):
@@ -708,23 +644,12 @@ class TwitchHTTP:
 
     async def get_search_channels(self, query: str, token: str = None, live: bool = False):
         return await self.request(
-            Route(
-                "GET",
-                "search/channels",
-                query=[("query", query), ("live_only", str(live))],
-                token=token,
-            )
+            Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
         )
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
         return await self.request(
-            Route(
-                "GET",
-                "streams/key",
-                query=[("broadcaster_id", broadcaster_id)],
-                token=token,
-            ),
-            paginate=False,
+            Route("GET", "streams/key", query=[("broadcaster_id", broadcaster_id)], token=token), paginate=False
         )
 
     async def get_streams(
@@ -756,12 +681,7 @@ class TwitchHTTP:
 
     async def post_stream_marker(self, token: str, user_id: str, description: str = None):
         return await self.request(
-            Route(
-                "POST",
-                "streams/markers",
-                body={"user_id": user_id, "description": description},
-                token=token,
-            )
+            Route("POST", "streams/markers", body={"user_id": user_id, "description": description}, token=token)
         )
 
     async def get_stream_markers(self, token: str, user_id: str = None, video_id: str = None):
@@ -775,42 +695,20 @@ class TwitchHTTP:
         )
 
     async def get_channels(self, broadcaster_id: str, token: str = None):
-        return await self.request(
-            Route(
-                "GET",
-                "channels",
-                query=[("broadcaster_id", broadcaster_id)],
-                token=token,
-            )
-        )
+        return await self.request(Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token))
 
     async def patch_channel(
-        self,
-        token: str,
-        broadcaster_id: str,
-        game_id: str = None,
-        language: str = None,
-        title: str = None,
+        self, token: str, broadcaster_id: str, game_id: str = None, language: str = None, title: str = None
     ):
         assert any((game_id, language, title))
         body = {
             k: v
-            for k, v in {
-                "game_id": game_id,
-                "broadcaster_language": language,
-                "title": title,
-            }.items()
+            for k, v in {"game_id": game_id, "broadcaster_language": language, "title": title}.items()
             if v is not None
         }
 
         return await self.request(
-            Route(
-                "PATCH",
-                "channels",
-                query=[("broadcaster_id", broadcaster_id)],
-                body=body,
-                token=token,
-            )
+            Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body, token=token)
         )
 
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
@@ -848,23 +746,14 @@ class TwitchHTTP:
             Route(
                 "POST",
                 "users/follows",
-                query=[
-                    ("from_id", from_id),
-                    ("to_id", to_id),
-                    ("allow_notifications", str(notifications)),
-                ],
+                query=[("from_id", from_id), ("to_id", to_id), ("allow_notifications", str(notifications))],
                 token=token,
             )
         )
 
     async def delete_unfollow_channel(self, token: str, from_id: str, to_id: str):
         return await self.request(
-            Route(
-                "DELETE",
-                "users/follows",
-                query=[("from_id", from_id), ("to_id", to_id)],
-                token=token,
-            )
+            Route("DELETE", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token)
         )
 
     async def get_users(self, ids: List[int], logins: List[str], token: str = None):
@@ -907,9 +796,7 @@ class TwitchHTTP:
     async def put_user_extensions(self, token: str, data: Dict[str, Any]):
         return (
             await self.request(
-                Route("PUT", "users/extensions", token=token, body={"data": data}),
-                paginate=False,
-                full_body=True,
+                Route("PUT", "users/extensions", token=token, body={"data": data}), paginate=False, full_body=True
             )
         )["data"]
 
@@ -946,13 +833,9 @@ class TwitchHTTP:
     async def delete_videos(self, token: str, ids: List[int]):
         q = [("id", str(x)) for x in ids]
 
-        return (
-            await self.request(
-                Route("DELETE", "videos", query=q, token=token),
-                paginate=False,
-                full_body=True,
-            )
-        )["data"]
+        return (await self.request(Route("DELETE", "videos", query=q, token=token), paginate=False, full_body=True))[
+            "data"
+        ]
 
     async def get_webhook_subs(self):
         return await self.request(Route("GET", "webhooks/subscriptions"))
