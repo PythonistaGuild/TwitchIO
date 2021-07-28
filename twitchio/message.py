@@ -33,7 +33,15 @@ if TYPE_CHECKING:
 
 class Message:
 
-    __slots__ = ("_raw_data", "content", "_author", "echo", "_timestamp", "_channel", "_tags")
+    __slots__ = (
+        "_raw_data",
+        "content",
+        "_author",
+        "echo",
+        "_timestamp",
+        "_channel",
+        "_tags",
+    )
 
     def __init__(self, **kwargs):
         self._raw_data = kwargs.get("raw_data")

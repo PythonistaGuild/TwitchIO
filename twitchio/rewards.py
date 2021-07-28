@@ -242,7 +242,17 @@ class CustomReward:
 
 class CustomRewardRedemption:
 
-    __slots__ = "_http", "_broadcaster_id", "id", "user_id", "user_name", "input", "status", "redeemed_at", "reward"
+    __slots__ = (
+        "_http",
+        "_broadcaster_id",
+        "id",
+        "user_id",
+        "user_name",
+        "input",
+        "status",
+        "redeemed_at",
+        "reward",
+    )
 
     def __init__(self, obj: dict, http: "TwitchHTTP", parent: Optional[CustomReward]):
         self._http = http
@@ -286,7 +296,11 @@ class CustomRewardRedemption:
                 ) from error
             raise
         else:
-            self.__init__(data["data"], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
+            self.__init__(
+                data["data"],
+                self._http,
+                self.reward if isinstance(self.reward, CustomReward) else None,
+            )
             return self
 
     async def refund(self, token: str):
@@ -320,5 +334,9 @@ class CustomRewardRedemption:
                 ) from error
             raise
         else:
-            self.__init__(data["data"], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
+            self.__init__(
+                data["data"],
+                self._http,
+                self.reward if isinstance(self.reward, CustomReward) else None,
+            )
             return self

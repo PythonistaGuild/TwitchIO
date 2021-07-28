@@ -119,7 +119,10 @@ class PubSubWebsocket:
     async def _send_topics(self, topics: List[Topic], type="LISTEN"):
         for tok, _topics in groupby(topics, key=lambda val: val.token):
             nonce = ("%032x" % uuid.uuid4().int)[:8]
-            payload = {"type": type, "data": {"topics": [x.present for x in _topics], "auth_token": tok}}
+            payload = {
+                "type": type,
+                "data": {"topics": [x.present for x in _topics], "auth_token": tok},
+            }
             logger.debug(f"Sending {type} payload with nonce '{nonce}': {payload}")
             await self.send(payload)
 

@@ -20,7 +20,11 @@ class EventSubHTTP:
             "type": event_type[0],
             "version": str(event_type[1]),
             "condition": condition,
-            "transport": {"method": "webhook", "callback": self._client.route, "secret": self._client.secret},
+            "transport": {
+                "method": "webhook",
+                "callback": self._client.route,
+                "secret": self._client.secret,
+            },
         }
         route = Route("POST", "eventsub/subscriptions", body=payload)
         return await self._http.request(route, paginate=False)
@@ -28,10 +32,12 @@ class EventSubHTTP:
     async def delete_subscription(self, substription: Union[str, "Subscription"]):
         if isinstance(substription, models.Subscription):
             return await self._http.request(
-                Route("DELETE", "eventsub/subscriptions", query=[("id", substription.id)]), paginate=False
+                Route("DELETE", "eventsub/subscriptions", query=[("id", substription.id)]),
+                paginate=False,
             )
         return await self._http.request(
-            Route("DELETE", "eventsub/subscriptions", query=[("id", substription)]), paginate=False
+            Route("DELETE", "eventsub/subscriptions", query=[("id", substription)]),
+            paginate=False,
         )
 
     async def get_subscriptions(self, status: str = None):
@@ -49,7 +55,11 @@ class EventSubHTTP:
         if status:
             qs.append(("status", status))
 
-        v = await self._http.request(Route("GET", "eventsub/subscriptions", query=qs), paginate=False, full_body=True)
+        v = await self._http.request(
+            Route("GET", "eventsub/subscriptions", query=qs),
+            paginate=False,
+            full_body=True,
+        )
         del v["data"]
         del v["pagination"]
         return v

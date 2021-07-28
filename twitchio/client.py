@@ -83,7 +83,11 @@ class Client:
 
         self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret)
         self._connection = WSConnection(
-            client=self, token=token, loop=self.loop, initial_channels=initial_channels, heartbeat=heartbeat
+            client=self,
+            token=token,
+            loop=self.loop,
+            initial_channels=initial_channels,
+            heartbeat=heartbeat,
         )
 
         self._events = {}
@@ -91,7 +95,12 @@ class Client:
 
     @classmethod
     def from_client_credentials(
-        cls, client_id: str, client_secret: str, *, loop: asyncio.AbstractEventLoop = None
+        cls,
+        client_id: str,
+        client_secret: str,
+        *,
+        loop: asyncio.AbstractEventLoop = None,
+        heartbeat: Optional[float] = 30.0,
     ) -> "Client":
         """
         creates a client application token from your client credentials.
@@ -120,8 +129,12 @@ class Client:
         self = cls.__new__(cls)
         self.loop = loop or asyncio.get_event_loop()
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
+        self._heartbeat = heartbeat
         self._connection = WSConnection(
-            client=self, loop=self.loop, initial_channels=None, heartbeat=self._heartbeat
+            client=self,
+            loop=self.loop,
+            initial_channels=None,
+            heartbeat=self._heartbeat,
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
@@ -186,7 +199,10 @@ class Client:
             if inspect.iscoroutinefunction(inner_cb):
                 self.loop.create_task(wrapped(inner_cb))
             else:
-                warnings.warn(f"event '{name}' callback is not a coroutine", category=RuntimeWarning)
+                warnings.warn(
+                    f"event '{name}' callback is not a coroutine",
+                    category=RuntimeWarning,
+                )
 
         if name in self._events:
             for event in self._events[name]:
@@ -233,7 +249,11 @@ class Client:
         return decorator
 
     async def wait_for(
-        self, event: str, predicate: Callable[[], bool] = lambda *a: True, *, timeout=60.0
+        self,
+        event: str,
+        predicate: Callable[[], bool] = lambda *a: True,
+        *,
+        timeout=60.0,
     ) -> Tuple[Any]:
         """|coro|
 
@@ -328,7 +348,11 @@ class Client:
 
     @user_cache()
     async def fetch_users(
-        self, names: List[str] = None, ids: List[int] = None, token: str = None, force=False
+        self,
+        names: List[str] = None,
+        ids: List[int] = None,
+        token: str = None,
+        force=False,
     ) -> List[User]:
         """|coro|
         Fetches users from the helix API
@@ -413,7 +437,13 @@ class Client:
         from .models import Video
 
         data = await self._http.get_videos(
-            ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type, language=language
+            ids,
+            user_id=user_id,
+            game_id=game_id,
+            period=period,
+            sort=sort,
+            type=type,
+            language=language,
         )
         return [Video(self._http, x) for x in data]
 
@@ -479,6 +509,51 @@ class Client:
         """
         data = await self._http.get_stream_tags(ids)
         return [models.Tag(x) for x in data]
+
+    async def fetch_streams(
+        self,
+        user_ids: List[str] = None,
+        game_ids: List[str] = None,
+        user_logins: List[str] = None,
+        languages: List[str] = None,
+        token: str = None,
+    ):
+        """|coro|
+        Fetches live streams from the helix API
+
+        Parameters
+        -----------
+        user_ids: Optional[List[:class:`str`]]
+            user ids of people whose streams to fetch
+        game_ids: Optional[List[:class:`str`]]
+            game ids of streams to fetch
+        user_logins: Optional[List[:class:`str`]]
+            user login names of people whose streams to fetch
+        languages: Optional[List:class:`str]]
+            language for the stream(s). ISO 639-1 or two letter code for supported stream language
+        token: Optional[:class:`str`]
+            An optional OAuth token to use instead of the bot OAuth token
+        force: :class:`bool`
+            whether to force a fetch from the api, or check the cache first. Defaults to False
+
+        Returns
+        --------
+        List[:class:`twitchio.Stream`]
+        """
+        from .models import Stream
+
+        # the forced argument doesnt actually get used here, it gets used by the cache wrapper.
+        # But we'll include it in the args here so that sphinx catches it
+        assert user_ids or game_ids or user_logins
+        data = await self._http.get_streams(
+            game_ids=game_ids,
+            user_ids=user_ids,
+            user_logins=user_logins,
+            languages=languages,
+            token=token,
+        )
+        print(data)
+        return [Stream(self._http, x) for x in data]
 
     async def search_categories(self, query: str):
         """|coro|

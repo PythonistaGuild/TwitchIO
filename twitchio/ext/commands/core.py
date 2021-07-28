@@ -313,14 +313,25 @@ class Group(Command):
             await self.invoke(context, index=index)
 
     def command(
-        self, *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
+        self,
+        *,
+        name: str = None,
+        aliases: Union[list, tuple] = None,
+        cls=Command,
+        no_global_checks=False,
     ) -> Callable[[Callable], Command]:
         if cls and not inspect.isclass(cls):
             raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
         def decorator(func: Callable):
             fname = name or func.__name__
-            cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks, parent=self)
+            cmd = cls(
+                name=fname,
+                func=func,
+                aliases=aliases,
+                no_global_checks=no_global_checks,
+                parent=self,
+            )
             self._sub_commands[cmd.name] = cmd
             if cmd.aliases:
                 for a in cmd.aliases:
@@ -450,7 +461,11 @@ class Context(Messageable):
 
 
 def command(
-    *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
+    *,
+    name: str = None,
+    aliases: Union[list, tuple] = None,
+    cls=Command,
+    no_global_checks=False,
 ) -> Callable[[Callable], Command]:
     if cls and not inspect.isclass(cls):
         raise TypeError(f"cls must be of type <class> not <{type(cls)}>")

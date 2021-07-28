@@ -130,7 +130,11 @@ class Channel(Messageable):
         return (await self._ws._client.fetch_users(login=[self._name], force=force))[0]
 
     async def fetch_bits_leaderboard(
-        self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
+        self,
+        token: str,
+        period: str = "all",
+        user_id: int = None,
+        started_at: datetime.datetime = None,
     ) -> BitsLeaderboard:
         """|coro|
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.

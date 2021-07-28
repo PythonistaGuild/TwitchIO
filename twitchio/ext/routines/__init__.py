@@ -288,7 +288,10 @@ class Routine:
             if self._time:
                 sleep = self._time + datetime.timedelta(hours=24)
             else:
-                sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
+                sleep = max(
+                    (start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta,
+                    0,
+                )
 
             self._completed_loops += 1
             await asyncio.sleep(sleep)
@@ -366,6 +369,12 @@ def routine(
         if not asyncio.iscoroutinefunction(coro):
             raise TypeError(f"Expected coroutine function not type, {type(coro).__name__!r}.")
 
-        return Routine(coro=coro, time=time_, delta=delta, iterations=iterations, wait_first=wait_first)
+        return Routine(
+            coro=coro,
+            time=time_,
+            delta=delta,
+            iterations=iterations,
+            wait_first=wait_first,
+        )
 
     return decorator

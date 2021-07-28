@@ -102,7 +102,15 @@ class CheerEmoteTier:
 
 class CheerEmote:
 
-    __slots__ = "_http", "prefix", "tiers", "type", "order", "last_updated", "charitable"
+    __slots__ = (
+        "_http",
+        "prefix",
+        "tiers",
+        "type",
+        "order",
+        "last_updated",
+        "charitable",
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
@@ -207,15 +215,30 @@ class HypeTrainEvent:
 
 class BanEvent:
 
-    __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at"
+    __slots__ = (
+        "id",
+        "type",
+        "timestamp",
+        "version",
+        "broadcaster",
+        "user",
+        "expires_at",
+    )
 
-    def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Optional[Union[PartialUser, User]]):
+    def __init__(
+        self,
+        http: "TwitchHTTP",
+        data: dict,
+        broadcaster: Optional[Union[PartialUser, User]],
+    ):
         self.id: str = data["id"]
         self.type: str = data["event_type"]
         self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
         self.version: float = float(data["version"])
         self.broadcaster = broadcaster or PartialUser(
-            http, data["event_data"]["broadcaster_id"], data["event_data"]["broadcaster_name"]
+            http,
+            data["event_data"]["broadcaster_id"],
+            data["event_data"]["broadcaster_name"],
         )
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
         self.expires_at = (
@@ -441,7 +464,10 @@ class ExtensionBuilder:
     __slots__ = "panels", "overlays", "components"
 
     def __init__(
-        self, panels: List[Extension] = None, overlays: List[Extension] = None, components: List[Extension] = None
+        self,
+        panels: List[Extension] = None,
+        overlays: List[Extension] = None,
+        components: List[Extension] = None,
     ):
         self.panels = panels or []
         self.overlays = overlays or []
@@ -530,3 +556,38 @@ class WebhookSubscription:
 
     def __repr__(self):
         return f"<WebhookSubscription callback={self.callback} topic={self.topic} expires_at={self.expires_at}>"
+
+
+class Stream:
+
+    __slots__ = (
+        "id",
+        "user",
+        "game_id",
+        "game_name",
+        "type",
+        "title",
+        "viewer_count",
+        "started_at",
+        "language",
+        "thumbnail_url",
+        "tag_ids",
+        "is_mature",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.id: str = (data["id"],)
+        self.user = PartialUser(http, data["user_id"], data["user_name"], data["user_login"])
+        self.game_id: str = (data["game_id"],)
+        self.game_name: str = (data["game_name"],)
+        self.type: str = (data["type"],)
+        self.title: str = (data["title"],)
+        self.viewer_count: int = (data["viewer_count"],)
+        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.language: str = (data["language"],)
+        self.thumbnail_url: str = (data["thumbnail_url"],)
+        self.tag_ids: List[str] = (data["tag_ids"],)
+        self.is_mature: bool = data["is_mature"]
+
+    def __repr__(self):
+        return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
