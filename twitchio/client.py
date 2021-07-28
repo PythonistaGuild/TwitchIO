@@ -486,8 +486,8 @@ class Client:
 
     async def fetch_streams(
         self,
-        user_ids: List[str] = None,
-        game_ids: List[str] = None,
+        user_ids: List[int] = None,
+        game_ids: List[int] = None,
         user_logins: List[str] = None,
         languages: List[str] = None,
         token: str = None,
@@ -497,9 +497,9 @@ class Client:
 
         Parameters
         -----------
-        user_ids: Optional[List[:class:`str`]]
+        user_ids: Optional[List[:class:`int`]]
             user ids of people whose streams to fetch
-        game_ids: Optional[List[:class:`str`]]
+        game_ids: Optional[List[:class:`int`]]
             game ids of streams to fetch
         user_logins: Optional[List[:class:`str`]]
             user login names of people whose streams to fetch
