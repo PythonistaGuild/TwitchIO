@@ -95,6 +95,29 @@ class Routine:
 
         self._stop_on_error = True
 
+        self._instance = None
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+
+        copy = Routine(
+            coro=self._coro,
+            loop=self._loop,
+            iterations=self._iterations,
+            time=self._time,
+            delta=self._delta,
+            wait_first=self._wait_first,
+        )
+
+        copy._instance = instance
+        copy._before = self._before
+        copy._after = self._after
+        copy._error = self._error
+        setattr(instance, self._coro.__name__, copy)
+
+        return copy
+
     def start(self, *args, **kwargs) -> asyncio.Task:
         """Start the routine and return the created task.
 
@@ -248,7 +271,10 @@ class Routine:
 
         try:
             if self._before:
-                await self._before()
+                if self._instance:
+                    await self._before(self._instance)
+                else:
+                    await self._before()
         except Exception as e:
             await self._error(e)
 
@@ -266,7 +292,10 @@ class Routine:
             start = datetime.datetime.now(datetime.timezone.utc)
 
             try:
-                await self._coro(*args, **kwargs)
+                if self._instance:
+                    await self._coro(self._instance, *args, **kwargs)
+                else:
+                    await self._coro(*args, **kwargs)
             except Exception as e:
                 await self._error(e)
 
@@ -295,7 +324,10 @@ class Routine:
 
         try:
             if self._after:
-                await self._after()
+                if self._instance:
+                    await self._after(self._instance)
+                else:
+                    await self._after()
         except Exception as e:
             await self._error(e)
         finally:
