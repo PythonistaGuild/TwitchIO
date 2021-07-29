@@ -91,7 +91,11 @@ class Client:
 
     @classmethod
     def from_client_credentials(
-        cls, client_id: str, client_secret: str, *, loop: asyncio.AbstractEventLoop = None
+        cls,
+        client_id: str,
+        client_secret: str,
+        *,
+        loop: asyncio.AbstractEventLoop = None,
     ) -> "Client":
         """
         creates a client application token from your client credentials.
@@ -121,7 +125,7 @@ class Client:
         self.loop = loop or asyncio.get_event_loop()
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
         self._connection = WSConnection(
-            client=self, loop=self.loop, initial_channels=None, heartbeat=self._heartbeat
+            client=self, loop=self.loop, initial_channels=None
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
@@ -479,6 +483,46 @@ class Client:
         """
         data = await self._http.get_stream_tags(ids)
         return [models.Tag(x) for x in data]
+
+    async def fetch_streams(
+        self,
+        user_ids: List[int] = None,
+        game_ids: List[int] = None,
+        user_logins: List[str] = None,
+        languages: List[str] = None,
+        token: str = None,
+    ):
+        """|coro|
+        Fetches live streams from the helix API
+
+        Parameters
+        -----------
+        user_ids: Optional[List[:class:`int`]]
+            user ids of people whose streams to fetch
+        game_ids: Optional[List[:class:`int`]]
+            game ids of streams to fetch
+        user_logins: Optional[List[:class:`str`]]
+            user login names of people whose streams to fetch
+        languages: Optional[List:class:`str]]
+            language for the stream(s). ISO 639-1 or two letter code for supported stream language
+        token: Optional[:class:`str`]
+            An optional OAuth token to use instead of the bot OAuth token
+
+        Returns
+        --------
+        List[:class:`twitchio.Stream`]
+        """
+        from .models import Stream
+
+        assert user_ids or game_ids or user_logins
+        data = await self._http.get_streams(
+            game_ids=game_ids,
+            user_ids=user_ids,
+            user_logins=user_logins,
+            languages=languages,
+            token=token,
+        )
+        return [Stream(self._http, x) for x in data]
 
     async def search_categories(self, query: str):
         """|coro|

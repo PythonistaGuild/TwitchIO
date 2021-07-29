@@ -530,3 +530,38 @@ class WebhookSubscription:
 
     def __repr__(self):
         return f"<WebhookSubscription callback={self.callback} topic={self.topic} expires_at={self.expires_at}>"
+
+
+class Stream:
+
+    __slots__ = (
+        "id",
+        "user",
+        "game_id",
+        "game_name",
+        "type",
+        "title",
+        "viewer_count",
+        "started_at",
+        "language",
+        "thumbnail_url",
+        "tag_ids",
+        "is_mature",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.id: int = data["id"]
+        self.user = PartialUser(http, data["user_id"], data["user_name"], data["user_login"])
+        self.game_id: int = data["game_id"]
+        self.game_name: str = data["game_name"]
+        self.type: str = data["type"]
+        self.title: str = data["title"]
+        self.viewer_count: int = data["viewer_count"]
+        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.language: str = data["language"]
+        self.thumbnail_url: str = data["thumbnail_url"]
+        self.tag_ids: List[str] = data["tag_ids"]
+        self.is_mature: bool = data["is_mature"]
+
+    def __repr__(self):
+        return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
