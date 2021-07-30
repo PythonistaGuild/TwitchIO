@@ -551,7 +551,7 @@ class Stream:
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.id: int = data["id"]
-        self.user = PartialUser(http, data["user_id"], data["user_name"], data["user_login"])
+        self.user = PartialUser(http, data["user_id"], data["user_name"])
         self.game_id: int = data["game_id"]
         self.game_name: str = data["game_name"]
         self.type: str = data["type"]
