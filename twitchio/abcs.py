@@ -42,11 +42,7 @@ class IRCLimiterMapping:
 
         if bucket.method != method:
             bucket.method = method
-            if method == "mod":
-                bucket.limit = bucket.MODLIMIT
-            else:
-                bucket.limit = bucket.IRCLIMIT
-
+            bucket.limit = bucket.MODLIMIT if method == "mod" else bucket.IRCLIMIT
             self.buckets[channel] = bucket
 
         return bucket
