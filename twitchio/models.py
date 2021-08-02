@@ -280,7 +280,7 @@ class Marker:
         self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
         self.description: str = data["description"]
         self.position: int = data["position_seconds"]
-        self.url: Optional[str] = data.get("URL", None)
+        self.url: Optional[str] = data.get("URL")
 
     def __repr__(self):
         return f"<Marker id={self.id} created_at={self.created_at} position={self.position} url={self.url}>"
