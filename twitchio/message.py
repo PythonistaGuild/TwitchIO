@@ -80,5 +80,4 @@ class Message:
         timestamp:
             UTC datetime object of the Twitch timestamp.
         """
-        timestamp = datetime.datetime.utcfromtimestamp(int(self._timestamp) / 1000)
-        return timestamp
+        return datetime.datetime.utcfromtimestamp(int(self._timestamp) / 1000)
