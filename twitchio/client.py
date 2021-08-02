@@ -322,7 +322,7 @@ class Client:
         """
 
         if not broadcaster.isdigit():
-            get_id : User = await self.fetch_users(names=[broadcaster.lower()])
+            get_id: User = await self.fetch_users(names=[broadcaster.lower()])
             for i in get_id:
                 broadcaster = i.id
 
@@ -535,7 +535,9 @@ class Client:
         data = await self._http.get_top_games()
         return [models.Game(d) for d in data]
 
-    async def fetch_games(self, ids: List[int] = None, names: List[str] = None) -> List[models.Game]:
+    async def fetch_games(
+        self, ids: List[int] = None, names: List[str] = None
+    ) -> List[models.Game]:
         """|coro|
 
         Fetches games by id or name.
@@ -831,7 +833,9 @@ class Client:
             async def event_error(error, data):
                 traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
         """
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+        traceback.print_exception(
+            type(error), error, error.__traceback__, file=sys.stderr
+        )
 
     async def event_ready(self):
         """|coro|
