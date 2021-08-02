@@ -284,7 +284,7 @@ class TwitchHTTP:
             self.session = aiohttp.ClientSession()
 
         async with self.session.post(url) as resp:
-            if 300 < resp.status or resp.status < 200:
+            if resp.status > 300 or resp.status < 200:
                 raise errors.HTTPException("Unable to generate a token: " + await resp.text())
 
             data = await resp.json()
@@ -305,7 +305,7 @@ class TwitchHTTP:
             if resp.status == 401:
                 raise errors.AuthenticationError("Invalid or unauthorized Access Token passed.")
 
-            if 300 < resp.status or resp.status < 200:
+            if resp.status > 300 or resp.status < 200:
                 raise errors.HTTPException("Unable to validate Access Token: " + await resp.text())
 
             data: dict = await resp.json()
@@ -317,7 +317,7 @@ class TwitchHTTP:
         return data
 
     async def post_commercial(self, token: str, broadcaster_id: str, length: int):
-        assert length in (30, 60, 90, 120, 150, 180)
+        assert length in {30, 60, 90, 120, 150, 180}
         data = await self.request(
             Route(
                 "POST", "channels/commercial", body={"broadcaster_id": broadcaster_id, "length": length}, token=token
@@ -351,7 +351,7 @@ class TwitchHTTP:
     async def get_bits_board(
         self, token: str, period: str = "all", user_id: str = None, started_at: datetime.datetime = None
     ):
-        assert period in ("all", "day", "week", "month", "year")
+        assert period in {"all", "day", "week", "month", "year"}
         route = Route(
             "GET",
             "bits/leaderboard",
