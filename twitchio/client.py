@@ -315,7 +315,7 @@ class Client:
         """
 
         if not broadcaster.isdigit():
-            get_id: User = await self.fetch_users(names=[broadcaster.lower()])
+            get_id = await self.fetch_users(names=[broadcaster.lower()])
             for i in get_id:
                 broadcaster = i.id
 
