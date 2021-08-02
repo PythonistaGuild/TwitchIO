@@ -47,9 +47,10 @@ class CogMeta(type):
         self._commands = {}
 
         for name, mem in inspect.getmembers(self):
-            if isinstance(mem, (CogEvent, Command)):
-                if name.startswith(("cog_", "bot_")):  # Invalid method prefixes
-                    raise RuntimeError(f'The event or command "{name}" starts with an invalid prefix (cog_ or bot_).')
+            if isinstance(mem, (CogEvent, Command)) and name.startswith(
+                ("cog_", "bot_")
+            ):  # Invalid method prefixes
+                raise RuntimeError(f'The event or command "{name}" starts with an invalid prefix (cog_ or bot_).')
 
             if isinstance(mem, CogEvent):
                 try:
