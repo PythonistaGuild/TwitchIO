@@ -285,8 +285,7 @@ class Client:
             # With the associated users as a set.
             # We create a Channel here and return it only if the cache has that channel key.
 
-            channel = Channel(name=name, websocket=self._connection)
-            return channel
+            return Channel(name=name, websocket=self._connection)
 
     async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
