@@ -153,9 +153,12 @@ class PartialUser:
         -------
 
         """
-        if not force and self._cached_rewards:
-            if self._cached_rewards[0] + 300 > time.monotonic():
-                return self._cached_rewards[1]
+        if (
+            not force
+            and self._cached_rewards
+            and self._cached_rewards[0] + 300 > time.monotonic()
+        ):
+            return self._cached_rewards[1]
 
         try:
             data = await self._http.get_rewards(token, self.id, only_manageable, ids)
@@ -653,7 +656,7 @@ class User(PartialUser):
         self.profile_image = data["profile_image_url"]
         self.offline_image = data["offline_image_url"]
         self.view_count = (data["view_count"],)
-        self.email = data.get("email", None)
+        self.email = data.get("email")
 
     def __repr__(self):
         return f"<User id={self.id} name={self.name} display_name={self.display_name} type={self.type}>"
