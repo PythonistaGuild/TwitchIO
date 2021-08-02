@@ -192,9 +192,7 @@ class Bot(Client):
         ---------
         Optional[:class:`.Cog`]
         """
-        cog = self.cogs.get(name, None)
-
-        return cog
+        return self.cogs.get(name, None)
 
     async def get_context(self, message, *, cls=None):
         """Get a Context object from a message.
