@@ -115,5 +115,6 @@ Special thanks to:
 
 `Scragly <https://github.com/scragly>`_
 
+`Chillymosh <https://github.com/chillymosh>`_
 
 If I have forgotten anyone please let me know <3: `EvieePy <https://github.com/EvieePy>`_
