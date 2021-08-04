@@ -316,8 +316,7 @@ class Client:
 
         if not broadcaster.isdigit():
             get_id = await self.fetch_users(names=[broadcaster.lower()])
-            for i in get_id:
-                broadcaster = i.id
+            broadcaster = get_id[0].id
 
         return await self._http.get_channels(broadcaster)
 
@@ -465,6 +464,33 @@ class Client:
             language=language,
         )
         return [Video(self._http, x) for x in data]
+
+    async def fetch_follow(self, from_id: str, to_id: str, token: str = None):
+        """|coro|
+        Check if a user follows another user or when they followed a user.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+            List[:class:`twitchio.FollowEvent`]
+        """
+
+        if not from_id.isdigit():
+            get_id = await self.fetch_users(names=[from_id.lower()])
+            from_id = get_id[0].id
+
+        if not to_id.isdigit():
+            get_id = await self.fetch_users(names=[to_id.lower()])
+            to_id = get_id[0].id
+
+        from .models import FollowEvent
+
+        data = await self._http.get_user_follows(from_id=str(from_id), to_id=str(to_id))
+        return [FollowEvent(self._http, d) for d in data]
 
     async def fetch_cheermotes(self, user_id: int = None):
         """|coro|
