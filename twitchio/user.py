@@ -620,6 +620,7 @@ class SearchUser(PartialUser):
         self.game_id: str = data["game_id"]
         self.title: str = data["title"]
         self.thumbnail_url: str = data["thumbnail_url"]
+        self.language: str = data["broadcaster_language"]
         self.live: bool = data["is_live"]
         self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data["tag_ids"]
