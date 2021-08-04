@@ -61,7 +61,7 @@ Here we will be using the commands extension of TwitchIO to create a Chat Bot.
 The above example listens to one event, `event_ready`. If we want to listen to other events,
 we can simply add them to our Bot class.
 
-For an exhaustive list of events, visit: `Event Reference <https://twitchio.readthedocs.io/en/2.0/twitchio.html#event-reference>`_
+For an exhaustive list of events, visit: `Event Reference <twitchio.html#event-reference>`_
 
 **Let's add an** `event_message` **which will listen for all messages the bot can see:**
 
