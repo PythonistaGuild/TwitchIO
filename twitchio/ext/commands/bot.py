@@ -366,18 +366,20 @@ class Bot(Client):
         cog._load_methods(self)
         self._cogs[cog.name] = cog
 
-    def remove_cog(self, cog: Cog):
+    def remove_cog(self, cog_name: str):
         """Method which removes a cog from the bot.
-
         Parameters
         ----------
         cog_name: str
             The name of the cog to remove.
         """
-        if cog.name not in self._cogs:
-            raise InvalidCog(f"Cog '{cog.name}' not found")
+        try:
+            if cog_name not in self._cogs:
+                raise InvalidCog(f"Cog '{cog_name}' not found")
 
-        cog = self._cogs.pop(cog.name)
+            cog = self._cogs.pop(cog_name)
+        except:
+            cog: Cog = cog_name
 
         cog._unload_methods(self)
 
