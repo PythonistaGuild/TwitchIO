@@ -328,7 +328,7 @@ class Bot(Client):
         if name not in self._modules:
             raise ValueError(f"Module <{name}> is not loaded")
 
-        module = self._modules.pop(name)
+        module = self._modules[name]
 
         modules = {
             name: m
