@@ -565,3 +565,19 @@ class Stream:
 
     def __repr__(self):
         return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
+
+
+class ChannelInfo:
+
+    __slots__ = ("user", "game_id", "game_name", "title", "language", "delay")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
+        self.game_id: int = data["game_id"]
+        self.game_name: str = data["game_name"]
+        self.title: str = data["title"]
+        self.language: str = data["broadcaster_language"]
+        self.delay: int = data["delay"]
+
+    def __repr__(self):
+        return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"

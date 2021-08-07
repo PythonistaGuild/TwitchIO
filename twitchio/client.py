@@ -30,6 +30,7 @@ import traceback
 import sys
 from typing import Union, Callable, List, Optional, Tuple, Any
 
+from twitchio.errors import HTTPException
 from . import models
 from .websocket import WSConnection
 from .http import TwitchHTTP
@@ -413,6 +414,34 @@ class Client:
         """
         data = await self._http.get_clips(ids=ids)
         return [models.Clip(self._http, d) for d in data]
+
+    async def fetch_channel(self, broadcaster: str):
+        """Retrieve a channel from the API.
+
+        Parameters
+        -----------
+        name: str
+            The channel name or ID to request from API. Returns empty dict if no channel was found.
+
+        Returns
+        --------
+            :class:`twitchio.ChannelInfo`
+        """
+
+        if not broadcaster.isdigit():
+            get_id = await self.fetch_users(names=[broadcaster.lower()])
+            if not get_id:
+                raise IndexError("Invalid channel name.")
+            broadcaster = get_id[0].id
+        try:
+            data = await self._http.get_channels(broadcaster)
+
+            from .models import ChannelInfo
+
+            return ChannelInfo(self._http, data=data[0])
+
+        except HTTPException:
+            raise HTTPException("Incorrect channel ID.")
 
     async def fetch_videos(
         self,
