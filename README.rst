@@ -14,11 +14,7 @@
     :target: https://github.com/psf/black
 
 
-TwitchIO 2.0 is currently in a BETA stage looking for testers and users. 2.0 supercedes the current 1.2.3 version.
-
-TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots. TwitchIO 2 will cover 100% of the new Twitch API and will feature support for commands, PubSub and Webhooks.
-
-TwitchIO 2.0 will be buggy, will be lacking some features and you will run into problems here and there, that is the nature of BETA software, by using 2.0 you are helping test and develop TwitchIO by providing us with valuable feedback, feature requests and bug reports.
+TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots. TwitchIO covers almost all of the new Twitch API and features support for commands, PubSub, Webhooks, and EventSub.
 
 Documentation
 ---------------------------
@@ -27,7 +23,7 @@ For the Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en
 Support
 ---------------------------
 For support using TwitchIO, please join the official `support server
-<https://discord.gg/RAKc3HF>`_ on `Discord <https://discordapp.com/>`_.
+<https://discord.gg/RAKc3HF>`_ on `Discord <https://discord.com/>`_.
 
 |Discord|
 
@@ -36,19 +32,19 @@ For support using TwitchIO, please join the official `support server
    
 Installation
 ---------------------------
-TwitchIO 2 requires **Python 3.7+**. You can download the latest version of Python  `here <https://www.python.org/downloads/>`_.
+TwitchIO requires **Python 3.7+**. You can download the latest version of Python  `here <https://www.python.org/downloads/>`_.
 
 **Windows**
 
 .. code:: sh
 
-    py -3.9 -m pip install -U twitchio
+    py -m pip install -U twitchio
 
 **Linux**
 
 .. code:: sh
 
-    python3.9 -m pip install -U twitchio
+    python -m pip install -U twitchio
 
 Access Tokens
 ---------------------------
