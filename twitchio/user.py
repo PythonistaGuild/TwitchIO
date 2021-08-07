@@ -153,11 +153,7 @@ class PartialUser:
         -------
 
         """
-        if (
-            not force
-            and self._cached_rewards
-            and self._cached_rewards[0] + 300 > time.monotonic()
-        ):
+        if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
             return self._cached_rewards[1]
 
         try:
@@ -415,6 +411,30 @@ class PartialUser:
 
         data = await self._http.get_user_follows(to_id=str(self.id))
         return [FollowEvent(self._http, d, to=self) for d in data]
+
+    async def fetch_follow(self, to_user, token: str = None):
+        """|coro|
+        Check if a user follows another user or when they followed a user.
+
+        Parameters
+        -----------
+        to_user: :class:`PartialUser`
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+            :class:`twitchio.FollowEvent`
+        """
+        if not isinstance(to_user, PartialUser):
+            raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
+
+        from .models import FollowEvent
+
+        data = await self._http.get_user_follows(from_id=str(self.id), to_id=str(to_user.id))
+        if not data:
+            raise IndexError(f"{self.name} does not follow {to_user.name}")
+        return FollowEvent(self._http, data[0])
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
