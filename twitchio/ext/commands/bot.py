@@ -300,11 +300,11 @@ class Bot(Client):
             except:
                 pass
 
-        to_delete = [cog_name for cog_name, cog in self._cogs.items() if cog.__module__ == module]
+        to_delete = [cog_name for cog_name, cog in self._cogs.items() if cog.__module__ == module.__name__]
         for name in to_delete:
             self.remove_cog(name)
 
-        to_delete = [name for name, cmd in self._commands if cmd._callback.__module__ == module]
+        to_delete = [name for name, cmd in self._commands.items() if cmd._callback.__module__ == module.__name__]
         for name in to_delete:
             self.remove_command(name)
 
@@ -373,14 +373,10 @@ class Bot(Client):
         cog_name: str
             The name of the cog to remove.
         """
-        try:
-            if cog_name not in self._cogs:
-                raise InvalidCog(f"Cog '{cog_name}' not found")
+        if cog_name not in self._cogs:
+            raise InvalidCog(f"Cog '{cog_name}' not found")
 
-            cog = self._cogs.pop(cog_name)
-        except:
-            cog: Cog = cog_name
-
+        cog = self._cogs.pop(cog_name)
         cog._unload_methods(self)
 
     async def global_before_invoke(self, ctx):
