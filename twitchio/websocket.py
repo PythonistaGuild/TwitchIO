@@ -70,7 +70,7 @@ class WSConnection:
         self.is_ready: asyncio.Event = asyncio.Event()
         self._join_lock: asyncio.Lock = asyncio.Lock()
         self._join_handle = 0
-        self._join_tick = 50
+        self._join_tick = 20
         self._join_pending = {}
         self._join_load = {}
         self._init = False
@@ -243,8 +243,8 @@ class WSConnection:
         async with self._join_lock:  # acquire a lock, allowing only one join_channels at once...
             for channel in channels:
                 if self._join_handle < time.time():  # Handle is less than the current time
-                    self._join_tick = 50  # So lets start a new rate limit bucket..
-                    self._join_handle = time.time() + 15  # Set the handle timeout time
+                    self._join_tick = 20  # So lets start a new rate limit bucket..
+                    self._join_handle = time.time() + 10  # Set the handle timeout time
 
                 if self._join_tick == 0:  # We have exhausted the bucket, wait so we can make a new one...
                     await asyncio.sleep(self._join_handle - time.time())
