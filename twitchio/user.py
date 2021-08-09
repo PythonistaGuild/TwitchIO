@@ -661,6 +661,7 @@ class User(PartialUser):
         "profile_image",
         "offline_image",
         "view_count",
+        "created_at",
         "email",
         "_cached_rewards",
     )
@@ -676,6 +677,7 @@ class User(PartialUser):
         self.profile_image = data["profile_image_url"]
         self.offline_image = data["offline_image_url"]
         self.view_count = (data["view_count"],)
+        self.created_at = data["created_at"]
         self.email = data.get("email")
 
     def __repr__(self):
