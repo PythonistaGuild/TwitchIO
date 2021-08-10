@@ -288,6 +288,9 @@ class Routine:
         if self._wait_first and not self._time:
             await asyncio.sleep(self._delta)
 
+        if self._remaining_iterations == 0:
+            self._remaining_iterations = self._iterations
+
         while True:
             start = datetime.datetime.now(datetime.timezone.utc)
 
