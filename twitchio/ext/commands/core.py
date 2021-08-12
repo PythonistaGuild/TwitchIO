@@ -102,9 +102,12 @@ class Command:
         return f"{self.parent.full_name} {self._name}"
 
     def _resolve_converter(self, converter: Union[Callable, Awaitable, type]) -> Callable:
-        if isinstance(converter, type) and converter.__module__.startswith("twitchio"):
-            if converter in builtin_converter._mapping:
-                return builtin_converter._mapping[converter]
+        if (
+            isinstance(converter, type)
+            and converter.__module__.startswith("twitchio")
+            and converter in builtin_converter._mapping
+        ):
+            return builtin_converter._mapping[converter]
 
         return converter
 
@@ -277,9 +280,8 @@ class Command:
                 if not result:
                     raise CheckFailure(f"The check {predicate} for command {self.name} failed.")
 
-            if self.cog:
-                if not await self.cog.cog_check(context):
-                    raise CheckFailure(f"The cog check for command <{self.name}> failed.")
+            if self.cog and not await self.cog.cog_check(context):
+                raise CheckFailure(f"The cog check for command <{self.name}> failed.")
 
             return True
         except Exception as e:
@@ -457,9 +459,12 @@ def command(
 
     def decorator(func: Callable):
         fname = name or func.__name__
-        cmd = cls(name=fname, func=func, aliases=aliases, no_global_checks=no_global_checks)
-
-        return cmd
+        return cls(
+            name=fname,
+            func=func,
+            aliases=aliases,
+            no_global_checks=no_global_checks,
+        )
 
     return decorator
 
@@ -477,15 +482,13 @@ def group(
 
     def decorator(func: Callable):
         fname = name or func.__name__
-        cmd = cls(
+        return cls(
             name=fname,
             func=func,
             aliases=aliases,
             no_global_checks=no_global_checks,
             invoke_with_subcommand=invoke_with_subcommand,
         )
-
-        return cmd
 
     return decorator
 

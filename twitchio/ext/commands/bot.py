@@ -192,9 +192,7 @@ class Bot(Client):
         ---------
         Optional[:class:`.Cog`]
         """
-        cog = self.cogs.get(name, None)
-
-        return cog
+        return self.cogs.get(name, None)
 
     async def get_context(self, message, *, cls=None):
         """Get a Context object from a message.
@@ -302,11 +300,11 @@ class Bot(Client):
             except:
                 pass
 
-        to_delete = [cog_name for cog_name, cog in self._cogs.items() if cog.__module__ == module]
+        to_delete = [cog_name for cog_name, cog in self._cogs.items() if cog.__module__ == module.__name__]
         for name in to_delete:
             self.remove_cog(name)
 
-        to_delete = [name for name, cmd in self._commands if cmd._callback.__module__ == module]
+        to_delete = [name for name, cmd in self._commands.items() if cmd._callback.__module__ == module.__name__]
         for name in to_delete:
             self.remove_command(name)
 
@@ -330,7 +328,7 @@ class Bot(Client):
         if name not in self._modules:
             raise ValueError(f"Module <{name}> is not loaded")
 
-        module = self._modules.pop(name)
+        module = self._modules[name]
 
         modules = {
             name: m
@@ -370,7 +368,6 @@ class Bot(Client):
 
     def remove_cog(self, cog_name: str):
         """Method which removes a cog from the bot.
-
         Parameters
         ----------
         cog_name: str
@@ -380,7 +377,6 @@ class Bot(Client):
             raise InvalidCog(f"Cog '{cog_name}' not found")
 
         cog = self._cogs.pop(cog_name)
-
         cog._unload_methods(self)
 
     async def global_before_invoke(self, ctx):

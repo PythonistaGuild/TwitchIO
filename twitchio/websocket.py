@@ -330,10 +330,10 @@ class WSConnection:
                 self.is_ready.set()
             else:
                 self._cache_add(parsed)
-        else:
-            if self.is_ready.is_set():
-                return
+        elif self.is_ready.is_set():
+            return
 
+        else:
             self.is_ready.set()
             # self.dispatch("ready")
 
@@ -344,7 +344,6 @@ class WSConnection:
 
     async def _part(self, parsed):  # TODO
         log.debug(f'ACTION: PART:: {parsed["channel"]}')
-        pass
 
     async def _privmsg(self, parsed):  # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
@@ -392,7 +391,6 @@ class WSConnection:
 
     async def _usernotice(self, parsed):  # TODO
         log.debug(f'ACTION: USERNOTICE:: {parsed["channel"]}')
-        pass
 
     async def _join(self, parsed):
         log.debug(f'ACTION: JOIN:: {parsed["channel"]}')
@@ -406,7 +404,7 @@ class WSConnection:
             else:
                 self._join_pending.pop(channel)
 
-        if not parsed["user"] == self._client.nick:
+        if parsed["user"] != self._client.nick:
             self._cache_add(parsed)
 
         channel = Channel(name=channel, websocket=self)

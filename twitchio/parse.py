@@ -38,11 +38,7 @@ TMI = "tmi.twitch.tv"
 
 def parser(data: str, nick: str):
     groups = data.split()
-    if groups[1] == "JOIN":
-        action = groups[1]
-    else:
-        action = groups[-2]
-
+    action = groups[1] if groups[1] == "JOIN" else groups[-2]
     channel = None
     message = None
     user = None
@@ -51,7 +47,7 @@ def parser(data: str, nick: str):
     if action == "PING":
         return dict(action="PING")
 
-    elif groups[2] == "PRIVMSG" or groups[2] == "PRIVMSG(ECHO)":
+    elif groups[2] in {"PRIVMSG", "PRIVMSG(ECHO)"}:
         action = groups[2]
         channel = groups[3].lstrip("#")
         message = " ".join(groups[4:]).lstrip(":")
@@ -134,6 +130,3 @@ def parse(data: str, ws: "WSConnection"):
         msg = msg.replace(":tmi.twitch.tv ", "")
         groups = msg.split()
         length = len(groups)
-
-        if length > 2 and groups[1] == "JOIN":
-            pass

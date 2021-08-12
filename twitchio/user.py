@@ -153,9 +153,8 @@ class PartialUser:
         -------
 
         """
-        if not force and self._cached_rewards:
-            if self._cached_rewards[0] + 300 > time.monotonic():
-                return self._cached_rewards[1]
+        if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
+            return self._cached_rewards[1]
 
         try:
             data = await self._http.get_rewards(token, self.id, only_manageable, ids)
@@ -413,6 +412,30 @@ class PartialUser:
         data = await self._http.get_user_follows(to_id=str(self.id))
         return [FollowEvent(self._http, d, to=self) for d in data]
 
+    async def fetch_follow(self, to_user: "PartialUser", token: str = None):
+        """|coro|
+        Check if a user follows another user or when they followed a user.
+
+        Parameters
+        -----------
+        to_user: :class:`PartialUser`
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+            :class:`twitchio.FollowEvent`
+        """
+        if not isinstance(to_user, PartialUser):
+            raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
+
+        from .models import FollowEvent
+
+        data = await self._http.get_user_follows(from_id=str(self.id), to_id=str(to_user.id))
+        if not data:
+            raise IndexError(f"{self.name} does not follow {to_user.name}")
+        return FollowEvent(self._http, data[0])
+
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
         Follows the user
@@ -638,6 +661,7 @@ class User(PartialUser):
         "profile_image",
         "offline_image",
         "view_count",
+        "created_at",
         "email",
         "_cached_rewards",
     )
@@ -653,7 +677,8 @@ class User(PartialUser):
         self.profile_image = data["profile_image_url"]
         self.offline_image = data["offline_image_url"]
         self.view_count = (data["view_count"],)
-        self.email = data.get("email", None)
+        self.created_at = data["created_at"]
+        self.email = data.get("email")
 
     def __repr__(self):
         return f"<User id={self.id} name={self.name} display_name={self.display_name} type={self.type}>"

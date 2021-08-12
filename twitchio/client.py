@@ -30,6 +30,7 @@ import traceback
 import sys
 from typing import Union, Callable, List, Optional, Tuple, Any
 
+from twitchio.errors import HTTPException
 from . import models
 from .websocket import WSConnection
 from .http import TwitchHTTP
@@ -83,7 +84,11 @@ class Client:
 
         self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret)
         self._connection = WSConnection(
-            client=self, token=token, loop=self.loop, initial_channels=initial_channels, heartbeat=heartbeat
+            client=self,
+            token=token,
+            loop=self.loop,
+            initial_channels=initial_channels,
+            heartbeat=heartbeat,
         )
 
         self._events = {}
@@ -127,7 +132,10 @@ class Client:
         self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
         self._heartbeat = heartbeat
         self._connection = WSConnection(
-            client=self, loop=self.loop, initial_channels=None, heartbeat=self._heartbeat
+            client=self,
+            loop=self.loop,
+            initial_channels=None,
+            heartbeat=self._heartbeat,
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
@@ -192,7 +200,10 @@ class Client:
             if inspect.iscoroutinefunction(inner_cb):
                 self.loop.create_task(wrapped(inner_cb))
             else:
-                warnings.warn(f"event '{name}' callback is not a coroutine", category=RuntimeWarning)
+                warnings.warn(
+                    f"event '{name}' callback is not a coroutine",
+                    category=RuntimeWarning,
+                )
 
         if name in self._events:
             for event in self._events[name]:
@@ -239,7 +250,11 @@ class Client:
         return decorator
 
     async def wait_for(
-        self, event: str, predicate: Callable[[], bool] = lambda *a: True, *, timeout=60.0
+        self,
+        event: str,
+        predicate: Callable[[], bool] = lambda *a: True,
+        *,
+        timeout=60.0,
     ) -> Tuple[Any]:
         """|coro|
 
@@ -285,8 +300,26 @@ class Client:
             # With the associated users as a set.
             # We create a Channel here and return it only if the cache has that channel key.
 
-            channel = Channel(name=name, websocket=self._connection)
-            return channel
+            return Channel(name=name, websocket=self._connection)
+
+    async def fetch_channel(self, broadcaster: str) -> list:
+        """Retrieve a channel from the API.
+
+        Parameters
+        -----------
+        name: str
+            The channel name or ID to request from API. Returns empty list if no channel was found.
+
+        Returns
+        --------
+            :class:`list`
+        """
+
+        if not broadcaster.isdigit():
+            get_id = await self.fetch_users(names=[broadcaster.lower()])
+            broadcaster = get_id[0].id
+
+        return await self._http.get_channels(broadcaster)
 
     async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
@@ -334,7 +367,11 @@ class Client:
 
     @user_cache()
     async def fetch_users(
-        self, names: List[str] = None, ids: List[int] = None, token: str = None, force=False
+        self,
+        names: List[str] = None,
+        ids: List[int] = None,
+        token: str = None,
+        force=False,
     ) -> List[User]:
         """|coro|
         Fetches users from the helix API
@@ -378,6 +415,34 @@ class Client:
         data = await self._http.get_clips(ids=ids)
         return [models.Clip(self._http, d) for d in data]
 
+    async def fetch_channel(self, broadcaster: str):
+        """Retrieve a channel from the API.
+
+        Parameters
+        -----------
+        name: str
+            The channel name or ID to request from API. Returns empty dict if no channel was found.
+
+        Returns
+        --------
+            :class:`twitchio.ChannelInfo`
+        """
+
+        if not broadcaster.isdigit():
+            get_id = await self.fetch_users(names=[broadcaster.lower()])
+            if not get_id:
+                raise IndexError("Invalid channel name.")
+            broadcaster = get_id[0].id
+        try:
+            data = await self._http.get_channels(broadcaster)
+
+            from .models import ChannelInfo
+
+            return ChannelInfo(self._http, data=data[0])
+
+        except HTTPException:
+            raise HTTPException("Incorrect channel ID.")
+
     async def fetch_videos(
         self,
         ids: List[int] = None,
@@ -419,7 +484,13 @@ class Client:
         from .models import Video
 
         data = await self._http.get_videos(
-            ids, user_id=user_id, game_id=game_id, period=period, sort=sort, type=type, language=language
+            ids,
+            user_id=user_id,
+            game_id=game_id,
+            period=period,
+            sort=sort,
+            type=type,
+            language=language,
         )
         return [Video(self._http, x) for x in data]
 
