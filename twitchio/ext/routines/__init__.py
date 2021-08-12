@@ -395,7 +395,10 @@ def routine(
         else:
             delta = None
 
-            if time_ < datetime.datetime.now(time_.tzinfo):
+            now = datetime.datetime.now(time_.tzinfo)
+            if time_ < now:
+                time_ = datetime.datetime.combine(now.date(), time_.time())
+            if time_ < now:
                 time_ = time_ + datetime.timedelta(days=1)
 
         if not asyncio.iscoroutinefunction(coro):
