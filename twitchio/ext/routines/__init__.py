@@ -318,7 +318,7 @@ class Routine:
                 break
 
             if self._time:
-                sleep = self._time + datetime.timedelta(hours=24)
+                sleep = compute_timedelta(self._time + datetime.timedelta(hours=24))
             else:
                 sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
 
