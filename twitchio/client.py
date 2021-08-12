@@ -308,24 +308,6 @@ class Client:
 
             return Channel(name=name, websocket=self._connection)
 
-    async def fetch_channel(self, broadcaster: str) -> list:
-        """Retrieve a channel from the API.
-
-        Parameters
-        -----------
-        name: str
-            The channel name or ID to request from API. Returns empty list if no channel was found.
-
-        Returns
-        --------
-            :class:`list`
-        """
-
-        if not broadcaster.isdigit():
-            get_id = await self.fetch_users(names=[broadcaster.lower()])
-            broadcaster = get_id[0].id
-
-        return await self._http.get_channels(broadcaster)
 
     async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
