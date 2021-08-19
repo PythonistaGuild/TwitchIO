@@ -105,11 +105,11 @@ class Chatter(PartialChatter):
     def __init__(self, websocket: "WSConnection", **kwargs):
         super(Chatter, self).__init__(websocket, **kwargs)
         self._tags = kwargs.get("tags", None)
-        self._badges = kwargs.get("badges", {})
         self._ws = websocket
 
         if not self._tags:
             self.id = None
+            self._badges = None
             self._turbo = None
             self._sub = None
             self._mod = None
@@ -118,6 +118,7 @@ class Chatter(PartialChatter):
             return
 
         self.id = self._tags.get("user-id")
+        self._badges = self._tags.get("badges")
         self._turbo = self._tags.get("turbo")
         self._sub = self._tags["subscriber"]
         self._mod = int(self._tags["mod"])
@@ -139,6 +140,11 @@ class Chatter(PartialChatter):
     def name(self) -> str:
         """The users name. This may be formatted differently than display name."""
         return self._name or (self.display_name and self.display_name.lower())
+
+    @property
+    def badges(self) -> dict:
+        """The users name. This may be formatted differently than display name."""
+        return {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
 
     @property
     def display_name(self) -> str:
@@ -176,7 +182,7 @@ class Chatter(PartialChatter):
 
         Could be None if no Tags were received.
         """
-        return self._sub
+        return self._sub or 'founder' in self._tags
 
     @property
     def prediction(self) -> Optional[PredictionEnum]:
