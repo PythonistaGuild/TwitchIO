@@ -182,7 +182,7 @@ class Chatter(PartialChatter):
 
         Could be None if no Tags were received.
         """
-        return self._sub or 'founder' in self._tags
+        return self._sub or "founder" in self._tags
 
     @property
     def prediction(self) -> Optional[PredictionEnum]:
