@@ -302,7 +302,6 @@ class PubSubModerationActionBanRequest(PubSubMessage):
             if data["message"]["data"]["target_user_id"]
             else None
         )
-        self.from_automod: bool = data["message"]["data"]["from_automod"]
 
 
 class PubSubModerationActionChannelTerms(PubSubMessage):
