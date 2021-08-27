@@ -22,11 +22,11 @@ on_rtd = os.environ.get("READTHEDOCS") == "True"
 
 # -- Project information -----------------------------------------------------
 
-project = "TwitchIO 2"
+project = "TwitchIO"
 copyright = "2021, TwitchIO, PythonistaGuild"
 author = "TwitchIO, PythonistaGuild"
 version = "2.0"
-release = "2.0.0a"
+release = "2.0.6"
 
 
 # -- General configuration ---------------------------------------------------
