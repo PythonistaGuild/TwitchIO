@@ -318,7 +318,7 @@ class Routine:
                 break
 
             if self._time:
-                sleep = self._time + datetime.timedelta(hours=24)
+                sleep = compute_timedelta(self._time + datetime.timedelta(days=self._completed_loops))
             else:
                 sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
 
@@ -395,7 +395,10 @@ def routine(
         else:
             delta = None
 
-            if time_ < datetime.datetime.now(time_.tzinfo):
+            now = datetime.datetime.now(time_.tzinfo)
+            if time_ < now:
+                time_ = datetime.datetime.combine(now.date(), time_.time())
+            if time_ < now:
                 time_ = time_ + datetime.timedelta(days=1)
 
         if not asyncio.iscoroutinefunction(coro):
