@@ -34,7 +34,7 @@ from .rewards import CustomReward
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
-    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent
+    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent, Prediction
 
 
 __all__ = (
@@ -608,6 +608,87 @@ class PartialUser:
 
         data = await self._http.get_videos(user_id=str(self.id), period=period, sort=sort, type=type, language=language)
         return [Video(self._http, x, self) for x in data]
+
+    async def end_prediction(self, token: str, prediction_id: str, status: str, winning_outcome_id: str = None) -> "Prediction":
+        """|coro|
+        End a prediction with an outcome.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:predictions scope
+        prediction_id: :class:`str`
+            ID of the prediction to end.
+
+        Returns
+        --------
+            :class:`twitchio.Prediction`
+        """
+        from .models import Prediction
+
+        data = await self._http.patch_prediction(
+                token,
+                broadcaster_id=str(self.id),
+                prediction_id=prediction_id,
+                status=status,
+                winning_outcome_id=winning_outcome_id)
+        return Prediction(self._http, data[0])
+
+    async def get_predictions(self, token: str, prediction_id: str = None) -> List["Prediction"]:
+        """|coro|
+        Gets information on a prediction or the list of predictions
+        if none is provided.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:predictions scope
+        prediction_id: :class:`str`
+            ID of the prediction to receive information about.
+
+        Returns
+        --------
+            :class:`twitchio.Prediction`
+        """
+        from .models import Prediction
+
+        data = await self._http.get_predictions(
+                token,
+                broadcaster_id=str(self.id),
+                prediction_id=prediction_id)
+        return [Prediction(self._http, d) for d in data]
+
+    async def create_prediction(self, token: str, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int) -> "Prediction":
+        """|coro|
+        Creates a prediction for the channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:predictions scope
+        title: :class:`str`
+            Title for the prediction (max of 45 characters)
+        blue_outcome: :class:`str`
+            Text for the first outcome people can vote for. (max 25 characters)
+        pink_outcome: :class:`str`
+            Text for the second outcome people can vote for. (max 25 characters)
+        prediction_window: :class:`int`
+            Total duration for the prediction (in seconds)
+
+        Returns
+        --------
+            :class:`twitchio.Prediction`
+        """
+        from .models import Prediction
+
+        data = await self._http.post_prediction(
+                token,
+                broadcaster_id=str(self.id),
+                title=title,
+                blue_outcome=blue_outcome,
+                pink_outcome=pink_outcome,
+                prediction_window=prediction_window)
+        return Prediction(self._http, data[0])
 
 
 class BitLeaderboardUser(PartialUser):
