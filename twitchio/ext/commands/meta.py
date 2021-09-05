@@ -103,6 +103,7 @@ class Cog(metaclass=CogMeta):
             # Load our cog with this module...
             bot.add_cog(MyCog(bot))
     """
+
     _commands: Dict[str, Command]
     _events: Dict[str, List[Callable]]
 
@@ -172,12 +173,12 @@ class Cog(metaclass=CogMeta):
     @property
     def name(self) -> str:
         """This cogs name."""
-        return self.__cogname__ # type: ignore
+        return self.__cogname__  # type: ignore
 
     @property
     def commands(self) -> dict:
         """The commands associated with this cog as a mapping."""
-        return self._commands # type: ignore
+        return self._commands  # type: ignore
 
     async def cog_error(self, exception: Exception) -> None:
         pass

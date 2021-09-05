@@ -27,6 +27,7 @@ from typing import Any, TypeVar, Optional
 K = TypeVar("K", bound=str)
 V = TypeVar("V")
 
+
 class _CaseInsensitiveDict(dict):
     def __getitem__(self, key: K) -> V:
         return super().__getitem__(key.lower())
@@ -37,7 +38,7 @@ class _CaseInsensitiveDict(dict):
     def __delitem__(self, key: K) -> None:
         return super().__delitem__(key.lower())
 
-    def __contains__(self, key: K) -> bool: # type: ignore
+    def __contains__(self, key: K) -> bool:  # type: ignore
         return super().__contains__(key.lower())
 
     def get(self, key: K, default: Any = None) -> Optional[V]:

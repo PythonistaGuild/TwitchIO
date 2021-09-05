@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 from typing import Dict
 
+
 class StringParser:
     def __init__(self):
         self.count = 0

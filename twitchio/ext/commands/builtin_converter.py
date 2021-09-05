@@ -65,7 +65,9 @@ async def convert_PartialChatter(ctx: Context, arg: str) -> Chatter:
 async def convert_Clip(ctx: Context, arg: str) -> Clip:
     finder = re.search(r"(https://clips.twitch.tv/)?(?P<slug>.*)", arg)
     if not finder:
-        raise RuntimeError("regex failed to match") # this should never ever raise, but its here to make type checkers happy
+        raise RuntimeError(
+            "regex failed to match"
+        )  # this should never ever raise, but its here to make type checkers happy
 
     slug = finder.group("slug")
     clips = await ctx.bot.fetch_clips([slug])

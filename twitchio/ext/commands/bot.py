@@ -40,6 +40,7 @@ from .utils import _CaseInsensitiveDict
 if TYPE_CHECKING:
     from twitchio import Message
 
+
 class Bot(Client):
     def __init__(
         self,
@@ -277,7 +278,7 @@ class Bot(Client):
         module = importlib.import_module(name)
 
         if hasattr(module, "prepare"):
-            module.prepare(self) # type: ignore
+            module.prepare(self)  # type: ignore
         else:
             del module
             del sys.modules[name]
@@ -300,7 +301,7 @@ class Bot(Client):
 
         if hasattr(module, "breakdown"):
             try:
-                module.breakdown(self) # type: ignore
+                module.breakdown(self)  # type: ignore
             except:
                 pass
 
@@ -345,7 +346,7 @@ class Bot(Client):
             self.load_module(name)
         except Exception as e:
             sys.modules.update(modules)
-            module.prepare(self) # type: ignore
+            module.prepare(self)  # type: ignore
             raise
 
     def add_cog(self, cog: Cog):

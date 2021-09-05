@@ -68,12 +68,12 @@ class Command:
         self.parent: Optional[Group] = attrs.get("parent")
 
         try:
-            self._checks.extend(func.__checks__) # type: ignore
+            self._checks.extend(func.__checks__)  # type: ignore
         except AttributeError:
             pass
 
         try:
-            self._cooldowns.extend(func.__cooldowns__) # type: ignore
+            self._cooldowns.extend(func.__cooldowns__)  # type: ignore
         except AttributeError:
             pass
 
@@ -88,7 +88,7 @@ class Command:
 
         for key, value in self.params.items():
             if isinstance(value.annotation, str):
-                self.params[key] = value.replace(annotation=eval(value.annotation, func.__globals__)) # type: ignore
+                self.params[key] = value.replace(annotation=eval(value.annotation, func.__globals__))  # type: ignore
 
     @property
     def name(self) -> str:
@@ -278,7 +278,7 @@ class Command:
                 result = predicate(context)
 
                 if inspect.isawaitable(result):
-                    result = await result # type: ignore
+                    result = await result  # type: ignore
 
                 if not result:
                     raise CheckFailure(f"The check {predicate} for command {self.name} failed.")
@@ -307,7 +307,7 @@ class Group(Command):
         if not context.view.words:
             return await self.invoke(context, index=index)
 
-        arg: Tuple[int, str] = list(context.view.words.items())[0] # type: ignore
+        arg: Tuple[int, str] = list(context.view.words.items())[0]  # type: ignore
         if arg[1] in self._sub_commands:
             _ctx = copy.copy(context)
             _ctx.view = _ctx.view.copy()
@@ -498,7 +498,9 @@ def group(
 
     return decorator
 
+
 FN = TypeVar("FN")
+
 
 def cooldown(rate, per, bucket=Bucket.default):
     def decorator(func: FN) -> FN:
