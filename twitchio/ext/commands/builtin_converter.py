@@ -47,7 +47,7 @@ async def convert_Chatter(ctx: "Context", arg: str):
     Converts the argument into a chatter in the chat. If the chatter is not found, BadArgument is raised.
     """
     arg = arg.lstrip("@")
-    resp = [x for x in filter(lambda c: c.name == arg, ctx.chatters)]
+    resp = [x for x in filter(lambda c: c.name == arg, ctx.chatters or tuple())]
     if not resp:
         raise BadArgument(f"The user '{arg}' was not found in {ctx.channel.name}'s chat.")
 
@@ -63,6 +63,9 @@ async def convert_PartialChatter(ctx: "Context", arg: str):
 
 async def convert_Clip(ctx: "Context", arg: str):
     finder = re.search(r"(https://clips.twitch.tv/)?(?P<slug>.*)", arg)
+    if not finder:
+        raise RuntimeError("regex failed to match") # this should never ever raise, but its here to make type checkers happy
+
     slug = finder.group("slug")
     clips = await ctx.bot.fetch_clips([slug])
     if not clips:
