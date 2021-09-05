@@ -22,22 +22,26 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from typing import Any, TypeVar, Optional
+
+K = TypeVar("K", bound=str)
+V = TypeVar("V")
 
 class _CaseInsensitiveDict(dict):
-    def __getitem__(self, key):
+    def __getitem__(self, key: K) -> V:
         return super().__getitem__(key.lower())
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: K, value: V) -> None:
         super().__setitem__(key.lower(), value)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: K) -> None:
         return super().__delitem__(key.lower())
 
-    def __contains__(self, key):
+    def __contains__(self, key: K) -> bool: # type: ignore
         return super().__contains__(key.lower())
 
-    def get(self, key, default=None):
+    def get(self, key: K, default: Any = None) -> Optional[V]:
         return super().get(key, default)
 
-    def pop(self, key, default=None):
+    def pop(self, key: K, default: Any = None) -> V:
         return super().pop(key, default)

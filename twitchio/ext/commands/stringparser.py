@@ -23,7 +23,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-
+from __future__ import annotations
+from typing import Dict
 
 class StringParser:
     def __init__(self):
@@ -31,10 +32,10 @@ class StringParser:
         self.index = 0
         self.eof = 0
         self.start = 0
-        self.words = {}
+        self.words: Dict[int, str] = {}
         self.ignore = False
 
-    def process_string(self, msg: str):
+    def process_string(self, msg: str) -> Dict[int, str]:
 
         while True:
             try:
@@ -66,7 +67,7 @@ class StringParser:
             self.count += 1
         return self.words
 
-    def copy(self):
+    def copy(self) -> StringParser:
         new = self.__class__()
         new.count = self.count
         new.start = self.start

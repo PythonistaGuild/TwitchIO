@@ -22,6 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
@@ -42,7 +43,7 @@ __all__ = (
 )
 
 
-async def convert_Chatter(ctx: "Context", arg: str):
+async def convert_Chatter(ctx: Context, arg: str) -> Chatter:
     """
     Converts the argument into a chatter in the chat. If the chatter is not found, BadArgument is raised.
     """
@@ -54,14 +55,14 @@ async def convert_Chatter(ctx: "Context", arg: str):
     return resp[0]
 
 
-async def convert_PartialChatter(ctx: "Context", arg: str):
+async def convert_PartialChatter(ctx: Context, arg: str) -> Chatter:
     """
     Actually a shorthand to :ref:`~convert_Chatter`
     """
-    return convert_Chatter(ctx, arg)
+    return await convert_Chatter(ctx, arg)
 
 
-async def convert_Clip(ctx: "Context", arg: str):
+async def convert_Clip(ctx: Context, arg: str) -> Clip:
     finder = re.search(r"(https://clips.twitch.tv/)?(?P<slug>.*)", arg)
     if not finder:
         raise RuntimeError("regex failed to match") # this should never ever raise, but its here to make type checkers happy
@@ -74,7 +75,7 @@ async def convert_Clip(ctx: "Context", arg: str):
     return clips[0]
 
 
-async def convert_User(ctx: "Context", arg: str):
+async def convert_User(ctx: Context, arg: str) -> User:
     """
     Similar to convert_Chatter, but fetches from the twitch API instead,
     returning a :class:`twitchio.User` instead of a :class:`twitchio.Chatter`.
@@ -87,14 +88,14 @@ async def convert_User(ctx: "Context", arg: str):
     return user[0]
 
 
-async def convert_PartialUser(ctx: "Context", arg: str):
+async def convert_PartialUser(ctx: Context, arg: str) -> User:
     """
     This is simply a shorthand to :ref:`~convert_User`, as fetching from the api will return a full user model
     """
     return await convert_User(ctx, arg)
 
 
-async def convert_Channel(ctx: "Context", arg: str):
+async def convert_Channel(ctx: Context, arg: str) -> Channel:
     if arg not in ctx.bot._connection._cache:
         raise BadArgument(f"Not connected to channel '{arg}'")
 

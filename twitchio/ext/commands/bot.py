@@ -22,19 +22,23 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import annotations
 import importlib
 import inspect
 import sys
 import traceback
-from typing import Callable, Optional, Union, Coroutine
+import types
+from typing import Callable, Optional, Union, Coroutine, Dict, List, TYPE_CHECKING, Mapping, Awaitable
 
 from twitchio.client import Client
-from .core import *
+from .core import Command, Group, Context
 from .errors import *
 from .meta import Cog
 from .stringparser import StringParser
 from .utils import _CaseInsensitiveDict
 
+if TYPE_CHECKING:
+    from twitchio import Message
 
 class Bot(Client):
     def __init__(
@@ -54,15 +58,15 @@ class Bot(Client):
         self._prefix = prefix
 
         if kwargs.get("case_insensitive", False):
-            self._commands = _CaseInsensitiveDict()
-            self._command_aliases = _CaseInsensitiveDict()
+            self._commands: Union[dict, _CaseInsensitiveDict] = _CaseInsensitiveDict()
+            self._command_aliases: Union[dict, _CaseInsensitiveDict] = _CaseInsensitiveDict()
         else:
             self._commands = {}
             self._command_aliases = {}
 
-        self._modules = {}
-        self._cogs = {}
-        self._checks = []
+        self._modules: Dict[str, types.ModuleType] = {}
+        self._cogs: Dict[str, Cog] = {}
+        self._checks: List[Callable[[Context], Union[bool, Awaitable[bool]]]] = []
 
         self.__init__commands__()
 
@@ -259,7 +263,7 @@ class Bot(Client):
         self.run_event("command_invoke", context)
         await context.command(context)
 
-    def load_module(self, name: str):
+    def load_module(self, name: str) -> None:
         """Method which loads a module and it's cogs.
 
         Parameters
@@ -273,7 +277,7 @@ class Bot(Client):
         module = importlib.import_module(name)
 
         if hasattr(module, "prepare"):
-            module.prepare(self)
+            module.prepare(self) # type: ignore
         else:
             del module
             del sys.modules[name]
@@ -281,7 +285,7 @@ class Bot(Client):
 
         self._modules[name] = module
 
-    def unload_module(self, name: str):
+    def unload_module(self, name: str) -> None:
         """Method which unloads a module and it's cogs.
 
         Parameters
@@ -296,7 +300,7 @@ class Bot(Client):
 
         if hasattr(module, "breakdown"):
             try:
-                module.breakdown(self)
+                module.breakdown(self) # type: ignore
             except:
                 pass
 
@@ -341,7 +345,7 @@ class Bot(Client):
             self.load_module(name)
         except Exception as e:
             sys.modules.update(modules)
-            module.prepare(self)
+            module.prepare(self) # type: ignore
             raise
 
     def add_cog(self, cog: Cog):
@@ -411,7 +415,7 @@ class Bot(Client):
         """
         pass
 
-    async def global_after_invoke(self, ctx):
+    async def global_after_invoke(self, ctx: Context) -> None:
         """|coro|
 
         Method which is called after any command is invoked regardless if it failed or not.
@@ -435,11 +439,11 @@ class Bot(Client):
         return self._commands
 
     @property
-    def cogs(self):
+    def cogs(self) -> Mapping[str, Cog]:
         """The currently loaded cogs."""
         return self._cogs
 
-    async def event_command_error(self, context, error):
+    async def event_command_error(self, context: Context, error: Exception) -> None:
         """|coro|
 
         Event called when an error occurs during command invocation.
@@ -454,7 +458,7 @@ class Bot(Client):
         print(f"Ignoring exception in command: {error}:", file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
-    async def event_message(self, message):
+    async def event_message(self, message: Message) -> None:
         """|coro|
 
         Event called when a PRIVMSG is received from Twitch.
