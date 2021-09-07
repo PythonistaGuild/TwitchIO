@@ -586,7 +586,18 @@ class ChannelInfo:
 
 class Prediction:
 
-    __slots__ = ("user", "prediction_id", "title", "winning_outcome_id", "outcomes", "prediction_window", "prediction_status", "created_at", "ended_at", "locked_at")
+    __slots__ = (
+        "user",
+        "prediction_id",
+        "title",
+        "winning_outcome_id",
+        "outcomes",
+        "prediction_window",
+        "prediction_status",
+        "created_at",
+        "ended_at",
+        "locked_at",
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
@@ -610,6 +621,7 @@ class Prediction:
     def __repr__(self):
         return f"<Prediction user={self.user} prediction_id={self.prediction_id} winning_outcome_id={self.winning_outcome_id} title={self.title}>"
 
+
 class Predictor:
 
     __slots__ = ("outcome_id", "title", "channel_points", "color")
@@ -618,6 +630,7 @@ class Predictor:
         self.channel_points_used: int = data["channel_points_used"]
         self.channel_points_won: int = data["channel_points_won"]
         self.user = PartialUser(http, data["user"]["id"], data["user"]["name"])
+
 
 class PredictionOutcome:
 

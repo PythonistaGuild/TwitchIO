@@ -534,12 +534,8 @@ class TwitchHTTP:
         return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
 
     async def patch_prediction(
-            self,
-            token: str,
-            broadcaster_id: int,
-            prediction_id: str,
-            status: str,
-            winning_outcome_id: str = None):
+        self, token: str, broadcaster_id: int, prediction_id: str, status: str, winning_outcome_id: str = None
+    ):
         body = {
             "broadcaster_id": str(broadcaster_id),
             "id": prediction_id,
@@ -558,7 +554,9 @@ class TwitchHTTP:
             )
         )
 
-    async def post_prediction(self, token: str, broadcaster_id: int, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int):
+    async def post_prediction(
+        self, token: str, broadcaster_id: int, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
+    ):
         body = {
             "broadcaster_id": broadcaster_id,
             "title": title,
@@ -569,7 +567,7 @@ class TwitchHTTP:
                 },
                 {
                     "title": pink_outcome,
-                }
+                },
             ],
         }
         return await self.request(
