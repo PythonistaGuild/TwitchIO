@@ -143,7 +143,7 @@ class Chatter(PartialChatter):
 
     @property
     def badges(self) -> dict:
-        """The users name. This may be formatted differently than display name."""
+        """The users badges."""
         return {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
 
     @property
