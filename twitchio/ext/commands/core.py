@@ -79,7 +79,7 @@ class Command:
 
         self.aliases = attrs.get("aliases", None)
         sig = inspect.signature(func)
-        self.params = sig.parameters.copy() # type: ignore
+        self.params = sig.parameters.copy()  # type: ignore
 
         self.event_error = None
         self._before_invoke = None
