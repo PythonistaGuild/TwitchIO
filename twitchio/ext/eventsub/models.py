@@ -135,7 +135,7 @@ class EventData:
 
 
 class ChannelBanData(EventData):
-    __slots__ = "user", "broadcaster", "moderator", "reason", "ends_at", "is_permanent"
+    __slots__ = "user", "broadcaster", "moderator", "reason", "ends_at", "permenant"
 
     def __init__(self, client: "EventSubClient", data: dict):
         self.user = _transform_user(client, data, "user")
@@ -143,7 +143,7 @@ class ChannelBanData(EventData):
         self.moderator = _transform_user(client, data, "moderator_user")
         self.reason: str = data["reason"]
         self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(data["ends_at"])
-        self.is_permanent: bool = data["is_permanent"]
+        self.permenant: bool = data["permenant"]
 
 
 class ChannelSubscribeData(EventData):
