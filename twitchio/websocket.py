@@ -427,9 +427,7 @@ class WSConnection:
                 self._cache[channel].add(user)
         else:
             name = parsed["user"] or parsed["nick"]
-            user = Chatter(
-                bot=self._client, name=name, websocket=self, channel=channel_, tags=parsed["badges"]
-            )
+            user = Chatter(bot=self._client, name=name, websocket=self, channel=channel_, tags=parsed["badges"])
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
 
