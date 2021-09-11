@@ -143,7 +143,7 @@ class ChannelBanData(EventData):
         self.moderator = _transform_user(client, data, "moderator_user")
         self.reason: str = data["reason"]
         self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(data["ends_at"])
-        self.permenant: bool = data["permenant"]
+        self.permenant: bool = data["is_permanent"]
 
 
 class ChannelSubscribeData(EventData):
@@ -350,7 +350,7 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     subscription = "channel.subscribe", 1, ChannelSubscribeData
     cheer = "channel.cheer", 1, ChannelCheerData
     raid = "channel.raid", 1, ChannelRaidData
-    ban = "chnnel.ban", 1, ChannelBanData
+    ban = "channel.ban", 1, ChannelBanData
     unban = "channel.unban", 1, ChannelUnbanData
 
     channel_update = "channel.update", 1, ChannelUpdateData

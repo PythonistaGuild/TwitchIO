@@ -208,9 +208,9 @@ class TwitchHTTP:
 
             async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
                 try:
-                    logger.debug(f"Recived a response from a request with status {resp.status}: {await resp.json()}")
+                    logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
                 except Exception:
-                    logger.debug(f"Recived a response from a request with status {resp.status} and without body")
+                    logger.debug(f"Received a response from a request with status {resp.status} and without body")
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason

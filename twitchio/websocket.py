@@ -385,7 +385,8 @@ class WSConnection:
         self._cache_add(parsed)
 
         channel = Channel(name=parsed["channel"], websocket=self)
-        user = Chatter(tags=parsed["badges"], name=parsed["nick"], channel=channel, bot=self._client, websocket=self)
+        name = parsed["user"] or parsed["nick"]
+        user = Chatter(tags=parsed["badges"], name=name, channel=channel, bot=self._client, websocket=self)
 
         self.dispatch("userstate", user)
 
@@ -425,8 +426,9 @@ class WSConnection:
                 user = PartialChatter(name=u, bot=self._client, websocket=self, channel=channel_)
                 self._cache[channel].add(user)
         else:
+            name = parsed["user"] or parsed["nick"]
             user = Chatter(
-                bot=self._client, name=parsed["nick"], websocket=self, channel=channel_, tags=parsed["badges"]
+                bot=self._client, name=name, websocket=self, channel=channel_, tags=parsed["badges"]
             )
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
