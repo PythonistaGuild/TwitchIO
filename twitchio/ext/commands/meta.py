@@ -22,17 +22,20 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import annotations
 import inspect
+import types
 from functools import partial
+from typing import Callable, Dict, List
 
-from .core import *
+from .core import Command, Context
 
 
 __all__ = ("Cog",)
 
 
 class CogEvent:
-    def __init__(self, *, name: str, func):
+    def __init__(self, *, name: str, func: Callable):
         self.name = name
         self.func = func
 
@@ -101,7 +104,10 @@ class Cog(metaclass=CogMeta):
             bot.add_cog(MyCog(bot))
     """
 
-    def _load_methods(self, bot):
+    _commands: Dict[str, Command]
+    _events: Dict[str, List[Callable]]
+
+    def _load_methods(self, bot) -> None:
         for name, method in inspect.getmembers(self):
             if isinstance(method, Command):
                 method._instance = self
@@ -119,7 +125,7 @@ class Cog(metaclass=CogMeta):
                 callback = partial(callback, self)
                 bot.add_event(callback=callback, name=event)
 
-    def _unload_methods(self, bot):
+    def _unload_methods(self, bot) -> None:
         for name in self._commands:
             bot.remove_command(name)
 
@@ -131,11 +137,11 @@ class Cog(metaclass=CogMeta):
 
         try:
             self.cog_unload()
-        except Exception as e:
+        except Exception:
             pass
 
     @classmethod
-    def event(cls, event: str = None):
+    def event(cls, event: str = None) -> Callable[[types.FunctionType], CogEvent]:
         """Add an event listener to this Cog.
 
         Examples
@@ -157,7 +163,7 @@ class Cog(metaclass=CogMeta):
                     print('Bot is ready!')
         """
 
-        def decorator(func):
+        def decorator(func) -> CogEvent:
             event_name = event or func.__name__
 
             return CogEvent(name=event_name, func=func)
@@ -167,17 +173,17 @@ class Cog(metaclass=CogMeta):
     @property
     def name(self) -> str:
         """This cogs name."""
-        return self.__cogname__
+        return self.__cogname__  # type: ignore
 
     @property
     def commands(self) -> dict:
         """The commands associated with this cog as a mapping."""
-        return self._commands
+        return self._commands  # type: ignore
 
-    async def cog_error(self, exception: Exception):
+    async def cog_error(self, exception: Exception) -> None:
         pass
 
-    async def cog_command_error(self, ctx: Context, exception: Exception):
+    async def cog_command_error(self, ctx: Context, exception: Exception) -> None:
         """Method invoked when an error is raised in one of this cogs commands.
 
         Parameters
@@ -206,5 +212,5 @@ class Cog(metaclass=CogMeta):
         """
         return True
 
-    def cog_unload(self):
+    def cog_unload(self) -> None:
         pass

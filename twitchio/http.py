@@ -520,6 +520,61 @@ class TwitchHTTP:
             )
         )
 
+    async def get_predictions(
+        self,
+        token: str,
+        broadcaster_id: int,
+        prediction_id: str = None,
+    ):
+        params = [("broadcaster_id", str(broadcaster_id))]
+
+        if prediction_id:
+            params.extend(("prediction_id", prediction_id))
+
+        return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
+
+    async def patch_prediction(
+        self, token: str, broadcaster_id: int, prediction_id: str, status: str, winning_outcome_id: str = None
+    ):
+        body = {
+            "broadcaster_id": str(broadcaster_id),
+            "id": prediction_id,
+            "status": status,
+        }
+
+        if status == "RESOLVED":
+            body["winning_outcome_id"] = winning_outcome_id
+
+        return await self.request(
+            Route(
+                "PATCH",
+                "predictions",
+                body=body,
+                token=token,
+            )
+        )
+
+    async def post_prediction(
+        self, token: str, broadcaster_id: int, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
+    ):
+        body = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "prediction_window": prediction_window,
+            "outcomes": [
+                {
+                    "title": blue_outcome,
+                },
+                {
+                    "title": pink_outcome,
+                },
+            ],
+        }
+        return await self.request(
+            Route("POST", "predictions", body=body, token=token),
+            paginate=False,
+        )
+
     async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
         return await self.request(
             Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", has_delay)], token=token),

@@ -143,7 +143,7 @@ class ChannelBanData(EventData):
         self.moderator = _transform_user(client, data, "moderator_user")
         self.reason: str = data["reason"]
         self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(data["ends_at"])
-        self.permenant: bool = data["permenant"]
+        self.permenant: bool = data["is_permanent"]
 
 
 class ChannelSubscribeData(EventData):
