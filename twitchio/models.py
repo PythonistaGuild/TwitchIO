@@ -55,6 +55,7 @@ __all__ = (
     "Video",
     "Tag",
     "WebhookSubscription",
+    "Prediction",
 )
 
 
@@ -581,3 +582,75 @@ class ChannelInfo:
 
     def __repr__(self):
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
+
+
+class Prediction:
+
+    __slots__ = (
+        "user",
+        "prediction_id",
+        "title",
+        "winning_outcome_id",
+        "outcomes",
+        "prediction_window",
+        "prediction_status",
+        "created_at",
+        "ended_at",
+        "locked_at",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
+        self.prediction_id: str = data["id"]
+        self.title: str = data["title"]
+        self.winning_outcome_id: str = data["winning_outcome_id"]
+        self.outcomes: List[PredictionOutcome] = [PredictionOutcome(http, x) for x in data["outcomes"]]
+        self.prediction_window: int = data["prediction_window"]
+        self.prediction_status: str = data["status"]
+        self.created_at = self._parse_time(data, "created_at")
+        self.ended_at = self._parse_time(data, "ended_at")
+        self.locked_at = self._parse_time(data, "locked_at")
+
+    def _parse_time(self, data, field) -> Optional["Datetime"]:
+        if field not in data or data[field] == None:
+            return None
+
+        time = data[field].split(".")[0]
+        return datetime.datetime.fromisoformat(time)
+
+    def __repr__(self):
+        return f"<Prediction user={self.user} prediction_id={self.prediction_id} winning_outcome_id={self.winning_outcome_id} title={self.title}>"
+
+
+class Predictor:
+
+    __slots__ = ("outcome_id", "title", "channel_points", "color")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.channel_points_used: int = data["channel_points_used"]
+        self.channel_points_won: int = data["channel_points_won"]
+        self.user = PartialUser(http, data["user"]["id"], data["user"]["name"])
+
+
+class PredictionOutcome:
+
+    __slots__ = ("outcome_id", "title", "channel_points", "color", "users", "top_predictors")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.outcome_id: str = data["id"]
+        self.title: str = data["title"]
+        self.channel_points: int = data["channel_points"]
+        self.color: str = data["color"]
+        self.users: int = data["users"]
+        if data["top_predictors"]:
+            self.top_predictors: List[Predictor] = [Predictor(http, x) for x in data["top_predictors"]]
+        else:
+            self.top_predictors: List[Predictor] = None
+
+    @property
+    def colour(self) -> str:
+        """The colour of the prediction. Alias to color."""
+        return self.color
+
+    def __repr__(self):
+        return f"<PredictionOutcome outcome_id={self.outcome_id} title={self.title} channel_points={self.channel_points} color={self.color}>"
