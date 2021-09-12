@@ -719,6 +719,28 @@ class TwitchHTTP:
 
         return await self.request(Route("GET", "subscriptions", query=q, token=token))
 
+    async def get_channel_schedule(
+        self,
+        broadcaster_id: str,
+        segment_id: str = None,
+        start_time: str = None,
+        utc_offset: str = None,
+        first: int = 20,
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("first", first)]
+        if segment_id:
+            q.append(("id", segment_id))
+        if start_time:
+            q.append(("start_time", start_time))
+        if utc_offset:
+            q.append(("utc_offset", utc_offset))
+        if first > 25:
+            raise errors.HTTPException(
+                "The parameter 'first' was malformed: the value must be less than or equal to 25"
+            )
+
+        return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
+
     async def get_stream_tags(self, tag_ids: List[str] = None):
         q = []
         if tag_ids:
