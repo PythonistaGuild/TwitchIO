@@ -774,12 +774,17 @@ class TwitchHTTP:
         utc_offset: str = None,
         first: int = 20,
     ):
-        q = [x for x in [("broadcaster_id", broadcaster_id),
-        ("first", first),
-        ("id", segment_id),
-        ("start_time", start_time),
-        ("utc_offset", utc_offset)]
-        if x[1] is not None]
+        q = [
+            x
+            for x in [
+                ("broadcaster_id", broadcaster_id),
+                ("first", first),
+                ("id", segment_id),
+                ("start_time", start_time),
+                ("utc_offset", utc_offset),
+            ]
+            if x[1] is not None
+        ]
 
         if first > 25:
             raise errors.HTTPException(
