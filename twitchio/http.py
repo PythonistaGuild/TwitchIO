@@ -769,7 +769,7 @@ class TwitchHTTP:
     async def get_channel_schedule(
         self,
         broadcaster_id: str,
-        segment_id: str = None,
+        segment_ids: List[str] = None,
         start_time: str = None,
         utc_offset: str = None,
         first: int = 20,
@@ -777,18 +777,25 @@ class TwitchHTTP:
 
         if first is not None and (first > 25 or first < 1):
             raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
+        if segment_ids is not None and len(segment_ids) > 100:
+            raise ValueError("segment_id can only have 100 entries")
 
         q = [
             x
             for x in [
                 ("broadcaster_id", broadcaster_id),
                 ("first", first),
-                ("id", segment_id),
                 ("start_time", start_time),
                 ("utc_offset", utc_offset),
             ]
             if x[1] is not None
         ]
+
+        if segment_ids:
+            for id in segment_ids:
+                q.append(
+                    ("id", id),
+                )
 
         return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
 

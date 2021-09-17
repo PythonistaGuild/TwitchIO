@@ -695,7 +695,7 @@ class PartialUser:
 
     async def fetch_schedule(
         self,
-        segment_id: str = None,
+        segment_ids: List[str] = None,
         start_time: str = None,
         utc_offset: str = None,
         first: int = 20,
@@ -704,7 +704,7 @@ class PartialUser:
         Fetches the schedule of a streamer
         Parameters
         -----------
-        segment_id: Optional[:class:`str`]
+        segment_ids: Optional[List[:class:`str`]]
             The ID of the stream segment to return.
         start_time: Optional[:class:`str`]
             A timestamp in RFC3339 format to start returning stream segments from. If not specified, the current date and time is used.
@@ -721,7 +721,7 @@ class PartialUser:
 
         data = await self._http.get_channel_schedule(
             broadcaster_id=str(self.id),
-            segment_id=segment_id,
+            segment_ids=segment_ids,
             start_time=start_time,
             utc_offset=utc_offset,
             first=first,
