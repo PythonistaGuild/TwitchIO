@@ -774,6 +774,10 @@ class TwitchHTTP:
         utc_offset: str = None,
         first: int = 20,
     ):
+
+        if first is not None and (first > 25 or first < 1):
+            raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
+
         q = [
             x
             for x in [
@@ -785,11 +789,6 @@ class TwitchHTTP:
             ]
             if x[1] is not None
         ]
-
-        if first > 25:
-            raise errors.HTTPException(
-                "The parameter 'first' was malformed: the value must be less than or equal to 25"
-            )
 
         return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
 
