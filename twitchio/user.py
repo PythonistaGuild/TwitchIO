@@ -705,7 +705,7 @@ class PartialUser:
         Parameters
         -----------
         segment_ids: Optional[List[:class:`str`]]
-            The ID of the stream segment to return.
+            List of segment IDs of the stream schedule to return.
         start_time: Optional[:class:`str`]
             A timestamp in RFC3339 format to start returning stream segments from. If not specified, the current date and time is used.
             Example format `2021-09-10T18:00:00Z`
