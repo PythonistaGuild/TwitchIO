@@ -693,9 +693,7 @@ class PartialUser:
         )
         return Prediction(self._http, data[0])
 
-    async def modify_stream(
-        self, token: str, game_id: int = None, language: str = None, title: str = None
-    ):
+    async def modify_stream(self, token: str, game_id: int = None, language: str = None, title: str = None):
         """|coro|
         Modify stream information
 
@@ -718,7 +716,7 @@ class PartialUser:
             title=title,
         )
 
-        
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"
