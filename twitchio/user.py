@@ -696,8 +696,8 @@ class PartialUser:
     async def fetch_schedule(
         self,
         segment_ids: List[str] = None,
-        start_time: str = None,
-        utc_offset: str = None,
+        start_time: datetime.datetime = None,
+        utc_offset: int = None,
         first: int = 20,
     ):
         """|coro|
@@ -706,10 +706,9 @@ class PartialUser:
         -----------
         segment_ids: Optional[List[:class:`str`]]
             List of segment IDs of the stream schedule to return. Maximum: 100
-        start_time: Optional[:class:`str`]
-            A timestamp in RFC3339 format to start returning stream segments from. If not specified, the current date and time is used.
-            Example format `2021-09-10T18:00:00Z`
-        utc_offset: Optional[:class:`str`]
+        start_time: Optional[:class:`datetime.datetime`]
+            A datetime object to start returning stream segments from. If not specified, the current date and time is used.
+        utc_offset: Optional[:class:`int`]
             A timezone offset for the requester specified in minutes. +4 hours from GMT would be `240`
         first: Optional[:class:`int`]
             Maximum number of stream segments to return. Maximum: 25. Default: 20.

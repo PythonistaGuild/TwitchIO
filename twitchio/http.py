@@ -770,8 +770,8 @@ class TwitchHTTP:
         self,
         broadcaster_id: str,
         segment_ids: List[str] = None,
-        start_time: str = None,
-        utc_offset: str = None,
+        start_time: datetime.datetime = None,
+        utc_offset: int = None,
         first: int = 20,
     ):
 
@@ -779,6 +779,12 @@ class TwitchHTTP:
             raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
         if segment_ids is not None and len(segment_ids) > 100:
             raise ValueError("segment_id can only have 100 entries")
+
+        if start_time:
+            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        if utc_offset:
+            utc_offset = str(utc_offset)
 
         q = [
             x
