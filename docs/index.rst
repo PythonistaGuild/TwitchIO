@@ -40,6 +40,11 @@ Getting Started
    exts/eventsub
    exts/routines
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Changelog:
+
+   changelog
 
 
 Indices and tables
