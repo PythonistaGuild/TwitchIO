@@ -696,6 +696,7 @@ class PartialUser:
     async def modify_stream(self, token: str, game_id: int = None, language: str = None, title: str = None):
         """|coro|
         Modify stream information
+
         Parameters
         -----------
         token: :class:`str`
