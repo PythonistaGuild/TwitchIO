@@ -116,6 +116,7 @@ class Channel(Messageable):
 
     async def user(self, force=False) -> "User":
         """|coro|
+
         Fetches the User from the api.
 
         Parameters
@@ -133,6 +134,7 @@ class Channel(Messageable):
         self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
     ) -> BitsLeaderboard:
         """|coro|
+
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 
         Parameters
@@ -151,6 +153,7 @@ class Channel(Messageable):
 
     async def whisper(self, content: str):
         """|coro|
+
         Whispers the user behind the channel. This will not work if the channel is the same as the one you are sending the message from.
 
         .. warning:

@@ -91,6 +91,7 @@ class Messageable(abc.ABC):
     async def send(self, content: str):
         """|coro|
 
+
         Send a message to the destination associated with the dataclass.
 
         Destination will either be a channel or user.

@@ -56,6 +56,7 @@ class PartialChatter(Messageable):
 
     async def user(self) -> "User":
         """|coro|
+
         Fetches a :class:`twitchio.User` object based off the chatters channel name
 
         Returns

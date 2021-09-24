@@ -502,6 +502,7 @@ class Video:
 
     async def delete(self, token: str):
         """|coro|
+
         Deletes the video. For bulk deletion see :ref:`twitchio.Client.delete_videos`
 
         Parameters

@@ -76,6 +76,7 @@ class PartialUser:
 
     async def fetch(self, token: str = None, force=False) -> "User":
         """|coro|
+
         Fetches the full user from the api or cache
 
         Parameters
@@ -94,6 +95,7 @@ class PartialUser:
 
     async def edit(self, token: str, description: str) -> None:
         """|coro|
+
         Edits a channels description
 
         Parameters
@@ -107,6 +109,7 @@ class PartialUser:
 
     async def fetch_tags(self):
         """|coro|
+
         Fetches tags the user currently has active.
 
         Returns
@@ -120,6 +123,7 @@ class PartialUser:
 
     async def replace_tags(self, token: str, tags: List[Union[str, "Tag"]]):
         """|coro|
+
         Replaces the channels active tags. Tags expire 72 hours after being applied,
         unless the stream is live during that time period.
 
@@ -137,6 +141,7 @@ class PartialUser:
         self, token: str, *, only_manageable=False, ids: List[int] = None, force=False
     ) -> List["CustomReward"]:
         """|coro|
+
         Fetches the channels custom rewards (aka channel points) from the api.
         Parameters
         ----------
@@ -179,6 +184,7 @@ class PartialUser:
         self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
     ) -> "BitsLeaderboard":
         """|coro|
+
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 
         Parameters
@@ -199,6 +205,7 @@ class PartialUser:
 
     async def start_commercial(self, token: str, length: int) -> dict:
         """|coro|
+
         Starts a commercial on the channel. Requires an OAuth token with the `channel:edit:commercial` scope.
 
         Parameters
@@ -217,6 +224,7 @@ class PartialUser:
 
     async def create_clip(self, token: str, has_delay=False) -> dict:
         """|coro|
+
         Creates a clip on the channel. Note that clips are not created instantly, so you will have to query
         :ref:`~.get_clips` to confirm the clip was created. Requires an OAuth token with the `clips:edit` scope
 
@@ -236,6 +244,7 @@ class PartialUser:
 
     async def fetch_clips(self) -> List["Clip"]:
         """|coro|
+
         Fetches clips from the api. This will only return clips from the specified user.
         Use :ref:`twitchio.Client` to fetch clips by id
 
@@ -251,6 +260,7 @@ class PartialUser:
 
     async def fetch_hypetrain_events(self, id: str = None, token: str = None):
         """|coro|
+
         Fetches hypetrain event from the api. Needs a token with the channel:read:hype_train scope.
 
         Parameters
@@ -272,6 +282,7 @@ class PartialUser:
 
     async def fetch_bans(self, token: str, userids: List[Union[str, int]] = None) -> List["UserBan"]:
         """|coro|
+
         Fetches a list of people the User has banned from their channel.
 
         Parameters
@@ -286,6 +297,7 @@ class PartialUser:
 
     async def fetch_ban_events(self, token: str, userids: List[int] = None):
         """|coro|
+
         Fetches ban/unban events from the User's channel.
 
         Parameters
@@ -306,6 +318,7 @@ class PartialUser:
 
     async def fetch_moderators(self, token: str, userids: List[int] = None):
         """|coro|
+
         Fetches the moderators for this channel.
 
         Parameters
@@ -324,6 +337,7 @@ class PartialUser:
 
     async def fetch_mod_events(self, token: str):
         """|coro|
+
         Fetches mod events (moderators being added and removed) for this channel.
 
         Parameters
@@ -342,6 +356,7 @@ class PartialUser:
 
     async def automod_check(self, token: str, query: list):
         """|coro|
+
         Checks if a string passes the automod filter
 
         Parameters
@@ -362,6 +377,7 @@ class PartialUser:
 
     async def fetch_stream_key(self, token: str):
         """|coro|
+
         Fetches the users stream key
 
         Parameters
@@ -378,6 +394,7 @@ class PartialUser:
 
     async def fetch_following(self, token: str = None) -> List["FollowEvent"]:
         """|coro|
+
         Fetches a list of users that this user is following.
 
         Parameters
@@ -396,6 +413,7 @@ class PartialUser:
 
     async def fetch_followers(self, token: str = None):
         """|coro|
+
         Fetches a list of users that are following this user.
 
         Parameters
@@ -414,6 +432,7 @@ class PartialUser:
 
     async def fetch_follow(self, to_user: "PartialUser", token: str = None):
         """|coro|
+
         Check if a user follows another user or when they followed a user.
 
         Parameters
@@ -438,6 +457,7 @@ class PartialUser:
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
+
         Follows the user
 
         Parameters
@@ -455,6 +475,7 @@ class PartialUser:
 
     async def unfollow(self, userid: int, token: str):
         """|coro|
+
         Unfollows the user
 
         Parameters
@@ -468,6 +489,7 @@ class PartialUser:
 
     async def fetch_subscriptions(self, token: str, userids: List[int] = None):
         """|coro|
+
         Fetches the subscriptions for this channel.
 
         Parameters
@@ -488,6 +510,7 @@ class PartialUser:
 
     async def create_marker(self, token: str, description: str = None):
         """|coro|
+
         Creates a marker on the stream. This only works if the channel is live (among other conditions)
 
         Parameters
@@ -508,6 +531,7 @@ class PartialUser:
 
     async def fetch_markers(self, token: str, video_id: str = None):
         """|coro|
+
         Fetches markers from the given video id, or the most recent video.
         The Twitch api will only return markers created by the user of the authorized token
 
@@ -530,6 +554,7 @@ class PartialUser:
 
     async def fetch_extensions(self, token: str):
         """|coro|
+
         Fetches extensions the user has (active and inactive)
 
         Parameters
@@ -548,6 +573,7 @@ class PartialUser:
 
     async def fetch_active_extensions(self, token: str = None):
         """|coro|
+
         Fetches active extensions the user has.
         Returns a dictionary containing the following keys: `panel`, `overlay`, `component`.
 
@@ -567,6 +593,7 @@ class PartialUser:
 
     async def update_extensions(self, token: str, extensions: "ExtensionBuilder"):
         """|coro|
+
         Updates a users extensions. See the :class:`twitchio.ExtensionBuilder`
 
         Parameters
@@ -587,6 +614,7 @@ class PartialUser:
 
     async def fetch_videos(self, period="all", sort="time", type="all", language=None):
         """|coro|
+
         Fetches videos that belong to the user. If you have specific video ids use :ref:`twitchio.Client.fetch_videos`
 
         Parameters
@@ -613,6 +641,7 @@ class PartialUser:
         self, token: str, prediction_id: str, status: str, winning_outcome_id: str = None
     ) -> "Prediction":
         """|coro|
+
         End a prediction with an outcome.
 
         Parameters
@@ -639,6 +668,7 @@ class PartialUser:
 
     async def get_predictions(self, token: str, prediction_id: str = None) -> List["Prediction"]:
         """|coro|
+
         Gets information on a prediction or the list of predictions
         if none is provided.
 
@@ -662,6 +692,7 @@ class PartialUser:
         self, token: str, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
     ) -> "Prediction":
         """|coro|
+
         Creates a prediction for the channel.
 
         Parameters
@@ -695,6 +726,7 @@ class PartialUser:
 
     async def modify_stream(self, token: str, game_id: int = None, language: str = None, title: str = None):
         """|coro|
+
         Modify stream information
 
         Parameters
@@ -724,6 +756,7 @@ class PartialUser:
         first: int = 20,
     ):
         """|coro|
+
         Fetches the schedule of a streamer
         Parameters
         -----------
