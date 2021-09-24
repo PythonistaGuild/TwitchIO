@@ -715,41 +715,6 @@ class PartialUser:
             title=title,
         )
 
-    async def fetch_schedule(
-        self,
-        segment_ids: List[str] = None,
-        start_time: datetime.datetime = None,
-        utc_offset: int = None,
-        first: int = 20,
-    ):
-        """|coro|
-        Fetches the schedule of a streamer
-        Parameters
-        -----------
-        segment_ids: Optional[List[:class:`str`]]
-            List of segment IDs of the stream schedule to return. Maximum: 100
-        start_time: Optional[:class:`datetime.datetime`]
-            A datetime object to start returning stream segments from. If not specified, the current date and time is used.
-        utc_offset: Optional[:class:`int`]
-            A timezone offset for the requester specified in minutes. +4 hours from GMT would be `240`
-        first: Optional[:class:`int`]
-            Maximum number of stream segments to return. Maximum: 25. Default: 20.
-        Returns
-        --------
-            :class:`twitchio.Schedule`
-        """
-        from .models import Schedule
-
-        data = await self._http.get_channel_schedule(
-            broadcaster_id=str(self.id),
-            segment_ids=segment_ids,
-            start_time=start_time,
-            utc_offset=utc_offset,
-            first=first,
-        )
-
-        return Schedule(self._http, data)
-
 
 class BitLeaderboardUser(PartialUser):
 
