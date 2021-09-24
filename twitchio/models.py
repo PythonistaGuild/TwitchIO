@@ -612,7 +612,7 @@ class Prediction:
         self.locked_at = self._parse_time(data, "locked_at")
 
     def _parse_time(self, data, field) -> Optional["Datetime"]:
-        if field not in data or data[field] == None:
+        if field not in data or data[field] is None:
             return None
 
         time = data[field].split(".")[0]
@@ -654,3 +654,58 @@ class PredictionOutcome:
 
     def __repr__(self):
         return f"<PredictionOutcome outcome_id={self.outcome_id} title={self.title} channel_points={self.channel_points} color={self.color}>"
+
+class Schedule:
+
+    __slots__ = ("segments", "user", "vacation")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.segments = [ScheduleSegment(d) for d in data["data"]["segments"]]
+        self.user = PartialUser(http, data["data"]["broadcaster_id"], data["data"]["broadcaster_login"])
+        self.vacation = ScheduleVacation(data["data"]["vacation"]) if data["data"]["vacation"] else None
+
+    def __repr__(self):
+        return f"<Schedule segments={self.segments} user={self.user} vacation={self.vacation}>"
+
+
+class ScheduleSegment:
+
+    __slots__ = ("id", "start_time", "end_time", "title", "canceled_until", "category", "is_recurring")
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.start_time = datetime.datetime.strptime(data["start_time"], "%Y-%m-%dT%H:%M:%SZ")
+        self.end_time = datetime.datetime.strptime(data["end_time"], "%Y-%m-%dT%H:%M:%SZ")
+        self.title: str = data["title"]
+        self.canceled_until = (
+            datetime.datetime.strptime(data["canceled_until"], "%Y-%m-%dT%H:%M:%SZ") if data["canceled_until"] else None
+        )
+        self.category = ScheduleCategory(data["category"]) if data["category"] else None
+        self.is_recurring: bool = data["is_recurring"]
+
+    def __repr__(self):
+        return f"<Segment id={self.id} start_time={self.start_time} end_time={self.end_time} title={self.title} canceled_until={self.canceled_until} category={self.category} is_recurring={self.is_recurring}>"
+
+
+class ScheduleCategory:
+
+    __slots__ = ("id", "name")
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.name: str = data["name"]
+
+    def __repr__(self):
+        return f"<ScheduleCategory id={self.id} name={self.name}>"
+
+
+class ScheduleVacation:
+
+    __slots__ = ("start_time", "end_time")
+
+    def __init__(self, data: dict):
+        self.start_time = datetime.datetime.strptime(data["start_time"], "%Y-%m-%dT%H:%M:%SZ")
+        self.end_time = datetime.datetime.strptime(data["end_time"], "%Y-%m-%dT%H:%M:%SZ")
+
+    def __repr__(self):
+        return f"<ScheduleVacation start_time={self.start_time} end_time={self.end_time}>"
