@@ -750,6 +750,7 @@ class PartialUser:
 
         return Schedule(self._http, data)
 
+
 class BitLeaderboardUser(PartialUser):
 
     __slots__ = "rank", "score"
