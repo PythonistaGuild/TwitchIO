@@ -56,6 +56,10 @@ __all__ = (
     "Tag",
     "WebhookSubscription",
     "Prediction",
+    "Schedule",
+    "ScheduleSegment",
+    "ScheduleCategory",
+    "ScheduleVacation"
 )
 
 
