@@ -74,6 +74,7 @@ class Headers:
     timestamp: :class:`datetime.datetime`
         The timestamp the message was sent at
     """
+
     def __init__(self, request: web.Request):
         self.message_id: str = request.headers["Twitch-Eventsub-Message-Id"]
         self.message_retry: int = int(request.headers["Twitch-Eventsub-Message-Retry"])
@@ -96,6 +97,7 @@ class BaseEvent:
     headers: :class`Headers`
         The headers received with the message
     """
+
     __slots__ = "_client", "_raw_data", "subscription", "headers"
 
     def __init__(self, client: EventSubClient, data: str, request: web.Request):
@@ -134,6 +136,7 @@ class ChallengeEvent(BaseEvent):
     challenge: :class`str`
         The challenge received from twitch
     """
+
     __slots__ = ("challenge",)
 
     def setup(self, data: dict):
@@ -160,6 +163,7 @@ class NotificationEvent(BaseEvent):
     data: :class:`models._DataType`
         The data associated with this event
     """
+
     __slots__ = ("data",)
 
     def setup(self, _data: dict):
@@ -200,6 +204,7 @@ class ChannelBanData(EventData):
     permanent: :class:`bool`
         Whether the ban is permanent
     """
+
     __slots__ = "user", "broadcaster", "moderator", "reason", "ends_at", "permenant", "permanent"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -209,7 +214,7 @@ class ChannelBanData(EventData):
         self.reason: str = data["reason"]
         self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(data["ends_at"])
         self.permenant: bool = data["is_permanent"]
-        self.permanent = self.permenant # fix the spelling while keeping backwards compat
+        self.permanent = self.permenant  # fix the spelling while keeping backwards compat
 
 
 class ChannelSubscribeData(EventData):
@@ -227,6 +232,7 @@ class ChannelSubscribeData(EventData):
     is_gift: :class:`bool`
         Whether the subscription was a gift or not
     """
+
     __slots__ = "user", "broadcaster", "tier", "is_gift"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -253,6 +259,7 @@ class ChannelCheerData(EventData):
     bits: :class:`int`
         The amount of bits sent
     """
+
     __slots__ = "user", "broadcaster", "is_anonymous", "message", "bits"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -282,6 +289,7 @@ class ChannelUpdateData(EventData):
     is_mature: :class:`bool`
         Whether the channel is marked as mature by the broadcaster
     """
+
     __slots__ = "broadcaster", "title", "language", "category_id", "category_name", "is_mature"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -306,6 +314,7 @@ class ChannelUnbanData(EventData):
     moderator: :class`PartialUser`
         The moderator that preformed the unban
     """
+
     __slots__ = "user", "broadcaster", "moderator"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -327,6 +336,7 @@ class ChannelFollowData(EventData):
     followed_at: :class:`datetime.datetime`
         When the follow occurred
     """
+
     __slots__ = "user", "broadcaster", "followed_at"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -348,6 +358,7 @@ class ChannelRaidData(EventData):
     viewer_count: :class:`int`
         The amount of people raiding
     """
+
     __slots__ = "raider", "reciever", "viewer_count"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -367,6 +378,7 @@ class ChannelModeratorAddRemoveData(EventData):
     broadcaster: :class:`PartialUser`
         The channel that is having a moderator added/removed
     """
+
     __slots__ = "broadcaster", "user"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -387,6 +399,7 @@ class CustomRewardAddUpdateRemoveData(EventData):
     reward: :class:`CustomReward`
         The reward object
     """
+
     __slots__ = "reward", "broadcaster", "id"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -416,6 +429,7 @@ class CustomRewardRedemptionAddUpdateData(EventData):
     reward: :class:`CustomReward`
         The reward object
     """
+
     __slots__ = "broadcaster", "id", "user", "input", "status", "reward", "redeemed_at"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -441,6 +455,7 @@ class HypeTrainContributor:
     total: :class:`int`
         How many points they've contributed to the Hype Train
     """
+
     __slots__ = "user", "type", "total"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -471,6 +486,7 @@ class HypeTrainBeginProgressData(EventData):
     last_contribution: :class:`HypeTrainContributor`
         The last contributor to the Hype Train
     """
+
     __slots__ = (
         "broadcaster",
         "total_points",
@@ -512,6 +528,7 @@ class HypeTrainEndData(EventData):
     cooldown_ends_at: :class:`datetime.datetime`
         When another Hype Train can begin
     """
+
     __slots__ = "broadcaster", "level", "total_points", "top_contributions", "started", "ended", "cooldown_ends_at"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -538,6 +555,7 @@ class StreamOnlineData(EventData):
         One of "live", "playlist", "watch_party", "premier", or "rerun". The type of live event.
     started_at: :class:`datetime.datetime`
     """
+
     __slots__ = "broadcaster", "id", "type", "started_at"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -556,6 +574,7 @@ class StreamOfflineData(EventData):
     broadcaster: :class:`PartialUser`
         The channel that stopped streaming
     """
+
     __slots__ = ("broadcaster",)
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -573,6 +592,7 @@ class UserAuthorizationRevokedData(EventData):
     client_id: :class:`str`
         The client id of the app that had its authorization revoked
     """
+
     __slots__ = "client_id", "user"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -593,6 +613,7 @@ class UserUpdateData(EventData):
     description: :class:`str`
         The channels description (displayed as ``bio``)
     """
+
     __slots__ = "user", "email", "description"
 
     def __init__(self, client: EventSubClient, data: dict):

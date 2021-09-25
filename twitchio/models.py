@@ -61,7 +61,7 @@ __all__ = (
     "Schedule",
     "ScheduleSegment",
     "ScheduleCategory",
-    "ScheduleVacation"
+    "ScheduleVacation",
 )
 
 
