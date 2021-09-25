@@ -20,3 +20,4 @@
 
 - ext.eventsub
     - fix :class:`ext.eventsub.models.ChannelBanData`'s ``permanent`` attribute accessing nonexistent attrs from the event payload
+    - Add documentation
