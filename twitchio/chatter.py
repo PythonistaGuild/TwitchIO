@@ -22,13 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Dict
 
 from .abcs import Messageable
 from .enums import PredictionEnum
 
 if TYPE_CHECKING:
-    from .channel import Channel
     from .user import User
     from .websocket import WSConnection
 
@@ -92,6 +91,7 @@ class Chatter(PartialChatter):
         "_channel",
         "_tags",
         "_badges",
+        "_cached_badges",
         "_ws",
         "id",
         "_turbo",
@@ -126,6 +126,10 @@ class Chatter(PartialChatter):
         self._display_name = self._tags["display-name"]
         self._colour = self._tags["color"]
 
+        self._cached_badges: Optional[Dict[str, str]] = None
+        if self._badges:
+            self._cached_badges = {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
+
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]  # noqa
         for user in cache:
@@ -145,7 +149,10 @@ class Chatter(PartialChatter):
     @property
     def badges(self) -> dict:
         """The users badges."""
-        return {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
+        if self._cached_badges:
+            return self._cached_badges.copy()
+
+        return {}
 
     @property
     def display_name(self) -> str:
@@ -178,12 +185,14 @@ class Chatter(PartialChatter):
         return self._turbo
 
     @property
-    def is_subscriber(self) -> Optional[bool]:
+    def is_subscriber(self) -> bool:
         """A boolean indicating whether the User is a subscriber of the current channel.
 
-        Could be None if no Tags were received.
+        .. note::
+
+            changed in 2.1.0: return value is no longer optional. founders will now appear as subscribers
         """
-        return self._sub or "founder" in self._tags
+        return self._sub or "founder" in self.badges
 
     @property
     def prediction(self) -> Optional[PredictionEnum]:
@@ -194,10 +203,10 @@ class Chatter(PartialChatter):
         --------
         Optional[:class:`twitchio.enums.PredictionEnum`]
         """
-        if "blue-1" in self._badges:
+        if "blue-1" in self.badges:
             return PredictionEnum("blue-1")
 
-        elif "pink-2" in self._badges:
+        elif "pink-2" in self.badges:
             return PredictionEnum("pink-2")
 
         return None

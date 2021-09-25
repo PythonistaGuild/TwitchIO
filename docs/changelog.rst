@@ -4,6 +4,7 @@
 ======
 - TwitchIO
     - :class:`Chatter` fixed the docstring for the `badges` property
+    - :func:`Chatter.is_subscriber` will now return True for founders
     - :class:`Client` change docstring on `fetch_channel`
     - Add support for the predictions API routes
         - :class:`Prediction`, :class:`Predictor`, :class:`PredictionOutcome`
