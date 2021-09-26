@@ -855,6 +855,7 @@ class User(PartialUser):
         self.view_count = (data["view_count"],)
         self.created_at = data["created_at"]
         self.email = data.get("email")
+        self._cached_rewards = None
 
     def __repr__(self):
         return f"<User id={self.id} name={self.name} display_name={self.display_name} type={self.type}>"
