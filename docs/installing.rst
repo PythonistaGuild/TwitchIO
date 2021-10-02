@@ -8,13 +8,13 @@ You can download the latest version of Python `here <https://www.python.org/down
 
 .. code:: sh
 
-    py -3.9 -m pip install -U twitchio --pre
+    py -3.9 -m pip install -U twitchio
 
 **Linux:**
 
 .. code:: sh
 
-    python3.9 -m pip install -U twitchio --pre
+    python3.9 -m pip install -U twitchio
 
 
 Debugging
