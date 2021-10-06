@@ -755,6 +755,7 @@ class PartialUser:
         first: int = 20,
     ):
         """|coro|
+
         Fetches the schedule of a streamer
         Parameters
         -----------
