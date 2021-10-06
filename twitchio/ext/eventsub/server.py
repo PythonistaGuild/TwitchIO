@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import yarl
 from aiohttp import web
 
-from ... import Client, PartialUser
+from twitchio import Client, PartialUser
 from . import models, http
 
 try:

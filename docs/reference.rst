@@ -203,16 +203,14 @@ CustomRewardRedemption
     :members:
     :inherited-members:
 
-PartialUser
--------------
+User
+------
 .. attributetable:: PartialUser
 
 .. autoclass:: PartialUser
     :members:
     :inherited-members:
 
-User
-------
 .. attributetable:: User
 
 .. autoclass:: User
@@ -239,7 +237,7 @@ SearchUser
 .. autoclass:: SearchUser
     :members:
 
-PartialChatter
+Chatter
 ----------------
 .. attributetable:: PartialChatter
 
@@ -247,8 +245,6 @@ PartialChatter
     :members:
     :inherited-members:
 
-Chatter
----------
 .. attributetable:: Chatter
 
 .. autoclass:: Chatter
@@ -259,6 +255,46 @@ Channel
 .. attributetable:: Channel
 
 .. autoclass:: Channel
+    :members:
+    :inherited-members:
+
+Predictions
+-------------
+.. attributetable:: Prediction
+
+.. autoclass:: Prediction
+    :members:
+    :inherited-members:
+
+.. attributetable:: Predictor
+
+.. autoclass:: Predictor
+    :members:
+    :inherited-members:
+
+Schedules
+----------
+.. attributetable:: Schedule
+
+.. autoclass:: Schedule
+    :members:
+    :inherited-members:
+
+.. attributetable:: ScheduleSegment
+
+.. autoclass:: ScheduleSegment
+    :members:
+    :inherited-members:
+
+.. attributetable:: ScheduleCategory
+
+.. autoclass:: ScheduleCategory
+    :members:
+    :inherited-members:
+
+.. attributetable:: ScheduleVacation
+
+.. autoclass:: ScheduleVacation
     :members:
     :inherited-members:
 

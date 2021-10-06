@@ -22,13 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Dict
 
 from .abcs import Messageable
 from .enums import PredictionEnum
 
 if TYPE_CHECKING:
-    from .channel import Channel
     from .user import User
     from .websocket import WSConnection
 
@@ -56,6 +55,7 @@ class PartialChatter(Messageable):
 
     async def user(self) -> "User":
         """|coro|
+
         Fetches a :class:`twitchio.User` object based off the chatters channel name
 
         Returns
@@ -91,6 +91,7 @@ class Chatter(PartialChatter):
         "_channel",
         "_tags",
         "_badges",
+        "_cached_badges",
         "_ws",
         "id",
         "_turbo",
@@ -107,6 +108,8 @@ class Chatter(PartialChatter):
         self._tags = kwargs.get("tags", None)
         self._ws = websocket
 
+        self._cached_badges: Optional[Dict[str, str]] = None
+
         if not self._tags:
             self.id = None
             self._badges = None
@@ -120,10 +123,13 @@ class Chatter(PartialChatter):
         self.id = self._tags.get("user-id")
         self._badges = self._tags.get("badges")
         self._turbo = self._tags.get("turbo")
-        self._sub = self._tags["subscriber"]
+        self._sub = int(self._tags["subscriber"])
         self._mod = int(self._tags["mod"])
         self._display_name = self._tags["display-name"]
         self._colour = self._tags["color"]
+
+        if self._badges:
+            self._cached_badges = {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]  # noqa
@@ -144,7 +150,10 @@ class Chatter(PartialChatter):
     @property
     def badges(self) -> dict:
         """The users badges."""
-        return {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
+        if self._cached_badges:
+            return self._cached_badges.copy()
+
+        return {}
 
     @property
     def display_name(self) -> str:
@@ -166,6 +175,7 @@ class Chatter(PartialChatter):
         """A boolean indicating whether the User is a moderator of the current channel."""
         if self._mod == 1:
             return True
+
         return self.channel.name == self.display_name.lower()
 
     @property
@@ -177,12 +187,14 @@ class Chatter(PartialChatter):
         return self._turbo
 
     @property
-    def is_subscriber(self) -> Optional[bool]:
+    def is_subscriber(self) -> bool:
         """A boolean indicating whether the User is a subscriber of the current channel.
 
-        Could be None if no Tags were received.
+        .. note::
+
+            changed in 2.1.0: return value is no longer optional. founders will now appear as subscribers
         """
-        return self._sub or "founder" in self._tags
+        return bool(self._sub) if self._sub is not None else "founder" in self.badges
 
     @property
     def prediction(self) -> Optional[PredictionEnum]:
@@ -193,10 +205,10 @@ class Chatter(PartialChatter):
         --------
         Optional[:class:`twitchio.enums.PredictionEnum`]
         """
-        if "blue-1" in self._badges:
+        if "blue-1" in self.badges:
             return PredictionEnum("blue-1")
 
-        elif "pink-2" in self._badges:
+        elif "pink-2" in self.badges:
             return PredictionEnum("pink-2")
 
         return None
