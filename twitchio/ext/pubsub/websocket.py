@@ -133,7 +133,7 @@ class PubSubWebsocket:
 
         await self._send_topics(topics)
 
-    async def unsubscribe_topic(self, topics: List[Topic]):
+    async def unsubscribe_topics(self, topics: List[Topic]):
         if any(t not in self.topics for t in topics):
             raise ValueError("Topics were given that have not been subscribed to")
 
