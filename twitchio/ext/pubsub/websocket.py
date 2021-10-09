@@ -193,5 +193,7 @@ class PubSubWebsocket:
     async def handle_response(self, message: dict):
         if message["error"]:
             logger.error(f"Recieved errored response for nonce {message['nonce']}: {message['error']}")
+            self.client.run_event("pubsub_error", message)
         elif message["nonce"]:
             logger.debug(f"Recieved OK response for nonce {message['nonce']}")
+            self.client.run_event("pubsub_nonce", message)
