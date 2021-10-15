@@ -232,7 +232,7 @@ class Bot(Client):
         try:
             command_ = parsed.pop(0)
         except KeyError:
-            raise CommandNotFound(f"No valid command was passed.")
+            raise CommandNotFound("No valid command was passed.")
 
         try:
             command_ = self._command_aliases[command_]

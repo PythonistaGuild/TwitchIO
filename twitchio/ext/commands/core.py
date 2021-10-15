@@ -154,7 +154,7 @@ class Command:
             if instance:
                 next(iterator)
         except StopIteration:
-            raise TwitchCommandError(f"self or ctx is a required argument which is missing.")
+            raise TwitchCommandError("self or ctx is a required argument which is missing.")
 
         for _, param in iterator:
             index += 1
@@ -400,6 +400,9 @@ class Context(Messageable):
 
     def _fetch_websocket(self):
         return self._ws  # Abstract method
+
+    def _fetch_message(self):
+        return self.message  # Abstract method
 
     def _bot_is_mod(self) -> bool:
         if not self.channel:
