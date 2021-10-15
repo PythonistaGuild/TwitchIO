@@ -728,7 +728,6 @@ class PartialUser:
         """|coro|
 
         Modify stream information
-
         Parameters
         -----------
         token: :class:`str`
@@ -783,7 +782,6 @@ class PartialUser:
         )
 
         return Schedule(self._http, data)
-
 
 class BitLeaderboardUser(PartialUser):
 

@@ -216,6 +216,8 @@ class Client:
             if e == event_name:
                 if check(*args):
                     future.set_result(args)
+            if future.done():
+                self._waiting.remove((e, check, future))
 
     def add_event(self, callback: Callable, name: str = None) -> None:
         try:
