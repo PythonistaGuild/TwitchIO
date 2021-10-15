@@ -133,7 +133,7 @@ class Messageable(abc.ABC):
         Send a message in reply to the user who sent a message in the destination
         associated with the dataclass.
 
-        Destination will be a channel or a user.
+        Destination will be the context of which the message/command was sent.
 
         Parameters
         ------------
