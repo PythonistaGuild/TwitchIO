@@ -43,6 +43,7 @@ class PartialChatter(Messageable):
         self._name = kwargs.get("name")
         self._ws = websocket
         self._channel = kwargs.get("channel", self._name)
+        self._message = kwargs.get("message")
 
     def __repr__(self):
         return f"<PartialChatter name: {self._name}, channel: {self._channel}>"
@@ -79,6 +80,9 @@ class PartialChatter(Messageable):
 
     def _fetch_websocket(self):
         return self._ws  # Abstract method
+
+    def _fetch_message(self):
+        return self._message  # Abstract method
 
     def _bot_is_mod(self):
         return False

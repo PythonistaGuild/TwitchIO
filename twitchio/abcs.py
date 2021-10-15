@@ -64,6 +64,10 @@ class Messageable(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def _fetch_message(self):
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def _bot_is_mod(self):
         raise NotImplementedError
 
@@ -121,3 +125,39 @@ class Messageable(abc.ABC):
             await ws.send(f"PRIVMSG #jtv :/w {name} {content}\r\n")
         else:
             await ws.send(f"PRIVMSG #{name} :{content}\r\n")
+
+    async def reply(self, content: str):
+        """|coro|
+
+
+        Send a message in reply to the user who sent a message in the destination
+        associated with the dataclass.
+
+        Destination will be a channel or a user.
+
+        Parameters
+        ------------
+        content: str
+            The content you wish to send as a message. The content must be a string.
+
+        Raises
+        --------
+        InvalidContent
+            Invalid content.
+        """
+        entity = self._fetch_channel()
+        ws = self._fetch_websocket()
+        message = self._fetch_message()
+
+        self.check_content(content)
+        self.check_bucket(channel=entity.name)
+
+        try:
+            name = entity.channel.name
+        except AttributeError:
+            name = entity.name
+
+        if entity.__messageable_channel__:
+            await ws.reply(message.id, f"PRIVMSG #{name} :{content}\r\n")
+        else:
+            await ws.send(f"PRIVMSG #jtv :/w {name} {content}\r\n")

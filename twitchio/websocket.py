@@ -200,6 +200,22 @@ class WSConnection:
 
         await self._websocket.send_str(message + "\r\n")
 
+    async def reply(self, msg_id: str, message: str):
+        message = message.strip()
+        log.debug(f" > {message}")
+
+        if message.startswith("PRIVMSG #"):
+            data = message.replace("PRIVMSG #", "", 1).split(" ")
+            channel = data.pop(0)
+            content = " ".join(data)
+
+            dummy = f"> @reply-parent-msg-id={msg_id} :{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO) #{channel} {content}\r\n"
+            print(f"{dummy=}")
+            task = asyncio.create_task(self._process_data(dummy))
+            task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
+
+        await self._websocket.send_str(f"@reply-parent-msg-id={msg_id} {message} \r\n")
+
     async def authenticate(self, channels: Union[list, tuple]):
         """|coro|
 
@@ -435,7 +451,7 @@ class WSConnection:
         pass
 
     async def _reconnect(self, parsed):
-        log.debug(f"ACTION: RECONNECT:: Twitch has gracefully closed the connection and will reconnect.")
+        log.debug("ACTION: RECONNECT:: Twitch has gracefully closed the connection and will reconnect.")
         self._reconnect_requested = True
 
     def dispatch(self, event: str, *args, **kwargs):

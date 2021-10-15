@@ -39,7 +39,7 @@ __all__ = ("Channel",)
 
 class Channel(Messageable):
 
-    __slots__ = ("_name", "_ws")
+    __slots__ = ("_name", "_ws", "_message")
 
     __messageable_channel__ = True
 
@@ -61,6 +61,9 @@ class Channel(Messageable):
 
     def _fetch_websocket(self):
         return self._ws  # Abstract method
+
+    def _fetch_message(self):
+        return self._message  # Abstract method
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self.name]  # noqa
