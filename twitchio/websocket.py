@@ -210,7 +210,6 @@ class WSConnection:
             content = " ".join(data)
 
             dummy = f"> @reply-parent-msg-id={msg_id} :{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO) #{channel} {content}\r\n"
-            print(f"{dummy=}")
             task = asyncio.create_task(self._process_data(dummy))
             task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
 
