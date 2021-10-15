@@ -662,6 +662,7 @@ class PredictionOutcome:
     def __repr__(self):
         return f"<PredictionOutcome outcome_id={self.outcome_id} title={self.title} channel_points={self.channel_points} color={self.color}>"
 
+
 class Schedule:
 
     __slots__ = ("segments", "user", "vacation")
