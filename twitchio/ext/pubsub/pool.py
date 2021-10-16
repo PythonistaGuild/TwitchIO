@@ -81,7 +81,7 @@ class PubSubPool:
 
         """
         for node, vals in itertools.groupby(topics, lambda t: self._topics[t]):
-            await node.unsubscribe_topics(vals)
+            await node.unsubscribe_topic(vals)
             if not node.topics:
                 await node.disconnect()
                 self._pool.remove(node)
