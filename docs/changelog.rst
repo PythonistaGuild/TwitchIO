@@ -15,10 +15,12 @@
         - :func:`PartialUser.fetch_schedule`
     - Add :func:`PartialUser.modify_stream`
     - Fix bug where chatter cache would not be created
+    - Fix bug where :func:`Client.wait_for` would cause internal asyncio.InvalidState errors
 
 - ext.commands
     - General typing improvements
     - :func:`ext.commands.builtin_converters.convert_Clip` - Raise error when the regex doesn't match to appease linters. This should never be raised.
+    - Added :func:`ext.commands.Context.reply` to support message replies
 
 - ext.eventsub
     - fix :class:`ext.eventsub.models.ChannelBanData`'s ``permanent`` attribute accessing nonexistent attrs from the event payload
