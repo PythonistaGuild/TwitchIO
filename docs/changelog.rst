@@ -22,6 +22,9 @@
     - :func:`ext.commands.builtin_converters.convert_Clip` - Raise error when the regex doesn't match to appease linters. This should never be raised.
     - Added :func:`ext.commands.Context.reply` to support message replies
 
+- ext.pubsub
+    - Fixed bug with Pool.unsubscribe_topics caused by typo
+
 - ext.eventsub
     - fix :class:`ext.eventsub.models.ChannelBanData`'s ``permanent`` attribute accessing nonexistent attrs from the event payload
     - Add documentation
