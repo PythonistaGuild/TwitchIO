@@ -93,6 +93,7 @@ class TwitchHTTP:
         self.client = client
         self.session = None
         self.token = api_token
+        self.app_token = None
         self._refresh_token = None
         self.client_secret = client_secret
         self.client_id = client_id
@@ -101,7 +102,7 @@ class TwitchHTTP:
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
 
-    async def request(self, route: Route, *, paginate=True, limit=100, full_body=False):
+    async def request(self, route: Route, *, paginate=True, limit=100, full_body=False, force_app_token=False):
         """
         Fulfills an API request
 
@@ -115,6 +116,8 @@ class TwitchHTTP:
             The data limit per request when paginating. Defaults to 100
         full_body : class:`bool`
             Whether to return the full response body or to accumulate the `data` key. Defaults to False. `paginate` must be False if this is True.
+        force_app_token : :class:`bool`
+            Forcibly use the client_id and client_secret generated token, if available. Otherwise fail the request immediately
         """
         if full_body:
             assert not paginate
@@ -127,9 +130,19 @@ class TwitchHTTP:
 
         headers = route.headers or {}
 
-        if not self.token and not self.client_secret and "Authorization" not in headers:
+        if force_app_token and "Authorization" not in headers:
+            if not self.client_secret:
+                raise errors.NoToken(
+                    "An app access token is required for this route, please provide a client id and client secret"
+                )
+
+            if self.app_token is None:
+                await self._generate_login()
+                headers["Authorization"] = f"Bearer {self.app_token}"
+
+        elif not self.token and not self.client_secret and "Authorization" not in headers:
             raise errors.NoToken(
-                "Authorization is required to use the Twitch API. Pass api_token and/or client_secret to the Client constructor"
+                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
             )
 
         if "Authorization" not in headers:
@@ -257,7 +270,7 @@ class TwitchHTTP:
             token = await self.client.event_token_expired()
             if token is not None:
                 assert isinstance(token, str), TypeError(f"Expected a string, got {type(token)}")
-                self.token = token
+                self.token = self.app_token = token
                 return
         except Exception as e:
             self.client.run_event("error", e)
@@ -288,7 +301,7 @@ class TwitchHTTP:
                 raise errors.HTTPException("Unable to generate a token: " + await resp.text())
 
             data = await resp.json()
-            self.token = data["access_token"]
+            self.token = self.app_token = data["access_token"]
             self._refresh_token = data.get("refresh_token", None)
             logger.info("Invalid or no token found, generated new token: %s", self.token)
 

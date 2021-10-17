@@ -15,7 +15,7 @@ class EventSubHTTP:
     def __init__(self, client: EventSubClient, token: Optional[str]):
         self._client = client
         self._http = client.client._http
-        self._token = token or self._http.token
+        self._token = token
 
     async def create_subscription(self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str]):
         payload = {
@@ -25,7 +25,7 @@ class EventSubHTTP:
             "transport": {"method": "webhook", "callback": self._client.route, "secret": self._client.secret},
         }
         route = Route("POST", "eventsub/subscriptions", body=payload, token=self._token)
-        return await self._http.request(route, paginate=False)
+        return await self._http.request(route, paginate=False, force_app_token=True)
 
     async def delete_subscription(self, substription: Union[str, Subscription]):
         if isinstance(substription, models.Subscription):
