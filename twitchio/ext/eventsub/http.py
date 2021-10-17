@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Tuple, Dict, Type, Union
+from __future__ import annotations
+from typing import TYPE_CHECKING, Tuple, Dict, Type, Union, Optional
 from ...http import Route
 
 from . import models
@@ -11,21 +12,22 @@ __all__ = ("EventSubHTTP",)
 
 
 class EventSubHTTP:
-    def __init__(self, client: "EventSubClient"):
+    def __init__(self, client: EventSubClient, token: Optional[str]):
         self._client = client
         self._http = client.client._http
+        self._token = token or self._http.token
 
-    async def create_subscription(self, event_type: Tuple[str, int, Type["EventData"]], condition: Dict[str, str]):
+    async def create_subscription(self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str]):
         payload = {
             "type": event_type[0],
             "version": str(event_type[1]),
             "condition": condition,
             "transport": {"method": "webhook", "callback": self._client.route, "secret": self._client.secret},
         }
-        route = Route("POST", "eventsub/subscriptions", body=payload)
+        route = Route("POST", "eventsub/subscriptions", body=payload, token=self._token)
         return await self._http.request(route, paginate=False)
 
-    async def delete_subscription(self, substription: Union[str, "Subscription"]):
+    async def delete_subscription(self, substription: Union[str, Subscription]):
         if isinstance(substription, models.Subscription):
             return await self._http.request(
                 Route("DELETE", "eventsub/subscriptions", query=[("id", substription.id)]), paginate=False
