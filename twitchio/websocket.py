@@ -407,7 +407,13 @@ class WSConnection:
 
     async def _usernotice(self, parsed):  # TODO
         log.debug(f'ACTION: USERNOTICE:: {parsed["channel"]}')
+        
+        channel = Channel(name=parsed["channel"], websocket=self)
+        rawData = parsed["groups"][0]
+        tags = {tag.split("=")[0]: tag.split("=")[1] for tag in rawData.split(";")}
 
+        self.dispatch("raw_usernotice", channel, tags)
+        
     async def _join(self, parsed):
         log.debug(f'ACTION: JOIN:: {parsed["channel"]}')
         channel = parsed["channel"]
