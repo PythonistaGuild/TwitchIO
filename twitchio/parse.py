@@ -31,7 +31,7 @@ if typing.TYPE_CHECKING:
     from .websocket import WSConnection
 
 ACTIONS = ("JOIN", "PART", "PING", "PRIVMSG", "PRIVMSG(ECHO)", "USERSTATE", "MODE", "RECONNECT", "WHISPER", "USERNOTICE")
-ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "WHISPER")
+ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "USERNOTICE", "WHISPER")
 USER_SUB = re.compile(r":(?P<user>.*)!")
 TMI = "tmi.twitch.tv"
 

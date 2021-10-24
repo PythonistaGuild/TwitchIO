@@ -121,10 +121,10 @@ class Messageable(abc.ABC):
         except AttributeError:
             name = entity.name
 
-        if not entity.__messageable_channel__:
-            await ws.send(f"PRIVMSG #jtv :/w {name} {content}\r\n")
-        else:
+        if entity.__messageable_channel__:
             await ws.send(f"PRIVMSG #{name} :{content}\r\n")
+        else:
+            await ws.send(f"PRIVMSG #jtv :/w {entity.name} {content}\r\n")
 
     async def reply(self, content: str):
         """|coro|

@@ -410,7 +410,7 @@ class WSConnection:
         
         channel = Channel(name=parsed["channel"], websocket=self)
         rawData = parsed["groups"][0]
-        tags = dict(x.split("=") for x in rawData.split(";))
+        tags = dict(x.split("=") for x in rawData.split(";"))
 
         self.dispatch("raw_usernotice", channel, tags)
         
