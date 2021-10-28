@@ -3,6 +3,9 @@
 2.1.0
 ======
 - TwitchIO
+    - Type the :class:`User` class
+    - Update the library to use a proper ISO datetime parser.
+    - Add event_raw_usernotice event (GH#229)
     - :class:`User` fixed an issue where the User class couldnt fetch rewards (GH#214)
     - :class:`Chatter` fixed the docstring for the `badges` property
     - :func:`Chatter.is_subscriber` will now return True for founders
