@@ -385,7 +385,7 @@ class WSConnection:
 
         self.dispatch("message", message)
 
-    async def _privmsg_echo(self, parsed):  # TODO
+    async def _privmsg_echo(self, parsed):
         log.debug(f'ACTION: PRIVMSG(ECHO):: {parsed["channel"]}')
 
         channel = Channel(name=parsed["channel"], websocket=self)
@@ -395,7 +395,7 @@ class WSConnection:
 
         self.dispatch("message", message)
 
-    async def _userstate(self, parsed):  # TODO
+    async def _userstate(self, parsed):
         log.debug(f'ACTION: USERSTATE:: {parsed["channel"]}')
         self._cache_add(parsed)
 
@@ -405,8 +405,14 @@ class WSConnection:
 
         self.dispatch("userstate", user)
 
-    async def _usernotice(self, parsed):  # TODO
+    async def _usernotice(self, parsed):
         log.debug(f'ACTION: USERNOTICE:: {parsed["channel"]}')
+
+        channel = Channel(name=parsed["channel"], websocket=self)
+        rawData = parsed["groups"][0]
+        tags = dict(x.split("=") for x in rawData.split(";"))
+
+        self.dispatch("raw_usernotice", channel, tags)
 
     async def _join(self, parsed):
         log.debug(f'ACTION: JOIN:: {parsed["channel"]}')
