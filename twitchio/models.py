@@ -26,6 +26,7 @@ import datetime
 from typing import Optional, Union, TYPE_CHECKING, List, Dict
 
 from . import enums
+from .utils import parse_timestamp
 from .user import BitLeaderboardUser, PartialUser, User
 
 if TYPE_CHECKING:
@@ -117,7 +118,7 @@ class CheerEmote:
         self.tiers = [CheerEmoteTier(x) for x in data["tiers"]]
         self.type: str = data["type"]
         self.order: str = data["order"]
-        self.last_updated = datetime.datetime.strptime(data["last_updated"], "%Y-%m-%dT%H:%M:%SZ")
+        self.last_updated = parse_timestamp(data["last_updated"])
         self.charitable: bool = data["is_charitable"]
 
     def __repr__(self):
@@ -152,7 +153,7 @@ class Clip:
         self.language = data["language"]
         self.title = data["title"]
         self.views = data["view_count"]
-        self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.created_at = parse_timestamp(data["created_at"])
         self.thumbnail_url = data["thumbnail_url"]
 
     def __repr__(self):
@@ -197,12 +198,10 @@ class HypeTrainEvent:
         self.type: str = data["event_type"]
         self.version: str = data["version"]
         self.broadcaster = PartialUser(http, id=data["event_data"]["broadcaster_id"], name=None)
-        self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-        self.cooldown_end_time = datetime.datetime.strptime(
-            data["event_data"]["cooldown_end_time"], "%Y-%m-%dT%H:%M:%SZ"
-        )
-        self.expiry = datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.started_at = datetime.datetime.strptime(data["event_data"]["started_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = parse_timestamp(data["event_timestamp"])
+        self.cooldown_end_time = parse_timestamp(data["event_data"]["cooldown_end_time"])
+        self.expiry = parse_timestamp(data["expires_at"])
+        self.started_at = parse_timestamp(data["event_data"]["started_at"])
         self.last_contribution = HypeTrainContribution(http, data["event_data"]["last_contribution"])
         self.level: int = data["event_data"]["level"]
         self.top_contributions = [HypeTrainContribution(http, x) for x in data["event_data"]["top_contributions"]]
@@ -219,14 +218,14 @@ class BanEvent:
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Optional[Union[PartialUser, User]]):
         self.id: str = data["id"]
         self.type: str = data["event_type"]
-        self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = parse_timestamp(data["event_timestamp"])
         self.version: float = float(data["version"])
         self.broadcaster = broadcaster or PartialUser(
             http, data["event_data"]["broadcaster_id"], data["event_data"]["broadcaster_name"]
         )
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
         self.expires_at = (
-            datetime.datetime.strptime(data["event_data"]["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
+            parse_timestamp(data["event_data"]["expires_at"])
             if data["event_data"]["expires_at"]
             else None
         )
@@ -248,7 +247,7 @@ class FollowEvent:
     ):
         self.from_user = from_ or PartialUser(http, data["from_id"], data["from_name"])
         self.to_user = to or PartialUser(http, data["to_id"], data["to_name"])
-        self.followed_at = datetime.datetime.strptime(data["followed_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.followed_at = parse_timestamp(data["followed_at"])
 
     def __repr__(self):
         return f"<FollowEvent from_user={self.from_user} to_user={self.to_user} followed_at={self.followed_at}>"
@@ -284,7 +283,7 @@ class Marker:
 
     def __init__(self, data: dict):
         self.id: int = data["id"]
-        self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.created_at = parse_timestamp(data["created_at"])
         self.description: str = data["description"]
         self.position: int = data["position_seconds"]
         self.url: Optional[str] = data.get("URL")
@@ -342,7 +341,7 @@ class ModEvent:
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Union[PartialUser, User]):
         self.id: int = data["id"]
         self.type = enums.ModEventEnum(value=data["event_type"])
-        self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = parse_timestamp(data["event_timestamp"])
         self.version: str = data["version"]
         self.broadcaster = broadcaster
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
@@ -487,8 +486,8 @@ class Video:
         self.user = user or PartialUser(http, data["user_id"], data["user_name"])
         self.title: str = data["title"]
         self.description: str = data["description"]
-        self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.published_at = datetime.datetime.strptime(data["published_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.created_at = parse_timestamp(data["created_at"])
+        self.published_at = parse_timestamp(data["published_at"])
         self.url: str = data["url"]
         self.thumbnail_url: str = data["thumbnail_url"]
         self.viewable: str = data["viewable"]
@@ -533,7 +532,7 @@ class WebhookSubscription:
 
     def __init__(self, data: dict):
         self.callback: str = data["callback"]
-        self.expires_at = datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.expires_at = parse_timestamp(data["expired_at"])
         self.topic: str = data["topic"]
 
     def __repr__(self):
@@ -565,7 +564,7 @@ class Stream:
         self.type: str = data["type"]
         self.title: str = data["title"]
         self.viewer_count: int = data["viewer_count"]
-        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.started_at = parse_timestamp(data["started_at"])
         self.language: str = data["language"]
         self.thumbnail_url: str = data["thumbnail_url"]
         self.tag_ids: List[str] = data["tag_ids"]
@@ -682,11 +681,11 @@ class ScheduleSegment:
 
     def __init__(self, data: dict):
         self.id: str = data["id"]
-        self.start_time = datetime.datetime.strptime(data["start_time"], "%Y-%m-%dT%H:%M:%SZ")
-        self.end_time = datetime.datetime.strptime(data["end_time"], "%Y-%m-%dT%H:%M:%SZ")
+        self.start_time = parse_timestamp(data["start_time"])
+        self.end_time = parse_timestamp(data["end_time"])
         self.title: str = data["title"]
         self.canceled_until = (
-            datetime.datetime.strptime(data["canceled_until"], "%Y-%m-%dT%H:%M:%SZ") if data["canceled_until"] else None
+            parse_timestamp(data["canceled_until"]) if data["canceled_until"] else None
         )
         self.category = ScheduleCategory(data["category"]) if data["category"] else None
         self.is_recurring: bool = data["is_recurring"]
@@ -712,8 +711,8 @@ class ScheduleVacation:
     __slots__ = ("start_time", "end_time")
 
     def __init__(self, data: dict):
-        self.start_time = datetime.datetime.strptime(data["start_time"], "%Y-%m-%dT%H:%M:%SZ")
-        self.end_time = datetime.datetime.strptime(data["end_time"], "%Y-%m-%dT%H:%M:%SZ")
+        self.start_time = parse_timestamp(data["start_time"])
+        self.end_time = parse_timestamp(data["end_time"])
 
     def __repr__(self):
         return f"<ScheduleVacation start_time={self.start_time} end_time={self.end_time}>"

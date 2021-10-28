@@ -24,11 +24,12 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union, Tuple
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
 from .rewards import CustomReward
+from .utils import parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -844,16 +845,16 @@ class User(PartialUser):
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
         self.id = int(data["id"])
-        self.name = data["login"]
-        self.display_name = data["display_name"]
+        self.name: str = data["login"]
+        self.display_name: str = data["display_name"]
         self.type = UserTypeEnum(data["type"])
         self.broadcaster_type = BroadcasterTypeEnum(data["broadcaster_type"])
-        self.description = data["description"]
-        self.profile_image = data["profile_image_url"]
-        self.offline_image = data["offline_image_url"]
-        self.view_count = (data["view_count"],)
-        self.created_at = data["created_at"]
-        self.email = data.get("email")
+        self.description: str = data["description"]
+        self.profile_image: str = data["profile_image_url"]
+        self.offline_image: str = data["offline_image_url"]
+        self.view_count: Tuple[int] = (data["view_count"],) # this isn't supposed to be a tuple but too late to fix it!
+        self.created_at = parse_timestamp(data["created_at"])
+        self.email: Optional[str] = data.get("email")
         self._cached_rewards = None
 
     def __repr__(self):

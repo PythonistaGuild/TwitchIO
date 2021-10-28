@@ -459,14 +459,16 @@ class Context(Messageable):
 
         return None
 
+C = TypeVar("C", bound="Command")
+G = TypeVar("G", bound="Group")
 
 def command(
-    *, name: str = None, aliases: Union[list, tuple] = None, cls=Command, no_global_checks=False
-) -> Callable[[Callable], Command]:
+    *, name: str = None, aliases: Union[list, tuple] = None, cls: C = Command, no_global_checks=False
+) -> Callable[[Callable], C]:
     if cls and not inspect.isclass(cls):
         raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
-    def decorator(func: Callable) -> cls:
+    def decorator(func: Callable) -> C:
         fname = name or func.__name__
         return cls(
             name=fname,
@@ -482,14 +484,14 @@ def group(
     *,
     name: str = None,
     aliases: Union[list, tuple] = None,
-    cls=Group,
+    cls: G = Group,
     no_global_checks=False,
     invoke_with_subcommand=False,
-) -> Callable[[Callable], Group]:
+) -> Callable[[Callable], G]:
     if cls and not inspect.isclass(cls):
         raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
 
-    def decorator(func: Callable) -> cls:
+    def decorator(func: Callable) -> G:
         fname = name or func.__name__
         return cls(
             name=fname,

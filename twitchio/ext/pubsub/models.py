@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 import datetime
 from typing import List, Optional
 
-from twitchio import PartialUser, Client, Channel, CustomReward
+from twitchio import PartialUser, Client, Channel, CustomReward, parse_timestamp
 
 
 __all__ = (
@@ -185,7 +185,7 @@ class PubSubBitsBadgeMessage(PubSubMessage):
         )
         self.badge_tier: int = data["badge_tier"]
         self.message: str = data["chat_message"]
-        self.timestamp = datetime.datetime.strptime(data["time"][0:25] + data["time"][28:], "%Y-%m-%dT%H:%M:%S.%fZ")
+        self.timestamp = parse_timestamp(data["time"])
 
 
 class PubSubChannelPointsMessage(PubSubMessage):
@@ -217,9 +217,7 @@ class PubSubChannelPointsMessage(PubSubMessage):
 
         redemption = data["message"]["data"]["redemption"]
 
-        self.timestamp = datetime.datetime.strptime(
-            redemption["redeemed_at"][0:25] + redemption["redeemed_at"][28:], "%Y-%m-%dT%H:%M:%S.%fZ"
-        )
+        self.timestamp = parse_timestamp(redemption["redeemed_at"])
         self.channel_id: int = int(redemption["channel_id"])
         self.id: str = redemption["id"]
         self.user = PartialUser(client._http, redemption["user"]["id"], redemption["user"]["display_name"])
@@ -336,16 +334,10 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
 
         self.expires_at = self.updated_at = None
         if data["message"]["data"]["expires_at"]:
-            self.expires_at = datetime.datetime.strptime(
-                data["message"]["data"]["expires_at"][0:25] + data["message"]["data"]["expires_at"][28:],
-                "%Y-%m-%dT%H:%M:%S.%fZ",
-            )
+            self.expires_at = parse_timestamp(data["message"]["data"]["expires_at"])
 
         if data["message"]["data"]["updated_at"]:
-            self.updated_at = datetime.datetime.strptime(
-                data["message"]["data"]["updated_at"][0:25] + data["message"]["data"]["updated_at"][28:],
-                "%Y-%m-%dT%H:%M:%S.%fZ",
-            )
+            self.updated_at = parse_timestamp(data["message"]["data"]["expires_at"])
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
