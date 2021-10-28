@@ -1,9 +1,8 @@
 import datetime
 import iso8601
 
-__all__ = (
-    "parse_timestamp",
-)
+__all__ = ("parse_timestamp",)
+
 
 def parse_timestamp(timestamp: str) -> datetime.datetime:
     """
