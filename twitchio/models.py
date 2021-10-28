@@ -225,9 +225,7 @@ class BanEvent:
         )
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
         self.expires_at = (
-            parse_timestamp(data["event_data"]["expires_at"])
-            if data["event_data"]["expires_at"]
-            else None
+            parse_timestamp(data["event_data"]["expires_at"]) if data["event_data"]["expires_at"] else None
         )
 
     def __repr__(self):
@@ -684,9 +682,7 @@ class ScheduleSegment:
         self.start_time = parse_timestamp(data["start_time"])
         self.end_time = parse_timestamp(data["end_time"])
         self.title: str = data["title"]
-        self.canceled_until = (
-            parse_timestamp(data["canceled_until"]) if data["canceled_until"] else None
-        )
+        self.canceled_until = parse_timestamp(data["canceled_until"]) if data["canceled_until"] else None
         self.category = ScheduleCategory(data["category"]) if data["category"] else None
         self.is_recurring: bool = data["is_recurring"]
 

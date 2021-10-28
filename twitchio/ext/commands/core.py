@@ -459,8 +459,10 @@ class Context(Messageable):
 
         return None
 
+
 C = TypeVar("C", bound="Command")
 G = TypeVar("G", bound="Group")
+
 
 def command(
     *, name: str = None, aliases: Union[list, tuple] = None, cls: C = Command, no_global_checks=False
