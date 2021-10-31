@@ -67,7 +67,11 @@ class CustomReward:
     def __init__(self, http: "TwitchHTTP", obj: dict, channel: "PartialUser"):
         self._http = http
         self._channel = channel
-        self._broadcaster_id = obj["broadcaster_id"]
+
+        try:
+            self._broadcaster_id = obj["broadcaster_id"]
+        except KeyError:
+            self._broadcaster_id = obj["channel_id"]
 
         self.id = obj["id"]
         self.image = obj["image"]["url_1x"] if obj["image"] else obj["default_image"]["url_1x"]
@@ -77,18 +81,34 @@ class CustomReward:
         self.title = obj["title"]
         self.prompt = obj["prompt"]
         self.input_required = obj["is_user_input_required"]
-        self.max_per_stream = (
-            obj["max_per_stream_setting"]["is_enabled"],
-            obj["max_per_stream_setting"]["max_per_stream"],
-        )
-        self.max_per_user_stream = (
-            obj["max_per_user_per_stream_setting"]["is_enabled"],
-            obj["max_per_user_per_stream_setting"]["max_per_user_per_stream"],
-        )
-        self.cooldown = (
-            obj["global_cooldown_setting"]["is_enabled"],
-            obj["global_cooldown_setting"]["global_cooldown_seconds"],
-        )
+
+        try:
+            self.max_per_stream = (
+                obj["max_per_stream_setting"]["is_enabled"],
+                obj["max_per_stream_setting"]["max_per_stream"]
+            )
+            self.max_per_user_stream = (
+                obj["max_per_user_per_stream_setting"]["is_enabled"],
+                obj["max_per_user_per_stream_setting"]["max_per_user_per_stream"]
+            )
+            self.cooldown = (
+                obj["global_cooldown_setting"]["is_enabled"],
+                obj["global_cooldown_setting"]["global_cooldown_seconds"],
+            )
+        except KeyError:
+            self.max_per_stream = (
+                obj["max_per_stream"]["is_enabled"],
+                obj["max_per_stream"]["max_per_stream"]
+            )
+            self.max_per_user_stream = (
+                obj["max_per_user_per_stream"]["is_enabled"],
+                obj["max_per_user_per_stream"]["max_per_user_per_stream"]
+            )
+            self.cooldown = (
+                obj["global_cooldown"]["is_enabled"],
+                obj["global_cooldown"]["global_cooldown_seconds"],
+            )
+
         self.paused = obj["is_paused"]
         self.in_stock = obj["is_in_stock"]
         self.redemptions_skip_queue = obj["should_redemptions_skip_request_queue"]
