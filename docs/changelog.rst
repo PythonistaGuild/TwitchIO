@@ -1,5 +1,10 @@
 .. currentmodule:: twitchio
 
+2.1.1
+======
+- Twitchio
+    - Patch a bug introduced in 2.1.0 that broke the library on python 3.7
+
 2.1.0
 ======
 - TwitchIO
