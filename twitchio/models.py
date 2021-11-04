@@ -712,3 +712,67 @@ class ScheduleVacation:
 
     def __repr__(self):
         return f"<ScheduleVacation start_time={self.start_time} end_time={self.end_time}>"
+
+
+class Team:
+
+    __slots__ = (
+        "users",
+        "background_image_url",
+        "banner",
+        "created_at",
+        "updated_at",
+        "info",
+        "thumbnail_url",
+        "team_name",
+        "team_display_name",
+        "id",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+
+        self.users: List[PartialUser] = [PartialUser(http, x["user_id"], x["user_login"]) for x in data["users"]]
+        self.background_image_url = data["background_image_url"]
+        self.banner = data["banner"]
+        self.created_at = parse_timestamp(data["created_at"].split(" ")[0])
+        self.updated_at = parse_timestamp(data["updated_at"].split(" ")[0])
+        self.info = data["info"]
+        self.thumbnail_url = data["thumbnail_url"]
+        self.team_name = data["team_name"]
+        self.team_display_name = data["team_display_name"]
+        self.id = data["id"]
+
+    def __repr__(self):
+        return f"<Team users={self.users} team_name={self.team_name} team_display_name={self.team_display_name} id={self.id} created_at={self.created_at}>"
+
+
+class ChannelTeams:
+
+    __slots__ = (
+        "broadcaster",
+        "background_image_url",
+        "banner",
+        "created_at",
+        "updated_at",
+        "info",
+        "thumbnail_url",
+        "team_name",
+        "team_display_name",
+        "id",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+
+        self.broadcaster: PartialUser = PartialUser(http, data["broadcaster_id"], data["broadcaster_login"])
+        self.background_image_url = data["background_image_url"]
+        self.banner = data["banner"]
+        self.created_at = parse_timestamp(data["created_at"].split(" ")[0])
+        self.updated_at = parse_timestamp(data["updated_at"].split(" ")[0])
+        self.info = data["info"]
+        self.thumbnail_url = data["thumbnail_url"]
+        self.team_name = data["team_name"]
+        self.team_display_name = data["team_display_name"]
+        self.id = data["id"]
+
+    def __repr__(self):
+        return f"<ChannelTeams user={self.broadcaster} team_name={self.team_name} team_display_name={self.team_display_name} id={self.id} created_at={self.created_at}>"
