@@ -725,7 +725,7 @@ class PartialUser:
         )
         return Prediction(self._http, data[0])
 
-    async def modify_stream(self, token: str, game_id: int = None, language: str = None, title: str = None):
+    async def modify_stream(self, token: str, game_id: str = None, language: str = None, title: str = None):
         """|coro|
 
         Modify stream information
@@ -733,8 +733,8 @@ class PartialUser:
         -----------
         token: :class:`str`
             An oauth token with the channel:manage:broadcast scope
-        game_id: :class:`int`
-            Optional game ID being played on the channel. Use 0 to unset the game.
+        game_id: :class:`str`
+            Optional game ID being played on the channel. Use “0” or “” (an empty string) to unset the game.
         language: :class:`str`
             Optional language of the channel. A language value must be either the ISO 639-1 two-letter code for a supported stream language or “other”.
         title: :class:`str`
@@ -743,7 +743,7 @@ class PartialUser:
         await self._http.patch_channel(
             token,
             broadcaster_id=str(self.id),
-            game_id=str(game_id),
+            game_id=game_id,
             language=language,
             title=title,
         )
