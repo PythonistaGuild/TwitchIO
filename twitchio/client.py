@@ -623,31 +623,6 @@ class Client:
 
         return Team(self._http, data[0])
 
-    async def fetch_channel_teams(
-        self,
-        broadcaster_id: str,
-    ):
-        """|coro|
-
-        Fetches a list of Twitch Teams of which the specified channel/broadcaster is a member.
-
-        Parameters
-        -----------
-        broadcaster_id: :class:`str`
-            User ID for a Twitch user.
-
-        Returns
-        --------
-        List[:class:`twitchio.ChannelTeams`]
-        """
-        from .models import ChannelTeams
-
-        data = await self._http.get_channel_teams(
-            broadcaster_id=broadcaster_id,
-        )
-
-        return [ChannelTeams(self._http, x) for x in data]
-
     async def search_categories(self, query: str):
         """|coro|
 
