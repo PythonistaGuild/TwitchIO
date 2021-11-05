@@ -63,6 +63,8 @@ __all__ = (
     "ScheduleSegment",
     "ScheduleCategory",
     "ScheduleVacation",
+    "Team",
+    "ChannelTeams",
 )
 
 
