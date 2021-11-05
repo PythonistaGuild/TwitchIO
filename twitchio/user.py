@@ -740,10 +740,13 @@ class PartialUser:
         title: :class:`str`
             Optional title of the stream.
         """
+        if game_id is not None:
+            game_id = str(game_id)
+
         await self._http.patch_channel(
             token,
             broadcaster_id=str(self.id),
-            game_id=str(game_id),
+            game_id=game_id,
             language=language,
             title=title,
         )
