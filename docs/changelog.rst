@@ -1,5 +1,15 @@
 .. currentmodule:: twitchio
 
+2.1.2
+======
+New logo!
+
+- Twitchio
+    - Add :func:`Chatter.mention`
+    - Re-add ``raw_usernotice`` from V1.x
+    - Fix echo messages for replies
+    - Fix a bug where the wrong user would be whispered
+
 2.1.1
 ======
 - Twitchio
@@ -9,7 +19,7 @@
 ======
 - TwitchIO
     - Type the :class:`User` class
-    - Update the library to use a proper ISO datetime parser.
+    - Update the library to use a proper ISO datetime parser
     - Add event_raw_usernotice event (GH#229)
     - :class:`User` fixed an issue where the User class couldn't fetch rewards (GH#214)
     - :class:`Chatter` fixed the docstring for the `badges` property

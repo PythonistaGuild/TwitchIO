@@ -308,6 +308,7 @@ class Client:
 
             return Channel(name=name, websocket=self._connection)
 
+
     async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
 
