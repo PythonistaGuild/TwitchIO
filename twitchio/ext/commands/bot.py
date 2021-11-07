@@ -83,7 +83,7 @@ class Bot(Client):
         *,
         loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
-        prefix: Union[str, list, tuple, set, Callable, Coroutine] = "!"
+        prefix: Union[str, list, tuple, set, Callable, Coroutine] = "!",
     ) -> Bot:
         """
         creates a client application token from your client credentials.
