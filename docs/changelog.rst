@@ -9,6 +9,7 @@ New logo!
     - Re-add ``raw_usernotice`` from V1.x
     - Fix echo messages for replies
     - Fix a bug where the wrong user would be whispered
+    - Fix a bug inside :func:`User.modify_stream` where the game_id key would be specified as ``"None"`` if not provided (GH#237)
     - Add support for teams and channelteams API routes
         - :class:`Team`, :class:`ChannelTeams`
         - :func:`Client.fetch_teams`
@@ -16,6 +17,10 @@ New logo!
 
 - ext.commands
     - Fix issue where Bot.from_client_credentials would result in an inoperable Bot instance (GH#239)
+
+- ext.pubsub
+    - Added :func:`ext.pubsub.Websocket.pubsub_error` to support being notified of pubsub errors
+    - Added :func:`ext.pubsub.Websocket.pubsub_nonce` to support being notified of pubsub nonces
 
 2.1.1
 ======
@@ -49,8 +54,6 @@ New logo!
 
 - ext.pubsub
     - Fixed bug with Pool.unsubscribe_topics caused by typo
-    - Added :func:`ext.pubsub.Websocket.pubsub_error` to support being notified of pubsub errors
-    - Added :func:`ext.pubsub.Websocket.pubsub_nonce` to support being notified of pubsub nonces
 
 - ext.eventsub
     - fix :class:`ext.eventsub.models.ChannelBanData`'s ``permanent`` attribute accessing nonexistent attrs from the event payload
