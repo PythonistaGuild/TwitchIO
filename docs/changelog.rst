@@ -49,6 +49,8 @@ New logo!
 
 - ext.pubsub
     - Fixed bug with Pool.unsubscribe_topics caused by typo
+    - Added :func:`ext.pubsub.Websocket.pubsub_error` to support being notified of pubsub errors
+    - Added :func:`ext.pubsub.Websocket.pubsub_nonce` to support being notified of pubsub nonces
 
 - ext.eventsub
     - fix :class:`ext.eventsub.models.ChannelBanData`'s ``permanent`` attribute accessing nonexistent attrs from the event payload
