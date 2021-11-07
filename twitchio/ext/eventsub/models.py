@@ -3,7 +3,8 @@ import datetime
 import hmac
 import hashlib
 import logging
-from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Literal
+from typing import Dict, TYPE_CHECKING, Optional, Type, Union
+from typing_extensions import Literal
 
 from aiohttp import web
 

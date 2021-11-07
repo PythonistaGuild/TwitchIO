@@ -22,6 +22,9 @@ New logo!
     - Added :func:`ext.pubsub.Websocket.pubsub_error` to support being notified of pubsub errors
     - Added :func:`ext.pubsub.Websocket.pubsub_nonce` to support being notified of pubsub nonces
 
+- ext.eventsub
+    - Patch 2.1.1 bug which breaks library on 3.7 for ext.eventsub
+
 2.1.1
 ======
 - Twitchio
