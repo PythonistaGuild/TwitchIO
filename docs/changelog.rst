@@ -9,6 +9,10 @@ New logo!
     - Re-add ``raw_usernotice`` from V1.x
     - Fix echo messages for replies
     - Fix a bug where the wrong user would be whispered
+    - Add support for teams and channelteams API routes
+        - :class:`Team`, :class:`ChannelTeams`
+        - :func:`Client.fetch_teams`
+        - :func:`PartialUser.fetch_channel_teams`
 
 - ext.commands
     - Fix issue where Bot.from_client_credentials would result in an inoperable Bot instance (GH#239)

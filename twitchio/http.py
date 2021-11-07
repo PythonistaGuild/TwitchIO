@@ -946,3 +946,16 @@ class TwitchHTTP:
 
     async def get_webhook_subs(self):
         return await self.request(Route("GET", "webhooks/subscriptions"))
+
+    async def get_teams(self, team_name: str = None, team_id: str = None):
+        if team_name:
+            q = [("name", team_name)]
+        elif team_id:
+            q = [("id", team_id)]
+        else:
+            raise ValueError("You need to provide a team name or id")
+        return await self.request(Route("GET", "teams", query=q))
+
+    async def get_channel_teams(self, broadcaster_id: str):
+        q = [("broadcaster_id", broadcaster_id)]
+        return await self.request(Route("GET", "teams/channel", query=q))

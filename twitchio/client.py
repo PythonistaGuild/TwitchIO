@@ -308,6 +308,7 @@ class Client:
 
             return Channel(name=name, websocket=self._connection)
 
+
     async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
 
@@ -592,6 +593,36 @@ class Client:
             token=token,
         )
         return [Stream(self._http, x) for x in data]
+
+    async def fetch_teams(
+        self,
+        team_name: str = None,
+        team_id: str = None,
+    ):
+        """|coro|
+
+        Fetches information for a specific Twitch Team.
+
+        Parameters
+        -----------
+        name: Optional[:class:`str`]
+            Team name to fetch
+        id: Optional[:class:`str`]
+            Team id to fetch
+
+        Returns
+        --------
+        List[:class:`twitchio.Team`]
+        """
+        from .models import Team
+
+        assert team_name or team_id
+        data = await self._http.get_teams(
+            team_name=team_name,
+            team_id=team_id,
+        )
+
+        return Team(self._http, data[0])
 
     async def search_categories(self, query: str):
         """|coro|
