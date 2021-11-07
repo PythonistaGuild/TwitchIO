@@ -10,6 +10,9 @@ New logo!
     - Fix echo messages for replies
     - Fix a bug where the wrong user would be whispered
 
+- ext.commands
+    - Fix issue where Bot.from_client_credentials would result in an inoperable Bot instance (GH#239)
+
 2.1.1
 ======
 - Twitchio
