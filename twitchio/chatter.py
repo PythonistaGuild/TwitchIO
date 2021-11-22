@@ -165,6 +165,11 @@ class Chatter(PartialChatter):
         return self._display_name
 
     @property
+    def mention(self) -> str:
+        """Mentions the users display name by prefixing it with '@'"""
+        return f"@{self._display_name}"
+
+    @property
     def colour(self) -> str:
         """The users colour. Alias to color."""
         return self._colour

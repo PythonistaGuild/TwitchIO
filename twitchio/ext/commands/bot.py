@@ -23,14 +23,18 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
+import asyncio
 import importlib
 import inspect
 import sys
 import traceback
 import types
+import warnings
 from typing import Callable, Optional, Union, Coroutine, Dict, List, TYPE_CHECKING, Mapping, Awaitable
 
 from twitchio.client import Client
+from twitchio.http import TwitchHTTP
+from twitchio.websocket import WSConnection
 from .core import Command, Group, Context
 from .errors import *
 from .meta import Cog
@@ -70,6 +74,67 @@ class Bot(Client):
         self._checks: List[Callable[[Context], Union[bool, Awaitable[bool]]]] = []
 
         self.__init__commands__()
+
+    @classmethod
+    def from_client_credentials(
+        cls,
+        client_id: str,
+        client_secret: str,
+        *,
+        loop: asyncio.AbstractEventLoop = None,
+        heartbeat: Optional[float] = 30.0,
+        prefix: Union[str, list, tuple, set, Callable, Coroutine] = "!",
+    ) -> Bot:
+        """
+        creates a client application token from your client credentials.
+
+        .. warning:
+
+            This method generates a token that is not suitable for logging in to IRC.
+            This is not recommended for Bot objects, as it renders the commands system inoperable.
+
+        .. note:
+
+            This classmethod skips :meth:`~.__init__`
+
+        Parameters
+        ------------
+        client_id: :class`str`
+            Your application's Client ID.
+        client_secret: :class:`str`
+            An application Client Secret used to generate Access Tokens automatically.
+        loop: Optional[:class:`asyncio.AbstractEventLoop`]
+            The event loop the client will use to run.
+        heartbeat: Optional[:class:`float`]
+            The heartbeat interval. Defaults to 30.
+        prefix: Union[:class:`str`, :class:`list`, :class:`tuple`, :class:`set`, Callable, Coroutine]
+            The bots prefix. Defaults to "!".
+
+        Returns
+        --------
+        A new :class:`Bot` instance
+        """
+        warnings.warn(DeprecationWarning("from_client_credentials is not suitable for Bots."))
+        self = cls.__new__(cls)
+        self.loop = loop or asyncio.get_event_loop()
+        self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
+        self._heartbeat = heartbeat
+        self._connection = WSConnection(
+            client=self,
+            loop=self.loop,
+            initial_channels=None,
+            heartbeat=self._heartbeat,
+        )  # The only reason we're even creating this is to avoid attribute errors
+        self._events = {}
+        self._waiting = []
+        self._modules = []
+        self._prefix = prefix
+        self._cogs = {}
+        self._commands = {}
+        self._command_aliases = {}
+        self._checks = []
+
+        return self
 
     def __init__commands__(self):
         commands = inspect.getmembers(self)

@@ -740,10 +740,13 @@ class PartialUser:
         title: :class:`str`
             Optional title of the stream.
         """
+        if game_id is not None:
+            game_id = str(game_id)
+
         await self._http.patch_channel(
             token,
             broadcaster_id=str(self.id),
-            game_id=str(game_id),
+            game_id=game_id,
             language=language,
             title=title,
         )
@@ -783,6 +786,23 @@ class PartialUser:
         )
 
         return Schedule(self._http, data)
+
+    async def fetch_channel_teams(self):
+        """|coro|
+
+        Fetches a list of Twitch Teams of which the specified channel/broadcaster is a member.
+
+        Returns
+        --------
+        List[:class:`twitchio.ChannelTeams`]
+        """
+        from .models import ChannelTeams
+
+        data = await self._http.get_channel_teams(
+            broadcaster_id=str(self.id),
+        )
+
+        return [ChannelTeams(self._http, x) for x in data]
 
 
 class BitLeaderboardUser(PartialUser):

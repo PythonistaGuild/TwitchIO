@@ -1,4 +1,4 @@
-.. image:: ./logo.png?raw=true
+.. image:: https://raw.githubusercontent.com/TwitchIO/TwitchIO/master/logo.png
     :align: center
     
     

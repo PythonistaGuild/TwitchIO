@@ -1,10 +1,40 @@
 .. currentmodule:: twitchio
 
+2.1.2
+======
+New logo!
+
+- Twitchio
+    - Add :func:`Chatter.mention`
+    - Re-add ``raw_usernotice`` from V1.x
+    - Fix echo messages for replies
+    - Fix a bug where the wrong user would be whispered
+    - Fix a bug inside :func:`User.modify_stream` where the game_id key would be specified as ``"None"`` if not provided (GH#237)
+    - Add support for teams and channelteams API routes
+        - :class:`Team`, :class:`ChannelTeams`
+        - :func:`Client.fetch_teams`
+        - :func:`PartialUser.fetch_channel_teams`
+
+- ext.commands
+    - Fix issue where Bot.from_client_credentials would result in an inoperable Bot instance (GH#239)
+
+- ext.pubsub
+    - Added :func:`ext.pubsub.Websocket.pubsub_error` to support being notified of pubsub errors
+    - Added :func:`ext.pubsub.Websocket.pubsub_nonce` to support being notified of pubsub nonces
+
+- ext.eventsub
+    - Patch 2.1.1 bug which breaks library on 3.7 for ext.eventsub
+
+2.1.1
+======
+- Twitchio
+    - Patch a bug introduced in 2.1.0 that broke the library on python 3.7
+
 2.1.0
 ======
 - TwitchIO
     - Type the :class:`User` class
-    - Update the library to use a proper ISO datetime parser.
+    - Update the library to use a proper ISO datetime parser
     - Add event_raw_usernotice event (GH#229)
     - :class:`User` fixed an issue where the User class couldn't fetch rewards (GH#214)
     - :class:`Chatter` fixed the docstring for the `badges` property
