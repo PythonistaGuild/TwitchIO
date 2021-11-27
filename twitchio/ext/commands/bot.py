@@ -127,7 +127,7 @@ class Bot(Client):
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
-        self._modules = []
+        self._modules = {}
         self._prefix = prefix
         self._cogs = {}
         self._commands = {}
