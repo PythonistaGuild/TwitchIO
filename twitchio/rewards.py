@@ -85,24 +85,21 @@ class CustomReward:
         try:
             self.max_per_stream = (
                 obj["max_per_stream_setting"]["is_enabled"],
-                obj["max_per_stream_setting"]["max_per_stream"]
+                obj["max_per_stream_setting"]["max_per_stream"],
             )
             self.max_per_user_stream = (
                 obj["max_per_user_per_stream_setting"]["is_enabled"],
-                obj["max_per_user_per_stream_setting"]["max_per_user_per_stream"]
+                obj["max_per_user_per_stream_setting"]["max_per_user_per_stream"],
             )
             self.cooldown = (
                 obj["global_cooldown_setting"]["is_enabled"],
                 obj["global_cooldown_setting"]["global_cooldown_seconds"],
             )
         except KeyError:
-            self.max_per_stream = (
-                obj["max_per_stream"]["is_enabled"],
-                obj["max_per_stream"]["max_per_stream"]
-            )
+            self.max_per_stream = (obj["max_per_stream"]["is_enabled"], obj["max_per_stream"]["max_per_stream"])
             self.max_per_user_stream = (
                 obj["max_per_user_per_stream"]["is_enabled"],
-                obj["max_per_user_per_stream"]["max_per_user_per_stream"]
+                obj["max_per_user_per_stream"]["max_per_user_per_stream"],
             )
             self.cooldown = (
                 obj["global_cooldown"]["is_enabled"],
