@@ -15,8 +15,8 @@ jobs:
       id: latest_version
       uses: abatilo/release-info-action@v1.3.0
       with:
-        owner: abatilo
-        repo: release-info-action
+        owner: TwitchIO
+        repo: TwitchIO
         
     - name: Set up Python
       uses: actions/setup-python@v1
