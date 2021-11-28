@@ -203,7 +203,7 @@ class Chatter(PartialChatter):
 
             changed in 2.1.0: return value is no longer optional. founders will now appear as subscribers
         """
-        return bool(self._sub) if self._sub is not None else "founder" in self.badges
+        return bool(self._sub) or "founder" in self.badges
 
     @property
     def prediction(self) -> Optional[PredictionEnum]:
