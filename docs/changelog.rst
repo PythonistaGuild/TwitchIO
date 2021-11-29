@@ -1,5 +1,15 @@
 .. currentmodule:: twitchio
 
+2.1.3
+======
+- Twitchio
+    - Fix bug where chatter never checked for founder in is_subscriber
+    - Fix rewards model so it can now handle pubsub and helix callbacks
+
+- ext.commands
+    - Fix TypeError in Bot.from_client_credentials
+
+
 2.1.2
 ======
 New logo!
