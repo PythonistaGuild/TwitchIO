@@ -43,7 +43,7 @@ class IRCRateLimiter:
 
         self.time = time.time() + self.per
 
-    def check_limit(self, *, time_: float = None) -> float:
+    def check_limit(self, *, time_: float = None, update: bool = True) -> float:
         """Check and update the RateLimiter."""
         time_ = time_ or time.time()
 
@@ -51,7 +51,8 @@ class IRCRateLimiter:
             self.tokens = self._tokens
             self.time = time.time() + self.per
 
-        self.tokens -= 1
+        if update:
+            self.tokens -= 1
 
         if self.tokens <= 0:
             return self.time - time.time()
@@ -62,4 +63,4 @@ class IRCRateLimiter:
         """Wait for the RateLimiter to cooldown."""
         time_ = time_ or time.time()
 
-        await asyncio.sleep(self.check_limit(time_=time_))
+        await asyncio.sleep(self.check_limit(time_=time_, update=False))
