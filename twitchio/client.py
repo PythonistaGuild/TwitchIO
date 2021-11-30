@@ -20,4 +20,35 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from .client import Client
+import asyncio
+import typing
+
+from .websocket import Websocket
+
+
+class Client:
+
+    def __init__(self,
+                 token: typing.Optional[str] = None
+                 ):
+        self._token: str = token.removeprefix('oauth:') if token else token
+        self._websocket = Websocket(client=self)
+
+    def run(self, token: str):
+        self._token = self._websocket._token = token.removeprefix('oauth:')
+        loop = asyncio.get_event_loop()
+
+        try:
+            loop.create_task(self._websocket._connect())
+            loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            loop.run_until_complete(self.close())
+
+    async def start(self):
+        await self._websocket._connect()
+
+    async def close(self):
+        await self._websocket.close()
+
