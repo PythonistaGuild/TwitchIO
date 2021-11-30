@@ -23,18 +23,30 @@ SOFTWARE.
 import asyncio
 import typing
 
+from .parser import IRCPayload
 from .websocket import Websocket
 
 
 class Client:
 
     def __init__(self,
-                 token: typing.Optional[str] = None
+                 token: typing.Optional[str] = None,
+                 heartbeat: typing.Optional[float] = 30.0,
+                 verified: typing.Optional[bool] = False,
+                 join_timeout: typing.Optional[float] = 15.0,
+                 initial_channels=None
                  ):
+        # TODO INITIAL_CHANNEL LOGIC
         self._token: str = token.removeprefix('oauth:') if token else token
-        self._websocket = Websocket(client=self)
+        self._websocket = Websocket(
+            client=self,
+            heartbeat=heartbeat,
+            verified=verified,
+            join_timeout=join_timeout,
+            initial_channels=initial_channels
+        )
 
-    def run(self, token: str):
+    def run(self, token: str) -> None:
         self._token = self._websocket._token = token.removeprefix('oauth:')
         loop = asyncio.get_event_loop()
 
@@ -46,9 +58,32 @@ class Client:
         finally:
             loop.run_until_complete(self.close())
 
-    async def start(self):
+    async def start(self, token: str) -> None:
+        self._token = self._websocket._token = token.removeprefix('oauth:')
+
         await self._websocket._connect()
 
-    async def close(self):
+    async def close(self) -> None:
         await self._websocket.close()
+
+    @property
+    def nick(self):
+        return self._websocket.nick
+
+    async def event_ready(self) -> None:
+        pass
+
+    async def event_error(self) -> None:
+        pass
+
+    async def event_raw_data(self, data: str) -> None:
+        pass
+
+    async def event_raw_payload(self, payload: IRCPayload) -> None:
+        pass
+
+    async def event_message(self, message) -> None:
+        pass
+
+
 
