@@ -27,7 +27,7 @@ import aiohttp
 import logging
 
 from .backoff import ExponentialBackoff
-from .exceptions import AuthenticationError, JoinFailed
+from .exceptions import *
 from .limiter import IRCRateLimiter
 from .parser import IRCPayload
 
@@ -113,6 +113,8 @@ class Websocket:
         self._keep_alive_task = asyncio.create_task(self._keep_alive())
         await self.authentication_sequence()
 
+        await self.dispatch(event='ready')
+
     async def _keep_alive(self) -> None:
         while True:
             message: aiohttp.WSMessage = await self.ws.receive()
@@ -178,6 +180,25 @@ class Websocket:
 
         await self.ws.send_str(f'{message}\r\n')
 
+    def dispatch_callback(self, task: asyncio.Task) -> None:
+        exc = task.exception()
+
+        if exc:
+            asyncio.create_task(self.dispatch('error', exc))
+
+    async def dispatch(self, event: str, *args, **kwargs) -> None:
+        event = event.lower()
+
+        coro = getattr(self.client, f'event_{event}')
+
+        if not coro:
+            raise EventNotFound(f'The event <{event}> was not found.')
+        if not asyncio.iscoroutinefunction(coro):
+            raise TypeError('Events must be coroutines.')
+
+        task = asyncio.create_task(coro(*args, **kwargs))
+        task.add_done_callback(self.dispatch_callback)
+
     def get_event(self, action: str):
         action = action.lower()
 
@@ -204,6 +225,9 @@ class Websocket:
 
     async def join_event(self, payload: IRCPayload) -> None:
         self.remove_join_cache(payload.channel)
+
+    async def part_event(self, payload: IRCPayload) -> None:
+        pass
 
     async def close(self):
         self.closing = True
