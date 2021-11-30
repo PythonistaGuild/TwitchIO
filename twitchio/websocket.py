@@ -175,7 +175,10 @@ class Websocket:
         return getattr(self, f'{action}_event')
 
     def remove_join_cache(self, channel: str) -> None:
-        task = self.join_cache[channel]
+        try:
+            task = self.join_cache[channel]
+        except KeyError:
+            return
 
         try:
             task.cancel()
