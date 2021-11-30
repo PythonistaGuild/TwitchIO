@@ -26,6 +26,11 @@ import typing
 import aiohttp
 import logging
 
+from .backoff import ExponentialBackoff
+from .exceptions import AuthenticationError, JoinFailed
+from .limiter import IRCRateLimiter
+from .parser import IRCPayload
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,17 +40,32 @@ HOST = 'wss://irc-ws.chat.twitch.tv:443'
 class Websocket:
 
     def __init__(self,
-                 heartbeat: typing.Optional[float] = 30.0
+                 token: str,
+                 heartbeat: typing.Optional[float] = 30.0,
+                 verified: typing.Optional[bool] = False,
+                 join_timeout: typing.Optional[float] = 10.0,
+                 initial_channels: list = []
                  ):
         self.ws: aiohttp.ClientWebSocketResponse = None  # type: ignore
-        self.heartbeat: float = heartbeat
+        self.heartbeat = heartbeat
 
+        self.join_limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
+        self.join_cache = {}
+        self.join_timeout = join_timeout
+
+        self._token = token.removeprefix("oauth:")
+        self.nick: str = None  # type: ignore
+        self.initial_channels = initial_channels
+
+        self._backoff = ExponentialBackoff()
+
+        self._ready_event = asyncio.Event()
         self._keep_alive_task: asyncio.Task = None  # type: ignore
 
     def is_connected(self) -> bool:
         return self.ws is not None and not self.ws.closed
 
-    async def _connect(self):
+    async def _connect(self) -> None:
         if self.is_connected():
             await self.ws.close()
 
@@ -58,10 +78,104 @@ class Websocket:
             self._keep_alive_task = None
 
         async with aiohttp.ClientSession() as session:
-            self.ws = await session.ws_connect(url=HOST, heartbeat=self.heartbeat)
+            try:
+                self.ws = await session.ws_connect(url=HOST, heartbeat=self.heartbeat)
+            except Exception as e:
+                retry = self._backoff.delay()
+                logger.error(f'Websocket could not connect. {e}. Attempting reconnect in {retry} seconds.')
+
+                await asyncio.sleep(retry)
+                asyncio.create_task(self._connect())
+
+                return
+
+            headers = {'Authorization': f'Bearer {self._token}'}
+            async with session.get(url='https://id.twitch.tv/oauth2/validate', headers=headers) as resp:
+                if resp.status == 401:
+                    raise AuthenticationError('Invalid token passed. Check your token and scopes and try again.')
+
+                data = await resp.json()
+                self.nick = data['login']
+
             session.detach()
 
         self._keep_alive_task = asyncio.create_task(self._keep_alive())
+        await self.authentication_sequence()
 
-    async def _keep_alive(self):
+    async def _keep_alive(self) -> None:
+        while True:
+            message: aiohttp.WSMessage = await self.ws.receive()
+
+            if message.type is aiohttp.WSMsgType.CLOSED:
+                logger.info(f'Websocket was closed. {message.extra}')
+                break
+
+            data = message.data
+            payloads = IRCPayload.parse(data=data)
+
+            # TODO REMOVE PRINT
+            print(data)
+
+            for payload in payloads:
+                match payload.code:
+                    case 200:
+                        await self.get_event(payload.action)
+                    case 1:
+                        logger.info(f'Successful authentication on Twitch Websocket with nick: {self.nick}.')
+
+        asyncio.create_task(self._connect())
+
+    async def authentication_sequence(self) -> None:
+        await self.send(f'PASS oauth:{self._token}')
+        await self.send(f'NICK {self.nick}')
+
+        await self.send('CAP REQ :twitch.tv/membership')
+        await self.send('CAP REQ :twitch.tv/tags')
+        await self.send('CAP REQ :twitch.tv/commands')
+
+        await self.join_channels(self.initial_channels)
+
+    async def join_timeout_task(self, channel: str) -> None:
+        await asyncio.sleep(self.join_timeout)
+
+        del self.join_cache[channel]
+        raise JoinFailed(f'The channel <{channel}> was not able be to be joined. Check the name and try again.')
+
+    async def join_channels(self, channels: list) -> None:
+        channels = [c.removeprefix('#') for c in channels]
+
+        for channel in channels:
+            self.join_cache[channel] = asyncio.create_task(self.join_timeout_task(channel), name=channel)
+
+            await self.send(f'JOIN #{channel}')
+            cd = self.join_limiter.check_limit()
+
+            if cd:
+                await self.join_limiter.wait_for()
+
+    async def send(self, message: str) -> None:
+        await self.ws.send_str(f'{message}\r\n')
+
+    def get_event(self, action: str):
+        action = action.lower()
+
+        return getattr(self, f'{action}_event')
+
+    def remove_join_cache(self, channel: str):
+        task = self.join_cache[channel]
+
+        try:
+            task.cancel()
+        except Exception as e:
+            logger.debug(f'An error occurred cancelling a join task. {e}')
+
+        del self.join_cache[channel]
+
+    async def reconnect_event(self, payload: IRCPayload):
         pass
+
+    async def ping_event(self, payload: IRCPayload):
+        await self.send('PONG :tmi.twitch.tv')
+
+    async def join_event(self, payload: IRCPayload):
+        self.remove_join_cache(payload.channel)
