@@ -43,8 +43,8 @@ class Websocket:
                  token: str,
                  heartbeat: typing.Optional[float] = 30.0,
                  verified: typing.Optional[bool] = False,
-                 join_timeout: typing.Optional[float] = 10.0,
-                 initial_channels: list = []
+                 join_timeout: typing.Optional[float] = 30.0,
+                 initial_channels: list = ['evieepy']
                  ):
         self.ws: aiohttp.ClientWebSocketResponse = None  # type: ignore
         self.heartbeat = heartbeat
@@ -66,6 +66,8 @@ class Websocket:
         return self.ws is not None and not self.ws.closed
 
     async def _connect(self) -> None:
+        self._ready_event.clear()
+
         if self.is_connected():
             await self.ws.close()
 
@@ -107,7 +109,7 @@ class Websocket:
             message: aiohttp.WSMessage = await self.ws.receive()
 
             if message.type is aiohttp.WSMsgType.CLOSED:
-                logger.info(f'Websocket was closed. {message.extra}')
+                logger.error(f'Websocket was unexpectedly closed. {message.extra}')
                 break
 
             data = message.data
@@ -119,9 +121,15 @@ class Websocket:
             for payload in payloads:
                 match payload.code:
                     case 200:
-                        await self.get_event(payload.action)
+                        event = self.get_event(payload.action)
+                        asyncio.create_task(event(payload)) if event else None
+                        break
                     case 1:
+                        self._ready_event.set()
                         logger.info(f'Successful authentication on Twitch Websocket with nick: {self.nick}.')
+                        break
+                    case _:
+                        break
 
         asyncio.create_task(self._connect())
 
@@ -142,18 +150,23 @@ class Websocket:
         raise JoinFailed(f'The channel <{channel}> was not able be to be joined. Check the name and try again.')
 
     async def join_channels(self, channels: list) -> None:
+        await self._ready_event.wait()
+        await asyncio.sleep(10)
+
         channels = [c.removeprefix('#') for c in channels]
 
         for channel in channels:
             self.join_cache[channel] = asyncio.create_task(self.join_timeout_task(channel), name=channel)
 
-            await self.send(f'JOIN #{channel}')
+            await self.send(f'JOIN #{channel.lower()}')
             cd = self.join_limiter.check_limit()
 
             if cd:
                 await self.join_limiter.wait_for()
 
     async def send(self, message: str) -> None:
+        message = message.strip('\r\n')
+
         await self.ws.send_str(f'{message}\r\n')
 
     def get_event(self, action: str):
@@ -161,7 +174,7 @@ class Websocket:
 
         return getattr(self, f'{action}_event')
 
-    def remove_join_cache(self, channel: str):
+    def remove_join_cache(self, channel: str) -> None:
         task = self.join_cache[channel]
 
         try:
@@ -171,11 +184,11 @@ class Websocket:
 
         del self.join_cache[channel]
 
-    async def reconnect_event(self, payload: IRCPayload):
+    async def reconnect_event(self, payload: IRCPayload) -> None:
         pass
 
-    async def ping_event(self, payload: IRCPayload):
+    async def ping_event(self, payload: IRCPayload) -> None:
         await self.send('PONG :tmi.twitch.tv')
 
-    async def join_event(self, payload: IRCPayload):
+    async def join_event(self, payload: IRCPayload) -> None:
         self.remove_join_cache(payload.channel)
