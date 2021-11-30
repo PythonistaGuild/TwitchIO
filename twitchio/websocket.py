@@ -31,6 +31,9 @@ from .exceptions import AuthenticationError, JoinFailed
 from .limiter import IRCRateLimiter
 from .parser import IRCPayload
 
+if typing.TYPE_CHECKING:
+    from .client import Client
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +43,14 @@ HOST = 'wss://irc-ws.chat.twitch.tv:443'
 class Websocket:
 
     def __init__(self,
-                 token: str,
+                 client: 'Client',
                  heartbeat: typing.Optional[float] = 30.0,
                  verified: typing.Optional[bool] = False,
-                 join_timeout: typing.Optional[float] = 30.0,
+                 join_timeout: typing.Optional[float] = 15.0,
                  initial_channels: list = []
                  ):
+        self.client = client
+
         self.ws: aiohttp.ClientWebSocketResponse = None  # type: ignore
         self.heartbeat = heartbeat
 
@@ -53,12 +58,13 @@ class Websocket:
         self.join_cache = {}
         self.join_timeout = join_timeout
 
-        self._token = token.removeprefix("oauth:")
+        self._token = client._token
         self.nick: str = None  # type: ignore
         self.initial_channels = initial_channels
 
         self._backoff = ExponentialBackoff()
 
+        self.closing = False
         self._ready_event = asyncio.Event()
         self._keep_alive_task: asyncio.Task = None  # type: ignore
 
@@ -66,6 +72,9 @@ class Websocket:
         return self.ws is not None and not self.ws.closed
 
     async def _connect(self) -> None:
+        if self.closing:
+            return
+
         self._ready_event.clear()
 
         if self.is_connected():
@@ -109,7 +118,8 @@ class Websocket:
             message: aiohttp.WSMessage = await self.ws.receive()
 
             if message.type is aiohttp.WSMsgType.CLOSED:
-                logger.error(f'Websocket was unexpectedly closed. {message.extra}')
+                if not self.closing:
+                    logger.error(f'Websocket was unexpectedly closed. {message.extra if message.extra else ""}')
                 break
 
             data = message.data
@@ -151,7 +161,6 @@ class Websocket:
 
     async def join_channels(self, channels: list) -> None:
         await self._ready_event.wait()
-        await asyncio.sleep(10)
 
         channels = [c.removeprefix('#') for c in channels]
 
@@ -195,3 +204,19 @@ class Websocket:
 
     async def join_event(self, payload: IRCPayload) -> None:
         self.remove_join_cache(payload.channel)
+
+    async def close(self):
+        self.closing = True
+
+        await self.ws.close()
+
+        try:
+            self._keep_alive_task.cancel()
+        except:
+            pass
+
+        for task in self.join_cache.values():
+            try:
+                task.cancel()
+            except:
+                pass
