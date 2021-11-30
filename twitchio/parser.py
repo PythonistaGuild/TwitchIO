@@ -80,7 +80,10 @@ class IRCPayload:
             self.tags = {}
 
     @classmethod
-    def parse(cls, data: str):
+    def parse(cls, data: str) -> list:
+        if not data:
+            return []
+
         return [cls._parse(data) for data in data.split("\n")]
 
     @classmethod
