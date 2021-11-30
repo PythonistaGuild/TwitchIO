@@ -44,7 +44,7 @@ class Websocket:
                  heartbeat: typing.Optional[float] = 30.0,
                  verified: typing.Optional[bool] = False,
                  join_timeout: typing.Optional[float] = 30.0,
-                 initial_channels: list = ['evieepy']
+                 initial_channels: list = []
                  ):
         self.ws: aiohttp.ClientWebSocketResponse = None  # type: ignore
         self.heartbeat = heartbeat
@@ -188,7 +188,7 @@ class Websocket:
         del self.join_cache[channel]
 
     async def reconnect_event(self, payload: IRCPayload) -> None:
-        pass
+        asyncio.create_task(self._connect())
 
     async def ping_event(self, payload: IRCPayload) -> None:
         await self.send('PONG :tmi.twitch.tv')
