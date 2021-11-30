@@ -26,9 +26,13 @@ class TwitchIOException(Exception):
     pass
 
 
-class JoinFailed(Exception):
+class JoinFailed(TwitchIOException):
     pass
 
 
-class AuthenticationError(Exception):
+class AuthenticationError(TwitchIOException):
+    pass
+
+
+class EventNotFound(Exception):
     pass
