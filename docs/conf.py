@@ -24,12 +24,12 @@ sys.path.insert(0, os.path.abspath(".."))
 sys.path.append(os.path.abspath("extensions"))
 
 on_rtd = os.environ.get("READTHEDOCS") == "True"
-project = 'TwitchIO'
-copyright = '2021, TwitchIO'
-author = 'TwitchIO'
+project = "TwitchIO"
+copyright = "2021, TwitchIO"
+author = "TwitchIO"
 
 # The full version, including alpha/beta/rc tags
-release = '2.1.3'
+release = "2.1.3"
 
 
 # -- General configuration ---------------------------------------------------
@@ -46,12 +46,12 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -59,8 +59,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'furo'
-#html_logo = "logo.png"
+html_theme = "furo"
+# html_logo = "logo.png"
 
 html_theme_options = {
     "sidebar_hide_name": True,
@@ -72,13 +72,11 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # These folders are copied to the documentation's HTML output
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
-html_css_files = [
-    'css/custom.css'
-]
+html_css_files = ["css/custom.css"]
 
 if on_rtd:
     extensions.append("sphinxcontrib.napoleon")
