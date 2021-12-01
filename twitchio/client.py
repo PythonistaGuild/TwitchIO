@@ -153,7 +153,6 @@ class Client:
             pass
         finally:
             self.loop.run_until_complete(self.close())
-            self.loop.close()
 
     async def start(self):
         """|coro|
