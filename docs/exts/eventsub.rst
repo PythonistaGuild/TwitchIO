@@ -19,7 +19,7 @@ integrating seamlessly into the twitchio Client event dispatching system.
 
 
 A Quick Example
-================
+----------------
 
 .. code-block:: python3
 
@@ -40,7 +40,7 @@ A Quick Example
     bot.loop.run_forever()
 
 Event Reference
-================
+----------------
 This is a list of events dispatched by the eventsub ext.
 
 .. function:: event_eventsub_revokation(event: RevokationEvent)
@@ -72,7 +72,7 @@ This is a list of events dispatched by the eventsub ext.
 
 
 API Reference
-================
+--------------
 
 .. attributetable:: EventSubClient
 
