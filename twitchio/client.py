@@ -68,7 +68,10 @@ class Client:
 
     @property
     def nick(self):
+        """The bots nickname"""
         return self._websocket.nick
+
+    nickname = nick
 
     async def event_ready(self) -> None:
         pass
