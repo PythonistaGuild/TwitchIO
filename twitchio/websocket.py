@@ -131,17 +131,15 @@ class Websocket:
             print(data)
 
             for payload in payloads:
-                match payload.code:
-                    case 200:
-                        event = self.get_event(payload.action)
-                        asyncio.create_task(event(payload)) if event else None
-                        break
-                    case 1:
-                        self._ready_event.set()
-                        logger.info(f'Successful authentication on Twitch Websocket with nick: {self.nick}.')
-                        break
-                    case _:
-                        break
+                payload: IRCPayload
+
+                if payload.code == 200:
+                    event = self.get_event(payload.action)
+                    asyncio.create_task(event(payload)) if event else None
+
+                elif payload.code == 1:
+                    self._ready_event.set()
+                    logger.info(f'Successful authentication on Twitch Websocket with nick: {self.nick}.')
 
         asyncio.create_task(self._connect())
 
