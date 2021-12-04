@@ -24,7 +24,7 @@ import re
 from typing import Optional
 
 
-USER_REGEX = re.compile(r':(?P<USER>.*)!\S*')
+USER_REGEX = re.compile(r'user-type=*\S*.:(?P<USER>.*?)!\S*')
 CHANNEL_REGEX = re.compile(r'tmi\.twitch\.tv [A-Z()]* #(?P<CHANNEL>\S*)')
 
 TMI = ':tmi.twitch.tv'
@@ -128,7 +128,8 @@ class IRCPayload:
 
             raw_tags = zero.split(';')
             for tag in raw_tags:
-                key, value = tag.split('=')
+                key, value = tag.split('=', 1)
+
 
                 if key == 'badges' and value:
                     badges = {}
