@@ -1,5 +1,11 @@
 .. currentmodule:: twitchio
 
+2.1.4
+======
+- Twitchio
+    - Chatter.is_mod now uses name instead of display_name
+    - Added ChannelInfo and mention to slots
+
 2.1.3
 ======
 - Twitchio
@@ -8,7 +14,6 @@
 
 - ext.commands
     - Fix TypeError in Bot.from_client_credentials
-
 
 2.1.2
 ======
