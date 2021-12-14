@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import logging
+import sys
 import time
 import uuid
 from itertools import groupby
@@ -72,7 +73,10 @@ class PubSubWebsocket:
         self.client = client
         self._latency = None
         self._closing = False
-        self.timeout = asyncio.Event(loop=self.client.loop)
+        if sys.version_info >= (3, 10):
+            self.timeout = asyncio.Event()
+        else:
+            self.timeout = asyncio.Event(loop=self.client.loop)
 
     @property
     def latency(self) -> Optional[float]:
