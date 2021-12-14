@@ -2,14 +2,14 @@
 
 2.1.4
 ======
-- Twitchio
+- TwitchIO
     - Chatter.is_mod now uses name instead of display_name
     - Added ChannelInfo to slots
     - Remove loop= parameter for asyncio.Event in websocket for 3.10 compatibility
 
 2.1.3
 ======
-- Twitchio
+- TwitchIO
     - Fix bug where chatter never checked for founder in is_subscriber
     - Fix rewards model so it can now handle pubsub and helix callbacks
 
@@ -20,7 +20,7 @@
 ======
 New logo!
 
-- Twitchio
+- TwitchIO
     - Add :func:`Chatter.mention`
     - Re-add ``raw_usernotice`` from V1.x
     - Fix echo messages for replies
@@ -43,12 +43,12 @@ New logo!
 
 2.1.1
 ======
-- Twitchio
+- TwitchIO
     - Patch a bug introduced in 2.1.0 that broke the library on python 3.7
 
 2.1.0
 ======
-- Twitchio
+- TwitchIO
     - Type the :class:`User` class
     - Update the library to use a proper ISO datetime parser
     - Add event_raw_usernotice event (GH#229)
