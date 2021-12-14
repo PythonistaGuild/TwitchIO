@@ -1,5 +1,12 @@
 .. currentmodule:: twitchio
 
+2.1.4
+======
+- Twitchio
+    - Chatter.is_mod now uses name instead of display_name
+    - Added ChannelInfo to slots
+    - Remove loop= parameter for asyncio.Event in websocket for 3.10 compatibility
+
 2.1.3
 ======
 - Twitchio
@@ -8,7 +15,6 @@
 
 - ext.commands
     - Fix TypeError in Bot.from_client_credentials
-
 
 2.1.2
 ======
@@ -42,7 +48,7 @@ New logo!
 
 2.1.0
 ======
-- TwitchIO
+- Twitchio
     - Type the :class:`User` class
     - Update the library to use a proper ISO datetime parser
     - Add event_raw_usernotice event (GH#229)
