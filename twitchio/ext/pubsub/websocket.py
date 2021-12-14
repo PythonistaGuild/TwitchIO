@@ -72,7 +72,7 @@ class PubSubWebsocket:
         self.client = client
         self._latency = None
         self._closing = False
-        self.timeout = asyncio.Event(loop=self.client.loop)
+        self.timeout = asyncio.Event()
 
     @property
     def latency(self) -> Optional[float]:
