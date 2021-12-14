@@ -19,7 +19,6 @@ try:
     def _loads(s: str) -> dict:
         return json.loads(s)
 
-
 except ModuleNotFoundError:
     import json
 
