@@ -259,7 +259,7 @@ class ChannelCheerData(EventData):
 
     def __init__(self, client: EventSubClient, data: dict):
         self.is_anonymous: bool = data["is_anonymous"]
-        self.user: Optional[PartialUser] = self.is_anonymous and _transform_user(client, data, "user")
+        self.user: Optional[PartialUser] = _transform_user(client, data, "user") if not self.is_anonymous else None
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.message: str = data["message"]
         self.bits = int(data["bits"])

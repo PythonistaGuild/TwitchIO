@@ -185,7 +185,7 @@ class Chatter(PartialChatter):
         if self._mod == 1:
             return True
 
-        return self.channel.name == self.display_name.lower()
+        return self.channel.name == self.name.lower()
 
     @property
     def is_turbo(self) -> Optional[bool]:

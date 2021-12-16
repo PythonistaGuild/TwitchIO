@@ -65,6 +65,7 @@ __all__ = (
     "ScheduleVacation",
     "Team",
     "ChannelTeams",
+    "ChannelInfo",
 )
 
 
