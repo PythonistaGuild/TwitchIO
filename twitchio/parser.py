@@ -130,7 +130,6 @@ class IRCPayload:
             for tag in raw_tags:
                 key, value = tag.split('=', 1)
 
-
                 if key == 'badges' and value:
                     badges = {}
 
