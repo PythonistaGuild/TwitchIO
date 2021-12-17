@@ -110,6 +110,10 @@ class Client:
             await shard._websocket.close()
 
     @property
+    def shards(self) -> dict[int, ShardInfo]:
+        return self._shards
+
+    @property
     def nick(self):
         """The bots nickname"""
         return self._shards[1]._websocket.nick
