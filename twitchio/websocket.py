@@ -33,6 +33,7 @@ from .parser import IRCPayload
 
 if typing.TYPE_CHECKING:
     from .client import Client
+    from .limiter import IRCRateLimiter
 
 
 logger = logging.getLogger(__name__)
@@ -44,21 +45,23 @@ class Websocket:
 
     def __init__(self,
                  client: 'Client',
+                 limiter: IRCRateLimiter,
+                 shard_index: int = 1,
                  heartbeat: typing.Optional[float] = 30.0,
-                 verified: typing.Optional[bool] = False,
-                 join_timeout: typing.Optional[float] = 15.0,
-                 initial_channels: list = []
+                 join_timeout: typing.Optional[float] = 10.0,
+                 initial_channels: list = [],
                  ):
         self.client = client
 
         self.ws: aiohttp.ClientWebSocketResponse = None  # type: ignore
         self.heartbeat = heartbeat
 
-        self.join_limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
+        self.join_limiter = limiter
         self.join_cache = {}
         self.join_timeout = join_timeout
 
         self._token = client._token
+        self.shard_index = shard_index
         self.nick: str = None  # type: ignore
         self.initial_channels = initial_channels
 
@@ -113,7 +116,14 @@ class Websocket:
         self._keep_alive_task = asyncio.create_task(self._keep_alive())
         await self.authentication_sequence()
 
-        await self.dispatch(event='ready')
+        while self.join_cache:
+            await asyncio.sleep(0)
+
+        await self.dispatch(event='shard_ready', number=self.shard_index)
+        self.client._shards[self.shard_index].ready = True
+
+        if all(s.ready for s in self.client._shards.values()):
+            await self.dispatch(event='ready')
 
     async def _keep_alive(self) -> None:
         while True:
@@ -126,12 +136,12 @@ class Websocket:
 
             data = message.data
             payloads = IRCPayload.parse(data=data)
-
-            # TODO REMOVE PRINT
-            print(data)
+            await self.dispatch('raw_data', data)
 
             for payload in payloads:
                 payload: IRCPayload
+
+                await self.dispatch('raw_payload', payload)
 
                 if payload.code == 200:
                     event = self.get_event(payload.action)
@@ -176,7 +186,10 @@ class Websocket:
     async def send(self, message: str) -> None:
         message = message.strip('\r\n')
 
-        await self.ws.send_str(f'{message}\r\n')
+        try:
+            await self.ws.send_str(f'{message}\r\n')
+        except Exception as e:
+            print(e)
 
     def dispatch_callback(self, task: asyncio.Task) -> None:
         exc = task.exception()
@@ -186,6 +199,9 @@ class Websocket:
 
     async def dispatch(self, event: str, *args, **kwargs) -> None:
         event = event.lower()
+
+        if not event:
+            return None
 
         coro = getattr(self.client, f'event_{event}')
 
@@ -199,6 +215,9 @@ class Websocket:
 
     def get_event(self, action: str):
         action = action.lower()
+
+        if not action:
+            return None
 
         return getattr(self, f'{action}_event')
 
@@ -225,6 +244,15 @@ class Websocket:
         self.remove_join_cache(payload.channel)
 
     async def part_event(self, payload: IRCPayload) -> None:
+        pass
+
+    async def cap_event(self, payload: IRCPayload) -> None:
+        pass
+
+    async def userstate_event(self, payload: IRCPayload) -> None:
+        pass
+
+    async def roomstate_event(self, payload: IRCPayload) -> None:
         pass
 
     async def close(self):
