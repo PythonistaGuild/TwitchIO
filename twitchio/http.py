@@ -98,6 +98,7 @@ class TwitchHTTP:
         self.client_secret = client_secret
         self.client_id = client_id
         self.nick = None
+        self.user_id = None
 
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
@@ -325,6 +326,7 @@ class TwitchHTTP:
 
         if not self.nick:
             self.nick = data.get("login")
+            self.user_id = data.get("user_id")
             self.client_id = data.get("client_id")
 
         return data

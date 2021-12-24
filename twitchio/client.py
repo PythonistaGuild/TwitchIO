@@ -336,6 +336,11 @@ class Client:
         """The IRC bots nick."""
         return self._http.nick or self._connection.nick
 
+    @property
+    def user_id(self):
+        """The IRC bot user id."""
+        return self._http.user_id or self._connection.user_id
+
     def create_user(self, user_id: int, user_name: str) -> PartialUser:
         """
         A helper method to create a :class:`twitchio.PartialUser` from a user id and user name.
