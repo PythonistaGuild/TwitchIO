@@ -1,5 +1,10 @@
 .. currentmodule:: twitchio
 
+Master
+======
+- TwitchIO
+    - Loosen aiohttp requirements to allow 3.8.1
+
 2.1.4
 ======
 - TwitchIO
