@@ -218,50 +218,49 @@ class TwitchHTTP:
         for attempt in range(5):
             if utilize_bucket and self.bucket.limited:
                 await self.bucket.wait_reset()
+            resp = await self.session.request(route.method, path, headers=headers, data=route.body)
+            try:
+                logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
+            except Exception:
+                logger.debug(f"Received a response from a request with status {resp.status} and without body")
 
-            async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
-                try:
-                    logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
-                except Exception:
-                    logger.debug(f"Received a response from a request with status {resp.status} and without body")
+            if 500 <= resp.status <= 504:
+                reason = resp.reason
+                await asyncio.sleep(2 ** attempt + 1)
+                continue
 
-                if 500 <= resp.status <= 504:
-                    reason = resp.reason
-                    await asyncio.sleep(2 ** attempt + 1)
-                    continue
+            if utilize_bucket:
+                reset = resp.headers.get("Ratelimit-Reset")
+                remaining = resp.headers.get("Ratelimit-Remaining")
 
-                if utilize_bucket:
-                    reset = resp.headers.get("Ratelimit-Reset")
-                    remaining = resp.headers.get("Ratelimit-Remaining")
+                self.bucket.update(reset=reset, remaining=remaining)
 
-                    self.bucket.update(reset=reset, remaining=remaining)
+            if 200 <= resp.status < 300:
+                if resp.content_type == "application/json":
+                    return await resp.json(), False
 
-                if 200 <= resp.status < 300:
-                    if resp.content_type == "application/json":
-                        return await resp.json(), False
+                return await resp.text(encoding="utf-8"), True
 
-                    return await resp.text(encoding="utf-8"), True
+            if resp.status == 401:
+                if "WWW-Authenticate" in resp.headers:
+                    try:
+                        await self._generate_login()
+                    except:
+                        raise errors.Unauthorized(
+                            "Your oauth token is invalid, and a new one could not be generated"
+                        )
 
-                if resp.status == 401:
-                    if "WWW-Authenticate" in resp.headers:
-                        try:
-                            await self._generate_login()
-                        except:
-                            raise errors.Unauthorized(
-                                "Your oauth token is invalid, and a new one could not be generated"
-                            )
+                print(resp.reason, await resp.json(), resp)
+                raise errors.Unauthorized("You're not authorized to use this route.")
 
-                    print(resp.reason, await resp.json(), resp)
-                    raise errors.Unauthorized("You're not authorized to use this route.")
+            if resp.status == 429:
+                reason = "Ratelimit Reached"
 
-                if resp.status == 429:
-                    reason = "Ratelimit Reached"
+                if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
+                    await asyncio.sleep(3 ** attempt + 1)
+                continue
 
-                    if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3 ** attempt + 1)
-                    continue
-
-                raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).", resp.reason, resp.status)
+            raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).", resp.reason, resp.status)
 
         raise errors.HTTPException("Failed to reach Twitch API", reason, resp.status)
 
@@ -296,14 +295,14 @@ class TwitchHTTP:
         if not self.session:
             self.session = aiohttp.ClientSession()
 
-        async with self.session.post(url) as resp:
-            if resp.status > 300 or resp.status < 200:
-                raise errors.HTTPException("Unable to generate a token: " + await resp.text())
+        resp = await self.session.post(url)
+        if resp.status > 300 or resp.status < 200:
+            raise errors.HTTPException("Unable to generate a token: " + await resp.text())
 
-            data = await resp.json()
-            self.token = self.app_token = data["access_token"]
-            self._refresh_token = data.get("refresh_token", None)
-            logger.info("Invalid or no token found, generated new token: %s", self.token)
+        data = await resp.json()
+        self.token = self.app_token = data["access_token"]
+        self._refresh_token = data.get("refresh_token", None)
+        logger.info("Invalid or no token found, generated new token: %s", self.token)
 
     async def validate(self, *, token: str = None) -> dict:
         if not token:
@@ -314,14 +313,14 @@ class TwitchHTTP:
         url = "https://id.twitch.tv/oauth2/validate"
         headers = {"Authorization": f"OAuth {token}"}
 
-        async with self.session.get(url, headers=headers) as resp:
-            if resp.status == 401:
-                raise errors.AuthenticationError("Invalid or unauthorized Access Token passed.")
+        resp = await self.session.get(url, headers=headers)
+        if resp.status == 401:
+            raise errors.AuthenticationError("Invalid or unauthorized Access Token passed.")
 
-            if resp.status > 300 or resp.status < 200:
-                raise errors.HTTPException("Unable to validate Access Token: " + await resp.text())
+        if resp.status > 300 or resp.status < 200:
+            raise errors.HTTPException("Unable to validate Access Token: " + await resp.text())
 
-            data: dict = await resp.json()
+        data: dict = await resp.json()
 
         if not self.nick:
             self.nick = data.get("login")
