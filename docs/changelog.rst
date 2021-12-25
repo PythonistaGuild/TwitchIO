@@ -1,5 +1,10 @@
 .. currentmodule:: twitchio
 
+Master
+=====
+- TwitchIO
+    - Add `user_id` property to Client
+
 2.1.4
 ======
 - TwitchIO
