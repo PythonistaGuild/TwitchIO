@@ -41,6 +41,7 @@ Here we will be using the commands extension of TwitchIO to create a Chat Bot.
             # Notify us when everything is ready!
             # We are logged in and ready to chat and use commands...
             print(f'Logged in as | {self.nick}')
+            print(f'User id is | {self.user_id}')
 
         @commands.command()
         async def hello(self, ctx: commands.Context):
@@ -82,6 +83,7 @@ For an exhaustive list of events, visit: `Event Reference <twitchio.html#event-r
             # Notify us when everything is ready!
             # We are logged in and ready to chat and use commands...
             print(f'Logged in as | {self.nick}')
+            print(f'User id is | {self.user_id}')
 
         async def event_message(self, message):
             # Messages with echo set to True are messages sent by the bot...
