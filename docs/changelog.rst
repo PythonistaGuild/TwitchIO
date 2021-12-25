@@ -1,5 +1,10 @@
 .. currentmodule:: twitchio
 
+Master
+======
+- TwitchIO
+    - Remove aiohttp context usage
+
 2.1.4
 ======
 - TwitchIO
