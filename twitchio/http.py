@@ -326,7 +326,7 @@ class TwitchHTTP:
 
         if not self.nick:
             self.nick = data.get("login")
-            self.user_id = data.get("user_id")
+            self.user_id = int(data.get("user_id"))
             self.client_id = data.get("client_id")
 
         return data
