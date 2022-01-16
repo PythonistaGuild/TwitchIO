@@ -72,7 +72,7 @@ class PubSubWebsocket:
         self.client = client
         self._latency = None
         self._closing = False
-        self.timeout = asyncio.Event(loop=self.client.loop)
+        self.timeout = asyncio.Event()
 
     @property
     def latency(self) -> Optional[float]:
@@ -192,6 +192,8 @@ class PubSubWebsocket:
 
     async def handle_response(self, message: dict):
         if message["error"]:
-            logger.error(f"Recieved errored response for nonce {message['nonce']}: {message['error']}")
+            logger.error(f"Received errored response for nonce {message['nonce']}: {message['error']}")
+            self.client.run_event("pubsub_error", message)
         elif message["nonce"]:
-            logger.debug(f"Recieved OK response for nonce {message['nonce']}")
+            logger.debug(f"Received OK response for nonce {message['nonce']}")
+            self.client.run_event("pubsub_nonce", message)

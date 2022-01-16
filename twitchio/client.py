@@ -157,6 +157,7 @@ class Client:
 
     async def start(self):
         """|coro|
+
         Connects to the twitch IRC server, and cleanly disconnects when done.
         """
         if self.loop is not asyncio.get_running_loop():
@@ -171,12 +172,14 @@ class Client:
 
     async def connect(self):
         """|coro|
+
         Connects to the twitch IRC server
         """
         await self._connection._connect()
 
     async def close(self):
         """|coro|
+
         Cleanly disconnects from the twitch IRC server
         """
         await self._connection._close()
@@ -213,6 +216,8 @@ class Client:
             if e == event_name:
                 if check(*args):
                     future.set_result(args)
+            if future.done():
+                self._waiting.remove((e, check, future))
 
     def add_event(self, callback: Callable, name: str = None) -> None:
         try:
@@ -258,6 +263,7 @@ class Client:
     ) -> Tuple[Any]:
         """|coro|
 
+
         Waits for an event to be dispatched, then returns the events data
 
         Parameters
@@ -302,27 +308,9 @@ class Client:
 
             return Channel(name=name, websocket=self._connection)
 
-    async def fetch_channel(self, broadcaster: str) -> list:
-        """Retrieve a channel from the API.
-
-        Parameters
-        -----------
-        name: str
-            The channel name or ID to request from API. Returns empty list if no channel was found.
-
-        Returns
-        --------
-            :class:`list`
-        """
-
-        if not broadcaster.isdigit():
-            get_id = await self.fetch_users(names=[broadcaster.lower()])
-            broadcaster = get_id[0].id
-
-        return await self._http.get_channels(broadcaster)
-
     async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
+
 
         Join the specified channels.
 
@@ -374,6 +362,7 @@ class Client:
         force=False,
     ) -> List[User]:
         """|coro|
+
         Fetches users from the helix API
 
         Parameters
@@ -400,6 +389,7 @@ class Client:
     async def fetch_clips(self, ids: List[str]):
         """|coro|
 
+
         Fetches clips by clip id.
         To fetch clips by user id, use :meth:`twitchio.PartialUser.fetch_clips`
 
@@ -416,11 +406,11 @@ class Client:
         return [models.Clip(self._http, d) for d in data]
 
     async def fetch_channel(self, broadcaster: str):
-        """Retrieve a channel from the API.
+        """Retrieve channel information from the API.
 
         Parameters
         -----------
-        name: str
+        broadcaster: str
             The channel name or ID to request from API. Returns empty dict if no channel was found.
 
         Returns
@@ -454,6 +444,7 @@ class Client:
         language=None,
     ):
         """|coro|
+
         Fetches videos by id, game id, or user id
 
         Parameters
@@ -497,6 +488,7 @@ class Client:
     async def fetch_cheermotes(self, user_id: int = None):
         """|coro|
 
+
         Fetches cheermotes from the twitch API
 
         Parameters
@@ -513,6 +505,7 @@ class Client:
 
     async def fetch_top_games(self) -> List[models.Game]:
         """|coro|
+
         Fetches the top games from the api
 
         Returns
@@ -524,6 +517,7 @@ class Client:
 
     async def fetch_games(self, ids: List[int] = None, names: List[str] = None) -> List[models.Game]:
         """|coro|
+
         Fetches games by id or name.
         At least one id or name must be provided
 
@@ -543,6 +537,7 @@ class Client:
 
     async def fetch_tags(self, ids: List[str] = None):
         """|coro|
+
         Fetches stream tags.
 
         Parameters
@@ -566,6 +561,7 @@ class Client:
         token: str = None,
     ):
         """|coro|
+
         Fetches live streams from the helix API
 
         Parameters
@@ -597,8 +593,39 @@ class Client:
         )
         return [Stream(self._http, x) for x in data]
 
+    async def fetch_teams(
+        self,
+        team_name: str = None,
+        team_id: str = None,
+    ):
+        """|coro|
+
+        Fetches information for a specific Twitch Team.
+
+        Parameters
+        -----------
+        name: Optional[:class:`str`]
+            Team name to fetch
+        id: Optional[:class:`str`]
+            Team id to fetch
+
+        Returns
+        --------
+        List[:class:`twitchio.Team`]
+        """
+        from .models import Team
+
+        assert team_name or team_id
+        data = await self._http.get_teams(
+            team_name=team_name,
+            team_id=team_id,
+        )
+
+        return Team(self._http, data[0])
+
     async def search_categories(self, query: str):
         """|coro|
+
         Searches twitches categories
 
         Parameters
@@ -615,6 +642,7 @@ class Client:
 
     async def search_channels(self, query: str, *, live_only=False):
         """|coro|
+
         Searches channels for the given query
 
         Parameters
@@ -633,6 +661,7 @@ class Client:
 
     async def delete_videos(self, token: str, ids: List[int]) -> List[int]:
         """|coro|
+
         Delete videos from the api. Returns the video ids that were successfully deleted.
 
         Parameters
@@ -654,6 +683,7 @@ class Client:
 
     async def get_webhook_subscriptions(self):
         """|coro|
+
         Fetches your current webhook subscriptions. Requires your bot to be logged in with an app access token.
 
         Returns
@@ -665,6 +695,7 @@ class Client:
 
     async def event_token_expired(self):
         """|coro|
+
 
         A special event called when the oauth token expires. This is a hook into the http system, it will call this
         when a call to the api fails due to a token expiry. This function should return either a new token, or `None`.
@@ -678,6 +709,7 @@ class Client:
 
     async def event_mode(self, channel: Channel, user: User, status: str):
         """|coro|
+
 
         Event called when a MODE is received from Twitch.
 
@@ -696,6 +728,7 @@ class Client:
     async def event_userstate(self, user: User):
         """|coro|
 
+
         Event called when a USERSTATE is received from Twitch.
 
         Parameters
@@ -707,6 +740,7 @@ class Client:
 
     async def event_raw_usernotice(self, channel: Channel, tags: dict):
         """|coro|
+
 
         Event called when a USERNOTICE is received from Twitch.
         Since USERNOTICE's can be fairly complex and vary, the following sub-events are available:
@@ -733,6 +767,7 @@ class Client:
     async def event_usernotice_subscription(self, metadata):
         """|coro|
 
+
         Event called when a USERNOTICE subscription or re-subscription event is received from Twitch.
 
         Parameters
@@ -747,6 +782,7 @@ class Client:
     async def event_part(self, user: User):
         """|coro|
 
+
         Event called when a PART is received from Twitch.
 
         Parameters
@@ -758,6 +794,7 @@ class Client:
 
     async def event_join(self, channel: Channel, user: User):
         """|coro|
+
 
         Event called when a JOIN is received from Twitch.
 
@@ -773,6 +810,7 @@ class Client:
     async def event_message(self, message: Message):
         """|coro|
 
+
         Event called when a PRIVMSG is received from Twitch.
 
         Parameters
@@ -784,6 +822,7 @@ class Client:
 
     async def event_error(self, error: Exception, data: str = None):
         """|coro|
+
 
         Event called when an error occurs while processing data.
 
@@ -807,6 +846,7 @@ class Client:
     async def event_ready(self):
         """|coro|
 
+
         Event called when the Bot has logged in and is ready.
 
         Example
@@ -821,6 +861,7 @@ class Client:
 
     async def event_raw_data(self, data: str):
         """|coro|
+
 
         Event called with the raw data received by Twitch.
 

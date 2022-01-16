@@ -26,6 +26,7 @@ import datetime
 from typing import Optional, Union, TYPE_CHECKING, List, Dict
 
 from . import enums
+from .utils import parse_timestamp
 from .user import BitLeaderboardUser, PartialUser, User
 
 if TYPE_CHECKING:
@@ -55,6 +56,16 @@ __all__ = (
     "Video",
     "Tag",
     "WebhookSubscription",
+    "Prediction",
+    "Predictor",
+    "PredictionOutcome",
+    "Schedule",
+    "ScheduleSegment",
+    "ScheduleCategory",
+    "ScheduleVacation",
+    "Team",
+    "ChannelTeams",
+    "ChannelInfo",
 )
 
 
@@ -110,7 +121,7 @@ class CheerEmote:
         self.tiers = [CheerEmoteTier(x) for x in data["tiers"]]
         self.type: str = data["type"]
         self.order: str = data["order"]
-        self.last_updated = datetime.datetime.strptime(data["last_updated"], "%Y-%m-%dT%H:%M:%SZ")
+        self.last_updated = parse_timestamp(data["last_updated"])
         self.charitable: bool = data["is_charitable"]
 
     def __repr__(self):
@@ -145,7 +156,7 @@ class Clip:
         self.language = data["language"]
         self.title = data["title"]
         self.views = data["view_count"]
-        self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.created_at = parse_timestamp(data["created_at"])
         self.thumbnail_url = data["thumbnail_url"]
 
     def __repr__(self):
@@ -190,12 +201,10 @@ class HypeTrainEvent:
         self.type: str = data["event_type"]
         self.version: str = data["version"]
         self.broadcaster = PartialUser(http, id=data["event_data"]["broadcaster_id"], name=None)
-        self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-        self.cooldown_end_time = datetime.datetime.strptime(
-            data["event_data"]["cooldown_end_time"], "%Y-%m-%dT%H:%M:%SZ"
-        )
-        self.expiry = datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.started_at = datetime.datetime.strptime(data["event_data"]["started_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = parse_timestamp(data["event_timestamp"])
+        self.cooldown_end_time = parse_timestamp(data["event_data"]["cooldown_end_time"])
+        self.expiry = parse_timestamp(data["expires_at"])
+        self.started_at = parse_timestamp(data["event_data"]["started_at"])
         self.last_contribution = HypeTrainContribution(http, data["event_data"]["last_contribution"])
         self.level: int = data["event_data"]["level"]
         self.top_contributions = [HypeTrainContribution(http, x) for x in data["event_data"]["top_contributions"]]
@@ -212,16 +221,14 @@ class BanEvent:
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Optional[Union[PartialUser, User]]):
         self.id: str = data["id"]
         self.type: str = data["event_type"]
-        self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = parse_timestamp(data["event_timestamp"])
         self.version: float = float(data["version"])
         self.broadcaster = broadcaster or PartialUser(
             http, data["event_data"]["broadcaster_id"], data["event_data"]["broadcaster_name"]
         )
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
         self.expires_at = (
-            datetime.datetime.strptime(data["event_data"]["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
-            if data["event_data"]["expires_at"]
-            else None
+            parse_timestamp(data["event_data"]["expires_at"]) if data["event_data"]["expires_at"] else None
         )
 
     def __repr__(self):
@@ -241,7 +248,7 @@ class FollowEvent:
     ):
         self.from_user = from_ or PartialUser(http, data["from_id"], data["from_name"])
         self.to_user = to or PartialUser(http, data["to_id"], data["to_name"])
-        self.followed_at = datetime.datetime.strptime(data["followed_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.followed_at = parse_timestamp(data["followed_at"])
 
     def __repr__(self):
         return f"<FollowEvent from_user={self.from_user} to_user={self.to_user} followed_at={self.followed_at}>"
@@ -277,7 +284,7 @@ class Marker:
 
     def __init__(self, data: dict):
         self.id: int = data["id"]
-        self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.created_at = parse_timestamp(data["created_at"])
         self.description: str = data["description"]
         self.position: int = data["position_seconds"]
         self.url: Optional[str] = data.get("URL")
@@ -335,7 +342,7 @@ class ModEvent:
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Union[PartialUser, User]):
         self.id: int = data["id"]
         self.type = enums.ModEventEnum(value=data["event_type"])
-        self.timestamp = datetime.datetime.strptime(data["event_timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+        self.timestamp = parse_timestamp(data["event_timestamp"])
         self.version: str = data["version"]
         self.broadcaster = broadcaster
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
@@ -480,8 +487,8 @@ class Video:
         self.user = user or PartialUser(http, data["user_id"], data["user_name"])
         self.title: str = data["title"]
         self.description: str = data["description"]
-        self.created_at = datetime.datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ")
-        self.published_at = datetime.datetime.strptime(data["published_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.created_at = parse_timestamp(data["created_at"])
+        self.published_at = parse_timestamp(data["published_at"])
         self.url: str = data["url"]
         self.thumbnail_url: str = data["thumbnail_url"]
         self.viewable: str = data["viewable"]
@@ -495,6 +502,7 @@ class Video:
 
     async def delete(self, token: str):
         """|coro|
+
         Deletes the video. For bulk deletion see :ref:`twitchio.Client.delete_videos`
 
         Parameters
@@ -525,7 +533,7 @@ class WebhookSubscription:
 
     def __init__(self, data: dict):
         self.callback: str = data["callback"]
-        self.expires_at = datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.expires_at = parse_timestamp(data["expired_at"])
         self.topic: str = data["topic"]
 
     def __repr__(self):
@@ -557,7 +565,7 @@ class Stream:
         self.type: str = data["type"]
         self.title: str = data["title"]
         self.viewer_count: int = data["viewer_count"]
-        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ")
+        self.started_at = parse_timestamp(data["started_at"])
         self.language: str = data["language"]
         self.thumbnail_url: str = data["thumbnail_url"]
         self.tag_ids: List[str] = data["tag_ids"]
@@ -581,3 +589,193 @@ class ChannelInfo:
 
     def __repr__(self):
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
+
+
+class Prediction:
+
+    __slots__ = (
+        "user",
+        "prediction_id",
+        "title",
+        "winning_outcome_id",
+        "outcomes",
+        "prediction_window",
+        "prediction_status",
+        "created_at",
+        "ended_at",
+        "locked_at",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
+        self.prediction_id: str = data["id"]
+        self.title: str = data["title"]
+        self.winning_outcome_id: str = data["winning_outcome_id"]
+        self.outcomes: List[PredictionOutcome] = [PredictionOutcome(http, x) for x in data["outcomes"]]
+        self.prediction_window: int = data["prediction_window"]
+        self.prediction_status: str = data["status"]
+        self.created_at = self._parse_time(data, "created_at")
+        self.ended_at = self._parse_time(data, "ended_at")
+        self.locked_at = self._parse_time(data, "locked_at")
+
+    def _parse_time(self, data, field) -> Optional["Datetime"]:
+        if field not in data or data[field] is None:
+            return None
+
+        time = data[field].split(".")[0]
+        return datetime.datetime.fromisoformat(time)
+
+    def __repr__(self):
+        return f"<Prediction user={self.user} prediction_id={self.prediction_id} winning_outcome_id={self.winning_outcome_id} title={self.title}>"
+
+
+class Predictor:
+
+    __slots__ = ("outcome_id", "title", "channel_points", "color")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.channel_points_used: int = data["channel_points_used"]
+        self.channel_points_won: int = data["channel_points_won"]
+        self.user = PartialUser(http, data["user"]["id"], data["user"]["name"])
+
+
+class PredictionOutcome:
+
+    __slots__ = ("outcome_id", "title", "channel_points", "color", "users", "top_predictors")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.outcome_id: str = data["id"]
+        self.title: str = data["title"]
+        self.channel_points: int = data["channel_points"]
+        self.color: str = data["color"]
+        self.users: int = data["users"]
+        if data["top_predictors"]:
+            self.top_predictors: List[Predictor] = [Predictor(http, x) for x in data["top_predictors"]]
+        else:
+            self.top_predictors: List[Predictor] = None
+
+    @property
+    def colour(self) -> str:
+        """The colour of the prediction. Alias to color."""
+        return self.color
+
+    def __repr__(self):
+        return f"<PredictionOutcome outcome_id={self.outcome_id} title={self.title} channel_points={self.channel_points} color={self.color}>"
+
+
+class Schedule:
+
+    __slots__ = ("segments", "user", "vacation")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.segments = [ScheduleSegment(d) for d in data["data"]["segments"]]
+        self.user = PartialUser(http, data["data"]["broadcaster_id"], data["data"]["broadcaster_login"])
+        self.vacation = ScheduleVacation(data["data"]["vacation"]) if data["data"]["vacation"] else None
+
+    def __repr__(self):
+        return f"<Schedule segments={self.segments} user={self.user} vacation={self.vacation}>"
+
+
+class ScheduleSegment:
+
+    __slots__ = ("id", "start_time", "end_time", "title", "canceled_until", "category", "is_recurring")
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.start_time = parse_timestamp(data["start_time"])
+        self.end_time = parse_timestamp(data["end_time"])
+        self.title: str = data["title"]
+        self.canceled_until = parse_timestamp(data["canceled_until"]) if data["canceled_until"] else None
+        self.category = ScheduleCategory(data["category"]) if data["category"] else None
+        self.is_recurring: bool = data["is_recurring"]
+
+    def __repr__(self):
+        return f"<Segment id={self.id} start_time={self.start_time} end_time={self.end_time} title={self.title} canceled_until={self.canceled_until} category={self.category} is_recurring={self.is_recurring}>"
+
+
+class ScheduleCategory:
+
+    __slots__ = ("id", "name")
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.name: str = data["name"]
+
+    def __repr__(self):
+        return f"<ScheduleCategory id={self.id} name={self.name}>"
+
+
+class ScheduleVacation:
+
+    __slots__ = ("start_time", "end_time")
+
+    def __init__(self, data: dict):
+        self.start_time = parse_timestamp(data["start_time"])
+        self.end_time = parse_timestamp(data["end_time"])
+
+    def __repr__(self):
+        return f"<ScheduleVacation start_time={self.start_time} end_time={self.end_time}>"
+
+
+class Team:
+
+    __slots__ = (
+        "users",
+        "background_image_url",
+        "banner",
+        "created_at",
+        "updated_at",
+        "info",
+        "thumbnail_url",
+        "team_name",
+        "team_display_name",
+        "id",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+
+        self.users: List[PartialUser] = [PartialUser(http, x["user_id"], x["user_login"]) for x in data["users"]]
+        self.background_image_url = data["background_image_url"]
+        self.banner = data["banner"]
+        self.created_at = parse_timestamp(data["created_at"].split(" ")[0])
+        self.updated_at = parse_timestamp(data["updated_at"].split(" ")[0])
+        self.info = data["info"]
+        self.thumbnail_url = data["thumbnail_url"]
+        self.team_name = data["team_name"]
+        self.team_display_name = data["team_display_name"]
+        self.id = data["id"]
+
+    def __repr__(self):
+        return f"<Team users={self.users} team_name={self.team_name} team_display_name={self.team_display_name} id={self.id} created_at={self.created_at}>"
+
+
+class ChannelTeams:
+
+    __slots__ = (
+        "broadcaster",
+        "background_image_url",
+        "banner",
+        "created_at",
+        "updated_at",
+        "info",
+        "thumbnail_url",
+        "team_name",
+        "team_display_name",
+        "id",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+
+        self.broadcaster: PartialUser = PartialUser(http, data["broadcaster_id"], data["broadcaster_login"])
+        self.background_image_url = data["background_image_url"]
+        self.banner = data["banner"]
+        self.created_at = parse_timestamp(data["created_at"].split(" ")[0])
+        self.updated_at = parse_timestamp(data["updated_at"].split(" ")[0])
+        self.info = data["info"]
+        self.thumbnail_url = data["thumbnail_url"]
+        self.team_name = data["team_name"]
+        self.team_display_name = data["team_display_name"]
+        self.id = data["id"]
+
+    def __repr__(self):
+        return f"<ChannelTeams user={self.broadcaster} team_name={self.team_name} team_display_name={self.team_display_name} id={self.id} created_at={self.created_at}>"

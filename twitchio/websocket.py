@@ -200,6 +200,21 @@ class WSConnection:
 
         await self._websocket.send_str(message + "\r\n")
 
+    async def reply(self, msg_id: str, message: str):
+        message = message.strip()
+        log.debug(f" > {message}")
+
+        if message.startswith("PRIVMSG #"):
+            data = message.replace("PRIVMSG #", "", 1).split(" ")
+            channel = data.pop(0)
+            content = " ".join(data)
+
+            dummy = f"> @reply-parent-msg-id={msg_id} :{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO) #{channel} {content}\r\n"
+            task = asyncio.create_task(self._process_data(dummy))
+            task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
+
+        await self._websocket.send_str(f"@reply-parent-msg-id={msg_id} {message} \r\n")
+
     async def authenticate(self, channels: Union[list, tuple]):
         """|coro|
 
@@ -370,7 +385,7 @@ class WSConnection:
 
         self.dispatch("message", message)
 
-    async def _privmsg_echo(self, parsed):  # TODO
+    async def _privmsg_echo(self, parsed):
         log.debug(f'ACTION: PRIVMSG(ECHO):: {parsed["channel"]}')
 
         channel = Channel(name=parsed["channel"], websocket=self)
@@ -380,17 +395,24 @@ class WSConnection:
 
         self.dispatch("message", message)
 
-    async def _userstate(self, parsed):  # TODO
+    async def _userstate(self, parsed):
         log.debug(f'ACTION: USERSTATE:: {parsed["channel"]}')
         self._cache_add(parsed)
 
         channel = Channel(name=parsed["channel"], websocket=self)
-        user = Chatter(tags=parsed["badges"], name=parsed["nick"], channel=channel, bot=self._client, websocket=self)
+        name = parsed["user"] or parsed["nick"]
+        user = Chatter(tags=parsed["badges"], name=name, channel=channel, bot=self._client, websocket=self)
 
         self.dispatch("userstate", user)
 
-    async def _usernotice(self, parsed):  # TODO
+    async def _usernotice(self, parsed):
         log.debug(f'ACTION: USERNOTICE:: {parsed["channel"]}')
+
+        channel = Channel(name=parsed["channel"], websocket=self)
+        rawData = parsed["groups"][0]
+        tags = dict(x.split("=") for x in rawData.split(";"))
+
+        self.dispatch("raw_usernotice", channel, tags)
 
     async def _join(self, parsed):
         log.debug(f'ACTION: JOIN:: {parsed["channel"]}')
@@ -425,9 +447,8 @@ class WSConnection:
                 user = PartialChatter(name=u, bot=self._client, websocket=self, channel=channel_)
                 self._cache[channel].add(user)
         else:
-            user = Chatter(
-                bot=self._client, name=parsed["nick"], websocket=self, channel=channel_, tags=parsed["badges"]
-            )
+            name = parsed["user"] or parsed["nick"]
+            user = Chatter(bot=self._client, name=name, websocket=self, channel=channel_, tags=parsed["badges"])
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
 
@@ -435,7 +456,7 @@ class WSConnection:
         pass
 
     async def _reconnect(self, parsed):
-        log.debug(f"ACTION: RECONNECT:: Twitch has gracefully closed the connection and will reconnect.")
+        log.debug("ACTION: RECONNECT:: Twitch has gracefully closed the connection and will reconnect.")
         self._reconnect_requested = True
 
     def dispatch(self, event: str, *args, **kwargs):

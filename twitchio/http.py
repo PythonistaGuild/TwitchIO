@@ -93,6 +93,7 @@ class TwitchHTTP:
         self.client = client
         self.session = None
         self.token = api_token
+        self.app_token = None
         self._refresh_token = None
         self.client_secret = client_secret
         self.client_id = client_id
@@ -101,7 +102,7 @@ class TwitchHTTP:
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
 
-    async def request(self, route: Route, *, paginate=True, limit=100, full_body=False):
+    async def request(self, route: Route, *, paginate=True, limit=100, full_body=False, force_app_token=False):
         """
         Fulfills an API request
 
@@ -115,6 +116,8 @@ class TwitchHTTP:
             The data limit per request when paginating. Defaults to 100
         full_body : class:`bool`
             Whether to return the full response body or to accumulate the `data` key. Defaults to False. `paginate` must be False if this is True.
+        force_app_token : :class:`bool`
+            Forcibly use the client_id and client_secret generated token, if available. Otherwise fail the request immediately
         """
         if full_body:
             assert not paginate
@@ -127,9 +130,19 @@ class TwitchHTTP:
 
         headers = route.headers or {}
 
-        if not self.token and not self.client_secret and "Authorization" not in headers:
+        if force_app_token and "Authorization" not in headers:
+            if not self.client_secret:
+                raise errors.NoToken(
+                    "An app access token is required for this route, please provide a client id and client secret"
+                )
+
+            if self.app_token is None:
+                await self._generate_login()
+                headers["Authorization"] = f"Bearer {self.app_token}"
+
+        elif not self.token and not self.client_secret and "Authorization" not in headers:
             raise errors.NoToken(
-                "Authorization is required to use the Twitch API. Pass api_token and/or client_secret to the Client constructor"
+                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
             )
 
         if "Authorization" not in headers:
@@ -208,9 +221,9 @@ class TwitchHTTP:
 
             async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
                 try:
-                    logger.debug(f"Recived a response from a request with status {resp.status}: {await resp.json()}")
+                    logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
                 except Exception:
-                    logger.debug(f"Recived a response from a request with status {resp.status} and without body")
+                    logger.debug(f"Received a response from a request with status {resp.status} and without body")
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
@@ -257,7 +270,7 @@ class TwitchHTTP:
             token = await self.client.event_token_expired()
             if token is not None:
                 assert isinstance(token, str), TypeError(f"Expected a string, got {type(token)}")
-                self.token = token
+                self.token = self.app_token = token
                 return
         except Exception as e:
             self.client.run_event("error", e)
@@ -288,7 +301,7 @@ class TwitchHTTP:
                 raise errors.HTTPException("Unable to generate a token: " + await resp.text())
 
             data = await resp.json()
-            self.token = data["access_token"]
+            self.token = self.app_token = data["access_token"]
             self._refresh_token = data.get("refresh_token", None)
             logger.info("Invalid or no token found, generated new token: %s", self.token)
 
@@ -520,6 +533,61 @@ class TwitchHTTP:
             )
         )
 
+    async def get_predictions(
+        self,
+        token: str,
+        broadcaster_id: int,
+        prediction_id: str = None,
+    ):
+        params = [("broadcaster_id", str(broadcaster_id))]
+
+        if prediction_id:
+            params.extend(("prediction_id", prediction_id))
+
+        return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
+
+    async def patch_prediction(
+        self, token: str, broadcaster_id: int, prediction_id: str, status: str, winning_outcome_id: str = None
+    ):
+        body = {
+            "broadcaster_id": str(broadcaster_id),
+            "id": prediction_id,
+            "status": status,
+        }
+
+        if status == "RESOLVED":
+            body["winning_outcome_id"] = winning_outcome_id
+
+        return await self.request(
+            Route(
+                "PATCH",
+                "predictions",
+                body=body,
+                token=token,
+            )
+        )
+
+    async def post_prediction(
+        self, token: str, broadcaster_id: int, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
+    ):
+        body = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "prediction_window": prediction_window,
+            "outcomes": [
+                {
+                    "title": blue_outcome,
+                },
+                {
+                    "title": pink_outcome,
+                },
+            ],
+        }
+        return await self.request(
+            Route("POST", "predictions", body=body, token=token),
+            paginate=False,
+        )
+
     async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
         return await self.request(
             Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", has_delay)], token=token),
@@ -711,6 +779,45 @@ class TwitchHTTP:
             Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body, token=token)
         )
 
+    async def get_channel_schedule(
+        self,
+        broadcaster_id: str,
+        segment_ids: List[str] = None,
+        start_time: datetime.datetime = None,
+        utc_offset: int = None,
+        first: int = 20,
+    ):
+
+        if first is not None and (first > 25 or first < 1):
+            raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
+        if segment_ids is not None and len(segment_ids) > 100:
+            raise ValueError("segment_id can only have 100 entries")
+
+        if start_time:
+            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        if utc_offset:
+            utc_offset = str(utc_offset)
+
+        q = [
+            x
+            for x in [
+                ("broadcaster_id", broadcaster_id),
+                ("first", first),
+                ("start_time", start_time),
+                ("utc_offset", utc_offset),
+            ]
+            if x[1] is not None
+        ]
+
+        if segment_ids:
+            for id in segment_ids:
+                q.append(
+                    ("id", id),
+                )
+
+        return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
+
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
@@ -839,3 +946,16 @@ class TwitchHTTP:
 
     async def get_webhook_subs(self):
         return await self.request(Route("GET", "webhooks/subscriptions"))
+
+    async def get_teams(self, team_name: str = None, team_id: str = None):
+        if team_name:
+            q = [("name", team_name)]
+        elif team_id:
+            q = [("id", team_id)]
+        else:
+            raise ValueError("You need to provide a team name or id")
+        return await self.request(Route("GET", "teams", query=q))
+
+    async def get_channel_teams(self, broadcaster_id: str):
+        q = [("broadcaster_id", broadcaster_id)]
+        return await self.request(Route("GET", "teams/channel", query=q))

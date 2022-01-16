@@ -28,7 +28,7 @@ __title__ = "TwitchIO"
 __author__ = "TwitchIO, PythonistaGuild"
 __license__ = "MIT"
 __copyright__ = "Copyright 2017-2021 (c) TwitchIO"
-__version__ = "2.0.5"
+__version__ = "2.1.2"
 
 from .client import Client
 from .user import *
@@ -39,3 +39,4 @@ from .errors import *
 from .message import Message
 from .models import *
 from .rewards import *
+from .utils import *

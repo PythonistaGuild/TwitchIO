@@ -30,8 +30,19 @@ import typing
 if typing.TYPE_CHECKING:
     from .websocket import WSConnection
 
-ACTIONS = ("JOIN", "PART", "PING", "PRIVMSG", "PRIVMSG(ECHO)", "USERSTATE", "MODE", "RECONNECT", "WHISPER")
-ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "WHISPER")
+ACTIONS = (
+    "JOIN",
+    "PART",
+    "PING",
+    "PRIVMSG",
+    "PRIVMSG(ECHO)",
+    "USERSTATE",
+    "MODE",
+    "RECONNECT",
+    "WHISPER",
+    "USERNOTICE",
+)
+ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "USERNOTICE", "WHISPER")
 USER_SUB = re.compile(r":(?P<user>.*)!")
 TMI = "tmi.twitch.tv"
 
@@ -58,8 +69,19 @@ def parser(data: str, nick: str):
         message = " ".join(groups[4:]).lstrip(":")
         user = re.search(USER_SUB, groups[1]).group("user")
 
+    elif groups[2] == "USERNOTICE":
+        action = groups[2]
+        channel = groups[3].lstrip("#")
+        message = " ".join(groups[4:]).lstrip(":")
+
     elif action in ACTIONS:
         channel = groups[-1].lstrip("#")
+
+    elif groups[3] in {"PRIVMSG", "PRIVMSG(ECHO)"}:
+        action = groups[3]
+        channel = groups[4].lstrip("#")
+        message = " ".join(groups[5:]).lstrip(":")
+        user = re.search(USER_SUB, groups[2]).group("user")
 
     if action in ACTIONS2:
         prebadge = groups[0].split(";")

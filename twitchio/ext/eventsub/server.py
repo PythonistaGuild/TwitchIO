@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import yarl
 from aiohttp import web
 
-from ... import Client, PartialUser
+from twitchio import Client, PartialUser
 from . import models, http
 
 try:
@@ -27,11 +27,11 @@ _message_types = {
 
 
 class EventSubClient(web.Application):
-    def __init__(self, client: Client, webhook_secret: str, callback_route: str):
+    def __init__(self, client: Client, webhook_secret: str, callback_route: str, token: str = None):
         self.client = client
         self.secret = webhook_secret
         self.route = callback_route
-        self._http = http.EventSubHTTP(self)
+        self._http = http.EventSubHTTP(self, token=token)
         super(EventSubClient, self).__init__()
         self.router.add_post(yarl.URL(self.route).path, self._callback)
         self._closing = asyncio.Event()

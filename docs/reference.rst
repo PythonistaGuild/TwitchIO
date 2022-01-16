@@ -3,107 +3,11 @@
 Dataclass Reference
 =====================
 
-BitsLeaderboard
+ActiveExtension
 ------------------
-.. attributetable:: BitsLeaderboard
+.. attributetable:: ActiveExtension
 
-.. autoclass:: BitsLeaderboard
-    :members:
-    :inherited-members:
-
-Clip
-------
-.. attributetable:: Clip
-
-.. autoclass:: Clip
-    :members:
-    :inherited-members:
-
-CheerEmote
-------------
-.. attributetable:: CheerEmote
-
-.. autoclass:: CheerEmote
-    :members:
-    :inherited-members:
-
-CheerEmoteTier
-----------------
-.. attributetable:: CheerEmoteTier
-
-.. autoclass:: CheerEmoteTier
-    :members:
-    :inherited-members:
-
-HypeTrainContribution
------------------------
-.. attributetable:: HypeTrainContribution
-
-.. autoclass:: HypeTrainContribution
-    :members:
-    :inherited-members:
-
-HypeTrainEvent
-----------------
-.. attributetable:: HypeTrainEvent
-
-.. autoclass:: HypeTrainEvent
-    :members:
-    :inherited-members:
-
-BanEvent
-----------
-.. attributetable:: BanEvent
-
-.. autoclass:: BanEvent
-    :members:
-    :inherited-members:
-
-FollowEvent
--------------
-.. attributetable:: FollowEvent
-
-.. autoclass:: FollowEvent
-    :members:
-    :inherited-members:
-
-SubscriptionEvent
--------------------
-.. attributetable:: SubscriptionEvent
-
-.. autoclass:: SubscriptionEvent
-    :members:
-    :inherited-members:
-
-Marker
---------
-.. attributetable:: Marker
-
-.. autoclass:: Marker
-    :members:
-    :inherited-members:
-
-VideoMarkers
---------------
-.. attributetable:: VideoMarkers
-
-.. autoclass:: VideoMarkers
-    :members:
-    :inherited-members:
-
-Game
-------
-.. attributetable:: Game
-
-.. autoclass:: Game
-    :members:
-    :inherited-members:
-
-ModEvent
-----------
-.. attributetable:: ModEvent
-
-.. autoclass:: ModEvent
+.. autoclass:: ActiveExtension
     :members:
     :inherited-members:
 
@@ -123,67 +27,87 @@ AutomodCheckResponse
     :members:
     :inherited-members:
 
-Extension
------------
-.. attributetable:: Extension
+BanEvent
+----------
+.. attributetable:: BanEvent
 
-.. autoclass:: Extension
+.. autoclass:: BanEvent
     :members:
     :inherited-members:
 
-MaybeActiveExtension
-----------------------
-.. attributetable:: MaybeActiveExtension
+BitLeaderboardUser
+--------------------
+.. attributetable:: BitLeaderboardUser
 
-.. autoclass:: MaybeActiveExtension
+.. autoclass:: BitLeaderboardUser
     :members:
-    :inherited-members:
 
-ActiveExtension
+BitsLeaderboard
 ------------------
-.. attributetable:: ActiveExtension
+.. attributetable:: BitsLeaderboard
 
-.. autoclass:: ActiveExtension
+.. autoclass:: BitsLeaderboard
     :members:
     :inherited-members:
 
-ExtensionBuilder
-------------------
-.. attributetable:: ExtensionBuilder
-
-.. autoclass:: ExtensionBuilder
-    :members:
-    :inherited-members:
-
-Video
--------
-.. attributetable:: Video
-
-.. autoclass:: Video
-    :members:
-    :inherited-members:
-
-Tag
------
-.. attributetable:: Tag
-
-.. autoclass:: Tag
-    :members:
-    :inherited-members:
-
-WebhookSubscription
----------------------
-.. attributetable:: WebhookSubscription
-
-.. autoclass:: WebhookSubscription
-    :members:
-    :inherited-members:
-
-Message
+Channel
 ---------
-.. attributetable:: Message
+.. attributetable:: Channel
 
-.. autoclass:: Message
+.. autoclass:: Channel
+    :members:
+    :inherited-members:
+
+ChannelInfo
+------------
+.. attributetable:: ChannelInfo
+
+.. autoclass:: ChannelInfo
+    :members:
+    :inherited-members:
+
+ChannelTeams
+-------------
+.. attributetable:: ChannelTeams
+
+.. autoclass:: ChannelTeams
+    :members:
+    :inherited-members:
+
+Chatter
+--------
+.. attributetable:: PartialChatter
+
+.. autoclass:: PartialChatter
+    :members:
+    :inherited-members:
+
+.. attributetable:: Chatter
+
+.. autoclass:: Chatter
+    :members:
+
+CheerEmote
+------------
+.. attributetable:: CheerEmote
+
+.. autoclass:: CheerEmote
+    :members:
+    :inherited-members:
+
+CheerEmoteTier
+----------------
+.. attributetable:: CheerEmoteTier
+
+.. autoclass:: CheerEmoteTier
+    :members:
+    :inherited-members:
+
+Clip
+------
+.. attributetable:: Clip
+
+.. autoclass:: Clip
     :members:
     :inherited-members:
 
@@ -203,26 +127,176 @@ CustomRewardRedemption
     :members:
     :inherited-members:
 
-PartialUser
+Extension
+-----------
+.. attributetable:: Extension
+
+.. autoclass:: Extension
+    :members:
+    :inherited-members:
+
+ExtensionBuilder
+------------------
+.. attributetable:: ExtensionBuilder
+
+.. autoclass:: ExtensionBuilder
+    :members:
+    :inherited-members:
+
+FollowEvent
 -------------
+.. attributetable:: FollowEvent
+
+.. autoclass:: FollowEvent
+    :members:
+    :inherited-members:
+
+Game
+------
+.. attributetable:: Game
+
+.. autoclass:: Game
+    :members:
+    :inherited-members:
+
+HypeTrainContribution
+-----------------------
+.. attributetable:: HypeTrainContribution
+
+.. autoclass:: HypeTrainContribution
+    :members:
+    :inherited-members:
+
+HypeTrainEvent
+----------------
+.. attributetable:: HypeTrainEvent
+
+.. autoclass:: HypeTrainEvent
+    :members:
+    :inherited-members:
+
+Marker
+--------
+.. attributetable:: Marker
+
+.. autoclass:: Marker
+    :members:
+    :inherited-members:
+
+MaybeActiveExtension
+----------------------
+.. attributetable:: MaybeActiveExtension
+
+.. autoclass:: MaybeActiveExtension
+    :members:
+    :inherited-members:
+
+Message
+---------
+.. attributetable:: Message
+
+.. autoclass:: Message
+    :members:
+    :inherited-members:
+
+ModEvent
+----------
+.. attributetable:: ModEvent
+
+.. autoclass:: ModEvent
+    :members:
+    :inherited-members:
+
+Predictions
+-------------
+.. attributetable:: Prediction
+
+.. autoclass:: Prediction
+    :members:
+    :inherited-members:
+
+.. attributetable:: Predictor
+
+.. autoclass:: Predictor
+    :members:
+    :inherited-members:
+
+Schedules
+----------
+.. attributetable:: Schedule
+
+.. autoclass:: Schedule
+    :members:
+    :inherited-members:
+
+.. attributetable:: ScheduleSegment
+
+.. autoclass:: ScheduleSegment
+    :members:
+    :inherited-members:
+
+.. attributetable:: ScheduleCategory
+
+.. autoclass:: ScheduleCategory
+    :members:
+    :inherited-members:
+
+.. attributetable:: ScheduleVacation
+
+.. autoclass:: ScheduleVacation
+    :members:
+    :inherited-members:
+
+SearchUser
+------------
+.. attributetable:: SearchUser
+
+.. autoclass:: SearchUser
+    :members:
+
+Stream
+----------
+.. attributetable:: Stream
+
+.. autoclass:: Stream
+    :members:
+    :inherited-members:
+
+SubscriptionEvent
+-------------------
+.. attributetable:: SubscriptionEvent
+
+.. autoclass:: SubscriptionEvent
+    :members:
+    :inherited-members:
+
+Tag
+-----
+.. attributetable:: Tag
+
+.. autoclass:: Tag
+    :members:
+    :inherited-members:
+
+Team
+----------
+.. attributetable:: Team
+
+.. autoclass:: Team
+    :members:
+    :inherited-members:
+
+User
+------
 .. attributetable:: PartialUser
 
 .. autoclass:: PartialUser
     :members:
     :inherited-members:
 
-User
-------
 .. attributetable:: User
 
 .. autoclass:: User
-    :members:
-
-BitLeaderboardUser
---------------------
-.. attributetable:: BitLeaderboardUser
-
-.. autoclass:: BitLeaderboardUser
     :members:
 
 UserBan
@@ -232,33 +306,26 @@ UserBan
 .. autoclass:: UserBan
     :members:
 
-SearchUser
-------------
-.. attributetable:: SearchUser
+Video
+-------
+.. attributetable:: Video
 
-.. autoclass:: SearchUser
-    :members:
-
-PartialChatter
-----------------
-.. attributetable:: PartialChatter
-
-.. autoclass:: PartialChatter
+.. autoclass:: Video
     :members:
     :inherited-members:
 
-Chatter
----------
-.. attributetable:: Chatter
+VideoMarkers
+--------------
+.. attributetable:: VideoMarkers
 
-.. autoclass:: Chatter
-    :members:
-
-Channel
----------
-.. attributetable:: Channel
-
-.. autoclass:: Channel
+.. autoclass:: VideoMarkers
     :members:
     :inherited-members:
 
+WebhookSubscription
+---------------------
+.. attributetable:: WebhookSubscription
+
+.. autoclass:: WebhookSubscription
+    :members:
+    :inherited-members:

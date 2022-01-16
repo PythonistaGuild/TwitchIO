@@ -10,6 +10,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
+
+
+# -- Project information -----------------------------------------------------
 import os
 import sys
 
@@ -18,15 +24,12 @@ sys.path.insert(0, os.path.abspath(".."))
 sys.path.append(os.path.abspath("extensions"))
 
 on_rtd = os.environ.get("READTHEDOCS") == "True"
+project = "TwitchIO"
+copyright = "2021, TwitchIO"
+author = "TwitchIO"
 
-
-# -- Project information -----------------------------------------------------
-
-project = "TwitchIO 2"
-copyright = "2021, TwitchIO, PythonistaGuild"
-author = "TwitchIO, PythonistaGuild"
-version = "2.0"
-release = "2.0.0a"
+# The full version, including alpha/beta/rc tags
+release = "2.1.4"
 
 
 # -- General configuration ---------------------------------------------------
@@ -42,35 +45,8 @@ extensions = [
     "attributetable",
 ]
 
-if on_rtd:
-    extensions.append("sphinxcontrib.napoleon")
-else:
-    extensions.append("sphinx.ext.napoleon")
-
-napoleon_google_docstring = False
-napoleon_numpy_docstring = True
-napoleon_include_private_with_doc = False
-napoleon_include_special_with_doc = False
-autodoc_member_order = "groupwise"
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
-
-rst_prolog = """
-.. |coro| replace:: This function is a |corourl|_.
-.. |maybecoro| replace:: This function *could be a* |corourl|_.
-.. |corourl| replace:: *coroutine*
-.. _corourl: https://docs.python.org/3/library/asyncio-task.html#coroutine
-"""
-
-# The suffix(es) of source filenames.
-# You can specify multiple suffix as a list of string:
-#
-# source_suffix = ['.rst', '.md']
-source_suffix = ".rst"
-
-intersphinx_mapping = {"py": ("https://docs.python.org/3", None)}
-
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -83,69 +59,51 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_logo = "logo.png"
+html_theme = "furo"
+# html_logo = "logo.png"
+
+html_theme_options = {
+    "sidebar_hide_name": True,
+    "light_logo": "logo_light.png",
+    "dark_logo": "logo_dark.png",
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_theme = "karma_sphinx_theme"
-html_static_path = ["./_static"]
-html_js_files = []
+# These folders are copied to the documentation's HTML output
+html_static_path = ["_static"]
+
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
 html_css_files = ["css/custom.css"]
-needs_sphinx = "3.4.3"
 
-# The master toctree document.
-master_doc = "index"
+if on_rtd:
+    extensions.append("sphinxcontrib.napoleon")
+else:
+    extensions.append("sphinx.ext.napoleon")
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "friendly"
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = False
+autodoc_member_order = "groupwise"
 
-# If true, `_todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
+rst_prolog = """
+.. |coro| replace:: This function is a |corourl|_.
+.. |maybecoro| replace:: This function *could be a* |corourl|_.
+.. |corourl| replace:: *coroutine*
+.. _corourl: https://docs.python.org/3/library/asyncio-task.html#coroutine
+.. |deco| replace:: This function is a **decorator**.
+"""
 
-# -- Options for HTML output ----------------------------------------------
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme_options = {"navigation_depth": 4}
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
 #
-# html_theme_options = {}
+# source_suffix = ['.rst', '.md']
+source_suffix = ".rst"
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-html_sidebars = {
-    "**": [
-        "globaltoc.html",
-        "searchbox.html",
-    ]
-}
+intersphinx_mapping = {"py": ("https://docs.python.org/3", None)}
 
-
-# -- Options for HTMLHelp output ------------------------------------------
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = "TwitchIOdoc"
-
-# -- Options for Texinfo output -------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "TwitchIO",
-        "TwitchIO Documentation",
-        author,
-        "TwitchIO",
-        "A Python IRC and API wrapper for Twitch.",
-        "Miscellaneous",
-    ),
-]
-
-
-def setup(app):
-    app.add_css_file("/style.css")
+pygments_style = "sphinx"
+pygments_dark_style = "monokai"

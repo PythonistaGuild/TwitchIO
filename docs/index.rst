@@ -7,7 +7,7 @@ Welcome to TwitchIO 2's Documentation!
 ========================================
 
 TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots.
-TwitchIO 2 will cover 100% of the new Twitch API and will feature support for commands, PubSub and Webhooks.
+TwitchIO covers 100% of the new Twitch API and features support for commands, PubSub and Eventsub.
 
 Getting Started
 ------------------
@@ -40,6 +40,11 @@ Getting Started
    exts/eventsub
    exts/routines
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Changelog:
+
+   changelog
 
 
 Indices and tables

@@ -24,17 +24,18 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union, Tuple
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
 from .rewards import CustomReward
+from .utils import parse_timestamp
 
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
-    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent
+    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent, Prediction
 
 
 __all__ = (
@@ -76,6 +77,7 @@ class PartialUser:
 
     async def fetch(self, token: str = None, force=False) -> "User":
         """|coro|
+
         Fetches the full user from the api or cache
 
         Parameters
@@ -94,6 +96,7 @@ class PartialUser:
 
     async def edit(self, token: str, description: str) -> None:
         """|coro|
+
         Edits a channels description
 
         Parameters
@@ -107,6 +110,7 @@ class PartialUser:
 
     async def fetch_tags(self):
         """|coro|
+
         Fetches tags the user currently has active.
 
         Returns
@@ -120,6 +124,7 @@ class PartialUser:
 
     async def replace_tags(self, token: str, tags: List[Union[str, "Tag"]]):
         """|coro|
+
         Replaces the channels active tags. Tags expire 72 hours after being applied,
         unless the stream is live during that time period.
 
@@ -137,6 +142,7 @@ class PartialUser:
         self, token: str, *, only_manageable=False, ids: List[int] = None, force=False
     ) -> List["CustomReward"]:
         """|coro|
+
         Fetches the channels custom rewards (aka channel points) from the api.
         Parameters
         ----------
@@ -179,6 +185,7 @@ class PartialUser:
         self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
     ) -> "BitsLeaderboard":
         """|coro|
+
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 
         Parameters
@@ -199,6 +206,7 @@ class PartialUser:
 
     async def start_commercial(self, token: str, length: int) -> dict:
         """|coro|
+
         Starts a commercial on the channel. Requires an OAuth token with the `channel:edit:commercial` scope.
 
         Parameters
@@ -217,6 +225,7 @@ class PartialUser:
 
     async def create_clip(self, token: str, has_delay=False) -> dict:
         """|coro|
+
         Creates a clip on the channel. Note that clips are not created instantly, so you will have to query
         :ref:`~.get_clips` to confirm the clip was created. Requires an OAuth token with the `clips:edit` scope
 
@@ -236,6 +245,7 @@ class PartialUser:
 
     async def fetch_clips(self) -> List["Clip"]:
         """|coro|
+
         Fetches clips from the api. This will only return clips from the specified user.
         Use :ref:`twitchio.Client` to fetch clips by id
 
@@ -251,6 +261,7 @@ class PartialUser:
 
     async def fetch_hypetrain_events(self, id: str = None, token: str = None):
         """|coro|
+
         Fetches hypetrain event from the api. Needs a token with the channel:read:hype_train scope.
 
         Parameters
@@ -272,6 +283,7 @@ class PartialUser:
 
     async def fetch_bans(self, token: str, userids: List[Union[str, int]] = None) -> List["UserBan"]:
         """|coro|
+
         Fetches a list of people the User has banned from their channel.
 
         Parameters
@@ -286,6 +298,7 @@ class PartialUser:
 
     async def fetch_ban_events(self, token: str, userids: List[int] = None):
         """|coro|
+
         Fetches ban/unban events from the User's channel.
 
         Parameters
@@ -306,6 +319,7 @@ class PartialUser:
 
     async def fetch_moderators(self, token: str, userids: List[int] = None):
         """|coro|
+
         Fetches the moderators for this channel.
 
         Parameters
@@ -324,6 +338,7 @@ class PartialUser:
 
     async def fetch_mod_events(self, token: str):
         """|coro|
+
         Fetches mod events (moderators being added and removed) for this channel.
 
         Parameters
@@ -342,6 +357,7 @@ class PartialUser:
 
     async def automod_check(self, token: str, query: list):
         """|coro|
+
         Checks if a string passes the automod filter
 
         Parameters
@@ -362,6 +378,7 @@ class PartialUser:
 
     async def fetch_stream_key(self, token: str):
         """|coro|
+
         Fetches the users stream key
 
         Parameters
@@ -378,6 +395,7 @@ class PartialUser:
 
     async def fetch_following(self, token: str = None) -> List["FollowEvent"]:
         """|coro|
+
         Fetches a list of users that this user is following.
 
         Parameters
@@ -396,6 +414,7 @@ class PartialUser:
 
     async def fetch_followers(self, token: str = None):
         """|coro|
+
         Fetches a list of users that are following this user.
 
         Parameters
@@ -414,6 +433,7 @@ class PartialUser:
 
     async def fetch_follow(self, to_user: "PartialUser", token: str = None):
         """|coro|
+
         Check if a user follows another user or when they followed a user.
 
         Parameters
@@ -438,6 +458,7 @@ class PartialUser:
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
+
         Follows the user
 
         Parameters
@@ -455,6 +476,7 @@ class PartialUser:
 
     async def unfollow(self, userid: int, token: str):
         """|coro|
+
         Unfollows the user
 
         Parameters
@@ -468,6 +490,7 @@ class PartialUser:
 
     async def fetch_subscriptions(self, token: str, userids: List[int] = None):
         """|coro|
+
         Fetches the subscriptions for this channel.
 
         Parameters
@@ -488,6 +511,7 @@ class PartialUser:
 
     async def create_marker(self, token: str, description: str = None):
         """|coro|
+
         Creates a marker on the stream. This only works if the channel is live (among other conditions)
 
         Parameters
@@ -508,6 +532,7 @@ class PartialUser:
 
     async def fetch_markers(self, token: str, video_id: str = None):
         """|coro|
+
         Fetches markers from the given video id, or the most recent video.
         The Twitch api will only return markers created by the user of the authorized token
 
@@ -530,6 +555,7 @@ class PartialUser:
 
     async def fetch_extensions(self, token: str):
         """|coro|
+
         Fetches extensions the user has (active and inactive)
 
         Parameters
@@ -548,6 +574,7 @@ class PartialUser:
 
     async def fetch_active_extensions(self, token: str = None):
         """|coro|
+
         Fetches active extensions the user has.
         Returns a dictionary containing the following keys: `panel`, `overlay`, `component`.
 
@@ -567,6 +594,7 @@ class PartialUser:
 
     async def update_extensions(self, token: str, extensions: "ExtensionBuilder"):
         """|coro|
+
         Updates a users extensions. See the :class:`twitchio.ExtensionBuilder`
 
         Parameters
@@ -587,6 +615,7 @@ class PartialUser:
 
     async def fetch_videos(self, period="all", sort="time", type="all", language=None):
         """|coro|
+
         Fetches videos that belong to the user. If you have specific video ids use :ref:`twitchio.Client.fetch_videos`
 
         Parameters
@@ -604,10 +633,176 @@ class PartialUser:
         --------
             List[:class:`twitchio.Video`]
         """
-        from models import Video
+        from .models import Video
 
         data = await self._http.get_videos(user_id=str(self.id), period=period, sort=sort, type=type, language=language)
         return [Video(self._http, x, self) for x in data]
+
+    async def end_prediction(
+        self, token: str, prediction_id: str, status: str, winning_outcome_id: str = None
+    ) -> "Prediction":
+        """|coro|
+
+        End a prediction with an outcome.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:predictions scope
+        prediction_id: :class:`str`
+            ID of the prediction to end.
+
+        Returns
+        --------
+            :class:`twitchio.Prediction`
+        """
+        from .models import Prediction
+
+        data = await self._http.patch_prediction(
+            token,
+            broadcaster_id=str(self.id),
+            prediction_id=prediction_id,
+            status=status,
+            winning_outcome_id=winning_outcome_id,
+        )
+        return Prediction(self._http, data[0])
+
+    async def get_predictions(self, token: str, prediction_id: str = None) -> List["Prediction"]:
+        """|coro|
+
+        Gets information on a prediction or the list of predictions
+        if none is provided.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:predictions scope
+        prediction_id: :class:`str`
+            ID of the prediction to receive information about.
+
+        Returns
+        --------
+            :class:`twitchio.Prediction`
+        """
+        from .models import Prediction
+
+        data = await self._http.get_predictions(token, broadcaster_id=str(self.id), prediction_id=prediction_id)
+        return [Prediction(self._http, d) for d in data]
+
+    async def create_prediction(
+        self, token: str, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
+    ) -> "Prediction":
+        """|coro|
+
+        Creates a prediction for the channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:predictions scope
+        title: :class:`str`
+            Title for the prediction (max of 45 characters)
+        blue_outcome: :class:`str`
+            Text for the first outcome people can vote for. (max 25 characters)
+        pink_outcome: :class:`str`
+            Text for the second outcome people can vote for. (max 25 characters)
+        prediction_window: :class:`int`
+            Total duration for the prediction (in seconds)
+
+        Returns
+        --------
+            :class:`twitchio.Prediction`
+        """
+        from .models import Prediction
+
+        data = await self._http.post_prediction(
+            token,
+            broadcaster_id=str(self.id),
+            title=title,
+            blue_outcome=blue_outcome,
+            pink_outcome=pink_outcome,
+            prediction_window=prediction_window,
+        )
+        return Prediction(self._http, data[0])
+
+    async def modify_stream(self, token: str, game_id: int = None, language: str = None, title: str = None):
+        """|coro|
+
+        Modify stream information
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:broadcast scope
+        game_id: :class:`int`
+            Optional game ID being played on the channel. Use 0 to unset the game.
+        language: :class:`str`
+            Optional language of the channel. A language value must be either the ISO 639-1 two-letter code for a supported stream language or “other”.
+        title: :class:`str`
+            Optional title of the stream.
+        """
+        if game_id is not None:
+            game_id = str(game_id)
+
+        await self._http.patch_channel(
+            token,
+            broadcaster_id=str(self.id),
+            game_id=game_id,
+            language=language,
+            title=title,
+        )
+
+    async def fetch_schedule(
+        self,
+        segment_ids: List[str] = None,
+        start_time: datetime.datetime = None,
+        utc_offset: int = None,
+        first: int = 20,
+    ):
+        """|coro|
+
+        Fetches the schedule of a streamer
+        Parameters
+        -----------
+        segment_ids: Optional[List[:class:`str`]]
+            List of segment IDs of the stream schedule to return. Maximum: 100
+        start_time: Optional[:class:`datetime.datetime`]
+            A datetime object to start returning stream segments from. If not specified, the current date and time is used.
+        utc_offset: Optional[:class:`int`]
+            A timezone offset for the requester specified in minutes. +4 hours from GMT would be `240`
+        first: Optional[:class:`int`]
+            Maximum number of stream segments to return. Maximum: 25. Default: 20.
+        Returns
+        --------
+            :class:`twitchio.Schedule`
+        """
+        from .models import Schedule
+
+        data = await self._http.get_channel_schedule(
+            broadcaster_id=str(self.id),
+            segment_ids=segment_ids,
+            start_time=start_time,
+            utc_offset=utc_offset,
+            first=first,
+        )
+
+        return Schedule(self._http, data)
+
+    async def fetch_channel_teams(self):
+        """|coro|
+
+        Fetches a list of Twitch Teams of which the specified channel/broadcaster is a member.
+
+        Returns
+        --------
+        List[:class:`twitchio.ChannelTeams`]
+        """
+        from .models import ChannelTeams
+
+        data = await self._http.get_channel_teams(
+            broadcaster_id=str(self.id),
+        )
+
+        return [ChannelTeams(self._http, x) for x in data]
 
 
 class BitLeaderboardUser(PartialUser):
@@ -643,6 +838,7 @@ class SearchUser(PartialUser):
         self.game_id: str = data["game_id"]
         self.title: str = data["title"]
         self.thumbnail_url: str = data["thumbnail_url"]
+        self.language: str = data["broadcaster_language"]
         self.live: bool = data["is_live"]
         self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data["tag_ids"]
@@ -669,16 +865,17 @@ class User(PartialUser):
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
         self.id = int(data["id"])
-        self.name = data["login"]
-        self.display_name = data["display_name"]
+        self.name: str = data["login"]
+        self.display_name: str = data["display_name"]
         self.type = UserTypeEnum(data["type"])
         self.broadcaster_type = BroadcasterTypeEnum(data["broadcaster_type"])
-        self.description = data["description"]
-        self.profile_image = data["profile_image_url"]
-        self.offline_image = data["offline_image_url"]
-        self.view_count = (data["view_count"],)
-        self.created_at = data["created_at"]
-        self.email = data.get("email")
+        self.description: str = data["description"]
+        self.profile_image: str = data["profile_image_url"]
+        self.offline_image: str = data["offline_image_url"]
+        self.view_count: Tuple[int] = (data["view_count"],)  # this isn't supposed to be a tuple but too late to fix it!
+        self.created_at = parse_timestamp(data["created_at"])
+        self.email: Optional[str] = data.get("email")
+        self._cached_rewards = None
 
     def __repr__(self):
         return f"<User id={self.id} name={self.name} display_name={self.display_name} type={self.type}>"

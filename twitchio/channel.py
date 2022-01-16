@@ -39,7 +39,7 @@ __all__ = ("Channel",)
 
 class Channel(Messageable):
 
-    __slots__ = ("_name", "_ws")
+    __slots__ = ("_name", "_ws", "_message")
 
     __messageable_channel__ = True
 
@@ -61,6 +61,9 @@ class Channel(Messageable):
 
     def _fetch_websocket(self):
         return self._ws  # Abstract method
+
+    def _fetch_message(self):
+        return self._message  # Abstract method
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self.name]  # noqa
@@ -116,6 +119,7 @@ class Channel(Messageable):
 
     async def user(self, force=False) -> "User":
         """|coro|
+
         Fetches the User from the api.
 
         Parameters
@@ -127,12 +131,13 @@ class Channel(Messageable):
         --------
         :class:`twitchio.User` the user associated with the channel
         """
-        return (await self._ws._client.fetch_users(login=[self._name], force=force))[0]
+        return (await self._ws._client.fetch_users(names=[self._name], force=force))[0]
 
     async def fetch_bits_leaderboard(
         self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
     ) -> BitsLeaderboard:
         """|coro|
+
         Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
 
         Parameters
@@ -151,6 +156,7 @@ class Channel(Messageable):
 
     async def whisper(self, content: str):
         """|coro|
+
         Whispers the user behind the channel. This will not work if the channel is the same as the one you are sending the message from.
 
         .. warning:

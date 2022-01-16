@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 class Message:
 
-    __slots__ = ("_raw_data", "content", "_author", "echo", "_timestamp", "_channel", "_tags")
+    __slots__ = ("_raw_data", "content", "_author", "echo", "_timestamp", "_channel", "_tags", "_id")
 
     def __init__(self, **kwargs):
         self._raw_data = kwargs.get("raw_data")
@@ -44,9 +44,16 @@ class Message:
         self.echo = kwargs.get("echo", False)
 
         try:
+            self._id = self._tags["id"]
             self._timestamp = self._tags["tmi-sent-ts"]
         except KeyError:
+            self._id = None
             self._timestamp = time.time()
+
+    @property
+    def id(self) -> str:
+        """The Message ID."""
+        return self._id
 
     @property
     def author(self) -> Union["Chatter", "PartialChatter"]:
