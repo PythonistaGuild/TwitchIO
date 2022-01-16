@@ -280,8 +280,6 @@ class PubSubModerationActionBanRequest(PubSubMessage):
         The user that created the action.
     target: :class:`twitchio.PartialUser`
         The target of this action.
-    from_automod: :class:`bool`
-        Whether this action was done automatically or not.
     """
 
     __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
@@ -332,12 +330,8 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
             client._http, data["message"]["data"]["requester_id"], data["message"]["data"]["requester_login"]
         )
 
-        self.expires_at = self.updated_at = None
-        if data["message"]["data"]["expires_at"]:
-            self.expires_at = parse_timestamp(data["message"]["data"]["expires_at"])
-
-        if data["message"]["data"]["updated_at"]:
-            self.updated_at = parse_timestamp(data["message"]["data"]["expires_at"])
+        self.expires_at = parse_timestamp(data["message"]["data"]["expires_at"]) if data["message"]["data"]["expires_at"] else None
+        self.updated_at = parse_timestamp(data["message"]["data"]["updated_at"]) if data["message"]["data"]["updated_at"] else None
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
