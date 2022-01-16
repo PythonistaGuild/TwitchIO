@@ -282,7 +282,7 @@ class PubSubModerationActionBanRequest(PubSubMessage):
         The target of this action.
     """
 
-    __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
+    __slots__ = "action", "args", "created_by", "message_id", "target"
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
@@ -318,7 +318,7 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
         The requester of this Term.
     """
 
-    __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at", "from_automod"
+    __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at"
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
