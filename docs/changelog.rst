@@ -3,7 +3,7 @@
 Master
 ======
 - TwitchIO
-    - Added the ability to leave channels to the Client.
+    - Added the ability to part from channels to the Client.
 
 2.1.4
 ======
