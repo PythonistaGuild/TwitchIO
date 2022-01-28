@@ -245,7 +245,6 @@ class WSConnection:
         channels = channels or self._initial_channels
         await self.join_channels(*channels)
 
-
     async def part_channels(self, *channels: str):
         """|coro|
 
@@ -262,8 +261,6 @@ class WSConnection:
     async def _part_channel(self, entry):
         channel = re.sub("[#]", "", entry).lower()
         await self.send(f"PART #{channel}\r\n")
-
-        
 
     async def join_channels(self, *channels: str):
         """|coro|
