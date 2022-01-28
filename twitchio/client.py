@@ -308,6 +308,20 @@ class Client:
 
             return Channel(name=name, websocket=self._connection)
 
+
+    async def leave_channels(self, channels: Union[List[str], Tuple[str]]):
+        """|coro|
+
+
+        Leave the specified channels.
+
+        Parameters
+        ------------
+        channels: Union[List[str], Tuple[str]]
+            The channels in either a list or tuple form to leave.
+        """
+        await self._connection.part_channels(*channels)
+
     async def join_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
 

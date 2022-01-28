@@ -245,6 +245,26 @@ class WSConnection:
         channels = channels or self._initial_channels
         await self.join_channels(*channels)
 
+
+    async def part_channels(self, *channels: str):
+        """|coro|
+
+        Attempt to part the provided channels.
+
+        Parameters
+        ------------
+        *channels: str
+            An argument list of channels to attempt parting.
+        """
+        for channel in channels:
+            asyncio.create_task(self._part_channel(channel))
+
+    async def _part_channel(self, entry):
+        channel = re.sub("[#]", "", entry).lower()
+        await self.send(f"PART #{channel}\r\n")
+
+        
+
     async def join_channels(self, *channels: str):
         """|coro|
 
@@ -357,8 +377,9 @@ class WSConnection:
         self._last_ping = time.time()
         await self.send("PONG :tmi.twitch.tv\r\n")
 
-    async def _part(self, parsed):  # TODO
+    async def _part(self, parsed):
         log.debug(f'ACTION: PART:: {parsed["channel"]}')
+        del self._cache[parsed["channel"]]
 
     async def _privmsg(self, parsed):  # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
