@@ -3,6 +3,7 @@ import datetime
 import hmac
 import hashlib
 import logging
+from enum import Enum
 from typing import Dict, TYPE_CHECKING, Optional, Type, Union
 from typing_extensions import Literal
 
@@ -535,6 +536,339 @@ class HypeTrainEndData(EventData):
         self.cooldown_ends_at = _parse_datetime(data["cooldown_ends_at"])
         self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
 
+class PollChoice:
+    """
+    A Poll Choice
+
+    Attributes
+    -----------
+    choice_id: :class:`str`
+        The ID of the choice
+    title: :class:`str`
+        The title of the choice
+    bits_votes: :class:`int`
+        How many votes were cast using Bits
+    channel_points_votes: :class:`int`
+        How many votes were cast using Channel Points
+    votes: :class:`int`
+        The total number of votes, including votes cast using Bits and Channel Points
+    """
+
+    __slots__ = "choice_id", "title", "bits_votes", "channel_points_votes", "votes"
+
+    def __init__(self, data):
+        self.choice_id: str = data["id"]
+        self.title: str = data["title"]
+        self.bits_votes: int = data.get("bits_votes", 0)
+        self.channel_points_votes: int = data.get("channel_points_votes", 0)
+        self.votes: int = data.get("votes", 0)
+
+class BitsVoting:
+    """
+    Information on voting on a poll with Bits
+
+    Attributes
+    -----------
+    is_enabled: :class:`bool`
+        Whether users can use Bits to vote on the poll
+    amount_per_vote: :class:`int`
+        How many Bits are required to cast an extra vote
+    """
+
+    __slots__ = "is_enabled", "amount_per_vote"
+
+    def __init__(self, data):
+        self.is_enabled: bool = data["is_enabled"]
+        self.amount_per_vote: int = data["amount_per_vote"]
+
+class ChannelPointsVoting:
+    """
+    Information on voting on a poll with Channel Points
+
+    Attributes
+    -----------
+    is_enabled: :class:`bool`
+        Whether users can use Channel Points to vote on the poll
+    amount_per_vote: :class:`int`
+        How many Channel Points are required to cast an extra vote
+    """
+    __slots__ = "is_enabled", "amount_per_vote"
+
+    def __init__(self, data):
+        self.is_enabled: bool = data["is_enabled"]
+        self.amount_per_vote: int = data["amount_per_vote"]
+
+class PollStatus(Enum):
+    """
+    The status of a poll.
+
+    Possible States
+    ----------------
+    ACTIVE: Poll is currently in progress.
+    COMPLETED: Poll has reached its `ended_at` time.
+    TERMINATED: Poll has been manually terminated before its `ended_at` time.
+    ARCHIVED: Poll is no longer visible on the channel.
+    MODERATED: Poll is no longer visible to any user on Twitch.
+    INVALID: Something went wrong determining the state.
+    """
+
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    TERMINATED = "terminated"
+    ARCHIVED = "archived"
+    MODERATED = "moderated"
+    INVALID = "invalid"
+
+class PollBeginProgressData(EventData):
+    """
+    A Poll Begin/Progress event
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The channel the poll occured in
+    poll_id: :class:`str`
+        The ID of the poll
+    title: :class:`str`
+        The title of the poll
+    choices: List[:class:`PollChoice`]
+        The choices in the poll
+    bits_voting: :class:BitsVoting
+        Information on voting on the poll with Bits
+    channel_points_voting: :class:ChannelPointsVoting
+        Information on voting on the poll with Channel Points
+    started_at: :class:`datetime.datetime`
+        When the poll started
+    ends_at: :class:`datetime.datetime`
+        When the poll is set to end
+    ...
+    """
+    
+    __slots__ = "broadcaster", "poll_id", "title", "choices", "bits_voting", "channel_points_voting", "started_at", "ends_at"
+
+    def __init__(self, client: EventSubClient, data:dict):
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.poll_id: str = data["id"]
+        self.title: str = data["title"]
+        self.choices = [PollChoice(c) for c in data["choices"]]
+        self.bits_voting = BitsVoting(data["bits_voting"])
+        self.channel_points_voting = ChannelPointsVoting(data["channel_points_voting"])
+        self.started_at = _parse_datetime(data["started_at"])
+        self.ends_at = _parse_datetime(data["ends_at"])
+
+
+class PollEndData(EventData):
+    """
+    A Poll End event
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The channel the poll occured in
+    poll_id: :class:`str`
+        The ID of the poll
+    title: :class:`str`
+        The title of the poll
+    choices: List[:class:`PollChoice`]
+        The choices in the poll
+    bits_voting: :class:BitsVoting
+        Information on voting on the poll with Bits
+    channel_points_voting: :class:ChannelPointsVoting
+        Information on voting on the poll with Channel Points
+    status: :class:`PollStatus`
+        How the poll ended
+    started_at: :class:`datetime.datetime`
+        When the poll started
+    ended_at: :class:`datetime.datetime`
+        When the poll is set to end
+    """
+    
+    __slots__ = "broadcaster", "poll_id", "title", "choices", "bits_voting", "channel_points_voting", "status", "started_at", "ended_at"
+
+    def __init__(self, client: EventSubClient, data:dict):
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.poll_id: str = data["id"]
+        self.title: str = data["title"]
+        self.choices = [PollChoice(c) for c in data["choices"]]
+        self.bits_voting = BitsVoting(data["bits_voting"])
+        self.channel_points_voting = ChannelPointsVoting(data["channel_points_voting"])
+        self.status = PollStatus(data["status"].lower())
+        self.started_at = _parse_datetime(data["started_at"])
+        self.ended_at = _parse_datetime(data["ended_at"])
+
+
+class Predictor:
+    """
+    A Predictor
+
+    Attributes
+    -----------
+    user: :class:`PartialUser`
+        The user who predicted an outcome
+    channel_points_used: :class:`int`
+        How many Channel Points the user used to predict this outcome
+    channel_points_won: :class:`int`
+        How many Channel Points was distributed to the user.
+        Will be `None` if the Prediction is unresolved, cancelled (refunded), or the user predicted the losing outcome. 
+    """
+
+
+    __slots__ = "outcome_id", "title", "channel_points", "color"
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.user = _transform_user(client, data, "user")
+        self.channel_points_used: int = data["channel_points_used"]
+        self.channel_points_won: int = data["channel_points_won"]
+
+
+class PredictionOutcome:
+    """
+    A Prediction Outcome
+
+    Attributes
+    -----------
+    outcome_id: :class:`str`
+        The ID of the outcome
+    title: :class:`str`
+        The title of the outcome
+    color: :class:`str`
+        The color of the outcome. Can be `blue` or `pink`.
+    user: :class:`int`
+        The number of users who predicted the outcome
+    top_predictors: List[:class:`Predictor`]
+        The top predictors of the outcome
+    """
+
+
+    __slots__ = "outcome_id", "title", "channel_points", "color", "users", "top_predictors"
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.outcome_id: str = data["id"]
+        self.title: str = data["title"]
+        self.channel_points: int = data.get("channel_points", 0)
+        self.color: str = data["color"]
+        self.users: int = data.get("users", 0)
+        self.top_predictors = [Predictor(client, x) for x in data.get("top_predictors", [])]
+
+    @property
+    def colour(self) -> str:
+        """The colour of the prediction. Alias to color."""
+        return self.color
+
+class PredictionStatus(Enum):
+    """
+    The status of a Prediction.
+
+    Possible States
+    ----------------
+    ACTIVE: Prediction is active and viewers can make predictions.
+    LOCKED: Prediction has been locked and viewers can no longer make predictions.
+    RESOLVED: A winning outcome has been chosen and the Channel Points have been distributed to the users who guessed the correct outcome.
+    CANCELED: Prediction has been canceled and the Channel Points have been refunded to participants.
+    """
+
+    ACTIVE = "active"
+    LOCKED = "locked"
+    RESOLVED = "resolved"
+    CANCELED = "canceled"
+
+class PredictionBeginProgressData(EventData):
+    """
+    A Prediction Begin/Progress event
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The channel the prediction occured in
+    prediction_id: :class:`str`
+        The ID of the prediction
+    title: :class:`str`
+        The title of the prediction
+    outcomes: List[:class:`PredictionOutcome`]
+        The outcomes for the prediction
+    started_at: :class:`datetime.datetime`
+        When the prediction started
+    locks_at: :class:`datetime.datetime`
+        When the prediction is set to be locked
+    """
+    
+    __slots__ = "broadcaster", "prediction_id", "title", "outcomes", "started_at", "locks_at"
+
+    def __init__(self, client: EventSubClient, data:dict):
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.prediction_id: str = data["id"]
+        self.title: str = data["title"]
+        self.outcomes = [PredictionOutcome(client, x) for x in data["outcomes"]]
+        self.started_at = _parse_datetime(data["started_at"])
+        self.locks_at = _parse_datetime(data["locks_at"])
+
+
+class PredictionLockData(EventData):
+    """
+    A Prediction Begin/Progress event
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The channel the prediction occured in
+    prediction_id: :class:`str`
+        The ID of the prediction
+    title: :class:`str`
+        The title of the prediction
+    outcomes: List[:class:`PredictionOutcome`]
+        The outcomes for the prediction
+    started_at: :class:`datetime.datetime`
+        When the prediction started
+    locked_at: :class:`datetime.datetime`
+        When the prediction was locked
+    """
+    
+    __slots__ = "broadcaster", "prediction_id", "title", "outcomes", "started_at", "locked_at"
+
+    def __init__(self, client: EventSubClient, data:dict):
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.prediction_id: str = data["id"]
+        self.title: str = data["title"]
+        self.outcomes = [PredictionOutcome(client, x) for x in data["outcomes"]]
+        self.started_at = _parse_datetime(data["started_at"])
+        self.locked_at = _parse_datetime(data["locked_at"])
+
+class PredictionEndData(EventData):
+    """
+    A Prediction Begin/Progress event
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The channel the prediction occured in
+    prediction_id: :class:`str`
+        The ID of the prediction
+    title: :class:`str`
+        The title of the prediction
+    winning_outcome_id: :class:`str`
+        The ID of the outcome that won 
+    outcomes: List[:class:`PredictionOutcome`]
+        The outcomes for the prediction
+    status: :class:`PredictionStatus`
+        How the prediction ended
+    started_at: :class:`datetime.datetime`
+        When the prediction started
+    ended_at: :class:`datetime.datetime`
+        When the prediction ended
+    """
+    
+    __slots__ = "broadcaster", "prediction_id", "title", "winning_outcome_id", "outcomes", "status", "started_at", "ended_at"
+
+    def __init__(self, client: EventSubClient, data:dict):
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.prediction_id: str = data["id"]
+        self.title: str = data["title"]
+        self.winning_outcome_id: str = data["winning_outcome_id"]
+        self.outcomes = [PredictionOutcome(client, x) for x in data["outcomes"]]
+        self.status = PredictionStatus(data["status"].lower())
+        self.started_at = _parse_datetime(data["started_at"])
+        self.ended_at = _parse_datetime(data["ended_at"])
+
 
 class StreamOnlineData(EventData):
     """
@@ -630,6 +964,11 @@ _DataType = Union[
     CustomRewardRedemptionAddUpdateData,
     HypeTrainBeginProgressData,
     HypeTrainEndData,
+    PollBeginProgressData,
+    PollEndData,
+    PredictionBeginProgressData,
+    PredictionLockData,
+    PredictionEndData,
     StreamOnlineData,
     StreamOfflineData,
     UserAuthorizationRevokedData,
@@ -675,6 +1014,15 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
     hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData
     hypetrain_end = "channel.hype_train.end", 1, HypeTrainEndData
+
+    poll_begin = "channel.poll.begin", 1, PollBeginProgressData
+    poll_progress = "channel.poll.progress", 1, PollBeginProgressData
+    poll_end = "channel.poll.end", 1, PollEndData
+
+    prediction_begin = "channel.prediction.begin", 1, PredictionBeginProgressData
+    prediction_progress = "channel.prediction.progress", 1, PredictionBeginProgressData
+    prediction_lock = "channel.prediction.lock", 1, PredictionLockData
+    prediction_end = "channel.prediction.end", 1, PredictionEndData
 
     stream_start = "stream.online", 1, StreamOnlineData
     stream_end = "stream.offline", 1, StreamOfflineData
