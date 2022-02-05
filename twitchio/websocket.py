@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
-import typing
+from typing import TYPE_CHECKING, Optional
 
 import aiohttp
 import logging
@@ -31,7 +31,7 @@ from .exceptions import *
 from .limiter import IRCRateLimiter
 from .parser import IRCPayload
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from .client import Client
     from .limiter import IRCRateLimiter
 
@@ -47,9 +47,9 @@ class Websocket:
                  client: 'Client',
                  limiter: IRCRateLimiter,
                  shard_index: int = 1,
-                 heartbeat: typing.Optional[float] = 30.0,
-                 join_timeout: typing.Optional[float] = 10.0,
-                 initial_channels: list = [],
+                 heartbeat: Optional[float] = 30.0,
+                 join_timeout: Optional[float] = 10.0,
+                 initial_channels: Optional[list] = None,
                  ):
         self.client = client
 

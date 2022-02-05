@@ -23,7 +23,7 @@ SOFTWARE.
 import asyncio
 import sys
 import traceback
-import typing
+from typing import Optional, Union, Coroutine, Dict
 
 from .limiter import IRCRateLimiter
 from .parser import IRCPayload
@@ -55,11 +55,11 @@ class Client:
     """
 
     def __init__(self,
-                 token: typing.Optional[str] = None,
-                 heartbeat: typing.Optional[float] = 30.0,
-                 verified: typing.Optional[bool] = False,
-                 join_timeout: typing.Optional[float] = 15.0,
-                 initial_channels: typing.Optional[typing.Union[list, tuple, callable, typing.Coroutine]] = [],
+                 token: Optional[str] = None,
+                 heartbeat: Optional[float] = 30.0,
+                 verified: Optional[bool] = False,
+                 join_timeout: Optional[float] = 15.0,
+                 initial_channels: Optional[Union[list, tuple, callable, Coroutine]] = None,
                  shard_limit: int = 100,
                  ):
         self._token: str = token.removeprefix('oauth:') if token else token
@@ -70,7 +70,7 @@ class Client:
 
         self._shards = {}
         self._shard_limit = shard_limit
-        self._initial_channels = initial_channels
+        self._initial_channels = initial_channels or []
 
         self._limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
 
@@ -102,7 +102,7 @@ class Client:
                                                 join_timeout=self._join_timeout,
                                                 initial_channels=chunk))
 
-    def run(self, token: typing.Optional[str] = '') -> None:
+    def run(self, token: Optional[str] = None) -> None:
         """A blocking call that starts and connects the bot to IRC.
 
         This methods abstracts away starting and cleaning up for you.
@@ -128,7 +128,10 @@ class Client:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._shard())
 
-        self._token = token.removeprefix('oauth:') if not self._token else self._token
+        if token:
+            token = token.removeprefix("oauth:")
+
+        self._token = token if not self._token else self._token
 
         for shard in self._shards.values():
             shard._websocket._token = self._token
@@ -141,7 +144,7 @@ class Client:
         finally:
             loop.run_until_complete(self.close())
 
-    async def start(self, token: typing.Optional[str] = '') -> None:
+    async def start(self, token: Optional[str] = None) -> None:
         """|coro|
 
         Parameters
@@ -151,7 +154,10 @@ class Client:
         """
         await self._shard()
 
-        self._token = token.removeprefix('oauth:') if not self._token else self._token
+        if token:
+            token = token.removeprefix("oauth:")
+
+        self._token = token if not self._token else self._token
 
         for shard in self._shards.values():
             shard._websocket._token = self._token
@@ -162,12 +168,12 @@ class Client:
             await shard._websocket.close()
 
     @property
-    def shards(self) -> dict[int, ShardInfo]:
+    def shards(self) -> Dict[int, ShardInfo]:
         """A dict of shard number to :class:`ShardInfo`"""
         return self._shards
 
     @property
-    def nick(self) -> typing.Optional[str]:
+    def nick(self) -> Optional[str]:
         """The bots nickname.
 
         This may be None if a shard has not become ready, or you have entered invalid credentials.
