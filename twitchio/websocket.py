@@ -117,7 +117,7 @@ class Websocket:
         await self.authentication_sequence()
 
         while self.join_cache:
-            await asyncio.sleep(0)
+            await asyncio.sleep(0.1)
 
         await self.dispatch(event='shard_ready', number=self.shard_index)
         self.client._shards[self.shard_index].ready = True
@@ -198,11 +198,10 @@ class Websocket:
             asyncio.create_task(self.dispatch('error', exc))
 
     async def dispatch(self, event: str, *args, **kwargs) -> None:
-        event = event.lower()
-
         if not event:
             return None
 
+        event = event.lower()
         coro = getattr(self.client, f'event_{event}')
 
         if not coro:
@@ -214,10 +213,10 @@ class Websocket:
         task.add_done_callback(self.dispatch_callback)
 
     def get_event(self, action: str):
-        action = action.lower()
-
         if not action:
             return None
+
+        action = action.lower()
 
         return getattr(self, f'{action}_event')
 
@@ -238,6 +237,7 @@ class Websocket:
         asyncio.create_task(self._connect())
 
     async def ping_event(self, payload: IRCPayload) -> None:
+        logger.info('Received PING from Twitch, sending reply PONG.')
         await self.send('PONG :tmi.twitch.tv')
 
     async def join_event(self, payload: IRCPayload) -> None:
