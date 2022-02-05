@@ -1,69 +1,63 @@
+from __future__ import annotations
+from typing import Optional, List, Callable
+
 __all__ = ('Command', 'Collection')
 
 
 class Command:
 
-    def __init__(self, **attrs):
-        self._callback = attrs.get('func')
-        self._name = attrs.get('name')
-        self._aliases = attrs.get('aliases', [])
+    def __init__(self, callback, *, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
+        self._callback = callback
+        self._name = name
+        self._aliases = aliases or []
 
-        self._parent = attrs.get('parent')
-        self._extras = []
+        self._parent = parent
 
     @classmethod
-    def __call__(cls, func, /, *, name: str = None, aliases: list = []):
+    def __call__(cls, func, /, *, name: str = None, aliases: Optional[list] = None):
         name = name if name else func.__name__
 
-        return cls(func=func, name=name, aliases=aliases)
+        return cls(func, name=name, aliases=aliases)
 
 
 class Collection(Command):
 
-    def __init__(self, **attrs):
-        self._callback = attrs.get('func')
-        self._name = attrs.get('name')
-        self._aliases = attrs.get('aliases', [])
+    def __init__(self, callback, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
+        super().__init__(
+            callback,
+            name=name,
+            aliases=aliases,
+            parent=parent
+        )
 
-        self._extras = []
+        self._children = {}
 
     @classmethod
-    def __call__(cls, func, /, *, name: str = None, aliases: list = []):
+    def __call__(cls, func, /, *, name: str = None, aliases: Optional[list] = None):
         name = name if name else func.__name__
-        self_ = cls()
+        self_ = cls(func, name)
 
-        return Collection(func=func, name=name, aliases=aliases, parent=self_)
+        return Collection(func, name=name, aliases=aliases, parent=self_)
 
-    def command(self, *, name: str = None, aliases: list = []):
-        name_ = name
-        self_ = self
-
+    def command(self, name: Optional[str] = None, *, aliases: Optional[list] = None):
         def wrapped(func):
-            name = name_ or func.__name__
+            nonlocal self
+            _name = name or func.__name__
 
-            self_._extras.append(Command(func=func, name=name, aliases=aliases, parent=self_))
-            return Command(func=func, name=name, aliases=aliases, parent=self_)
+            self._children[name] = cmd = Command(func, name=name, aliases=aliases, parent=self)
+            return cmd
+
         return wrapped
 
-    def collection(self, *, name: str = None, aliases: list = []):
-        name_ = name
-        self_ = self
-
+    def collection(self, *, name: str = None, aliases: list = None):
         def wrapped(func):
-            name = name_ or func.__name__
+            nonlocal self
+            _name = name or func.__name__
+            self._children[_name] = cmd = Collection(func, name=_name, aliases=aliases, parent=self)
 
-            self_._extras.append(Collection(func=func, name=name, aliases=aliases, parent=self_))
-            return Collection(func=func, name=name, aliases=aliases,parent=self_)
+            return cmd
+
         return wrapped
-
-
-class Collections:
-
-    def __init__(self):
-        self.collections = []
-
-    def append(self, param):
-        self.collections.append(param)
 
 
 class Listener:

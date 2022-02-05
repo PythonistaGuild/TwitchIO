@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import typing
 
@@ -15,7 +16,7 @@ class Bot(Client):
 
         self._commands = {}
 
-    def add_component(self, component: 'ComponentMeta'):
+    def add_component(self, component: ComponentMeta):
         component._bot = self
 
     def add_command(self, command):
