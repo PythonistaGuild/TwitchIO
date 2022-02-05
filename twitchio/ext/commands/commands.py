@@ -1,12 +1,14 @@
 from __future__ import annotations
-from typing import Optional, List, Callable
+from typing import List, Optional, TypeVar
+from types import FunctionType
 
 __all__ = ('Command', 'Collection')
 
+Callback = TypeVar("Callback", bound=FunctionType)
 
 class Command:
 
-    def __init__(self, callback, *, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
+    def __init__(self, callback: Callback, *, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
         self._callback = callback
         self._name = name
         self._aliases = aliases or []
@@ -22,7 +24,7 @@ class Command:
 
 class Collection(Command):
 
-    def __init__(self, callback, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
+    def __init__(self, callback: Callback, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
         super().__init__(
             callback,
             name=name,
@@ -33,14 +35,14 @@ class Collection(Command):
         self._children = {}
 
     @classmethod
-    def __call__(cls, func, /, *, name: str = None, aliases: Optional[list] = None):
+    def __call__(cls, func: Callback, /, *, name: str = None, aliases: Optional[list] = None):
         name = name if name else func.__name__
         self_ = cls(func, name)
 
         return Collection(func, name=name, aliases=aliases, parent=self_)
 
     def command(self, name: Optional[str] = None, *, aliases: Optional[list] = None):
-        def wrapped(func):
+        def wrapped(func: Callback):
             nonlocal self
             _name = name or func.__name__
 
@@ -49,8 +51,8 @@ class Collection(Command):
 
         return wrapped
 
-    def collection(self, *, name: str = None, aliases: list = None):
-        def wrapped(func):
+    def collection(self, *, name: Optional[str] = None, aliases: Optional[list] = None):
+        def wrapped(func: Callback):
             nonlocal self
             _name = name or func.__name__
             self._children[_name] = cmd = Collection(func, name=_name, aliases=aliases, parent=self)
