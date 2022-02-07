@@ -120,7 +120,7 @@ class Websocket:
             await asyncio.sleep(0.1)
 
         await self.dispatch(event='shard_ready', number=self.shard_index)
-        self.client._shards[self.shard_index].ready = True
+        self.client._shards[self.shard_index]._ready = True
 
         if all(s.ready for s in self.client._shards.values()):
             await self.dispatch(event='ready')
