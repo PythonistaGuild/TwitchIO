@@ -60,7 +60,7 @@ except FileExistsError:
 class Sound:
     """TwitchIO Sound Source.
 
-    This is the class that represents a TwitchIO Sound, able to be played in `class`:AudioPayer:.
+    This is the class that represents a TwitchIO Sound, able to be played in `class`:AudioPlayer:.
 
     Parameters
     __________
@@ -125,6 +125,8 @@ class Sound:
                 source = f'{source_}.opus'
                 self._source = pydub.AudioSegment.from_file(source, codec='opus')
                 self._original = source
+
+                proc.kill()
 
             else:
                 self._source = pydub.AudioSegment.from_file(source, codec=codec)
@@ -218,7 +220,7 @@ class AudioPlayer:
         elif self._playing and not replace:
             return
 
-        self._thread = threading.Thread(target=self._play_run, args=([sound]))
+        self._thread = threading.Thread(target=self._play_run, args=([sound]), daemon=True)
         self._thread.start()
 
     def _play_run(self, sound: Sound):
@@ -255,12 +257,14 @@ class AudioPlayer:
             break
 
     def _clean(self):
-        if self._current._original.startswith('_temp'):
-            os.remove(self._current._original)
+        if self._current._original.startswith(str(_TEMP.as_posix())):
+            try:
+                os.remove(self._current._original)
+            except FileNotFoundError:
+                pass
 
         self._current = None
         self._paused = False
-
         self._playing = False
 
     @property
