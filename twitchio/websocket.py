@@ -233,6 +233,9 @@ class Websocket:
 
         del self.join_cache[channel]
 
+    async def privmsg_event(self, payload: IRCPayload) -> None:
+        pass
+
     async def reconnect_event(self, payload: IRCPayload) -> None:
         asyncio.create_task(self._connect())
 
