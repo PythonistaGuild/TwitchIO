@@ -159,6 +159,9 @@ class IRCPayload:
             names = None
             message = data.split(':')[-1]
 
+        if channel and "PRIVMSG" in data:
+            message = data.split(f'{channel} :')[-1]
+
         if code != 200:
             action = None
 
