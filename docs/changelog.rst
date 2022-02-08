@@ -1,4 +1,8 @@
 .. currentmodule:: twitchio
+Master
+======
+-ext.pubsub
+    - Add channel subscription pubsub model
 
 
 2.1.6
