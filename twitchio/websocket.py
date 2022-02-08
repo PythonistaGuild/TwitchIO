@@ -483,5 +483,8 @@ class WSConnection:
         for fut in futures:
             fut.cancel()
 
-        await self._websocket.close()
+        if self._websocket:
+            await self._websocket.close()
+        if self._client._http.session:
+            await self._client._http.session.close()
         self._loop.stop()
