@@ -41,6 +41,7 @@ __all__ = (
     "PubSubModerationActionModeratorAdd",
     "PubSubModerationActionBanRequest",
     "PubSubModerationActionChannelTerms",
+    "PubChannelSubscriptionMessage",
 )
 
 
@@ -338,6 +339,72 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
 
         if data["message"]["data"]["updated_at"]:
             self.updated_at = parse_timestamp(data["message"]["data"]["expires_at"])
+
+class PubChannelSubscriptionMessage(PubSubMessage):
+    """
+    A Subscribe message
+    Attributes
+    -----------
+    user: :class:`twitchio.PartialUser`
+        User ID of the person who subscribed or sent a gift subscription
+    message: :class:`PubSubChatMessage`
+        The message sent along with the subscription.
+    channel_id: :class:`int`
+        ID of the channel that has been subscribed or subgifted.
+    channel_name: :class:`str`
+        	Name of the channel that has been subscribed or subgifted
+    context: :class:`str`
+        Event type associated with the subscription product, values: sub, resub, subgift, anonsubgift, resubgift, anonresubgift
+    display_name: :class:`str`
+        Display name of the person who subscribed or sent a gift subscription
+    recipient_id: :class:`int`
+        User ID of the subscription gift recipient
+    recipient_user_name: :class:`str`
+        Login name of the subscription gift recipient
+    recipient_display_name: :class:`str`
+        Display name of the person who received the subscription gift
+    sub_plan: :class:`str`
+        Subscription Plan ID, values: Prime, 1000, 2000, 3000
+    sub_plan_name: :class:`str`
+        Channel Specific Subscription Plan Name
+    time: :class:`datetime`
+        Time when the subscription or gift was completed. RFC 3339 format
+    cumulative_months: :class:`int`
+        Cumulative number of tenure months of the subscription
+    streak_months: :class:`int`
+        Denotes the user’s most recent (and contiguous) subscription tenure streak in the channel
+    is_gift: :class:`bool`
+        If this sub message was caused by a gift subscription
+    multi_month_duration: :class:`int`
+        Number of months gifted as part of a single, multi-month gift OR number of months purchased as part of a multi-month subscription
+    """
+
+    __slots__ = "channel_id", "channel_name", "context", "user_id", "user_name", "display_name", "message", \
+                "recipient_id", "recipient_user_name", "recipient_display_name", "sub_plan", "sub_plan_name", "time", "topic", \
+                "type", "cummulative_months", "streak_months", "is_gift", "multi_month_duration"
+
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+
+        subscription = data["message"]
+
+        self.user = (PartialUser(client._http,  subscription["user_id"],  subscription["user_name"], subscription["display_name"]) if subscription["user_id"] is not None else None)
+        self.message = PubSubChatMessage(subscription["sub_message"]["message"],  subscription["sub_message"]["emotes"])
+      
+        self.channel_id: int = int(subscription["channel_id"])
+        self.channel_name: str = subscription["channel_name"]
+        self.sub_plan: str = subscription["sub_plan"]
+        self.sub_plan_name: str = subscription["sub_plan_name"]
+        self.cumulative_months: int = int(subscription["cumulative_months"])
+        self.streak_months: int = int(subscription["streak_months"])
+        self.context: str = subscription["context"]
+        self.multi_month_duration: int = int(subscription["multi_month_duration"])
+        self.is_gift: bool = subscription["is_gift"]
+
+        self.recipient_id: int = (int(subscription["recipient_id"]) if self.is_gift is True else None)
+        self.recipient_user_name: str = (subscription["recipient_id"] if self.is_gift is True else None)
+        self.recipient_display_name: str = (subscription["recipient_id"] if self.is_gift is True else None)
+        self.timestamp = parse_timestamp(subscription["time"])
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
