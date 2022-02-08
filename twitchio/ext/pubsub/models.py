@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import datetime
+from re import sub
 from typing import List, Optional
 
 from twitchio import PartialUser, Client, Channel, CustomReward, parse_timestamp
@@ -41,12 +42,13 @@ __all__ = (
     "PubSubModerationActionModeratorAdd",
     "PubSubModerationActionBanRequest",
     "PubSubModerationActionChannelTerms",
-    "PubChannelSubscriptionMessage",
+    "PubSubChannelSubscribe",
 )
 
 
 class PubSubError(Exception):
     pass
+
 
 
 class ConnectionFailure(PubSubError):
@@ -338,73 +340,77 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
             parse_timestamp(data["message"]["data"]["updated_at"]) if data["message"]["data"]["updated_at"] else None
         )
 
-class PubChannelSubscriptionMessage(PubSubMessage):
+class PubSubChannelSubscribe(PubSubMessage):
     """
-    A Subscribe message
+    Channel subscription
+
     Attributes
     -----------
-    user: :class:`twitchio.PartialUser`
-        User ID of the person who subscribed or sent a gift subscription
-    message: :class:`PubSubChatMessage`
-        The message sent along with the subscription.
+    channel: :class:`twitchio.Channel`
+        Channel that has been subscribed or subgifted.
     channel_id: :class:`int`
-        ID of the channel that has been subscribed or subgifted.
-    channel_name: :class:`str`
-        	Name of the channel that has been subscribed or subgifted
+        The channel id the action occurred on.
     context: :class:`str`
-        Event type associated with the subscription product, values: sub, resub, subgift, anonsubgift, resubgift, anonresubgift
-    display_name: :class:`str`
-        Display name of the person who subscribed or sent a gift subscription
-    recipient_id: :class:`int`
-        User ID of the subscription gift recipient
-    recipient_user_name: :class:`str`
-        Login name of the subscription gift recipient
-    recipient_display_name: :class:`str`
-        Display name of the person who received the subscription gift
+        Event type associated with the subscription product.
+    user: :class:`twitchio.PartialUser`
+        The person who subscribed or sent a gift subscription.
+    message: :class:`str`
+        Message sent with the sub/resub
+    recipient: :class:`twitchio.PartialUser`
+        The person the who received the gift subscription.
     sub_plan: :class:`str`
-        Subscription Plan ID, values: Prime, 1000, 2000, 3000
+        Subscription Plan ID.
     sub_plan_name: :class:`str`
-        Channel Specific Subscription Plan Name
-    time: :class:`datetime`
-        Time when the subscription or gift was completed. RFC 3339 format
-    cumulative_months: :class:`int`
-        Cumulative number of tenure months of the subscription
-    streak_months: :class:`int`
-        Denotes the user’s most recent (and contiguous) subscription tenure streak in the channel
+        Channel Specific Subscription Plan Name.
+    time: :class:`datetime.datetime`
+        Time when the subscription or gift was completed. RFC 3339 format.
+    cumulative_months: :class:`str`
+        Cumulative number of tenure months of the subscription.
+    streak_months: :class:`str`
+        Denotes the user's most recent (and contiguous) subscription tenure streak in the channel.
     is_gift: :class:`bool`
-        If this sub message was caused by a gift subscription
+        If this sub message was caused by a gift subscription,
     multi_month_duration: :class:`int`
-        Number of months gifted as part of a single, multi-month gift OR number of months purchased as part of a multi-month subscription
+        Number of months gifted as part of a single, multi-month gift OR number of months purchased as part of a multi-month subscription.
     """
 
-    __slots__ = "channel_id", "channel_name", "context", "user_id", "user_name", "display_name", "message", \
-                "recipient_id", "recipient_user_name", "recipient_display_name", "sub_plan", "sub_plan_name", "time", "topic", \
-                "type", "cummulative_months", "streak_months", "is_gift", "multi_month_duration"
+    __slots__ = ("channel",
+        "channel_id",
+        "context",
+        "user",
+        "message",
+        "is_gift",
+        "recipient",
+        "sub_plan",
+        "sub_plan_name",
+        "time",
+        "cumulative_months",
+        "streak_months",
+        "multi_month_duration",)
+
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
 
         subscription = data["message"]
-
-        self.user = (PartialUser(client._http,  subscription["user_id"],  subscription["user_name"], subscription["display_name"]) if subscription["user_id"] is not None else None)
-        self.message = PubSubChatMessage(subscription["sub_message"]["message"],  subscription["sub_message"]["emotes"])
-      
+        
+        self.channel: Channel = client.get_channel(subscription["channel_name"]) or Channel(
+            name=subscription["channel_name"], websocket=client._connection
+        )
         self.channel_id: int = int(subscription["channel_id"])
-        self.channel_name: str = subscription["channel_name"]
+        self.context: str = subscription["context"]
+        self.user = PartialUser(client._http, subscription["user_id"], subscription["user_name"], subscription["display_name"]) if self.context != "anongiftsub" or self.context != "anonresubgift" else None
+        self.message = PubSubChatMessage(subscription["sub_message"]["message"],  subscription["sub_message"]["emotes"] if subscription["sub_message"]["emotes"] is not None else None)
+        self.is_gift: bool = subscription["is_gift"]
+        self.recipient = PartialUser(client._http, subscription["recipient_user_name"], int(subscription["recipient_id"]), subscription["recipient_display_name"]) if self.is_gift is True else None
         self.sub_plan: str = subscription["sub_plan"]
         self.sub_plan_name: str = subscription["sub_plan_name"]
+        self.time = parse_timestamp(subscription["time"])
         self.cumulative_months: int = int(subscription["cumulative_months"])
         self.streak_months: int = int(subscription["streak_months"])
-        self.context: str = subscription["context"]
         self.multi_month_duration: int = int(subscription["multi_month_duration"])
-        self.is_gift: bool = subscription["is_gift"]
-
-        self.recipient_id: int = (int(subscription["recipient_id"]) if self.is_gift is True else None)
-        self.recipient_user_name: str = (subscription["recipient_id"] if self.is_gift is True else None)
-        self.recipient_display_name: str = (subscription["recipient_id"] if self.is_gift is True else None)
-        self.timestamp = parse_timestamp(subscription["time"])
-
-
+        
+        
 class PubSubModerationActionModeratorAdd(PubSubMessage):
     """
     A moderator add event.
@@ -456,7 +462,7 @@ def _find_mod_action(client: Client, topic: str, data: dict):
 _mapping = {
     "channel-bits-events-v2": ("pubsub_bits", PubSubBitsMessage),
     "channel-bits-badge-unlocks": ("pubsub_bits_badge", PubSubBitsBadgeMessage),
-    "channel-subscribe-events-v1": ("pubsub_subscription", None),
+    "channel-subscribe-events-v1": ("pubsub_subscription", PubSubChannelSubscribe),
     "chat_moderator_actions": ("pubsub_moderation", _find_mod_action),
     "channel-points-channel-v1": ("pubsub_channel_points", PubSubChannelPointsMessage),
     "whispers": ("pubsub_whisper", None),
