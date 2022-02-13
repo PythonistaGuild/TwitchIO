@@ -363,9 +363,9 @@ class PubSubChannelSubscribe(PubSubMessage):
         Channel Specific Subscription Plan Name.
     time: :class:`datetime.datetime`
         Time when the subscription or gift was completed. RFC 3339 format.
-    cumulative_months: :class:`str`
+    cumulative_months: :class:`int`
         Cumulative number of tenure months of the subscription.
-    streak_months: :class:`str`
+    streak_months: :class:`int`
         Denotes the user's most recent (and contiguous) subscription tenure streak in the channel.
     is_gift: :class:`bool`
         If this sub message was caused by a gift subscription,
