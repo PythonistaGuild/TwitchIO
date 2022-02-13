@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-2022 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+__title__ = "TwitchIO"
+__author__ = "TwitchIO, PythonistaGuild"
+__license__ = "MIT"
+__copyright__ = "Copyright 2017-2022 (c) TwitchIO"
+__version__ = "3.0.0"
+
 from .channel import Channel
 from .client import Client
 from .message import Message
