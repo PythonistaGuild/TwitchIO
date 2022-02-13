@@ -40,11 +40,6 @@ class Messageable(metaclass=abc.ABCMeta):
     def name(self) -> str:
         raise NotImplementedError
 
-    @property
-    @abc.abstractmethod
-    def owner(self):  # TODO -> User
-        raise NotImplementedError
-
     @abc.abstractmethod
     async def send(self, content: str) -> "Message":
         raise NotImplementedError
