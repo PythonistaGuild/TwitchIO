@@ -22,8 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import datetime
-from re import sub
+
 from typing import List, Optional
 
 from twitchio import PartialUser, Client, Channel, CustomReward, parse_timestamp
@@ -350,13 +349,13 @@ class PubSubChannelSubscribe(PubSubMessage):
     -----------
     channel: :class:`twitchio.Channel`
         Channel that has been subscribed or subgifted.
-    channel_id: :class:`int`
-        The channel id the action occurred on.
     context: :class:`str`
         Event type associated with the subscription product.
     user: :class:`twitchio.PartialUser`
         The person who subscribed or sent a gift subscription.
     message: :class:`str`
+        Message sent with the sub/resub
+    emotes: List[:class:`dict`]
         Message sent with the sub/resub
     recipient: :class:`twitchio.PartialUser`
         The person the who received the gift subscription.
@@ -377,10 +376,10 @@ class PubSubChannelSubscribe(PubSubMessage):
     """
 
     __slots__ = ("channel",
-        "channel_id",
         "context",
         "user",
         "message",
+        "emotes"
         "is_gift",
         "recipient",
         "sub_plan",
@@ -399,18 +398,32 @@ class PubSubChannelSubscribe(PubSubMessage):
         self.channel: Channel = client.get_channel(subscription["channel_name"]) or Channel(
             name=subscription["channel_name"], websocket=client._connection
         )
-        self.channel_id: int = int(subscription["channel_id"])
         self.context: str = subscription["context"]
-        self.user = PartialUser(client._http, subscription["user_id"], subscription["user_name"], subscription["display_name"]) if self.context != "anongiftsub" or self.context != "anonresubgift" else None
-        self.message = PubSubChatMessage(subscription["sub_message"]["message"],  subscription["sub_message"]["emotes"] if subscription["sub_message"]["emotes"] is not None else None)
+
+        try:
+            self.user =  PartialUser(client._http,subscription["user_name"], int(subscription["user_id"])), subscription["display_name"]
+        except KeyError:
+            self.user = None
+        self.message = PubSubChatMessage(subscription["sub_message"]["message"])
+        
+        try:
+            self.emotes = subscription["sub_message"]["emotes"]
+        except KeyError:
+            self.emotes = None
+        
         self.is_gift: bool = subscription["is_gift"]
-        self.recipient = PartialUser(client._http, subscription["recipient_user_name"], int(subscription["recipient_id"]), subscription["recipient_display_name"]) if self.is_gift is True else None
+        
+        try:
+            self.recipient = PartialUser(client._http, subscription["recipient_user_name"], int(subscription["recipient_id"])), subscription["recipient_display_name"]
+        except KeyError:
+            self.recipient = None
+        
         self.sub_plan: str = subscription["sub_plan"]
         self.sub_plan_name: str = subscription["sub_plan_name"]
         self.time = parse_timestamp(subscription["time"])
         self.cumulative_months: int = int(subscription["cumulative_months"])
-        self.streak_months: int = int(subscription["streak_months"])
-        self.multi_month_duration: int = int(subscription["multi_month_duration"])
+        self.streak_months = int(subscription["streak_months"])
+        self.multi_month_duration = int(subscription["multi_month_duration"])
         
         
 class PubSubModerationActionModeratorAdd(PubSubMessage):

@@ -1,4 +1,8 @@
 .. currentmodule:: twitchio
+2.1.5
+======
+-ext.pubsub
+    - Fix channel subscription model so it can now handle pubsub
 
 2.1.4
 ======
