@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-2022 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,31 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from .channel import Channel
-from .client import Client
-from .message import Message
-from .parser import IRCPayload
-from .user import User
+import abc
+import typing
+
+if typing.TYPE_CHECKING:
+    from .message import Message
+    from .websocket import Websocket
+
+
+class Messageable(metaclass=abc.ABCMeta):
+
+    def __init__(self, **attrs):
+        self._name: str = attrs.get('name')
+
+        self._websocket: "Websocket" = attrs.get('websocket')
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def owner(self):  # TODO -> User
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def send(self, content: str) -> "Message":
+        raise NotImplementedError

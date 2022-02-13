@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-2022 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from .channel import Channel
-from .client import Client
-from .message import Message
-from .parser import IRCPayload
-from .user import User
+import typing
+
+from .abc import Messageable
+
+if typing.TYPE_CHECKING:
+    from .message import Message
+
+
+class Channel(Messageable):
+
+    __slots__ = ('_name', '_websocket')
+
+    def __repr__(self) -> str:
+        return f'Channel: name={self._name}, shard_index={self._websocket.shard_index}'
+
+    async def send(self, content: str):  # TODO Return Message...
+        await self._websocket.send(f"PRIVMSG #{self._name} :{content}")
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def owner(self):  # TODO Return Channel Owner User object...
+        return None
