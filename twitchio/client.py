@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-2022 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,11 @@ import sys
 import traceback
 from typing import Optional, Union, Coroutine, Dict
 
+from .channel import Channel
 from .limiter import IRCRateLimiter
 from .parser import IRCPayload
 from .shards import ShardInfo
+from .user import User
 from .websocket import Websocket
 
 
@@ -52,6 +54,8 @@ class Client:
         but must return a list or tuple.
     shard_limit: int
         The amount of channels per websocket. Defaults to 100 channels per socket.
+    cache_size: Optional[int]
+        The size of the internal channel cache. Defaults to unlimited.
     """
 
     def __init__(self,
@@ -61,12 +65,15 @@ class Client:
                  join_timeout: Optional[float] = 15.0,
                  initial_channels: Optional[Union[list, tuple, callable, Coroutine]] = None,
                  shard_limit: int = 100,
+                 cache_size: Optional[int] = None,
                  ):
         self._token: str = token.removeprefix('oauth:') if token else token
 
         self._heartbeat = heartbeat
         self._verified = verified
         self._join_timeout = join_timeout
+
+        self._cache_size = cache_size
 
         self._shards = {}
         self._shard_limit = shard_limit
@@ -100,7 +107,9 @@ class Client:
                                                 shard_index=index,
                                                 heartbeat=self._heartbeat,
                                                 join_timeout=self._join_timeout,
-                                                initial_channels=chunk))
+                                                initial_channels=chunk,
+                                                cache_size=self._cache_size
+                                            ))
 
     def run(self, token: Optional[str] = None) -> None:
         """A blocking call that starts and connects the bot to IRC.
@@ -248,7 +257,7 @@ class Client:
     async def event_message(self, message) -> None:
         """|coro|
 
-        THe message sent in Twitch Chat.
+        Event fired when receiving a message in a joined channel.
 
         Parameters
         ----------
@@ -261,5 +270,28 @@ class Client:
         """
         pass
 
+    async def event_join(self, channel: Channel, user: User) -> None:
+        """|coro|
 
+        Event fired when a JOIN is received via Twitch.
 
+        Parameters
+        ----------
+        channel: :class:`Channel`
+            ...
+        user: :class:`User`
+            ...
+        """
+
+    async def event_part(self, channel: Optional[Channel], user: User) -> None:
+        """|coro|
+
+        Event fired when a PART is received via Twitch.
+
+        Parameters
+        ----------
+        channel: Optional[:class:`Channel`]
+            ... Could be None if the channel is not in your cache.
+        user: :class:`User`
+            ...
+        """

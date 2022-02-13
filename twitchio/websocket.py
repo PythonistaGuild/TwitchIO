@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-2022 TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,9 +27,13 @@ import aiohttp
 import logging
 
 from .backoff import ExponentialBackoff
+from .cache import Cache
+from .channel import Channel
 from .exceptions import *
 from .limiter import IRCRateLimiter
+from .message import Message
 from .parser import IRCPayload
+from .user import User
 
 if TYPE_CHECKING:
     from .client import Client
@@ -50,6 +54,7 @@ class Websocket:
                  heartbeat: Optional[float] = 30.0,
                  join_timeout: Optional[float] = 10.0,
                  initial_channels: Optional[list] = None,
+                 cache_size: Optional[int] = None,
                  ):
         self.client = client
 
@@ -70,6 +75,8 @@ class Websocket:
         self.closing = False
         self._ready_event = asyncio.Event()
         self._keep_alive_task: asyncio.Task = None  # type: ignore
+
+        self._channel_cache = Cache(size=cache_size)
 
     def is_connected(self) -> bool:
         return self.ws is not None and not self.ws.closed
@@ -244,10 +251,26 @@ class Websocket:
         await self.send('PONG :tmi.twitch.tv')
 
     async def join_event(self, payload: IRCPayload) -> None:
-        self.remove_join_cache(payload.channel)
+        if payload.channel in self.join_cache:
+            self.remove_join_cache(payload.channel)
+
+        channel = Channel(name=payload.channel, websocket=self)
+        user = User()  # TODO...
+
+        if payload.user == self.nick:
+            self._channel_cache[channel.name] = channel
+
+        await self.dispatch('join', channel, user)
 
     async def part_event(self, payload: IRCPayload) -> None:
-        pass
+        if payload.user == self.nick:
+            channel: Channel = self._channel_cache.pop(payload.channel)
+        else:
+            channel = Channel(name=payload.channel, websocket=self)
+
+        user = User()
+
+        await self.dispatch('part', channel, user)
 
     async def cap_event(self, payload: IRCPayload) -> None:
         pass
