@@ -1,3 +1,7 @@
+.. image:: https://raw.githubusercontent.com/TwitchIO/TwitchIO/master/logo.png
+    :align: center
+
+
 TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots.
 This is the new in development version and is currently in early Alpha Stage.
 
