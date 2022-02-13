@@ -352,9 +352,11 @@ class PubSubChannelSubscribe(PubSubMessage):
     user: :class:`twitchio.PartialUser`
         The person who subscribed or sent a gift subscription.
     message: :class:`str`
-        Message sent with the sub/resub
+        Message sent with the sub/resub.
     emotes: List[:class:`dict`]
-        Message sent with the sub/resub
+        Message sent with the sub/resub.
+    is_gift: :class:`bool`
+        If this sub message was caused by a gift subscription.
     recipient: :class:`twitchio.PartialUser`
         The person the who received the gift subscription.
     sub_plan: :class:`str`
@@ -367,8 +369,6 @@ class PubSubChannelSubscribe(PubSubMessage):
         Cumulative number of tenure months of the subscription.
     streak_months: :class:`int`
         Denotes the user's most recent (and contiguous) subscription tenure streak in the channel.
-    is_gift: :class:`bool`
-        If this sub message was caused by a gift subscription,
     multi_month_duration: :class:`int`
         Number of months gifted as part of a single, multi-month gift OR number of months purchased as part of a multi-month subscription.
     """
