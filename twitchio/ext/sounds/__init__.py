@@ -22,6 +22,7 @@ SOFTWARE.
 """
 import asyncio
 import io
+import logging
 import os
 import pathlib
 import shlex
@@ -35,6 +36,9 @@ import pyaudio
 import pydub
 from pydub.utils import make_chunks
 from yt_dlp import YoutubeDL
+
+
+logger = logging.getLogger(__name__)
 
 
 has_ffmpeg: bool
