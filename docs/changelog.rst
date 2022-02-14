@@ -1,5 +1,8 @@
 .. currentmodule:: twitchio
 
+Master
+======
+Set paginate to False when using full_body
 
 2.1.6
 ======
@@ -7,7 +10,7 @@
     - Loosen aiohttp requirements to allow 3.8.1
 
 2.1.5
-=====
+======
 - TwitchIO
     - Add ``user_id`` property to Client
     - Change id_cache to only cache if a value is not ``None``

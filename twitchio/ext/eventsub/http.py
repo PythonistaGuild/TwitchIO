@@ -51,7 +51,7 @@ class EventSubHTTP:
         if status:
             qs.append(("status", status))
 
-        v = await self._http.request(Route("GET", "eventsub/subscriptions", query=qs), paginate=False, full_body=True)
+        v = await self._http.request(Route("GET", "eventsub/subscriptions", query=qs), full_body=True)
         del v["data"]
         del v["pagination"]
         return v

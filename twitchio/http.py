@@ -121,7 +121,7 @@ class TwitchHTTP:
             Forcibly use the client_id and client_secret generated token, if available. Otherwise fail the request immediately
         """
         if full_body:
-            assert not paginate
+            paginate = False
 
         if (not self.client_id or not self.nick) and self.token:
             await self.validate(token=self.token)
@@ -228,7 +228,7 @@ class TwitchHTTP:
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2**attempt + 1)
+                    await asyncio.sleep(2 ** attempt + 1)
                     continue
 
                 if utilize_bucket:
@@ -259,7 +259,7 @@ class TwitchHTTP:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3**attempt + 1)
+                        await asyncio.sleep(3 ** attempt + 1)
                     continue
 
                 raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).", resp.reason, resp.status)
@@ -378,7 +378,7 @@ class TwitchHTTP:
             ],
             token=token,
         )
-        return await self.request(route, full_body=True, paginate=False)
+        return await self.request(route, full_body=True)
 
     async def get_cheermotes(self, broadcaster_id: str):
         return await self.request(Route("GET", "bits/cheermotes", "", query=[("broadcaster_id", broadcaster_id)]))
@@ -818,7 +818,7 @@ class TwitchHTTP:
                     ("id", id),
                 )
 
-        return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
+        return await self.request(Route("GET", "schedule", query=q), full_body=True)
 
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
@@ -897,7 +897,6 @@ class TwitchHTTP:
         return (
             await self.request(
                 Route("GET", "users/extensions", query=[("user_id", user_id)], token=token),
-                paginate=False,
                 full_body=True,
             )
         )["data"]
@@ -905,7 +904,7 @@ class TwitchHTTP:
     async def put_user_extensions(self, token: str, data: Dict[str, Any]):
         return (
             await self.request(
-                Route("PUT", "users/extensions", token=token, body={"data": data}), paginate=False, full_body=True
+                Route("PUT", "users/extensions", token=token, body={"data": data}), full_body=True
             )
         )["data"]
 
@@ -942,7 +941,7 @@ class TwitchHTTP:
     async def delete_videos(self, token: str, ids: List[int]):
         q = [("id", str(x)) for x in ids]
 
-        return (await self.request(Route("DELETE", "videos", query=q, token=token), paginate=False, full_body=True))[
+        return (await self.request(Route("DELETE", "videos", query=q, token=token), full_body=True))[
             "data"
         ]
 
