@@ -35,16 +35,23 @@ from twitchio import Client, Channel
 __all__ = ('EventSubClient', 'EventSubType')
 
 
+logger = logging.getLogger("twitchio.ext.eventsub")
+
+
 class _EventSubTypeMeta(enum.Enum):
 
     @classmethod
     def all(cls) -> list:
         return [e.value for e in cls]
 
+    @classmethod
+    def unauthenticated_endpoints(cls) -> list:
+        return [e.value for e in cls if e.value['auth'] is False]
+
 
 class EventSubType(_EventSubTypeMeta):
 
-    ChannelFollows = {'topic': 'channel.follow', 'version': 1}
+    ChannelFollows = {'topic': 'channel.follow', 'version': 1, 'auth': False}
 
 
 class EventSubClient(web.Application):
@@ -86,6 +93,7 @@ class EventSubClient(web.Application):
         pass
 
     async def _run(self) -> None:
+        logger.info(f'Starting EventSub sever on host: {self._host.host}, port: {self._host.port}')
         await self._client_ready.wait()
 
         runner = web.AppRunner(self)
@@ -93,3 +101,5 @@ class EventSubClient(web.Application):
 
         site = web.TCPSite(runner, host=self._host.host, port=self._host.port)
         await site.start()
+
+        logger.info('Successfully started EventSub sever.')
