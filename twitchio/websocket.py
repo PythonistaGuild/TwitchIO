@@ -251,10 +251,12 @@ class Websocket:
         await self.send('PONG :tmi.twitch.tv')
 
     async def join_event(self, payload: IRCPayload) -> None:
-        if payload.channel in self.join_cache:
-            self.remove_join_cache(payload.channel)
-
         channel = Channel(name=payload.channel, websocket=self)
+
+        if payload.channel in self.join_cache:
+            self.remove_join_cache(channel.name)
+            self._channel_cache[channel.name] = channel
+
         user = User()  # TODO...
 
         if payload.user == self.nick:
