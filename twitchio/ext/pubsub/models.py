@@ -49,7 +49,6 @@ class PubSubError(Exception):
     pass
 
 
-
 class ConnectionFailure(PubSubError):
     pass
 
@@ -339,6 +338,7 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
             parse_timestamp(data["message"]["data"]["updated_at"]) if data["message"]["data"]["updated_at"] else None
         )
 
+
 class PubSubChannelSubscribe(PubSubMessage):
     """
     Channel subscription
@@ -373,57 +373,63 @@ class PubSubChannelSubscribe(PubSubMessage):
         Number of months gifted as part of a single, multi-month gift OR number of months purchased as part of a multi-month subscription.
     """
 
-    __slots__ = ("channel",
+    __slots__ = (
+        "channel",
         "context",
         "user",
         "message",
-        "emotes"
-        "is_gift",
+        "emotes" "is_gift",
         "recipient",
         "sub_plan",
         "sub_plan_name",
         "time",
         "cumulative_months",
         "streak_months",
-        "multi_month_duration",)
-
+        "multi_month_duration",
+    )
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
 
         subscription = data["message"]
-        
+
         self.channel: Channel = client.get_channel(subscription["channel_name"]) or Channel(
             name=subscription["channel_name"], websocket=client._connection
         )
         self.context: str = subscription["context"]
 
         try:
-            self.user =  PartialUser(client._http,subscription["user_name"], int(subscription["user_id"])), subscription["display_name"]
+            self.user = (
+                PartialUser(client._http, subscription["user_name"], int(subscription["user_id"])),
+                subscription["display_name"],
+            )
         except KeyError:
             self.user = None
         self.message = PubSubChatMessage(subscription["sub_message"]["message"])
-        
+
         try:
             self.emotes = subscription["sub_message"]["emotes"]
         except KeyError:
             self.emotes = None
-        
+
         self.is_gift: bool = subscription["is_gift"]
-        
+
         try:
-            self.recipient = PartialUser(client._http, subscription["recipient_user_name"], int(subscription["recipient_id"])), subscription["recipient_display_name"]
+            self.recipient = (
+                PartialUser(client._http, subscription["recipient_user_name"], int(subscription["recipient_id"])),
+                subscription["recipient_display_name"],
+            )
         except KeyError:
             self.recipient = None
-        
+
         self.sub_plan: str = subscription["sub_plan"]
         self.sub_plan_name: str = subscription["sub_plan_name"]
         self.time = parse_timestamp(subscription["time"])
         self.cumulative_months: int = int(subscription["cumulative_months"])
         self.streak_months = int(subscription["streak_months"])
         self.multi_month_duration = int(subscription["multi_month_duration"])
-        
-        
+
+
 class PubSubModerationActionModeratorAdd(PubSubMessage):
     """
     A moderator add event.
