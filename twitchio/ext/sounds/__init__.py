@@ -97,6 +97,7 @@ class Sound:
         'ignoreerrors': False,
         'logtostderr': False,
         'quiet': True,
+        'progress': False,
         'no_warnings': True,
         'default_search': 'auto',
         'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
@@ -260,7 +261,7 @@ class AudioPlayer:
                     break
 
             self._clean()
-            self._loop.call_soon_threadsafe(self._callback)
+            asyncio.run_coroutine_threadsafe(self._callback(), loop=self._loop)
             break
 
     def _clean(self):
