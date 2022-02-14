@@ -8,6 +8,9 @@ Set paginate to False when using full_body
 ======
 - TwitchIO
     - Loosen aiohttp requirements to allow 3.8.1
+  
+-ext.pubsub
+    - Add channel subscription pubsub model
 
 2.1.5
 ======
