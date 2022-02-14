@@ -38,6 +38,9 @@ from pydub.utils import make_chunks
 from yt_dlp import YoutubeDL
 
 
+__all__ = ('Sound', 'AudioPlayer')
+
+
 logger = logging.getLogger(__name__)
 
 
