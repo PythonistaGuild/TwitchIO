@@ -34,7 +34,6 @@ classifiers= [
 python = "^3.7"
 aiohttp = "3.8.1"
 yt-dlp = "*"
-pydub = "0.25.1"
 pyaudio = [
     { path = "./._audio_wheels/PyAudio-0.2.11-cp310-cp310-win_amd64.whl", platform = "windows"},
     { path = "./._audio_wheels/PyAudio-0.2.11-cp310-cp310-win32.whl", platform = "windows"},

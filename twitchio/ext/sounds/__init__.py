@@ -21,20 +21,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
+import audioop
 import io
 import logging
-import os
-import pathlib
-import shlex
 import subprocess
 import threading
 import time
 from functools import partial
-from typing import Optional, Union
+from typing import Coroutine, Optional, Union
 
 import pyaudio
-import pydub
-from pydub.utils import make_chunks
 from yt_dlp import YoutubeDL
 
 
@@ -56,30 +52,30 @@ else:
 __all__ = ('Sound', 'AudioPlayer')
 
 
-_TEMP = pathlib.Path(str(pathlib.Path().cwd()) + '/_temp')
-
-try:
-    _TEMP.mkdir()
-except FileExistsError:
-    pass
-
-
 class Sound:
     """TwitchIO Sound Source.
 
-    This is the class that represents a TwitchIO Sound, able to be played in `class`:AudioPlayer:.
+    This is the class that represents a TwitchIO Sound, able to be played in :class:`AudioPlayer`.
+
+
+    .. warning::
+
+        This class is still in Beta stages and currently only supports generating sounds via :meth:`ytdl_search`.
 
     Parameters
     __________
-    source: Union[str, io.BufferedIOBase]
+    source: Optional[Union[str, io.BufferedIOBase]]
         The source to play. Could be a string representing a local file or bytes.
-        To search YouTube, use `meth`:ytdl_search: instead.
+        To search YouTube, use :meth:`ytdl_search` instead.
     info: Optional[dict]
-        The info dict provided via ytdl. Only available when searching via YouTube.
+        The info dict provided via ytdl. Only available when searching via YouTube. Do not pass this directly.
 
     Attributes
     ----------
-    ...
+    title: str
+        The title of the track.
+    url: str
+        The url of the track searched via YouTube.
     """
 
     CODECS = ('mp3',
@@ -90,7 +86,6 @@ class Sound:
 
     YTDLOPTS = {
         'format': 'bestaudio/best',
-        'outtmpl': f'{_TEMP}/%(id)s.%(ext)s',
         'restrictfilenames': True,
         'noplaylist': True,
         'nocheckcertificate': True,
@@ -105,74 +100,50 @@ class Sound:
 
     YTDL = YoutubeDL(YTDLOPTS)
 
-    def __init__(self, source: Union[str, io.BufferedIOBase], *, info: Optional[dict]):
+    def __init__(self, source: Optional[Union[str, io.BufferedIOBase]] = None, *, info: Optional[dict]):
+
+        self.proc = None
 
         if not has_ffmpeg:
             raise RuntimeError('ffmpeg is required to create and play Sounds. For more information visit: ...')
 
-        self._original = source
-
-        if isinstance(source, str):
-            codec = source.split('.')[-1]
-
-            if codec not in self.CODECS:
-                source = pathlib.Path(source).absolute().as_posix()
-                source_ = source.removesuffix(f'.{codec}')
-
-                proc = subprocess.Popen(shlex.split(f'ffmpeg '
-                                                    f'-hide_banner '
-                                                    f'-loglevel quiet '
-                                                    f'-i '
-                                                    f'{source} '
-                                                    f'-vn '
-                                                    f'-y '
-                                                    f'{source_}.opus'))
-                proc.wait()
-                os.remove(source)
-
-                source = f'{source_}.opus'
-                self._source = pydub.AudioSegment.from_file(source, codec='opus')
-                self._original = source
-
-                proc.kill()
-
-            else:
-                self._source = pydub.AudioSegment.from_file(source, codec=codec)
-        else:
-            raise NotImplementedError
-
         if info:
+            self.proc = subprocess.Popen(
+                ["ffmpeg.exe",
+                 '-reconnect', '1',
+                 '-reconnect_streamed', '1',
+                 '-reconnect_delay_max', '5',
+                 "-i", info['url'],
+                 "-loglevel", "panic",
+                 "-vn",
+                 "-f", "s16le",
+                 "pipe:1"],
+                stdout=subprocess.PIPE)
+
             self.title = info.get('title', None)
             self.url = info.get('url', None)
 
-        self._sample_width = self._source.sample_width
-        self._channels = self._source.channels
-        self._rate = self._source.frame_rate
+            self._channels = 2
+            self._rate = 48000
 
     @classmethod
     async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):
         """|coro|
 
-        Search and download songs via YouTube ready to be played.
-
-        Please note this currently downloads to a temp folder in your CWD. This behaviour may change in the future.
+        Search songs via YouTube ready to be played.
         """
         loop = loop or asyncio.get_event_loop()
 
-        to_run = partial(cls.YTDL.extract_info, url=search, download=True)
+        to_run = partial(cls.YTDL.extract_info, url=search, download=False)
         data = await loop.run_in_executor(None, to_run)
 
         if 'entries' in data:
             # take first item from a playlist
             data = data['entries'][0]
 
-        source = cls.YTDL.prepare_filename(data)
-        return cls(source=source, info=data)
+        data['time'] = time.time()
 
-    @property
-    def sample_width(self):
-        """The audio source sample width."""
-        return self._sample_width
+        return cls(info=data)
 
     @property
     def channels(self):
@@ -192,12 +163,22 @@ class Sound:
     def __del__(self):
         self._source = None
 
+        if self.proc:
+            self.proc.kill()
+
 
 class AudioPlayer:
+    """TwitchIO Sounds Audio Player.
 
-    MS_CHUNK = 20 / 1000.0
+    Use this class to control and play sounds generated with :class:`Sound`.
 
-    def __init__(self, *, callback: callable):
+    Parameters
+    ----------
+    callback: Coroutine
+        The coroutine called when a Sound has finished playing.
+    """
+
+    def __init__(self, *, callback: Coroutine):
         self._pa = pyaudio.PyAudio()
 
         self._volume: float = 100.0
@@ -209,16 +190,17 @@ class AudioPlayer:
 
         self._paused: bool = False
         self._playing: bool = False
+        self._volume = 100
 
         self._callback = callback
-        self._thread: threading.Thread = None  #type: ignore
+        self._thread: threading.Thread = None  # type: ignore
 
         self._loop = asyncio.get_event_loop()
 
     def play(self, sound: Sound, *, replace: bool = False) -> None:
         """Play a :class:`Sound` object.
 
-        When play has finished playing, the event `meth`:event_player_finished: is called.
+        When play has finished playing, the event :meth:`event_player_finished` is called.
         """
         if not isinstance(sound, Sound):
             raise TypeError('sound parameter must be of type <Sound>.')
@@ -233,43 +215,33 @@ class AudioPlayer:
 
     def _play_run(self, sound: Sound):
         self._current = sound
-        stream = self._pa.open(format=self._pa.get_format_from_width(sound.sample_width),
+        stream = self._pa.open(format=pyaudio.paInt16,
                                output=True,
                                channels=sound.channels,
                                rate=sound.rate)
 
-        self._time = start = 0
-        self._length = sound._source.duration_seconds
-        # TODO: VOLUME CHANGER...
-        self._source_chunk = sound._source[start * 1000.0:(start + self._length) * 1000.0] - (60 - (60 * (100 / 100.0)))
+        bytes_ = sound.proc.stdout.read(4096)
 
         self._playing = True
         while self._playing:
-            self._time = start
 
-            for chunks in make_chunks(self._source_chunk, self.MS_CHUNK * 1000):
-                while self._paused:
-                    time.sleep(0.1)
+            while self._paused:
+                time.sleep(0.1)
 
-                if self._playing is False:
-                    break
+            if self._playing is False:
+                break
 
-                self._time += self.MS_CHUNK
-                stream.write(chunks._data)
+            if not bytes_:
+                break
 
-                if self._time >= start + self._length:
-                    break
+            stream.write(audioop.mul(bytes_, 2, self._volume / 100))
+            bytes_ = sound.proc.stdout.read(4096)
 
-            self._clean()
-            asyncio.run_coroutine_threadsafe(self._callback(), loop=self._loop)
-            break
+        self._clean(sound)
+        asyncio.run_coroutine_threadsafe(self._callback(), loop=self._loop)
 
-    def _clean(self):
-        if self._current._original.startswith(str(_TEMP.as_posix())):
-            try:
-                os.remove(self._current._original)
-            except FileNotFoundError:
-                pass
+    def _clean(self, sound: Sound):
+        sound.proc.kill()
 
         self._current = None
         self._paused = False
@@ -277,12 +249,12 @@ class AudioPlayer:
 
     @property
     def source(self):
-        """The currently playing `class`:Sound: object."""
+        """The currently playing :class:`Sound` object."""
         return self._current
 
     @property
     def current(self):
-        """An alias to `meth`:source:."""
+        """An alias to :meth:`source`."""
         return self.source
 
     def pause(self):
@@ -306,3 +278,21 @@ class AudioPlayer:
     def is_playing(self):
         """Property which returns whether the player is currently playing."""
         return self._playing
+
+    @property
+    def volume(self) -> int:
+        """Property which returns the current volume.
+
+        This property can also be set with a volume between 1 and 100, to change the volume.
+        """
+        return self._volume
+
+    @volume.setter
+    def volume(self, level: int) -> None:
+        if level > 100 or level < 1:
+            raise ValueError('Volume must be between 1 and 100')
+
+        self._volume = level
+
+
+
