@@ -330,8 +330,12 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
             client._http, data["message"]["data"]["requester_id"], data["message"]["data"]["requester_login"]
         )
 
-        self.expires_at = parse_timestamp(data["message"]["data"]["expires_at"]) if data["message"]["data"]["expires_at"] else None
-        self.updated_at = parse_timestamp(data["message"]["data"]["updated_at"]) if data["message"]["data"]["updated_at"] else None
+        self.expires_at = (
+            parse_timestamp(data["message"]["data"]["expires_at"]) if data["message"]["data"]["expires_at"] else None
+        )
+        self.updated_at = (
+            parse_timestamp(data["message"]["data"]["updated_at"]) if data["message"]["data"]["updated_at"] else None
+        )
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
