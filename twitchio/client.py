@@ -208,6 +208,24 @@ class Client:
 
     nickname = nick
 
+    def get_channel(self, name: str) -> Channel:
+        """Method which returns a channel from cache if it exits.
+
+        Could be None if the channel is not in cache.
+
+        Returns
+        -------
+        channel: Optional[:class:`Channel`]
+            The channel matching the provided name.
+        """
+        for shard in self._shards.values():
+            channel = shard._websocket._channel_cache.get(name, default=None)
+
+            if channel:
+                break
+
+        return channel
+
     async def event_shard_ready(self, number: int) -> None:
         """|coro|
 
