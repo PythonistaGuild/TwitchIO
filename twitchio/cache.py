@@ -92,7 +92,9 @@ def id_cache(timer=300):
                 return cache[id]
 
             value = func(cls, id)
-            cache[id] = value
+            if value is not None:
+                cache[id] = value
+
             return value
 
         return _wraps

@@ -98,6 +98,7 @@ class TwitchHTTP:
         self.client_secret = client_secret
         self.client_id = client_id
         self.nick = None
+        self.user_id = None
 
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
@@ -227,7 +228,7 @@ class TwitchHTTP:
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2 ** attempt + 1)
+                    await asyncio.sleep(2**attempt + 1)
                     continue
 
                 if utilize_bucket:
@@ -258,7 +259,7 @@ class TwitchHTTP:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3 ** attempt + 1)
+                        await asyncio.sleep(3**attempt + 1)
                     continue
 
                 raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).", resp.reason, resp.status)
@@ -325,6 +326,7 @@ class TwitchHTTP:
 
         if not self.nick:
             self.nick = data.get("login")
+            self.user_id = int(data.get("user_id"))
             self.client_id = data.get("client_id")
 
         return data

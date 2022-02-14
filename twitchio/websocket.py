@@ -90,6 +90,7 @@ class WSConnection:
         }
 
         self.nick = None
+        self.user_id = None
         self._token = token
         self.modes = modes or ("commands", "tags", "membership")
         self._initial_channels = initial_channels or []
@@ -126,6 +127,7 @@ class WSConnection:
         if not self._client._http.nick:
             data = await self._client._http.validate(token=self._token)
             self.nick = data["login"]
+            self.user_id = int(data["user_id"])
 
         session = self._client._http.session
 
@@ -483,5 +485,8 @@ class WSConnection:
         for fut in futures:
             fut.cancel()
 
-        await self._websocket.close()
+        if self._websocket:
+            await self._websocket.close()
+        if self._client._http.session:
+            await self._client._http.session.close()
         self._loop.stop()

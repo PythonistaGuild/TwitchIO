@@ -1,9 +1,17 @@
 .. currentmodule:: twitchio
 
-Master
+
+2.1.6
 ======
 - TwitchIO
     - Loosen aiohttp requirements to allow 3.8.1
+
+2.1.5
+=====
+- TwitchIO
+    - Add ``user_id`` property to Client
+    - Change id_cache to only cache if a value is not ``None``
+    - Add :func:`Client.wait_for_ready`
 
 2.1.4
 ======
