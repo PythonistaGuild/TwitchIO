@@ -28,7 +28,7 @@ import warnings
 import logging
 import traceback
 import sys
-from typing import Union, Callable, List, Optional, Tuple, Any
+from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine
 
 from twitchio.errors import HTTPException
 from . import models
@@ -285,6 +285,17 @@ class Client:
         self._waiting.append(tup)
         values = await asyncio.wait_for(fut, timeout, loop=self.loop)
         return values
+
+    def wait_for_ready(self) -> Coroutine[Any, Any, bool]:
+        """|coro|
+
+        Waits for the underlying connection to finish startup
+
+        Returns
+        --------
+        :class:`bool` The state of the underlying flag. This will always be ``True``
+        """
+        return self._connection.is_ready.wait()
 
     @id_cache()
     def get_channel(self, name: str) -> Optional[Channel]:
