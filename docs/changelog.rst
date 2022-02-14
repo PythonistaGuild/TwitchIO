@@ -1,5 +1,11 @@
 .. currentmodule:: twitchio
 
+
+2.1.6
+======
+- TwitchIO
+    - Loosen aiohttp requirements to allow 3.8.1
+
 2.1.5
 =====
 - TwitchIO
