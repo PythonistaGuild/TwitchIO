@@ -42,11 +42,13 @@ logger = logging.getLogger(__name__)
 
 has_ffmpeg: bool
 try:
-    subprocess.Popen('ffmpeg -version', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen('ffmpeg -version', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except FileNotFoundError:
     has_ffmpeg = False
 else:
     has_ffmpeg = True
+finally:
+    proc.kill()
 
 
 __all__ = ('Sound', 'AudioPlayer')
