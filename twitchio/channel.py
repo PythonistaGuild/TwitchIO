@@ -30,7 +30,11 @@ if typing.TYPE_CHECKING:
 
 class Channel(Messageable):
 
-    __slots__ = ('_name', '_websocket')
+    __slots__ = ('_name', '_id', '_websocket')
+
+    def __init__(self, **attrs):
+        super().__init__(**attrs)
+        self._id = attrs.get('id')
 
     def __repr__(self) -> str:
         return f'Channel: name={self._name}, shard_index={self._websocket.shard_index}'
@@ -41,6 +45,10 @@ class Channel(Messageable):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     @property
     def owner(self):  # TODO Return Channel Owner User object...

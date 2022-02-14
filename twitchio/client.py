@@ -23,7 +23,7 @@ SOFTWARE.
 import asyncio
 import sys
 import traceback
-from typing import Optional, Union, Coroutine, Dict
+from typing import Optional, Union, Coroutine, Dict, TYPE_CHECKING
 
 from .channel import Channel
 from .limiter import IRCRateLimiter
@@ -31,6 +31,9 @@ from .parser import IRCPayload
 from .shards import ShardInfo
 from .user import User
 from .websocket import Websocket
+
+if TYPE_CHECKING:
+    from ext.eventsub import EventSubClient
 
 
 class Client:
@@ -56,6 +59,8 @@ class Client:
         The amount of channels per websocket. Defaults to 100 channels per socket.
     cache_size: Optional[int]
         The size of the internal channel cache. Defaults to unlimited.
+    eventsub: Optional[:class:`EventSubClient`]
+        The EventSubClient instance to use with the client to dispatch subscribed webhook events.
     """
 
     def __init__(self,
@@ -66,6 +71,7 @@ class Client:
                  initial_channels: Optional[Union[list, tuple, callable, Coroutine]] = None,
                  shard_limit: int = 100,
                  cache_size: Optional[int] = None,
+                 eventsub: Optional["EventSubClient"] = None,
                  ):
         self._token: str = token.removeprefix('oauth:') if token else token
 
@@ -80,6 +86,14 @@ class Client:
         self._initial_channels = initial_channels or []
 
         self._limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
+
+        self._eventsub = None
+        if eventsub:
+            self._eventsub = eventsub
+            self._eventsub._client = self
+            self._eventsub._client_ready.set()
+
+        self.loop: asyncio.AbstractEventLoop = None  # type: ignore
 
     async def _shard(self):
         if asyncio.iscoroutinefunction(self._initial_channels):
@@ -134,8 +148,8 @@ class Client:
 
             If you want to take more control over cleanup, see :meth:`close`.
         """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._shard())
+        self.loop = asyncio.get_event_loop()
+        self.loop.run_until_complete(self._shard())
 
         if token:
             token = token.removeprefix("oauth:")
@@ -144,14 +158,17 @@ class Client:
 
         for shard in self._shards.values():
             shard._websocket._token = self._token
-            loop.create_task(shard._websocket._connect())
+            self.loop.create_task(shard._websocket._connect())
+
+        if self._eventsub:
+            self.loop.create_task(self._eventsub._run())  # TODO: Cleanup...
 
         try:
-            loop.run_forever()
+            self.loop.run_forever()
         except KeyboardInterrupt:
             pass
         finally:
-            loop.run_until_complete(self.close())
+            self.loop.run_until_complete(self.close())
 
     async def start(self, token: Optional[str] = None) -> None:
         """|coro|

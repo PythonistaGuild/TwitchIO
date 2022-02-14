@@ -1,0 +1,73 @@
+[tool.poetry]
+name = "twitchio"
+version = "3.0.0"
+description = "An asynchronous Python IRC and API wrapper for Twitch."
+authors = ["TwitchIO"]
+
+license = "MIT"
+readme = "README.rst"
+repository = "https://github.com/TwitchIO/TwitchIO"
+documentation = "https://twitchio.readthedocs.io/en/latest/"
+homepage = "https://github.com/TwitchIO/TwitchIO"
+
+include = ["LICENSE"]
+
+keywords = ['twitch', 'bot', 'chat bot', 'async', 'api']
+classifiers= [
+    "Framework :: AsyncIO",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+    ]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+aiohttp = "3.8.1"
+yt-dlp = "*"
+pydub = "0.25.1"
+pyaudio = [
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp310-cp310-win_amd64.whl", platform = "windows"},
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp310-cp310-win32.whl", platform = "windows"},
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp39-cp39-win_amd64.whl", platform = "windows"},
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp39-cp39-win32.whl", platform = "windows"},
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp38-cp38-win_amd64.whl", platform = "windows"},
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp38-cp38-win32.whl", platform = "windows"},
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp37-cp37m-win_amd64.whl", platform = "windows"},
+    { path = "./._audio_wheels/PyAudio-0.2.11-cp37-cp37m-win32.whl", platform = "windows"},
+    {version = "0.2.11", platform = "linux" }
+]
+
+sphinx = { version = "*", optional = true}
+docutils = { version = "<0.18", optional = true}
+sphinxcontrib-napoleon = { version = "*", optional = true}
+sphinxcontrib-asyncio = { version = "*", optional = true}
+sphinxcontrib-websupport = { version = "*", optional = true}
+Pygments = { version = "*", optional = true}
+furo = { version = "*", optional = true}
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.extras]
+docs = [
+    'sphinx',
+    'docutils',
+    'sphinxcontrib-napoleon',
+    'sphinxcontrib-asyncio',
+    'sphinxcontrib-websupport',
+    'Pygments',
+    'furo',
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
