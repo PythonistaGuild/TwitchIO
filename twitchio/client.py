@@ -141,6 +141,13 @@ class Client:
         self._waiting = []
         return self
 
+    async def login(self):
+        """|coro|
+        Validate token and get user associated with the token.
+        To be used if an IRC connection is not desired.
+        """
+        return await self._http.validate()
+
     def run(self):
         """
         A blocking function that starts the asyncio event loop,
