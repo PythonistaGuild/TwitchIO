@@ -22,13 +22,14 @@ SOFTWARE.
 """
 import asyncio
 import audioop
+import dataclasses
 import io
 import logging
 import subprocess
 import threading
 import time
 from functools import partial
-from typing import Coroutine, Optional, Union
+from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar, Union
 
 import pyaudio
 from yt_dlp import YoutubeDL
@@ -39,6 +40,8 @@ __all__ = ('Sound', 'AudioPlayer')
 
 logger = logging.getLogger(__name__)
 
+
+AP = TypeVar('AP', bound='AudioPlayer')
 
 has_ffmpeg: bool
 try:
@@ -52,6 +55,27 @@ finally:
 
 
 __all__ = ('Sound', 'AudioPlayer')
+
+
+@dataclasses.dataclass
+class OutputDevice:
+    """Class which represents an OutputDevice usable with :class:`AudioPlayer`.
+
+    Pass this into the appropriate :class:`AudioPlayer`s method to set or change device.
+
+    Attributes
+    ----------
+    name: str
+        The name of the device.
+    index: int
+        The index of the device.
+    channels: int
+        The amount of available channels this device has.
+    """
+
+    name: str
+    index: int
+    channels: int
 
 
 class Sound:
@@ -180,15 +204,11 @@ class AudioPlayer:
         The coroutine called when a Sound has finished playing.
     """
 
-    def __init__(self, *, callback: Coroutine):
+    def __init__(self, *, callback: Callable[..., Coroutine[Any, Any, None]]):
         self._pa = pyaudio.PyAudio()
+        self._stream = None
 
-        self._volume: float = 100.0
         self._current: Sound = None  # type: ignore
-
-        self._length = 0
-        self._source_chunk = None
-        self._time = 0
 
         self._paused: bool = False
         self._playing: bool = False
@@ -198,6 +218,25 @@ class AudioPlayer:
         self._thread: threading.Thread = None  # type: ignore
 
         self._loop = asyncio.get_event_loop()
+
+        self._devices: Dict[int, OutputDevice] = {}
+        self._get_devices()
+
+        self._active_devices: List[OutputDevice] = []
+        self._use_device: Optional[OutputDevice] = None
+
+    def _get_devices(self):
+        for index in range(self._pa.get_device_count()):
+            device = self._pa.get_device_info_by_index(index)
+
+            if device['maxInputChannels'] != 0:
+                continue
+
+            self._devices[index] = OutputDevice(
+                 name=device['name'],
+                 index=device['index'],
+                 channels=device['maxOutputChannels']
+            )
 
     def play(self, sound: Sound, *, replace: bool = False) -> None:
         """Play a :class:`Sound` object.
@@ -217,10 +256,13 @@ class AudioPlayer:
 
     def _play_run(self, sound: Sound):
         self._current = sound
-        stream = self._pa.open(format=pyaudio.paInt16,
-                               output=True,
-                               channels=sound.channels,
-                               rate=sound.rate)
+
+        device = self._use_device.index if self._use_device else None
+        self._stream = self._pa.open(format=pyaudio.paInt16,
+                                     output=True,
+                                     channels=sound.channels,
+                                     rate=sound.rate,
+                                     output_device_index=device)
 
         bytes_ = sound.proc.stdout.read(4096)
 
@@ -236,7 +278,7 @@ class AudioPlayer:
             if not bytes_:
                 break
 
-            stream.write(audioop.mul(bytes_, 2, self._volume / 100))
+            self._stream.write(audioop.mul(bytes_, 2, self._volume / 100))
             bytes_ = sound.proc.stdout.read(4096)
 
         self._clean(sound)
@@ -244,6 +286,7 @@ class AudioPlayer:
 
     def _clean(self, sound: Sound):
         sound.proc.kill()
+        self._stream = None
 
         self._current = None
         self._paused = False
@@ -296,5 +339,51 @@ class AudioPlayer:
 
         self._volume = level
 
+    @property
+    def devices(self) -> Dict[int, OutputDevice]:
+        """Return a dict of :class:`OutputDevice` that can be used to output audio."""
+        return self._devices
 
+    @property
+    def active_device(self) -> Optional[OutputDevice]:
+        """Return the active output device for this player. Could be None if default is being used.
 
+        This property can also be set with a new :class:`OutputDevice` to change audio output.
+        """
+        return self._use_device
+
+    @active_device.setter
+    def active_device(self, device: OutputDevice) -> None:
+        if not isinstance(device, OutputDevice):
+            raise TypeError(f'Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.')
+
+        self._use_device = device
+        if not self._stream:
+            return
+
+        if self._playing:
+            self._paused = True
+
+        self._stream = self._pa.open(format=pyaudio.paInt16,
+                                     output=True,
+                                     channels=self._current.channels,
+                                     rate=self._current.rate,
+                                     output_device_index=device.index)
+
+        self._paused = False
+
+    @classmethod
+    def with_device(cls, *, callback: Callable[..., Coroutine[Any, Any, None]], device: OutputDevice) -> AP:
+        """Method which returns a player ready to be used with the given :class:`OutputDevice`.
+
+        Returns
+        -------
+            :class:`OutputDevice`
+        """
+        if not isinstance(device, OutputDevice):
+            raise TypeError(f'Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.')
+
+        self = cls(callback=callback)
+        self._use_device = device
+
+        return self
