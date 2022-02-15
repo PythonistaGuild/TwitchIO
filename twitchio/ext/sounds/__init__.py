@@ -217,6 +217,13 @@ class AudioPlayer:
     ----------
     callback: Coroutine
         The coroutine called when a Sound has finished playing.
+
+
+    .. note ::
+
+        To use this player with the system non default output device, see :meth:`with_device`, or
+        :property:`active_device`. The output device can be changed live by setting `active_device` with an
+        :class:`OutputDevice`.
     """
 
     def __init__(self, *, callback: Callable[..., Coroutine[Any, Any, None]]):
