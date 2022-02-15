@@ -86,7 +86,8 @@ class Sound:
 
     .. warning::
 
-        This class is still in Beta stages and currently only supports generating sounds via :meth:`ytdl_search`.
+        This class is still in Beta stages and currently only supports generating sounds via :meth:`ytdl_search`
+        or locally downloaded audio files. Future versions will have support for file like objects.
 
     Parameters
     __________
@@ -99,9 +100,9 @@ class Sound:
     Attributes
     ----------
     title: str
-        The title of the track.
-    url: str
-        The url of the track searched via YouTube.
+        The title of the track. Will be None if :class:`io.BufferedIOBase` is supplied as a source.
+    url: Optional[str]
+        The url of the track searched via YouTube. Will be None if source is supplied.
     """
 
     CODECS = ('mp3',
@@ -126,7 +127,9 @@ class Sound:
 
     YTDL = YoutubeDL(YTDLOPTS)
 
-    def __init__(self, source: Optional[Union[str, io.BufferedIOBase]] = None, *, info: Optional[dict]):
+    def __init__(self, source: Optional[Union[str, io.BufferedIOBase]] = None, *, info: Optional[dict] = None):
+        self.title = None
+        self.url = None
 
         self.proc = None
 
@@ -149,8 +152,20 @@ class Sound:
             self.title = info.get('title', None)
             self.url = info.get('url', None)
 
-            self._channels = 2
-            self._rate = 48000
+        elif isinstance(source, str):
+            self.title = source
+
+            self.proc = subprocess.Popen(
+                ["ffmpeg.exe",
+                 "-i", source,
+                 "-loglevel", "panic",
+                 "-vn",
+                 "-f", "s16le",
+                 "pipe:1"],
+                stdout=subprocess.PIPE)
+
+        self._channels = 2
+        self._rate = 48000
 
     @classmethod
     async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):
