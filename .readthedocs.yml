@@ -1,7 +1,10 @@
 formats: []
 
+version: 2
+
 build:
-  image: latest
+  os: ubuntu-18.04
+
   apt_packages:
     - libasound-dev
     - portaudio19-dev
@@ -13,7 +16,10 @@ build:
     - python-pyaudio
 
 python:
-  version: 3.7
-  pip_install: true
-  extra_requirements:
-    - docs
+  install:
+    - requirements: requirements.txt
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
+  system_packages: true
