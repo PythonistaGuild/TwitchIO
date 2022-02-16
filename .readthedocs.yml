@@ -3,7 +3,7 @@ formats: []
 version: 2
 
 build:
-  os: ubuntu-18.04
+  os: ubuntu-20.04
 
   apt_packages:
     - libasound-dev
