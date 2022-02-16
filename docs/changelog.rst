@@ -1,5 +1,10 @@
 .. currentmodule:: twitchio
 
+Master
+======
+- User.view_count
+    - Fix incorrect type
+
 2.2.0
 =====
 - ext.sounds
