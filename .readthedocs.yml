@@ -9,6 +9,8 @@ build:
     - libportaudiocpp0
     - ffmpeg
     - libav-tools
+    - python3-pyaudio
+    - python-pyaudio
 
 python:
   version: 3.7
