@@ -2,6 +2,13 @@ formats: []
 
 build:
   image: latest
+  apt_packages:
+    - libasound-dev
+    - portaudio19-dev
+    - libportaudio2
+    - libportaudiocpp0
+    - ffmpeg
+    - libav-tools
 
 python:
   version: 3.7
