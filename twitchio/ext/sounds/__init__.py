@@ -35,24 +35,24 @@ import pyaudio
 from yt_dlp import YoutubeDL
 
 
-__all__ = ('Sound', 'AudioPlayer')
+__all__ = ("Sound", "AudioPlayer")
 
 
 logger = logging.getLogger(__name__)
 
 
-AP = TypeVar('AP', bound='AudioPlayer')
+AP = TypeVar("AP", bound="AudioPlayer")
 
 has_ffmpeg: bool
 try:
-    proc = subprocess.Popen('ffmpeg -version', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except FileNotFoundError:
     has_ffmpeg = False
 else:
     has_ffmpeg = True
 
 
-__all__ = ('Sound', 'AudioPlayer')
+__all__ = ("Sound", "AudioPlayer")
 
 
 @dataclasses.dataclass
@@ -103,24 +103,26 @@ class Sound:
         The url of the track searched via YouTube. Will be None if source is supplied.
     """
 
-    CODECS = ('mp3',
-              'aac',
-              'flv',
-              'wav',
-              'opus',)
+    CODECS = (
+        "mp3",
+        "aac",
+        "flv",
+        "wav",
+        "opus",
+    )
 
     YTDLOPTS = {
-        'format': 'bestaudio/best',
-        'restrictfilenames': True,
-        'noplaylist': True,
-        'nocheckcertificate': True,
-        'ignoreerrors': False,
-        'logtostderr': False,
-        'quiet': True,
-        'progress': False,
-        'no_warnings': True,
-        'default_search': 'auto',
-        'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
+        "format": "bestaudio/best",
+        "restrictfilenames": True,
+        "noplaylist": True,
+        "nocheckcertificate": True,
+        "ignoreerrors": False,
+        "logtostderr": False,
+        "quiet": True,
+        "progress": False,
+        "no_warnings": True,
+        "default_search": "auto",
+        "source_address": "0.0.0.0",  # ipv6 addresses cause issues sometimes
     }
 
     YTDL = YoutubeDL(YTDLOPTS)
@@ -132,35 +134,40 @@ class Sound:
         self.proc = None
 
         if not has_ffmpeg:
-            raise RuntimeError('ffmpeg is required to create and play Sounds. For more information visit: ...')
+            raise RuntimeError("ffmpeg is required to create and play Sounds. For more information visit: ...")
 
         if info:
             self.proc = subprocess.Popen(
-                ["ffmpeg.exe",
-                 '-reconnect', '1',
-                 '-reconnect_streamed', '1',
-                 '-reconnect_delay_max', '5',
-                 "-i", info['url'],
-                 "-loglevel", "panic",
-                 "-vn",
-                 "-f", "s16le",
-                 "pipe:1"],
-                stdout=subprocess.PIPE)
+                [
+                    "ffmpeg.exe",
+                    "-reconnect",
+                    "1",
+                    "-reconnect_streamed",
+                    "1",
+                    "-reconnect_delay_max",
+                    "5",
+                    "-i",
+                    info["url"],
+                    "-loglevel",
+                    "panic",
+                    "-vn",
+                    "-f",
+                    "s16le",
+                    "pipe:1",
+                ],
+                stdout=subprocess.PIPE,
+            )
 
-            self.title = info.get('title', None)
-            self.url = info.get('url', None)
+            self.title = info.get("title", None)
+            self.url = info.get("url", None)
 
         elif isinstance(source, str):
             self.title = source
 
             self.proc = subprocess.Popen(
-                ["ffmpeg.exe",
-                 "-i", source,
-                 "-loglevel", "panic",
-                 "-vn",
-                 "-f", "s16le",
-                 "pipe:1"],
-                stdout=subprocess.PIPE)
+                ["ffmpeg.exe", "-i", source, "-loglevel", "panic", "-vn", "-f", "s16le", "pipe:1"],
+                stdout=subprocess.PIPE,
+            )
 
         self._channels = 2
         self._rate = 48000
@@ -176,11 +183,11 @@ class Sound:
         to_run = partial(cls.YTDL.extract_info, url=search, download=False)
         data = await loop.run_in_executor(None, to_run)
 
-        if 'entries' in data:
+        if "entries" in data:
             # take first item from a playlist
-            data = data['entries'][0]
+            data = data["entries"][0]
 
-        data['time'] = time.time()
+        data["time"] = time.time()
 
         return cls(info=data)
 
@@ -249,13 +256,11 @@ class AudioPlayer:
         for index in range(self._pa.get_device_count()):
             device = self._pa.get_device_info_by_index(index)
 
-            if device['maxInputChannels'] != 0:
+            if device["maxInputChannels"] != 0:
                 continue
 
             self._devices[index] = OutputDevice(
-                 name=device['name'],
-                 index=device['index'],
-                 channels=device['maxOutputChannels']
+                name=device["name"], index=device["index"], channels=device["maxOutputChannels"]
             )
 
     def play(self, sound: Sound, *, replace: bool = False) -> None:
@@ -264,7 +269,7 @@ class AudioPlayer:
         When play has finished playing, the event :meth:`event_player_finished` is called.
         """
         if not isinstance(sound, Sound):
-            raise TypeError('sound parameter must be of type <Sound>.')
+            raise TypeError("sound parameter must be of type <Sound>.")
 
         if self._playing and replace:
             self.stop()
@@ -278,11 +283,9 @@ class AudioPlayer:
         self._current = sound
 
         device = self._use_device.index if self._use_device else None
-        self._stream = self._pa.open(format=pyaudio.paInt16,
-                                     output=True,
-                                     channels=sound.channels,
-                                     rate=sound.rate,
-                                     output_device_index=device)
+        self._stream = self._pa.open(
+            format=pyaudio.paInt16, output=True, channels=sound.channels, rate=sound.rate, output_device_index=device
+        )
 
         bytes_ = sound.proc.stdout.read(4096)
 
@@ -355,7 +358,7 @@ class AudioPlayer:
     @volume.setter
     def volume(self, level: int) -> None:
         if level > 100 or level < 1:
-            raise ValueError('Volume must be between 1 and 100')
+            raise ValueError("Volume must be between 1 and 100")
 
         self._volume = level
 
@@ -375,7 +378,7 @@ class AudioPlayer:
     @active_device.setter
     def active_device(self, device: OutputDevice) -> None:
         if not isinstance(device, OutputDevice):
-            raise TypeError(f'Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.')
+            raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
 
         self._use_device = device
         if not self._stream:
@@ -384,11 +387,13 @@ class AudioPlayer:
         if self._playing:
             self._paused = True
 
-        self._stream = self._pa.open(format=pyaudio.paInt16,
-                                     output=True,
-                                     channels=self._current.channels,
-                                     rate=self._current.rate,
-                                     output_device_index=device.index)
+        self._stream = self._pa.open(
+            format=pyaudio.paInt16,
+            output=True,
+            channels=self._current.channels,
+            rate=self._current.rate,
+            output_device_index=device.index,
+        )
 
         self._paused = False
 
@@ -401,7 +406,7 @@ class AudioPlayer:
             :class:`OutputDevice`
         """
         if not isinstance(device, OutputDevice):
-            raise TypeError(f'Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.')
+            raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
 
         self = cls(callback=callback)
         self._use_device = device

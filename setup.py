@@ -49,12 +49,10 @@ with open("README.rst") as f:
 
 
 sounds = [
-    'yt-dlp>=2022.2.4',
+    "yt-dlp>=2022.2.4",
     'pyaudio==0.2.11; platform_system!="Windows"',
 ]
-extras_require = {
-    'sounds': sounds
-}
+extras_require = {"sounds": sounds}
 
 setup(
     name="twitchio",
