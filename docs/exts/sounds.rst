@@ -61,32 +61,32 @@ This bot will search YouTube for a relevant video and playback its audio.
 
 .. code-block:: python3
 
-from twitchio.ext import commands, sounds
+    from twitchio.ext import commands, sounds
 
 
-class Bot(commands.Bot):
+    class Bot(commands.Bot):
 
-    def __init__(self):
-        super().__init__(token='...', prefix='!', initial_channels=['...'])
+        def __init__(self):
+            super().__init__(token='...', prefix='!', initial_channels=['...'])
 
-        self.player = sounds.AudioPlayer(callback=self.player_done)
+            self.player = sounds.AudioPlayer(callback=self.player_done)
 
-    async def event_ready(self) -> None:
-        print('Successfully logged in!')
+        async def event_ready(self) -> None:
+            print('Successfully logged in!')
 
-    async def player_done(self):
-        print('Finished playing song!')
+        async def player_done(self):
+            print('Finished playing song!')
 
-    @commands.command()
-    async def play(self, ctx: commands.Context, *, search: str) -> None:
-        track = await sounds.Sound.ytdl_search(search)
-        self.player.play(track)
+        @commands.command()
+        async def play(self, ctx: commands.Context, *, search: str) -> None:
+            track = await sounds.Sound.ytdl_search(search)
+            self.player.play(track)
 
-        await ctx.send(f'Now playing: {track.title}')
+            await ctx.send(f'Now playing: {track.title}')
 
 
-bot = Bot()
-bot.run()
+    bot = Bot()
+    bot.run()
 
 
 **Sound with a Local File:**
@@ -95,7 +95,7 @@ This Sound will target a local file on your machine. Just pass the location to s
 
 .. code-block:: python3
 
-sound = sounds.Sound(source='my_audio.mp3')
+    sound = sounds.Sound(source='my_audio.mp3')
 
 
 **Multiple Players:**
@@ -105,43 +105,43 @@ This example shows how to setup multiple players. Useful for playing music in ad
 
 .. code-block:: python3
 
-import twitchio
-from twitchio.ext import commands, sounds
+    import twitchio
+    from twitchio.ext import commands, sounds
 
 
-class Bot(commands.Bot):
+    class Bot(commands.Bot):
 
-    def __init__(self):
-        super().__init__(token='...', prefix='!', initial_channels=['...'])
+        def __init__(self):
+            super().__init__(token='...', prefix='!', initial_channels=['...'])
 
-        self.music_player = sounds.AudioPlayer(callback=self.music_done)
-        self.event_player = sounds.AudioPlayer(callback=self.sound_done)
+            self.music_player = sounds.AudioPlayer(callback=self.music_done)
+            self.event_player = sounds.AudioPlayer(callback=self.sound_done)
 
-    async def event_ready(self) -> None:
-        print('Successfully logged in!')
+        async def event_ready(self) -> None:
+            print('Successfully logged in!')
 
-    async def music_done(self):
-        print('Finished playing song!')
+        async def music_done(self):
+            print('Finished playing song!')
 
-    async def sound_done(self):
-        print('Finished playing sound!')
+        async def sound_done(self):
+            print('Finished playing sound!')
 
-    @commands.command()
-    async def play(self, ctx: commands.Context, *, search: str) -> None:
-        track = await sounds.Sound.ytdl_search(search)
-        self.music_player.play(track)
+        @commands.command()
+        async def play(self, ctx: commands.Context, *, search: str) -> None:
+            track = await sounds.Sound.ytdl_search(search)
+            self.music_player.play(track)
 
-        await ctx.send(f'Now playing: {track.title}')
+            await ctx.send(f'Now playing: {track.title}')
 
-    async def event_message(self, message: twitchio.Message) -> None:
-        # This is just an example only...
-        # Playing a sound on every message could get extremely spammy...
-        sound = sounds.Sound(source='beep.mp3')
-        self.event_player.play(sound)
+        async def event_message(self, message: twitchio.Message) -> None:
+            # This is just an example only...
+            # Playing a sound on every message could get extremely spammy...
+            sound = sounds.Sound(source='beep.mp3')
+            self.event_player.play(sound)
 
 
-bot = Bot()
-bot.run()
+    bot = Bot()
+    bot.run()
 
 
 **Common AudioPlayer actions:**
