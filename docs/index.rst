@@ -39,6 +39,7 @@ Getting Started
    exts/pubsub
    exts/eventsub
    exts/routines
+   exts/sounds
 
 .. toctree::
    :maxdepth: 2

@@ -1,11 +1,15 @@
 .. currentmodule:: twitchio
 
-2.1.6
-======
+2.2.0
+=====
+- ext.sounds
+    - Added sounds extension. Check the sounds documentation for more information.
+
 - TwitchIO
     - Loosen aiohttp requirements to allow 3.8.1
+    - :class:`Stream` was missing from ``__all__``. It is now available in the twitchio namespace.
   
--ext.pubsub
+- ext.pubsub
     - Add channel subscription pubsub model
 
 2.1.5
@@ -22,7 +26,7 @@
     - Added ChannelInfo to slots
     - Remove loop= parameter for asyncio.Event in websocket for 3.10 compatibility
 
--ext.eventsub
+- ext.eventsub
     - ChannelCheerData now returns user if is_anonymous is False else None
 
 2.1.3
