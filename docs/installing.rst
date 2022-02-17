@@ -1,3 +1,5 @@
+:orphan:
+
 Installing
 ============
 TwitchIO 2 requires Python 3.7+.

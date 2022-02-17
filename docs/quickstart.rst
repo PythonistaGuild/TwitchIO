@@ -1,3 +1,5 @@
+:orphan:
+
 Quickstart
 =============
 This mini tutorial will serve as an entry point into TwitchIO 2.

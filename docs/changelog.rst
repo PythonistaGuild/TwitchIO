@@ -1,4 +1,4 @@
-.. currentmodule:: twitchio
+:orphan:
 
 2.2.0
 =====
