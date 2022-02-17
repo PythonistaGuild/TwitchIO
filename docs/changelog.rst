@@ -1,5 +1,23 @@
 .. currentmodule:: twitchio
 
+Master
+=======
+
+- ext.eventsub
+    - Add support for the following subscription types
+        - :class:`PollBeginProgressData`
+            - ``channel.poll.begin``: 
+            - ``channel.poll.progress``
+        - :class:`PollEndData`
+            - ``channel.poll.end``
+        - :class:`PredictionBeginProgressData`
+            - ``channel.prediction.begin``
+            - ``channel.prediction.progress``
+        - :class:`PredictionLockData`
+            - ``channel.prediction.lock``
+        - :class:`PredictionEndData`
+            - ``channel.prediction.end``
+
 2.1.4
 ======
 - TwitchIO
@@ -7,7 +25,7 @@
     - Added ChannelInfo to slots
     - Remove loop= parameter for asyncio.Event in websocket for 3.10 compatibility
 
--ext.eventsub
+- ext.eventsub
     - ChannelCheerData now returns user if is_anonymous is False else None
 
 2.1.3
