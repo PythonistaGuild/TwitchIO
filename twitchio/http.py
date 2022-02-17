@@ -262,9 +262,13 @@ class TwitchHTTP:
                         await asyncio.sleep(3**attempt + 1)
                     continue
 
-                raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).", resp.reason, resp.status)
+                raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).",
+                                           reason=resp.reason,
+                                           status=resp.status)
 
-        raise errors.HTTPException("Failed to reach Twitch API", reason, resp.status)
+        raise errors.HTTPException("Failed to reach Twitch API",
+                                   reason=reason,
+                                   status=resp.status)
 
     async def _generate_login(self):
         try:
@@ -341,7 +345,7 @@ class TwitchHTTP:
         )
         data = data[0]
         if data["message"]:
-            raise errors.HTTPException(data["message"], data["retry_after"])
+            raise errors.HTTPException(data["message"], extra=data["retry_after"])
 
     async def get_extension_analytics(
         self,
