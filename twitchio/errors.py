@@ -21,6 +21,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from typing import Optional
+
+
+__all__ = (
+    'TwitchIOException',
+    'AuthenticationError',
+    'InvalidContent',
+    'IRCCooldownError',
+    'EchoMessageWarning',
+    'NoClientID',
+    'NoToken',
+    'HTTPException',
+    'Unauthorized',
+)
 
 
 class TwitchIOException(Exception):
@@ -52,7 +66,10 @@ class NoToken(TwitchIOException):
 
 
 class HTTPException(TwitchIOException):
-    pass
+
+    def __init__(self, reason: Optional[str] = None, status: Optional[int] = None):
+        self.reason = reason
+        self.status = status
 
 
 class Unauthorized(HTTPException):
