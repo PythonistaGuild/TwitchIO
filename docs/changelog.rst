@@ -2,7 +2,7 @@
 
 2.2.0
 =====
-- Client
+- Add :meth:`Client.login`
     - Add login method
 
 - ext.sounds
