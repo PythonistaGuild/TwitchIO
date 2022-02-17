@@ -2,6 +2,9 @@
 
 2.2.0
 =====
+- Client
+    - Add login method
+
 - ext.sounds
     - Added sounds extension. Check the sounds documentation for more information.
 
