@@ -26,7 +26,7 @@ import asyncio
 import copy
 import datetime
 import logging
-from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict
+from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict, Optional
 
 import aiohttp
 from yarl import URL
@@ -98,7 +98,7 @@ class TwitchHTTP:
         self.client_secret = client_secret
         self.client_id = client_id
         self.nick = None
-        self.user_id = None
+        self.user_id: Optional[int] = None
 
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
@@ -328,7 +328,7 @@ class TwitchHTTP:
 
         if not self.nick:
             self.nick = data.get("login")
-            self.user_id = int(data.get("user_id"))
+            self.user_id = data.get("user_id") and int(data["user_id"])
             self.client_id = data.get("client_id")
 
         return data
