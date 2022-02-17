@@ -22,7 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import datetime
+
 from typing import List, Optional
 
 from twitchio import PartialUser, Client, Channel, CustomReward, parse_timestamp
@@ -41,6 +41,7 @@ __all__ = (
     "PubSubModerationActionModeratorAdd",
     "PubSubModerationActionBanRequest",
     "PubSubModerationActionChannelTerms",
+    "PubSubChannelSubscribe",
 )
 
 
@@ -280,11 +281,9 @@ class PubSubModerationActionBanRequest(PubSubMessage):
         The user that created the action.
     target: :class:`twitchio.PartialUser`
         The target of this action.
-    from_automod: :class:`bool`
-        Whether this action was done automatically or not.
     """
 
-    __slots__ = "action", "args", "created_by", "message_id", "target", "from_automod"
+    __slots__ = "action", "args", "created_by", "message_id", "target"
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
@@ -320,7 +319,7 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
         The requester of this Term.
     """
 
-    __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at", "from_automod"
+    __slots__ = "type", "channel_id", "id", "text", "requester", "expires_at", "updated_at"
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
@@ -332,12 +331,103 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
             client._http, data["message"]["data"]["requester_id"], data["message"]["data"]["requester_login"]
         )
 
-        self.expires_at = self.updated_at = None
-        if data["message"]["data"]["expires_at"]:
-            self.expires_at = parse_timestamp(data["message"]["data"]["expires_at"])
+        self.expires_at = (
+            parse_timestamp(data["message"]["data"]["expires_at"]) if data["message"]["data"]["expires_at"] else None
+        )
+        self.updated_at = (
+            parse_timestamp(data["message"]["data"]["updated_at"]) if data["message"]["data"]["updated_at"] else None
+        )
 
-        if data["message"]["data"]["updated_at"]:
-            self.updated_at = parse_timestamp(data["message"]["data"]["expires_at"])
+
+class PubSubChannelSubscribe(PubSubMessage):
+    """
+    Channel subscription
+
+    Attributes
+    -----------
+    channel: :class:`twitchio.Channel`
+        Channel that has been subscribed or subgifted.
+    context: :class:`str`
+        Event type associated with the subscription product.
+    user: :class:`twitchio.PartialUser`
+        The person who subscribed or sent a gift subscription.
+    message: :class:`str`
+        Message sent with the sub/resub.
+    emotes: List[:class:`dict`]
+        Message sent with the sub/resub.
+    is_gift: :class:`bool`
+        If this sub message was caused by a gift subscription.
+    recipient: :class:`twitchio.PartialUser`
+        The person the who received the gift subscription.
+    sub_plan: :class:`str`
+        Subscription Plan ID.
+    sub_plan_name: :class:`str`
+        Channel Specific Subscription Plan Name.
+    time: :class:`datetime.datetime`
+        Time when the subscription or gift was completed. RFC 3339 format.
+    cumulative_months: :class:`int`
+        Cumulative number of tenure months of the subscription.
+    streak_months: :class:`int`
+        Denotes the user's most recent (and contiguous) subscription tenure streak in the channel.
+    multi_month_duration: :class:`int`
+        Number of months gifted as part of a single, multi-month gift OR number of months purchased as part of a multi-month subscription.
+    """
+
+    __slots__ = (
+        "channel",
+        "context",
+        "user",
+        "message",
+        "emotes" "is_gift",
+        "recipient",
+        "sub_plan",
+        "sub_plan_name",
+        "time",
+        "cumulative_months",
+        "streak_months",
+        "multi_month_duration",
+    )
+
+    def __init__(self, client: Client, topic: str, data: dict):
+        super().__init__(client, topic, data)
+
+        subscription = data["message"]
+
+        self.channel: Channel = client.get_channel(subscription["channel_name"]) or Channel(
+            name=subscription["channel_name"], websocket=client._connection
+        )
+        self.context: str = subscription["context"]
+
+        try:
+            self.user = (
+                PartialUser(client._http, subscription["user_name"], int(subscription["user_id"])),
+                subscription["display_name"],
+            )
+        except KeyError:
+            self.user = None
+        self.message = PubSubChatMessage(subscription["sub_message"]["message"])
+
+        try:
+            self.emotes = subscription["sub_message"]["emotes"]
+        except KeyError:
+            self.emotes = None
+
+        self.is_gift: bool = subscription["is_gift"]
+
+        try:
+            self.recipient = (
+                PartialUser(client._http, subscription["recipient_user_name"], int(subscription["recipient_id"])),
+                subscription["recipient_display_name"],
+            )
+        except KeyError:
+            self.recipient = None
+
+        self.sub_plan: str = subscription["sub_plan"]
+        self.sub_plan_name: str = subscription["sub_plan_name"]
+        self.time = parse_timestamp(subscription["time"])
+        self.cumulative_months: int = int(subscription["cumulative_months"])
+        self.streak_months = int(subscription["streak_months"])
+        self.multi_month_duration = int(subscription["multi_month_duration"])
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):
@@ -391,7 +481,7 @@ def _find_mod_action(client: Client, topic: str, data: dict):
 _mapping = {
     "channel-bits-events-v2": ("pubsub_bits", PubSubBitsMessage),
     "channel-bits-badge-unlocks": ("pubsub_bits_badge", PubSubBitsBadgeMessage),
-    "channel-subscribe-events-v1": ("pubsub_subscription", None),
+    "channel-subscribe-events-v1": ("pubsub_subscription", PubSubChannelSubscribe),
     "chat_moderator_actions": ("pubsub_moderation", _find_mod_action),
     "channel-points-channel-v1": ("pubsub_channel_points", PubSubChannelPointsMessage),
     "whispers": ("pubsub_whisper", None),

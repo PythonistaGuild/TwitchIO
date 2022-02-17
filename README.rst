@@ -13,6 +13,10 @@
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
 
+.. image:: https://img.shields.io/pypi/dm/twitchio?color=black
+    :target: https://pypi.org/project/twitchio
+    :alt: PyPI - Downloads
+    
 
 TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a powerful command extension for creating Twitch Chat Bots. TwitchIO covers almost all of the new Twitch API and features support for commands, PubSub, Webhooks, and EventSub.
 
@@ -68,6 +72,7 @@ A simple Chat Bot.
         async def event_ready(self):
             # We are logged in and ready to chat and use commands...
             print(f'Logged in as | {self.nick}')
+            print(f'User id is | {self.user_id}')
 
         @commands.command()
         async def hello(self, ctx: commands.Context):

@@ -26,7 +26,7 @@ import asyncio
 import copy
 import datetime
 import logging
-from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict
+from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict, Optional
 
 import aiohttp
 from yarl import URL
@@ -98,6 +98,7 @@ class TwitchHTTP:
         self.client_secret = client_secret
         self.client_id = client_id
         self.nick = None
+        self.user_id: Optional[int] = None
 
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
@@ -227,7 +228,7 @@ class TwitchHTTP:
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2 ** attempt + 1)
+                    await asyncio.sleep(2**attempt + 1)
                     continue
 
                 if utilize_bucket:
@@ -258,12 +259,14 @@ class TwitchHTTP:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3 ** attempt + 1)
+                        await asyncio.sleep(3**attempt + 1)
                     continue
 
-                raise errors.HTTPException(f"Failed to fulfil request ({resp.status}).", resp.reason, resp.status)
+                raise errors.HTTPException(
+                    f"Failed to fulfil request ({resp.status}).", reason=resp.reason, status=resp.status
+                )
 
-        raise errors.HTTPException("Failed to reach Twitch API", reason, resp.status)
+        raise errors.HTTPException("Failed to reach Twitch API", reason=reason, status=resp.status)
 
     async def _generate_login(self):
         try:
@@ -325,6 +328,7 @@ class TwitchHTTP:
 
         if not self.nick:
             self.nick = data.get("login")
+            self.user_id = data.get("user_id") and int(data["user_id"])
             self.client_id = data.get("client_id")
 
         return data
@@ -339,7 +343,7 @@ class TwitchHTTP:
         )
         data = data[0]
         if data["message"]:
-            raise errors.HTTPException(data["message"], data["retry_after"])
+            raise errors.HTTPException(data["message"], extra=data["retry_after"])
 
     async def get_extension_analytics(
         self,

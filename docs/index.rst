@@ -25,20 +25,21 @@ Getting Started
    faq
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: API Reference:
 
    twitchio
    reference
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Extensions API's:
 
    exts/commands
    exts/pubsub
    exts/eventsub
    exts/routines
+   exts/sounds
 
 .. toctree::
    :maxdepth: 2

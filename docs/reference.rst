@@ -1,4 +1,4 @@
-.. py:currentmodule:: twitchio
+.. currentmodule:: twitchio
 
 Dataclass Reference
 =====================

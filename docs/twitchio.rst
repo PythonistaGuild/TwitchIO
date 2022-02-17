@@ -1,8 +1,9 @@
+.. currentmodule:: twitchio
+
+
 Client Reference
 ================
 Event, Client and Exceptions API reference.
-
-.. py:currentmodule:: twitchio
 
 .. note::
 

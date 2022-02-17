@@ -47,6 +47,13 @@ readme = ""
 with open("README.rst") as f:
     readme = f.read()
 
+
+sounds = [
+    "yt-dlp>=2022.2.4",
+    'pyaudio==0.2.11; platform_system!="Windows"',
+]
+extras_require = {"sounds": sounds}
+
 setup(
     name="twitchio",
     author="TwitchIO",
@@ -58,12 +65,14 @@ setup(
         "twitchio.ext.pubsub",
         "twitchio.ext.routines",
         "twitchio.ext.eventsub",
+        "twitchio.ext.sounds",
     ],
     license="MIT",
     description="An asynchronous Python IRC and API wrapper for Twitch.",
     long_description=readme,
     include_package_data=True,
     install_requires=requirements,
+    extras_require=extras_require,
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Intended Audience :: Developers",

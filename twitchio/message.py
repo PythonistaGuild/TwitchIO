@@ -48,7 +48,7 @@ class Message:
             self._timestamp = self._tags["tmi-sent-ts"]
         except KeyError:
             self._id = None
-            self._timestamp = time.time()
+            self._timestamp = datetime.datetime.now().timestamp() * 1000
 
     @property
     def id(self) -> str:
