@@ -14,16 +14,6 @@
 - ext.pubsub
     - Add channel subscription pubsub model.
 
-2.1.5
-=====
-- TwitchIO
-    - Add ``user_id`` property to Client
-    - Change id_cache to only cache if a value is not ``None``
-    - Add :func:`Client.wait_for_ready`
-
-Master
-=======
-
 - ext.eventsub
     - Add support for the following subscription types
         - :class:`PollBeginProgressData`
@@ -38,6 +28,13 @@ Master
             - ``channel.prediction.lock``
         - :class:`PredictionEndData`
             - ``channel.prediction.end``
+
+2.1.5
+=====
+- TwitchIO
+    - Add ``user_id`` property to Client
+    - Change id_cache to only cache if a value is not ``None``
+    - Add :func:`Client.wait_for_ready`
 
 2.1.4
 ======
