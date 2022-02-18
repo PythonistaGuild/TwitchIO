@@ -283,7 +283,7 @@ class Client:
         fut = self.loop.create_future()
         tup = (event, predicate, fut)
         self._waiting.append(tup)
-        values = await asyncio.wait_for(fut, timeout, loop=self.loop)
+        values = await asyncio.wait_for(fut, timeout)
         return values
 
     def wait_for_ready(self) -> Coroutine[Any, Any, bool]:

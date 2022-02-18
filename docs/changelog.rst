@@ -9,8 +9,10 @@
     - Loosen aiohttp requirements to allow 3.8.1
     - :class:`Stream` was missing from ``__all__``. It is now available in the twitchio namespace.
     - Added ``.status``, ``.reason`` and ``.extra`` to :class:`HTTPException`
-    - fix Message._timestamp value when tag is not provided by twitch
-  
+    - Fix Message._timestamp value when tag is not provided by twitch
+    - Fix :func:`Client.wait_for_ready`
+    - Remove loop= parameter for :func:`Client.wait_for` for 3.10 compatibility
+
 - ext.pubsub
     - Add channel subscription pubsub model.
 

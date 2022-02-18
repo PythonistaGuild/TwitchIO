@@ -347,9 +347,10 @@ class WSConnection:
                 self.is_ready.set()
             else:
                 self._cache_add(parsed)
+        elif code in {2, 3, 4, 366, 372, 375, 376}:
+            return
         elif self.is_ready.is_set():
             return
-
         else:
             self.is_ready.set()
             # self.dispatch("ready")
