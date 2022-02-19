@@ -731,6 +731,8 @@ class PredictionOutcome:
         The ID of the outcome
     title: :class:`str`
         The title of the outcome
+    channel_points: :class:`int`
+        The amount of Channel Points that have been bet for this outcome
     color: :class:`str`
         The color of the outcome. Can be `blue` or `pink`.
     user: :class:`int`
