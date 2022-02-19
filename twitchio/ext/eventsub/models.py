@@ -713,7 +713,7 @@ class Predictor:
     """
 
 
-    __slots__ = "outcome_id", "title", "channel_points", "color"
+    __slots__ = "user", "channel_points_used", "channel_points_won"
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "user")
