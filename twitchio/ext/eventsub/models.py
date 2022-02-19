@@ -735,7 +735,7 @@ class PredictionOutcome:
         The amount of Channel Points that have been bet for this outcome
     color: :class:`str`
         The color of the outcome. Can be `blue` or `pink`.
-    user: :class:`int`
+    users: :class:`int`
         The number of users who predicted the outcome
     top_predictors: List[:class:`Predictor`]
         The top predictors of the outcome
