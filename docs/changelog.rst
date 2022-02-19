@@ -16,17 +16,17 @@
 
 - ext.eventsub
     - Add support for the following subscription types
-        - :class:`PollBeginProgressData`
+        - :class:`ext.eventsub.PollBeginProgressData`
             - ``channel.poll.begin``: 
             - ``channel.poll.progress``
-        - :class:`PollEndData`
+        - :class:`ext.eventsub.PollEndData`
             - ``channel.poll.end``
-        - :class:`PredictionBeginProgressData`
+        - :class:`ext.eventsub.PredictionBeginProgressData`
             - ``channel.prediction.begin``
             - ``channel.prediction.progress``
-        - :class:`PredictionLockData`
+        - :class:`ext.eventsub.PredictionLockData`
             - ``channel.prediction.lock``
-        - :class:`PredictionEndData`
+        - :class:`ext.eventsub.PredictionEndData`
             - ``channel.prediction.end``
 
 2.1.5
