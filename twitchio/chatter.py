@@ -133,7 +133,9 @@ class Chatter(PartialChatter):
         self._colour = self._tags["color"]
 
         if self._badges:
-            self._cached_badges = {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
+            self._cached_badges = {
+                k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]
+            }
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]  # noqa
@@ -178,6 +180,12 @@ class Chatter(PartialChatter):
     def color(self) -> str:
         """The users color."""
         return self.colour
+
+    @property
+    def is_broadcaster(self) -> bool:
+        """A boolean indicating whether the User is a moderator of the current channel."""
+
+        return "broadcaster" in self.badges
 
     @property
     def is_mod(self) -> bool:
