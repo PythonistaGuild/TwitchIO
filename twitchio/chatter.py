@@ -133,9 +133,7 @@ class Chatter(PartialChatter):
         self._colour = self._tags["color"]
 
         if self._badges:
-            self._cached_badges = {
-                k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]
-            }
+            self._cached_badges = {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]  # noqa
