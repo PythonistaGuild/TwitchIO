@@ -26,6 +26,8 @@ jobs:
 
       - name: Install Deps
         run: |
+          sudo apt update
+          sudo apt install -y portaudio
           python -m ensurepip
           pip install wheel setuptools
           pip install -r requirements.txt
