@@ -1,6 +1,9 @@
 name: Lint
 
-on: [push]
+on:
+  push:
+  pull_request:
+    types: [ opened, edited ]
 
 jobs:
   lint:
@@ -10,16 +13,15 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: 3.8
 
       - name: install black
-        run: pip install black
+        run: |
+          python -m ensurepip
+          pip install black
 
       - name: run linter
-        uses: wearerequired/lint-action@v1
-        with:
-          black: true
-          black_args: ". --line-length 120"
-          auto_fix: true
+        run: |
+          black twitchio --line-length 120 --verbose --check
