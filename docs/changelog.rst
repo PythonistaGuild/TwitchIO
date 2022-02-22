@@ -12,6 +12,7 @@
     - Fix Message._timestamp value when tag is not provided by twitch
     - Fix :func:`Client.wait_for_ready`
     - Remove loop= parameter for :func:`Client.wait_for` for 3.10 compatibility
+    - Add `is_broadcaster` check to `PartialChatter` class. This is accessible as `ctx.author.is_broadcaster`.
 
 - ext.pubsub
     - Add channel subscription pubsub model.
