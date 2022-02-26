@@ -70,6 +70,34 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when someone raids a channel you've subscribed to.
 
+.. function:: event_eventsub_notification_poll_begin(event: PollBeginProgressData)
+
+    Called when a poll begins on a channel you've subscribed to.
+
+.. function:: event_eventsub_notification_poll_progress(event: PollBeginProgressData)
+
+    Called repeatedly while a poll is running on a channel you've subscribed to.
+
+.. function:: event_eventsub_notification_poll_end(event: PollEndData)
+
+    Called when a poll ends on a channel you've subscribed to.
+
+.. function:: event_eventsub_notification_prediction_begin(event: PredictionBeginProgressData)
+
+    Called when a prediction starts on a channel you've subscribed to.
+
+.. function:: event_eventsub_notification_prediction_progress(event: PredictionBeginProgressData)
+
+    Called repeatedly while a prediction is running on a channel you've subscribed to.
+
+.. function:: event_eventsub_notification_prediction_lock(event: PredictionLockData)
+
+    Called when a prediction locks on a channel you've subscribed to.
+
+.. function:: event_eventsub_notification_prediction_end(event: PredictionEndData)
+
+    Called when a prediction ends on a channel you've subscribed to.
+
 
 API Reference
 --------------
@@ -168,6 +196,78 @@ API Reference
 .. attributetable::: HypeTrainEndData
 
 .. autoclass:: HypeTrainEndData
+    :members:
+    :inherited-members:
+
+.. attributetable::: PollChoice
+
+.. autoclass:: PollChoice
+    :members:
+    :inherited-members:
+
+.. attributetable::: BitsVoting
+
+.. autoclass:: BitsVoting
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelPointsVoting
+
+.. autoclass:: ChannelPointsVoting
+    :members:
+    :inherited-members:
+
+.. attributetable::: PollStatus
+
+.. autoclass:: PollStatus
+    :members:
+    :inherited-members:
+
+.. attributetable::: PollBeginProgressData
+
+.. autoclass:: PollBeginProgressData
+    :members:
+    :inherited-members:
+
+.. attributetable::: PollEndData
+
+.. autoclass:: PollEndData
+    :members:
+    :inherited-members:
+
+.. attributetable::: Predictor
+
+.. autoclass:: Predictor
+    :members:
+    :inherited-members:
+
+.. attributetable::: PredictionOutcome
+
+.. autoclass:: PredictionOutcome
+    :members:
+    :inherited-members:
+
+.. attributetable::: PredictionStatus
+
+.. autoclass:: PredictionStatus
+    :members:
+    :inherited-members:
+
+.. attributetable::: PredictionBeginProgressData
+
+.. autoclass:: PredictionBeginProgressData
+    :members:
+    :inherited-members:
+
+.. attributetable::: PredictionLockData
+
+.. autoclass:: PredictionLockData
+    :members:
+    :inherited-members:
+
+.. attributetable::: PredictionEndData
+
+.. autoclass:: PredictionEndData
     :members:
     :inherited-members:
 

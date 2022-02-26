@@ -19,6 +19,21 @@
 - ext.pubsub
     - Add channel subscription pubsub model.
 
+- ext.eventsub
+    - Add support for the following subscription types
+        - :class:`ext.eventsub.PollBeginProgressData`
+            - ``channel.poll.begin``: 
+            - ``channel.poll.progress``
+        - :class:`ext.eventsub.PollEndData`
+            - ``channel.poll.end``
+        - :class:`ext.eventsub.PredictionBeginProgressData`
+            - ``channel.prediction.begin``
+            - ``channel.prediction.progress``
+        - :class:`ext.eventsub.PredictionLockData`
+            - ``channel.prediction.lock``
+        - :class:`ext.eventsub.PredictionEndData`
+            - ``channel.prediction.end``
+
 2.1.5
 =====
 - TwitchIO

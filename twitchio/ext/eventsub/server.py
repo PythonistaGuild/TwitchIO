@@ -169,6 +169,27 @@ class EventSubClient(web.Application):
             models.SubscriptionTypes.channel_reward_redeem_updated, broadcaster, reward_id
         )
 
+    def subscribe_channel_poll_begin(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_begin, broadcaster)
+
+    def subscribe_channel_poll_progress(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_progress, broadcaster)
+
+    def subscribe_channel_poll_end(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_end, broadcaster)
+
+    def subscribe_channel_prediction_begin(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_begin, broadcaster)
+
+    def subscribe_channel_prediction_progress(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_progress, broadcaster)
+
+    def subscribe_channel_prediction_lock(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_lock, broadcaster)
+
+    def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster)
+
     async def subscribe_user_authorization_revoked(self):
         return await self._http.create_subscription(
             models.SubscriptionTypes.user_authorization_revoke, {"client_id": self.client._http.client_id}
