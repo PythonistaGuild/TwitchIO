@@ -12,7 +12,9 @@
     - Fix Message._timestamp value when tag is not provided by twitch
     - Fix :func:`Client.wait_for_ready`
     - Remove loop= parameter for :func:`Client.wait_for` for 3.10 compatibility
-    - Add `is_broadcaster` check to `PartialChatter` class. This is accessible as `ctx.author.is_broadcaster`.
+    - Add `is_broadcaster` check to `PartialChatter` class. This is accessible as `ctx.author.is_broadcaster`
+    - :func:`User.fetch_follow` will now return None if the FollowEvent does not exists
+    - TwitchIO will now correctly handle error raised when only the prefix is typed in chat
 
 - ext.pubsub
     - Add channel subscription pubsub model.

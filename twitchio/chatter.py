@@ -181,7 +181,7 @@ class Chatter(PartialChatter):
 
     @property
     def is_broadcaster(self) -> bool:
-        """A boolean indicating whether the User is a moderator of the current channel."""
+        """A boolean indicating whether the User is the broadcaster of the current channel."""
 
         return "broadcaster" in self.badges
 

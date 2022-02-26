@@ -452,9 +452,7 @@ class PartialUser:
         from .models import FollowEvent
 
         data = await self._http.get_user_follows(from_id=str(self.id), to_id=str(to_user.id))
-        if not data:
-            raise IndexError(f"{self.name} does not follow {to_user.name}")
-        return FollowEvent(self._http, data[0])
+        return FollowEvent(self._http, data[0]) if data else None
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|

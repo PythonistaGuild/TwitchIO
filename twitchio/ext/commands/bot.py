@@ -297,7 +297,11 @@ class Bot(Client):
         try:
             command_ = parsed.pop(0)
         except KeyError:
-            raise CommandNotFound("No valid command was passed.")
+            context = cls(message=message, bot=self, prefix=prefix, command=None, valid=False, view=view)
+            error = CommandNotFound("No valid command was passed.")
+
+            self.run_event("command_error", context, error)
+            return context
 
         try:
             command_ = self._command_aliases[command_]
