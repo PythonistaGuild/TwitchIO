@@ -35,9 +35,10 @@ __all__ = ("Cog",)
 
 
 class CogEvent:
-    def __init__(self, *, name: str, func: Callable):
+    def __init__(self, *, name: str, func: Callable, module: str):
         self.name = name
         self.func = func
+        self.module = module
 
 
 class CogMeta(type):
@@ -166,7 +167,7 @@ class Cog(metaclass=CogMeta):
         def decorator(func) -> CogEvent:
             event_name = event or func.__name__
 
-            return CogEvent(name=event_name, func=func)
+            return CogEvent(name=event_name, func=func, module=cls.__module__)
 
         return decorator
 

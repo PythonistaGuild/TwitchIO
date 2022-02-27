@@ -37,7 +37,7 @@ from twitchio.http import TwitchHTTP
 from twitchio.websocket import WSConnection
 from .core import Command, Group, Context
 from .errors import *
-from .meta import Cog
+from .meta import Cog, CogEvent
 from .stringparser import StringParser
 from .utils import _CaseInsensitiveDict
 
@@ -381,6 +381,11 @@ class Bot(Client):
         to_delete = [name for name, cmd in self._commands.items() if cmd._callback.__module__ == module.__name__]
         for name in to_delete:
             self.remove_command(name)
+
+        for event, cluster in self._events.items():
+            deletable = [x for x in cluster if isinstance(x, CogEvent) and x.module == module.__name__]
+            for callback in deletable:
+                cluster.remove(callback)
 
         for m in list(sys.modules.keys()):
             if m == module.__name__ or m.startswith(module.__name__ + "."):

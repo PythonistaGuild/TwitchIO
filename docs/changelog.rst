@@ -16,6 +16,9 @@
     - :func:`User.fetch_follow` will now return None if the FollowEvent does not exists
     - TwitchIO will now correctly handle error raised when only the prefix is typed in chat
 
+- ext.commands
+    - Fixed an issue (`GH#273 <https://github.com/TwitchIO/TwitchIO/issues/273>`_) where cog listeners were not ejected when unloading a module
+
 - ext.pubsub
     - Add channel subscription pubsub model.
 
