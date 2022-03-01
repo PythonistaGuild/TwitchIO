@@ -536,6 +536,7 @@ class HypeTrainEndData(EventData):
         self.cooldown_ends_at = _parse_datetime(data["cooldown_ends_at"])
         self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
 
+
 class PollChoice:
     """
     A Poll Choice
@@ -563,6 +564,7 @@ class PollChoice:
         self.channel_points_votes: int = data.get("channel_points_votes", 0)
         self.votes: int = data.get("votes", 0)
 
+
 class BitsVoting:
     """
     Information on voting on a poll with Bits
@@ -581,6 +583,7 @@ class BitsVoting:
         self.is_enabled: bool = data["is_enabled"]
         self.amount_per_vote: int = data["amount_per_vote"]
 
+
 class ChannelPointsVoting:
     """
     Information on voting on a poll with Channel Points
@@ -592,11 +595,13 @@ class ChannelPointsVoting:
     amount_per_vote: :class:`int`
         How many Channel Points are required to cast an extra vote
     """
+
     __slots__ = "is_enabled", "amount_per_vote"
 
     def __init__(self, data):
         self.is_enabled: bool = data["is_enabled"]
         self.amount_per_vote: int = data["amount_per_vote"]
+
 
 class PollStatus(Enum):
     """
@@ -618,6 +623,7 @@ class PollStatus(Enum):
     ARCHIVED = "archived"
     MODERATED = "moderated"
     INVALID = "invalid"
+
 
 class PollBeginProgressData(EventData):
     """
@@ -643,10 +649,19 @@ class PollBeginProgressData(EventData):
         When the poll is set to end
     ...
     """
-    
-    __slots__ = "broadcaster", "poll_id", "title", "choices", "bits_voting", "channel_points_voting", "started_at", "ends_at"
 
-    def __init__(self, client: EventSubClient, data:dict):
+    __slots__ = (
+        "broadcaster",
+        "poll_id",
+        "title",
+        "choices",
+        "bits_voting",
+        "channel_points_voting",
+        "started_at",
+        "ends_at",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.poll_id: str = data["id"]
         self.title: str = data["title"]
@@ -682,10 +697,20 @@ class PollEndData(EventData):
     ended_at: :class:`datetime.datetime`
         When the poll is set to end
     """
-    
-    __slots__ = "broadcaster", "poll_id", "title", "choices", "bits_voting", "channel_points_voting", "status", "started_at", "ended_at"
 
-    def __init__(self, client: EventSubClient, data:dict):
+    __slots__ = (
+        "broadcaster",
+        "poll_id",
+        "title",
+        "choices",
+        "bits_voting",
+        "channel_points_voting",
+        "status",
+        "started_at",
+        "ended_at",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.poll_id: str = data["id"]
         self.title: str = data["title"]
@@ -709,9 +734,8 @@ class Predictor:
         How many Channel Points the user used to predict this outcome
     channel_points_won: :class:`int`
         How many Channel Points was distributed to the user.
-        Will be `None` if the Prediction is unresolved, cancelled (refunded), or the user predicted the losing outcome. 
+        Will be `None` if the Prediction is unresolved, cancelled (refunded), or the user predicted the losing outcome.
     """
-
 
     __slots__ = "user", "channel_points_used", "channel_points_won"
 
@@ -741,7 +765,6 @@ class PredictionOutcome:
         The top predictors of the outcome
     """
 
-
     __slots__ = "outcome_id", "title", "channel_points", "color", "users", "top_predictors"
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -756,6 +779,7 @@ class PredictionOutcome:
     def colour(self) -> str:
         """The colour of the prediction. Alias to color."""
         return self.color
+
 
 class PredictionStatus(Enum):
     """
@@ -773,6 +797,7 @@ class PredictionStatus(Enum):
     LOCKED = "locked"
     RESOLVED = "resolved"
     CANCELED = "canceled"
+
 
 class PredictionBeginProgressData(EventData):
     """
@@ -793,10 +818,10 @@ class PredictionBeginProgressData(EventData):
     locks_at: :class:`datetime.datetime`
         When the prediction is set to be locked
     """
-    
+
     __slots__ = "broadcaster", "prediction_id", "title", "outcomes", "started_at", "locks_at"
 
-    def __init__(self, client: EventSubClient, data:dict):
+    def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.prediction_id: str = data["id"]
         self.title: str = data["title"]
@@ -824,16 +849,17 @@ class PredictionLockData(EventData):
     locked_at: :class:`datetime.datetime`
         When the prediction was locked
     """
-    
+
     __slots__ = "broadcaster", "prediction_id", "title", "outcomes", "started_at", "locked_at"
 
-    def __init__(self, client: EventSubClient, data:dict):
+    def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.prediction_id: str = data["id"]
         self.title: str = data["title"]
         self.outcomes = [PredictionOutcome(client, x) for x in data["outcomes"]]
         self.started_at = _parse_datetime(data["started_at"])
         self.locked_at = _parse_datetime(data["locked_at"])
+
 
 class PredictionEndData(EventData):
     """
@@ -848,7 +874,7 @@ class PredictionEndData(EventData):
     title: :class:`str`
         The title of the prediction
     winning_outcome_id: :class:`str`
-        The ID of the outcome that won 
+        The ID of the outcome that won
     outcomes: List[:class:`PredictionOutcome`]
         The outcomes for the prediction
     status: :class:`PredictionStatus`
@@ -858,10 +884,19 @@ class PredictionEndData(EventData):
     ended_at: :class:`datetime.datetime`
         When the prediction ended
     """
-    
-    __slots__ = "broadcaster", "prediction_id", "title", "winning_outcome_id", "outcomes", "status", "started_at", "ended_at"
 
-    def __init__(self, client: EventSubClient, data:dict):
+    __slots__ = (
+        "broadcaster",
+        "prediction_id",
+        "title",
+        "winning_outcome_id",
+        "outcomes",
+        "status",
+        "started_at",
+        "ended_at",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.prediction_id: str = data["id"]
         self.title: str = data["title"]
