@@ -393,7 +393,7 @@ class PartialUser:
         data = await self._http.get_stream_key(token, str(self.id))
         return data
 
-    async def fetch_following(self, token: str = None) -> List["FollowEvent"]:
+    async def fetch_following(self, token: str = None, limit: int = 100) -> List["FollowEvent"]:
         """|coro|
 
         Fetches a list of users that this user is following.
@@ -402,6 +402,8 @@ class PartialUser:
         -----------
         token: Optional[:class:`str`]
             An oauth token to use instead of the bots token
+        limit: Optional[:class:`int`]
+            Number of following events requested
 
         Returns
         --------
@@ -409,7 +411,7 @@ class PartialUser:
         """
         from .models import FollowEvent
 
-        data = await self._http.get_user_follows(token=token, from_id=str(self.id))
+        data = await self._http.get_user_follows(token=token, from_id=str(self.id), limit=limit)
         return [FollowEvent(self._http, d, from_=self) for d in data]
 
     async def fetch_followers(self, token: str = None):

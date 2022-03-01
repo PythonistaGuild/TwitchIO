@@ -220,7 +220,7 @@ class TwitchHTTP:
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2**attempt + 1)
+                    await asyncio.sleep(2 ** attempt + 1)
                     continue
 
                 if utilize_bucket:
@@ -251,7 +251,7 @@ class TwitchHTTP:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3**attempt + 1)
+                        await asyncio.sleep(3 ** attempt + 1)
                     continue
 
                 raise errors.HTTPException(
@@ -871,14 +871,15 @@ class TwitchHTTP:
 
         return await self.request(Route("GET", "users", query=q, token=token))
 
-    async def get_user_follows(self, from_id: str = None, to_id: str = None, token: str = None):
+    async def get_user_follows(self, from_id: str = None, to_id: str = None, limit: int = 100, token: str = None):
         return await self.request(
             Route(
                 "GET",
                 "users/follows",
                 query=[x for x in [("from_id", from_id), ("to_id", to_id)] if x[1] is not None],
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
     async def put_update_user(self, token: str, description: str):
