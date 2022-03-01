@@ -228,7 +228,7 @@ class TwitchHTTP:
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2**attempt + 1)
+                    await asyncio.sleep(2 ** attempt + 1)
                     continue
 
                 if utilize_bucket:
@@ -259,7 +259,7 @@ class TwitchHTTP:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3**attempt + 1)
+                        await asyncio.sleep(3 ** attempt + 1)
                     continue
 
                 raise errors.HTTPException(
@@ -718,6 +718,11 @@ class TwitchHTTP:
         return await self.request(
             Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
         )
+
+    async def get_chatters_info(self, login: str, token: str = None):
+        path = URL(f"https://tmi.twitch.tv/group/user/{login}/chatters")
+        route = Route("GET", path, token=token)
+        return await self.request(route, full_body=True, paginate=False)
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
         return await self.request(
