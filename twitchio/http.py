@@ -220,7 +220,7 @@ class TwitchHTTP:
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2 ** attempt + 1)
+                    await asyncio.sleep(2**attempt + 1)
                     continue
 
                 if utilize_bucket:
@@ -251,7 +251,7 @@ class TwitchHTTP:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3 ** attempt + 1)
+                        await asyncio.sleep(3**attempt + 1)
                     continue
 
                 raise errors.HTTPException(
@@ -374,16 +374,18 @@ class TwitchHTTP:
         )
         return await self.request(route, full_body=True, paginate=False)
 
-    async def get_cheermotes(self, broadcaster_id: str):
-        return await self.request(Route("GET", "bits/cheermotes", "", query=[("broadcaster_id", broadcaster_id)]))
+    async def get_cheermotes(self, broadcaster_id: str, limit: int = 100):
+        return await self.request(
+            Route("GET", "bits/cheermotes", "", query=[("broadcaster_id", broadcaster_id)]), limit=limit
+        )
 
-    async def get_extension_transactions(self, extension_id: str, ids: List[Any] = None):
+    async def get_extension_transactions(self, extension_id: str, ids: List[Any] = None, limit: int = 100):
         q = [("extension_id", extension_id)]
         if ids:
             for id in ids:
                 q.append(("id", id))
 
-        return await self.request(Route("GET", "extensions/transactions", "", query=q))
+        return await self.request(Route("GET", "extensions/transactions", "", query=q), limit=limit)
 
     async def create_reward(
         self,
@@ -399,6 +401,7 @@ class TwitchHTTP:
         max_per_user: int = None,
         global_cooldown: int = None,
         fufill_immediatly: bool = False,
+        limit: int = 100,
     ):
         params = [("broadcaster_id", str(broadcaster_id))]
         data = {
@@ -424,16 +427,20 @@ class TwitchHTTP:
             data["global_cooldown_seconds"] = global_cooldown
             data["is_global_cooldown_enabled"] = True
 
-        return await self.request(Route("POST", "channel_points/custom_rewards", query=params, body=data, token=token))
+        return await self.request(
+            Route("POST", "channel_points/custom_rewards", query=params, body=data, token=token), limit=limit
+        )
 
-    async def get_rewards(self, token: str, broadcaster_id: int, only_manageable: bool = False, ids: List[int] = None):
+    async def get_rewards(
+        self, token: str, broadcaster_id: int, only_manageable: bool = False, ids: List[int] = None, limit: int = 100
+    ):
         params = [("broadcaster_id", str(broadcaster_id)), ("only_manageable_rewards", str(only_manageable))]
 
         if ids:
             for id in ids:
                 params.append(("id", str(id)))
 
-        return await self.request(Route("GET", "channel_points/custom_rewards", query=params, token=token))
+        return await self.request(Route("GET", "channel_points/custom_rewards", query=params, token=token), limit=limit)
 
     async def update_reward(
         self,
@@ -454,6 +461,7 @@ class TwitchHTTP:
         global_cooldown: int = None,
         paused: bool = None,
         redemptions_skip_queue: bool = None,
+        limit: int = 100,
     ):
         data = {
             "title": title,
@@ -485,12 +493,15 @@ class TwitchHTTP:
                 query=params,
                 headers={"Authorization": f"Bearer {token}"},
                 body=data,
-            )
+            ),
+            limit=limit,
         )
 
-    async def delete_custom_reward(self, token: str, broadcaster_id: int, reward_id: str):
+    async def delete_custom_reward(self, token: str, broadcaster_id: int, reward_id: str, limit: int = 100):
         params = [("broadcaster_id", str(broadcaster_id)), ("id", reward_id)]
-        return await self.request(Route("DELETE", "channel_points/custom_rewards", query=params, token=token))
+        return await self.request(
+            Route("DELETE", "channel_points/custom_rewards", query=params, token=token), limit=limit
+        )
 
     async def get_reward_redemptions(
         self,
@@ -500,6 +511,7 @@ class TwitchHTTP:
         redemption_id: str = None,
         status: str = None,
         sort: str = None,
+        limit: int = 100,
     ):
         params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
 
@@ -512,10 +524,12 @@ class TwitchHTTP:
         if sort:
             params.append(("sort", sort))
 
-        return await self.request(Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token))
+        return await self.request(
+            Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token), limit=limit
+        )
 
     async def update_reward_redemption_status(
-        self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool
+        self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool, limit: int = 100
     ):
         params = [("id", custom_reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
         status = "FULFILLED" if status else "CANCELLED"
@@ -526,7 +540,8 @@ class TwitchHTTP:
                 query=params,
                 body={"status": status},
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
     async def get_predictions(
@@ -543,7 +558,13 @@ class TwitchHTTP:
         return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
 
     async def patch_prediction(
-        self, token: str, broadcaster_id: int, prediction_id: str, status: str, winning_outcome_id: str = None
+        self,
+        token: str,
+        broadcaster_id: int,
+        prediction_id: str,
+        status: str,
+        winning_outcome_id: str = None,
+        limit: int = 100,
     ):
         body = {
             "broadcaster_id": str(broadcaster_id),
@@ -560,7 +581,8 @@ class TwitchHTTP:
                 "predictions",
                 body=body,
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
     async def post_prediction(
@@ -598,6 +620,7 @@ class TwitchHTTP:
         started_at: datetime.datetime = None,
         ended_at: datetime.datetime = None,
         token: str = None,
+        limit: int = 100,
     ):
         q = [
             ("broadcaster_id", broadcaster_id),
@@ -610,16 +633,17 @@ class TwitchHTTP:
 
         query = [x for x in q if x[1] is not None]
 
-        return await self.request(Route("GET", "clips", query=query, token=token))
+        return await self.request(Route("GET", "clips", query=query, token=token), limit=limit)
 
-    async def post_entitlements_upload(self, manifest_id: str, type="bulk_drops_grant"):
+    async def post_entitlements_upload(self, manifest_id: str, type="bulk_drops_grant", limit: int = 100):
         return await self.request(
-            Route("POST", "entitlements/upload", query=[("manifest_id", manifest_id), ("type", type)])
+            Route("POST", "entitlements/upload", query=[("manifest_id", manifest_id), ("type", type)]), limit=limit
         )
 
-    async def get_entitlements(self, id: str = None, user_id: str = None, game_id: str = None):
+    async def get_entitlements(self, id: str = None, user_id: str = None, game_id: str = None, limit: int = 100):
         return await self.request(
-            Route("GET", "entitlements/drops", query=[("id", id), ("user_id", user_id), ("game_id", game_id)])
+            Route("GET", "entitlements/drops", query=[("id", id), ("user_id", user_id), ("game_id", game_id)]),
+            limit=limit,
         )
 
     async def get_code_status(self, codes: List[str], user_id: int):
@@ -629,17 +653,17 @@ class TwitchHTTP:
 
         return await self.request(Route("GET", "entitlements/codes", query=q))
 
-    async def post_redeem_code(self, user_id: int, codes: List[str]):
+    async def post_redeem_code(self, user_id: int, codes: List[str], limit: int = 100):
         q = [("user_id", user_id)]
         for c in codes:
             q.append(("code", c))
 
-        return await self.request(Route("POST", "entitlements/code", query=q))
+        return await self.request(Route("POST", "entitlements/code", query=q), limit=limit)
 
-    async def get_top_games(self):
-        return await self.request(Route("GET", "games/top"))
+    async def get_top_games(self, limit: int = 100):
+        return await self.request(Route("GET", "games/top"), limit=limit)
 
-    async def get_games(self, game_ids: List[Any], game_names: List[str]):
+    async def get_games(self, game_ids: List[Any], game_names: List[str], limit: int = 100):
         q = []
         if game_ids:
             for id in game_ids:
@@ -648,19 +672,20 @@ class TwitchHTTP:
             for name in game_names:
                 q.append(("name", name))
 
-        return await self.request(Route("GET", "games", query=q))
+        return await self.request(Route("GET", "games", query=q), limit=limit)
 
-    async def get_hype_train(self, broadcaster_id: str, id: str = None, token: str = None):
+    async def get_hype_train(self, broadcaster_id: str, id: str = None, token: str = None, limit: int = 100):
         return await self.request(
             Route(
                 "GET",
                 "hypetrain/events",
                 query=[x for x in [("broadcaster_id", broadcaster_id), ("id", id)] if x[1] is not None],
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
-    async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]]):
+    async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]], limit: int = 100):
         print(msgs)
         return await self.request(
             Route(
@@ -669,46 +694,54 @@ class TwitchHTTP:
                 query=[("broadcaster_id", broadcaster_id)],
                 body={"data": msgs},
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
-    async def get_channel_ban_unban_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
+    async def get_channel_ban_unban_events(
+        self, token: str, broadcaster_id: str, user_ids: List[str] = None, limit: int = 100
+    ):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             for id in user_ids:
                 q.append(("user_id", id))
 
-        return await self.request(Route("GET", "moderation/banned/events", query=q, token=token))
+        return await self.request(Route("GET", "moderation/banned/events", query=q, token=token), limit=limit)
 
-    async def get_channel_bans(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
+    async def get_channel_bans(self, token: str, broadcaster_id: str, user_ids: List[str] = None, limit: int = 100):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             for id in user_ids:
                 q.append(("user_id", id))
 
-        return await self.request(Route("GET", "moderation/banned", query=q, token=token))
+        return await self.request(Route("GET", "moderation/banned", query=q, token=token), limit=limit)
 
-    async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
+    async def get_channel_moderators(
+        self, token: str, broadcaster_id: str, user_ids: List[str] = None, limit: int = 100
+    ):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             for id in user_ids:
                 q.append(("user_id", id))
 
-        return await self.request(Route("GET", "moderation/moderators", query=q, token=token))
+        return await self.request(Route("GET", "moderation/moderators", query=q, token=token), limit=limit)
 
-    async def get_channel_mod_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
+    async def get_channel_mod_events(
+        self, token: str, broadcaster_id: str, user_ids: List[str] = None, limit: int = 100
+    ):
         q = [("broadcaster_id", broadcaster_id)]
         for id in user_ids:
             q.append(("user_id", id))
 
-        return await self.request(Route("GET", "moderation/moderators/events", query=q, token=token))
+        return await self.request(Route("GET", "moderation/moderators/events", query=q, token=token), limit=limit)
 
-    async def get_search_categories(self, query: str, token: str = None):
-        return await self.request(Route("GET", "search/categories", query=[("query", query)], token=token))
+    async def get_search_categories(self, query: str, token: str = None, limit: int = 100):
+        return await self.request(Route("GET", "search/categories", query=[("query", query)], token=token), limit=limit)
 
-    async def get_search_channels(self, query: str, token: str = None, live: bool = False):
+    async def get_search_channels(self, query: str, token: str = None, live: bool = False, limit: int = 100):
         return await self.request(
-            Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
+            Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token),
+            limit=limit,
         )
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
@@ -723,6 +756,7 @@ class TwitchHTTP:
         user_logins: List[str] = None,
         languages: List[str] = None,
         token: str = None,
+        limit: int = 100,
     ):
         q = []
         if game_ids:
@@ -741,28 +775,38 @@ class TwitchHTTP:
             for l in languages:
                 q.append(("language", l))
 
-        return await self.request(Route("GET", "streams", query=q, token=token))
+        return await self.request(Route("GET", "streams", query=q, token=token), limit=limit)
 
-    async def post_stream_marker(self, token: str, user_id: str, description: str = None):
+    async def post_stream_marker(self, token: str, user_id: str, description: str = None, limit: int = 100):
         return await self.request(
-            Route("POST", "streams/markers", body={"user_id": user_id, "description": description}, token=token)
+            Route("POST", "streams/markers", body={"user_id": user_id, "description": description}, token=token),
+            limit=limit,
         )
 
-    async def get_stream_markers(self, token: str, user_id: str = None, video_id: str = None):
+    async def get_stream_markers(self, token: str, user_id: str = None, video_id: str = None, limit: int = 100):
         return await self.request(
             Route(
                 "GET",
                 "streams/markers",
                 query=[x for x in [("user_id", user_id), ("video_id", video_id)] if x[1] is not None],
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
-    async def get_channels(self, broadcaster_id: str, token: str = None):
-        return await self.request(Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token))
+    async def get_channels(self, broadcaster_id: str, token: str = None, limit: int = 100):
+        return await self.request(
+            Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token), limit=limit
+        )
 
     async def patch_channel(
-        self, token: str, broadcaster_id: str, game_id: str = None, language: str = None, title: str = None
+        self,
+        token: str,
+        broadcaster_id: str,
+        game_id: str = None,
+        language: str = None,
+        title: str = None,
+        limit: int = 100,
     ):
         assert any((game_id, language, title))
         body = {
@@ -772,7 +816,7 @@ class TwitchHTTP:
         }
 
         return await self.request(
-            Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body, token=token)
+            Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body, token=token), limit=limit
         )
 
     async def get_channel_schedule(
@@ -814,26 +858,30 @@ class TwitchHTTP:
 
         return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
 
-    async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
+    async def get_channel_subscriptions(
+        self, token: str, broadcaster_id: str, user_ids: List[str] = None, limit: int = 100
+    ):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             for u in user_ids:
                 q.append(("user_id", u))
 
-        return await self.request(Route("GET", "subscriptions", query=q, token=token))
+        return await self.request(Route("GET", "subscriptions", query=q, token=token), limit=limit)
 
-    async def get_stream_tags(self, tag_ids: List[str] = None):
+    async def get_stream_tags(self, tag_ids: List[str] = None, limit: int = 100):
         q = []
         if tag_ids:
             for u in tag_ids:
                 q.append(("tag_id", u))
 
-        return await self.request(Route("GET", "tags/streams", query=q or None))
+        return await self.request(Route("GET", "tags/streams", query=q or None), limit=limit)
 
-    async def get_channel_tags(self, broadcaster_id: str):
-        return await self.request(Route("GET", "streams/tags", query=[("broadcaster_id", broadcaster_id)]))
+    async def get_channel_tags(self, broadcaster_id: str, limit: int = 100):
+        return await self.request(Route("GET", "streams/tags", query=[("broadcaster_id", broadcaster_id)]), limit=limit)
 
-    async def put_replace_channel_tags(self, token: str, broadcaster_id: str, tag_ids: List[str] = None):
+    async def put_replace_channel_tags(
+        self, token: str, broadcaster_id: str, tag_ids: List[str] = None, limit: int = 100
+    ):
         return await self.request(
             Route(
                 "PUT",
@@ -841,25 +889,27 @@ class TwitchHTTP:
                 query=[("broadcaster_id", broadcaster_id)],
                 body={"tag_ids": tag_ids},
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
-    async def post_follow_channel(self, token: str, from_id: str, to_id: str, notifications=False):
+    async def post_follow_channel(self, token: str, from_id: str, to_id: str, notifications=False, limit: int = 100):
         return await self.request(
             Route(
                 "POST",
                 "users/follows",
                 query=[("from_id", from_id), ("to_id", to_id), ("allow_notifications", str(notifications))],
                 token=token,
-            )
+            ),
+            limit=limit,
         )
 
-    async def delete_unfollow_channel(self, token: str, from_id: str, to_id: str):
+    async def delete_unfollow_channel(self, token: str, from_id: str, to_id: str, limit: int = 100):
         return await self.request(
-            Route("DELETE", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token)
+            Route("DELETE", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token), limit=limit
         )
 
-    async def get_users(self, ids: List[int], logins: List[str], token: str = None):
+    async def get_users(self, ids: List[int], logins: List[str], token: str = None, limit: int = 100):
         q = []
         if ids:
             for id in ids:
@@ -869,7 +919,7 @@ class TwitchHTTP:
             for login in logins:
                 q.append(("login", login))
 
-        return await self.request(Route("GET", "users", query=q, token=token))
+        return await self.request(Route("GET", "users", query=q, token=token), limit=limit)
 
     async def get_user_follows(self, from_id: str = None, to_id: str = None, limit: int = 100, token: str = None):
         return await self.request(
@@ -882,11 +932,11 @@ class TwitchHTTP:
             limit=limit,
         )
 
-    async def put_update_user(self, token: str, description: str):
-        return await self.request(Route("PUT", "users", query=[("description", description)], token=token))
+    async def put_update_user(self, token: str, description: str, limit: int = 100):
+        return await self.request(Route("PUT", "users", query=[("description", description)], token=token), limit=limit)
 
-    async def get_channel_extensions(self, token: str):
-        return await self.request(Route("GET", "users/extensions/list", token=token))
+    async def get_channel_extensions(self, token: str, limit: int = 100):
+        return await self.request(Route("GET", "users/extensions/list", token=token), limit=limit)
 
     async def get_user_active_extensions(self, token: str, user_id: str = None):
         return (
@@ -914,6 +964,7 @@ class TwitchHTTP:
         period: str = "all",
         language: str = None,
         token: str = None,
+        limit: int = 100,
     ):
         q = [
             x
@@ -932,7 +983,7 @@ class TwitchHTTP:
             for id in ids:
                 q.append(("id", id))
 
-        return await self.request(Route("GET", "videos", query=q, token=token))
+        return await self.request(Route("GET", "videos", query=q, token=token), limit=limit)
 
     async def delete_videos(self, token: str, ids: List[int]):
         q = [("id", str(x)) for x in ids]
@@ -941,18 +992,18 @@ class TwitchHTTP:
             "data"
         ]
 
-    async def get_webhook_subs(self):
-        return await self.request(Route("GET", "webhooks/subscriptions"))
+    async def get_webhook_subs(self, limit: int = 100):
+        return await self.request(Route("GET", "webhooks/subscriptions"), limit=limit)
 
-    async def get_teams(self, team_name: str = None, team_id: str = None):
+    async def get_teams(self, team_name: str = None, team_id: str = None, limit: int = 100):
         if team_name:
             q = [("name", team_name)]
         elif team_id:
             q = [("id", team_id)]
         else:
             raise ValueError("You need to provide a team name or id")
-        return await self.request(Route("GET", "teams", query=q))
+        return await self.request(Route("GET", "teams", query=q), limit=limit)
 
-    async def get_channel_teams(self, broadcaster_id: str):
+    async def get_channel_teams(self, broadcaster_id: str, limit: int = 100):
         q = [("broadcaster_id", broadcaster_id)]
-        return await self.request(Route("GET", "teams/channel", query=q))
+        return await self.request(Route("GET", "teams/channel", query=q), limit=limit)
