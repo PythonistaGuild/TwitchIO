@@ -25,11 +25,11 @@ sys.path.append(os.path.abspath("extensions"))
 
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 project = "TwitchIO"
-copyright = "2021, TwitchIO"
+copyright = "2022, TwitchIO"
 author = "TwitchIO"
 
 # The full version, including alpha/beta/rc tags
-release = "2.1.5"
+release = "2.2.0"
 
 
 # -- General configuration ---------------------------------------------------
