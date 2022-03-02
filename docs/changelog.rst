@@ -16,6 +16,7 @@
     - :func:`User.fetch_follow` will now return None if the FollowEvent does not exists
     - TwitchIO will now correctly handle error raised when only the prefix is typed in chat
     - Fix paginate logic in :func:`TwitchHTTP.request`
+    - Expose the limit parameter to all pageable :class:`TwitchHTTP` methods and to :func:`PartialUser.fetch_following`
 
 - ext.commands
     - Fixed an issue (`GH#273 <https://github.com/TwitchIO/TwitchIO/issues/273>`_) where cog listeners were not ejected when unloading a module
