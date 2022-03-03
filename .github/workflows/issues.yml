@@ -1,0 +1,15 @@
+name: issue-welcome
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: ben-z/actions-comment-on-issue@1.0.2
+      with:
+        message: "Hello! Thanks for the issue. For a faster response consider joining the official [Discord Server](https://discord.gg/RAKc3HF)\nElse please wait for someone to help you here."
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
