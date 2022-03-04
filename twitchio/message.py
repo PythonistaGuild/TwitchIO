@@ -33,7 +33,16 @@ if TYPE_CHECKING:
 
 class Message:
 
-    __slots__ = ("_raw_data", "content", "_author", "echo", "_timestamp", "_channel", "_tags", "_id")
+    __slots__ = (
+        "_raw_data",
+        "content",
+        "_author",
+        "echo",
+        "_timestamp",
+        "_channel",
+        "_tags",
+        "_id",
+    )
 
     def __init__(self, **kwargs):
         self._raw_data = kwargs.get("raw_data")
@@ -64,6 +73,16 @@ class Message:
     def channel(self) -> "Channel":
         """The Channel object associated with the Message."""
         return self._channel
+
+    @property
+    def content(self) -> str:
+        """The parsed raw_data received from Twitch for this Message."""
+        return self.content
+
+    @property
+    def echo(self) -> bool:
+        """Boolean representing if this is a self-message or not."""
+        return self.echo
 
     @property
     def raw_data(self) -> str:
