@@ -58,3 +58,23 @@ jobs:
         run: |
           cd docs
           make html
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: install black
+      run: |
+        python -m ensurepip
+        pip install black
+
+    - name: run linter
+      run: |
+        black twitchio --line-length 120 --verbose --check
