@@ -22,7 +22,7 @@ TwitchIO is an asynchronous Python wrapper around the Twitch API and IRC, with a
 
 Documentation
 ---------------------------
-For the Official Documentation: `Click Here! <https://twitchio.readthedocs.io/en/latest/>`_
+For the Official Documentation: `Click Here! <https://twitchio.dev/>`_
 
 Support
 ---------------------------
