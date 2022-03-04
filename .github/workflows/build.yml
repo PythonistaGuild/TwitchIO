@@ -52,6 +52,7 @@ jobs:
           sudo apt install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
           python -m ensurepip
           pip install -r docs/requirements.txt
+          pip install -r requirements.txt
 
       - name: Build Docs
         run: |
