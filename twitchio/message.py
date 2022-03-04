@@ -32,6 +32,15 @@ if TYPE_CHECKING:
 
 
 class Message:
+    """
+    Attributes
+    -----------
+    content: :class:`str
+        The content of this message.
+    echo: :class:`bool`
+        Boolean representing if this is a self-message or not.
+
+    """
 
     __slots__ = (
         "_raw_data",
@@ -73,16 +82,6 @@ class Message:
     def channel(self) -> "Channel":
         """The Channel object associated with the Message."""
         return self._channel
-
-    @property
-    def content(self) -> str:
-        """The parsed raw_data received from Twitch for this Message."""
-        return self.content
-
-    @property
-    def echo(self) -> bool:
-        """Boolean representing if this is a self-message or not."""
-        return self.echo
 
     @property
     def raw_data(self) -> str:
