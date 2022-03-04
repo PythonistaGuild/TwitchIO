@@ -178,18 +178,10 @@ class TwitchHTTP:
             path = copy.copy(route.path)
 
             if limit is not None and paginate:
+                q = route.query or []
                 if cursor is not None:
-                    if route.query:
-                        q = [("after", cursor), *route.query]
-                    else:
-                        q = [("after", cursor)]
-                    path = path.with_query(q)
-
-                if route.query:
-                    q = [("first", get_limit()), *route.query]
-                else:
-                    q = [("first", get_limit())]
-
+                    q = [("after", cursor), *q]
+                q = [("first", get_limit()), *q]
                 path = path.with_query(q)
 
             body, is_text = await self._request(route, path, headers)
