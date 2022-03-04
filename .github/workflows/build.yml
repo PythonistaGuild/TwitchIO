@@ -6,7 +6,7 @@ on:
     types: [opened, edited]
 
 jobs:
-  build:
+  lib:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -26,15 +26,32 @@ jobs:
 
       - name: Install Deps
         run: |
-          sudo apt update
-          sudo apt install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
           python -m ensurepip
           pip install wheel setuptools
           pip install -r requirements.txt
-          pip install -r docs/requirements.txt
 
       - name: Build
         run: python setup.py sdist bdist_wheel
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install CPython
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install Deps
+        run: |
+          sudo apt update
+          sudo apt install -y libasound-dev portaudio19-dev libportaudio2 libportaudiocpp0
+          python -m ensurepip
+          pip install -r docs/requirement.txt
 
       - name: Build Docs
         run: |
