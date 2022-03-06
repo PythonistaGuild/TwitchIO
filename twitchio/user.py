@@ -227,7 +227,7 @@ class PartialUser:
         """|coro|
 
         Creates a clip on the channel. Note that clips are not created instantly, so you will have to query
-        :ref:`~.get_clips` to confirm the clip was created. Requires an OAuth token with the `clips:edit` scope
+        :meth:`~get_clips` to confirm the clip was created. Requires an OAuth token with the `clips:edit` scope
 
         Parameters
         -----------
@@ -247,7 +247,7 @@ class PartialUser:
         """|coro|
 
         Fetches clips from the api. This will only return clips from the specified user.
-        Use :ref:`twitchio.Client` to fetch clips by id
+        Use :class:`Client.fetch_clips` to fetch clips by id
 
         Returns
         --------
@@ -365,7 +365,7 @@ class PartialUser:
         token: :class:`str`
             The oauth token with the moderation:read scope.
         query: List[:class:`AutomodCheckMessage`]
-            A list of :class:`twitchio.AutomodCheckMessage`s
+            A list of :class:`twitchio.AutomodCheckMessage`
 
         Returns
         --------
@@ -614,7 +614,7 @@ class PartialUser:
     async def fetch_videos(self, period="all", sort="time", type="all", language=None):
         """|coro|
 
-        Fetches videos that belong to the user. If you have specific video ids use :ref:`twitchio.Client.fetch_videos`
+        Fetches videos that belong to the user. If you have specific video ids use :func:`Client.fetch_videos`
 
         Parameters
         -----------

@@ -39,7 +39,7 @@ __all__ = "CustomReward", "CustomRewardRedemption"
 
 class CustomReward:
     """
-    Represents a Custom Reward object, as given by the api. Use :ref:`User.get_custom_rewards` to fetch these
+    Represents a Custom Reward object, as given by the api. Use :func:`User.get_custom_rewards` to fetch these
     """
 
     __slots__ = (

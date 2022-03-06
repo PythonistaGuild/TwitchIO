@@ -163,12 +163,6 @@ API Reference
     :members:
     :inherited-members:
 
-.. attributetable::: ChannelModeratorAddRemoveData
-
-.. autoclass:: ChannelModeratorAddRemoveData
-    :members:
-    :inherited-members:
-
 .. attributetable::: CustomRewardAddUpdateRemoveData
 
 .. autoclass:: CustomRewardAddUpdateRemoveData

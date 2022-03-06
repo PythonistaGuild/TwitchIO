@@ -57,17 +57,17 @@ __all__ = ("Sound", "AudioPlayer")
 
 @dataclasses.dataclass
 class OutputDevice:
-    """Class which represents an OutputDevice usable with :class:`AudioPlayer`.
+    """Class which represents an OutputDevice usable with :class:`AudioPlayer` .
 
-    Pass this into the appropriate :class:`AudioPlayer`s method to set or change device.
+    Pass this into the appropriate :class:`AudioPlayer` method to set or change device.
 
     Attributes
     ----------
-    name: str
+    name: :class:`str`
         The name of the device.
-    index: int
+    index: :class:`int`
         The index of the device.
-    channels: int
+    channels: :class:`int`
         The amount of available channels this device has.
     """
 
@@ -216,7 +216,7 @@ class Sound:
 class AudioPlayer:
     """TwitchIO Sounds Audio Player.
 
-    Use this class to control and play sounds generated with :class:`Sound`.
+    Use this class to control and play sounds generated with :class:`Sound` .
 
     Parameters
     ----------
@@ -227,7 +227,7 @@ class AudioPlayer:
     .. note ::
 
         To use this player with the system non default output device, see :meth:`with_device`, or
-        :property:`active_device`. The output device can be changed live by setting `active_device` with an
+        :attr:`active_device`. The output device can be changed live by setting `active_device` with an
         :class:`OutputDevice`.
     """
 

@@ -172,12 +172,12 @@ API Reference
 .. autoclass:: OutputDevice
     :members:
 
-.. attributeable:: Sound
+.. attributetable:: Sound
 
 .. autoclass:: Sound
     :members:
 
-.. attributeable:: AudioPlayer
+.. attributetable:: AudioPlayer
 
 .. autoclass:: AudioPlayer
     :members:

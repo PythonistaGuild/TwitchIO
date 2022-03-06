@@ -607,8 +607,6 @@ class PollStatus(Enum):
     """
     The status of a poll.
 
-    Possible States
-    ----------------
     ACTIVE: Poll is currently in progress.
     COMPLETED: Poll has reached its `ended_at` time.
     TERMINATED: Poll has been manually terminated before its `ended_at` time.
@@ -785,8 +783,6 @@ class PredictionStatus(Enum):
     """
     The status of a Prediction.
 
-    Possible States
-    ----------------
     ACTIVE: Prediction is active and viewers can make predictions.
     LOCKED: Prediction has been locked and viewers can no longer make predictions.
     RESOLVED: A winning outcome has been chosen and the Channel Points have been distributed to the users who guessed the correct outcome.

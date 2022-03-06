@@ -405,7 +405,6 @@ class Client:
     async def fetch_clips(self, ids: List[str]):
         """|coro|
 
-
         Fetches clips by clip id.
         To fetch clips by user id, use :meth:`twitchio.PartialUser.fetch_clips`
 
@@ -588,7 +587,7 @@ class Client:
             game ids of streams to fetch
         user_logins: Optional[List[:class:`str`]]
             user login names of people whose streams to fetch
-        languages: Optional[List:class:`str]]
+        languages: Optional[List[:class:`str`]]
             language for the stream(s). ISO 639-1 or two letter code for supported stream language
         token: Optional[:class:`str`]
             An optional OAuth token to use instead of the bot OAuth token
@@ -719,7 +718,7 @@ class Client:
 
         .. note::
             This event is a callback hook. It is not a dispatched event. Any errors raised will be passed to the
-            :ref:`~event_error` event.
+            :func:`~event_error` event.
         """
         return None
 

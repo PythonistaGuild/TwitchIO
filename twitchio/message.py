@@ -35,7 +35,7 @@ class Message:
     """
     Attributes
     -----------
-    content: :class:`str
+    content: :class:`str`
         The content of this message.
     echo: :class:`bool`
         Boolean representing if this is a self-message or not.
