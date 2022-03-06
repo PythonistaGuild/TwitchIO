@@ -3,17 +3,17 @@
 2.2.0
 =====
 - ext.sounds
-    - Added sounds extension. Check the sounds documentation for more information.
+    - Added sounds extension. Check the :ref:`sounds-ref` documentation for more information.
 
 - TwitchIO
     - Loosen aiohttp requirements to allow 3.8.1
-    - :class:`Stream` was missing from ``__all__``. It is now available in the twitchio namespace.
+    - :class:`twitchio.Stream` was missing from ``__all__``. It is now available in the twitchio namespace.
     - Added ``.status``, ``.reason`` and ``.extra`` to :class:`HTTPException`
-    - Fix Message._timestamp value when tag is not provided by twitch
-    - Fix :func:`Client.wait_for_ready`
-    - Remove loop= parameter inside :func:`Client.wait_for` for 3.10 compatibility
-    - Add `is_broadcaster` check to `PartialChatter` class. This is accessible as `Context.author.is_broadcaster`
-    - :func:`User.fetch_follow` will now return ``None`` if the FollowEvent does not exists
+    - Fix ``Message._timestamp`` value when tag is not provided by twitch
+    - Fix :func:`twitchio.Client.wait_for_ready`
+    - Remove loop= parameter inside :func:`twitchio.Client.wait_for` for 3.10 compatibility
+    - Add ``is_broadcaster`` check to :class:`twitchio.PartialChatter`. This is accessible as ``Context.author.is_broadcaster``
+    - :func:`twitchio.User.fetch_follow` will now return ``None`` if the FollowEvent does not exists
     - TwitchIO will now correctly handle error raised when only the prefix is typed in chat
     - Fix paginate logic in :func:`TwitchHTTP.request`
 
@@ -25,17 +25,17 @@
 
 - ext.eventsub
     - Add support for the following subscription types
-        - :class:`ext.eventsub.PollBeginProgressData`
+        - :class:`twitchio.ext.eventsub.PollBeginProgressData`
             - ``channel.poll.begin``: 
             - ``channel.poll.progress``
-        - :class:`ext.eventsub.PollEndData`
+        - :class:`twitchio.ext.eventsub.PollEndData`
             - ``channel.poll.end``
-        - :class:`ext.eventsub.PredictionBeginProgressData`
+        - :class:`twitchio.ext.eventsub.PredictionBeginProgressData`
             - ``channel.prediction.begin``
             - ``channel.prediction.progress``
-        - :class:`ext.eventsub.PredictionLockData`
+        - :class:`twitchio.ext.eventsub.PredictionLockData`
             - ``channel.prediction.lock``
-        - :class:`ext.eventsub.PredictionEndData`
+        - :class:`twitchio.ext.eventsub.PredictionEndData`
             - ``channel.prediction.end``
 
 2.1.5

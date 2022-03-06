@@ -185,18 +185,18 @@ class ChannelBanData(EventData):
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user that was banned
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The broadcaster who's channel the ban occurred in
-    moderator: :class:`PartialUser`
+    moderator: :class:`twitchio.PartialUser`
         The moderator responsible for the ban
     reason: :class:`str`
         The reason for the ban
     ends_at: Optional[:class:`datetime.datetime`]
         When the ban ends at. Could be ``None``
     permanant: :class:`bool`
-        A typo of ``permanent``. Kept for backwards compatibility
+        A typo of ``permanent`` Kept for backwards compatibility
     permanent: :class:`bool`
         Whether the ban is permanent
     """
@@ -219,9 +219,9 @@ class ChannelSubscribeData(EventData):
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user who subscribed
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel that was subscribed to
     tier: :class:`int`
         The tier of the subscription
@@ -246,9 +246,9 @@ class ChannelCheerData(EventData):
     ----------
     is_anonymous: :class:`bool`
         Whether the cheer was anonymous
-    user: Optional[:class:`PartialUser`]
+    user: Optional[:class:`twitchio.PartialUser`]
         The user that cheered. Will be ``None`` if ``is_anonymous`` is ``True``
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the cheer happened on
     message: :class:`str`
         The message sent along with the bits
@@ -272,7 +272,7 @@ class ChannelUpdateData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel that was updated
     title: :class:`str`
         The title of the stream
@@ -303,11 +303,11 @@ class ChannelUnbanData(EventData):
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user that was unbanned
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the unban occurred in
-    moderator: :class`PartialUser`
+    moderator: :class`twitchio.PartialUser`
         The moderator that preformed the unban
     """
 
@@ -325,9 +325,9 @@ class ChannelFollowData(EventData):
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user that followed
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel that was followed
     followed_at: :class:`datetime.datetime`
         When the follow occurred
@@ -347,9 +347,9 @@ class ChannelRaidData(EventData):
 
     Attributes
     -----------
-    raider: :class:`PartialUser`
+    raider: :class:`twitchio.PartialUser`
         The person initiating the raid
-    reciever: :class:`PartialUser`
+    reciever: :class:`twitchio.PartialUser`
         The person recieving the raid
     viewer_count: :class:`int`
         The amount of people raiding
@@ -369,9 +369,9 @@ class ChannelModeratorAddRemoveData(EventData):
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user being added or removed from the moderator status
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel that is having a moderator added/removed
     """
 
@@ -390,9 +390,9 @@ class CustomRewardAddUpdateRemoveData(EventData):
     -----------
     id: :class:`str`
         The ID of the custom reward
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the custom reward was modified in
-    reward: :class:`CustomReward`
+    reward: :class:`twitchio.CustomReward`
         The reward object
     """
 
@@ -410,9 +410,9 @@ class CustomRewardRedemptionAddUpdateData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the redemption occurred in
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user that redeemed the reward
     id: :class:`str`
         The ID of the redemption
@@ -422,7 +422,7 @@ class CustomRewardRedemptionAddUpdateData(EventData):
         One of "unknown", "unfulfilled", "fulfilled", or "cancelled"
     redeemed_at: :class:`datetime.datetime`
         When the reward was redeemed at
-    reward: :class:`CustomReward`
+    reward: :class:`twitchio.CustomReward`
         The reward object
     """
 
@@ -444,7 +444,7 @@ class HypeTrainContributor:
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user
     type: :class:`str`
         One of "bits" or "subscription". The way they contributed to the hype train
@@ -463,9 +463,11 @@ class HypeTrainContributor:
 class HypeTrainBeginProgressData(EventData):
     """
     A Hype Train Begin/Progress event
+
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the Hype Train occurred in
     total_points: :class:`int`
         The total amounts of points in the Hype Train
@@ -511,7 +513,7 @@ class HypeTrainEndData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the Hype Train occurred in
     total_points: :class:`int`
         The total amounts of points in the Hype Train
@@ -629,7 +631,7 @@ class PollBeginProgressData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the poll occured in
     poll_id: :class:`str`
         The ID of the poll
@@ -637,9 +639,9 @@ class PollBeginProgressData(EventData):
         The title of the poll
     choices: List[:class:`PollChoice`]
         The choices in the poll
-    bits_voting: :class:BitsVoting
+    bits_voting: :class:`BitsVoting`
         Information on voting on the poll with Bits
-    channel_points_voting: :class:ChannelPointsVoting
+    channel_points_voting: :class:`ChannelPointsVoting`
         Information on voting on the poll with Channel Points
     started_at: :class:`datetime.datetime`
         When the poll started
@@ -676,7 +678,7 @@ class PollEndData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the poll occured in
     poll_id: :class:`str`
         The ID of the poll
@@ -684,9 +686,9 @@ class PollEndData(EventData):
         The title of the poll
     choices: List[:class:`PollChoice`]
         The choices in the poll
-    bits_voting: :class:BitsVoting
+    bits_voting: :class:`BitsVoting`
         Information on voting on the poll with Bits
-    channel_points_voting: :class:ChannelPointsVoting
+    channel_points_voting: :class:`ChannelPointsVoting`
         Information on voting on the poll with Channel Points
     status: :class:`PollStatus`
         How the poll ended
@@ -726,7 +728,7 @@ class Predictor:
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user who predicted an outcome
     channel_points_used: :class:`int`
         How many Channel Points the user used to predict this outcome
@@ -756,7 +758,7 @@ class PredictionOutcome:
     channel_points: :class:`int`
         The amount of Channel Points that have been bet for this outcome
     color: :class:`str`
-        The color of the outcome. Can be `blue` or `pink`.
+        The color of the outcome. Can be `blue` or `pink`
     users: :class:`int`
         The number of users who predicted the outcome
     top_predictors: List[:class:`Predictor`]
@@ -801,7 +803,7 @@ class PredictionBeginProgressData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the prediction occured in
     prediction_id: :class:`str`
         The ID of the prediction
@@ -832,7 +834,7 @@ class PredictionLockData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the prediction occured in
     prediction_id: :class:`str`
         The ID of the prediction
@@ -863,7 +865,7 @@ class PredictionEndData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel the prediction occured in
     prediction_id: :class:`str`
         The ID of the prediction
@@ -909,7 +911,7 @@ class StreamOnlineData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel that went live
     id: :class:`str`
         Some sort of ID for the stream
@@ -933,7 +935,7 @@ class StreamOfflineData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`twitchio.PartialUser`
         The channel that stopped streaming
     """
 
@@ -949,7 +951,7 @@ class UserAuthorizationRevokedData(EventData):
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user that has revoked authorization for your app
     client_id: :class:`str`
         The client id of the app that had its authorization revoked
@@ -968,7 +970,7 @@ class UserUpdateData(EventData):
 
     Attributes
     -----------
-    user: :class:`PartialUser`
+    user: :class:`twitchio.PartialUser`
         The user that was updated
     email: Optional[:class:`str`]
         The users email, if you have permission to read this information
