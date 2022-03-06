@@ -11,5 +11,5 @@ jobs:
     steps:
     - uses: ben-z/actions-comment-on-issue@1.0.2
       with:
-        message: "Hello! Thanks for the issue. For a faster response consider joining the official [Discord Server](https://discord.gg/RAKc3HF)\nElse please wait for someone to help you here."
+        message: "Hello! Thanks for the issue. If this is a general help question, for a faster response consider joining the official [Discord Server](https://discord.gg/RAKc3HF)\n\nElse if you have an issue with the library please wait for someone to help you here."
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
