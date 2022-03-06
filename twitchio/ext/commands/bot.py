@@ -100,7 +100,7 @@ class Bot(Client):
 
         Parameters
         ------------
-        client_id: :class`str`
+        client_id: :class:`str`
             Your application's Client ID.
         client_secret: :class:`str`
             An application Client Secret used to generate Access Tokens automatically.

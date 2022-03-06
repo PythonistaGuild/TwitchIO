@@ -116,7 +116,7 @@ class Client:
 
         Parameters
         ------------
-        client_id: :class`str`
+        client_id: :class:`str`
 
         client_secret: :class:`str`
             An application Client Secret used to generate Access Tokens automatically.
