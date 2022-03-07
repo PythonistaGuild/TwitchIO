@@ -143,7 +143,7 @@ class Websocket:
                 break
 
             data = message.data
-            # print(data)
+
             payloads = IRCPayload.parse(data=data)
             await self.dispatch('raw_data', data)
 
@@ -181,7 +181,7 @@ class Websocket:
     async def join_channels(self, channels: list) -> None:
         await self._ready_event.wait()
 
-        channels = [c.removeprefix('#') for c in channels]
+        channels = [c.removeprefix('#').lower() for c in channels]
 
         for channel in channels:
             self.join_cache[channel] = asyncio.create_task(self.join_timeout_task(channel), name=channel)
