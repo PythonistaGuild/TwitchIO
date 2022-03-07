@@ -33,7 +33,7 @@ from .exceptions import *
 from .limiter import IRCRateLimiter
 from .message import Message
 from .parser import IRCPayload
-from .user import User
+from .user import PartialUser
 
 if TYPE_CHECKING:
     from .client import Client
@@ -77,6 +77,7 @@ class Websocket:
         self._keep_alive_task: asyncio.Task = None  # type: ignore
 
         self._channel_cache = Cache(size=cache_size)
+        self._message_cache = Cache(size=cache_size)
 
     def is_connected(self) -> bool:
         return self.ws is not None and not self.ws.closed
@@ -142,6 +143,7 @@ class Websocket:
                 break
 
             data = message.data
+            # print(data)
             payloads = IRCPayload.parse(data=data)
             await self.dispatch('raw_data', data)
 
@@ -241,7 +243,23 @@ class Websocket:
         del self.join_cache[channel]
 
     async def privmsg_event(self, payload: IRCPayload) -> None:
-        pass
+        logger.debug(f'Received PRIVMSG from Twitch: '
+                     f'channel={payload.channel}, '
+                     f'user={payload.user}, '
+                     f'content={payload.message}')
+        channel = self._channel_cache.get(payload.channel, default=None)
+
+        if channel is None:
+            channel = Channel(name=payload.channel, websocket=self)
+            self._channel_cache[channel.name] = channel
+
+        user = PartialUser(payload=payload)
+        message = Message(payload=payload, channel=channel, echo=False, user=user)
+
+        self._message_cache[message.id] = message
+        channel._users[user.name] = user
+
+        await self.dispatch('message', message)
 
     async def reconnect_event(self, payload: IRCPayload) -> None:
         asyncio.create_task(self._connect())
@@ -257,7 +275,7 @@ class Websocket:
             self.remove_join_cache(channel.name)
             self._channel_cache[channel.name] = channel
 
-        user = User()  # TODO...
+        user = PartialUser(payload=payload)  # TODO...
 
         if payload.user == self.nick:
             self._channel_cache[channel.name] = channel
@@ -270,7 +288,7 @@ class Websocket:
         else:
             channel = Channel(name=payload.channel, websocket=self)
 
-        user = User()
+        user = PartialUser(payload=payload)  # TODO
 
         await self.dispatch('part', channel, user)
 
