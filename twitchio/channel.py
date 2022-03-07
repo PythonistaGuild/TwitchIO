@@ -20,36 +20,59 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import typing
+import copy
+from typing import Dict, Optional
 
 from .abc import Messageable
-
-if typing.TYPE_CHECKING:
-    from .message import Message
+from .cache import Cache
+from .user import PartialUser
 
 
 class Channel(Messageable):
 
-    __slots__ = ('_name', '_id', '_websocket')
+    __slots__ = (
+        '_name',
+        '_id',
+        '_websocket',
+        '_users'
+                 )
 
     def __init__(self, **attrs):
         super().__init__(**attrs)
         self._id = attrs.get('id')
+        self._users = Cache()
 
     def __repr__(self) -> str:
         return f'Channel: name={self._name}, shard_index={self._websocket.shard_index}'
 
-    async def send(self, content: str):  # TODO Return Message...
+    async def send(self, content: str) -> None:
         await self._websocket.send(f"PRIVMSG #{self._name} :{content}")
 
     @property
     def name(self) -> str:
+        """The channel name."""
         return self._name
 
     @property
     def id(self) -> int:
-        return self._id
+        """The channel ID."""
+        return int(self._id)
 
     @property
-    def owner(self):  # TODO Return Channel Owner User object...
-        return None
+    def owner(self) -> Optional[PartialUser]:
+        """The channel owner."""
+        return self._users.get(self._name, default=None)
+
+    @property
+    def users(self) -> Dict[str, PartialUser]:
+        """A mapping of the channel's user cache."""
+        return copy.copy(self._users.items())
+
+    def get_user(self, name: str) -> Optional[PartialUser]:
+        """Method which returns a user from the channel's cache.
+
+        Could be None if the user is not in cache.
+        """
+        name = name.removeprefix('#').lower()
+
+        return self._users.get(name, default=None)
