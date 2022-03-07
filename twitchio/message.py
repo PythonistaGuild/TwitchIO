@@ -20,7 +20,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Any
 
 from .channel import Channel
 from .parser import IRCPayload
@@ -34,7 +33,15 @@ class Message:
     ----------
     content: str
         The message content.
-
+    channel: :class:`Channel`
+        The channel the message was sent from.
+    author: :class:`PartialChatter`
+        The chatter that sent the message.
+    echo: bool
+        Bool indicating whether the message is a message sent from the bot or not. True indicates the message
+        was sent from the bot.
+    raw: str
+        The raw message string received via Twitch.
     """
 
     __slots__ = (
@@ -85,30 +92,15 @@ class Message:
 
     @property
     def id(self) -> str:
+        """The message ID."""
         return self._id
 
     @property
     def tags(self) -> dict:
+        """The tags associated with the message."""
         return self._tags
 
     @property
     def badges(self) -> dict:
+        """The badges associated with the message."""
         return self._badges
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
