@@ -114,7 +114,7 @@ class Cog(metaclass=CogMeta):
                 method._instance = self
                 method.cog = self
 
-                self._commands[name] = method
+                self._commands[method.name] = method
                 bot.add_command(method)
 
         events = self._events.copy()
