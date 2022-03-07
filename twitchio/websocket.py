@@ -352,12 +352,12 @@ class WSConnection:
             if parsed["channel"] == "TWITCHIOFAILURE":
                 self._initial_channels.remove(parsed["batches"][0])
 
-            if parsed["channel"] in self._initial_channels and not self._init:
+            if parsed["channel"] in [c.lower() for c in self._initial_channels] and not self._init:
                 self._join_load[parsed["channel"]] = None
 
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
-                    self._join_load.pop(channel)
+                    self._join_load.pop(channel.lower())
                     self._cache_add(parsed)
                 self.is_ready.set()
             else:
