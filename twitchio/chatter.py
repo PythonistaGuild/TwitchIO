@@ -20,95 +20,80 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Any
-
-from .channel import Channel
 from .parser import IRCPayload
-from .chatter import PartialChatter
 
 
-class Message:
-    """TwitchIO Message object representing a messages received via Twitch.
-
-    Attributes
-    ----------
-    content: str
-        The message content.
-
-    """
+class PartialChatter:
 
     __slots__ = (
-        '_tags',
+        '_name',
+        '_colour',
+        '_display_name',
+        '_mod',
+        '_turbo',
         '_id',
-        'content',
-        'channel',
-        'author',
-        '_badges',
-        'echo',
-        'raw',
-        'timestamp'
+        'tags',
+        'badges'
     )
 
     def __init__(self,
                  payload: IRCPayload,
-                 *,
-                 channel: Channel,
-                 chatter: PartialChatter,
-                 echo: bool = False
                  ):
-        self._tags = payload.tags
-        self._badges: dict = payload.badges
+        self._name = payload.user
 
-        self._id: str = self._tags.get('id')
-        self.content: str = payload.message
-        self.channel: Channel = channel
-        self.author: PartialChatter = chatter
+        tags = payload.tags
+        badges = payload.badges
 
-        self.echo: bool = echo
-        self.raw: str = payload.raw
+        if tags:
+            self._colour = tags.get('color')
+            self._display_name = tags.get('display-name')
+            self._mod = tags.get('mod')
+            self._turbo = tags.get('turbo')
+            self._id = tags.get('user-id')
 
-        self.timestamp = ...
+        self.tags = tags
+        self.badges = badges
 
     def __repr__(self):
-        return f'Message: ' \
-               f'id={self.id}, ' \
-               f'author=<{self.author}>, ' \
-               f'channel=<{self.channel}>, ' \
-               f'echo={self.echo}, ' \
-               f'timestamp={self.timestamp}'
+        return f'PartialUser: id={self._id}, name={self._name}'
 
     def __str__(self):
-        return self.content
+        return self._name
 
     def __eq__(self, other):
         return self.id == other.id
 
-    @property
-    def id(self) -> str:
-        return self._id
+    def __gt__(self, other):
+        # TODO
+        ...
+
+    def __lt__(self, other):
+        # TODO
+        ...
 
     @property
-    def tags(self) -> dict:
-        return self._tags
+    def id(self) -> int:
+        """The users ID."""
+        return int(self._id)
 
     @property
-    def badges(self) -> dict:
-        return self._badges
+    def name(self) -> str:
+        """The users name."""
+        return self._name
 
+    @property
+    def colour(self) -> hex:
+        """The users colour."""
+        return hex(self._colour.removeprefix('#'))
 
+    color = colour
 
+    @property
+    def display_name(self) -> str:
+        """The users display name."""
+        return self._display_name
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @property
+    def is_mod(self) -> bool:
+        """Whether the user is mod of this channel."""
+        return True  # TODO

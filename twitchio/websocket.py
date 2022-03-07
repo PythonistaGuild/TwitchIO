@@ -33,7 +33,7 @@ from .exceptions import *
 from .limiter import IRCRateLimiter
 from .message import Message
 from .parser import IRCPayload
-from .user import PartialUser
+from .chatter import PartialChatter
 
 if TYPE_CHECKING:
     from .client import Client
@@ -245,7 +245,7 @@ class Websocket:
     async def privmsg_event(self, payload: IRCPayload) -> None:
         logger.debug(f'Received PRIVMSG from Twitch: '
                      f'channel={payload.channel}, '
-                     f'user={payload.user}, '
+                     f'chatter={payload.user}, '
                      f'content={payload.message}')
         channel = self._channel_cache.get(payload.channel, default=None)
 
@@ -253,11 +253,11 @@ class Websocket:
             channel = Channel(name=payload.channel, websocket=self)
             self._channel_cache[channel.name] = channel
 
-        user = PartialUser(payload=payload)
-        message = Message(payload=payload, channel=channel, echo=False, user=user)
+        chatter = PartialChatter(payload=payload)
+        message = Message(payload=payload, channel=channel, echo=False, chatter=chatter)
 
         self._message_cache[message.id] = message
-        channel._users[user.name] = user
+        channel._chatters[chatter.name] = chatter
 
         await self.dispatch('message', message)
 
@@ -275,12 +275,12 @@ class Websocket:
             self.remove_join_cache(channel.name)
             self._channel_cache[channel.name] = channel
 
-        user = PartialUser(payload=payload)  # TODO...
+        chatter = PartialChatter(payload=payload)  # TODO...
 
         if payload.user == self.nick:
             self._channel_cache[channel.name] = channel
 
-        await self.dispatch('join', channel, user)
+        await self.dispatch('join', channel, chatter)
 
     async def part_event(self, payload: IRCPayload) -> None:
         if payload.user == self.nick:
@@ -288,9 +288,9 @@ class Websocket:
         else:
             channel = Channel(name=payload.channel, websocket=self)
 
-        user = PartialUser(payload=payload)  # TODO
+        chatter = PartialChatter(payload=payload)  # TODO
 
-        await self.dispatch('part', channel, user)
+        await self.dispatch('part', channel, chatter)
 
     async def cap_event(self, payload: IRCPayload) -> None:
         pass

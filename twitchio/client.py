@@ -30,7 +30,7 @@ from .limiter import IRCRateLimiter
 from .message import Message
 from .parser import IRCPayload
 from .shards import ShardInfo
-from .user import User
+from .chatter import PartialChatter
 from .websocket import Websocket
 
 if TYPE_CHECKING:
@@ -336,7 +336,7 @@ class Client:
         """
         pass
 
-    async def event_join(self, channel: Channel, user: User) -> None:
+    async def event_join(self, channel: Channel, chatter: PartialChatter) -> None:
         """|coro|
 
         Event fired when a JOIN is received via Twitch.
@@ -345,11 +345,11 @@ class Client:
         ----------
         channel: :class:`Channel`
             ...
-        user: :class:`User`
+        chatter: :class:`PartialChatter`
             ...
         """
 
-    async def event_part(self, channel: Optional[Channel], user: User) -> None:
+    async def event_part(self, channel: Optional[Channel], chatter: PartialChatter) -> None:
         """|coro|
 
         Event fired when a PART is received via Twitch.
@@ -358,6 +358,6 @@ class Client:
         ----------
         channel: Optional[:class:`Channel`]
             ... Could be None if the channel is not in your cache.
-        user: :class:`User`
+        chatter: :class:`PartialChatter`
             ...
         """

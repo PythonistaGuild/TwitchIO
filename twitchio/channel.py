@@ -25,7 +25,7 @@ from typing import Dict, Optional
 
 from .abc import Messageable
 from .cache import Cache
-from .user import PartialUser
+from .chatter import PartialChatter
 
 
 class Channel(Messageable):
@@ -34,13 +34,13 @@ class Channel(Messageable):
         '_name',
         '_id',
         '_websocket',
-        '_users'
+        '_chatters'
                  )
 
     def __init__(self, **attrs):
         super().__init__(**attrs)
         self._id = attrs.get('id')
-        self._users = Cache()
+        self._chatters = Cache()
 
     def __repr__(self) -> str:
         return f'Channel: name={self._name}, shard_index={self._websocket.shard_index}'
@@ -59,20 +59,20 @@ class Channel(Messageable):
         return int(self._id)
 
     @property
-    def owner(self) -> Optional[PartialUser]:
+    def owner(self) -> Optional[PartialChatter]:
         """The channel owner."""
-        return self._users.get(self._name, default=None)
+        return self._chatters.get(self._name, default=None)
 
     @property
-    def users(self) -> Dict[str, PartialUser]:
-        """A mapping of the channel's user cache."""
-        return copy.copy(self._users.items())
+    def chatters(self) -> Dict[str, PartialChatter]:
+        """A mapping of the channel's chatter cache."""
+        return copy.copy(self._chatters.items())
 
-    def get_user(self, name: str) -> Optional[PartialUser]:
-        """Method which returns a user from the channel's cache.
+    def get_chatter(self, name: str) -> Optional[PartialChatter]:
+        """Method which returns a chatter from the channel's cache.
 
-        Could be None if the user is not in cache.
+        Could be None if the chatter is not in cache.
         """
         name = name.removeprefix('#').lower()
 
-        return self._users.get(name, default=None)
+        return self._chatters.get(name, default=None)

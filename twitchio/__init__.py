@@ -30,4 +30,4 @@ from .channel import Channel
 from .client import Client
 from .message import Message
 from .parser import IRCPayload
-from .user import User
+from .chatter import PartialChatter
