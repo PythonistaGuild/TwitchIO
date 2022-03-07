@@ -86,7 +86,7 @@ A simple Chat Bot.
 
 Contributing
 ---------------------------
-TwitchIO currently uses the `Black <https://black.readthedocs.io/en/stable/index.html/>`_ formatter to enforce sensible style formatting.
+TwitchIO currently uses the `Black <https://black.readthedocs.io/en/stable/>`_ formatter to enforce sensible style formatting.
 
 
 Before creating a Pull Request it is encouraged you install and run black on your code.
