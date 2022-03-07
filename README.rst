@@ -86,7 +86,7 @@ A simple Chat Bot.
 
 Contributing
 ---------------------------
-TwitchIO currently uses the `Black <https://black.readthedocs.io/en/stable/index.html/>`_ formatter to enforce sensible style formatting.
+TwitchIO currently uses the `Black <https://black.readthedocs.io/en/stable/>`_ formatter to enforce sensible style formatting.
 
 
 Before creating a Pull Request it is encouraged you install and run black on your code.
@@ -94,7 +94,7 @@ Before creating a Pull Request it is encouraged you install and run black on you
 The Line Length limit for TwitchIO is **120**.
 
 
-For installation and usage of Black visit: `Black Formatter <https://black.readthedocs.io/en/stable/usage_and_configuration/index.html/>`_
+For installation and usage of Black visit: `Black Formatter <https://black.readthedocs.io/en/stable/usage_and_configuration/>`_
 
 For integrating Black into your IDE visit: `Black IDE Usage <https://black.readthedocs.io/en/stable/integrations/editors.html>`_
 
