@@ -83,3 +83,4 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+/CONFIG.ini
