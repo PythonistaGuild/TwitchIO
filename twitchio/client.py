@@ -224,6 +224,8 @@ class Client:
         channel: Optional[:class:`Channel`]
             The channel matching the provided name.
         """
+        name = name.removeprefix('#').lower()
+
         for shard in self._shards.values():
             channel = shard._websocket._channel_cache.get(name, default=None)
 
