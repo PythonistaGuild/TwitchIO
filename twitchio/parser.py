@@ -75,6 +75,7 @@ class IRCPayload:
         self.names = names
 
         self.badges = tags.get('badges', {})
+        self.tags = tags
 
         if tags == {'badges': {}}:
             self.tags = {}
