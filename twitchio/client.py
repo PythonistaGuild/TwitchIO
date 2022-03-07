@@ -27,6 +27,7 @@ from typing import Optional, Union, Coroutine, Dict, TYPE_CHECKING
 
 from .channel import Channel
 from .limiter import IRCRateLimiter
+from .message import Message
 from .parser import IRCPayload
 from .shards import ShardInfo
 from .user import User
@@ -208,10 +209,15 @@ class Client:
 
     nickname = nick
 
-    def get_channel(self, name: str) -> Channel:
+    def get_channel(self, name: str, /) -> Optional[Channel]:
         """Method which returns a channel from cache if it exits.
 
         Could be None if the channel is not in cache.
+
+        Parameters
+        ----------
+        name: str
+            The name of the channel to search cache for.
 
         Returns
         -------
@@ -225,6 +231,29 @@ class Client:
                 break
 
         return channel
+
+    def get_message(self, id_: str, /) -> Optional[Message]:
+        """Method which returns a message from cache if it exists.
+
+        Could be None if the message is not in cache.
+
+        Parameters
+        ----------
+        id_: str
+            The message ID to search cache for.
+
+        Returns
+        -------
+        message: Optional[:class:`Message`]
+            The message matching the provided identifier.
+        """
+        for shard in self._shards.values():
+            message = shard._websocket._message_cache.get(id_, default=None)
+
+            if message:
+                break
+
+        return message
 
     async def event_shard_ready(self, number: int) -> None:
         """|coro|
