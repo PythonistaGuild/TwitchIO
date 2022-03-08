@@ -319,9 +319,20 @@ class Client:
 
             return Channel(name=name, websocket=self._connection)
 
-    async def join_channels(self, channels: Union[List[str], Tuple[str]]):
+    async def part_channels(self, channels: Union[List[str], Tuple[str]]):
         """|coro|
 
+        Part the specified channels.
+
+        Parameters
+        ------------
+        channels: Union[List[str], Tuple[str]]
+            The channels in either a list or tuple form to part.
+        """
+        await self._connection.part_channels(*channels)
+
+    async def join_channels(self, channels: Union[List[str], Tuple[str]]):
+        """|coro|
 
         Join the specified channels.
 

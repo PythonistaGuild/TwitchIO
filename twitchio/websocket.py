@@ -247,6 +247,21 @@ class WSConnection:
         channels = channels or self._initial_channels
         await self.join_channels(*channels)
 
+    async def part_channels(self, *channels: str):
+        """|coro|
+
+        Attempt to part the provided channels.
+
+        Parameters
+        ----------
+        *channels: str
+            An argument list of channels to attempt parting.
+        """
+
+        for channel in channels:
+            channel = re.sub("[#]", "", channel).lower()
+            await self.send(f"PART #{channel}\r\n")
+
     async def join_channels(self, *channels: str):
         """|coro|
 
@@ -337,12 +352,12 @@ class WSConnection:
             if parsed["channel"] == "TWITCHIOFAILURE":
                 self._initial_channels.remove(parsed["batches"][0])
 
-            if parsed["channel"] in self._initial_channels and not self._init:
+            if parsed["channel"] in [c.lower() for c in self._initial_channels] and not self._init:
                 self._join_load[parsed["channel"]] = None
 
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
-                    self._join_load.pop(channel)
+                    self._join_load.pop(channel.lower())
                     self._cache_add(parsed)
                 self.is_ready.set()
             else:
@@ -362,6 +377,22 @@ class WSConnection:
 
     async def _part(self, parsed):  # TODO
         log.debug(f'ACTION: PART:: {parsed["channel"]}')
+        channel = parsed["channel"]
+
+        if self._join_pending:
+            try:
+                self._join_pending[channel].set_result(None)
+            except KeyError:
+                pass
+            else:
+                self._join_pending.pop(channel)
+
+        self._cache.pop(channel, None)
+
+        channel = Channel(name=channel, websocket=self)
+        user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
+
+        self.dispatch("part", user)
 
     async def _privmsg(self, parsed):  # TODO(Update Cache properly)
         log.debug(f'ACTION: PRIVMSG:: {parsed["channel"]}')
