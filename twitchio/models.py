@@ -76,9 +76,9 @@ class BitsLeaderboard:
 
     Attributes
     ------------
-    started_at: datetime.datetime
+    started_at: :class:`datetime.datetime`
         The time the leaderboard started.
-    ended_at: datetime.datetime
+    ended_at: :class`datetime.datetime`
         The time the leaderboard ended.
     leaders: List[:class:`BitLeaderboardUser`]
         The current leaders of the Leaderboard.
@@ -97,6 +97,26 @@ class BitsLeaderboard:
 
 
 class CheerEmoteTier:
+    """
+    Represents a Cheer Emote tier.
+
+    Attributes
+    -----------
+    min_bits: :class:`int`
+        The minimum bits for the tier
+    id: :class:`str`
+        The ID of the tier
+    colour: :class:`str`
+        The colour of the tier
+    images: :class:`dict`
+        contains two dicts, ``light`` and ``dark``. Each item will have an ``animated`` and ``static`` item,
+        which will contain yet another dict, with sizes ``1``, ``1.5``, ``2``, ``3``, and ``4``.
+        Ex. ``cheeremotetier.images["light"]["animated"]["1"]``
+    can_cheer: :class:`bool`
+        Indicates whether emote information is accessible to users.
+    show_in_bits_card: :class`bool`
+        Indicates whether twitch hides the emote from the bits card.
+    """
 
     __slots__ = "min_bits", "id", "colour", "images", "can_cheer", "show_in_bits_card"
 
@@ -104,7 +124,7 @@ class CheerEmoteTier:
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
         self.colour: str = data["colour"]
-        self.images = data["images"]
+        self.images = data["images"] # TODO types
         self.can_cheer: bool = data["can_cheer"]
         self.show_in_bits_card: bool = data["show_in_bits_card"]
 
@@ -113,6 +133,24 @@ class CheerEmoteTier:
 
 
 class CheerEmote:
+    """
+    Represents a Cheer Emote
+
+    Attributes
+    -----------
+    prefix: :class:`str`
+        The string used to Cheer that precedes the Bits amount.
+    tiers: :class:`~CheerEmoteTier`
+        The tiers this Cheer Emote has
+    type: :class:`str`
+        Shows whether the emote is ``global_first_party``, ``global_third_party``, ``channel_custom``, ``display_only``, or ``sponsored``.
+    order: :class:`str`
+        Order of the emotes as shown in the bits card, in ascending order.
+    last_updated :class:`datetime.datetime`
+        The date this cheermote was last updated.
+    charitable: :class:`bool`
+        Indicates whether this emote provides a charity contribution match during charity campaigns.
+    """
 
     __slots__ = "_http", "prefix", "tiers", "type", "order", "last_updated", "charitable"
 
@@ -130,6 +168,36 @@ class CheerEmote:
 
 
 class Clip:
+    """
+    Represents a Twitch Clip
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the clip.
+    url: :class:`str`
+        The URL of the clip.
+    embed_url: :class:`str`
+        The URL to embed the clip with.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The user whose channel the clip was created on.
+    creator: :class:`~twitchio.PartialUser`
+        The user who created the clip.
+    video_id: :class:`str`
+        The ID of the video the clip is sourced from.
+    game_id: :class:`str`
+        The ID of the game that was being played when the clip was created.
+    language: :class:`str`
+        The language, in an `ISO 639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ format, of the stream when the clip was created.
+    title: :class:`str`
+        The title of the clip.
+    views: :class:`int`
+        The amount of views this clip has.
+    created_at: :class:`datetime.datetime`
+        When the clip was created.
+    thumbnail_url: :class:`str`
+        The url of the clip thumbnail.
+    """
 
     __slots__ = (
         "id",
@@ -147,24 +215,38 @@ class Clip:
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        self.id = data["id"]
-        self.url = data["url"]
-        self.embed_url = data["embed_url"]
+        self.id: str = data["id"]
+        self.url: str = data["url"]
+        self.embed_url: str = data["embed_url"]
         self.broadcaster = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
         self.creator = PartialUser(http, data["creator_id"], data["creator_name"])
-        self.video_id = data["video_id"]
-        self.game_id = data["game_id"]
-        self.language = data["language"]
-        self.title = data["title"]
-        self.views = data["view_count"]
+        self.video_id: str = data["video_id"]
+        self.game_id: str = data["game_id"]
+        self.language: str = data["language"]
+        self.title: str = data["title"]
+        self.views: int = data["view_count"]
         self.created_at = parse_timestamp(data["created_at"])
-        self.thumbnail_url = data["thumbnail_url"]
+        self.thumbnail_url: str = data["thumbnail_url"]
 
     def __repr__(self):
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
 
 
 class HypeTrainContribution:
+    """
+    A Contribution to a Hype Train
+
+    Attributes
+    -----------
+    total: :class:`int`
+        Total aggregated amount of all contributions by the top contributor. If type is ``BITS``, total represents aggregate amount of bits used.
+        If type is ``SUBS``, aggregate total where 500, 1000, or 2500 represent tier 1, 2, or 3 subscriptions respectively.
+        For example, if top contributor has gifted a tier 1, 2, and 3 subscription, total would be 4000.
+    type: :class:`str`
+        Identifies the contribution method, either BITS or SUBS.
+    user: :class:`~twitchio.PartialUser`
+        The user making the contribution.
+    """
 
     __slots__ = "total", "type", "user"
 
@@ -178,6 +260,40 @@ class HypeTrainContribution:
 
 
 class HypeTrainEvent:
+    """
+    Represents a Hype Train Event (progression)
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the event.
+    event_id: :class:`str`
+        The ID of the Hype Train.
+    type: :class:`str`
+        The type of the event. Currently only ``hypetrain.progression``.
+    version: :class:`str`
+        The version of the endpoint.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The user whose channel the Hype Train is occurring on.
+    timestamp: :class:`datetime.datetime`
+        The time the event happened at.
+    cooldown_end_time: :class:`datetime.datetime`
+        The time that another Hype Train can happen at.
+    expiry: :class:`datetime.datetime`
+        The time that this Hype Train expires at.
+    started_at: :class:`datetime.datetime`
+        The time that this Hype Train started at.
+    last_contribution: :class:`HypeTrainContribution`
+        The last contribution to this Hype Train.
+    level: :class:`int`
+        The level reached on this Hype Train (1-5).
+    top_contributions: List[:class:`HypeTrainContribution`]
+        The top contributors to the Hype Train.
+    contributions_total: :class:`int`
+        The total score towards completing the goal.
+    goal: :class:`int`
+        The goal for the next Hype Train level
+    """
 
     __slots__ = (
         "id",
@@ -210,24 +326,51 @@ class HypeTrainEvent:
         self.level: int = data["event_data"]["level"]
         self.top_contributions = [HypeTrainContribution(http, x) for x in data["event_data"]["top_contributions"]]
         self.contributions_total: int = data["event_data"]["total"]
+        self.goal: int = data["event_data"]["goal"]
 
     def __repr__(self):
         return f"<HypeTrainEvent id={self.id} type={self.type} level={self.level} broadcaster={self.broadcaster}>"
 
 
 class BanEvent:
+    """
+    Represents a user being banned from a channel.
 
-    __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at"
+    Attributes
+    -----------
+    id: :class:`str`
+        The event ID.
+    type: :class:`str`
+        Type of ban event. Either ``moderation.user.ban`` or ``moderation.user.unban``.
+    timestamp: :class:`datetime.datetime`
+        The time the action occurred at.
+    version: :class:`float`
+        The version of the endpoint.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The user whose channel the ban/unban occurred on.
+    user: :class:`~twichio.PartialUser`
+        The user who was banned/unbanned.
+    moderator: :class:`~twitchio.PartialUser`
+        The user who performed the action.
+    expires_at: Optional[:class:`datetime.datetime`]
+        When the ban expires.
+    reason: :class:`str`
+        The reason the moderator banned/unbanned the user
+    """
+
+    __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at", "moderator", "reason"
 
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Optional[Union[PartialUser, User]]):
         self.id: str = data["id"]
         self.type: str = data["event_type"]
         self.timestamp = parse_timestamp(data["event_timestamp"])
         self.version: float = float(data["version"])
+        self.reason: str = data["event_data"]["reason"]
         self.broadcaster = broadcaster or PartialUser(
             http, data["event_data"]["broadcaster_id"], data["event_data"]["broadcaster_name"]
         )
         self.user = PartialUser(http, data["event_data"]["user_id"], data["event_data"]["user_name"])
+        self.moderator = PartialUser(http, data["event_data"]["moderator_id"], data["event_data"]["moderator_name"])
         self.expires_at = (
             parse_timestamp(data["event_data"]["expires_at"]) if data["event_data"]["expires_at"] else None
         )

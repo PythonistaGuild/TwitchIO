@@ -1,5 +1,9 @@
 :orphan:
 
+Master
+=======
+Massive documentation updates
+
 2.2.0
 =====
 - ext.sounds

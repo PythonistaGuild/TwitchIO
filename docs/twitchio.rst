@@ -32,7 +32,7 @@ Event Reference
 .. automethod:: Client.event_userstate(user: User)
 .. automethod:: Client.event_raw_usernotice(channel: Channel, tags: dict)
 .. automethod:: Client.event_usernotice_subscription(metadata)
-.. automethod:: Client.event_error(error: Exception, data: str = None)
+.. automethod:: Client.event_error(error: Exception, data: Optional[str] = None)
 
 Exceptions
 ------------
