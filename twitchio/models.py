@@ -22,6 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import annotations
 import datetime
 from typing import Optional, Union, TYPE_CHECKING, List, Dict
 
@@ -355,7 +356,7 @@ class BanEvent:
     expires_at: Optional[:class:`datetime.datetime`]
         When the ban expires.
     reason: :class:`str`
-        The reason the moderator banned/unbanned the user
+        The reason the moderator banned/unbanned the user.
     """
 
     __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user", "expires_at", "moderator", "reason"
@@ -380,6 +381,18 @@ class BanEvent:
 
 
 class FollowEvent:
+    """
+    Represents a Follow Event.
+
+    Attributes
+    -----------
+    from_user: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user that followed another user.
+    to_user: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user that was followed.
+    followed_at: :class:`datetime.datetime`
+        When the follow happened.
+    """
 
     __slots__ = "from_user", "to_user", "followed_at"
 
@@ -390,8 +403,8 @@ class FollowEvent:
         from_: Union[User, PartialUser] = None,
         to: Union[User, PartialUser] = None,
     ):
-        self.from_user = from_ or PartialUser(http, data["from_id"], data["from_name"])
-        self.to_user = to or PartialUser(http, data["to_id"], data["to_name"])
+        self.from_user: Union[User, PartialUser] = from_ or PartialUser(http, data["from_id"], data["from_name"])
+        self.to_user: Union[User, PartialUser] = to or PartialUser(http, data["to_id"], data["to_name"])
         self.followed_at = parse_timestamp(data["followed_at"])
 
     def __repr__(self):
@@ -399,6 +412,22 @@ class FollowEvent:
 
 
 class SubscriptionEvent:
+    """
+    Represents a Subscription Event
+
+    Attributes
+    -----------
+    broadcaster: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user that was subscribed to.
+    user: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user who subscribed.
+    tier: :class:`int`
+        The tier at which the user subscribed. Could be ``1``, ``2``, or ``3``.
+    plan_name: :class:`str`
+        Name of the description. (twitch docs aren't helpful, if you know what this is specifically please PR :) ).
+    gift: :class:`bool`
+        Whether the subscription is a gift.
+    """
 
     __slots__ = "broadcaster", "gift", "tier", "plan_name", "user"
 
@@ -409,9 +438,9 @@ class SubscriptionEvent:
         broadcaster: Union[User, PartialUser] = None,
         user: Union[User, PartialUser] = None,
     ):
-        self.broadcaster = broadcaster or PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
-        self.user = user or PartialUser(http, data["user_id"], data["user_name"])
-        self.tier = int(data["tier"]) / 1000
+        self.broadcaster: Union[User, PartialUser] = broadcaster or PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
+        self.user: Union[User, PartialUser] = user or PartialUser(http, data["user_id"], data["user_name"])
+        self.tier: int = round(int(data["tier"]) / 1000)
         self.plan_name: str = data["plan_name"]
         self.gift: bool = data["is_gift"]
 
@@ -423,11 +452,27 @@ class SubscriptionEvent:
 
 
 class Marker:
+    """
+    Represents a stream Marker
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the marker.
+    created_at: :class:`datetime.datetime`
+        When the marker was created.
+    description: :class:`str`
+        The description of the marker.
+    position: :class:`int`
+        The position of the marker, in seconds.
+    url: Optional[:class:`str`]
+        The url that leads to the marker.
+    """
 
     __slots__ = "id", "created_at", "description", "position", "url"
 
     def __init__(self, data: dict):
-        self.id: int = data["id"]
+        self.id: str = data["id"]
         self.created_at = parse_timestamp(data["created_at"])
         self.description: str = data["description"]
         self.position: int = data["position_seconds"]
@@ -438,18 +483,40 @@ class Marker:
 
 
 class VideoMarkers:
+    """
+    Represents markers contained in a video
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The video id.
+    markers: List[:class:`Marker`]
+        The markers contained in the video.
+    """
 
     __slots__ = "id", "markers"
 
     def __init__(self, data: dict):
         self.id: str = data["video_id"]
-        self.markers = [Marker(d) for d in data]
+        self.markers = [Marker(d) for d in data["markers"]]
 
     def __repr__(self):
         return f"<VideoMarkers id={self.id}>"
 
 
 class Game:
+    """
+    Represents a Game on twitch
+
+    Attributes
+    -----------
+    id: :class:`int`
+        Game ID.
+    name: :class:`str`
+        Game name.
+    box_art_url: :class:`str`
+        Template URL for the game’s box art.
+    """
 
     __slots__ = "id", "name", "box_art_url"
 
@@ -480,11 +547,29 @@ class Game:
 
 
 class ModEvent:
+    """
+    Represents a mod add/remove action
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the event.
+    type: :class:`~twitchio.ModEventEnum`
+        The type of the event.
+    timestamp: :class:`datetime.datetime`
+        The timestamp of the event.
+    version: :class:`str`
+        The version of the endpoint.
+    broadcaster: Union[:class:`~twitchio.PartialUser`, :class:`~twitchio.User`]
+        The user whose channel the event happened on.
+    user: :class:`~twitchio.PartialUser`
+        The user being removed or added as a moderator.
+    """
 
     __slots__ = "id", "type", "timestamp", "version", "broadcaster", "user"
 
     def __init__(self, http: "TwitchHTTP", data: dict, broadcaster: Union[PartialUser, User]):
-        self.id: int = data["id"]
+        self.id: str = data["id"]
         self.type = enums.ModEventEnum(value=data["event_type"])
         self.timestamp = parse_timestamp(data["event_timestamp"])
         self.version: str = data["version"]
