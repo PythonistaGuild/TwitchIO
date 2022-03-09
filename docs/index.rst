@@ -73,6 +73,15 @@
 .. rst-class:: index-display-none
 .. toctree::
    :maxdepth: 1
+   :caption: Getting Started
+
+   installing
+   quickstart
+   faq
+
+.. rst-class:: index-display-none
+.. toctree::
+   :maxdepth: 1
    :caption: API Reference
 
    twitchio
