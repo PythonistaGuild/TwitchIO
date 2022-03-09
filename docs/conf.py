@@ -76,7 +76,7 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 # These folders are copied to the documentation's HTML output
 html_static_path = ["_static"]
-html_js_files = ["_static/js"]
+html_js_files = ["js/custom.js"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
