@@ -41,17 +41,17 @@ body {
 
 /* Sidebar Stuff */
 .sidebar-drawer {
-    width: 0;
+    width: 0!important;
 }
 
 /* Main Div */
 .main {
-    justify-content: space-evenly;
+    justify-content: space-evenly!important;
 }
 
 /* Content Div */
 .content {
-    width: 50%;
+    width: 50%!important;
 }
 
 /* Index Page Stuff */
