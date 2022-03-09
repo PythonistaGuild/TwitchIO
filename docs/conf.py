@@ -16,6 +16,7 @@
 
 
 # -- Project information -----------------------------------------------------
+import re
 import os
 import sys
 
@@ -29,7 +30,9 @@ copyright = "2022, TwitchIO"
 author = "TwitchIO"
 
 # The full version, including alpha/beta/rc tags
-release = "2.2.0"
+release = ''
+with open('../twitchio/__init__.py') as f:
+    release = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE).group(1)
 
 
 # -- General configuration ---------------------------------------------------
@@ -73,6 +76,7 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 # These folders are copied to the documentation's HTML output
 html_static_path = ["_static"]
+html_js_files = ["_static/js"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)

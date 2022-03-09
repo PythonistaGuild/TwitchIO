@@ -11,6 +11,7 @@ body {
     border-radius: 0 0 0 3px;
 }
 
+/* Attributable stuff */
 .py-attribute-table {
     display: flex;
     flex-wrap: wrap;
@@ -36,4 +37,77 @@ body {
 .py-attribute-table-badge {
     font-weight: bold;
     margin-right: .5rem;
+}
+
+/* Sidebar Stuff */
+.sidebar-drawer {
+    width: 0;
+}
+
+/* Main Div */
+.main {
+    justify-content: space-evenly;
+}
+
+/* Content Div */
+.content {
+    width: 50%;
+}
+
+/* Index Page Stuff */
+.featuring-logo {
+    width: 50%;
+    align-self: flex-start;
+    margin-top: 4rem;
+}
+
+.featuring-hr {
+    margin-top: 2rem;
+    opacity: 40%;
+}
+
+.index-featuring {
+    margin-top: 2rem!important;
+}
+
+.index-featuring-list {
+    list-style: none;
+    margin-top: 1rem;
+}
+
+.index-featuring-list > li::before {
+    content: '- ';
+    font-weight: bold;
+}
+
+.index-featuring-list > li::before {
+    content: '- ';
+    font-weight: bold;
+}
+
+.index-section-header {
+    margin-top: 2rem;
+}
+
+.index-apis-wrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+.index-apis-section {
+    margin-top: 2rem;
+    margin-right: 4rem;
+}
+
+.index-display-none {
+    display: none;
+}
+
+.index-changelog > .caption[role=heading] {
+    display: none;
+}
+
+.index-changelog > ul > li::marker {
+    content: '- ';
+    font-weight: bold;
 }
