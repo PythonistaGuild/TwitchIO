@@ -17,4 +17,4 @@ Consider reading through the :doc:`exts/routines` documentation.
 How can I send a message?
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 TwitchIO is an object orientated library with stateful objects. To send a message simply use ``await .send('Hello World!)``
-on any :class:``Messageable`` class. E.g :class:`twitchio.PartialChatter`, :class:`twitchio.Channel` or :class:`twitchio.ext.commands.Context`.
+on any ``Messageable`` class. E.g :class:`twitchio.PartialChatter`, :class:`twitchio.Channel` or :class:`twitchio.ext.commands.Context`.
