@@ -52,6 +52,11 @@ extensions = [
 # OpenGraph Meta Tags
 ogp_image = "https://raw.githubusercontent.com/TwitchIO/TwitchIO/master/logo.png"
 ogp_description = "Documentation for TwitchIO, the asynchronous Python wrapper for Twitch.tv."
+ogp_site_url = "https://twitchio.dev/"
+ogp_custom_meta_tags = [
+    '<meta property="og:description" content="A fully asynchronous Python IRC, API, EventSub and PubSub library for Twitch." />',
+    '<meta property="og:title" content="TwitchIO Documentation" />'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
