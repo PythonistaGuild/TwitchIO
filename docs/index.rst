@@ -113,8 +113,10 @@
    changelog
 
 
-Indices and tables
-==================
+.. raw:: html
+
+   <h3 class="index-section-header">Table of Contents</h3>
+   <hr class="featuring-hr">
 
 * :ref:`genindex`
 * :ref:`search`
