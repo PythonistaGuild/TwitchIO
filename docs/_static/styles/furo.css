@@ -145,7 +145,7 @@ body {
 
 .class > .sig-object {
     border-left: #0e84b5 solid 3px;
-    border-radius: 0 0 0 3px;
+    border-radius: 3px 0 0 0;
 }
 
 /* Attributable stuff */
@@ -153,9 +153,9 @@ body {
     display: flex;
     flex-wrap: wrap;
     background-color: var(--color-api-background);
-    margin-bottom: -1rem;
-    border-radius: 3px 3px 0 0;
+    border-radius: 0 0 3px 3px;
     border-left: #0e84b5 solid 3px;
+    margin-bottom: 2rem;
 }
 
 .py-attribute-table-entry {

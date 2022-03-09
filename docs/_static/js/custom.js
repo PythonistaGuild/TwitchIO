@@ -1,11 +1,12 @@
-const loadCSS = function(){
-    let cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = '_static/css/custom.css';
+const classes = document.getElementsByClassName("class");
+const tables =  document.getElementsByClassName('py-attribute-table');
 
-    let head = document.getElementsByTagName('head')[0];
-    head.parentNode.insertBefore(cssLink, head);
-};
+for (let i = 0; i < classes.length; i++) {
+   const parentSig = classes[i].getElementsByTagName('dt')[0];
+   const table = tables[i];
 
-//call function on window load
-window.addEventListener('load', loadCSS);
+   parentSig.classList.add(`parent-sig-${i}`);
+   table.id = `attributable-${i}`
+
+   $(`#attributable-${i}`).insertAfter( `.parent-sig-${i}` );
+}
