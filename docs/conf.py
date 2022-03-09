@@ -73,13 +73,13 @@ html_theme_options = {
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+# so a file named "default.styles" will overwrite the builtin "default.styles".
 # These folders are copied to the documentation's HTML output
 html_static_path = ["_static"]
-html_js_files = ["js/custom.js"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
+html_css_files = ["styles/furo.css"]
 
 if on_rtd:
     extensions.append("sphinxcontrib.napoleon")
