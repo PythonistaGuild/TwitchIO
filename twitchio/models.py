@@ -692,6 +692,38 @@ class ExtensionBuilder:
 
 
 class Video:
+    """
+    Represents video information
+
+    Attributes
+    -----------
+    id: :class:`int`
+        The ID of the video.
+    user: :class:`~twitchio.PartialUser`
+        User who owns the video.
+    title: :class:`str`
+        Title of the video
+    description: :class:`str`
+        Description of the video.
+    created_at: :class:`datetime.datetime`
+        Date when the video was created.
+    published_at: :class:`datetime.datetime`
+       Date when the video was published.
+    url: :class:`str`
+        URL of the video.
+    thumbnail_url: :class:`str`
+        Template URL for the thumbnail of the video.
+    viewable: :class:`str`
+        Indicates whether the video is public or private.
+    view_count: :class:`int`
+        Number of times the video has been viewed.
+    language: :class:`str`
+        Language of the video.
+    type: :class:`str`
+        The type of video.
+    duration: :class:`str`
+        Length of the video.
+    """
 
     __slots__ = (
         "_http",
@@ -712,7 +744,7 @@ class Video:
 
     def __init__(self, http: "TwitchHTTP", data: dict, user: Union[PartialUser, User] = None):
         self._http = http
-        self.id: id = int(data["id"])
+        self.id: int = int(data["id"])
         self.user = user or PartialUser(http, data["user_id"], data["user_name"])
         self.title: str = data["title"]
         self.description: str = data["description"]
@@ -743,7 +775,20 @@ class Video:
 
 
 class Tag:
+    """
+    Represents a stream tag
 
+    Attributes
+    -----------
+    id: :class:`str`
+        An ID that identifies the tag.
+    auto: :class:`bool`
+        Indicates whether the tag is an automatic tag.
+    localization_names: Dict[:class:`str`, :class:`str`]
+        A dictionary that contains the localized names of the tag.
+    localization_descriptions: :class:`str`
+        A dictionary that contains the localized descriptions of the tag.
+    """
     __slots__ = "id", "auto", "localization_names", "localization_descriptions"
 
     def __init__(self, data: dict):
@@ -770,7 +815,36 @@ class WebhookSubscription:
 
 
 class Stream:
+    """
+    Represents a Stream
 
+    Attributes
+    -----------
+    id: :class:`int`
+        The current stream ID.
+    user: :class:`~twitchio.PartialUser`
+        The user who is streaming.
+    game_id: :class:`int`
+        Current game ID being played on the channel.
+    game_name: :class:`str`
+        Name of the game being played on the channel.
+    type: :class:`str`
+        Whether the stream is "live" or not.
+    title: :class:`str`
+        Title of the stream.
+    viewer_count: :class:`int`
+        Current viewer count of the stream
+    started_at: :class:`datetime.datetime`
+        UTC timestamp of when the stream started.
+    language: :class:`str`
+        Language of the channel.
+    thumbnail_url: :class:`str`
+        Thumbnail URL of the stream.
+    tag_ids: List[:class:`str`]
+        Tag IDs that apply to the stream.
+    is_mature: :class:`bool`
+        Indicates whether the stream is intended for mature audience.
+    """
     __slots__ = (
         "id",
         "user",
@@ -805,6 +879,24 @@ class Stream:
 
 
 class ChannelInfo:
+    """
+    Represents a channel's current information
+
+    Attributes
+    -----------
+    user: :class:`~twitchio.PartialUser`
+        The user whose channel information was requested.
+    game_id: :class:`int`
+        Current game ID being played on the channel.
+    game_name: :class:`str`
+        Name of the game being played on the channel.
+    title: :class:`str`
+        Title of the stream.
+    language: :class:`str`
+        Language of the channel.
+    delay: :class:`int`
+        Stream delay in seconds.
+    """
 
     __slots__ = ("user", "game_id", "game_name", "title", "language", "delay")
 
@@ -821,6 +913,32 @@ class ChannelInfo:
 
 
 class Prediction:
+    """
+    Represents channel point predictions
+
+    Attributes
+    -----------
+    user: :class:`~twitchio.PartialUser`
+        The user who is streaming.
+    prediction_id: :class:`str`
+        ID of the Prediction.
+    title: :class:`str`
+        Title for the Prediction.
+    winning_outcome_id: :class:`str`
+        ID of the winning outcome
+    outcomes: List[:class:`~twitchio.PredictionOutcome`]
+        List of possible outcomes for the Prediction.
+    prediction_window: :class:`int`
+        Total duration for the Prediction (in seconds).
+    prediction_status: :class:`str`
+        Status of the Prediction.
+    created_at: :class:`datetime.datetime`
+        Time for when the Prediction was created.
+    ended_at: :class:`datetime.datetime`
+        Time for when the Prediction ended.
+    locked_at: :class:`datetime.datetime`
+        Time for when the Prediction was locked.
+    """
 
     __slots__ = (
         "user",
@@ -859,6 +977,18 @@ class Prediction:
 
 
 class Predictor:
+    """
+    Represents predictor
+
+    Attributes
+    -----------
+    user: :class:`~twitchio.PartialUser`
+        The user who is streaming.
+    channel_points_used: :class:`int`
+        Number of Channel Points used by the user.
+    channel_points_won: :class:`int`
+        Number of Channel Points won by the user.
+    """
 
     __slots__ = ("outcome_id", "title", "channel_points", "color")
 
@@ -869,6 +999,24 @@ class Predictor:
 
 
 class PredictionOutcome:
+    """
+    Represents a prediction outcome
+
+    Attributes
+    -----------
+    outcome_id: :class:`str`
+        ID for the outcome.
+    title: :class:`str`
+        Text displayed for outcome.
+    channel_points: :class:`int`
+        Number of Channel Points used for the outcome.
+    color: :class:`str`
+        Color for the outcome.
+    users: :class:`int`
+        Number of unique uesrs that chose the outcome.
+    top_predictors: List[:class:`~twitchio.Predictor`]
+        List of the top predictors. Could be None.
+    """
 
     __slots__ = ("outcome_id", "title", "channel_points", "color", "users", "top_predictors")
 
@@ -893,7 +1041,18 @@ class PredictionOutcome:
 
 
 class Schedule:
+    """
+    Represents a channel's stream schedule
 
+    Attributes
+    -----------
+    segments: List[:class:`~twitchio.ScheduleSegment`]
+        Segment of a channel's stream schedule.
+    user: :class:`~twitchio.PartialUser`
+        The user of the channel associated to the schedule.
+    vacation: :class:`~twitchio.ScheduleVacation`
+        Vacation details of stream schedule.
+    """
     __slots__ = ("segments", "user", "vacation")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -906,7 +1065,26 @@ class Schedule:
 
 
 class ScheduleSegment:
+    """
+    Represents a segment of a channel's stream schedule
 
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID for the scheduled broadcast.
+    start_time: :class:`datetime.datetime`
+        Scheduled start time for the scheduled broadcast
+    end_time: :class:`datetime.datetime`
+        Scheduled end time for the scheduled broadcast
+    title: :class:`str`
+        Title for the scheduled broadcast.
+    canceled_until: :class:`datetime.datetime`
+        Used with recurring scheduled broadcasts. Specifies the date of the next recurring broadcast.
+    category: :class:`~twitchio.ScheduleCategory`
+        The game or category details for the scheduled broadcast.
+    is_recurring: :class:`bool`
+        Indicates if the scheduled broadcast is recurring weekly.
+    """
     __slots__ = ("id", "start_time", "end_time", "title", "canceled_until", "category", "is_recurring")
 
     def __init__(self, data: dict):
@@ -923,7 +1101,16 @@ class ScheduleSegment:
 
 
 class ScheduleCategory:
+    """
+    Game or category details of a stream's schedule
 
+    Attributes
+    -----------
+    id: :class:`str`
+        The game or category ID.
+    name: :class:`str`
+        The game or category name.
+    """
     __slots__ = ("id", "name")
 
     def __init__(self, data: dict):
@@ -935,7 +1122,16 @@ class ScheduleCategory:
 
 
 class ScheduleVacation:
+    """
+    A schedule's vacation details
 
+    Attributes
+    -----------
+    start_time: :class:`datetime.datetime`
+        Start date of stream schedule vaction.
+    end_time: :class:`datetime.datetime`
+        End date of stream schedule vaction.
+    """
     __slots__ = ("start_time", "end_time")
 
     def __init__(self, data: dict):
@@ -947,6 +1143,32 @@ class ScheduleVacation:
 
 
 class Team:
+    """
+    Represents information for a specific Twitch Team
+
+    Attributes
+    -----------
+    users: List[:class:`~twitchio.PartialUser`]
+        List of users in the specified Team.
+    background_image_url: :class:`str`
+        URL for the Team background image.
+    banner: :class:`str`
+        URL for the Team banner.
+    created_at: :class:`datetime.datetime`
+        Date and time the Team was created.
+    updated_at: :class:`datetime.datetime`
+        Date and time the Team was last updated.
+    info: :class:`str`
+        Team description.
+    thumbnail_url: :class:`str`
+        Image URL for the Team logo.
+    team_name: :class:`str`
+        Team name.
+    team_display_name: :class:`str`
+        Team display name.
+    id: :class:`str`
+        Team ID.
+    """
 
     __slots__ = (
         "users",
@@ -964,14 +1186,14 @@ class Team:
     def __init__(self, http: "TwitchHTTP", data: dict):
 
         self.users: List[PartialUser] = [PartialUser(http, x["user_id"], x["user_login"]) for x in data["users"]]
-        self.background_image_url = data["background_image_url"]
-        self.banner = data["banner"]
+        self.background_image_url: str = data["background_image_url"]
+        self.banner: str = data["banner"]
         self.created_at = parse_timestamp(data["created_at"].split(" ")[0])
         self.updated_at = parse_timestamp(data["updated_at"].split(" ")[0])
-        self.info = data["info"]
-        self.thumbnail_url = data["thumbnail_url"]
-        self.team_name = data["team_name"]
-        self.team_display_name = data["team_display_name"]
+        self.info: str = data["info"]
+        self.thumbnail_url: str = data["thumbnail_url"]
+        self.team_name: str = data["team_name"]
+        self.team_display_name: str = data["team_display_name"]
         self.id = data["id"]
 
     def __repr__(self):
@@ -979,7 +1201,32 @@ class Team:
 
 
 class ChannelTeams:
+    """
+    Represents a list of Twitch Teams of which the specified channel/broadcaster is a member
 
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        User of the broadcaster.
+    background_image_url: :class:`str`
+        URL for the Team background image.
+    banner: :class:`str`
+        URL for the Team banner.
+    created_at: :class:`datetime.datetime`
+        Date and time the Team was created.
+    updated_at: :class:`datetime.datetime`
+        Date and time the Team was last updated.
+    info: :class:`str`
+        Team description.
+    thumbnail_url: :class:`str`
+        Image URL for the Team logo.
+    team_name: :class:`str`
+        Team name.
+    team_display_name: :class:`str`
+        Team display name.
+    id: :class:`str`
+        Team ID.
+    """
     __slots__ = (
         "broadcaster",
         "background_image_url",
@@ -996,14 +1243,14 @@ class ChannelTeams:
     def __init__(self, http: "TwitchHTTP", data: dict):
 
         self.broadcaster: PartialUser = PartialUser(http, data["broadcaster_id"], data["broadcaster_login"])
-        self.background_image_url = data["background_image_url"]
-        self.banner = data["banner"]
+        self.background_image_url: str = data["background_image_url"]
+        self.banner: str = data["banner"]
         self.created_at = parse_timestamp(data["created_at"].split(" ")[0])
         self.updated_at = parse_timestamp(data["updated_at"].split(" ")[0])
-        self.info = data["info"]
-        self.thumbnail_url = data["thumbnail_url"]
-        self.team_name = data["team_name"]
-        self.team_display_name = data["team_display_name"]
+        self.info: str = data["info"]
+        self.thumbnail_url: str = data["thumbnail_url"]
+        self.team_name: str = data["team_name"]
+        self.team_display_name: str = data["team_display_name"]
         self.id = data["id"]
 
     def __repr__(self):
