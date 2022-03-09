@@ -46,7 +46,12 @@ extensions = [
     "sphinxcontrib.asyncio",
     "sphinx.ext.intersphinx",
     "attributetable",
+    "sphinxext.opengraph"
 ]
+
+# OpenGraph Meta Tags
+ogp_image = "https://raw.githubusercontent.com/TwitchIO/TwitchIO/master/logo.png"
+ogp_description = "Documentation for TwitchIO, the asynchronous Python wrapper for Twitch.tv."
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

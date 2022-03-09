@@ -3,6 +3,7 @@ docutils<0.18
 sphinxcontrib-napoleon
 sphinxcontrib-asyncio
 sphinxcontrib-websupport
+sphinxext-opengraph
 Pygments
 furo
 pyaudio==0.2.11
