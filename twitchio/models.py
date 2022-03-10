@@ -125,7 +125,7 @@ class CheerEmoteTier:
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
         self.colour: str = data["colour"]
-        self.images = data["images"] # TODO types
+        self.images = data["images"]  # TODO types
         self.can_cheer: bool = data["can_cheer"]
         self.show_in_bits_card: bool = data["show_in_bits_card"]
 
@@ -438,7 +438,9 @@ class SubscriptionEvent:
         broadcaster: Union[User, PartialUser] = None,
         user: Union[User, PartialUser] = None,
     ):
-        self.broadcaster: Union[User, PartialUser] = broadcaster or PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
+        self.broadcaster: Union[User, PartialUser] = broadcaster or PartialUser(
+            http, data["broadcaster_id"], data["broadcaster_name"]
+        )
         self.user: Union[User, PartialUser] = user or PartialUser(http, data["user_id"], data["user_name"])
         self.tier: int = round(int(data["tier"]) / 1000)
         self.plan_name: str = data["plan_name"]
@@ -581,6 +583,18 @@ class ModEvent:
 
 
 class AutomodCheckMessage:
+    """
+    Represents the message to check with automod
+
+    Attributes
+    -----------
+    id: :class:`str`
+        Developer-generated identifier for mapping messages to results.
+    text: :class:`str`
+        Message text.
+    user_id: :class:`int`
+        User ID of the sender.
+    """
 
     __slots__ = "id", "text", "user_id"
 
@@ -597,6 +611,16 @@ class AutomodCheckMessage:
 
 
 class AutomodCheckResponse:
+    """
+    Represents the response to a message check with automod
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The message ID passed in the body of the check
+    permitted: :class:`bool`
+        Indicates if this message meets AutoMod requirements.
+    """
 
     __slots__ = "id", "permitted"
 
@@ -609,6 +633,18 @@ class AutomodCheckResponse:
 
 
 class Extension:
+    """
+    Represents an extension for a specified user
+
+    Attributes
+    -----------
+    id: :class:`str`
+        ID of the extension.
+    version: :class:`str`
+        Version of the extension.
+    active: :class:`bool`
+        Activation state of the extension, for each extension type (component, overlay, mobile, panel).
+    """
 
     __slots__ = "id", "active", "version", "_x", "_y"
 
@@ -642,6 +678,22 @@ class Extension:
 
 
 class MaybeActiveExtension(Extension):
+    """
+    Represents an extension for a specified user that could be may be activated
+
+    Attributes
+    -----------
+    id: :class:`str`
+        ID of the extension.
+    version: :class:`str`
+        Version of the extension.
+    name: :class:`str`
+        Name of the extension.
+    can_activate: :class:`bool`
+        Indicates whether the extension is configured such that it can be activated.
+    types: List[:class:`str`]
+        Types for which the extension can be activated.
+    """
 
     __slots__ = "id", "version", "name", "can_activate", "types"
 
@@ -657,6 +709,24 @@ class MaybeActiveExtension(Extension):
 
 
 class ActiveExtension(Extension):
+    """
+    Represents an active extension for a specified user
+
+    Attributes
+    -----------
+    id: :class:`str`
+        ID of the extension.
+    version: :class:`str`
+        Version of the extension.
+    active: :class:`bool`
+        Activation state of the extension.
+    name: :class:`str`
+        Name of the extension.
+    x: :class:`int`
+        (Video-component Extensions only) X-coordinate of the placement of the extension. Could be None.
+    y: :class:`int`
+        (Video-component Extensions only) Y-coordinate of the placement of the extension. Could be None.
+    """
 
     __slots__ = "id", "active", "name", "version", "x", "y"
 
@@ -673,6 +743,18 @@ class ActiveExtension(Extension):
 
 
 class ExtensionBuilder:
+    """
+    Represents an extension to be updated for a specific user
+
+    Attributes
+    -----------
+    panels: List[:class:`~twitchio.Extension`]
+        List of panels to update for an extension.
+    overlays: List[:class:`~twitchio.Extension`]
+        List of overlays to update for an extension.
+    components: List[:class:`~twitchio.Extension`]
+        List of components to update for an extension.
+    """
 
     __slots__ = "panels", "overlays", "components"
 
@@ -789,6 +871,7 @@ class Tag:
     localization_descriptions: :class:`str`
         A dictionary that contains the localized descriptions of the tag.
     """
+
     __slots__ = "id", "auto", "localization_names", "localization_descriptions"
 
     def __init__(self, data: dict):
@@ -845,6 +928,7 @@ class Stream:
     is_mature: :class:`bool`
         Indicates whether the stream is intended for mature audience.
     """
+
     __slots__ = (
         "id",
         "user",
@@ -978,7 +1062,7 @@ class Prediction:
 
 class Predictor:
     """
-    Represents predictor
+    Represents a predictor
 
     Attributes
     -----------
@@ -1053,6 +1137,7 @@ class Schedule:
     vacation: :class:`~twitchio.ScheduleVacation`
         Vacation details of stream schedule.
     """
+
     __slots__ = ("segments", "user", "vacation")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -1085,6 +1170,7 @@ class ScheduleSegment:
     is_recurring: :class:`bool`
         Indicates if the scheduled broadcast is recurring weekly.
     """
+
     __slots__ = ("id", "start_time", "end_time", "title", "canceled_until", "category", "is_recurring")
 
     def __init__(self, data: dict):
@@ -1111,6 +1197,7 @@ class ScheduleCategory:
     name: :class:`str`
         The game or category name.
     """
+
     __slots__ = ("id", "name")
 
     def __init__(self, data: dict):
@@ -1132,6 +1219,7 @@ class ScheduleVacation:
     end_time: :class:`datetime.datetime`
         End date of stream schedule vaction.
     """
+
     __slots__ = ("start_time", "end_time")
 
     def __init__(self, data: dict):
@@ -1202,7 +1290,7 @@ class Team:
 
 class ChannelTeams:
     """
-    Represents a list of Twitch Teams of which the specified channel/broadcaster is a member
+    Represents the Twitch Teams of which the specified channel/broadcaster is a member
 
     Attributes
     -----------
@@ -1227,6 +1315,7 @@ class ChannelTeams:
     id: :class:`str`
         Team ID.
     """
+
     __slots__ = (
         "broadcaster",
         "background_image_url",
