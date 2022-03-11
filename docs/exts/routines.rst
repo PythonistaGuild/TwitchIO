@@ -42,14 +42,14 @@ routine.
 
     @routines.routine(hours=1)
     async def hello():
-        print('Hello World!)
+        print('Hello World!')
 
     @hello.before_routine
     async def hello_before():
         print('I am run first!')
 
 
-    @hello.start()
+    hello.start()
 
 
 **Routine with an error handler:**
