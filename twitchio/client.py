@@ -432,7 +432,9 @@ class Client:
         return [models.Clip(self._http, d) for d in data]
 
     async def fetch_channel(self, broadcaster: str):
-        """Retrieve channel information from the API.
+        """|coro|
+
+        Retrieve channel information from the API.
 
         Parameters
         -----------

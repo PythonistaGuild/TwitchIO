@@ -9,7 +9,7 @@ Sounds Ext
 Sounds is an extension to easily play sounds on your local machine plugged directly into your bot.
 Sounds is currently a Beta release, and as such should be treated so.
 
-Currently sounds supports local files, and YouTube searches. See below for more details.
+Currently sounds supports local files and YouTube searches. See below for more details.
 
 Sounds requires a few extra steps to get started, below is a short guide on how to get started with sounds:
 

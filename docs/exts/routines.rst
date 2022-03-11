@@ -42,14 +42,14 @@ routine.
 
     @routines.routine(hours=1)
     async def hello():
-        print('Hello World!)
+        print('Hello World!')
 
     @hello.before_routine
     async def hello_before():
         print('I am run first!')
 
 
-    @hello.start()
+    hello.start()
 
 
 **Routine with an error handler:**
@@ -86,7 +86,7 @@ It will then be ran every 24 hours after the initial date, until stopped.
 
 If the **date** has already passed, the routine will run at the next specified time.
 For example: If today was the **2nd, June 2021 8:30am** and your datetime was scheduled to run on the
-**1st, June 2021 at 9:30am**, you routine will first run on **2nd, June 2021 at 9:30am**.
+**1st, June 2021 at 9:30am**, your routine will first run on **2nd, June 2021 at 9:30am**.
 
 In simpler terms, datetimes in the past only care about the time, not the date. This can be useful when scheduling
 routines that don't need to be started on a specific date.
