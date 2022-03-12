@@ -28,7 +28,7 @@ bot.loop.run_until_complete(bot.__ainit__())
 async def event_eventsub_notification_follow(payload: eventsub.ChannelFollowData) -> None:
     print("Received event!")
     channel = bot.get_channel("channel")
-    await channel.send(f"{payload.user.name} followed woohoo!")
+    await channel.send(f"{payload.data.user.name} followed woohoo!")
 
 
 bot.run()
