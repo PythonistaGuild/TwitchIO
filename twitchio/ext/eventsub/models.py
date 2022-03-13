@@ -9,7 +9,7 @@ from typing_extensions import Literal
 
 from aiohttp import web
 
-from twitchio import CustomReward, PartialUser, parse_timestamp as _parse_datetime
+from twitchio import PartialUser, parse_timestamp as _parse_datetime
 
 if TYPE_CHECKING:
     from .server import EventSubClient
@@ -382,6 +382,102 @@ class ChannelModeratorAddRemoveData(EventData):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
 
 
+class CustomReward:
+    """
+    A Custom Reward
+
+    Attributes
+    -----------
+    broadcaster: :class:`twitchio.PartialUser`
+        The channel that has this reward
+    id: :class:`str`
+        The ID of the reward
+    title: :class:`str`
+        The title of the reward
+    cost: :class:`int`
+        The cost of the reward in Channel Points
+    prompt: :class:`str`
+        The prompt of the reward
+    enabled: :class:`bool`
+        Whether or not the reward is enabled. Will be `None` for Redemption events.
+    paused: :class:`bool`
+        Whether or not the reward is paused. Will be `None` for Redemption events.
+    in_stock: :class:`bool`
+        Whether or not the reward is in stock. Will be `None` for Redemption events.
+    cooldown_until: :class:`datetime.datetime`
+        How long until the reward is off cooldown and can be redeemed again. Will be `None` for Redemption events.
+    input_required: :class:`bool`
+        Whether or not the reward requires an input. Will be `None` for Redemption events.
+    redemptions_skip_queue: :class:`bool`
+        Whether or not redemptions for this reward skips the queue. Will be `None` for Redemption events.
+    redemptions_current_stream: :class:`int`
+        How many redemptions of this reward have been redeemed for this stream. Will be `None` for Redemption events.
+    max_per_stream: (:class:`bool`, :class:`int`)
+        Whether or not a per-stream redemption limit is in place, and if so, the maximum number of redemptions allowed
+        per stream. Will be `None` for Redemption events.
+    max_per_user_per_stream: (:class:`bool`, :class:`int`)
+        Whether or not a per-user-per-stream redemption limit is in place, and if so, the maximum number of redemptions
+        allowed per user per stream. Will be `None` for Redemption events.
+    cooldown: (:class:`bool`, :class:`int`)
+        Whether or not a global cooldown is in place, and if so, the number of seconds until the reward can be redeemed
+        again. Will be `None` for Redemption events.
+    """
+
+    __slots__ = (
+        "id",
+        "title",
+        "cost",
+        "prompt",
+        "enabled",
+        "paused",
+        "in_stock",
+        "cooldown_until",
+        "input_required",
+        "redemptions_skip_queue",
+        "redemptions_current_stream",
+        "max_per_stream",
+        "max_per_user_stream",
+        "cooldown",
+    )
+
+    def __init__(self, data, broadcaster):
+        self.broadcaster = broadcaster
+
+        self.id = data["id"]
+
+        self.title = data["title"]
+        self.cost = data["cost"]
+        self.prompt = data["prompt"]
+
+        self.enabled = data.get("is_enabled", None)
+        self.paused = data.get("is_paused", None)
+        self.in_stock = data.get("is_in_stock", None)
+
+        self.cooldown_until = (
+            _parse_datetime(data["cooldown_expires_at"]) if data.get("cooldown_expires_at", None) else None
+        )
+
+        self.input_required = data.get("is_user_input_required", None)
+        self.redemptions_skip_queue = data.get("should_redemptions_skip_request_queue", None)
+        self.redemptions_current_stream = data.get("redemptions_redeemed_current_stream", None)
+
+        self.max_per_stream = (
+            data.get("max_per_stream", {}).get("is_enabled"),
+            data.get("max_per_stream", {}).get("value"),
+        )
+        self.max_per_user_stream = (
+            data.get("max_per_user_per_stream", {}).get("is_enabled"),
+            data.get("max_per_user_per_stream", {}).get("value"),
+        )
+        self.cooldown = (
+            data.get("global_cooldown", {}).get("is_enabled"),
+            data.get("global_cooldown", {}).get("seconds"),
+        )
+
+        self.background_color = data.get("background_color", None)
+        self.image = data.get("image", data.get("default_image", {})).get("url_1x", None)
+
+
 class CustomRewardAddUpdateRemoveData(EventData):
     """
     A Custom Reward Add/Update/Remove event
@@ -401,7 +497,7 @@ class CustomRewardAddUpdateRemoveData(EventData):
     def __init__(self, client: EventSubClient, data: dict):
         self.id: str = data["id"]
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
-        self.reward = CustomReward(client.client._http, data, self.broadcaster)
+        self.reward = CustomReward(data, self.broadcaster)
 
 
 class CustomRewardRedemptionAddUpdateData(EventData):
@@ -435,7 +531,7 @@ class CustomRewardRedemptionAddUpdateData(EventData):
         self.input: str = data["user_input"]
         self.status: Literal["unknown", "unfulfilled", "fulfilled", "cancelled"] = data["status"]
         self.redeemed_at = _parse_datetime(data["redeemed_at"])
-        self.reward = CustomReward(client.client._http, data["reward"], self.broadcaster)
+        self.reward = CustomReward(data["reward"], self.broadcaster)
 
 
 class HypeTrainContributor:
