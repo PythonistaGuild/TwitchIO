@@ -424,6 +424,7 @@ class CustomReward:
     """
 
     __slots__ = (
+        "broadcaster",
         "id",
         "title",
         "cost",
@@ -438,6 +439,8 @@ class CustomReward:
         "max_per_stream",
         "max_per_user_stream",
         "cooldown",
+        "background_color",
+        "image",
     )
 
     def __init__(self, data, broadcaster):
