@@ -488,7 +488,7 @@ class CustomRewardAddUpdateRemoveData(EventData):
         The ID of the custom reward
     broadcaster: :class:`twitchio.PartialUser`
         The channel the custom reward was modified in
-    reward: :class:`twitchio.CustomReward`
+    reward: :class:`CustomReward`
         The reward object
     """
 
@@ -518,7 +518,7 @@ class CustomRewardRedemptionAddUpdateData(EventData):
         One of "unknown", "unfulfilled", "fulfilled", or "cancelled"
     redeemed_at: :class:`datetime.datetime`
         When the reward was redeemed at
-    reward: :class:`twitchio.CustomReward`
+    reward: :class:`CustomReward`
         The reward object
     """
 
