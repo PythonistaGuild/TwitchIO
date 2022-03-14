@@ -60,7 +60,7 @@ class Cooldown:
 
     def update_bucket(self, ctx):
         now = time.time()
-        
+
         bucket_keys = self._bucket_keys(ctx)
         buckets = []
 
@@ -75,7 +75,7 @@ class Cooldown:
 
             if tokens == self._rate:
                 window = now
-                
+
             self._cache[bucket] = (tokens, window)
 
     def reset(self):
