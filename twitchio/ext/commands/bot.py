@@ -327,8 +327,8 @@ class Bot(Client):
 
         This method handles commands sent from chat and invokes them.
 
-        By default, this coroutine is called within the `event_message` event.
-        If you choose to override `event_message` then you need to invoke this coroutine in order to handle commands.
+        By default, this coroutine is called within the :func:`Bot.event_message` event.
+        If you choose to override :func:`Bot.event_message` then you need to invoke this coroutine in order to handle commands.
 
         Parameters
         ----------
