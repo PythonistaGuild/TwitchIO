@@ -4,6 +4,13 @@ Master
 =======
 Massive documentation updates
 
+- TwitchIO
+    - Fix bug where # prefixed channel names in initial_channels would not trigger :func:`Client.event_ready``
+
+- ext.commands
+    - :func:`Bot.handle_commands` now also invokes on threads / replies
+
+
 2.2.0
 =====
 - ext.sounds
@@ -30,7 +37,7 @@ Massive documentation updates
 - ext.eventsub
     - Add support for the following subscription types
         - :class:`twitchio.ext.eventsub.PollBeginProgressData`
-            - ``channel.poll.begin``: 
+            - ``channel.poll.begin``:
             - ``channel.poll.progress``
         - :class:`twitchio.ext.eventsub.PollEndData`
             - ``channel.poll.end``

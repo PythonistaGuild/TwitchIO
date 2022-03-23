@@ -323,6 +323,21 @@ class Bot(Client):
         return context
 
     async def handle_commands(self, message):
+        """|coro|
+
+        This method handles commands sent from chat and invokes them.
+
+        By default, this coroutine is called within the `event_message` event.
+        If you choose to override `event_message` then you need to invoke this coroutine in order to handle commands.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The message object to get content of and context for.
+
+        """
+        if "reply-parent-msg-id" in message.tags:
+            message.content = message.content.split(" ")[1]
         context = await self.get_context(message)
         await self.invoke(context)
 
