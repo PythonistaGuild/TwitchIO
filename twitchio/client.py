@@ -96,6 +96,13 @@ class Client:
 
         self.loop: asyncio.AbstractEventLoop = None  # type: ignore
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if exc_val:
+            raise exc_val
+
     async def _shard(self):
         if asyncio.iscoroutinefunction(self._initial_channels):
             channels = await self._initial_channels()
@@ -157,6 +164,8 @@ class Client:
 
         self._token = token if not self._token else self._token
 
+        asyncio.run(self.setup())
+
         for shard in self._shards.values():
             shard._websocket._token = self._token
             self.loop.create_task(shard._websocket._connect())
@@ -177,7 +186,7 @@ class Client:
         Parameters
         ----------
         token: str
-            An optional token to pass to connect to Twitch IRC. This can also be placed in your bots init.
+            An optional token to pass to connect to Twitch IRC. This can also be placed in :class:`Client` init.
         """
         await self._shard()
 
@@ -185,6 +194,8 @@ class Client:
             token = token.removeprefix("oauth:")
 
         self._token = token if not self._token else self._token
+
+        await self.setup()
 
         for shard in self._shards.values():
             shard._websocket._token = self._token
@@ -361,3 +372,14 @@ class Client:
         chatter: :class:`PartialChatter`
             ...
         """
+
+    async def setup(self) -> None:
+        """|coro|
+
+        Method called before the Client has logged in to Twitch, used for asynchronous setup.
+
+        Useful for setting up state, like databases, before the client has logged in.
+
+        .. versionadded:: 3.0
+        """
+        pass
