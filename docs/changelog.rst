@@ -6,6 +6,7 @@ Massive documentation updates
 
 - TwitchIO
     - Fix bug where # prefixed channel names in initial_channels would not trigger :func:`Client.event_ready``
+    - Removed unexpected loop termination from `WSConnection._close()`
 
 - ext.commands
     - :func:`Bot.handle_commands` now also invokes on threads / replies
