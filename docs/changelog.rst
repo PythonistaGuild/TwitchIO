@@ -9,6 +9,7 @@ Massive documentation updates
 
 - ext.commands
     - :func:`Bot.handle_commands` now also invokes on threads / replies
+    - Cooldowns are now handled correctly per bucket.
 
 
 2.2.0
