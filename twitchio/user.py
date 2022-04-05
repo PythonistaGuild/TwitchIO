@@ -727,6 +727,7 @@ class PartialUser:
         """|coro|
 
         Modify stream information
+
         Parameters
         -----------
         token: :class:`str`
