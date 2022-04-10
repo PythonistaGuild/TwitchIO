@@ -1131,7 +1131,7 @@ class Schedule:
     Attributes
     -----------
     segments: List[:class:`~twitchio.ScheduleSegment`]
-        Segment of a channel's stream schedule.
+        List of segments of a channel's stream schedule.
     user: :class:`~twitchio.PartialUser`
         The user of the channel associated to the schedule.
     vacation: :class:`~twitchio.ScheduleVacation`
@@ -1141,7 +1141,7 @@ class Schedule:
     __slots__ = ("segments", "user", "vacation")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        self.segments = [ScheduleSegment(d) for d in data["data"]["segments"]]
+        self.segments = [ScheduleSegment(d) for d in data["data"]["segments"]] if data["data"]["segments"] else []
         self.user = PartialUser(http, data["data"]["broadcaster_id"], data["data"]["broadcaster_login"])
         self.vacation = ScheduleVacation(data["data"]["vacation"]) if data["data"]["vacation"] else None
 
@@ -1151,7 +1151,7 @@ class Schedule:
 
 class ScheduleSegment:
     """
-    Represents a segment of a channel's stream schedule
+    Represents a list segments of a channel's stream schedule
 
     Attributes
     -----------
@@ -1183,7 +1183,7 @@ class ScheduleSegment:
         self.is_recurring: bool = data["is_recurring"]
 
     def __repr__(self):
-        return f"<Segment id={self.id} start_time={self.start_time} end_time={self.end_time} title={self.title} canceled_until={self.canceled_until} category={self.category} is_recurring={self.is_recurring}>"
+        return f"<ScheduleSegment id={self.id} start_time={self.start_time} end_time={self.end_time} title={self.title} canceled_until={self.canceled_until} category={self.category} is_recurring={self.is_recurring}>"
 
 
 class ScheduleCategory:
