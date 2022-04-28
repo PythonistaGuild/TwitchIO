@@ -11,6 +11,8 @@ Massive documentation updates
     - :func:`Bot.handle_commands` now also invokes on threads / replies
     - Cooldowns are now handled correctly per bucket.
 
+- ext.pubsub
+    - Channel subscription model fixes.
 
 2.2.0
 =====

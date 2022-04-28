@@ -399,13 +399,11 @@ class PubSubChannelSubscribe(PubSubMessage):
         self.context: str = subscription["context"]
 
         try:
-            self.user = (
-                PartialUser(client._http, subscription["user_name"], int(subscription["user_id"])),
-                subscription["display_name"],
-            )
+            self.user = PartialUser(client._http, int(subscription["user_id"]), subscription["user_name"])
         except KeyError:
             self.user = None
-        self.message = PubSubChatMessage(subscription["sub_message"]["message"])
+
+        self.message: str = subscription["sub_message"]["message"]
 
         try:
             self.emotes = subscription["sub_message"]["emotes"]
@@ -415,9 +413,8 @@ class PubSubChannelSubscribe(PubSubMessage):
         self.is_gift: bool = subscription["is_gift"]
 
         try:
-            self.recipient = (
-                PartialUser(client._http, subscription["recipient_user_name"], int(subscription["recipient_id"])),
-                subscription["recipient_display_name"],
+            self.recipient = PartialUser(
+                client._http, int(subscription["recipient_id"]), subscription["recipient_user_name"]
             )
         except KeyError:
             self.recipient = None
