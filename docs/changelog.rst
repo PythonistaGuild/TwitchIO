@@ -5,7 +5,8 @@ Master
 Massive documentation updates
 
 - TwitchIO
-    - Fix bug where # prefixed channel names in initial_channels would not trigger :func:`Client.event_ready``
+    - Fix bug where # prefixed channel names in initial_channels would not trigger :func:`twitchio.Client.event_ready`
+    - :func:`User.create_clip` has been fixed by converting bool to string in http request
 
 - ext.commands
     - :func:`Bot.handle_commands` now also invokes on threads / replies
