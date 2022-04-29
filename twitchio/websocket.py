@@ -132,7 +132,7 @@ class Websocket:
 
             if message.type is aiohttp.WSMsgType.CLOSED:
                 if not self.closing:
-                    logger.error(f'Websocket was unexpectedly closed. {message.extra if message.extra else ""}')
+                    logger.error(f"Websocket was unexpectedly closed. {message.extra or ''}")
                 break
 
             data = message.data
@@ -180,9 +180,7 @@ class Websocket:
             self.join_cache[channel] = asyncio.create_task(self.join_timeout_task(channel), name=channel)
 
             await self.send(f'JOIN #{channel.lower()}')
-            cd = self.join_limiter.check_limit()
-
-            if cd:
+            if cd := self.join_limiter.check_limit():
                 await self.join_limiter.wait_for()
 
     async def send(self, message: str) -> None:
@@ -194,9 +192,7 @@ class Websocket:
             print(e)
 
     def dispatch_callback(self, task: asyncio.Task) -> None:
-        exc = task.exception()
-
-        if exc:
+        if exc := task.exception():
             asyncio.create_task(self.dispatch('error', exc))
 
     async def dispatch(self, event: str, *args, **kwargs) -> None:
@@ -301,11 +297,11 @@ class Websocket:
 
         try:
             self._keep_alive_task.cancel()
-        except:
+        except Exception:
             pass
 
         for task in self.join_cache.values():
             try:
                 task.cancel()
-            except:
+            except Exception:
                 pass

@@ -162,7 +162,7 @@ class Client:
         if token:
             token = token.removeprefix("oauth:")
 
-        self._token = token if not self._token else self._token
+        self._token = self._token or token
 
         asyncio.run(self.setup())
 
@@ -193,7 +193,7 @@ class Client:
         if token:
             token = token.removeprefix("oauth:")
 
-        self._token = token if not self._token else self._token
+        self._token = self._token or token
 
         await self.setup()
 

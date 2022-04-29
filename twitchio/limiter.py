@@ -36,11 +36,7 @@ class IRCRateLimiter:
 
         self._tokens = self.tokens
 
-        if bucket == 'messages':
-            self.per = 30
-        else:
-            self.per = 10
-
+        self.per = 30 if bucket == 'messages' else 10
         self.time = time.time() + self.per
 
     def check_limit(self, *, time_: float = None, update: bool = True) -> float:
