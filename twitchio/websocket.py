@@ -91,14 +91,6 @@ class Websocket:
         if self.is_connected():
             await self.ws.close()
 
-        if self._keep_alive_task:
-            try:
-                self._keep_alive_task.cancel()
-            except Exception as e:
-                logger.debug(e)
-
-            self._keep_alive_task = None
-
         async with aiohttp.ClientSession() as session:
             try:
                 self.ws = await session.ws_connect(url=HOST, heartbeat=self.heartbeat)
@@ -107,9 +99,7 @@ class Websocket:
                 logger.error(f'Websocket could not connect. {e}. Attempting reconnect in {retry} seconds.')
 
                 await asyncio.sleep(retry)
-                asyncio.create_task(self._connect())
-
-                return
+                return await self._connect()
 
             headers = {'Authorization': f'Bearer {self._token}'}
             async with session.get(url='https://id.twitch.tv/oauth2/validate', headers=headers) as resp:
@@ -122,6 +112,7 @@ class Websocket:
             session.detach()
 
         self._keep_alive_task = asyncio.create_task(self._keep_alive())
+
         await self.authentication_sequence()
 
         while self.join_cache:
@@ -132,6 +123,8 @@ class Websocket:
 
         if all(s.ready for s in self.client._shards.values()):
             await self.dispatch(event='ready')
+
+        await asyncio.wait_for(self._keep_alive_task, timeout=None)
 
     async def _keep_alive(self) -> None:
         while True:
@@ -160,7 +153,7 @@ class Websocket:
                     self._ready_event.set()
                     logger.info(f'Successful authentication on Twitch Websocket with nick: {self.nick}.')
 
-        asyncio.create_task(self._connect())
+        return await self._connect()
 
     async def authentication_sequence(self) -> None:
         await self.send(f'PASS oauth:{self._token}')

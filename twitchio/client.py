@@ -197,9 +197,12 @@ class Client:
 
         await self.setup()
 
+        shard_tasks = []
         for shard in self._shards.values():
             shard._websocket._token = self._token
-            await shard._websocket._connect()
+            shard_tasks.append(asyncio.create_task(shard._websocket._connect()))
+
+        await asyncio.wait(shard_tasks)
 
     async def close(self) -> None:
         for shard in self._shards.values():
