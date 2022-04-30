@@ -96,12 +96,15 @@ class Client:
 
         self.loop: asyncio.AbstractEventLoop = None  # type: ignore
 
+        self._is_closed = False
+
     async def __aenter__(self):
+        await self.setup()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if exc_val:
-            raise exc_val
+        if not self._is_closed:
+            await self.close()
 
     async def _shard(self):
         if asyncio.iscoroutinefunction(self._initial_channels):
@@ -164,8 +167,6 @@ class Client:
 
         self._token = self._token or token
 
-        asyncio.run(self.setup())
-
         for shard in self._shards.values():
             shard._websocket._token = self._token
             self.loop.create_task(shard._websocket._connect())
@@ -195,8 +196,6 @@ class Client:
 
         self._token = self._token or token
 
-        await self.setup()
-
         shard_tasks = []
         for shard in self._shards.values():
             shard._websocket._token = self._token
@@ -207,6 +206,8 @@ class Client:
     async def close(self) -> None:
         for shard in self._shards.values():
             await shard._websocket.close()
+
+        self._is_closed = True
 
     @property
     def shards(self) -> Dict[int, ShardInfo]:
