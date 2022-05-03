@@ -1,69 +1,38 @@
 from __future__ import annotations
-from typing import List, Optional, TypeVar
+
+import asyncio
+from typing import Collection, List, Optional, TypeVar
 from types import FunctionType
 
-__all__ = ('Command', 'Collection')
+
+__all__ = ('Command', 'command')
 
 Callback = TypeVar("Callback", bound=FunctionType)
 
+
 class Command:
 
-    def __init__(self, callback: Callback, *, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
+    def __init__(self,
+                 callback: Callback,
+                 *,
+                 name: Optional[str] = None,
+                 aliases: Optional[List[str]] = None):
         self._callback = callback
         self._name = name
         self._aliases = aliases or []
 
-        self._parent = parent
-
-    @classmethod
-    def __call__(cls, func, /, *, name: str = None, aliases: Optional[list] = None):
-        name = name if name else func.__name__
-
-        return cls(func, name=name, aliases=aliases)
+    async def __call__(self, *args, **kwargs):
+        await self._callback(*args, **kwargs)
 
 
-class Collection(Command):
+def command(*, name: Optional[str] = None, aliases: Optional[Collection[str]] = None, cls: Optional[Command] = Command):
+    # noinspection PyTypeChecker
+    if cls and not issubclass(cls, Command):
+        raise TypeError(f'cls parameter must derive from {Command!r}.')
 
-    def __init__(self, callback: Callback, name: str, aliases: Optional[List[str]] = None, parent: Optional[Collection] = None):
-        super().__init__(
-            callback,
-            name=name,
-            aliases=aliases,
-            parent=parent
-        )
+    def wrapped(func: Callback):
+        if not asyncio.iscoroutinefunction(func):
+            raise TypeError('Command callbacks must be coroutines.')
 
-        self._children = {}
-
-    @classmethod
-    def __call__(cls, func: Callback, /, *, name: str = None, aliases: Optional[list] = None):
-        name = name if name else func.__name__
-        self_ = cls(func, name)
-
-        return Collection(func, name=name, aliases=aliases, parent=self_)
-
-    def command(self, name: Optional[str] = None, *, aliases: Optional[list] = None):
-        def wrapped(func: Callback):
-            nonlocal self
-            _name = name or func.__name__
-
-            self._children[name] = cmd = Command(func, name=name, aliases=aliases, parent=self)
-            return cmd
-
-        return wrapped
-
-    def collection(self, *, name: Optional[str] = None, aliases: Optional[list] = None):
-        def wrapped(func: Callback):
-            nonlocal self
-            _name = name or func.__name__
-            self._children[_name] = cmd = Collection(func, name=_name, aliases=aliases, parent=self)
-
-            return cmd
-
-        return wrapped
-
-
-class Listener:
-
-    def __init__(self, **attrs):
-        self.callback = attrs.get('func')
-        self.name = attrs.get('name')
+        return cls(name=name or func.__name__, callback=func, aliases=aliases)
+    return wrapped
