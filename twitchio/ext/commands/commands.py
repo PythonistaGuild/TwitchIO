@@ -21,10 +21,12 @@ class Command:
                  *,
                  name: Optional[str] = None,
                  aliases: Optional[List[str]] = None,
+                 positional_delimiter: Optional[str] = '=',
                  **kwargs):
         self._callback = callback
         self._name = name
         self._aliases = aliases or []
+        self._pos_delim = positional_delimiter
 
         sig = inspect.signature(callback)
         self.params = sig.parameters.copy()  # type: ignore
@@ -60,13 +62,15 @@ class Command:
                 continue
 
             if param.kind == param.POSITIONAL_ONLY:
-                value = [splat_copy.pop(i) for i, v in enumerate(splat_copy) if v.startswith(f'{name}=')] or None
+                value = \
+                    [splat_copy.pop(i) for i, v in enumerate(splat_copy) if v.startswith(f'{name}{self._pos_delim}')] \
+                    or None
 
                 if value and len(value) > 1:
                     raise ValueError(f'The argument "{name}" can not have more than one value.')
 
                 if value:
-                    value = value[0].removeprefix(f'{name}=')
+                    value = value[0].removeprefix(f'{name}{self._pos_delim}')
 
                 positionals[name] = {'index': index, 'value': value}
 
@@ -101,7 +105,13 @@ class Command:
         await self._callback(self._instance, context, *args, **kwargs)
 
 
-def command(*, name: Optional[str] = None, aliases: Optional[Collection[str]] = None, cls: Optional[Command] = Command):
+def command(
+        *,
+        name: Optional[str] = None,
+        aliases: Optional[Collection[str]] = None,
+        cls: Optional[Command] = Command,
+        positional_delimiter: Optional[str] = '='
+        ):
     # noinspection PyTypeChecker
     if cls and not issubclass(cls, Command):
         raise TypeError(f'cls parameter must derive from {Command!r}.')
@@ -110,5 +120,7 @@ def command(*, name: Optional[str] = None, aliases: Optional[Collection[str]] = 
         if not asyncio.iscoroutinefunction(func):
             raise TypeError('Command callbacks must be coroutines.')
 
-        return cls(name=name or func.__name__, callback=func, aliases=aliases)
+        return cls(name=name or func.__name__,
+                   callback=func, aliases=aliases,
+                   positional_delimiter=positional_delimiter)
     return wrapped
