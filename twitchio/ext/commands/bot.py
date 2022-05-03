@@ -1,45 +1,90 @@
 from __future__ import annotations
+
 import asyncio
-import typing
+from typing import Coroutine, Dict, List, Optional, Union
 
+from .commands import Command
+from .components import Component
 from twitchio import Client
-from .commands import Command, Collection
-
-if typing.TYPE_CHECKING:
-    from ..components import ComponentMeta
 
 
 class Bot(Client):
 
-    def __init__(self, prefix: typing.Union[list, callable, typing.Coroutine], *args, **kwargs):
+    def __init__(self, prefix: Union[list, callable, Coroutine], *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._commands = {}
+        self.__commands: Dict[str, Component] = {}
+        self.__components: Dict[str, Command] = {}
 
-    def add_component(self, component: ComponentMeta):
-        component._bot = self
+        self._unassigned_prefixes = prefix
+        self._prefixes: List[str] = []
 
-    def add_command(self, command):
+        self._in_context: bool = False
 
-        if not asyncio.iscoroutinefunction(command._callback):
-            raise TypeError('Commands must be coroutines.')
+    async def __aenter__(self) -> Bot:
+        self._in_context = True
 
-        if not isinstance(command, (Command, Collection)):
-            raise TypeError(f'Commands must be an instance of Command or Collection not <{command!r}>')
+        await self._prepare_prefixes()
+        await super().__aenter__()
 
-        if command._name in self._commands:
-            raise RuntimeError(f'The command <{command._name}> already exists.')
+        return self
 
-        for alias in command._aliases:
-            if alias in self._commands:
-                raise RuntimeError(f'A command with the name/alias <{command._name}> already exists.')
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self._in_context = False
 
-        if isinstance(command, Collection):
-            # TODO Stuck here trying to figure out whether a collection has a command
-            # With the same name or alias...
-            pass
+        await super().__aexit__(exc_type, exc_val, exc_tb)
 
-        self._commands[command._name] = command
+    def run(self, token: Optional[str] = None) -> None:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._prepare_prefixes())
+
+        super().run(token=token)
+
+    async def start(self, token: Optional[str] = None) -> None:
+        if not self._in_context:
+            raise RuntimeError('"bot.start" can only be used within the bot async context manager.')
+
+        await super().start(token=token)
+
+    @property
+    def prefixes(self) -> List[str]:
+        return self._prefixes
+
+    async def _prepare_prefixes(self) -> None:
+        if asyncio.iscoroutine(self._unassigned_prefixes):
+            prefixes = await self._unassigned_prefixes(self)
+
+        elif callable(self._unassigned_prefixes):
+            prefixes = self._unassigned_prefixes(self)
+
+        else:
+            prefixes = self._unassigned_prefixes
+
+        if isinstance(prefixes, str):
+            self._prefixes = [prefixes]
+
+        elif isinstance(prefixes, list):
+            if not all(isinstance(prefix, str) for prefix in prefixes):
+                raise TypeError('prefix parameter must be a str, list of str or callable/coroutine returning either.')
+            self._prefixes = prefixes
+
+        else:
+            raise TypeError('prefix parameter must be a str, list of str or callable/coroutine returning either.')
+
+    async def add_component(self, component: Component) -> None:
+        pass
+
+    async def remove_component(self, component: Component) -> None:
+        pass
+
+    async def load_extension(self):
+        pass
+
+    async def unload_extension(self):
+        pass
+
+    async def reload_extension(self):
+        pass
 
 
 
