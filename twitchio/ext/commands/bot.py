@@ -441,6 +441,7 @@ class Bot(Client):
         except Exception as e:
             sys.modules.update(modules)
             module.prepare(self)  # type: ignore
+            self._modules[name] = module
             raise
 
     def add_cog(self, cog: Cog):
