@@ -5,6 +5,7 @@ Master
 Massive documentation updates
 
 - TwitchIO
+    - Removed unexpected loop termination from `WSConnection._close()`
     - Fix bug where # prefixed channel names in initial_channels would not trigger :func:`twitchio.Client.event_ready`
     - :func:`User.create_clip` has been fixed by converting bool to string in http request
 
