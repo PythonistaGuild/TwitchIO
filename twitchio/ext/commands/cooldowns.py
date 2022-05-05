@@ -56,40 +56,30 @@ class Cooldown:
         self._per = per
         self.bucket = bucket
 
-        self._window = time.time() + self._per
-        self._tokens = 0
-
         self._cache = {}
-
-    def get_tokens(self, now=None):
-        now = now or time.time()
-        tokens = self._tokens
-
-        if now > self._window + self._per:
-            tokens = 0
-
-        return tokens
 
     def update_bucket(self, ctx):
         now = time.time()
 
-        self._tokens = self.get_tokens(now)
+        bucket_keys = self._bucket_keys(ctx)
+        buckets = []
 
-        if self._tokens == 0:
-            self._window = now
+        for bucket in bucket_keys:
+            (tokens, window) = self._cache[bucket]
 
-        if self._tokens == self._rate:
-            retry = self._per - (now - self._window)
-            raise CommandOnCooldown(command=ctx.command, retry_after=retry)
+            if tokens == self._rate:
+                retry = self._per - (now - window)
+                raise CommandOnCooldown(command=ctx.command, retry_after=retry)
 
-        self._tokens += 1
+            tokens += 1
 
-        if self._tokens == self._rate:
-            self._window = now
+            if tokens == self._rate:
+                window = now
+
+            self._cache[bucket] = (tokens, window)
 
     def reset(self):
-        self._tokens = 0
-        self._window = time.time()
+        self._cache = {}
 
     def _bucket_keys(self, ctx):
         buckets = []
@@ -115,7 +105,7 @@ class Cooldown:
 
     def _update_cache(self, now=None):
         now = now or time.time()
-        dead = [key for key, cooldown in self._cache.items() if now > cooldown._window + cooldown._per]
+        dead = [key for key, cooldown in self._cache.items() if now > cooldown[1] + self._per]
 
         for bucket in dead:
             del self._cache[bucket]
@@ -129,10 +119,8 @@ class Cooldown:
         buckets = []
 
         for index, bucket in enumerate(bucket_keys):
+            buckets.append(ctx.command._cooldowns[index])
             if bucket not in self._cache:
-                buckets.append(ctx.command._cooldowns[index])
-                self._cache[bucket] = ctx.command._cooldowns[index]
-            else:
-                buckets.append(self._cache[bucket])
+                self._cache[bucket] = (0, now)
 
         return buckets

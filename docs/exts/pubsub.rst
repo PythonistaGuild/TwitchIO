@@ -151,10 +151,6 @@ If the topic requires multiple channel ids, they should be passed as such:
 
 .. function:: channel_subscriptions(oauth_token: str)
 
-    .. warning::
-
-        This does not have a model created yet, and will error when a subscription event is received
-
     This topic listens for subscriptions on the given channel.
     This topic dispatches the ``pubsub_subscription`` client event.
     This topic takes one channel id, the channel to listen on, e.g.:

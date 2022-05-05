@@ -36,7 +36,7 @@ from .cooldowns import RateBucket
 
 try:
     import ujson as json
-except:
+except Exception:
     import json
 
 if TYPE_CHECKING:
@@ -380,8 +380,7 @@ class TwitchHTTP:
     async def get_extension_transactions(self, extension_id: str, ids: List[Any] = None):
         q = [("extension_id", extension_id)]
         if ids:
-            for id in ids:
-                q.append(("id", id))
+            q.extend(("id", id) for id in ids)
 
         return await self.request(Route("GET", "extensions/transactions", "", query=q))
 
@@ -430,8 +429,7 @@ class TwitchHTTP:
         params = [("broadcaster_id", str(broadcaster_id)), ("only_manageable_rewards", str(only_manageable))]
 
         if ids:
-            for id in ids:
-                params.append(("id", str(id)))
+            params.extend(("id", str(id)) for id in ids)
 
         return await self.request(Route("GET", "channel_points/custom_rewards", query=params, token=token))
 
@@ -586,7 +584,7 @@ class TwitchHTTP:
 
     async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
         return await self.request(
-            Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", has_delay)], token=token),
+            Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", str(has_delay))], token=token),
             paginate=False,
         )
 
@@ -605,9 +603,7 @@ class TwitchHTTP:
             ("started_at", started_at.isoformat() if started_at else None),
             ("ended_at", ended_at.isoformat() if ended_at else None),
         ]
-        for id in ids:
-            q.append(("id", id))
-
+        q.extend(("id", id) for id in ids)
         query = [x for x in q if x[1] is not None]
 
         return await self.request(Route("GET", "clips", query=query, token=token))
@@ -624,15 +620,13 @@ class TwitchHTTP:
 
     async def get_code_status(self, codes: List[str], user_id: int):
         q = [("user_id", user_id)]
-        for code in codes:
-            q.append(("code", code))
+        q.extend(("code", code) for code in codes)
 
         return await self.request(Route("GET", "entitlements/codes", query=q))
 
     async def post_redeem_code(self, user_id: int, codes: List[str]):
         q = [("user_id", user_id)]
-        for c in codes:
-            q.append(("code", c))
+        q.extend(("code", c) for c in codes)
 
         return await self.request(Route("POST", "entitlements/code", query=q))
 
@@ -642,11 +636,9 @@ class TwitchHTTP:
     async def get_games(self, game_ids: List[Any], game_names: List[str]):
         q = []
         if game_ids:
-            for id in game_ids:
-                q.append(("id", id))
+            q.extend(("id", id) for id in game_ids)
         if game_names:
-            for name in game_names:
-                q.append(("name", name))
+            q.extend(("name", name) for name in game_names)
 
         return await self.request(Route("GET", "games", query=q))
 
@@ -675,31 +667,27 @@ class TwitchHTTP:
     async def get_channel_ban_unban_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
-            for id in user_ids:
-                q.append(("user_id", id))
+            q.extend(("user_id", id) for id in user_ids)
 
         return await self.request(Route("GET", "moderation/banned/events", query=q, token=token))
 
     async def get_channel_bans(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
-            for id in user_ids:
-                q.append(("user_id", id))
+            q.extend(("user_id", id) for id in user_ids)
 
         return await self.request(Route("GET", "moderation/banned", query=q, token=token))
 
     async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
-            for id in user_ids:
-                q.append(("user_id", id))
+            q.extend(("user_id", id) for id in user_ids)
 
         return await self.request(Route("GET", "moderation/moderators", query=q, token=token))
 
     async def get_channel_mod_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
-        for id in user_ids:
-            q.append(("user_id", id))
+        q.extend(("user_id", id) for id in user_ids)
 
         return await self.request(Route("GET", "moderation/moderators/events", query=q, token=token))
 
@@ -726,20 +714,13 @@ class TwitchHTTP:
     ):
         q = []
         if game_ids:
-            for g in game_ids:
-                q.append(("game_id", g))
-
+            q.extend(("game_id", g) for g in game_ids)
         if user_ids:
-            for u in user_ids:
-                q.append(("user_id", u))
-
+            q.extend(("user_id", u) for u in user_ids)
         if user_logins:
-            for l in user_logins:
-                q.append(("user_login", l))
-
+            q.extend(("user_login", l) for l in user_logins)
         if languages:
-            for l in languages:
-                q.append(("language", l))
+            q.extend(("language", l) for l in languages)
 
         return await self.request(Route("GET", "streams", query=q, token=token))
 
@@ -807,26 +788,21 @@ class TwitchHTTP:
         ]
 
         if segment_ids:
-            for id in segment_ids:
-                q.append(
-                    ("id", id),
-                )
+            q.extend(("id", id) for id in segment_ids)
 
         return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
 
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
-            for u in user_ids:
-                q.append(("user_id", u))
+            q.extend(("user_id", u) for u in user_ids)
 
         return await self.request(Route("GET", "subscriptions", query=q, token=token))
 
     async def get_stream_tags(self, tag_ids: List[str] = None):
         q = []
         if tag_ids:
-            for u in tag_ids:
-                q.append(("tag_id", u))
+            q.extend(("tag_id", u) for u in tag_ids)
 
         return await self.request(Route("GET", "tags/streams", query=q or None))
 
@@ -862,12 +838,9 @@ class TwitchHTTP:
     async def get_users(self, ids: List[int], logins: List[str], token: str = None):
         q = []
         if ids:
-            for id in ids:
-                q.append(("id", id))
-
+            q.extend(("id", id) for id in ids)
         if logins:
-            for login in logins:
-                q.append(("login", login))
+            q.extend(("login", login) for login in logins)
 
         return await self.request(Route("GET", "users", query=q, token=token))
 
@@ -928,8 +901,7 @@ class TwitchHTTP:
         ]
 
         if ids:
-            for id in ids:
-                q.append(("id", id))
+            q.extend(("id", id) for id in ids)
 
         return await self.request(Route("GET", "videos", query=q, token=token))
 
