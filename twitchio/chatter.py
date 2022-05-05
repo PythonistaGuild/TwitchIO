@@ -20,6 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from typing import Optional
+
 from .parser import IRCPayload
 
 
@@ -77,14 +79,15 @@ class PartialChatter:
         return int(self._id)
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """The users name."""
         return self._name
 
     @property
-    def colour(self) -> hex:
+    def colour(self) -> Optional[str]:
         """The users colour."""
-        return hex(self._colour.removeprefix('#'))
+        if self._colour:
+            return hex(self._colour.removeprefix('#'))
 
     color = colour
 

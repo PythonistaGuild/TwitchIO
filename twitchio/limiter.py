@@ -23,6 +23,7 @@ SOFTWARE.
 import asyncio
 import time
 
+from typing import Optional
 
 class IRCRateLimiter:
 
@@ -39,7 +40,7 @@ class IRCRateLimiter:
         self.per = 30 if bucket == 'messages' else 10
         self.time = time.time() + self.per
 
-    def check_limit(self, *, time_: float = None, update: bool = True) -> float:
+    def check_limit(self, *, time_: Optional[float] = None, update: bool = True) -> float:
         """Check and update the RateLimiter."""
         time_ = time_ or time.time()
 
@@ -55,7 +56,7 @@ class IRCRateLimiter:
 
         return 0.0
 
-    async def wait_for(self, *, time_: float = None) -> None:
+    async def wait_for(self, *, time_: Optional[float] = None) -> None:
         """Wait for the RateLimiter to cooldown."""
         time_ = time_ or time.time()
 

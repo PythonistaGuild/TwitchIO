@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import copy
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 from .abc import Messageable
 from .cache import Cache

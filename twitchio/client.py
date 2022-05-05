@@ -20,10 +20,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
+
 import asyncio
+import inspect
 import sys
 import traceback
-from typing import Optional, Union, Coroutine, Dict, TYPE_CHECKING
+from typing import Optional, Tuple, Union, Coroutine, Callable, Any, Dict, List, TYPE_CHECKING
 
 from .channel import Channel
 from .limiter import IRCRateLimiter
@@ -35,6 +38,8 @@ from .websocket import Websocket
 
 if TYPE_CHECKING:
     from ext.eventsub import EventSubClient
+
+_initial_channels_T = Optional[Union[List[str], Tuple[str], Callable[[], List[str]], Coroutine[Any, Any, None]]]
 
 
 class Client:
@@ -69,12 +74,12 @@ class Client:
                  heartbeat: Optional[float] = 30.0,
                  verified: Optional[bool] = False,
                  join_timeout: Optional[float] = 15.0,
-                 initial_channels: Optional[Union[list, tuple, callable, Coroutine]] = None,
+                 initial_channels: _initial_channels_T = None,
                  shard_limit: int = 100,
                  cache_size: Optional[int] = None,
-                 eventsub: Optional["EventSubClient"] = None,
+                 eventsub: Optional[EventSubClient] = None,
                  ):
-        self._token: str = token.removeprefix('oauth:') if token else token
+        self._token: Optional[str] = token and token.removeprefix('oauth:')
 
         self._heartbeat = heartbeat
         self._verified = verified
@@ -84,11 +89,11 @@ class Client:
 
         self._shards = {}
         self._shard_limit = shard_limit
-        self._initial_channels = initial_channels or []
+        self._initial_channels: _initial_channels_T = initial_channels or []
 
         self._limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
 
-        self._eventsub = None
+        self._eventsub: Optional[EventSubClient] = None
         if eventsub:
             self._eventsub = eventsub
             self._eventsub._client = self
@@ -107,8 +112,8 @@ class Client:
             await self.close()
 
     async def _shard(self):
-        if asyncio.iscoroutinefunction(self._initial_channels):
-            channels = await self._initial_channels()
+        if inspect.iscoroutinefunction(self._initial_channels):
+            channels = await self._initial_channels() # type: ignore
 
         elif callable(self._initial_channels):
             channels = self._initial_channels()
@@ -241,6 +246,8 @@ class Client:
         """
         name = name.removeprefix('#').lower()
 
+        channel = None
+
         for shard in self._shards.values():
             channel = shard._websocket._channel_cache.get(name, default=None)
 
@@ -264,6 +271,8 @@ class Client:
         message: Optional[:class:`Message`]
             The message matching the provided identifier.
         """
+        message = None
+
         for shard in self._shards.values():
             message = shard._websocket._message_cache.get(id_, default=None)
 
@@ -335,7 +344,7 @@ class Client:
         """
         pass
 
-    async def event_message(self, message) -> None:
+    async def event_message(self, message: Message) -> None:
         """|coro|
 
         Event fired when receiving a message in a joined channel.
