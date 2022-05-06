@@ -38,11 +38,8 @@ try:
     import ujson as json
 except Exception:
     import json
-
 if TYPE_CHECKING:
     from .client import Client
-
-
 logger = logging.getLogger("twitchio.http")
 
 
@@ -67,15 +64,12 @@ class Route:
 
         if token:
             self.headers["Authorization"] = "Bearer " + token
-
         if isinstance(path, URL):
             self.path = path
         else:
             self.path = URL(self.BASE_URL + "/" + path.rstrip("/"))
-
         if query:
             self.path = self.path.with_query(query)
-
         if isinstance(body, dict):
             self.body = json.dumps(body)
             self.headers["Content-Type"] = "application/json"
@@ -122,13 +116,10 @@ class TwitchHTTP:
         """
         if full_body:
             assert not paginate
-
         if (not self.client_id or not self.nick) and self.token:
             await self.validate(token=self.token)
-
         if not self.client_id:
             raise errors.NoClientID("A Client ID is required to use the Twitch API")
-
         headers = route.headers or {}
 
         if force_app_token and "Authorization" not in headers:
@@ -136,30 +127,23 @@ class TwitchHTTP:
                 raise errors.NoToken(
                     "An app access token is required for this route, please provide a client id and client secret"
                 )
-
             if self.app_token is None:
                 await self._generate_login()
                 headers["Authorization"] = f"Bearer {self.app_token}"
-
         elif not self.token and not self.client_secret and "Authorization" not in headers:
             raise errors.NoToken(
                 "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
             )
-
         if "Authorization" not in headers:
             if not self.token:
                 await self._generate_login()
-
             headers["Authorization"] = f"Bearer {self.token}"
-
         headers["Client-ID"] = self.client_id
 
         if not self.session:
             self.session = aiohttp.ClientSession()
-
         if self.bucket.limited:
             await self.bucket
-
         cursor = None
         data = []
 
@@ -169,7 +153,6 @@ class TwitchHTTP:
         def get_limit():
             if limit is None:
                 return "100"
-
             to_get = limit - len(data)
             return str(to_get) if to_get < 100 else "100"
 
@@ -183,14 +166,11 @@ class TwitchHTTP:
                     q = [("after", cursor), *q]
                 q = [("first", get_limit()), *q]
                 path = path.with_query(q)
-
             body, is_text = await self._request(route, path, headers)
             if is_text:
                 return body
-
             if full_body:
                 return body
-
             data += body["data"]
 
             try:
@@ -200,9 +180,7 @@ class TwitchHTTP:
             else:
                 if not cursor:
                     break
-
             is_finished = reached_limit() if limit is not None else True if paginate else True
-
         return data
 
     async def _request(self, route, path, headers, utilize_bucket=True):
@@ -211,30 +189,24 @@ class TwitchHTTP:
         for attempt in range(5):
             if utilize_bucket and self.bucket.limited:
                 await self.bucket.wait_reset()
-
             async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
                 try:
                     logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
                 except Exception:
                     logger.debug(f"Received a response from a request with status {resp.status} and without body")
-
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2 ** attempt + 1)
+                    await asyncio.sleep(2**attempt + 1)
                     continue
-
                 if utilize_bucket:
                     reset = resp.headers.get("Ratelimit-Reset")
                     remaining = resp.headers.get("Ratelimit-Remaining")
 
                     self.bucket.update(reset=reset, remaining=remaining)
-
                 if 200 <= resp.status < 300:
                     if resp.content_type == "application/json":
                         return await resp.json(), False
-
                     return await resp.text(encoding="utf-8"), True
-
                 if resp.status == 401:
                     if "WWW-Authenticate" in resp.headers:
                         try:
@@ -243,21 +215,17 @@ class TwitchHTTP:
                             raise errors.Unauthorized(
                                 "Your oauth token is invalid, and a new one could not be generated"
                             )
-
                     print(resp.reason, await resp.json(), resp)
                     raise errors.Unauthorized("You're not authorized to use this route.")
-
                 if resp.status == 429:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3 ** attempt + 1)
+                        await asyncio.sleep(3**attempt + 1)
                     continue
-
                 raise errors.HTTPException(
                     f"Failed to fulfil request ({resp.status}).", reason=resp.reason, status=resp.status
                 )
-
         raise errors.HTTPException("Failed to reach Twitch API", reason=reason, status=resp.status)
 
     async def _generate_login(self):
@@ -269,10 +237,8 @@ class TwitchHTTP:
                 return
         except Exception as e:
             self.client.run_event("error", e)
-
         if not self.client_id or not self.client_secret:
             raise errors.HTTPException("Unable to generate a token, client id and/or client secret not given")
-
         if self._refresh_token:
             url = (
                 self.TOKEN_BASE
@@ -280,21 +246,17 @@ class TwitchHTTP:
                     self._refresh_token, self.client_id, self.client_secret
                 )
             )
-
         else:
             url = self.TOKEN_BASE + "?client_id={0}&client_secret={1}&grant_type=client_credentials".format(
                 self.client_id, self.client_secret
             )
             if self.scopes:
                 url += "&scope=" + " ".join(self.scopes)
-
         if not self.session:
             self.session = aiohttp.ClientSession()
-
         async with self.session.post(url) as resp:
             if resp.status > 300 or resp.status < 200:
                 raise errors.HTTPException("Unable to generate a token: " + await resp.text())
-
             data = await resp.json()
             self.token = self.app_token = data["access_token"]
             self._refresh_token = data.get("refresh_token", None)
@@ -305,24 +267,19 @@ class TwitchHTTP:
             token = self.token
         if not self.session:
             self.session = aiohttp.ClientSession()
-
         url = "https://id.twitch.tv/oauth2/validate"
         headers = {"Authorization": f"OAuth {token}"}
 
         async with self.session.get(url, headers=headers) as resp:
             if resp.status == 401:
                 raise errors.AuthenticationError("Invalid or unauthorized Access Token passed.")
-
             if resp.status > 300 or resp.status < 200:
                 raise errors.HTTPException("Unable to validate Access Token: " + await resp.text())
-
             data: dict = await resp.json()
-
         if not self.nick:
             self.nick = data.get("login")
             self.user_id = data.get("user_id") and int(data["user_id"])
             self.client_id = data.get("client_id")
-
         return data
 
     async def post_commercial(self, token: str, broadcaster_id: str, length: int):
@@ -381,7 +338,6 @@ class TwitchHTTP:
         q = [("extension_id", extension_id)]
         if ids:
             q.extend(("id", id) for id in ids)
-
         return await self.request(Route("GET", "extensions/transactions", "", query=q))
 
     async def create_reward(
@@ -411,18 +367,14 @@ class TwitchHTTP:
         if max_per_stream:
             data["max_per_stream"] = max_per_stream
             data["max_per_stream_enabled"] = True
-
         if max_per_user:
             data["max_per_user_per_stream"] = max_per_user
             data["max_per_user_per_stream_enabled"] = True
-
         if background_color:
             data["background_color"] = background_color
-
         if global_cooldown:
             data["global_cooldown_seconds"] = global_cooldown
             data["is_global_cooldown_enabled"] = True
-
         return await self.request(Route("POST", "channel_points/custom_rewards", query=params, body=data, token=token))
 
     async def get_rewards(self, token: str, broadcaster_id: int, only_manageable: bool = False, ids: List[int] = None):
@@ -430,7 +382,6 @@ class TwitchHTTP:
 
         if ids:
             params.extend(("id", str(id)) for id in ids)
-
         return await self.request(Route("GET", "channel_points/custom_rewards", query=params, token=token))
 
     async def update_reward(
@@ -474,7 +425,6 @@ class TwitchHTTP:
 
         if not data:
             raise ValueError("Nothing changed!")
-
         params = [("broadcaster_id", str(broadcaster_id)), ("id", str(reward_id))]
         return await self.request(
             Route(
@@ -503,13 +453,10 @@ class TwitchHTTP:
 
         if redemption_id:
             params.append(("id", redemption_id))
-
         if status:
             params.append(("status", status))
-
         if sort:
             params.append(("sort", sort))
-
         return await self.request(Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token))
 
     async def update_reward_redemption_status(
@@ -537,7 +484,6 @@ class TwitchHTTP:
 
         if prediction_id:
             params.extend(("prediction_id", prediction_id))
-
         return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
 
     async def patch_prediction(
@@ -551,7 +497,6 @@ class TwitchHTTP:
 
         if status == "RESOLVED":
             body["winning_outcome_id"] = winning_outcome_id
-
         return await self.request(
             Route(
                 "PATCH",
@@ -641,7 +586,6 @@ class TwitchHTTP:
             q.extend(("id", id) for id in game_ids)
         if game_names:
             q.extend(("name", name) for name in game_names)
-
         return await self.request(Route("GET", "games", query=q))
 
     async def get_hype_train(self, broadcaster_id: str, id: str = None, token: str = None):
@@ -670,21 +614,18 @@ class TwitchHTTP:
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-
         return await self.request(Route("GET", "moderation/banned/events", query=q, token=token))
 
     async def get_channel_bans(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-
         return await self.request(Route("GET", "moderation/banned", query=q, token=token))
 
     async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-
         return await self.request(Route("GET", "moderation/moderators", query=q, token=token))
 
     async def get_channel_mod_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
@@ -723,7 +664,6 @@ class TwitchHTTP:
             q.extend(("user_login", l) for l in user_logins)
         if languages:
             q.extend(("language", l) for l in languages)
-
         return await self.request(Route("GET", "streams", query=q, token=token))
 
     async def post_stream_marker(self, token: str, user_id: str, description: str = None):
@@ -779,21 +719,18 @@ class TwitchHTTP:
 
         if segment_ids:
             q.extend(("id", id) for id in segment_ids)
-
         return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
 
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", u) for u in user_ids)
-
         return await self.request(Route("GET", "subscriptions", query=q, token=token))
 
     async def get_stream_tags(self, tag_ids: List[str] = None):
         q = []
         if tag_ids:
             q.extend(("tag_id", u) for u in tag_ids)
-
         return await self.request(Route("GET", "tags/streams", query=q or None))
 
     async def get_channel_tags(self, broadcaster_id: str):
@@ -831,7 +768,6 @@ class TwitchHTTP:
             q.extend(("id", id) for id in ids)
         if logins:
             q.extend(("login", login) for login in logins)
-
         return await self.request(Route("GET", "users", query=q, token=token))
 
     async def get_user_follows(self, from_id: str = None, to_id: str = None, token: str = None):
@@ -892,7 +828,6 @@ class TwitchHTTP:
 
         if ids:
             q.extend(("id", id) for id in ids)
-
         return await self.request(Route("GET", "videos", query=q, token=token))
 
     async def delete_videos(self, token: str, ids: List[int]):
@@ -954,7 +889,6 @@ class TwitchHTTP:
             body["bits_per_vote"] = bits_per_vote
         if channel_points_voting_enabled and channel_points_per_vote:
             body["channel_points_per_vote"] = channel_points_per_vote
-
         return await self.request(Route("POST", "polls", body=body, token=token))
 
     async def patch_poll(self, broadcaster_id: str, token: str, id: str, status: str):
