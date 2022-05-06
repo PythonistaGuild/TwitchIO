@@ -777,17 +777,6 @@ class PartialUser:
         """
         from .models import Schedule
 
-        if first > 25 or first < 1:
-            raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
-        if segment_ids is not None and len(segment_ids) > 100:
-            raise ValueError("segment_id can only have 100 entries")
-
-        if start_time:
-            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        if utc_offset:
-            utc_offset = str(utc_offset)
-
         data = await self._http.get_channel_schedule(
             broadcaster_id=str(self.id),
             segment_ids=segment_ids,
@@ -795,7 +784,6 @@ class PartialUser:
             utc_offset=utc_offset,
             first=first,
         )
-
         return Schedule(self._http, data)
 
     async def fetch_channel_teams(self):
@@ -834,11 +822,6 @@ class PartialUser:
         List[:class:`twitchio.Poll`]
         """
         from .models import Poll
-
-        if poll_ids and len(poll_ids) > 100:
-            raise ValueError("poll_ids can only have up to 100 entries")
-        if first and (first > 25 or first < 1):
-            raise ValueError("first can only be between 1 and 20")
 
         data = await self._http.get_polls(broadcaster_id=str(self.id), token=token, poll_ids=poll_ids, first=first)
         return [Poll(self._http, x) for x in data["data"]] if data["data"] else None
@@ -882,20 +865,6 @@ class PartialUser:
         List[:class:`twitchio.Poll`]
         """
         from .models import Poll
-
-        if len(title) > 60:
-            raise ValueError("title must be less than or equal to 60 characters")
-        if len(choices) < 2 or len(choices) > 5:
-            raise ValueError("You must have between 2 and 5 choices")
-        for c in choices:
-            if len(c) > 25:
-                raise ValueError("choice title must be less than or equal to 25 characters")
-        if duration < 15 or duration > 1800:
-            raise ValueError("duration must be between 15 and 1800 seconds")
-        if bits_per_vote and bits_per_vote > 10000:
-            raise ValueError("bits_per_vote must bebetween 0 and 10000")
-        if channel_points_per_vote and channel_points_per_vote > 1000000:
-            raise ValueError("channel_points_per_vote must bebetween 0 and 1000000")
 
         data = await self._http.post_poll(
             broadcaster_id=str(self.id),

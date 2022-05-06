@@ -706,6 +706,14 @@ class TwitchHTTP:
         utc_offset: Optional[int] = None,
         first: int = 20,
     ):
+        if first > 25 or first < 1:
+            raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
+        if segment_ids is not None and len(segment_ids) > 100:
+            raise ValueError("segment_id can only have 100 entries")
+        if start_time:
+            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if utc_offset:
+            utc_offset = str(utc_offset)
         q = [
             x
             for x in [
@@ -860,7 +868,12 @@ class TwitchHTTP:
         poll_ids: Optional[List[str]] = None,
         first: Optional[int] = 20,
     ):
+        if poll_ids and len(poll_ids) > 100:
+            raise ValueError("poll_ids can only have up to 100 entries")
+        if first and (first > 25 or first < 1):
+            raise ValueError("first can only be between 1 and 20")
         q = [("broadcaster_id", broadcaster_id), ("first", first)]
+
         if poll_ids:
             q.extend(("id", poll_id) for poll_id in poll_ids)
         return await self.request(Route("GET", "polls", query=q, token=token), paginate=False, full_body=True)
@@ -877,6 +890,20 @@ class TwitchHTTP:
         channel_points_voting_enabled: Optional[bool] = False,
         channel_points_per_vote: Optional[int] = None,
     ):
+
+        if len(title) > 60:
+            raise ValueError("title must be less than or equal to 60 characters")
+        if len(choices) < 2 or len(choices) > 5:
+            raise ValueError("You must have between 2 and 5 choices")
+        for c in choices:
+            if len(c) > 25:
+                raise ValueError("choice title must be less than or equal to 25 characters")
+        if duration < 15 or duration > 1800:
+            raise ValueError("duration must be between 15 and 1800 seconds")
+        if bits_per_vote and bits_per_vote > 10000:
+            raise ValueError("bits_per_vote must bebetween 0 and 10000")
+        if channel_points_per_vote and channel_points_per_vote > 1000000:
+            raise ValueError("channel_points_per_vote must bebetween 0 and 1000000")
         body = {
             "broadcaster_id": broadcaster_id,
             "title": title,
