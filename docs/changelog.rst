@@ -13,6 +13,7 @@ Massive documentation updates
     - :func:`Bot.handle_commands` now also invokes on threads / replies
     - Cooldowns are now handled correctly per bucket.
     - Fix issue with :func:`Bot.reload_module` where module is reloaded incorrectly if exception occurs
+    - Add type conversion for variable positional arguments
 
 - ext.pubsub
     - Channel subscription model fixes.

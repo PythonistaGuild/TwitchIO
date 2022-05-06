@@ -186,7 +186,8 @@ class Command:
                 parsed.clear()
                 break
             elif param.VAR_POSITIONAL:
-                args.extend(parsed.values())
+                args.extend([await self._convert_types(context, param, argument) for argument in parsed.values()])
+                parsed.clear()
                 break
 
         if parsed:
