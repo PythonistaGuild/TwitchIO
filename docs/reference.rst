@@ -207,6 +207,20 @@ ModEvent
     :members:
     :inherited-members:
 
+Poll
+-------------
+.. attributetable:: Poll
+
+.. autoclass:: Poll
+    :members:
+    :inherited-members:
+
+.. attributetable:: PollChoice
+
+.. autoclass:: PollChoice
+    :members:
+    :inherited-members:
+
 Predictions
 -------------
 .. attributetable:: Prediction

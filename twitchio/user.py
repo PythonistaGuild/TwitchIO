@@ -752,9 +752,9 @@ class PartialUser:
 
     async def fetch_schedule(
         self,
-        segment_ids: List[str] = None,
-        start_time: datetime.datetime = None,
-        utc_offset: int = None,
+        segment_ids: Optional[List[str]] = None,
+        start_time: Optional[datetime.datetime] = None,
+        utc_offset: Optional[int] = None,
         first: int = 20,
     ):
         """|coro|
@@ -770,11 +770,23 @@ class PartialUser:
             A timezone offset for the requester specified in minutes. +4 hours from GMT would be `240`
         first: Optional[:class:`int`]
             Maximum number of stream segments to return. Maximum: 25. Default: 20.
+
         Returns
         --------
             :class:`twitchio.Schedule`
         """
         from .models import Schedule
+
+        if first > 25 or first < 1:
+            raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
+        if segment_ids is not None and len(segment_ids) > 100:
+            raise ValueError("segment_id can only have 100 entries")
+
+        if start_time:
+            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        if utc_offset:
+            utc_offset = str(utc_offset)
 
         data = await self._http.get_channel_schedule(
             broadcaster_id=str(self.id),
@@ -802,6 +814,126 @@ class PartialUser:
         )
 
         return [ChannelTeams(self._http, x) for x in data]
+
+    async def fetch_polls(self, token: str, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20):
+        """|coro|
+
+        Fetches a list of polls for the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:read:broadcast scope
+        poll_ids: Optional[List[:class:`str`]]
+            List of poll IDs to return. Maximum: 100
+        first: Optional[:class:`int`]
+            Number of polls to return. Maximum: 20. Default: 20.
+
+        Returns
+        --------
+        List[:class:`twitchio.Poll`]
+        """
+        from .models import Poll
+
+        if poll_ids and len(poll_ids) > 100:
+            raise ValueError("poll_ids can only have up to 100 entries")
+        if first and (first > 25 or first < 1):
+            raise ValueError("first can only be between 1 and 20")
+
+        data = await self._http.get_polls(broadcaster_id=str(self.id), token=token, poll_ids=poll_ids, first=first)
+        return [Poll(self._http, x) for x in data["data"]] if data["data"] else None
+
+    async def create_poll(
+        self,
+        token: str,
+        title: str,
+        choices: List[str],
+        duration: int,
+        bits_voting_enabled: Optional[bool] = False,
+        bits_per_vote: Optional[int] = None,
+        channel_points_voting_enabled: Optional[bool] = False,
+        channel_points_per_vote: Optional[int] = None,
+    ):
+        """|coro|
+
+        Creates a poll for the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:read:broadcast scope
+        title: :class:`str`
+            Question displayed for the poll.
+        choices: List[:class:`str`]
+            List of choices for the poll. Must be between 2 and 5 choices.
+        duration: :class:`int`
+            Total duration for the poll in seconds. Must be between 15 and 1800.
+        bits_voting_enabled: Optional[:class:`bool`]
+            Indicates if Bits can be used for voting. Default is False.
+        bits_per_vote: Optional[:class:`int`]
+            Number of Bits required to vote once with Bits. Max 10000.
+        channel_points_voting_enabled: Optional[:class:`bool`]
+            Indicates if Channel Points can be used for voting. Default is False.
+        channel_points_per_vote: Optional[:class:`int`]
+            Number of Channel Points required to vote once with Channel Points. Max 1000000.
+
+        Returns
+        --------
+        List[:class:`twitchio.Poll`]
+        """
+        from .models import Poll
+
+        if len(title) > 60:
+            raise ValueError("title must be less than or equal to 60 characters")
+        if len(choices) < 2 or len(choices) > 5:
+            raise ValueError("You must have between 2 and 5 choices")
+        for c in choices:
+            if len(c) > 25:
+                raise ValueError("choice title must be less than or equal to 25 characters")
+        if duration < 15 or duration > 1800:
+            raise ValueError("duration must be between 15 and 1800 seconds")
+        if bits_per_vote and bits_per_vote > 10000:
+            raise ValueError("bits_per_vote must bebetween 0 and 10000")
+        if channel_points_per_vote and channel_points_per_vote > 1000000:
+            raise ValueError("channel_points_per_vote must bebetween 0 and 1000000")
+
+        data = await self._http.post_poll(
+            broadcaster_id=str(self.id),
+            token=token,
+            title=title,
+            choices=choices,
+            duration=duration,
+            bits_voting_enabled=bits_voting_enabled,
+            bits_per_vote=bits_per_vote,
+            channel_points_voting_enabled=channel_points_voting_enabled,
+            channel_points_per_vote=channel_points_per_vote,
+        )
+        return Poll(self._http, data[0])
+
+    async def end_poll(self, token: str, poll_id: str, status: str):
+        """|coro|
+
+        Ends a poll for the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:read:broadcast scope
+        poll_id: :class:`str`
+            ID of the poll.
+        status: :class:`str`
+            The poll status to be set. Valid values:
+            TERMINATED: End the poll manually, but allow it to be viewed publicly.
+            ARCHIVED: End the poll manually and do not allow it to be viewed publicly.
+
+        Returns
+        --------
+        :class:`twitchio.Poll`
+        """
+        from .models import Poll
+
+        data = await self._http.patch_poll(broadcaster_id=str(self.id), token=token, id=poll_id, status=status)
+        return Poll(self._http, data[0])
 
 
 class BitLeaderboardUser(PartialUser):

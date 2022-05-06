@@ -220,7 +220,7 @@ class TwitchHTTP:
 
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
-                    await asyncio.sleep(2**attempt + 1)
+                    await asyncio.sleep(2 ** attempt + 1)
                     continue
 
                 if utilize_bucket:
@@ -251,7 +251,7 @@ class TwitchHTTP:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3**attempt + 1)
+                        await asyncio.sleep(3 ** attempt + 1)
                     continue
 
                 raise errors.HTTPException(
@@ -584,7 +584,9 @@ class TwitchHTTP:
 
     async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
         return await self.request(
-            Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", str(has_delay))], token=token),
+            Route(
+                "POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", str(has_delay))], token=token
+            ),
             paginate=False,
         )
 
@@ -759,23 +761,11 @@ class TwitchHTTP:
     async def get_channel_schedule(
         self,
         broadcaster_id: str,
-        segment_ids: List[str] = None,
-        start_time: datetime.datetime = None,
-        utc_offset: int = None,
+        segment_ids: Optional[List[str]] = None,
+        start_time: Optional[datetime.datetime] = None,
+        utc_offset: Optional[int] = None,
         first: int = 20,
     ):
-
-        if first is not None and (first > 25 or first < 1):
-            raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
-        if segment_ids is not None and len(segment_ids) > 100:
-            raise ValueError("segment_id can only have 100 entries")
-
-        if start_time:
-            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        if utc_offset:
-            utc_offset = str(utc_offset)
-
         q = [
             x
             for x in [
@@ -927,3 +917,46 @@ class TwitchHTTP:
     async def get_channel_teams(self, broadcaster_id: str):
         q = [("broadcaster_id", broadcaster_id)]
         return await self.request(Route("GET", "teams/channel", query=q))
+
+    async def get_polls(
+        self,
+        broadcaster_id: str,
+        token: str,
+        poll_ids: Optional[List[str]] = None,
+        first: Optional[int] = 20,
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("first", first)]
+        if poll_ids:
+            q.extend(("id", poll_id) for poll_id in poll_ids)
+        return await self.request(Route("GET", "polls", query=q, token=token), paginate=False, full_body=True)
+
+    async def post_poll(
+        self,
+        broadcaster_id: str,
+        token: str,
+        title: str,
+        choices,
+        duration: int,
+        bits_voting_enabled: Optional[bool] = False,
+        bits_per_vote: Optional[int] = None,
+        channel_points_voting_enabled: Optional[bool] = False,
+        channel_points_per_vote: Optional[int] = None,
+    ):
+        body = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "choices": [{"title": choice} for choice in choices],
+            "duration": duration,
+            "bits_voting_enabled": str(bits_voting_enabled),
+            "channel_points_voting_enabled": str(channel_points_voting_enabled),
+        }
+        if bits_voting_enabled and bits_per_vote:
+            body["bits_per_vote"] = bits_per_vote
+        if channel_points_voting_enabled and channel_points_per_vote:
+            body["channel_points_per_vote"] = channel_points_per_vote
+
+        return await self.request(Route("POST", "polls", body=body, token=token))
+
+    async def patch_poll(self, broadcaster_id: str, token: str, id: str, status: str):
+        body = {"broadcaster_id": broadcaster_id, "id": id, "status": status}
+        return await self.request(Route("PATCH", "polls", body=body, token=token))

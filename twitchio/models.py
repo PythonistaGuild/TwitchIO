@@ -68,6 +68,8 @@ __all__ = (
     "Team",
     "ChannelTeams",
     "ChannelInfo",
+    "Poll",
+    "PollChoice",
 )
 
 
@@ -1344,3 +1346,98 @@ class ChannelTeams:
 
     def __repr__(self):
         return f"<ChannelTeams user={self.broadcaster} team_name={self.team_name} team_display_name={self.team_display_name} id={self.id} created_at={self.created_at}>"
+
+
+class Poll:
+    """
+    Represents a list of Polls for a broadcaster / channel
+
+    Attributes
+    -----------
+    id: :class:`str`
+        ID of a poll.
+    broadcaster: :class:`~twitchio.PartialUser`
+        User of the broadcaster.
+    title: :class:`str`
+        Question displayed for the poll.
+    choices: List[:class:`~twitchio.PollChoice`]
+        The poll choices.
+    bits_voting_enabled: :class:`bool`
+        Indicates if Bits can be used for voting.
+    bits_per_vote: :class:`int`
+        Number of Bits required to vote once with Bits.
+    channel_points_voting_enabled: :class:`bool`
+        Indicates if Channel Points can be used for voting.
+    channel_points_per_vote: :class:`int`
+        Number of Channel Points required to vote once with Channel Points.
+    status: :class:`str`
+        Poll status. Valid values: ACTIVE, COMPLETED, TERMINATED, ARCHIVED, MODERATED, INVALID
+    duration: :class:`int`
+        Total duration for the poll (in seconds).
+    started_at: :class:`datetime.datetime`
+        Date and time the the poll was started.
+    ended_at: :class:`datetime.datetime`
+        Date and time the the poll was ended.
+    """
+
+    __slots__ = (
+        "id",
+        "broadcaster",
+        "title",
+        "choices",
+        "channel_points_voting_enabled",
+        "channel_points_per_vote",
+        "status",
+        "duration",
+        "started_at",
+        "ended_at",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.id: str = data["id"]
+        self.broadcaster = PartialUser(http, data["broadcaster_id"], data["broadcaster_login"])
+        self.title: str = data["title"]
+        self.choices: List[PollChoice] = [PollChoice(d) for d in data["choices"]] if data["choices"] else []
+        self.channel_points_voting_enabled: bool = data["channel_points_voting_enabled"]
+        self.channel_points_per_vote: int = data["channel_points_per_vote"]
+        self.status: str = data["status"]
+        self.duration: int = data["duration"]
+        self.started_at: datetime.datetime = parse_timestamp(data["started_at"])
+        try:
+            self.ended_at: Optional[datetime.datetime] = parse_timestamp(data["ended_at"])
+        except KeyError:
+            self.ended_at = None
+
+    def __repr__(self):
+        return f"<Polls id={self.id} broadcaster={self.broadcaster} title={self.title} status={self.status} duration={self.duration} started_at={self.started_at} ended_at={self.ended_at}>"
+
+
+class PollChoice:
+    """
+    Represents a polls choices
+
+    Attributes
+    -----------
+    id: :class:`str`
+        ID for the choice.
+    title: :class:`str`
+        Text displayed for the choice.
+    votes: :class:`int`
+        Total number of votes received for the choice across all methods of voting.
+    channel_points_votes: :class:`int`
+        Number of votes received via Channel Points.
+    bits_votes: :class:`int`
+        Number of votes received via Bits.
+    """
+
+    __slots__ = ("id", "title", "votes", "channel_points_votes", "bits_votes")
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.title: str = data["title"]
+        self.votes: int = data["votes"]
+        self.channel_points_votes: int = data["channel_points_votes"]
+        self.bits_votes: int = data["bits_votes"]
+
+    def __repr__(self):
+        return f"<PollChoice id={self.id} title={self.title} votes={self.votes} channel_points_votes={self.channel_points_votes} bits_votes={self.bits_votes}>"
