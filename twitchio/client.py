@@ -49,21 +49,21 @@ class Client:
 
     Parameters
     ----------
-    token: Optional[str]
+    token: Optional[:class:`str`]
         The token to use for IRC authentication.
-    heartbeat: Optional[float]
+    heartbeat: Optional[:class:`float`]
         An optional heartbeat to provide to keep connections over proxies and such alive.
         Defaults to 30.0.
-    verified: Optional[bool]
+    verified: Optional[:class:`bool`]
         Whether or not your bot is verified or not. Defaults to False.
-    join_timeout: Optional[float]
+    join_timeout: Optional[:class:`float`]
         An optional float to use to timeout channel joins. Defaults to 15.0.
-    initial_channels: Optional[Union[list, tuple, callable, coroutine]]
+    initial_channels: Optional[Union[List[:class:`str`], Tuple[:class:`str`], :class:`callable`, :class:`coroutine`]]
         An optional list or tuple of channels to join on bot start. This may be a callable or coroutine,
-        but must return a list or tuple.
-    shard_limit: int
+        but must return a :clas:`list` or :class:`tuple`.
+    shard_limit: :class:`int`
         The amount of channels per websocket. Defaults to 100 channels per socket.
-    cache_size: Optional[int]
+    cache_size: Optional[:class:`int`]
         The size of the internal channel cache. Defaults to unlimited.
     eventsub: Optional[:class:`EventSubClient`]
         The EventSubClient instance to use with the client to dispatch subscribed webhook events.
