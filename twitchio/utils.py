@@ -20,16 +20,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-__title__ = "TwitchIO"
-__author__ = "TwitchIO, PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-2022 (c) TwitchIO"
-__version__ = "3.0.0"
 
-from .channel import Channel
-from .client import Client
-from .message import Message
-from .parser import IRCPayload
-from .chatter import PartialChatter
-from .tokens import Token, BaseTokenHandler, SimpleTokenHandler
-from .exceptions import *
+__all__ = ("json_loader", )
+
+try:
+    from orjson import loads as _loads
+    HAS_MODDED_JSON = True
+except ModuleNotFoundError:
+    try:
+        from ujson import loads as _loads
+        HAS_MODDED_JSON = True
+    except ModuleNotFoundError:
+        from json import loads as _loads
+        HAS_MODDED_JSON = False
+
+json_loader = _loads
