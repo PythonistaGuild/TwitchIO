@@ -1,3 +1,5 @@
+from typing import Dict
+
 from .commands import Command
 
 
@@ -18,10 +20,15 @@ class ComponentMeta(type):
                     if name.startswith('component_'):
                         raise TypeError('Command callbacks must not start with "component_" or "bot".')
 
+                    value._component = base
+                    base._commands[value._name] = value
+
         return cls
 
 
 class Component(metaclass=ComponentMeta):
+
+    _commands: Dict[str, Command] = {}
 
     @property
     def name(self) -> str:
