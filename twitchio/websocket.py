@@ -292,6 +292,9 @@ class Websocket:
     async def roomstate_event(self, payload: IRCPayload) -> None:
         pass
 
+    async def whisper_event(self, payload: IRCPayload) -> None:
+        pass
+
     async def close(self):
         self.closing = True
 
