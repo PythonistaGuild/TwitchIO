@@ -21,17 +21,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__all__ = ("json_loader", )
+from typing import Any, Union, Dict, List
+
+__all__ = ("json_loader", "json_dumper")
 
 try:
-    from orjson import loads as _loads
+    from orjson import loads as _loads, dumps as _orjson_dumps
+    def _dumps(obj: Union[Dict[str, Any], List[Any]]) -> str: # orjson returns bytes instead of str, so patch it here
+        return _orjson_dumps(obj).decode()
+
     HAS_MODDED_JSON = True
 except ModuleNotFoundError:
     try:
-        from ujson import loads as _loads
+        from ujson import loads as _loads, dumps as _dumps
         HAS_MODDED_JSON = True
     except ModuleNotFoundError:
-        from json import loads as _loads
+        from json import loads as _loads, dumps as _dumps
         HAS_MODDED_JSON = False
 
 json_loader = _loads
+json_dumper = _dumps
