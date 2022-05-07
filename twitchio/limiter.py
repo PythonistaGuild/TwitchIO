@@ -27,7 +27,6 @@ __all__ = (
     "IRCRateLimiter",
     "HTTPRateLimiter",
     "RateLimitBucket",
-    "EmptyRateLimitBucket"
 )
 import asyncio
 import time
@@ -84,11 +83,10 @@ class IRCRateLimiter:
         await asyncio.sleep(self.check_limit(time_=time_, update=False))
 
 class RateLimitBucket:
-    def __init__(self, reset_at: float, tokens: int, max_tokens: int) -> None:
-        super().__init__()
-        self.reset_at: float = reset_at
-        self.tokens: int = tokens
-        self.max_tokens: int = max_tokens
+    def __init__(self) -> None:
+        self.reset_at: float = MISSING
+        self.tokens: int = MISSING
+        self.max_tokens: int = MISSING
         self.lock = asyncio.Lock()
     
     async def __aenter__(self) -> None:
@@ -121,21 +119,14 @@ class RateLimitBucket:
         self.tokens -= tokens
         return True
 
-class EmptyRateLimitBucket(RateLimitBucket):
-    def __init__(self) -> None:
-        self.reset_at: float = MISSING
-        self.tokens: int = MISSING
-        self.max_tokens: int = MISSING
-        self.lock = asyncio.Lock()
-
 class HTTPRateLimiter:
     def __init__(self) -> None:
         self.buckets: Dict[Optional[UserT], RateLimitBucket] = {}
     
-    def get_bucket(self, user: Optional[UserT]) -> Union[RateLimitBucket, EmptyRateLimitBucket]:
+    def get_bucket(self, user: Optional[UserT]) -> RateLimitBucket:
         if user in self.buckets:
             return self.buckets[user]
         
-        bucket = EmptyRateLimitBucket()
+        bucket = RateLimitBucket()
         self.buckets[user] = bucket
         return bucket
