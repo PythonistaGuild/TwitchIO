@@ -3,32 +3,27 @@ from typing import Dict
 from .commands import Command
 
 
-__all__ = ('Component', 'ComponentMeta')
+__all__ = ('Component', )
 
 
-class ComponentMeta(type):
+class Component:
 
-    def __new__(mcs, name, bases, attrs, **kwargs):
-        attrs['__component_name__'] = name
+    def __new__(cls, *args, **kwargs):
+        new = super().__new__(cls)
+        new.__dict__['__component_name__'] = cls.__name__
+        # noinspection PyTypeHints
+        new.__commands: dict[str, Command] = {}
 
-        cls = super().__new__(mcs, name, bases, attrs, **kwargs)
+        for name, value in cls.__dict__.items():
 
-        for base in reversed(cls.__mro__):
-            for name, value in base.__dict__.items():
+            if isinstance(value, Command):
+                if name.startswith('component_'):
+                    raise TypeError('Command callbacks must not start with "component_" or "bot".')
 
-                if isinstance(value, Command):
-                    if name.startswith('component_'):
-                        raise TypeError('Command callbacks must not start with "component_" or "bot".')
+                value._component = new
+                new.__commands[value._name] = value
 
-                    value._component = base
-                    base._commands[value._name] = value
-
-        return cls
-
-
-class Component(metaclass=ComponentMeta):
-
-    _commands: Dict[str, Command] = {}
+        return new
 
     @property
     def name(self) -> str:
@@ -37,7 +32,7 @@ class Component(metaclass=ComponentMeta):
 
     @property
     def commands(self) -> dict[str, Command]:
-        raise NotImplementedError
+        return self.__commands.copy()
 
     @property
     def events(self) -> dict:

@@ -136,13 +136,14 @@ class Bot(Client):
                                               'Consider using the override parameter.')
 
         # noinspection PyUnresolvedReferences
-        for name, command in component._commands.items():
+        commands_ = component.commands
+        for name, command in commands_.items():
             self.add_command(command)
 
         try:
             await component.component_on_load()
         except Exception as e:
-            for name, command in component._commands.items():
+            for name, command in commands_.items():
                 self.remove_command(command)
 
             raise ComponentLoadError(f'The component "{component.name}" failed to load due to the above error.') from e
@@ -159,7 +160,8 @@ class Bot(Client):
         elif not isinstance(component, Component):
             raise TypeError(f'component argument must be of type "commands.Component" or str, not {type(component)}.')
 
-        for name, command in component._commands.items():
+        commands_ = component.commands
+        for name, command in commands_.items():
             self.remove_command(command)
 
         try:
