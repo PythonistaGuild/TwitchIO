@@ -20,11 +20,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
+
+
+__all__ = (
+    "IRCRateLimiter",
+    "HTTPRateLimiter",
+    "RateLimitBucket",
+    "EmptyRateLimitBucket"
+)
 import asyncio
 import time
+import aiohttp
 
-from typing import Optional
+from typing import Optional, TYPE_CHECKING, Any, Protocol, Dict, TypeVar, Literal, Union
+MISSING: Any = object()
 
+if TYPE_CHECKING:
+    class PartialUser(Protocol):
+        id: int
+        name: str
+
+        def __eq__(self, __o: object) -> bool:
+            ...
+
+    UserT = PartialUser
+    E = TypeVar("E", bound=BaseException)
 class IRCRateLimiter:
 
     buckets = {'verified': {'messages': 100, 'joins': 2000},
@@ -61,3 +82,60 @@ class IRCRateLimiter:
         time_ = time_ or time.time()
 
         await asyncio.sleep(self.check_limit(time_=time_, update=False))
+
+class RateLimitBucket:
+    def __init__(self, reset_at: float, tokens: int, max_tokens: int) -> None:
+        super().__init__()
+        self.reset_at: float = reset_at
+        self.tokens: int = tokens
+        self.max_tokens: int = max_tokens
+        self.lock = asyncio.Lock()
+    
+    async def __aenter__(self) -> None:
+        return await self.lock.__aenter__()
+    
+    async def __exit__(self, *args) -> None:
+        return await self.lock.__aexit__(*args)
+    
+    async def acquire(self) -> Literal[True]:
+        return await self.lock.acquire()
+    
+    def update(self, response: aiohttp.ClientResponse) -> None:
+        self.reset_at = float(response.headers['ratelimit-reset'])
+        self.tokens = int(response.headers['ratelimit-remaining'])
+        self.max_tokens = int(response.headers['ratelimit-limit'])
+    
+    def _update_times(self) -> None:
+        if self.reset_at <= time.time():
+            self.tokens = self.max_tokens
+    
+    def hit(self, tokens: int) -> bool:
+        if self.tokens is MISSING:
+            return True # we havent made a request yet, so it must be ok
+        
+        self._update_times()
+
+        if self.tokens - tokens <= 0:
+            return False
+        
+        self.tokens -= tokens
+        return True
+
+class EmptyRateLimitBucket(RateLimitBucket):
+    def __init__(self) -> None:
+        self.reset_at: float = MISSING
+        self.tokens: int = MISSING
+        self.max_tokens: int = MISSING
+        self.lock = asyncio.Lock()
+
+class HTTPRateLimiter:
+    def __init__(self) -> None:
+        self.buckets: Dict[Optional[UserT], RateLimitBucket] = {}
+    
+    def get_bucket(self, user: Optional[UserT]) -> Union[RateLimitBucket, EmptyRateLimitBucket]:
+        if user in self.buckets:
+            return self.buckets[user]
+        
+        bucket = EmptyRateLimitBucket()
+        self.buckets[user] = bucket
+        return bucket
