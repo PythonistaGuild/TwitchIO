@@ -102,6 +102,9 @@ class Command:
             args = ()
             kwargs = {}
 
+        context.args = args
+        context.kwargs = kwargs
+
         await self._callback(self._instance, context, *args, **kwargs)
 
 
@@ -121,6 +124,7 @@ def command(
             raise TypeError('Command callbacks must be coroutines.')
 
         return cls(name=name or func.__name__,
-                   callback=func, aliases=aliases,
+                   callback=func,
+                   aliases=aliases,
                    positional_delimiter=positional_delimiter)
     return wrapped
