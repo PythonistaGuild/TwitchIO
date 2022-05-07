@@ -7,10 +7,10 @@ if TYPE_CHECKING:
 class ShardInfo:
 
     def __init__(self, **kwargs):
-        self._websocket: Websocket = kwargs.get('websocket')
+        self._websocket: Websocket = kwargs['websocket']
 
-        self._number: int = kwargs.get('number')
-        self._channels: list = kwargs.get('channels')
+        self._number: int = kwargs['number']
+        self._channels: list = kwargs['channels']
         self._ready: bool = False
 
     @property

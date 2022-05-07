@@ -20,10 +20,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import abc
-import typing
+from __future__ import annotations
 
-if typing.TYPE_CHECKING:
+import abc
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
     from .message import Message
     from .websocket import Websocket
 
@@ -31,9 +33,9 @@ if typing.TYPE_CHECKING:
 class Messageable(metaclass=abc.ABCMeta):
 
     def __init__(self, **attrs):
-        self._name: str = attrs.get('name')
+        self._name: str = attrs['name']
 
-        self._websocket: "Websocket" = attrs.get('websocket')
+        self._websocket: Websocket = attrs['websocket']
 
     @property
     @abc.abstractmethod
@@ -41,5 +43,5 @@ class Messageable(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def send(self, content: str) -> "Message":
+    async def send(self, content: str) -> Message:
         raise NotImplementedError

@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import re
-from typing import Optional
+from typing import Optional, Dict, Union
 
 
 USER_REGEX = re.compile(r'user-type=*\S*.:(?P<USER>.*?)!\S*')
@@ -91,13 +91,15 @@ class IRCPayload:
     def _parse(cls, data: str):
 
         try:
-            channel = (CHANNEL_REGEX.search(data))['CHANNEL']
+            channel = CHANNEL_REGEX.search(data)
+            if channel:
+                channel = channel['CHANNEL']
         except (TypeError, KeyError):
             channel = None
 
         parts = data.split(' ')
 
-        tags = {'badges': {}}
+        tags: Dict[str, Union[Dict[str, str], str, int]] = {'badges': {}}
 
         try:
             parts.remove(TMI)
@@ -115,7 +117,9 @@ class IRCPayload:
                 code = 200
 
         try:
-            user = (USER_REGEX.search(data))['USER']
+            user = USER_REGEX.search(data)
+            if user:
+                user = user['USER']
         except (TypeError, KeyError):
             user = None
 

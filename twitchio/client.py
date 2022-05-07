@@ -20,10 +20,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
+
 import asyncio
+import inspect
 import sys
 import traceback
-from typing import Optional, Union, Coroutine, Dict, TYPE_CHECKING
+from typing import Optional, Tuple, Union, Coroutine, Callable, Any, Dict, List, TYPE_CHECKING
 
 from .channel import Channel
 from .limiter import IRCRateLimiter
@@ -36,6 +39,8 @@ from .websocket import Websocket
 if TYPE_CHECKING:
     from ext.eventsub import EventSubClient
 
+_initial_channels_T = Optional[Union[List[str], Tuple[str], Callable[[], List[str]], Coroutine[Any, Any, None]]]
+
 
 class Client:
     """THe main Twitch HTTP and IRC Client.
@@ -44,21 +49,21 @@ class Client:
 
     Parameters
     ----------
-    token: Optional[str]
+    token: Optional[:class:`str`]
         The token to use for IRC authentication.
-    heartbeat: Optional[float]
+    heartbeat: Optional[:class:`float`]
         An optional heartbeat to provide to keep connections over proxies and such alive.
         Defaults to 30.0.
-    verified: Optional[bool]
+    verified: Optional[:class:`bool`]
         Whether or not your bot is verified or not. Defaults to False.
-    join_timeout: Optional[float]
+    join_timeout: Optional[:class:`float`]
         An optional float to use to timeout channel joins. Defaults to 15.0.
-    initial_channels: Optional[Union[list, tuple, callable, coroutine]]
+    initial_channels: Optional[Union[List[:class:`str`], Tuple[:class:`str`], :class:`callable`, :class:`coroutine`]]
         An optional list or tuple of channels to join on bot start. This may be a callable or coroutine,
-        but must return a list or tuple.
-    shard_limit: int
+        but must return a :clas:`list` or :class:`tuple`.
+    shard_limit: :class:`int`
         The amount of channels per websocket. Defaults to 100 channels per socket.
-    cache_size: Optional[int]
+    cache_size: Optional[:class:`int`]
         The size of the internal channel cache. Defaults to unlimited.
     eventsub: Optional[:class:`EventSubClient`]
         The EventSubClient instance to use with the client to dispatch subscribed webhook events.
@@ -69,12 +74,12 @@ class Client:
                  heartbeat: Optional[float] = 30.0,
                  verified: Optional[bool] = False,
                  join_timeout: Optional[float] = 15.0,
-                 initial_channels: Optional[Union[list, tuple, callable, Coroutine]] = None,
+                 initial_channels: _initial_channels_T = None,
                  shard_limit: int = 100,
                  cache_size: Optional[int] = None,
-                 eventsub: Optional["EventSubClient"] = None,
+                 eventsub: Optional[EventSubClient] = None,
                  ):
-        self._token: str = token.removeprefix('oauth:') if token else token
+        self._token: Optional[str] = token and token.removeprefix('oauth:')
 
         self._heartbeat = heartbeat
         self._verified = verified
@@ -84,11 +89,11 @@ class Client:
 
         self._shards = {}
         self._shard_limit = shard_limit
-        self._initial_channels = initial_channels or []
+        self._initial_channels: _initial_channels_T = initial_channels or []
 
         self._limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
 
-        self._eventsub = None
+        self._eventsub: Optional[EventSubClient] = None
         if eventsub:
             self._eventsub = eventsub
             self._eventsub._client = self
@@ -107,8 +112,8 @@ class Client:
             await self.close()
 
     async def _shard(self):
-        if asyncio.iscoroutinefunction(self._initial_channels):
-            channels = await self._initial_channels()
+        if inspect.iscoroutinefunction(self._initial_channels):
+            channels = await self._initial_channels() # type: ignore
 
         elif callable(self._initial_channels):
             channels = self._initial_channels()
@@ -241,6 +246,8 @@ class Client:
         """
         name = name.removeprefix('#').lower()
 
+        channel = None
+
         for shard in self._shards.values():
             channel = shard._websocket._channel_cache.get(name, default=None)
 
@@ -264,6 +271,8 @@ class Client:
         message: Optional[:class:`Message`]
             The message matching the provided identifier.
         """
+        message = None
+
         for shard in self._shards.values():
             message = shard._websocket._message_cache.get(id_, default=None)
 
@@ -335,7 +344,7 @@ class Client:
         """
         pass
 
-    async def event_message(self, message) -> None:
+    async def event_message(self, message: Message) -> None:
         """|coro|
 
         Event fired when receiving a message in a joined channel.

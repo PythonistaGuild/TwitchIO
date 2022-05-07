@@ -21,6 +21,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+__all__ = (
+    "TwitchIOException",
+    "JoinFailed",
+    "AuthenticationError",
+    "InvalidToken",
+    "RefreshFailure",
+    "EventNotFound"
+)
+
 
 class TwitchIOException(Exception):
     pass
@@ -31,6 +40,14 @@ class JoinFailed(TwitchIOException):
 
 
 class AuthenticationError(TwitchIOException):
+    pass
+
+
+class InvalidToken(AuthenticationError):
+    pass
+
+
+class RefreshFailure(AuthenticationError):
     pass
 
 

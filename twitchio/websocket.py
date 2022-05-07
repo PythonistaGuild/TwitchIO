@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, cast
 
 import aiohttp
 import logging
@@ -146,7 +146,7 @@ class Websocket:
                 await self.dispatch('raw_payload', payload)
 
                 if payload.code == 200:
-                    event = self.get_event(payload.action)
+                    event = self.get_event(cast(str, payload.action))
                     asyncio.create_task(event(payload)) if event else None
 
                 elif payload.code == 1:
@@ -163,10 +163,12 @@ class Websocket:
         await self.send('CAP REQ :twitch.tv/tags')
         await self.send('CAP REQ :twitch.tv/commands')
 
-        await self.join_channels(self.initial_channels)
+        if self.initial_channels:
+            await self.join_channels(self.initial_channels)
 
     async def join_timeout_task(self, channel: str) -> None:
-        await asyncio.sleep(self.join_timeout)
+        if self.join_timeout:
+            await asyncio.sleep(self.join_timeout)
 
         del self.join_cache[channel]
         raise JoinFailed(f'The channel <{channel}> was not able be to be joined. Check the name and try again.')
@@ -273,7 +275,7 @@ class Websocket:
 
     async def part_event(self, payload: IRCPayload) -> None:
         if payload.user == self.nick:
-            channel: Channel = self._channel_cache.pop(payload.channel)
+            channel: Optional[Channel] = self._channel_cache.pop(payload.channel)
         else:
             channel = Channel(name=payload.channel, websocket=self)
 
