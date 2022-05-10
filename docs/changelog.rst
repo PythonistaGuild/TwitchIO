@@ -9,6 +9,7 @@ Massive documentation updates
     - Fix bug where # prefixed channel names in initial_channels would not trigger :func:`twitchio.Client.event_ready`
     - :func:`User.create_clip` has been fixed by converting bool to string in http request
     - Poll endpoints added :func:`User.fetch_polls` :func:`User.create_poll` and :func:`User.end_poll`
+    - :func:`Client.fetch_cheermotes` color attribute corrected
 
 - ext.commands
     - :func:`Bot.handle_commands` now also invokes on threads / replies
@@ -16,7 +17,10 @@ Massive documentation updates
     - Fix issue with :func:`Bot.reload_module` where module is reloaded incorrectly if exception occurs
 
 - ext.pubsub
-    - Channel subscription model fixes.
+    - Channel subscription model fixes and additional type hints for Optional return values
+    - PubSubBitsMessage model updated to return correct data and updated typing
+    - PubSubBitsBadgeMessage model updated to return correct data and updated typing
+    - PubSubChatMessage now correctly returns a string rather than int for the Bits Events
 
 2.2.0
 =====

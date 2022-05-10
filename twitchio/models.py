@@ -121,12 +121,12 @@ class CheerEmoteTier:
         Indicates whether twitch hides the emote from the bits card.
     """
 
-    __slots__ = "min_bits", "id", "colour", "images", "can_cheer", "show_in_bits_card"
+    __slots__ = "min_bits", "id", "color", "images", "can_cheer", "show_in_bits_card"
 
     def __init__(self, data: dict):
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
-        self.colour: str = data["colour"]
+        self.color: str = data["color"]
         self.images = data["images"]  # TODO types
         self.can_cheer: bool = data["can_cheer"]
         self.show_in_bits_card: bool = data["show_in_bits_card"]
