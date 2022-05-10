@@ -293,7 +293,14 @@ class Websocket:
         pass
 
     async def whisper_event(self, payload: IRCPayload) -> None:
-        pass
+        logger.debug(f'Received WHISPER from Twitch: sender={payload.user} content={payload.message}')
+
+        chatter = PartialChatter(payload=payload)
+        message = Message(payload=payload, channel=None, echo=False, chatter=chatter)
+
+        self._message_cache[message.id] = message
+
+        await self.dispatch('message', message)
 
     async def close(self):
         self.closing = True

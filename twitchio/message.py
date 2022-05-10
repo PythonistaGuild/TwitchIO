@@ -34,8 +34,8 @@ class Message:
     ----------
     content: str
         The message content.
-    channel: :class:`Channel`
-        The channel the message was sent from.
+    channel: Optional[:class:`Channel`]
+        The channel the message was sent from. Could be None if the Message is a whisper.
     author: :class:`PartialChatter`
         The chatter that sent the message.
     echo: bool
@@ -48,6 +48,7 @@ class Message:
     __slots__ = (
         '_tags',
         '_id',
+        '_tid',
         'content',
         'channel',
         'author',
@@ -60,16 +61,17 @@ class Message:
     def __init__(self,
                  payload: IRCPayload,
                  *,
-                 channel: Channel,
+                 channel: Optional[Channel],
                  chatter: PartialChatter,
                  echo: bool = False
                  ):
         self._tags = payload.tags
         self._badges: dict = payload.badges
 
-        self._id: str = self._tags['id']
+        self._id: str = self._tags.get('id') or self._tags.get('message-id')
+        self._tid: str = self._tags.get('thread-id')
         self.content: Optional[str] = payload.message
-        self.channel: Channel = channel
+        self.channel: Optional[Channel] = channel
         self.author: PartialChatter = chatter
 
         self.echo: bool = echo
@@ -95,6 +97,11 @@ class Message:
     def id(self) -> str:
         """The message ID."""
         return self._id
+
+    @property
+    def thread_id(self) -> Optional[str]:
+        """The Thread ID associated with this message. Could be None."""
+        return self._tid
 
     @property
     def tags(self) -> dict:
