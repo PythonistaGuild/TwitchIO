@@ -801,7 +801,7 @@ class PartialUser:
             broadcaster_id=str(self.id),
         )
 
-        return [ChannelTeams(self._http, x) for x in data]
+        return [ChannelTeams(self._http, x) for x in data["data"]] if data["data"] else []
 
     async def fetch_polls(self, token: str, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20):
         """|coro|
@@ -824,7 +824,7 @@ class PartialUser:
         from .models import Poll
 
         data = await self._http.get_polls(broadcaster_id=str(self.id), token=token, poll_ids=poll_ids, first=first)
-        return [Poll(self._http, x) for x in data["data"]] if data["data"] else None
+        return [Poll(self._http, x) for x in data["data"]] if data["data"] else []
 
     async def create_poll(
         self,
@@ -904,6 +904,111 @@ class PartialUser:
         data = await self._http.patch_poll(broadcaster_id=str(self.id), token=token, id=poll_id, status=status)
         return Poll(self._http, data[0])
 
+    async def fetch_goals(self, token: str):
+        """|coro|
+
+        Fetches a list of goals for the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the user:read:broadcast scope
+
+        Returns
+        --------
+        List[:class:`twitchio.Goal`]
+        """
+        from .models import Goal
+
+        data = await self._http.get_goals(broadcaster_id=str(self.id), token=token)
+        return [Goal(self._http, x) for x in data]
+
+    async def fetch_chat_settings(self, moderator_id: Optional[int] = None, token: Optional[str] = None):
+        """|coro|
+
+        Fetches the current chat settings for this channel/broadcaster.
+
+        Parameters
+        -----------
+        moderator_id: Optional[:class:`int`]
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+        token: Optional[:class:`str`]
+            An oauth token with the moderator:read:chat_settings scope. Required if moderator_id is provided.
+
+        Returns
+        --------
+        :class:`twitchio.ChatSettings`
+        """
+        from .models import ChatSettings
+
+        data = await self._http.get_chat_settings(broadcaster_id=str(self.id), moderator_id=str(moderator_id), token=token)
+        return ChatSettings(self._http, data[0])
+
+    async def update_chat_settings(
+        self,
+        moderator_id: int,
+        token: str,
+        emote_mode: Optional[bool] = None,
+        follower_mode: Optional[bool] = None,
+        follower_mode_duration: Optional[int] = None,
+        slow_mode: Optional[bool] = None,
+        slow_mode_wait_time: Optional[int] = None,
+        subscriber_mode: Optional[bool] = None,
+        unique_chat_mode: Optional[bool] = None,
+        non_moderator_chat_delay: Optional[bool] = None,
+        non_moderator_chat_delay_duration: Optional[int] = None
+        ):
+        """|coro|
+
+        Updates the current chat settings for this channel/broadcaster.
+
+        Parameters
+        -----------
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+        token: :class:`str`
+            An oauth token with the moderator:manage:chat_settings scope.
+        emote_mode: Optional[:class:`bool`]
+            A boolean to determine whether chat must contain only emotes or not.
+        follower_mode: Optional[:class:`bool`]
+            A boolean to determine whether chat must contain only emotes or not.
+        follower_mode_duration: Optional[:class:`int`]
+            The length of time, in minutes, that the followers must have followed the broadcaster to participate in chat.
+            Values: 0 (no restriction) through 129600 (3 months). The default is 0.
+        slow_mode: Optional[:class:`bool`]
+            A boolean to determine whether the broadcaster limits how often users in the chat room are allowed to send messages.
+        slow_mode_wait_time: Optional[:class:`int`]
+            The amount of time, in seconds, that users need to wait between sending messages.
+            Values: 3 through 120 (2 minute delay). The default is 30 seconds.
+        subscriber_mode: Optional[:class:`bool`]
+            A boolean to determine whether only users that subscribe to the broadcaster's channel can talk in chat.
+        unique_chat_mode: Optional[:class:`bool`]
+            A boolean to determine whether the broadcaster requires users to post only unique messages in chat.
+        non_moderator_chat_delay: Optional[:class:`bool`]
+            A boolean to determine whether the broadcaster adds a short delay before chat messages appear in chat.
+        non_moderator_chat_delay_duration: Optional[:class:`int`]
+            The amount of time, in seconds, that messages are delayed from appearing in chat.
+            Valid values: 2, 4 and 6.
+
+        Returns
+        --------
+        :class:`twitchio.ChatSettings`
+        """
+        from .models import ChatSettings
+        data = await self._http.patch_chat_settings(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            token=token, emote_mode=emote_mode,
+            follower_mode=follower_mode,
+            follower_mode_duration=follower_mode_duration,
+            slow_mode=slow_mode,
+            slow_mode_wait_time=slow_mode_wait_time,
+            subscriber_mode=subscriber_mode,
+            unique_chat_mode=unique_chat_mode,
+            non_moderator_chat_delay=non_moderator_chat_delay,
+            non_moderator_chat_delay_duration=non_moderator_chat_delay_duration
+            )
+        return ChatSettings(self._http, data[0])
 
 class BitLeaderboardUser(PartialUser):
 

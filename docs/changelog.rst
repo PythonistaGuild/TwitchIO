@@ -6,10 +6,13 @@ Massive documentation updates
 
 - TwitchIO
     - Removed unexpected loop termination from `WSConnection._close()`
-    - Fix bug where # prefixed channel names in initial_channels would not trigger :func:`twitchio.Client.event_ready`
+    - Fix bug where # prefixed channel names and capitals in initial_channels would not trigger :func:`twitchio.Client.event_ready`
     - :func:`User.create_clip` has been fixed by converting bool to string in http request
     - Poll endpoints added :func:`User.fetch_polls` :func:`User.create_poll` and :func:`User.end_poll`
     - :func:`Client.fetch_cheermotes` color attribute corrected
+    - :func:`User.fetch_channel_teams` returns empty list if no teams found rather than unhandled error
+    - :func:`User.fetch_goals` method added
+    - :func:`User.fetch_chat_settings` and :func:`User.update_chat_settings` methods added
 
 - ext.commands
     - :func:`Bot.handle_commands` now also invokes on threads / replies

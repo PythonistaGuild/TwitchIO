@@ -74,6 +74,14 @@ ChannelTeams
     :members:
     :inherited-members:
 
+ChatSettings
+-------------
+.. attributetable:: ChatSettings
+
+.. autoclass:: ChatSettings
+    :members:
+    :inherited-members:
+
 Chatter
 --------
 .. attributetable:: PartialChatter
@@ -156,6 +164,14 @@ Game
 .. attributetable:: Game
 
 .. autoclass:: Game
+    :members:
+    :inherited-members:
+
+Goal
+------
+.. attributetable:: Goal
+
+.. autoclass:: Goal
     :members:
     :inherited-members:
 

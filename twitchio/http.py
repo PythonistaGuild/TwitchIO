@@ -859,7 +859,7 @@ class TwitchHTTP:
 
     async def get_channel_teams(self, broadcaster_id: str):
         q = [("broadcaster_id", broadcaster_id)]
-        return await self.request(Route("GET", "teams/channel", query=q))
+        return await self.request(Route("GET", "teams/channel", query=q), paginate=False, full_body=True)
 
     async def get_polls(
         self,
@@ -921,3 +921,48 @@ class TwitchHTTP:
     async def patch_poll(self, broadcaster_id: str, token: str, id: str, status: str):
         body = {"broadcaster_id": broadcaster_id, "id": id, "status": status}
         return await self.request(Route("PATCH", "polls", body=body, token=token))
+
+    async def get_goals(self, broadcaster_id: str, token: str):
+        return await self.request(Route("GET", "goals", query=[("broadcaster_id", broadcaster_id)], token=token))
+
+    async def get_chat_settings(self, broadcaster_id: str, moderator_id: Optional[str] = None, token: Optional[str] = None):
+        q = [("broadcaster_id", broadcaster_id)]
+        if moderator_id and token:
+            q.append(("moderator_id", moderator_id))
+        return await self.request(Route("GET", "chat/settings", query=q, token=token))
+
+    async def patch_chat_settings(
+        self,
+        broadcaster_id: str,
+        moderator_id: str,
+        token: str,
+        emote_mode: Optional[bool] = None,
+        follower_mode: Optional[bool] = None,
+        follower_mode_duration: Optional[int] = None,
+        slow_mode: Optional[bool] = None,
+        slow_mode_wait_time: Optional[int] = None,
+        subscriber_mode: Optional[bool] = None,
+        unique_chat_mode: Optional[bool] = None,
+        non_moderator_chat_delay: Optional[bool] = None,
+        non_moderator_chat_delay_duration: Optional[int] = None
+        ):
+        if follower_mode_duration and follower_mode_duration > 129600:
+            raise ValueError("follower_mode_duration must be below 129600")
+        if slow_mode_wait_time and (slow_mode_wait_time < 3 or slow_mode_wait_time > 120):
+            raise ValueError("slow_mode_wait_time must be between 3 and 120")
+        if non_moderator_chat_delay_duration and non_moderator_chat_delay_duration not in {2, 4, 6}:
+            raise ValueError("non_moderator_chat_delay_duration must be 2, 4 or 6")
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        data = {
+            "emote_mode": emote_mode,
+            "follower_mode": follower_mode,
+            "follower_mode_duration": follower_mode_duration,
+            "slow_mode": slow_mode,
+            "slow_mode_wait_time": slow_mode_wait_time,
+            "subscriber_mode": subscriber_mode,
+            "unique_chat_mode": unique_chat_mode,
+            "non_moderator_chat_delay": non_moderator_chat_delay,
+            "non_moderator_chat_delay_duration": non_moderator_chat_delay_duration,
+        }
+        data = {k: v for k, v in data.items() if v is not None}
+        return await self.request(Route("PATCH", "chat/settings", query=q, body=data, token=token))

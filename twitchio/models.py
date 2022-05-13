@@ -70,6 +70,8 @@ __all__ = (
     "ChannelInfo",
     "Poll",
     "PollChoice",
+    "Goal",
+    "ChatSettings",
 )
 
 
@@ -1375,9 +1377,9 @@ class Poll:
     duration: :class:`int`
         Total duration for the poll (in seconds).
     started_at: :class:`datetime.datetime`
-        Date and time the the poll was started.
+        Date and time the poll was started.
     ended_at: :class:`datetime.datetime`
-        Date and time the the poll was ended.
+        Date and time the poll was ended.
     """
 
     __slots__ = (
@@ -1441,3 +1443,111 @@ class PollChoice:
 
     def __repr__(self):
         return f"<PollChoice id={self.id} title={self.title} votes={self.votes} channel_points_votes={self.channel_points_votes} bits_votes={self.bits_votes}>"
+
+class Goal:
+    """
+    Represents a list of Goals for a broadcaster / channel
+
+    Attributes
+    -----------
+    id: :class:`str`
+        An ID that uniquely identifies this goal.
+    broadcaster: :class:`~twitchio.PartialUser`
+        User of the broadcaster.
+    type: :class:`str`
+        The type of goal.
+        Valid values: follower, subscription and new_subscription.
+    description: :class:`str`
+        A description of the goal, if specified.
+    current_amount: :class:`int`
+        The current value.
+    target_amount: :class:`int`
+        Number of Bits required to vote once with Bits.
+    created_at: :class:`datetime.datetime`
+        Date and time of when the broadcaster created the goal.
+    """
+
+    __slots__ = (
+        "id",
+        "broadcaster",
+        "type",
+        "description",
+        "current_amount",
+        "target_amount",
+        "created_at",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.id: str = data["id"]
+        self.broadcaster = PartialUser(http, data["broadcaster_id"], data["broadcaster_login"])
+        self.type: str = data["type"]
+        self.description: str = data["description"]
+        self.current_amount: int = data["current_amount"]
+        self.target_amount: int = data["target_amount"]
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+
+    def __repr__(self):
+        return f"<Goal id={self.id} broadcaster={self.broadcaster} description={self.description} current_amount={self.current_amount} target_amount={self.target_amount} created_at={self.created_at}>"
+
+class ChatSettings:
+    """
+    Represents current chat settings of a broadcaster / channel
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        User of the broadcaster. Only returns the ID.
+    emote_mode: :class:`bool`
+        Indicates whether emote only mode is enabled.
+    follower_mode: :class:`bool`
+        Indicates whether follower only chat is enabled.
+    follower_mode_duration: Optional[:class:`int`]
+        The length of time, in minutes, that the followers must have followed the broadcaster to participate in chat.
+    slow_mode: :class:`bool`
+        Indicates whether the chat is in slow mode.
+    slow_mode_wait_time: Optional[:class:`int`]
+        The amount of time, in seconds, that users need to wait between sending messages.
+    subscriber_mode: :class:`bool`
+        Indicates whether only users that subscribe to the broadcaster's channel can talk in chat.
+    unique_chat_mode: :class:`bool`
+        Indicates whether the broadcaster requires users to post only unique messages in the chat room.
+    moderator: Optional[:class:`~twitchio.PartialUser`]
+        The User of the moderator, if provided. Only returns the ID.
+    non_moderator_chat_delay: Optional[:class:`bool`]
+        Indicates whether the broadcaster adds a short delay before chat messages appear in the chat room.
+    non_moderator_chat_delay_duration: Optional[:class:`int`]
+        The amount of time, in seconds, that messages are delayed from appearing in chat.
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "emote_mode",
+        "follower_mode",
+        "follower_mode_duration",
+        "slow_mode",
+        "slow_mode_wait_time",
+        "subscriber_mode",
+        "unique_chat_mode",
+        "moderator",
+        "non_moderator_chat_delay",
+        "non_moderator_chat_delay_duration",
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.broadcaster = PartialUser(http, data["broadcaster_id"], None)
+        self.emote_mode: bool = data["emote_mode"]
+        self.follower_mode: bool = data["follower_mode"]
+        self.follower_mode_duration: Optional[int] = data.get("follower_mode_duration")
+        self.slow_mode: bool = data["slow_mode"]
+        self.slow_mode_wait_time: Optional[int] = data.get("slow_mode_wait_time")
+        self.subscriber_mode: bool = data["subscriber_mode"]
+        self.unique_chat_mode: bool = data["unique_chat_mode"]
+        self.non_moderator_chat_delay: Optional[bool] = data.get("non_moderator_chat_delay")
+        self.non_moderator_chat_delay_duration: Optional[int] = data.get("non_moderator_chat_delay_duration")
+        try:
+            self.moderator  = PartialUser(http, data["moderator_id"], None)
+        except KeyError:
+            self.moderator = None
+
+    def __repr__(self):
+        return f"<ChatSettings broadcaster={self.broadcaster} emote_mode={self.emote_mode} follower_mode={self.follower_mode} slow_mode={self.slow_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
