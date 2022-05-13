@@ -36,8 +36,6 @@ if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
     from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent, Prediction
-
-
 __all__ = (
     "PartialUser",
     "BitLeaderboardUser",
@@ -161,7 +159,6 @@ class PartialUser:
         """
         if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
             return self._cached_rewards[1]
-
         try:
             data = await self._http.get_rewards(token, self.id, only_manageable, ids)
         except Unauthorized as error:
@@ -448,7 +445,6 @@ class PartialUser:
         """
         if not isinstance(to_user, PartialUser):
             raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
-
         from .models import FollowEvent
 
         data = await self._http.get_user_follows(from_id=str(self.id), to_id=str(to_user.id))
@@ -741,7 +737,6 @@ class PartialUser:
         """
         if game_id is not None:
             game_id = str(game_id)
-
         await self._http.patch_channel(
             token,
             broadcaster_id=str(self.id),
@@ -941,7 +936,9 @@ class PartialUser:
         """
         from .models import ChatSettings
 
-        data = await self._http.get_chat_settings(broadcaster_id=str(self.id), moderator_id=str(moderator_id), token=token)
+        data = await self._http.get_chat_settings(
+            broadcaster_id=str(self.id), moderator_id=str(moderator_id), token=token
+        )
         return ChatSettings(self._http, data[0])
 
     async def update_chat_settings(
@@ -956,8 +953,8 @@ class PartialUser:
         subscriber_mode: Optional[bool] = None,
         unique_chat_mode: Optional[bool] = None,
         non_moderator_chat_delay: Optional[bool] = None,
-        non_moderator_chat_delay_duration: Optional[int] = None
-        ):
+        non_moderator_chat_delay_duration: Optional[int] = None,
+    ):
         """|coro|
 
         Updates the current chat settings for this channel/broadcaster.
@@ -995,10 +992,12 @@ class PartialUser:
         :class:`twitchio.ChatSettings`
         """
         from .models import ChatSettings
+
         data = await self._http.patch_chat_settings(
             broadcaster_id=str(self.id),
             moderator_id=str(moderator_id),
-            token=token, emote_mode=emote_mode,
+            token=token,
+            emote_mode=emote_mode,
             follower_mode=follower_mode,
             follower_mode_duration=follower_mode_duration,
             slow_mode=slow_mode,
@@ -1006,9 +1005,10 @@ class PartialUser:
             subscriber_mode=subscriber_mode,
             unique_chat_mode=unique_chat_mode,
             non_moderator_chat_delay=non_moderator_chat_delay,
-            non_moderator_chat_delay_duration=non_moderator_chat_delay_duration
-            )
+            non_moderator_chat_delay_duration=non_moderator_chat_delay_duration,
+        )
         return ChatSettings(self._http, data[0])
+
 
 class BitLeaderboardUser(PartialUser):
 

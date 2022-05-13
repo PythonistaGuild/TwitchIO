@@ -925,7 +925,9 @@ class TwitchHTTP:
     async def get_goals(self, broadcaster_id: str, token: str):
         return await self.request(Route("GET", "goals", query=[("broadcaster_id", broadcaster_id)], token=token))
 
-    async def get_chat_settings(self, broadcaster_id: str, moderator_id: Optional[str] = None, token: Optional[str] = None):
+    async def get_chat_settings(
+        self, broadcaster_id: str, moderator_id: Optional[str] = None, token: Optional[str] = None
+    ):
         q = [("broadcaster_id", broadcaster_id)]
         if moderator_id and token:
             q.append(("moderator_id", moderator_id))
@@ -944,8 +946,8 @@ class TwitchHTTP:
         subscriber_mode: Optional[bool] = None,
         unique_chat_mode: Optional[bool] = None,
         non_moderator_chat_delay: Optional[bool] = None,
-        non_moderator_chat_delay_duration: Optional[int] = None
-        ):
+        non_moderator_chat_delay_duration: Optional[int] = None,
+    ):
         if follower_mode_duration and follower_mode_duration > 129600:
             raise ValueError("follower_mode_duration must be below 129600")
         if slow_mode_wait_time and (slow_mode_wait_time < 3 or slow_mode_wait_time > 120):

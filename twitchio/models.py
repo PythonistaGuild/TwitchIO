@@ -32,8 +32,6 @@ from .user import BitLeaderboardUser, PartialUser, User
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
-
-
 __all__ = (
     "BitsLeaderboard",
     "Clip",
@@ -1056,7 +1054,6 @@ class Prediction:
     def _parse_time(self, data, field) -> Optional["Datetime"]:
         if field not in data or data[field] is None:
             return None
-
         time = data[field].split(".")[0]
         return datetime.datetime.fromisoformat(time)
 
@@ -1444,6 +1441,7 @@ class PollChoice:
     def __repr__(self):
         return f"<PollChoice id={self.id} title={self.title} votes={self.votes} channel_points_votes={self.channel_points_votes} bits_votes={self.bits_votes}>"
 
+
 class Goal:
     """
     Represents a list of Goals for a broadcaster / channel
@@ -1488,6 +1486,7 @@ class Goal:
 
     def __repr__(self):
         return f"<Goal id={self.id} broadcaster={self.broadcaster} description={self.description} current_amount={self.current_amount} target_amount={self.target_amount} created_at={self.created_at}>"
+
 
 class ChatSettings:
     """
@@ -1545,7 +1544,7 @@ class ChatSettings:
         self.non_moderator_chat_delay: Optional[bool] = data.get("non_moderator_chat_delay")
         self.non_moderator_chat_delay_duration: Optional[int] = data.get("non_moderator_chat_delay_duration")
         try:
-            self.moderator  = PartialUser(http, data["moderator_id"], None)
+            self.moderator = PartialUser(http, data["moderator_id"], None)
         except KeyError:
             self.moderator = None
 
