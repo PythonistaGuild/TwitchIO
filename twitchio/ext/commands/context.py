@@ -13,6 +13,8 @@ if typing.TYPE_CHECKING:
 class Context(Messageable):
 
     def __init__(self, message: Message, bot: 'Bot', **attrs):
+        attrs['name'] = message.channel.name
+        attrs['websocket'] = message.channel._websocket
         super().__init__(**attrs)
 
         self.message: Message = message
