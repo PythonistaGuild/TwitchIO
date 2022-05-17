@@ -55,10 +55,15 @@ class Bot(Client):
         client_secret: str = None,
         initial_channels: Union[list, tuple, Callable] = None,
         heartbeat: Optional[float] = 30.0,
+        retain_cache: Optional[bool] = False,
         **kwargs,
     ):
         super().__init__(
-            token=token, client_secret=client_secret, initial_channels=initial_channels, heartbeat=heartbeat
+            token=token,
+            client_secret=client_secret,
+            initial_channels=initial_channels,
+            heartbeat=heartbeat,
+            retain_cache = retain_cache,
         )
 
         self._prefix = prefix

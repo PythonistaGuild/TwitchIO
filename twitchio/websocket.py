@@ -60,6 +60,7 @@ class WSConnection:
         token: str = None,
         modes: tuple = None,
         initial_channels: List[str] = None,
+        retain_cache: Optional[bool] = False,
     ):
         self._loop = loop
         self._backoff = ExponentialBackoff()
@@ -94,6 +95,7 @@ class WSConnection:
         self._token = token
         self.modes = modes or ("commands", "tags", "membership")
         self._initial_channels = initial_channels or []
+        self._retain_cache = retain_cache
 
         if callable(self._initial_channels):
             _temp_initial_channels = self._initial_channels()
@@ -261,6 +263,8 @@ class WSConnection:
         for channel in channels:
             channel = re.sub("[#]", "", channel).lower()
             await self.send(f"PART #{channel}\r\n")
+            if self._retain_cache:
+                self._cache.pop(channel, None)
 
     async def join_channels(self, *channels: str):
         """|coro|
@@ -276,11 +280,10 @@ class WSConnection:
             for channel in channels:
                 if self._join_handle < time.time():  # Handle is less than the current time
                     self._join_tick = 20  # So lets start a new rate limit bucket..
-                    self._join_handle = time.time() + 10  # Set the handle timeout time
+                    self._join_handle = time.time() + 11  # Set the handle timeout time
 
                 if self._join_tick == 0:  # We have exhausted the bucket, wait so we can make a new one...
                     await asyncio.sleep(self._join_handle - time.time())
-                    continue
 
                 asyncio.create_task(self._join_channel(channel))
                 self._join_tick -= 1
@@ -294,7 +297,7 @@ class WSConnection:
 
     async def _join_future_handle(self, fut: asyncio.Future, channel: str):
         try:
-            await asyncio.wait_for(fut, timeout=10)
+            await asyncio.wait_for(fut, timeout=11)
         except asyncio.TimeoutError:
             log.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
             self._join_pending.pop(channel)
@@ -386,8 +389,8 @@ class WSConnection:
                 pass
             else:
                 self._join_pending.pop(channel)
-
-        self._cache.pop(channel, None)
+        if not self._retain_cache:
+            self._cache.pop(channel, None)
 
         channel = Channel(name=channel, websocket=self)
         user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
