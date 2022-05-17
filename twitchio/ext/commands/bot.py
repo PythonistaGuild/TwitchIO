@@ -63,7 +63,7 @@ class Bot(Client):
             client_secret=client_secret,
             initial_channels=initial_channels,
             heartbeat=heartbeat,
-            retain_cache = retain_cache,
+            retain_cache=retain_cache,
         )
 
         self._prefix = prefix
@@ -74,7 +74,6 @@ class Bot(Client):
         else:
             self._commands = {}
             self._command_aliases = {}
-
         self._modules: Dict[str, types.ModuleType] = {}
         self._cogs: Dict[str, Cog] = {}
         self._checks: List[Callable[[Context], Union[bool, Awaitable[bool]]]] = []
@@ -148,7 +147,6 @@ class Bot(Client):
         for _, obj in commands:
             if not isinstance(obj, Command):
                 continue
-
             obj._instance = self
 
             try:
@@ -165,10 +163,8 @@ class Bot(Client):
                 ret = await self._prefix(self, message)
             else:
                 ret = self._prefix(self, message)
-
         if not isinstance(ret, (list, tuple, set, str)):
             raise TypeError(f"Prefix must be of either class <list, tuple, set, str> not <{type(ret)}>")
-
         return ret
 
     async def get_prefix(self, message):
@@ -200,19 +196,16 @@ class Bot(Client):
             )
         elif not inspect.iscoroutinefunction(command._callback):
             raise TwitchCommandError(f"Failed to load command <{command.name}>. Commands must be coroutines.")
-
         self.commands[command.name] = command
 
         if not command.aliases:
             return
-
         for alias in command.aliases:
             if alias in self.commands:
                 del self.commands[command.name]
                 raise TwitchCommandError(
                     f"Failed to load command <{command.name}>, a command with that name/alias already exists."
                 )
-
             self._command_aliases[alias] = command.name
 
     def get_command(self, name: str) -> Optional[Command]:
@@ -253,7 +246,6 @@ class Bot(Client):
         for alias in list(self._command_aliases.keys()):
             if self._command_aliases[alias] == name:
                 del self._command_aliases[alias]
-
         try:
             del self._commands[name]
         except KeyError:
@@ -291,11 +283,9 @@ class Bot(Client):
         """
         if not cls:
             cls = Context
-
         prefix = await self.get_prefix(message)
         if not prefix:
             return cls(message=message, prefix=prefix, valid=False, bot=self)
-
         content = message.content[len(prefix) : :].lstrip()  # Strip prefix and remainder whitespace
         view = StringParser()
         parsed = view.process_string(content)  # Return the string as a dict view
@@ -308,12 +298,10 @@ class Bot(Client):
 
             self.run_event("command_error", context, error)
             return context
-
         try:
             command_ = self._command_aliases[command_]
         except KeyError:
             pass
-
         if command_ in self.commands:
             command_ = self.commands[command_]
         else:
@@ -322,7 +310,6 @@ class Bot(Client):
 
             self.run_event("command_error", context, error)
             return context
-
         context = cls(message=message, bot=self, prefix=prefix, command=command_, valid=True, view=view)
 
         return context
@@ -350,7 +337,6 @@ class Bot(Client):
         # TODO Docs
         if not context.prefix or not context.is_valid:
             return
-
         self.run_event("command_invoke", context)
         await context.command(context)
 
@@ -364,7 +350,6 @@ class Bot(Client):
         """
         if name in self._modules:
             raise ValueError(f"Module <{name}> is already loaded")
-
         module = importlib.import_module(name)
 
         if hasattr(module, "prepare"):
@@ -373,7 +358,6 @@ class Bot(Client):
             del module
             del sys.modules[name]
             raise ImportError(f"Module <{name}> is missing a prepare method")
-
         self._modules[name] = module
 
     def unload_module(self, name: str) -> None:
@@ -386,7 +370,6 @@ class Bot(Client):
         """
         if name not in self._modules:
             raise ValueError(f"Module <{name}> is not loaded")
-
         module = self._modules.pop(name)
 
         if hasattr(module, "breakdown"):
@@ -394,15 +377,12 @@ class Bot(Client):
                 module.breakdown(self)  # type: ignore
             except:
                 pass
-
         to_delete = [cog_name for cog_name, cog in self._cogs.items() if cog.__module__ == module.__name__]
         for name in to_delete:
             self.remove_cog(name)
-
         to_delete = [name for name, cmd in self._commands.items() if cmd._callback.__module__ == module.__name__]
         for name in to_delete:
             self.remove_command(name)
-
         to_delete = [
             x
             for y in self._events.items()
@@ -411,7 +391,6 @@ class Bot(Client):
         ]
         for event in to_delete:
             self.remove_event(event)
-
         for m in list(sys.modules.keys()):
             if m == module.__name__ or m.startswith(module.__name__ + "."):
                 del sys.modules[m]
@@ -431,7 +410,6 @@ class Bot(Client):
         """
         if name not in self._modules:
             raise ValueError(f"Module <{name}> is not loaded")
-
         module = self._modules[name]
 
         modules = {
@@ -464,10 +442,8 @@ class Bot(Client):
         """
         if not isinstance(cog, Cog):
             raise InvalidCog('Cogs must derive from "commands.Cog".')
-
         if cog.name in self._cogs:
             raise InvalidCog(f'Cog "{cog.name}" has already been loaded.')
-
         cog._load_methods(self)
         self._cogs[cog.name] = cog
 
@@ -480,7 +456,6 @@ class Bot(Client):
         """
         if cog_name not in self._cogs:
             raise InvalidCog(f"Cog '{cog_name}' not found")
-
         cog = self._cogs.pop(cog_name)
         cog._unload_methods(self)
 
@@ -571,7 +546,6 @@ class Bot(Client):
         """
         if message.echo:
             return
-
         await self.handle_commands(message)
 
     def command(
@@ -630,6 +604,5 @@ class Bot(Client):
     def check(self, func: Callable[[Context], bool]) -> Callable:
         if func in self._checks:
             raise ValueError("The function is already registered as a bot check")
-
         self._checks.append(func)
         return func
