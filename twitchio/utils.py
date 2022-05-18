@@ -41,6 +41,3 @@ except ModuleNotFoundError:
 
 json_loader = _loads
 json_dumper = _dumps
-
-
-MISSING: Any = object()
