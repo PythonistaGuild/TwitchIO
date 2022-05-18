@@ -32,19 +32,16 @@ import asyncio
 import time
 import aiohttp
 
-from typing import Optional, TYPE_CHECKING, Any, Protocol, Dict, TypeVar, Literal, Union
-MISSING: Any = object()
+from typing import Optional, TYPE_CHECKING, Dict, TypeVar, Literal, Union
+from .utils import MISSING
 
 if TYPE_CHECKING:
-    class PartialUser(Protocol):
-        id: int
-        name: str
+    from .models import PartialUser, User
 
-        def __eq__(self, __o: object) -> bool:
-            ...
-
-    UserT = PartialUser
+    UserT = Union[PartialUser, User]
     E = TypeVar("E", bound=BaseException)
+
+
 class IRCRateLimiter:
 
     buckets = {'verified': {'messages': 100, 'joins': 2000},
@@ -82,6 +79,7 @@ class IRCRateLimiter:
 
         await asyncio.sleep(self.check_limit(time_=time_, update=False))
 
+
 class RateLimitBucket:
     def __init__(self) -> None:
         self.reset_at: float = MISSING
@@ -92,11 +90,14 @@ class RateLimitBucket:
     async def __aenter__(self) -> None:
         return await self.lock.__aenter__()
     
-    async def __exit__(self, *args) -> None:
+    async def __aexit__(self, *args) -> None:
         return await self.lock.__aexit__(*args)
     
     async def acquire(self) -> Literal[True]:
         return await self.lock.acquire()
+    
+    async def release(self) -> None:
+        self.lock.release()
     
     def update(self, response: aiohttp.ClientResponse) -> None:
         self.reset_at = float(response.headers['ratelimit-reset'])
@@ -113,11 +114,20 @@ class RateLimitBucket:
         
         self._update_times()
 
+        if tokens > self.max_tokens:
+            raise ValueError("Cannot hit with more tokens than max available tokens")
+
         if self.tokens - tokens <= 0:
             return False
         
         self.tokens -= tokens
         return True
+    
+    async def wait(self, tokens: int) -> None:
+        if not self.hit(tokens):
+            await asyncio.sleep(self.reset_at - time.time())
+            self.hit(tokens)
+
 
 class HTTPRateLimiter:
     def __init__(self) -> None:
