@@ -21,6 +21,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import datetime
+import iso8601
 from typing import Any, Union, Dict, List
 
 __all__ = ("json_loader", "json_dumper")
@@ -41,3 +43,21 @@ except ModuleNotFoundError:
 
 json_loader = _loads
 json_dumper = _dumps
+
+MISSING: Any = object()
+
+def parse_timestamp(timestamp: str) -> datetime.datetime:
+    """
+
+    Parameters
+    ----------
+    timestamp: :class:`str`
+        The timestamp to be parsed, in an iso8601 format.
+
+    Returns
+    -------
+    :class:`datetime.datetime`
+        The parsed timestamp.
+
+    """
+    return iso8601.parse_date(timestamp, datetime.timezone.utc)
