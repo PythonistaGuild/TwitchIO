@@ -421,6 +421,10 @@ class CustomReward:
     cooldown: (:class:`bool`, :class:`int`)
         Whether or not a global cooldown is in place, and if so, the number of seconds until the reward can be redeemed
         again. Will be `None` for Redemption events.
+    background_color: :class:`str`
+        Hexadecimal color code for the background of the reward.
+    image: :class:`str`
+        Image URL for the reward.
     """
 
     __slots__ = (
@@ -444,41 +448,41 @@ class CustomReward:
     )
 
     def __init__(self, data, broadcaster):
-        self.broadcaster = broadcaster
+        self.broadcaster: PartialUser = broadcaster
 
-        self.id = data["id"]
+        self.id: str = data["id"]
 
-        self.title = data["title"]
-        self.cost = data["cost"]
-        self.prompt = data["prompt"]
+        self.title: str = data["title"]
+        self.cost: int = data["cost"]
+        self.prompt: str = data["prompt"]
 
-        self.enabled = data.get("is_enabled", None)
-        self.paused = data.get("is_paused", None)
-        self.in_stock = data.get("is_in_stock", None)
+        self.enabled: bool = data.get("is_enabled", None)
+        self.paused: bool = data.get("is_paused", None)
+        self.in_stock: bool = data.get("is_in_stock", None)
 
-        self.cooldown_until = (
+        self.cooldown_until: datetime.datetime = (
             _parse_datetime(data["cooldown_expires_at"]) if data.get("cooldown_expires_at", None) else None
         )
 
-        self.input_required = data.get("is_user_input_required", None)
-        self.redemptions_skip_queue = data.get("should_redemptions_skip_request_queue", None)
-        self.redemptions_current_stream = data.get("redemptions_redeemed_current_stream", None)
+        self.input_required: bool = data.get("is_user_input_required", None)
+        self.redemptions_skip_queue: bool = data.get("should_redemptions_skip_request_queue", None)
+        self.redemptions_current_stream: bool = data.get("redemptions_redeemed_current_stream", None)
 
-        self.max_per_stream = (
+        self.max_per_stream: tuple[bool, int] = (
             data.get("max_per_stream", {}).get("is_enabled"),
             data.get("max_per_stream", {}).get("value"),
         )
-        self.max_per_user_stream = (
+        self.max_per_user_stream: tuple[bool, int] = (
             data.get("max_per_user_per_stream", {}).get("is_enabled"),
             data.get("max_per_user_per_stream", {}).get("value"),
         )
-        self.cooldown = (
+        self.cooldown: tuple[bool, int] = (
             data.get("global_cooldown", {}).get("is_enabled"),
             data.get("global_cooldown", {}).get("seconds"),
         )
 
-        self.background_color = data.get("background_color", None)
-        self.image = data.get("image", data.get("default_image", {})).get("url_1x", None)
+        self.background_color: str = data.get("background_color", None)
+        self.image: str = data.get("image", data.get("default_image", {})).get("url_1x", None)
 
 
 class CustomRewardAddUpdateRemoveData(EventData):
