@@ -32,7 +32,7 @@ import asyncio
 import time
 import aiohttp
 
-from typing import Optional, TYPE_CHECKING, Dict, TypeVar, Literal, Union
+from typing import cast, Dict, Optional, TYPE_CHECKING, TypeVar, Literal, Union
 from .utils import MISSING
 
 if TYPE_CHECKING:
@@ -81,7 +81,8 @@ class IRCRateLimiter:
 
 
 class RateLimitBucket:
-    def __init__(self) -> None:
+    def __init__(self, name: str) -> None:
+        self.name: str = name
         self.reset_at: float = MISSING
         self.tokens: int = MISSING
         self.max_tokens: int = MISSING
@@ -137,6 +138,12 @@ class HTTPRateLimiter:
         if user in self.buckets:
             return self.buckets[user]
         
-        bucket = RateLimitBucket()
+        name: str
+        if user:
+            name = cast(str, user.name)
+        else:
+            name = "Client-Credential"
+        
+        bucket = RateLimitBucket(name)
         self.buckets[user] = bucket
         return bucket
