@@ -28,7 +28,7 @@ import warnings
 import logging
 import traceback
 import sys
-from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine
+from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict
 
 from twitchio.errors import HTTPException
 from . import models
@@ -98,6 +98,7 @@ class Client:
 
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
+        self.registered_callbacks: Dict[Callable, str] = {}
 
     @classmethod
     def from_client_credentials(
@@ -234,7 +235,7 @@ class Client:
             raise ValueError("Event callback must be a coroutine")
 
         event_name = name or callback.__name__
-        callback._event = event_name  # used to remove the event
+        self.registered_callbacks[callback] = event_name
 
         if event_name in self._events:
             self._events[event_name].append(callback)
@@ -243,11 +244,13 @@ class Client:
             self._events[event_name] = [callback]
 
     def remove_event(self, callback: Callable) -> bool:
-        if not hasattr(callback, "_event"):
+        event_name = self.registered_callbacks.get(callback)
+
+        if event_name is None:
             raise ValueError("Event callback is not a registered event")
 
-        if callback in self._events[callback._event]:
-            self._events[callback._event].remove(callback)
+        if callback in self._events[event_name]:
+            self._events[event_name].remove(callback)
             return True
 
         return False

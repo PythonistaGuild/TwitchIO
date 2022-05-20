@@ -360,7 +360,7 @@ class PubSubChannelSubscribe(PubSubMessage):
     message: :class:`str`
         Message sent with the sub/resub.
     emotes: Optional[List[:class:`dict`]]
-        Message sent with the sub/resub.
+        Emotes sent with the sub/resub.
     is_gift: :class:`bool`
         If this sub message was caused by a gift subscription.
     recipient: Optional[:class:`twitchio.PartialUser`]
