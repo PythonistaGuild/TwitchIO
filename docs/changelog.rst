@@ -8,13 +8,14 @@ Massive documentation updates
     - Removed unexpected loop termination from `WSConnection._close()`
     - Fix bug where # prefixed channel names and capitals in initial_channels would not trigger :func:`twitchio.Client.event_ready`
     - Adjusted join channel rate limit handling
-    - Added `retain_cache` kwarg to Client and Bot
+    - Added `retain_cache` kwarg to Client and Bot. Default is True.
     - :func:`User.create_clip` has been fixed by converting bool to string in http request
     - Poll endpoints added :func:`User.fetch_polls` :func:`User.create_poll` and :func:`User.end_poll`
     - :func:`Client.fetch_cheermotes` color attribute corrected
     - :func:`User.fetch_channel_teams` returns empty list if no teams found rather than unhandled error
-    - :func:`User.fetch_goals` method added
-    - :func:`User.fetch_chat_settings` and :func:`User.update_chat_settings` methods added
+    - Added :func:`User.fetch_goals` method
+    - Added :func:`User.fetch_chat_settings` and :func:`User.update_chat_settings` methods
+    - Added :func:`Client.part_channels` method
 
 - ext.commands
     - :func:`Bot.handle_commands` now also invokes on threads / replies

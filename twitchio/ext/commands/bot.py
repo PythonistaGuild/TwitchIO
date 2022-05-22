@@ -55,7 +55,7 @@ class Bot(Client):
         client_secret: str = None,
         initial_channels: Union[list, tuple, Callable] = None,
         heartbeat: Optional[float] = 30.0,
-        retain_cache: Optional[bool] = False,
+        retain_cache: Optional[bool] = True,
         **kwargs,
     ):
         super().__init__(

@@ -60,7 +60,7 @@ class WSConnection:
         token: str = None,
         modes: tuple = None,
         initial_channels: List[str] = None,
-        retain_cache: Optional[bool] = False,
+        retain_cache: Optional[bool] = True,
     ):
         self._loop = loop
         self._backoff = ExponentialBackoff()

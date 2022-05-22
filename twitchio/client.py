@@ -62,7 +62,7 @@ class Client:
         An optional float in seconds to send a PING message to the server. Defaults to 30.0.
     retain_cache: Optional[bool]
         An optional bool that will retain the cache if PART is received from websocket when True.
-        It will still remove from cache if part_channels is manually called. Defaults to False.
+        It will still remove from cache if part_channels is manually called. Defaults to True.
 
     Attributes
     ------------
@@ -78,7 +78,7 @@ class Client:
         initial_channels: Union[list, tuple, Callable] = None,
         loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
-        retain_cache: Optional[bool] = False,
+        retain_cache: Optional[bool] = True,
     ):
 
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
