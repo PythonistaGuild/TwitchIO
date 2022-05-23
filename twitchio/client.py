@@ -915,3 +915,14 @@ class Client:
                 print(data)
         """
         pass
+
+    async def event_channel_joined(self, channel: Channel):
+        """|coro|
+
+        Event called when the bot joins a channel.
+
+        Parameters
+        ----------
+        channel: :class:`.Channel`
+            The channel that was joined.
+        """

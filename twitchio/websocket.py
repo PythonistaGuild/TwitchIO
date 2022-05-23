@@ -469,6 +469,9 @@ class WSConnection:
         channel = Channel(name=channel, websocket=self)
         user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
 
+        if user.name == self._client.nick:
+            self.dispatch('channel_joined', channel)
+
         self.dispatch("join", channel, user)
 
     def _cache_add(self, parsed: dict):
