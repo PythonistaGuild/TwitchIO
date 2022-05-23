@@ -66,7 +66,11 @@ class Channel(Messageable):
         return self._message  # Abstract method
 
     def _bot_is_mod(self):
-        cache = self._ws._cache[self.name]  # noqa
+        try:
+            cache = self._ws._cache[self.name]  # noqa
+        except KeyError:
+            return False
+
         for user in cache:
             if user.name == self._ws.nick:
                 try:
