@@ -44,8 +44,6 @@ from .chatter import Chatter, PartialChatter, WhisperChatter
 
 if TYPE_CHECKING:
     from .client import Client
-
-
 log = logging.getLogger(__name__)
 HOST = "wss://irc-ws.chat.twitch.tv:443"
 
@@ -103,7 +101,6 @@ class WSConnection:
                 self._initial_channels = _temp_initial_channels
             else:
                 self._initial_channels = [_temp_initial_channels]
-
         self._last_ping = 0
         self._reconnect_requested = False
 
@@ -122,15 +119,12 @@ class WSConnection:
 
         if self._keeper:
             self._keeper.cancel()  # Stop our current keep alive.
-
         if self.is_alive:
             await self._websocket.close()  # If for some reason we are in a weird state, close it before retrying.
-
         if not self._client._http.nick:
             data = await self._client._http.validate(token=self._token)
             self.nick = data["login"]
             self.user_id = int(data["user_id"])
-
         session = self._client._http.session
 
         try:
@@ -141,12 +135,10 @@ class WSConnection:
 
             await asyncio.sleep(retry)
             return asyncio.create_task(self._connect())
-
         if time.time() > self._last_ping + 240 or self._reconnect_requested:
             # Re-authenticate as we have surpassed a PING request or Twitch issued a RECONNECT.
             await self.authenticate(self._initial_channels)
             self._reconnect_requested = False
-
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
         self._ws_ready_event.set()
 
@@ -156,14 +148,12 @@ class WSConnection:
 
         if not self._last_ping:
             self._last_ping = time.time()
-
         while not self._websocket.closed:
             msg = await self._websocket.receive()  # Receive data...
 
             if msg.type is aiohttp.WSMsgType.CLOSED:
                 log.error(f"Websocket connection was closed: {msg.extra}")
                 break
-
             data = msg.data
             if data:
                 log.debug(f" < {data}")
@@ -173,10 +163,8 @@ class WSConnection:
                 for event in events:
                     if not event:
                         continue
-
                     task = asyncio.create_task(self._process_data(event))
                     task.add_done_callback(partial(self._task_callback, event))  # Process our raw data
-
         asyncio.create_task(self._connect())
 
     def _task_callback(self, data, task):
@@ -201,7 +189,6 @@ class WSConnection:
 
             task = asyncio.create_task(self._process_data(dummy))
             task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
-
         await self._websocket.send_str(message + "\r\n")
 
     async def reply(self, msg_id: str, message: str):
@@ -216,7 +203,6 @@ class WSConnection:
             dummy = f"> @reply-parent-msg-id={msg_id} :{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO) #{channel} {content}\r\n"
             task = asyncio.create_task(self._process_data(dummy))
             task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
-
         await self._websocket.send_str(f"@reply-parent-msg-id={msg_id} {message} \r\n")
 
     async def authenticate(self, channels: Union[list, tuple]):
@@ -236,16 +222,13 @@ class WSConnection:
         """
         if not self.is_alive:
             return
-
         await self.send(f"PASS oauth:{self._token}\r\n")
         await self.send(f"NICK {self.nick}\r\n")
 
         for cap in self.modes:
             await self.send(f"CAP REQ :twitch.tv/{cap}")  # Ideally no one should overwrite defaults...
-
         if not channels and not self._initial_channels:
             return
-
         channels = channels or self._initial_channels
         await self.join_channels(*channels)
 
@@ -281,10 +264,8 @@ class WSConnection:
                 if self._join_handle < time.time():  # Handle is less than the current time
                     self._join_tick = 20  # So lets start a new rate limit bucket..
                     self._join_handle = time.time() + 11  # Set the handle timeout time
-
                 if self._join_tick == 0:  # We have exhausted the bucket, wait so we can make a new one...
                     await asyncio.sleep(self._join_handle - time.time())
-
                 asyncio.create_task(self._join_channel(channel))
                 self._join_tick -= 1
 
@@ -322,7 +303,6 @@ class WSConnection:
                 f'Login unsuccessful with token "{self._token}". ' f'Check your scopes for "chat_login" and try again.'
             )
             return await self._close()
-
         partial_ = self._actions.get(parsed["action"])
         if partial_:
             await partial_(parsed)
@@ -335,10 +315,8 @@ class WSConnection:
                 fut.exception()
             except asyncio.InvalidStateError:
                 pass
-
             if fut.done():
                 futures.remove(fut)
-
         if futures:
             await asyncio.wait(futures)
 
@@ -350,14 +328,11 @@ class WSConnection:
             await self.is_ready.wait()
             self.dispatch("ready")
             self._init = True
-
         elif code == 353:
             if parsed["channel"] == "TWITCHIOFAILURE":
                 self._initial_channels.remove(parsed["batches"][0])
-
             if parsed["channel"] in [c.lower().lstrip("#") for c in self._initial_channels] and not self._init:
                 self._join_load[parsed["channel"]] = None
-
             if len(self._join_load) == len(self._initial_channels):
                 for channel in self._initial_channels:
                     self._join_load.pop(channel.lower().lstrip("#"))
@@ -391,7 +366,6 @@ class WSConnection:
                 self._join_pending.pop(channel)
         if not self._retain_cache:
             self._cache.pop(channel, None)
-
         channel = Channel(name=channel, websocket=self)
         user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
 
@@ -410,7 +384,6 @@ class WSConnection:
             user = Chatter(
                 tags=parsed["badges"], name=parsed["user"], channel=channel, bot=self._client, websocket=self
             )
-
         message = Message(
             raw_data=parsed["data"],
             content=parsed["message"],
@@ -462,16 +435,13 @@ class WSConnection:
                 pass
             else:
                 self._join_pending.pop(channel)
-
         if parsed["user"] != self._client.nick:
             self._cache_add(parsed)
-
         channel = Channel(name=channel, websocket=self)
         user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
 
         if user.name == self._client.nick:
-            self.dispatch('channel_joined', channel)
-
+            self.dispatch("channel_joined", channel)
         self.dispatch("join", channel, user)
 
     def _cache_add(self, parsed: dict):
@@ -479,7 +449,6 @@ class WSConnection:
 
         if channel not in self._cache:
             self._cache[channel] = set()
-
         channel_ = Channel(name=channel, websocket=self)
 
         if parsed["batches"]:
@@ -522,7 +491,6 @@ class WSConnection:
 
         for fut in futures:
             fut.cancel()
-
         if self._websocket:
             await self._websocket.close()
         if self._client._http.session:
