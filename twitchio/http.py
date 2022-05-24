@@ -445,12 +445,12 @@ class TwitchHTTP:
         token: str,
         broadcaster_id: int,
         reward_id: str,
-        redemption_id: str = None,
-        status: str = None,
-        sort: str = None,
+        redemption_id: Optional[str] = None,
+        status: Optional[str] = None,
+        sort: str = "OLDEST",
+        first: int = 20
     ):
-        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
-
+        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id), ("first", first)]
         if redemption_id:
             params.append(("id", redemption_id))
         if status:

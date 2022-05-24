@@ -224,7 +224,7 @@ class CustomReward:
                 ) from error
             raise
 
-    async def get_redemptions(self, token: str, status: str, sort: str = None):
+    async def get_redemptions(self, token: str, status: str, sort: str = "OLDEST", first: int = 20):
         """
         Gets redemptions for this reward
 
@@ -235,11 +235,14 @@ class CustomReward:
         status:
             :class:`str` one of UNFULFILLED, FULFILLED or CANCELED
         sort:
-            :class:`str` the order redemptions are returned in. One of OLDEST, NEWEST. Default: OLDEST.
+            Optional[:class:`str`] the order redemptions are returned in. One of OLDEST, NEWEST. Default: OLDEST.
+        first:
+            :class:`int` Number of results to be returned when getting the paginated Custom Reward Redemption objects for a reward.
+            Limit: 50. Default: 20.
         """
         try:
             data = await self._http.get_reward_redemptions(
-                token, self._broadcaster_id, self.id, status=status, sort=sort
+                token, self._broadcaster_id, self.id, status=status, sort=sort, first=first
             )
         except Unauthorized as error:
             raise Unauthorized("The given token is invalid", "", 401) from error
