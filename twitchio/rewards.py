@@ -28,6 +28,7 @@ import datetime
 from typing import Optional, TYPE_CHECKING
 
 from .errors import HTTPException, Unauthorized
+from .utils import parse_timestamp
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
@@ -272,8 +273,11 @@ class CustomRewardRedemption:
         self.user_name = obj["user_name"]
         self.input = obj["user_input"]
         self.status = obj["status"]
-        self.redeemed_at = datetime.datetime.strptime(obj["redeemed_at"], '%Y-%m-%dT%H:%M:%SZ')
+        self.redeemed_at = parse_timestamp(obj["redeemed_at"])
         self.reward = parent or obj["reward"]
+
+    def __repr__(self):
+        return f"<CustomRewardRedemption id={self.id} user_id={self.user_id} user_name={self.user_name} input={self.input} status={self.status} redeemed_at={self.redeemed_at}>"
 
     async def fulfill(self, token: str):
         """
