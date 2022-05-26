@@ -257,7 +257,7 @@ class CustomReward:
                 ) from error
             raise
         else:
-            return [CustomRewardRedemption(x, self._http, self) for x in data["data"]]
+            return [CustomRewardRedemption(x, self._http, self) for x in data]
 
 
 class CustomRewardRedemption:
@@ -272,7 +272,7 @@ class CustomRewardRedemption:
         self.user_name = obj["user_name"]
         self.input = obj["user_input"]
         self.status = obj["status"]
-        self.redeemed_at = datetime.datetime.fromisoformat(obj["redeemed_at"])
+        self.redeemed_at = datetime.datetime.strptime(obj["redeemed_at"], '%Y-%m-%dT%H:%M:%SZ')
         self.reward = parent or obj["reward"]
 
     async def fulfill(self, token: str):
