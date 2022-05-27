@@ -7,6 +7,10 @@ Massive documentation updates
 - TwitchIO
     - Removed unexpected loop termination from `WSConnection._close()`
     - Fix bug where # prefixed channel names and capitals in initial_channels would not trigger :func:`twitchio.Client.event_ready`
+    - Fix :class:`CustomRewardRedemption`
+        - Add :func:`__repr__`
+        - Fix :func:`__init__`
+    - Fix :func:`CustomRewardget_redemptions()`
     - Adjusted join channel rate limit handling
     - Added `retain_cache` kwarg to Client and Bot. Default is True.
     - :func:`User.create_clip` has been fixed by converting bool to string in http request
