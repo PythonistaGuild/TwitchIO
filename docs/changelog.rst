@@ -1,35 +1,41 @@
 :orphan:
 
-Master
-=======
+2.3.0
+=====
 Massive documentation updates
 
 - TwitchIO
-    - Removed unexpected loop termination from `WSConnection._close()`
-    - Fix bug where # prefixed channel names and capitals in initial_channels would not trigger :func:`twitchio.Client.event_ready`
-    - Adjusted join channel rate limit handling
-    - Added `retain_cache` kwarg to Client and Bot. Default is True.
-    - :func:`User.create_clip` has been fixed by converting bool to string in http request
-    - Poll endpoints added :func:`User.fetch_polls` :func:`User.create_poll` and :func:`User.end_poll`
-    - :func:`Client.fetch_cheermotes` color attribute corrected
-    - :func:`User.fetch_channel_teams` returns empty list if no teams found rather than unhandled error
-    - Added :func:`User.fetch_goals` method
-    - Added :func:`User.fetch_chat_settings` and :func:`User.update_chat_settings` methods
-    - Added :func:`Client.part_channels` method
-    - Added :func:`Client.event_channel_joined` event. This is dispatched when the bot joins a channel
-    - Added first kwarg to :func:`CustomReward.get_redemptions`
-    - Fix :class:`CustomRewardRedemption` so :func:`CustomReward.get_redemptions` returns correctly
+    - Additions
+        - Added ``retain_cache`` kwarg to Client and Bot. Default is True.
+        - Poll endpoints added :func:`twitchio.PartialUser.fetch_polls` :func:`twitchio.PartialUser.create_poll` and :func:`twitchio.PartialUser.end_poll`
+        - Added :func:`twitchio.PartialUser.fetch_goals` method
+        - Added :func:`twitchio.PartialUser.fetch_chat_settings` and :func:`twitchio.PartialUser.update_chat_settings` methods
+        - Added :func:`twitchio.Client.part_channels` method
+        - Added :func:`~twitchio.Client.event_channel_joined` event. This is dispatched when the bot joins a channel
+        - Added first kwarg to :func:`twitchio.CustomReward.get_redemptions`
+
+    - Bug fixes
+        - Removed unexpected loop termination from ``WSConnection._close()``
+        - Fix bug where # prefixed channel names and capitals in initial_channels would not trigger :func:`~twitchio.Client.event_ready`
+        - Adjusted join channel rate limit handling
+        - :func:`twitchio.PartialUser.create_clip` has been fixed by converting bool to string in http request
+        - :func:`twitchio.Client.fetch_cheermotes` color attribute corrected
+        - :func:`twitchio.PartialUser.fetch_channel_teams` returns empty list if no teams found rather than unhandled error
+        - Fix :class:`twitchio.CustomRewardRedemption` so :func:`twitchio.CustomReward.get_redemptions` returns correctly
 
 - ext.commands
-    - :func:`Bot.handle_commands` now also invokes on threads / replies
-    - Cooldowns are now handled correctly per bucket.
-    - Fix issue with :func:`Bot.reload_module` where module is reloaded incorrectly if exception occurs
+    - Additions
+        - :func:`twitchio.ext.commands.Bot.handle_commands` now also invokes on threads / replies
+
+    - Bug fixes
+        - Cooldowns are now handled correctly per bucket.
+        - Fix issue with :func:`twitchio.ext.Bot.reload_module` where module is reloaded incorrectly if exception occurs
 
 - ext.pubsub
     - Channel subscription model fixes and additional type hints for Optional return values
-    - PubSubBitsMessage model updated to return correct data and updated typing
-    - PubSubBitsBadgeMessage model updated to return correct data and updated typing
-    - PubSubChatMessage now correctly returns a string rather than int for the Bits Events
+    - :class:`~twitchio.ext.pubsub.PubSubBitsMessage` model updated to return correct data and updated typing
+    - :class:`~twitchio.ext.pubsub.PubSubBitsBadgeMessage` model updated to return correct data and updated typing
+    - :class:`~twitchio.ext.pubsub.PubSubChatMessage` now correctly returns a string rather than int for the Bits Events
 
 2.2.0
 =====
