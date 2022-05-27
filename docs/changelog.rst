@@ -17,7 +17,8 @@ Massive documentation updates
     - Added :func:`User.fetch_chat_settings` and :func:`User.update_chat_settings` methods
     - Added :func:`Client.part_channels` method
     - Added :func:`Client.event_channel_joined` event. This is dispatched when the bot joins a channel
-    - Added first kwarg to CustomReward.get_redemption()
+    - Added first kwarg to :func:`CustomReward.get_redemptions`
+    - Fix :class:`CustomRewardRedemption` so :func:`CustomReward.get_redemptions` returns correctly
 
 - ext.commands
     - :func:`Bot.handle_commands` now also invokes on threads / replies
