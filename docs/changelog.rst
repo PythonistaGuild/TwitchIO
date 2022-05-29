@@ -1,5 +1,11 @@
 :orphan:
 
+Master
+======
+- TwitchIO
+    - Bug fixes
+        - Added ``self.registered_callbacks = {}`` to Bot and :func:`Client.from_client_credentials`
+
 2.3.0
 =====
 Massive documentation updates

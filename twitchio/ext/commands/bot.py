@@ -138,6 +138,7 @@ class Bot(Client):
         self._commands = {}
         self._command_aliases = {}
         self._checks = []
+        self.registered_callbacks = {}
 
         return self
 

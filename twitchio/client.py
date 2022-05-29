@@ -145,6 +145,7 @@ class Client:
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
+        self.registered_callbacks = {}
         return self
 
     def run(self):
