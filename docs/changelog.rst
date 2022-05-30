@@ -6,6 +6,10 @@ Master
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to Bot and :func:`Client.from_client_credentials`
 
+- ext.pubsub
+    - Bug fixes
+        - :class:`~twitchio.ext.pubsub.PubSubModerationAction` now handles missing keys
+
 2.3.0
 =====
 Massive documentation updates
