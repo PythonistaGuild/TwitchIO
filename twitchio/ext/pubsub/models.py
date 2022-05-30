@@ -245,7 +245,7 @@ class PubSubModerationAction(PubSubMessage):
         The arguments given to the command.
     created_by: :class:`twitchio.PartialUser`
         The user that created the action.
-    message_id: :class:`str`
+    message_id: Optional[:class:`str`]
         The id of the message that created this action.
     target: :class:`twitchio.PartialUser`
         The target of this action.
@@ -262,7 +262,7 @@ class PubSubModerationAction(PubSubMessage):
         self.created_by = PartialUser(
             client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
         )
-        self.message_id: str = data["message"]["data"]["msg_id"]
+        self.message_id: Optional[str] = data["message"]["data"].get("msg_id")
         self.target = (
             PartialUser(
                 client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
@@ -270,7 +270,7 @@ class PubSubModerationAction(PubSubMessage):
             if data["message"]["data"]["target_user_id"]
             else None
         )
-        self.from_automod: bool = data["message"]["data"]["from_automod"]
+        self.from_automod: bool = data["message"]["data"].get("from_automod", False)
 
 
 class PubSubModerationActionBanRequest(PubSubMessage):
