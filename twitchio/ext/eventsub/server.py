@@ -120,10 +120,10 @@ class EventSubClient(web.Application):
     def subscribe_channel_subscriptions(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription, broadcaster)
 
-    def subscribe_channel_subscription_gift(self, broadcaster: Union[PartialUser, str, int]):
+    def subscribe_channel_subscription_gifts(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_gift, broadcaster)
 
-    def subscribe_channel_subscriptions_message(self, broadcaster: Union[PartialUser, str, int]):
+    def subscribe_channel_subscription_messages(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_message, broadcaster)
 
     def subscribe_channel_cheers(self, broadcaster: Union[PartialUser, str, int]):
