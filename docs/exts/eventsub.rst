@@ -108,6 +108,14 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when someone subscribes to a channel that you've subscribed to.
 
+.. function:: event_eventsub_notification_subscription_gift(event: ChannelSubscriptionGiftData)
+
+    Called when someone gifts a subscription to a channel that you've subscribed to.
+
+.. function:: event_eventsub_notification_subscription_message(event: ChannelSubscriptionMessageData)
+
+    Called when someone resubscribes with a message to a channel that you've subscribed to.
+
 .. function:: event_eventsub_notification_cheer(event: ChannelCheerData)
 
     Called when someone cheers on a channel you've subscribed to.
@@ -174,6 +182,18 @@ API Reference
     :inherited-members:
 
 .. attributetable::: ChannelSubscribeData
+
+.. autoclass:: ChannelSubscribeData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelSubscriptionGiftData
+
+.. autoclass:: ChannelSubscribeData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelSubscriptionMessageData
 
 .. autoclass:: ChannelSubscribeData
     :members:
