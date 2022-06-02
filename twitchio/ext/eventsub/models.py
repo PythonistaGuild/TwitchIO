@@ -238,6 +238,74 @@ class ChannelSubscribeData(EventData):
         self.is_gift: bool = data["is_gift"]
 
 
+class ChannelSubscriptionGiftData(EventData):
+    """
+    A Subscription Gift event
+    Explicitly, the act of giving another user a Subscription.
+    Receiving a gift-subscription uses ChannelSubscribeData above, with is_gift==True
+
+    Attributes
+    -----------
+    is_anonymous: :class:`bool`
+        Whether the gift sub was anonymous
+    user: Optional[:class:`twitchio.PartialUser`]
+        The user that gifted subs. Will be ``None`` if ``is_anonymous`` is ``True``
+    broadcaster: :class:`twitchio.PartialUser`
+        The channel that was subscribed to
+    tier: :class:`int`
+        The tier of the subscription
+    total: :class:`int`
+        The total number of subs gifted by a user at once
+    cumulative: Optional[:class:`int`]
+        The total number of subs gifted by a user overall. Will be ``None`` if ``is_anonymous`` is ``True``
+    """
+
+    __slots__ = "is_anonymous", "user", "broadcaster", "tier", "total", "cumulative"
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.is_anonymous: bool = data["is_anonymous"]
+        self.user: Optional[PartialUser] = _transform_user(client, data, "user") if not self.is_anonymous else None
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.tier = int(data["tier"])
+        self.total = int(data["total"])
+        self.cumulative = int(data["cumulative_total"]) if not self.is_anonymous else None
+
+
+class ChannelSubscriptionMessageData(EventData):
+    """
+    A Subscription Message event.
+    A combination of resubscriptions + the messages users type as part of the resub.
+
+    Attributes
+    -----------
+    user: :class:`twitchio.PartialUser`
+        The user who subscribed
+    broadcaster: :class:`twitchio.PartialUser`
+        The channel that was subscribed to
+    tier: :class:`int`
+        The tier of the subscription
+    message: :class:`str`
+        The user's resubscription message
+    cumulative: :class:`int`
+        The total number of months a user has subscribed to the channel
+    streak: Optional[:class:`int`]
+        The total number of months subscribed in a row. ``None`` if the user declines to share it.
+    duration: :class:`int`
+        The length of the subscription. Typically 1, but some users may buy subscriptions for several months.
+    """
+
+    __slots__ = "user", "broadcaster", "tier", "message", "cumulative", "streak", "duration"
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.user = _transform_user(client, data, "user")
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.tier = int(data["tier"])
+        self.message = data["message"]["text"] # There's also an "emotes" part, but its a bunch of data
+        self.cumulative = data["cumulative_months"]
+        self.streak = data["streak_months"]
+        self.duration = data["duration_months"]
+
+
 class ChannelCheerData(EventData):
     """
     A Cheer event
@@ -990,6 +1058,8 @@ _DataType = Union[
     ChannelBanData,
     ChannelUnbanData,
     ChannelSubscribeData,
+    ChannelSubscriptionGiftData,
+    ChannelSubscriptionMessageData,
     ChannelCheerData,
     ChannelUpdateData,
     ChannelFollowData,
@@ -1024,6 +1094,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
     follow = "channel.follow", 1, ChannelFollowData
     subscription = "channel.subscribe", 1, ChannelSubscribeData
+    subscription_gift = "channel.subscription.gift", 1, ChannelSubscriptionGiftData
+    subscription_message = "channel.subscription.message", 1, ChannelSubscriptionMessageData
     cheer = "channel.cheer", 1, ChannelCheerData
     raid = "channel.raid", 1, ChannelRaidData
     ban = "channel.ban", 1, ChannelBanData

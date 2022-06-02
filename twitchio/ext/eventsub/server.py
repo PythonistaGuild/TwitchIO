@@ -46,6 +46,12 @@ class EventSubClient(web.Application):
     async def delete_subscription(self, subscription_id: str):
         await self._http.delete_subscription(subscription_id)
 
+    async def delete_all_active_subscriptions(self):
+        # A convenience method
+        active_subscriptions = await self.get_subscriptions("enabled")
+        for subscription_id in active_subscriptions:
+            await self.delete_subscription(subscription_id)
+
     async def get_subscriptions(self, status: str = None):
         # All possible statuses are:
         #
@@ -113,6 +119,12 @@ class EventSubClient(web.Application):
 
     def subscribe_channel_subscriptions(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription, broadcaster)
+
+    def subscribe_channel_subscription_gift(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_gift, broadcaster)
+
+    def subscribe_channel_subscriptions_message(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_message, broadcaster)
 
     def subscribe_channel_cheers(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.cheer, broadcaster)
