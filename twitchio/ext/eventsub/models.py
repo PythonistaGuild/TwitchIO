@@ -303,7 +303,7 @@ class ChannelSubscriptionMessageData(EventData):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.tier = int(data["tier"])
         self.message = data["message"]["text"]
-        self.emote_data: List[Dict] = data["message"]["emotes"]
+        self.emote_data: List[Dict] = data["message"].get("emotes", [])
         self.cumulative = data["cumulative_months"]
         self.streak = data["streak_months"]
         self.duration = data["duration_months"]
