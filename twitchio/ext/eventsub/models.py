@@ -286,6 +286,8 @@ class ChannelSubscriptionMessageData(EventData):
         The tier of the subscription
     message: :class:`str`
         The user's resubscription message
+    emote_data: :class:`List[Dict]`
+        emote data within the user's resubscription message. Not the emotes themselves
     cumulative: :class:`int`
         The total number of months a user has subscribed to the channel
     streak: Optional[:class:`int`]
@@ -294,13 +296,14 @@ class ChannelSubscriptionMessageData(EventData):
         The length of the subscription. Typically 1, but some users may buy subscriptions for several months.
     """
 
-    __slots__ = "user", "broadcaster", "tier", "message", "cumulative", "streak", "duration"
+    __slots__ = "user", "broadcaster", "tier", "message", "emote_data", "cumulative", "streak", "duration"
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "user")
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.tier = int(data["tier"])
-        self.message = data["message"]["text"] # There's also an "emotes" part, but its a bunch of data
+        self.message = data["message"]["text"]
+        self.emote_data: List[Dict] = data["message"]["emotes"]
         self.cumulative = data["cumulative_months"]
         self.streak = data["streak_months"]
         self.duration = data["duration_months"]
