@@ -550,7 +550,8 @@ class TwitchHTTP:
             ("started_at", started_at.isoformat() if started_at else None),
             ("ended_at", ended_at.isoformat() if ended_at else None),
         ]
-        q.extend(("id", id) for id in ids)
+        if ids:
+            q.extend(("id", id) for id in ids)
         query = [x for x in q if x[1] is not None]
 
         return await self.request(Route("GET", "clips", query=query, token=token))
