@@ -9,7 +9,7 @@ Future via PR #303
             - Callback function is :func:`event_eventsub_notification_subscription_gift(payload)`
         - Added Resubscription Message subscriptions for Resub messages:
             - Subscribed via :func:`esclient.subscribe_channel_subscription_messages(broadcaster=CHANNEL_ID)`
-            -Callback function is :func:`event_eventsub_notification_subscription_message(payload)`
+            - Callback function is :func:`event_eventsub_notification_subscription_message(payload)`
         - Added :func:`EventSubClient.delete_all_active_subscriptions()` for convenience
 
 Master
