@@ -160,8 +160,7 @@ API Reference
 
 .. autoclass:: EventSubClient
     :members:
-
-(The above is broken, and does not show members)
+    :undoc-members:
 
 .. attributetable:: Subscription
 
