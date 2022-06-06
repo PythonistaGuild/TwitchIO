@@ -1,17 +1,5 @@
 :orphan:
 
-Future via PR #303
-======
-- ext.eventsub
-    - Additions
-        - Added Gift Subcriptions subscriptions for giving other users Subs:
-            - Subscribed via :func:`esclient.subscribe_channel_subscription_gifts(broadcaster=CHANNEL_ID)`
-            - Callback function is :func:`event_eventsub_notification_subscription_gift(payload)`
-        - Added Resubscription Message subscriptions for Resub messages:
-            - Subscribed via :func:`esclient.subscribe_channel_subscription_messages(broadcaster=CHANNEL_ID)`
-            - Callback function is :func:`event_eventsub_notification_subscription_message(payload)`
-        - Added :func:`EventSubClient.delete_all_active_subscriptions()` for convenience
-
 Master
 ======
 - TwitchIO
@@ -21,6 +9,17 @@ Master
 - ext.pubsub
     - Bug fixes
         - :class:`~twitchio.ext.pubsub.PubSubModerationAction` now handles missing keys
+
+- ext.eventsub
+    - Additions
+        - Added Gift Subcriptions subscriptions for gifting other users Subs:
+            - Subscribed via :func:`twitchio.ext.eventsub.server.EventSubClient.subscribe_channel_subscription_gifts(broadcaster=CHANNEL_ID)`
+            - Callback function is ``event_eventsub_notification_subscription_gift(payload)``
+        - Added Resubscription Message subscriptions for Resub messages:
+            - Subscribed via :func:`twitchio.ext.eventsub.server.EventSubClient.esclient.subscribe_channel_subscription_messages(broadcaster=CHANNEL_ID)`
+            - Callback function is ``event_eventsub_notification_subscription_message(payload)``
+        - Added :func:`twitchio.ext.eventsub.server.EventSubClient.delete_all_active_subscriptions()` for convenience
+
 
 2.3.0
 =====
