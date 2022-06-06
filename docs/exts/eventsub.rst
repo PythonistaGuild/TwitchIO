@@ -189,13 +189,13 @@ API Reference
 
 .. attributetable::: ChannelSubscriptionGiftData
 
-.. autoclass:: ChannelSubscribeData
+.. autoclass:: ChannelSubscriptionGiftData
     :members:
     :inherited-members:
 
 .. attributetable::: ChannelSubscriptionMessageData
 
-.. autoclass:: ChannelSubscribeData
+.. autoclass:: ChannelSubscriptionMessageData
     :members:
     :inherited-members:
 
