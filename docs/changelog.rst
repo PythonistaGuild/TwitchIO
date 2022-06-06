@@ -18,7 +18,7 @@ Master
         - Added Resubscription Message subscriptions for Resub messages:
             - Subscribed via :func:`twitchio.ext.eventsub.EventSubClient.esclient.subscribe_channel_subscription_messages`
             - Callback function is :func:`twitchio.ext.eventsub.event_eventsub_notification_subscription_message`
-        - Added :func:`twitchio.ext.eventsub.server.EventSubClient.delete_all_active_subscriptions` for convenience
+        - Added :func:`twitchio.ext.eventsub.EventSubClient.delete_all_active_subscriptions` for convenience
 
 
 2.3.0
