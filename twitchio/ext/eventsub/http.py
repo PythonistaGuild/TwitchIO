@@ -27,13 +27,13 @@ class EventSubHTTP:
         route = Route("POST", "eventsub/subscriptions", body=payload, token=self._token)
         return await self._http.request(route, paginate=False, force_app_token=True)
 
-    async def delete_subscription(self, substription: Union[str, Subscription]):
-        if isinstance(substription, models.Subscription):
+    async def delete_subscription(self, subscription: Union[str, Subscription]):
+        if isinstance(subscription, models.Subscription):
             return await self._http.request(
-                Route("DELETE", "eventsub/subscriptions", query=[("id", substription.id)]), paginate=False
+                Route("DELETE", "eventsub/subscriptions", query=[("id", subscription.id)]), paginate=False
             )
         return await self._http.request(
-            Route("DELETE", "eventsub/subscriptions", query=[("id", substription)]), paginate=False
+            Route("DELETE", "eventsub/subscriptions", query=[("id", subscription)]), paginate=False
         )
 
     async def get_subscriptions(self, status: str = None):
