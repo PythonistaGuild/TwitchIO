@@ -45,15 +45,14 @@ pyaudio = [
     {version = "0.2.11", platform = "linux" }
 ]
 
-sphinx = { version = "*", optional = true}
-docutils = { version = "<0.18", optional = true}
-sphinxcontrib-napoleon = { version = "*", optional = true}
-sphinxcontrib-asyncio = { version = "*", optional = true}
-sphinxcontrib-websupport = { version = "*", optional = true}
-Pygments = { version = "*", optional = true}
-furo = { version = "*", optional = true}
-
 [tool.poetry.dev-dependencies]
+sphinx = { version = "*"}
+docutils = { version = "<0.18"}
+sphinxcontrib-napoleon = { version = "*"}
+sphinxcontrib-asyncio = { version = "*"}
+sphinxcontrib-websupport = { version = "*"}
+Pygments = { version = "*"}
+furo = { version = "*"}
 
 [tool.black]
 line-length = 120
