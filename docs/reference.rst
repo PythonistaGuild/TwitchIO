@@ -74,6 +74,14 @@ ChannelTeams
     :members:
     :inherited-members:
 
+ChatSettings
+-------------
+.. attributetable:: ChatSettings
+
+.. autoclass:: ChatSettings
+    :members:
+    :inherited-members:
+
 Chatter
 --------
 .. attributetable:: PartialChatter
@@ -159,6 +167,14 @@ Game
     :members:
     :inherited-members:
 
+Goal
+------
+.. attributetable:: Goal
+
+.. autoclass:: Goal
+    :members:
+    :inherited-members:
+
 HypeTrainContribution
 -----------------------
 .. attributetable:: HypeTrainContribution
@@ -204,6 +220,20 @@ ModEvent
 .. attributetable:: ModEvent
 
 .. autoclass:: ModEvent
+    :members:
+    :inherited-members:
+
+Poll
+-------------
+.. attributetable:: Poll
+
+.. autoclass:: Poll
+    :members:
+    :inherited-members:
+
+.. attributetable:: PollChoice
+
+.. autoclass:: PollChoice
     :members:
     :inherited-members:
 

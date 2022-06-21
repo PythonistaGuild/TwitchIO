@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,7 +28,7 @@ import warnings
 import logging
 import traceback
 import sys
-from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine
+from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict
 
 from twitchio.errors import HTTPException
 from . import models
@@ -60,6 +60,9 @@ class Client:
         The event loop the client will use to run.
     heartbeat: Optional[float]
         An optional float in seconds to send a PING message to the server. Defaults to 30.0.
+    retain_cache: Optional[bool]
+        An optional bool that will retain the cache if PART is received from websocket when True.
+        It will still remove from cache if part_channels is manually called. Defaults to True.
 
     Attributes
     ------------
@@ -75,6 +78,7 @@ class Client:
         initial_channels: Union[list, tuple, Callable] = None,
         loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
+        retain_cache: Optional[bool] = True,
     ):
 
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
@@ -89,10 +93,12 @@ class Client:
             loop=self.loop,
             initial_channels=initial_channels,
             heartbeat=heartbeat,
+            retain_cache=retain_cache,
         )
 
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
+        self.registered_callbacks: Dict[Callable, str] = {}
 
     @classmethod
     def from_client_credentials(
@@ -139,6 +145,7 @@ class Client:
         )  # The only reason we're even creating this is to avoid attribute errors
         self._events = {}
         self._waiting = []
+        self.registered_callbacks = {}
         return self
 
     def run(self):
@@ -229,7 +236,7 @@ class Client:
             raise ValueError("Event callback must be a coroutine")
 
         event_name = name or callback.__name__
-        callback._event = event_name  # used to remove the event
+        self.registered_callbacks[callback] = event_name
 
         if event_name in self._events:
             self._events[event_name].append(callback)
@@ -238,11 +245,13 @@ class Client:
             self._events[event_name] = [callback]
 
     def remove_event(self, callback: Callable) -> bool:
-        if not hasattr(callback, "_event"):
+        event_name = self.registered_callbacks.get(callback)
+
+        if event_name is None:
             raise ValueError("Event callback is not a registered event")
 
-        if callback in self._events[callback._event]:
-            self._events[callback._event].remove(callback)
+        if callback in self._events[event_name]:
+            self._events[event_name].remove(callback)
             return True
 
         return False
@@ -907,3 +916,14 @@ class Client:
                 print(data)
         """
         pass
+
+    async def event_channel_joined(self, channel: Channel):
+        """|coro|
+
+        Event called when the bot joins a channel.
+
+        Parameters
+        ----------
+        channel: :class:`.Channel`
+            The channel that was joined.
+        """

@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -38,11 +38,8 @@ try:
     import ujson as json
 except Exception:
     import json
-
 if TYPE_CHECKING:
     from .client import Client
-
-
 logger = logging.getLogger("twitchio.http")
 
 
@@ -67,15 +64,12 @@ class Route:
 
         if token:
             self.headers["Authorization"] = "Bearer " + token
-
         if isinstance(path, URL):
             self.path = path
         else:
             self.path = URL(self.BASE_URL + "/" + path.rstrip("/"))
-
         if query:
             self.path = self.path.with_query(query)
-
         if isinstance(body, dict):
             self.body = json.dumps(body)
             self.headers["Content-Type"] = "application/json"
@@ -122,13 +116,10 @@ class TwitchHTTP:
         """
         if full_body:
             assert not paginate
-
         if (not self.client_id or not self.nick) and self.token:
             await self.validate(token=self.token)
-
         if not self.client_id:
             raise errors.NoClientID("A Client ID is required to use the Twitch API")
-
         headers = route.headers or {}
 
         if force_app_token and "Authorization" not in headers:
@@ -136,30 +127,23 @@ class TwitchHTTP:
                 raise errors.NoToken(
                     "An app access token is required for this route, please provide a client id and client secret"
                 )
-
             if self.app_token is None:
                 await self._generate_login()
                 headers["Authorization"] = f"Bearer {self.app_token}"
-
         elif not self.token and not self.client_secret and "Authorization" not in headers:
             raise errors.NoToken(
                 "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
             )
-
         if "Authorization" not in headers:
             if not self.token:
                 await self._generate_login()
-
             headers["Authorization"] = f"Bearer {self.token}"
-
         headers["Client-ID"] = self.client_id
 
         if not self.session:
             self.session = aiohttp.ClientSession()
-
         if self.bucket.limited:
             await self.bucket
-
         cursor = None
         data = []
 
@@ -169,7 +153,6 @@ class TwitchHTTP:
         def get_limit():
             if limit is None:
                 return "100"
-
             to_get = limit - len(data)
             return str(to_get) if to_get < 100 else "100"
 
@@ -183,14 +166,11 @@ class TwitchHTTP:
                     q = [("after", cursor), *q]
                 q = [("first", get_limit()), *q]
                 path = path.with_query(q)
-
             body, is_text = await self._request(route, path, headers)
             if is_text:
                 return body
-
             if full_body:
                 return body
-
             data += body["data"]
 
             try:
@@ -200,9 +180,7 @@ class TwitchHTTP:
             else:
                 if not cursor:
                     break
-
             is_finished = reached_limit() if limit is not None else True if paginate else True
-
         return data
 
     async def _request(self, route, path, headers, utilize_bucket=True):
@@ -211,30 +189,24 @@ class TwitchHTTP:
         for attempt in range(5):
             if utilize_bucket and self.bucket.limited:
                 await self.bucket.wait_reset()
-
             async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
                 try:
                     logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
                 except Exception:
                     logger.debug(f"Received a response from a request with status {resp.status} and without body")
-
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
                     await asyncio.sleep(2**attempt + 1)
                     continue
-
                 if utilize_bucket:
                     reset = resp.headers.get("Ratelimit-Reset")
                     remaining = resp.headers.get("Ratelimit-Remaining")
 
                     self.bucket.update(reset=reset, remaining=remaining)
-
                 if 200 <= resp.status < 300:
                     if resp.content_type == "application/json":
                         return await resp.json(), False
-
                     return await resp.text(encoding="utf-8"), True
-
                 if resp.status == 401:
                     if "WWW-Authenticate" in resp.headers:
                         try:
@@ -243,21 +215,17 @@ class TwitchHTTP:
                             raise errors.Unauthorized(
                                 "Your oauth token is invalid, and a new one could not be generated"
                             )
-
                     print(resp.reason, await resp.json(), resp)
                     raise errors.Unauthorized("You're not authorized to use this route.")
-
                 if resp.status == 429:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
                         await asyncio.sleep(3**attempt + 1)
                     continue
-
                 raise errors.HTTPException(
                     f"Failed to fulfil request ({resp.status}).", reason=resp.reason, status=resp.status
                 )
-
         raise errors.HTTPException("Failed to reach Twitch API", reason=reason, status=resp.status)
 
     async def _generate_login(self):
@@ -269,10 +237,8 @@ class TwitchHTTP:
                 return
         except Exception as e:
             self.client.run_event("error", e)
-
         if not self.client_id or not self.client_secret:
             raise errors.HTTPException("Unable to generate a token, client id and/or client secret not given")
-
         if self._refresh_token:
             url = (
                 self.TOKEN_BASE
@@ -280,21 +246,17 @@ class TwitchHTTP:
                     self._refresh_token, self.client_id, self.client_secret
                 )
             )
-
         else:
             url = self.TOKEN_BASE + "?client_id={0}&client_secret={1}&grant_type=client_credentials".format(
                 self.client_id, self.client_secret
             )
             if self.scopes:
                 url += "&scope=" + " ".join(self.scopes)
-
         if not self.session:
             self.session = aiohttp.ClientSession()
-
         async with self.session.post(url) as resp:
             if resp.status > 300 or resp.status < 200:
                 raise errors.HTTPException("Unable to generate a token: " + await resp.text())
-
             data = await resp.json()
             self.token = self.app_token = data["access_token"]
             self._refresh_token = data.get("refresh_token", None)
@@ -305,24 +267,19 @@ class TwitchHTTP:
             token = self.token
         if not self.session:
             self.session = aiohttp.ClientSession()
-
         url = "https://id.twitch.tv/oauth2/validate"
         headers = {"Authorization": f"OAuth {token}"}
 
         async with self.session.get(url, headers=headers) as resp:
             if resp.status == 401:
                 raise errors.AuthenticationError("Invalid or unauthorized Access Token passed.")
-
             if resp.status > 300 or resp.status < 200:
                 raise errors.HTTPException("Unable to validate Access Token: " + await resp.text())
-
             data: dict = await resp.json()
-
         if not self.nick:
             self.nick = data.get("login")
             self.user_id = data.get("user_id") and int(data["user_id"])
             self.client_id = data.get("client_id")
-
         return data
 
     async def post_commercial(self, token: str, broadcaster_id: str, length: int):
@@ -381,7 +338,6 @@ class TwitchHTTP:
         q = [("extension_id", extension_id)]
         if ids:
             q.extend(("id", id) for id in ids)
-
         return await self.request(Route("GET", "extensions/transactions", "", query=q))
 
     async def create_reward(
@@ -411,18 +367,14 @@ class TwitchHTTP:
         if max_per_stream:
             data["max_per_stream"] = max_per_stream
             data["max_per_stream_enabled"] = True
-
         if max_per_user:
             data["max_per_user_per_stream"] = max_per_user
             data["max_per_user_per_stream_enabled"] = True
-
         if background_color:
             data["background_color"] = background_color
-
         if global_cooldown:
             data["global_cooldown_seconds"] = global_cooldown
             data["is_global_cooldown_enabled"] = True
-
         return await self.request(Route("POST", "channel_points/custom_rewards", query=params, body=data, token=token))
 
     async def get_rewards(self, token: str, broadcaster_id: int, only_manageable: bool = False, ids: List[int] = None):
@@ -430,7 +382,6 @@ class TwitchHTTP:
 
         if ids:
             params.extend(("id", str(id)) for id in ids)
-
         return await self.request(Route("GET", "channel_points/custom_rewards", query=params, token=token))
 
     async def update_reward(
@@ -474,7 +425,6 @@ class TwitchHTTP:
 
         if not data:
             raise ValueError("Nothing changed!")
-
         params = [("broadcaster_id", str(broadcaster_id)), ("id", str(reward_id))]
         return await self.request(
             Route(
@@ -495,21 +445,18 @@ class TwitchHTTP:
         token: str,
         broadcaster_id: int,
         reward_id: str,
-        redemption_id: str = None,
-        status: str = None,
-        sort: str = None,
+        redemption_id: Optional[str] = None,
+        status: Optional[str] = None,
+        sort: str = "OLDEST",
+        first: int = 20,
     ):
-        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
-
+        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id), ("first", first)]
         if redemption_id:
             params.append(("id", redemption_id))
-
         if status:
             params.append(("status", status))
-
         if sort:
             params.append(("sort", sort))
-
         return await self.request(Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token))
 
     async def update_reward_redemption_status(
@@ -537,7 +484,6 @@ class TwitchHTTP:
 
         if prediction_id:
             params.extend(("prediction_id", prediction_id))
-
         return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
 
     async def patch_prediction(
@@ -551,7 +497,6 @@ class TwitchHTTP:
 
         if status == "RESOLVED":
             body["winning_outcome_id"] = winning_outcome_id
-
         return await self.request(
             Route(
                 "PATCH",
@@ -584,7 +529,9 @@ class TwitchHTTP:
 
     async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
         return await self.request(
-            Route("POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", str(has_delay))], token=token),
+            Route(
+                "POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", str(has_delay))], token=token
+            ),
             paginate=False,
         )
 
@@ -603,7 +550,8 @@ class TwitchHTTP:
             ("started_at", started_at.isoformat() if started_at else None),
             ("ended_at", ended_at.isoformat() if ended_at else None),
         ]
-        q.extend(("id", id) for id in ids)
+        if ids:
+            q.extend(("id", id) for id in ids)
         query = [x for x in q if x[1] is not None]
 
         return await self.request(Route("GET", "clips", query=query, token=token))
@@ -639,7 +587,6 @@ class TwitchHTTP:
             q.extend(("id", id) for id in game_ids)
         if game_names:
             q.extend(("name", name) for name in game_names)
-
         return await self.request(Route("GET", "games", query=q))
 
     async def get_hype_train(self, broadcaster_id: str, id: str = None, token: str = None):
@@ -668,21 +615,18 @@ class TwitchHTTP:
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-
         return await self.request(Route("GET", "moderation/banned/events", query=q, token=token))
 
     async def get_channel_bans(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-
         return await self.request(Route("GET", "moderation/banned", query=q, token=token))
 
     async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-
         return await self.request(Route("GET", "moderation/moderators", query=q, token=token))
 
     async def get_channel_mod_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
@@ -721,7 +665,6 @@ class TwitchHTTP:
             q.extend(("user_login", l) for l in user_logins)
         if languages:
             q.extend(("language", l) for l in languages)
-
         return await self.request(Route("GET", "streams", query=q, token=token))
 
     async def post_stream_marker(self, token: str, user_id: str, description: str = None):
@@ -759,23 +702,19 @@ class TwitchHTTP:
     async def get_channel_schedule(
         self,
         broadcaster_id: str,
-        segment_ids: List[str] = None,
-        start_time: datetime.datetime = None,
-        utc_offset: int = None,
+        segment_ids: Optional[List[str]] = None,
+        start_time: Optional[datetime.datetime] = None,
+        utc_offset: Optional[int] = None,
         first: int = 20,
     ):
-
-        if first is not None and (first > 25 or first < 1):
+        if first > 25 or first < 1:
             raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
         if segment_ids is not None and len(segment_ids) > 100:
             raise ValueError("segment_id can only have 100 entries")
-
         if start_time:
             start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-
         if utc_offset:
             utc_offset = str(utc_offset)
-
         q = [
             x
             for x in [
@@ -789,21 +728,18 @@ class TwitchHTTP:
 
         if segment_ids:
             q.extend(("id", id) for id in segment_ids)
-
         return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
 
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", u) for u in user_ids)
-
         return await self.request(Route("GET", "subscriptions", query=q, token=token))
 
     async def get_stream_tags(self, tag_ids: List[str] = None):
         q = []
         if tag_ids:
             q.extend(("tag_id", u) for u in tag_ids)
-
         return await self.request(Route("GET", "tags/streams", query=q or None))
 
     async def get_channel_tags(self, broadcaster_id: str):
@@ -841,7 +777,6 @@ class TwitchHTTP:
             q.extend(("id", id) for id in ids)
         if logins:
             q.extend(("login", login) for login in logins)
-
         return await self.request(Route("GET", "users", query=q, token=token))
 
     async def get_user_follows(self, from_id: str = None, to_id: str = None, token: str = None):
@@ -902,7 +837,6 @@ class TwitchHTTP:
 
         if ids:
             q.extend(("id", id) for id in ids)
-
         return await self.request(Route("GET", "videos", query=q, token=token))
 
     async def delete_videos(self, token: str, ids: List[int]):
@@ -926,4 +860,112 @@ class TwitchHTTP:
 
     async def get_channel_teams(self, broadcaster_id: str):
         q = [("broadcaster_id", broadcaster_id)]
-        return await self.request(Route("GET", "teams/channel", query=q))
+        return await self.request(Route("GET", "teams/channel", query=q), paginate=False, full_body=True)
+
+    async def get_polls(
+        self,
+        broadcaster_id: str,
+        token: str,
+        poll_ids: Optional[List[str]] = None,
+        first: Optional[int] = 20,
+    ):
+        if poll_ids and len(poll_ids) > 100:
+            raise ValueError("poll_ids can only have up to 100 entries")
+        if first and (first > 25 or first < 1):
+            raise ValueError("first can only be between 1 and 20")
+        q = [("broadcaster_id", broadcaster_id), ("first", first)]
+
+        if poll_ids:
+            q.extend(("id", poll_id) for poll_id in poll_ids)
+        return await self.request(Route("GET", "polls", query=q, token=token), paginate=False, full_body=True)
+
+    async def post_poll(
+        self,
+        broadcaster_id: str,
+        token: str,
+        title: str,
+        choices,
+        duration: int,
+        bits_voting_enabled: Optional[bool] = False,
+        bits_per_vote: Optional[int] = None,
+        channel_points_voting_enabled: Optional[bool] = False,
+        channel_points_per_vote: Optional[int] = None,
+    ):
+
+        if len(title) > 60:
+            raise ValueError("title must be less than or equal to 60 characters")
+        if len(choices) < 2 or len(choices) > 5:
+            raise ValueError("You must have between 2 and 5 choices")
+        for c in choices:
+            if len(c) > 25:
+                raise ValueError("choice title must be less than or equal to 25 characters")
+        if duration < 15 or duration > 1800:
+            raise ValueError("duration must be between 15 and 1800 seconds")
+        if bits_per_vote and bits_per_vote > 10000:
+            raise ValueError("bits_per_vote must bebetween 0 and 10000")
+        if channel_points_per_vote and channel_points_per_vote > 1000000:
+            raise ValueError("channel_points_per_vote must bebetween 0 and 1000000")
+        body = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "choices": [{"title": choice} for choice in choices],
+            "duration": duration,
+            "bits_voting_enabled": str(bits_voting_enabled),
+            "channel_points_voting_enabled": str(channel_points_voting_enabled),
+        }
+        if bits_voting_enabled and bits_per_vote:
+            body["bits_per_vote"] = bits_per_vote
+        if channel_points_voting_enabled and channel_points_per_vote:
+            body["channel_points_per_vote"] = channel_points_per_vote
+        return await self.request(Route("POST", "polls", body=body, token=token))
+
+    async def patch_poll(self, broadcaster_id: str, token: str, id: str, status: str):
+        body = {"broadcaster_id": broadcaster_id, "id": id, "status": status}
+        return await self.request(Route("PATCH", "polls", body=body, token=token))
+
+    async def get_goals(self, broadcaster_id: str, token: str):
+        return await self.request(Route("GET", "goals", query=[("broadcaster_id", broadcaster_id)], token=token))
+
+    async def get_chat_settings(
+        self, broadcaster_id: str, moderator_id: Optional[str] = None, token: Optional[str] = None
+    ):
+        q = [("broadcaster_id", broadcaster_id)]
+        if moderator_id and token:
+            q.append(("moderator_id", moderator_id))
+        return await self.request(Route("GET", "chat/settings", query=q, token=token))
+
+    async def patch_chat_settings(
+        self,
+        broadcaster_id: str,
+        moderator_id: str,
+        token: str,
+        emote_mode: Optional[bool] = None,
+        follower_mode: Optional[bool] = None,
+        follower_mode_duration: Optional[int] = None,
+        slow_mode: Optional[bool] = None,
+        slow_mode_wait_time: Optional[int] = None,
+        subscriber_mode: Optional[bool] = None,
+        unique_chat_mode: Optional[bool] = None,
+        non_moderator_chat_delay: Optional[bool] = None,
+        non_moderator_chat_delay_duration: Optional[int] = None,
+    ):
+        if follower_mode_duration and follower_mode_duration > 129600:
+            raise ValueError("follower_mode_duration must be below 129600")
+        if slow_mode_wait_time and (slow_mode_wait_time < 3 or slow_mode_wait_time > 120):
+            raise ValueError("slow_mode_wait_time must be between 3 and 120")
+        if non_moderator_chat_delay_duration and non_moderator_chat_delay_duration not in {2, 4, 6}:
+            raise ValueError("non_moderator_chat_delay_duration must be 2, 4 or 6")
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        data = {
+            "emote_mode": emote_mode,
+            "follower_mode": follower_mode,
+            "follower_mode_duration": follower_mode_duration,
+            "slow_mode": slow_mode,
+            "slow_mode_wait_time": slow_mode_wait_time,
+            "subscriber_mode": subscriber_mode,
+            "unique_chat_mode": unique_chat_mode,
+            "non_moderator_chat_delay": non_moderator_chat_delay,
+            "non_moderator_chat_delay_duration": non_moderator_chat_delay_duration,
+        }
+        data = {k: v for k, v in data.items() if v is not None}
+        return await self.request(Route("PATCH", "chat/settings", query=q, body=data, token=token))

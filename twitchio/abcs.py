@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -39,12 +39,10 @@ class IRCLimiterMapping:
         except KeyError:
             bucket = RateBucket(method=method)
             self.buckets[channel] = bucket
-
         if bucket.method != method:
             bucket.method = method
             bucket.limit = bucket.MODLIMIT if method == "mod" else bucket.IRCLIMIT
             self.buckets[channel] = bucket
-
         return bucket
 
 
@@ -78,7 +76,6 @@ class Messageable(abc.ABC):
             bucket = limiter.get_bucket(channel=channel, method="mod")
         else:
             bucket = limiter.get_bucket(channel=channel, method="irc")
-
         now = time.time()
         bucket.update()
 
@@ -120,44 +117,7 @@ class Messageable(abc.ABC):
             name = entity.channel.name
         except AttributeError:
             name = entity.name
-
         if entity.__messageable_channel__:
             await ws.send(f"PRIVMSG #{name} :{content}\r\n")
         else:
             await ws.send(f"PRIVMSG #jtv :/w {entity.name} {content}\r\n")
-
-    async def reply(self, content: str):
-        """|coro|
-
-
-        Send a message in reply to the user who sent a message in the destination
-        associated with the dataclass.
-
-        Destination will be the context of which the message/command was sent.
-
-        Parameters
-        ------------
-        content: str
-            The content you wish to send as a message. The content must be a string.
-
-        Raises
-        --------
-        InvalidContent
-            Invalid content.
-        """
-        entity = self._fetch_channel()
-        ws = self._fetch_websocket()
-        message = self._fetch_message()
-
-        self.check_content(content)
-        self.check_bucket(channel=entity.name)
-
-        try:
-            name = entity.channel.name
-        except AttributeError:
-            name = entity.name
-
-        if entity.__messageable_channel__:
-            await ws.reply(message.id, f"PRIVMSG #{name} :{content}\r\n")
-        else:
-            await ws.send(f"PRIVMSG #jtv :/w {name} {content}\r\n")

@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -79,7 +79,7 @@ class PubSubChatMessage:
 
     def __init__(self, content: str, id: str, type: str):
         self.content = content
-        self.id = int(id)
+        self.id = id
         self.type = type
 
 
@@ -133,8 +133,8 @@ class PubSubBitsMessage(PubSubMessage):
         The amount of bits used.
     channel_id: :class:`int`
         The channel the bits were given to.
-    user: :class:`twitchio.PartialUser`
-        The user giving the bits.
+    user: Optional[:class:`twitchio.PartialUser`]
+        The user giving the bits. Can be None if anonymous.
     version: :class:`str`
         The event version.
     """
@@ -144,16 +144,21 @@ class PubSubBitsMessage(PubSubMessage):
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
 
-        self.message = PubSubChatMessage(data["chat_message"], data["message_id"], data["message_type"])
+        data = data["message"]
+        self.message = PubSubChatMessage(data["data"]["chat_message"], data["message_id"], data["message_type"])
         self.badge_entitlement = (
-            PubSubBadgeEntitlement(data["badge_entitlement"]["new_version"], data["badge_entitlement"]["old_version"])
-            if data["badge_entitlement"]
+            PubSubBadgeEntitlement(
+                data["data"]["badge_entitlement"]["new_version"], data["data"]["badge_entitlement"]["old_version"]
+            )
+            if data["data"]["badge_entitlement"]
             else None
         )
-        self.bits_used: int = data["bits_used"]
-        self.channel_id: int = int(data["channel_id"])
+        self.bits_used: int = data["data"]["bits_used"]
+        self.channel_id: int = int(data["data"]["channel_id"])
         self.user = (
-            PartialUser(client._http, data["user_id"], data["user_name"]) if data["user_id"] is not None else None
+            PartialUser(client._http, data["data"]["user_id"], data["data"]["user_name"])
+            if data["data"]["user_id"]
+            else None
         )
         self.version: str = data["version"]
 
@@ -180,6 +185,7 @@ class PubSubBitsBadgeMessage(PubSubMessage):
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
+        data = data["message"]
         self.user = PartialUser(client._http, data["user_id"], data["user_name"])
         self.channel: Channel = client.get_channel(data["channel_name"]) or Channel(
             name=data["channel_name"], websocket=client._connection
@@ -239,7 +245,7 @@ class PubSubModerationAction(PubSubMessage):
         The arguments given to the command.
     created_by: :class:`twitchio.PartialUser`
         The user that created the action.
-    message_id: :class:`str`
+    message_id: Optional[:class:`str`]
         The id of the message that created this action.
     target: :class:`twitchio.PartialUser`
         The target of this action.
@@ -256,7 +262,7 @@ class PubSubModerationAction(PubSubMessage):
         self.created_by = PartialUser(
             client._http, data["message"]["data"]["created_by_user_id"], data["message"]["data"]["created_by"]
         )
-        self.message_id: str = data["message"]["data"]["msg_id"]
+        self.message_id: Optional[str] = data["message"]["data"].get("msg_id")
         self.target = (
             PartialUser(
                 client._http, data["message"]["data"]["target_user_id"], data["message"]["data"]["target_user_login"]
@@ -264,7 +270,7 @@ class PubSubModerationAction(PubSubMessage):
             if data["message"]["data"]["target_user_id"]
             else None
         )
-        self.from_automod: bool = data["message"]["data"]["from_automod"]
+        self.from_automod: bool = data["message"]["data"].get("from_automod", False)
 
 
 class PubSubModerationActionBanRequest(PubSubMessage):
@@ -349,15 +355,15 @@ class PubSubChannelSubscribe(PubSubMessage):
         Channel that has been subscribed or subgifted.
     context: :class:`str`
         Event type associated with the subscription product.
-    user: :class:`twitchio.PartialUser`
-        The person who subscribed or sent a gift subscription.
+    user: Optional[:class:`twitchio.PartialUser`]
+        The person who subscribed or sent a gift subscription. Can be None if anonymous.
     message: :class:`str`
         Message sent with the sub/resub.
-    emotes: List[:class:`dict`]
-        Message sent with the sub/resub.
+    emotes: Optional[List[:class:`dict`]]
+        Emotes sent with the sub/resub.
     is_gift: :class:`bool`
         If this sub message was caused by a gift subscription.
-    recipient: :class:`twitchio.PartialUser`
+    recipient: Optional[:class:`twitchio.PartialUser`]
         The person the who received the gift subscription.
     sub_plan: :class:`str`
         Subscription Plan ID.
@@ -367,9 +373,9 @@ class PubSubChannelSubscribe(PubSubMessage):
         Time when the subscription or gift was completed. RFC 3339 format.
     cumulative_months: :class:`int`
         Cumulative number of tenure months of the subscription.
-    streak_months: :class:`int`
+    streak_months: Optional[:class:`int`]
         Denotes the user's most recent (and contiguous) subscription tenure streak in the channel.
-    multi_month_duration: :class:`int`
+    multi_month_duration: Optional[:class:`int`]
         Number of months gifted as part of a single, multi-month gift OR number of months purchased as part of a multi-month subscription.
     """
 
@@ -398,21 +404,18 @@ class PubSubChannelSubscribe(PubSubMessage):
             name=subscription["channel_name"], websocket=client._connection
         )
         self.context: str = subscription["context"]
-
         try:
             self.user = PartialUser(client._http, int(subscription["user_id"]), subscription["user_name"])
         except KeyError:
             self.user = None
 
         self.message: str = subscription["sub_message"]["message"]
-
         try:
             self.emotes = subscription["sub_message"]["emotes"]
         except KeyError:
             self.emotes = None
 
         self.is_gift: bool = subscription["is_gift"]
-
         try:
             self.recipient = PartialUser(
                 client._http, int(subscription["recipient_id"]), subscription["recipient_user_name"]
@@ -423,9 +426,18 @@ class PubSubChannelSubscribe(PubSubMessage):
         self.sub_plan: str = subscription["sub_plan"]
         self.sub_plan_name: str = subscription["sub_plan_name"]
         self.time = parse_timestamp(subscription["time"])
-        self.cumulative_months: int = int(subscription["cumulative_months"])
-        self.streak_months = int(subscription["streak_months"])
-        self.multi_month_duration = int(subscription["multi_month_duration"])
+        try:
+            self.cumulative_months = int(subscription["cumulative_months"])
+        except KeyError:
+            self.cumulative_months = None
+        try:
+            self.streak_months = int(subscription["streak_months"])
+        except KeyError:
+            self.streak_months = None
+        try:
+            self.multi_month_duration = int(subscription["multi_month_duration"])
+        except KeyError:
+            self.multi_month_duration = None
 
 
 class PubSubModerationActionModeratorAdd(PubSubMessage):

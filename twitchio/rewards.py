@@ -3,7 +3,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,6 +28,7 @@ import datetime
 from typing import Optional, TYPE_CHECKING
 
 from .errors import HTTPException, Unauthorized
+from .utils import parse_timestamp
 
 if TYPE_CHECKING:
     from .http import TwitchHTTP
@@ -224,7 +225,7 @@ class CustomReward:
                 ) from error
             raise
 
-    async def get_redemptions(self, token: str, status: str, sort: str = None):
+    async def get_redemptions(self, token: str, status: str, sort: str = "OLDEST", first: int = 20):
         """
         Gets redemptions for this reward
 
@@ -235,11 +236,14 @@ class CustomReward:
         status:
             :class:`str` one of UNFULFILLED, FULFILLED or CANCELED
         sort:
-            :class:`str` the order redemptions are returned in. One of OLDEST, NEWEST. Default: OLDEST.
+            Optional[:class:`str`] the order redemptions are returned in. One of OLDEST, NEWEST. Default: OLDEST.
+        first:
+            :class:`int` Number of results to be returned when getting the paginated Custom Reward Redemption objects for a reward.
+            Limit: 50. Default: 20.
         """
         try:
             data = await self._http.get_reward_redemptions(
-                token, self._broadcaster_id, self.id, status=status, sort=sort
+                token, self._broadcaster_id, self.id, status=status, sort=sort, first=first
             )
         except Unauthorized as error:
             raise Unauthorized("The given token is invalid", "", 401) from error
@@ -254,7 +258,7 @@ class CustomReward:
                 ) from error
             raise
         else:
-            return [CustomRewardRedemption(x, self._http, self) for x in data["data"]]
+            return [CustomRewardRedemption(x, self._http, self) for x in data]
 
 
 class CustomRewardRedemption:
@@ -269,8 +273,11 @@ class CustomRewardRedemption:
         self.user_name = obj["user_name"]
         self.input = obj["user_input"]
         self.status = obj["status"]
-        self.redeemed_at = datetime.datetime.fromisoformat(obj["redeemed_at"])
+        self.redeemed_at = parse_timestamp(obj["redeemed_at"])
         self.reward = parent or obj["reward"]
+
+    def __repr__(self):
+        return f"<CustomRewardRedemption id={self.id} user_id={self.user_id} user_name={self.user_name} input={self.input} status={self.status} redeemed_at={self.redeemed_at}>"
 
     async def fulfill(self, token: str):
         """

@@ -27,9 +27,9 @@ A Quick Example
     from twitchio.ext import eventsub, commands
     bot = commands.Bot(token="...")
     eventsub_client = eventsub.EventSubClient(bot, "some_secret_string", "/callback")
-    # when subscribing
+    # when subscribing (you can only await inside coroutines)
 
-    await eventsub_client.subscribe_channel_subscribtions("channel_name")
+    await eventsub_client.subscribe_channel_subscriptions(channel_ID)
 
     @bot.event()
     async def eventsub_notification_subscription(payload: eventsub.ChannelSubscribeData):
