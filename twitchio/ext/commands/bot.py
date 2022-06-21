@@ -330,7 +330,7 @@ class Bot(Client):
 
         """
         if "reply-parent-msg-id" in message.tags:
-            message.content = message.content.split(" ")[1]
+            message.content = message.content.split(" ", 1)[1]
         context = await self.get_context(message)
         await self.invoke(context)
 
