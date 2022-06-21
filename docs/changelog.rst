@@ -5,6 +5,7 @@ Master
 - TwitchIO
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to Bot and :func:`Client.from_client_credentials`
+        - Fixed message content while handling commands in reply messages
 
 - ext.commands:
   - Bug fixes
