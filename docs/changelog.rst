@@ -6,6 +6,10 @@ Master
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to Bot and :func:`Client.from_client_credentials`
 
+- ext.commands:
+  - Bug fixes
+      - Add type conversion for variable positional arguments
+      
 - ext.pubsub
     - Bug fixes
         - :class:`~twitchio.ext.pubsub.PubSubModerationAction` now handles missing keys
@@ -34,6 +38,9 @@ Massive documentation updates
         - Fix :class:`twitchio.CustomRewardRedemption` so :func:`twitchio.CustomReward.get_redemptions` returns correctly
 
 - ext.commands
+    - :func:`Bot.handle_commands` now also invokes on threads / replies
+    - Cooldowns are now handled correctly per bucket.
+    - Fix issue with :func:`Bot.reload_module` where module is reloaded incorrectly if exception occurs
     - Additions
         - :func:`twitchio.ext.commands.Bot.handle_commands` now also invokes on threads / replies
 
