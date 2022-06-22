@@ -20,10 +20,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
+
+
+__all__ = (
+    "IRCRateLimiter",
+    "HTTPRateLimiter",
+    "RateLimitBucket",
+)
 import asyncio
 import time
+import aiohttp
 
-from typing import Optional
+from typing import cast, Dict, Optional, TYPE_CHECKING, TypeVar, Literal, Union
+from .utils import MISSING
+
+if TYPE_CHECKING:
+    from .models import PartialUser, User
+
+    UserT = Union[PartialUser, User]
+    E = TypeVar("E", bound=BaseException)
+
 
 class IRCRateLimiter:
 
@@ -61,3 +78,72 @@ class IRCRateLimiter:
         time_ = time_ or time.time()
 
         await asyncio.sleep(self.check_limit(time_=time_, update=False))
+
+
+class RateLimitBucket:
+    def __init__(self, name: str) -> None:
+        self.name: str = name
+        self.reset_at: float = MISSING
+        self.tokens: int = MISSING
+        self.max_tokens: int = MISSING
+        self.lock = asyncio.Lock()
+    
+    async def __aenter__(self) -> None:
+        return await self.lock.__aenter__()
+    
+    async def __aexit__(self, *args) -> None:
+        return await self.lock.__aexit__(*args)
+    
+    async def acquire(self) -> Literal[True]:
+        return await self.lock.acquire()
+    
+    async def release(self) -> None:
+        self.lock.release()
+    
+    def update(self, response: aiohttp.ClientResponse) -> None:
+        self.reset_at = float(response.headers['ratelimit-reset'])
+        self.tokens = int(response.headers['ratelimit-remaining'])
+        self.max_tokens = int(response.headers['ratelimit-limit'])
+    
+    def _update_times(self) -> None:
+        if self.reset_at <= time.time():
+            self.tokens = self.max_tokens
+    
+    def hit(self, tokens: int) -> bool:
+        if self.tokens is MISSING:
+            return True # we havent made a request yet, so it must be ok
+        
+        self._update_times()
+
+        if tokens > self.max_tokens:
+            raise ValueError("Cannot hit with more tokens than max available tokens")
+
+        if self.tokens - tokens <= 0:
+            return False
+        
+        self.tokens -= tokens
+        return True
+    
+    async def wait(self, tokens: int) -> None:
+        if not self.hit(tokens):
+            await asyncio.sleep(self.reset_at - time.time())
+            self.hit(tokens)
+
+
+class HTTPRateLimiter:
+    def __init__(self) -> None:
+        self.buckets: Dict[Optional[UserT], RateLimitBucket] = {}
+    
+    def get_bucket(self, user: Optional[UserT]) -> RateLimitBucket:
+        if user in self.buckets:
+            return self.buckets[user]
+        
+        name: str
+        if user:
+            name = cast(str, user.name)
+        else:
+            name = "Client-Credential"
+        
+        bucket = RateLimitBucket(name)
+        self.buckets[user] = bucket
+        return bucket

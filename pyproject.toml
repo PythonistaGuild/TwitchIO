@@ -3,11 +3,10 @@ name = "twitchio"
 version = "3.0.0"
 description = "An asynchronous Python IRC and API wrapper for Twitch."
 authors = ["TwitchIO"]
-
 license = "MIT"
 readme = "README.rst"
 repository = "https://github.com/TwitchIO/TwitchIO"
-documentation = "https://twitchio.readthedocs.io/en/latest/"
+documentation = "https://twitchio.dev/"
 homepage = "https://github.com/TwitchIO/TwitchIO"
 
 include = ["LICENSE"]
@@ -55,6 +54,35 @@ Pygments = { version = "*", optional = true}
 furo = { version = "*", optional = true}
 
 [tool.poetry.dev-dependencies]
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+combine_as_imports = true
+combine_star = true
+line_length = 120
+
+[tool.pyright]
+include = [
+    "twitchio",
+    "twitchio/ext/commands",
+    "twitchio/ext/eventsub",
+    "twitchio/ext/pubsub",
+    "twitchio/ext/routines",
+    "twitchio/ext/sounds"
+]
+exclude = [
+    "**/__pycache__",
+    "build",
+    "dist",
+    "docs",
+]
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnusedImport = "error"
+pythonVersion = "3.8"
+typeCheckingMode = "basic"
 
 [tool.poetry.extras]
 docs = [

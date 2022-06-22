@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import copy
-from typing import Dict, Optional, cast
+from typing import Dict, Optional
 
 from .abc import Messageable
 from .cache import Cache
@@ -39,40 +39,81 @@ class Channel(Messageable):
 
     def __init__(self, **attrs):
         super().__init__(**attrs)
-        self._id = attrs.get('id')
-        self._chatters = Cache()
+        self._id: Optional[int] = attrs.get('id')
+        self._chatters: Cache = Cache()
 
     def __repr__(self) -> str:
         return f'Channel: name={self._name}, shard_index={self._websocket.shard_index}'
 
     async def send(self, content: str) -> None:
+        """|coro|
+        Sends a whisper message to the channel's user.
+        
+        Parameters
+        -----------
+        content: :class:`str`
+            The content to send to the user
+        """
         await self._websocket.send(f"PRIVMSG #{self._name} :{content}")
 
     @property
     def name(self) -> str:
-        """The channel name."""
+        """
+        The channel name.
+        
+        Returns
+        --------
+        :class:`str`
+        """
         return self._name
 
     @property
-    def id(self) -> int:
-        """The channel ID."""
-        return int(self._id)
+    def id(self) -> Optional[int]:
+        """
+        The channel ID.
+        
+        Returns
+        --------
+        Optional[:class:`int`]
+        """
+        return self._id and int(self._id)
 
     @property
     def owner(self) -> Optional[PartialChatter]:
-        """The channel owner."""
+        """
+        The channel owner.
+
+        Returns
+        --------
+        Optional[:class:`~twitchio.PartialChatter`]
+        """
         return self._chatters.get(self._name, default=None)
 
     @property
     def chatters(self) -> Dict[str, PartialChatter]:
-        """A mapping of the channel's chatter cache."""
+        """
+        A mapping of the channel's chatter cache.
+        
+        Returns
+        --------
+        Dict[:class:`str`, :class:`~twitchio.PartialChatter`]
+        """
         return copy.copy(self._chatters.items())
 
     def get_chatter(self, name: str) -> Optional[PartialChatter]:
         """Method which returns a chatter from the channel's cache.
 
-        Could be None if the chatter is not in cache.
+        Could be ``None`` if the chatter is not in cache.
+        
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the chatter to find
+        
+        Returns
+        --------
+        Optional[:class:`~twitchio.PartialChatter`]
         """
-        name = name.removeprefix('#').lower()
+        name = name.lstrip('#').lower()
 
         return self._chatters.get(name, default=None)

@@ -20,6 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
 
 __all__ = (
     "TwitchIOException",
@@ -27,9 +28,17 @@ __all__ = (
     "AuthenticationError",
     "InvalidToken",
     "RefreshFailure",
-    "EventNotFound"
+    "EventNotFound",
+    "HTTPException",
+    "HTTPResponseException",
+    "Unauthorized"
 )
 
+import aiohttp
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .types.payloads import ErrorType
 
 class TwitchIOException(Exception):
     pass
@@ -52,4 +61,19 @@ class RefreshFailure(AuthenticationError):
 
 
 class EventNotFound(Exception):
+    pass
+
+
+class HTTPException(TwitchIOException):
+    pass
+
+
+class HTTPResponseException(HTTPException):
+    def __init__(self, response: aiohttp.ClientResponse, data: ErrorType) -> None:
+        self.status = response.status
+        self.message = data["message"]
+        super().__init__(data["message"])
+
+
+class Unauthorized(HTTPResponseException):
     pass
