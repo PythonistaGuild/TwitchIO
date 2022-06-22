@@ -28,6 +28,8 @@ import sys
 import traceback
 from typing import Optional, Tuple, Union, Coroutine, Callable, Any, Dict, List, TYPE_CHECKING
 
+from twitchio.http import HTTPHandler
+
 from .channel import Channel
 from .limiter import IRCRateLimiter
 from .message import Message
@@ -35,6 +37,7 @@ from .parser import IRCPayload
 from .shards import ShardInfo
 from .chatter import PartialChatter
 from .websocket import Websocket
+from .tokens import BaseTokenHandler
 
 if TYPE_CHECKING:
     from ext.eventsub import EventSubClient
@@ -49,8 +52,8 @@ class Client:
 
     Parameters
     ----------
-    token: Optional[:class:`str`]
-        The token to use for IRC authentication.
+    token_handler: :class:`~twitchio.BaseTokenHandler`
+        Your token handler instance. See ... # TODO doc link to explaining token handlers
     heartbeat: Optional[:class:`float`]
         An optional heartbeat to provide to keep connections over proxies and such alive.
         Defaults to 30.0.
@@ -65,12 +68,12 @@ class Client:
         The amount of channels per websocket. Defaults to 100 channels per socket.
     cache_size: Optional[:class:`int`]
         The size of the internal channel cache. Defaults to unlimited.
-    eventsub: Optional[:class:`EventSubClient`]
+    eventsub: Optional[:class:`~twitchio.ext.EventSubClient`]
         The EventSubClient instance to use with the client to dispatch subscribed webhook events.
     """
 
     def __init__(self,
-                 token: Optional[str] = None,
+                 token_handler: BaseTokenHandler,
                  heartbeat: Optional[float] = 30.0,
                  verified: Optional[bool] = False,
                  join_timeout: Optional[float] = 15.0,
@@ -78,9 +81,8 @@ class Client:
                  shard_limit: int = 100,
                  cache_size: Optional[int] = None,
                  eventsub: Optional[EventSubClient] = None,
+                 **kwargs
                  ):
-        self._token: Optional[str] = token and token.removeprefix('oauth:')
-
         self._heartbeat = heartbeat
         self._verified = verified
         self._join_timeout = join_timeout
@@ -92,6 +94,7 @@ class Client:
         self._initial_channels: _initial_channels_T = initial_channels or []
 
         self._limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
+        self._http = HTTPHandler(None, token_handler, **kwargs)
 
         self._eventsub: Optional[EventSubClient] = None
         if eventsub:
@@ -99,15 +102,20 @@ class Client:
             self._eventsub._client = self
             self._eventsub._client_ready.set()
 
-        self.loop: asyncio.AbstractEventLoop = None  # type: ignore
+        self.loop: Optional[asyncio.AbstractEventLoop] = None
+        self._kwargs: Dict[str, Any] = kwargs
+        self._token_handler: BaseTokenHandler = token_handler
 
         self._is_closed = False
+        self._has_acquired = False
 
     async def __aenter__(self):
         await self.setup()
+        self._has_acquired = True
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self._has_acquired = False
         if not self._is_closed:
             await self.close()
 
@@ -132,24 +140,21 @@ class Client:
             self._shards[index] = ShardInfo(number=index,
                                             channels=channels,
                                             websocket=Websocket(
+                                                token_handler=self._token_handler,
                                                 client=self,
                                                 limiter=self._limiter,
                                                 shard_index=index,
                                                 heartbeat=self._heartbeat,
                                                 join_timeout=self._join_timeout,
                                                 initial_channels=chunk,
-                                                cache_size=self._cache_size
+                                                cache_size=self._cache_size,
+                                                **self._kwargs
                                             ))
 
-    def run(self, token: Optional[str] = None) -> None:
+    def run(self) -> None:
         """A blocking call that starts and connects the bot to IRC.
 
         This methods abstracts away starting and cleaning up for you.
-
-        Parameters
-        ----------
-        token: str
-            An optional token to pass to connect to Twitch IRC. This can also be placed in your bots init.
 
         .. warning::
 
@@ -167,13 +172,7 @@ class Client:
         self.loop = asyncio.get_event_loop()
         self.loop.run_until_complete(self._shard())
 
-        if token:
-            token = token.removeprefix("oauth:")
-
-        self._token = self._token or token
-
         for shard in self._shards.values():
-            shard._websocket._token = self._token
             self.loop.create_task(shard._websocket._connect())
 
         if self._eventsub:
@@ -186,24 +185,18 @@ class Client:
         finally:
             self.loop.run_until_complete(self.close())
 
-    async def start(self, token: Optional[str] = None) -> None:
+    async def start(self) -> None:
         """|coro|
-
-        Parameters
-        ----------
-        token: str
-            An optional token to pass to connect to Twitch IRC. This can also be placed in :class:`Client` init.
+        This method connects to twitch's IRC servers, and prepares to handle incoming messages.
+        This method will not return until all the IRC shards have been closed
         """
+        if not self._has_acquired:
+            raise RuntimeError("You must first enter an async context by calling `async with client:`") # TODO need better error
+        
         await self._shard()
-
-        if token:
-            token = token.removeprefix("oauth:")
-
-        self._token = self._token or token
 
         shard_tasks = []
         for shard in self._shards.values():
-            shard._websocket._token = self._token
             shard_tasks.append(asyncio.create_task(shard._websocket._connect()))
 
         await asyncio.wait(shard_tasks)
@@ -211,12 +204,14 @@ class Client:
     async def close(self) -> None:
         for shard in self._shards.values():
             await shard._websocket.close()
+        
+        await self._http.cleanup()
 
         self._is_closed = True
 
     @property
     def shards(self) -> Dict[int, ShardInfo]:
-        """A dict of shard number to :class:`ShardInfo`"""
+        """A dict of shard number to :class:`~twitchio.ShardInfo`"""
         return self._shards
 
     @property
@@ -236,15 +231,15 @@ class Client:
 
         Parameters
         ----------
-        name: str
+        name: :class:`str`
             The name of the channel to search cache for.
 
         Returns
         -------
-        channel: Optional[:class:`Channel`]
+        channel: Optional[:class:`~twitchio.Channel`]
             The channel matching the provided name.
         """
-        name = name.removeprefix('#').lower()
+        name = name.strip('#').lower()
 
         channel = None
 
@@ -263,12 +258,12 @@ class Client:
 
         Parameters
         ----------
-        id_: str
+        id_: :class:`str`
             The message ID to search cache for.
 
         Returns
         -------
-        message: Optional[:class:`Message`]
+        message: Optional[:class:`~twitchio.Message`]
             The message matching the provided identifier.
         """
         message = None
@@ -288,7 +283,7 @@ class Client:
 
         Parameters
         ----------
-        number: int
+        number: :class:`int`
             The shard number identifier.
 
         Returns
@@ -319,7 +314,7 @@ class Client:
 
         Parameters
         ----------
-        data: str
+        data: :class:`str`
             The data received from Twitch.
 
         Returns
@@ -335,7 +330,7 @@ class Client:
 
         Parameters
         ----------
-        payload: :class:`IRCPayload`
+        payload: :class:`~twitchio.IRCPayload`
             The parsed IRC payload from Twitch.
 
         Returns
@@ -351,7 +346,7 @@ class Client:
 
         Parameters
         ----------
-        message
+        message: :class:`~twitchio.Message`
             The message received via Twitch.
 
         Returns
@@ -367,9 +362,9 @@ class Client:
 
         Parameters
         ----------
-        channel: :class:`Channel`
+        channel: :class:`~twitchio.Channel`
             ...
-        chatter: :class:`PartialChatter`
+        chatter: :class:`~twitchio.PartialChatter`
             ...
         """
 
@@ -380,9 +375,9 @@ class Client:
 
         Parameters
         ----------
-        channel: Optional[:class:`Channel`]
+        channel: Optional[:class:`~twitchio.Channel`]
             ... Could be None if the channel is not in your cache.
-        chatter: :class:`PartialChatter`
+        chatter: :class:`~twitchio.PartialChatter`
             ...
         """
 

@@ -32,4 +32,5 @@ from .message import Message
 from .parser import IRCPayload
 from .chatter import PartialChatter
 from .tokens import Token, BaseTokenHandler, SimpleTokenHandler
+from .models import *
 from .exceptions import *

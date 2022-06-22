@@ -20,11 +20,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Optional, cast
 
 import aiohttp
 import logging
+
+from twitchio.tokens import BaseTokenHandler
 
 from .backoff import ExponentialBackoff
 from .cache import Cache
@@ -48,26 +51,28 @@ HOST = 'wss://irc-ws.chat.twitch.tv:443'
 class Websocket:
 
     def __init__(self,
-                 client: 'Client',
-                 limiter: IRCRateLimiter,
-                 shard_index: int = 1,
-                 heartbeat: Optional[float] = 30.0,
-                 join_timeout: Optional[float] = 10.0,
-                 initial_channels: Optional[list] = None,
-                 cache_size: Optional[int] = None,
+                token_handler: BaseTokenHandler,
+                client: Client,
+                limiter: IRCRateLimiter,
+                shard_index: int = 1,
+                heartbeat: Optional[float] = 30.0,
+                join_timeout: Optional[float] = 10.0,
+                initial_channels: Optional[list] = None,
+                cache_size: Optional[int] = None,
+                **_
                  ):
         self.client = client
 
-        self.ws: aiohttp.ClientWebSocketResponse = None  # type: ignore
+        self.ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self.heartbeat = heartbeat
 
         self.join_limiter = limiter
         self.join_cache = {}
         self.join_timeout = join_timeout
 
-        self._token = client._token
+        self.token_handler = token_handler
         self.shard_index = shard_index
-        self.nick: str = None  # type: ignore
+        self.nick: Optional[str] = None
         self.initial_channels = initial_channels
 
         self._backoff = ExponentialBackoff()
@@ -88,8 +93,11 @@ class Websocket:
 
         self._ready_event.clear()
 
-        if self.is_connected():
+        if self.ws and self.is_connected():
             await self.ws.close()
+        
+        token, user = await self.token_handler._client_get_irc_login(self.client, self.shard_index)
+        self.nick = user.name
 
         async with aiohttp.ClientSession() as session:
             try:
@@ -101,19 +109,11 @@ class Websocket:
                 await asyncio.sleep(retry)
                 return await self._connect()
 
-            headers = {'Authorization': f'Bearer {self._token}'}
-            async with session.get(url='https://id.twitch.tv/oauth2/validate', headers=headers) as resp:
-                if resp.status == 401:
-                    raise AuthenticationError('Invalid token passed. Check your token and scopes and try again.')
-
-                data = await resp.json()
-                self.nick = data['login']
-
             session.detach()
 
         self._keep_alive_task = asyncio.create_task(self._keep_alive())
 
-        await self.authentication_sequence()
+        await self.authentication_sequence(token)
 
         while self.join_cache:
             await asyncio.sleep(0.1)
@@ -128,7 +128,7 @@ class Websocket:
 
     async def _keep_alive(self) -> None:
         while True:
-            message: aiohttp.WSMessage = await self.ws.receive()
+            message: aiohttp.WSMessage = await self.ws.receive() # type: ignore
 
             if message.type is aiohttp.WSMsgType.CLOSED:
                 if not self.closing:
@@ -155,8 +155,8 @@ class Websocket:
 
         return await self._connect()
 
-    async def authentication_sequence(self) -> None:
-        await self.send(f'PASS oauth:{self._token}')
+    async def authentication_sequence(self, token: str) -> None:
+        await self.send(f'PASS oauth:{token}')
         await self.send(f'NICK {self.nick}')
 
         await self.send('CAP REQ :twitch.tv/membership')
@@ -186,6 +186,7 @@ class Websocket:
                 await self.join_limiter.wait_for()
 
     async def send(self, message: str) -> None:
+        assert self.ws, "There is no websocket"
         message = message.strip('\r\n')
 
         try:
@@ -305,7 +306,8 @@ class Websocket:
     async def close(self):
         self.closing = True
 
-        await self.ws.close()
+        if self.ws:
+            await self.ws.close()
 
         try:
             self._keep_alive_task.cancel()
