@@ -1,3 +1,4 @@
+import copy
 import typing
 from typing import Optional
 
@@ -18,6 +19,10 @@ class Context(Messageable):
         super().__init__(**attrs)
 
         self.message: Message = message
+        self._message_copy = copy.copy(message)
+        if "reply-parent-msg-id" in self._message_copy.tags:
+            _, _, self._message_copy.content = self._message_copy.content.partition(' ')
+
         self.channel: Channel = self.message.channel
 
         self.bot: 'Bot' = bot
@@ -29,7 +34,7 @@ class Context(Messageable):
         self.kwargs: dict = {}
 
     def _get_command_string(self) -> str:
-        return self.message.content.removeprefix(self.prefix).split()[0]
+        return self._message_copy.content.removeprefix(self.prefix).split()[0]
 
     def _get_command(self) -> Optional['Command']:
         if not self.is_valid:
@@ -46,7 +51,7 @@ class Context(Messageable):
 
     def _get_prefix(self) -> Optional[str]:
         for prefix in self.bot.prefixes:
-            if self.message.content.startswith(prefix):
+            if self._message_copy.content.startswith(prefix):
                 return prefix
 
         return None

@@ -91,7 +91,9 @@ class Command:
         return tuple(v['value'] for k, v in sorted(args.items(), key=lambda item: item[1]['index']))
 
     async def invoke(self, context: Context) -> None:
-        to_parse = context.message.content.removeprefix(context.prefix)
+        content = context._message_copy.content
+
+        to_parse = content.removeprefix(context.prefix)
         to_parse = to_parse.removeprefix(context.invoked_with)
         to_parse = to_parse.strip()
 
