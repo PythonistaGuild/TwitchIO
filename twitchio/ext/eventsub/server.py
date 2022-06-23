@@ -29,48 +29,46 @@ import aiohttp
 import yarl
 from aiohttp import web
 
-from twitchio import Client, Channel
+from twitchio import Channel, Client
 
-
-__all__ = ('EventSubClient', 'EventSubType')
+__all__ = ("EventSubClient", "EventSubType")
 
 
 logger = logging.getLogger("twitchio.ext.eventsub")
 
 
 class _EventSubTypeMeta(enum.Enum):
-
     @classmethod
     def all(cls) -> list:
         return [e.value for e in cls]
 
     @classmethod
     def unauthenticated_endpoints(cls) -> list:
-        return [e.value for e in cls if e.value['auth'] is False]
+        return [e.value for e in cls if e.value["auth"] is False]
 
 
 class EventSubType(_EventSubTypeMeta):
 
-    ChannelFollows = {'topic': 'channel.follow', 'version': 1, 'auth': False}
+    ChannelFollows = {"topic": "channel.follow", "version": 1, "auth": False}
 
 
 class EventSubClient(web.Application):
-
-    def __init__(self,
-                 *,
-                 client_id: str,
-                 client_secret: str,
-                 host: Optional[str] = 'https://0.0.0.0',
-                 port: Optional[int] = 4000,
-                 webhook_callback: Optional[str] = '/callback',
-                 ):
+    def __init__(
+        self,
+        *,
+        client_id: str,
+        client_secret: str,
+        host: Optional[str] = "https://0.0.0.0",
+        port: Optional[int] = 4000,
+        webhook_callback: Optional[str] = "/callback",
+    ):
         super().__init__()
 
         callback = f'/{webhook_callback.removeprefix("/")}'
 
-        host = yarl.URL(f'{host}:{port}')
-        if host.scheme != 'https':
-            raise RuntimeError('EventSubClient host parameter must use https, not http.')
+        host = yarl.URL(f"{host}:{port}")
+        if host.scheme != "https":
+            raise RuntimeError("EventSubClient host parameter must use https, not http.")
 
         self._host = host
 
@@ -83,17 +81,16 @@ class EventSubClient(web.Application):
         self._client: Client = None  # type: ignore
         self._client_ready = asyncio.Event()
 
-    async def subscribe(self,
-                        topics: Union[EventSubType, list[EventSubType]],
-                        channels: list[Union[str, int, Channel]]
-                        ) -> None:
+    async def subscribe(
+        self, topics: Union[EventSubType, list[EventSubType]], channels: list[Union[str, int, Channel]]
+    ) -> None:
         pass
 
     async def _callback(self, request: web.Request):
         pass
 
     async def _run(self) -> None:
-        logger.info(f'Starting EventSub sever on host: {self._host.host}, port: {self._host.port}')
+        logger.info(f"Starting EventSub sever on host: {self._host.host}, port: {self._host.port}")
         await self._client_ready.wait()
 
         runner = web.AppRunner(self)
@@ -102,4 +99,4 @@ class EventSubClient(web.Application):
         site = web.TCPSite(runner, host=self._host.host, port=self._host.port)
         await site.start()
 
-        logger.info('Successfully started EventSub sever.')
+        logger.info("Successfully started EventSub sever.")

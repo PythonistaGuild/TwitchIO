@@ -21,22 +21,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from __future__ import annotations
+
 import asyncio
+import logging
 from typing import TYPE_CHECKING, Optional, cast
 
 import aiohttp
-import logging
 
 from twitchio.tokens import BaseTokenHandler
 
 from .backoff import ExponentialBackoff
 from .cache import Cache
 from .channel import Channel
+from .chatter import PartialChatter
 from .exceptions import *
 from .limiter import IRCRateLimiter
 from .message import Message
 from .parser import IRCPayload
-from .chatter import PartialChatter
 
 if TYPE_CHECKING:
     from .client import Client
@@ -45,22 +46,22 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-HOST = 'wss://irc-ws.chat.twitch.tv:443'
+HOST = "wss://irc-ws.chat.twitch.tv:443"
 
 
 class Websocket:
-
-    def __init__(self,
-                token_handler: BaseTokenHandler,
-                client: Client,
-                limiter: IRCRateLimiter,
-                shard_index: int = 1,
-                heartbeat: Optional[float] = 30.0,
-                join_timeout: Optional[float] = 10.0,
-                initial_channels: Optional[list] = None,
-                cache_size: Optional[int] = None,
-                **_
-                 ):
+    def __init__(
+        self,
+        token_handler: BaseTokenHandler,
+        client: Client,
+        limiter: IRCRateLimiter,
+        shard_index: int = 1,
+        heartbeat: Optional[float] = 30.0,
+        join_timeout: Optional[float] = 10.0,
+        initial_channels: Optional[list] = None,
+        cache_size: Optional[int] = None,
+        **_,
+    ):
         self.client = client
 
         self.ws: Optional[aiohttp.ClientWebSocketResponse] = None
@@ -95,7 +96,7 @@ class Websocket:
 
         if self.ws and self.is_connected():
             await self.ws.close()
-        
+
         token, user = await self.token_handler._client_get_irc_login(self.client, self.shard_index)
         self.nick = user.name
 
@@ -104,7 +105,7 @@ class Websocket:
                 self.ws = await session.ws_connect(url=HOST, heartbeat=self.heartbeat)
             except Exception as e:
                 retry = self._backoff.delay()
-                logger.error(f'Websocket could not connect. {e}. Attempting reconnect in {retry} seconds.')
+                logger.error(f"Websocket could not connect. {e}. Attempting reconnect in {retry} seconds.")
 
                 await asyncio.sleep(retry)
                 return await self._connect()
@@ -118,17 +119,17 @@ class Websocket:
         while self.join_cache:
             await asyncio.sleep(0.1)
 
-        await self.dispatch(event='shard_ready', number=self.shard_index)
+        await self.dispatch(event="shard_ready", number=self.shard_index)
         self.client._shards[self.shard_index]._ready = True
 
         if all(s.ready for s in self.client._shards.values()):
-            await self.dispatch(event='ready')
+            await self.dispatch(event="ready")
 
         await asyncio.wait_for(self._keep_alive_task, timeout=None)
 
     async def _keep_alive(self) -> None:
         while True:
-            message: aiohttp.WSMessage = await self.ws.receive() # type: ignore
+            message: aiohttp.WSMessage = await self.ws.receive()  # type: ignore
 
             if message.type is aiohttp.WSMsgType.CLOSED:
                 if not self.closing:
@@ -138,12 +139,12 @@ class Websocket:
             data = message.data
 
             payloads = IRCPayload.parse(data=data)
-            await self.dispatch('raw_data', data)
+            await self.dispatch("raw_data", data)
 
             for payload in payloads:
                 payload: IRCPayload
 
-                await self.dispatch('raw_payload', payload)
+                await self.dispatch("raw_payload", payload)
 
                 if payload.code == 200:
                     event = self.get_event(cast(str, payload.action))
@@ -151,17 +152,17 @@ class Websocket:
 
                 elif payload.code == 1:
                     self._ready_event.set()
-                    logger.info(f'Successful authentication on Twitch Websocket with nick: {self.nick}.')
+                    logger.info(f"Successful authentication on Twitch Websocket with nick: {self.nick}.")
 
         return await self._connect()
 
     async def authentication_sequence(self, token: str) -> None:
-        await self.send(f'PASS oauth:{token}')
-        await self.send(f'NICK {self.nick}')
+        await self.send(f"PASS oauth:{token}")
+        await self.send(f"NICK {self.nick}")
 
-        await self.send('CAP REQ :twitch.tv/membership')
-        await self.send('CAP REQ :twitch.tv/tags')
-        await self.send('CAP REQ :twitch.tv/commands')
+        await self.send("CAP REQ :twitch.tv/membership")
+        await self.send("CAP REQ :twitch.tv/tags")
+        await self.send("CAP REQ :twitch.tv/commands")
 
         if self.initial_channels:
             await self.join_channels(self.initial_channels)
@@ -171,44 +172,44 @@ class Websocket:
             await asyncio.sleep(self.join_timeout)
 
         del self.join_cache[channel]
-        raise JoinFailed(f'The channel <{channel}> was not able be to be joined. Check the name and try again.')
+        raise JoinFailed(f"The channel <{channel}> was not able be to be joined. Check the name and try again.")
 
     async def join_channels(self, channels: list) -> None:
         await self._ready_event.wait()
 
-        channels = [c.removeprefix('#').lower() for c in channels]
+        channels = [c.removeprefix("#").lower() for c in channels]
 
         for channel in channels:
             self.join_cache[channel] = asyncio.create_task(self.join_timeout_task(channel), name=channel)
 
-            await self.send(f'JOIN #{channel.lower()}')
+            await self.send(f"JOIN #{channel.lower()}")
             if cd := self.join_limiter.check_limit():
                 await self.join_limiter.wait_for()
 
     async def send(self, message: str) -> None:
         assert self.ws, "There is no websocket"
-        message = message.strip('\r\n')
+        message = message.strip("\r\n")
 
         try:
-            await self.ws.send_str(f'{message}\r\n')
+            await self.ws.send_str(f"{message}\r\n")
         except Exception as e:
             print(e)
 
     def dispatch_callback(self, task: asyncio.Task) -> None:
         if exc := task.exception():
-            asyncio.create_task(self.dispatch('error', exc))
+            asyncio.create_task(self.dispatch("error", exc))
 
     async def dispatch(self, event: str, *args, **kwargs) -> None:
         if not event:
             return None
 
         event = event.lower()
-        coro = getattr(self.client, f'event_{event}')
+        coro = getattr(self.client, f"event_{event}")
 
         if not coro:
-            raise EventNotFound(f'The event <{event}> was not found.')
+            raise EventNotFound(f"The event <{event}> was not found.")
         if not asyncio.iscoroutinefunction(coro):
-            raise TypeError('Events must be coroutines.')
+            raise TypeError("Events must be coroutines.")
 
         task = asyncio.create_task(coro(*args, **kwargs))
         task.add_done_callback(self.dispatch_callback)
@@ -219,7 +220,7 @@ class Websocket:
 
         action = action.lower()
 
-        return getattr(self, f'{action}_event')
+        return getattr(self, f"{action}_event")
 
     def remove_join_cache(self, channel: str) -> None:
         try:
@@ -230,15 +231,17 @@ class Websocket:
         try:
             task.cancel()
         except Exception as e:
-            logger.debug(f'An error occurred cancelling a join task. {e}')
+            logger.debug(f"An error occurred cancelling a join task. {e}")
 
         del self.join_cache[channel]
 
     async def privmsg_event(self, payload: IRCPayload) -> None:
-        logger.debug(f'Received PRIVMSG from Twitch: '
-                     f'channel={payload.channel}, '
-                     f'chatter={payload.user}, '
-                     f'content={payload.message}')
+        logger.debug(
+            f"Received PRIVMSG from Twitch: "
+            f"channel={payload.channel}, "
+            f"chatter={payload.user}, "
+            f"content={payload.message}"
+        )
         channel = self._channel_cache.get(payload.channel, default=None)
 
         if channel is None:
@@ -251,14 +254,14 @@ class Websocket:
         self._message_cache[message.id] = message
         channel._chatters[chatter.name] = chatter
 
-        await self.dispatch('message', message)
+        await self.dispatch("message", message)
 
     async def reconnect_event(self, payload: IRCPayload) -> None:
         asyncio.create_task(self._connect())
 
     async def ping_event(self, payload: IRCPayload) -> None:
-        logger.info('Received PING from Twitch, sending reply PONG.')
-        await self.send('PONG :tmi.twitch.tv')
+        logger.info("Received PING from Twitch, sending reply PONG.")
+        await self.send("PONG :tmi.twitch.tv")
 
     async def join_event(self, payload: IRCPayload) -> None:
         channel = Channel(name=payload.channel, websocket=self)
@@ -272,7 +275,7 @@ class Websocket:
         if payload.user == self.nick:
             self._channel_cache[channel.name] = channel
 
-        await self.dispatch('join', channel, chatter)
+        await self.dispatch("join", channel, chatter)
 
     async def part_event(self, payload: IRCPayload) -> None:
         if payload.user == self.nick:
@@ -282,7 +285,7 @@ class Websocket:
 
         chatter = PartialChatter(payload=payload)  # TODO
 
-        await self.dispatch('part', channel, chatter)
+        await self.dispatch("part", channel, chatter)
 
     async def cap_event(self, payload: IRCPayload) -> None:
         pass
@@ -294,14 +297,14 @@ class Websocket:
         pass
 
     async def whisper_event(self, payload: IRCPayload) -> None:
-        logger.debug(f'Received WHISPER from Twitch: sender={payload.user} content={payload.message}')
+        logger.debug(f"Received WHISPER from Twitch: sender={payload.user} content={payload.message}")
 
         chatter = PartialChatter(payload=payload)
         message = Message(payload=payload, channel=None, echo=False, chatter=chatter)
 
         self._message_cache[message.id] = message
 
-        await self.dispatch('message', message)
+        await self.dispatch("message", message)
 
     async def close(self):
         self.closing = True

@@ -24,7 +24,6 @@ DEALINGS IN THE SOFTWARE.
 
 import enum
 
-
 __all__ = ("PredictionEnum", "BroadcasterTypeEnum", "UserTypeEnum", "ModEventEnum")
 
 

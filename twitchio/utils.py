@@ -22,29 +22,34 @@ SOFTWARE.
 """
 
 import datetime
+from typing import Any, Dict, List, Union
+
 import iso8601
-from typing import Any, Union, Dict, List
 
 __all__ = ("json_loader", "json_dumper")
 
 try:
-    from orjson import loads as _loads, dumps as _orjson_dumps
-    def _dumps(obj: Union[Dict[str, Any], List[Any]]) -> str: # orjson returns bytes instead of str, so patch it here
+    from orjson import dumps as _orjson_dumps, loads as _loads
+
+    def _dumps(obj: Union[Dict[str, Any], List[Any]]) -> str:  # orjson returns bytes instead of str, so patch it here
         return _orjson_dumps(obj).decode()
 
     HAS_MODDED_JSON = True
 except ModuleNotFoundError:
     try:
-        from ujson import loads as _loads, dumps as _dumps
+        from ujson import dumps as _dumps, loads as _loads
+
         HAS_MODDED_JSON = True
     except ModuleNotFoundError:
-        from json import loads as _loads, dumps as _dumps
+        from json import dumps as _dumps, loads as _loads
+
         HAS_MODDED_JSON = False
 
 json_loader = _loads
 json_dumper = _dumps
 
 MISSING: Any = object()
+
 
 def parse_timestamp(timestamp: str) -> datetime.datetime:
     """

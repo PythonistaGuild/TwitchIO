@@ -26,18 +26,18 @@ import asyncio
 import inspect
 import sys
 import traceback
-from typing import Optional, Tuple, Union, Coroutine, Callable, Any, Dict, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union
 
 from twitchio.http import HTTPHandler
 
 from .channel import Channel
+from .chatter import PartialChatter
 from .limiter import IRCRateLimiter
 from .message import Message
 from .parser import IRCPayload
 from .shards import ShardInfo
-from .chatter import PartialChatter
-from .websocket import Websocket
 from .tokens import BaseTokenHandler
+from .websocket import Websocket
 
 if TYPE_CHECKING:
     from ext.eventsub import EventSubClient
@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 _initial_channels_T = Optional[Union[List[str], Tuple[str], Callable[[], List[str]], Coroutine[Any, Any, None]]]
 
 __all__ = ("Client",)
+
 
 class Client:
     """THe main Twitch HTTP and IRC Client.
@@ -73,17 +74,18 @@ class Client:
         The EventSubClient instance to use with the client to dispatch subscribed webhook events.
     """
 
-    def __init__(self,
-                 token_handler: BaseTokenHandler,
-                 heartbeat: Optional[float] = 30.0,
-                 verified: Optional[bool] = False,
-                 join_timeout: Optional[float] = 15.0,
-                 initial_channels: _initial_channels_T = None,
-                 shard_limit: int = 100,
-                 cache_size: Optional[int] = None,
-                 eventsub: Optional[EventSubClient] = None,
-                 **kwargs
-                 ):
+    def __init__(
+        self,
+        token_handler: BaseTokenHandler,
+        heartbeat: Optional[float] = 30.0,
+        verified: Optional[bool] = False,
+        join_timeout: Optional[float] = 15.0,
+        initial_channels: _initial_channels_T = None,
+        shard_limit: int = 100,
+        cache_size: Optional[int] = None,
+        eventsub: Optional[EventSubClient] = None,
+        **kwargs,
+    ):
         self._heartbeat = heartbeat
         self._verified = verified
         self._join_timeout = join_timeout
@@ -94,7 +96,7 @@ class Client:
         self._shard_limit = shard_limit
         self._initial_channels: _initial_channels_T = initial_channels or []
 
-        self._limiter = IRCRateLimiter(status='verified' if verified else 'user', bucket='joins')
+        self._limiter = IRCRateLimiter(status="verified" if verified else "user", bucket="joins")
         self._http = HTTPHandler(None, token_handler, **kwargs)
 
         self._eventsub: Optional[EventSubClient] = None
@@ -122,7 +124,7 @@ class Client:
 
     async def _shard(self):
         if inspect.iscoroutinefunction(self._initial_channels):
-            channels = await self._initial_channels() # type: ignore
+            channels = await self._initial_channels()  # type: ignore
 
         elif callable(self._initial_channels):
             channels = self._initial_channels()
@@ -130,27 +132,29 @@ class Client:
         elif isinstance(self._initial_channels, (list, tuple)):
             channels = self._initial_channels
         else:
-            raise TypeError('initial_channels must be a list, tuple, callable or coroutine returning a list or tuple.')
+            raise TypeError("initial_channels must be a list, tuple, callable or coroutine returning a list or tuple.")
 
         if not isinstance(channels, (list, tuple)):
-            raise TypeError('initial_channels must return a list or tuple of str.')
+            raise TypeError("initial_channels must return a list or tuple of str.")
 
-        chunked = [channels[x:x+self._shard_limit] for x in range(0, len(channels), self._shard_limit)]
+        chunked = [channels[x : x + self._shard_limit] for x in range(0, len(channels), self._shard_limit)]
 
         for index, chunk in enumerate(chunked, 1):
-            self._shards[index] = ShardInfo(number=index,
-                                            channels=channels,
-                                            websocket=Websocket(
-                                                token_handler=self._token_handler,
-                                                client=self,
-                                                limiter=self._limiter,
-                                                shard_index=index,
-                                                heartbeat=self._heartbeat,
-                                                join_timeout=self._join_timeout,
-                                                initial_channels=chunk,
-                                                cache_size=self._cache_size,
-                                                **self._kwargs
-                                            ))
+            self._shards[index] = ShardInfo(
+                number=index,
+                channels=channels,
+                websocket=Websocket(
+                    token_handler=self._token_handler,
+                    client=self,
+                    limiter=self._limiter,
+                    shard_index=index,
+                    heartbeat=self._heartbeat,
+                    join_timeout=self._join_timeout,
+                    initial_channels=chunk,
+                    cache_size=self._cache_size,
+                    **self._kwargs,
+                ),
+            )
 
     def run(self) -> None:
         """A blocking call that starts and connects the bot to IRC.
@@ -192,8 +196,10 @@ class Client:
         This method will not return until all the IRC shards have been closed
         """
         if not self._has_acquired:
-            raise RuntimeError("You must first enter an async context by calling `async with client:`") # TODO need better error
-        
+            raise RuntimeError(
+                "You must first enter an async context by calling `async with client:`"
+            )  # TODO need better error
+
         await self._shard()
 
         shard_tasks = []
@@ -205,7 +211,7 @@ class Client:
     async def close(self) -> None:
         for shard in self._shards.values():
             await shard._websocket.close()
-        
+
         await self._http.cleanup()
 
         self._is_closed = True
@@ -240,7 +246,7 @@ class Client:
         channel: Optional[:class:`~twitchio.Channel`]
             The channel matching the provided name.
         """
-        name = name.strip('#').lower()
+        name = name.strip("#").lower()
 
         channel = None
 

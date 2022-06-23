@@ -24,8 +24,10 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 from __future__ import annotations
+
 import datetime
-from typing import Literal, Optional, TYPE_CHECKING, Tuple, Union
+from typing import TYPE_CHECKING, Literal, Optional, Tuple, Union
+
 from typing_extensions import Self
 
 from twitchio.http import HTTPAwaitableAsyncIterator
@@ -39,6 +41,7 @@ if TYPE_CHECKING:
 
 
 __all__ = "CustomReward", "CustomRewardRedemption"
+
 
 class PartialCustomReward:
     """
@@ -59,7 +62,7 @@ class PartialCustomReward:
     cost: :class:`int`
         How much the reward costed to redeem
     """
-    
+
     __slots__ = ("id", "title", "prompt", "cost")
 
     def __init__(self, obj: dict) -> None:
@@ -163,7 +166,9 @@ class CustomReward:
         self.in_stock: bool = obj["is_in_stock"]
         self.redemptions_skip_queue: bool = obj["should_redemptions_skip_request_queue"]
         self.redemptions_current_stream: Optional[int] = obj["redemptions_redeemed_current_stream"]
-        self.cooldown_until: Optional[datetime.datetime] = obj["cooldown_expires_at"] and parse_timestamp(obj["cooldown_expires_at"])
+        self.cooldown_until: Optional[datetime.datetime] = obj["cooldown_expires_at"] and parse_timestamp(
+            obj["cooldown_expires_at"]
+        )
 
     async def edit(
         self,
@@ -248,7 +253,7 @@ class CustomReward:
                     error._response,
                     await error._response.json(),
                     message="The custom reward was created by a different application, or channel points are "
-                    "not available for the broadcaster (403)"
+                    "not available for the broadcaster (403)",
                 ) from error
             raise
         else:
@@ -270,16 +275,20 @@ class CustomReward:
         try:
             await self._http.delete_custom_reward(self._user, self._broadcaster_id, self.id)
         except Unauthorized as error:
-            raise Unauthorized(error._response, await error._response.json(), message=f"The token for {self._user} is invalid") from error
+            raise Unauthorized(
+                error._response, await error._response.json(), message=f"The token for {self._user} is invalid"
+            ) from error
         except HTTPResponseException as error:
             raise HTTPResponseException(
-                    error._response,
-                    await error._response.json(),
-                    message="The custom reward was created by a different application, or channel points are "
-                    "not available for the broadcaster (403)"
-                ) from error
+                error._response,
+                await error._response.json(),
+                message="The custom reward was created by a different application, or channel points are "
+                "not available for the broadcaster (403)",
+            ) from error
 
-    async def get_redemptions(self, status: Literal["UNFULFILLED", "FULFILLED", "CANCELLED"], sort: Literal["OLDEST", "NEWEST"] = "OLDEST") -> HTTPAwaitableAsyncIterator[CustomRewardRedemption]:
+    async def get_redemptions(
+        self, status: Literal["UNFULFILLED", "FULFILLED", "CANCELLED"], sort: Literal["OLDEST", "NEWEST"] = "OLDEST"
+    ) -> HTTPAwaitableAsyncIterator[CustomRewardRedemption]:
         """
         Gets redemptions for this reward
 
@@ -295,7 +304,9 @@ class CustomReward:
                 self._user, self._broadcaster_id, self.id, status=status, sort=sort
             )
         except Unauthorized as error:
-            raise Unauthorized(error._response, await error._response.json(), message=f"The token for {self._user} is invalid") from error
+            raise Unauthorized(
+                error._response, await error._response.json(), message=f"The token for {self._user} is invalid"
+            ) from error
         except HTTPException as error:
             status = error.args[2]
             if status == 403:

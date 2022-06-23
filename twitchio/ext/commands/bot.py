@@ -7,15 +7,15 @@ import traceback
 import types
 from typing import Coroutine, Dict, List, Optional, Union
 
+from twitchio import Client, Message
+
 from .commands import Command
 from .components import Component
 from .context import Context
 from .errors import *
-from twitchio import Client, Message
 
 
 class Bot(Client):
-
     def __init__(self, prefix: Union[list, callable, Coroutine], *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -84,16 +84,16 @@ class Bot(Client):
 
         elif isinstance(prefixes, list):
             if not all(isinstance(prefix, str) for prefix in prefixes):
-                raise TypeError('prefix parameter must be a str, list of str or callable/coroutine returning either.')
+                raise TypeError("prefix parameter must be a str, list of str or callable/coroutine returning either.")
             self._prefixes = prefixes
 
         else:
-            raise TypeError('prefix parameter must be a str, list of str or callable/coroutine returning either.')
+            raise TypeError("prefix parameter must be a str, list of str or callable/coroutine returning either.")
 
     def get_context(self, message: Message, *, cls: Optional[Context] = Context) -> Context:
         # noinspection PyTypeChecker
         if cls and not issubclass(cls, Context):
-            raise TypeError(f'cls parameter must derive from {Context!r}.')
+            raise TypeError(f"cls parameter must derive from {Context!r}.")
 
         return cls(message, self)
 
@@ -105,13 +105,13 @@ class Bot(Client):
 
     def add_command(self, command: Command) -> None:
         if not isinstance(command, Command):
-            raise TypeError(f'The command argument must be a subclass of commands.Command.')
+            raise TypeError(f"The command argument must be a subclass of commands.Command.")
 
         if command.name in self.commands or any(x in self.commands for x in command.aliases):
             raise ValueError(f'Command "{command.name}" is already registered command or alias.')
 
         if not asyncio.iscoroutinefunction(command._callback):
-            raise TypeError('Command callbacks must be coroutines.')
+            raise TypeError("Command callbacks must be coroutines.")
 
         command._instance = command._component or self
 
@@ -119,7 +119,7 @@ class Bot(Client):
 
     def remove_command(self, command: Command) -> None:
         if not isinstance(command, Command):
-            raise TypeError(f'The command argument must be a subclass of commands.Command.')
+            raise TypeError(f"The command argument must be a subclass of commands.Command.")
 
         if command.name not in self.commands and not any(x in self.commands for x in command.aliases):
             raise ValueError(f'Command "{command.name}" is not an already registered command or alias.')
@@ -132,8 +132,9 @@ class Bot(Client):
 
         # noinspection PyUnresolvedReferences
         if not override and component.__component_name__ in self.__components:
-            raise ComponentAlreadyExistsError('This component has already been loaded. '
-                                              'Consider using the override parameter.')
+            raise ComponentAlreadyExistsError(
+                "This component has already been loaded. " "Consider using the override parameter."
+            )
 
         # noinspection PyUnresolvedReferences
         commands_ = component.commands
@@ -180,7 +181,7 @@ class Bot(Client):
 
     async def _remove_extension_remnants(self, name: str):
         for component_name, component in self.__components.copy().items():
-            if component.__module__ == name or component.__module__.startswith(f'{name}.'):
+            if component.__module__ == name or component.__module__.startswith(f"{name}."):
                 await self.remove_component(component)
 
     async def load_extension(self, extension: str, package: Optional[str] = None) -> None:
@@ -203,7 +204,7 @@ class Bot(Client):
             raise ExtensionLoadFailureError(e) from e
 
         try:
-            entry = getattr(module, 'setup')
+            entry = getattr(module, "setup")
         except AttributeError:
             del sys.modules[name]
             raise NoExtensionEntryPoint(f'The extension "{extension}" has no setup coroutine.')
@@ -230,7 +231,7 @@ class Bot(Client):
         module = self.__extensions[name]
 
         try:
-            exit_ = getattr(module, 'teardown')
+            exit_ = getattr(module, "teardown")
         except AttributeError:
             exit_ = None
 

@@ -21,40 +21,41 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from __future__ import annotations
+
 import asyncio
 import copy
 import datetime
 import logging
-
-import aiohttp
-import multidict
-from yarl import URL
 from typing import (
+    TYPE_CHECKING,
     Any,
     Awaitable,
     Callable,
     ClassVar,
+    Dict,
     Generic,
-    Literal,
-    Tuple,
     List,
+    Literal,
     Optional,
-    TYPE_CHECKING,
+    Tuple,
     TypeVar,
     Union,
-    Dict,
     cast,
 )
 
-from .utils import json_loader, json_dumper, MISSING
-from .tokens import BaseTokenHandler, BaseToken
-from .limiter import HTTPRateLimiter, RateLimitBucket
+import aiohttp
+import multidict
+from yarl import URL
+
 from .exceptions import HTTPException, HTTPResponseException, Unauthorized
+from .limiter import HTTPRateLimiter, RateLimitBucket
+from .tokens import BaseToken, BaseTokenHandler
+from .utils import MISSING, json_dumper, json_loader
 
 if TYPE_CHECKING:
     from .models import PartialUser, User
-    from .types.payloads import BasePayload
     from .types.extensions import ExtensionBuilder as ExtensionBuilderType
+    from .types.payloads import BasePayload
 
     UserType = Union[PartialUser, User]
     methodType = Literal["DELETE", "GET", "PATCH", "POST", "PUT"]
@@ -167,12 +168,13 @@ class HTTPAwaitableAsyncIteratorWithSource(HTTPAwaitableAsyncIterator, Generic[T
 
     async def _await_and_discard(self) -> List[T]:
         return self.buffer
-    
+
     async def __anext__(self) -> T:
         if not self.buffer:
             raise StopAsyncIteration
-        
+
         return self.buffer.pop(0)
+
 
 class HTTPHandler(Generic[TokenHandlerT, T]):
     def __init__(

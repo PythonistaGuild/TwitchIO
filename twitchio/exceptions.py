@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from __future__ import annotations
+
 from typing import Optional
 
 __all__ = (
@@ -32,14 +33,16 @@ __all__ = (
     "EventNotFound",
     "HTTPException",
     "HTTPResponseException",
-    "Unauthorized"
+    "Unauthorized",
 )
 
-import aiohttp
 from typing import TYPE_CHECKING
+
+import aiohttp
 
 if TYPE_CHECKING:
     from .types.payloads import ErrorType
+
 
 class TwitchIOException(Exception):
     pass

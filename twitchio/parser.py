@@ -21,13 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import re
-from typing import Optional, Dict, Union
+from typing import Dict, Optional, Union
 
+USER_REGEX = re.compile(r"user-type=*\S*.:(?P<USER>.*?)!\S*")
+CHANNEL_REGEX = re.compile(r"tmi\.twitch\.tv [A-Z()]* #(?P<CHANNEL>\S*)")
 
-USER_REGEX = re.compile(r'user-type=*\S*.:(?P<USER>.*?)!\S*')
-CHANNEL_REGEX = re.compile(r'tmi\.twitch\.tv [A-Z()]* #(?P<CHANNEL>\S*)')
-
-TMI = ':tmi.twitch.tv'
+TMI = ":tmi.twitch.tv"
 
 
 class IRCPayload:
@@ -55,17 +54,18 @@ class IRCPayload:
         The badges received via tags. Could be an empty dict if no badges were received.
     """
 
-    def __init__(self,
-                 *,
-                 raw: str,
-                 code: int,
-                 tags: dict,
-                 action: Optional[str] = None,
-                 message: Optional[str] = None,
-                 channel: Optional[str] = None,
-                 user: Optional[str] = None,
-                 names: Optional[list] = None
-                 ):
+    def __init__(
+        self,
+        *,
+        raw: str,
+        code: int,
+        tags: dict,
+        action: Optional[str] = None,
+        message: Optional[str] = None,
+        channel: Optional[str] = None,
+        user: Optional[str] = None,
+        names: Optional[list] = None,
+    ):
         self.raw = raw
         self.code = code
         self.action = action
@@ -74,10 +74,10 @@ class IRCPayload:
         self.user = user
         self.names = names
 
-        self.badges = tags.get('badges', {})
+        self.badges = tags.get("badges", {})
         self.tags = tags
 
-        if tags == {'badges': {}}:
+        if tags == {"badges": {}}:
             self.tags = {}
 
     @classmethod
@@ -93,13 +93,13 @@ class IRCPayload:
         try:
             channel = CHANNEL_REGEX.search(data)
             if channel:
-                channel = channel['CHANNEL']
+                channel = channel["CHANNEL"]
         except (TypeError, KeyError):
             channel = None
 
-        parts = data.split(' ')
+        parts = data.split(" ")
 
-        tags: Dict[str, Union[Dict[str, str], str, int]] = {'badges': {}}
+        tags: Dict[str, Union[Dict[str, str], str, int]] = {"badges": {}}
 
         try:
             parts.remove(TMI)
@@ -119,28 +119,28 @@ class IRCPayload:
         try:
             user = USER_REGEX.search(data)
             if user:
-                user = user['USER']
+                user = user["USER"]
         except (TypeError, KeyError):
             user = None
 
-        if zero.startswith('PING'):
-            action = 'PING'
+        if zero.startswith("PING"):
+            action = "PING"
 
-        elif zero.startswith('@'):
+        elif zero.startswith("@"):
             action = parts[2] if user else parts[1]
 
-            zero = zero.removeprefix('@')
+            zero = zero.removeprefix("@")
 
-            raw_tags = zero.split(';')
+            raw_tags = zero.split(";")
             for tag in raw_tags:
-                key, value = tag.split('=', 1)
+                key, value = tag.split("=", 1)
 
-                if key == 'badges' and value:
+                if key == "badges" and value:
                     badges = {}
 
-                    raw_badges = value.split(',')
+                    raw_badges = value.split(",")
                     for badge in raw_badges:
-                        bkey, bvalue = badge.split('/')
+                        bkey, bvalue = badge.split("/")
 
                         badges[bkey] = bvalue
 
@@ -149,34 +149,27 @@ class IRCPayload:
 
                 tags[key] = value
 
-        elif zero.startswith(':'):
+        elif zero.startswith(":"):
             action = parts[1]
 
         else:
             action = zero
 
         if code == 353:
-            names = data.split(':')[-1].split()
+            names = data.split(":")[-1].split()
             message = None
             user = parts[2]
-            channel = parts[4].removeprefix('#')
+            channel = parts[4].removeprefix("#")
         else:
             names = None
-            message = data.split(':')[-1]
+            message = data.split(":")[-1]
 
         if channel and "PRIVMSG" in data:
-            message = data.split(f'{channel} :')[-1]
+            message = data.split(f"{channel} :")[-1]
 
         if code != 200:
             action = None
 
         return cls(
-            raw=data,
-            code=code,
-            action=action,
-            message=message,
-            channel=channel,
-            user=user,
-            tags=tags,
-            names=names
+            raw=data, code=code, action=action, message=message, channel=channel, user=user, tags=tags, names=names
         )

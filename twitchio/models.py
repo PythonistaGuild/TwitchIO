@@ -25,18 +25,18 @@ from __future__ import annotations
 
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Literal, Optional, TypedDict, Union, Tuple, Dict
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, TypedDict, Union
 
+from .channel import Channel
+from .enums import BroadcasterTypeEnum, ModEventEnum, UserTypeEnum
 from .http import HTTPAwaitableAsyncIterator, HTTPAwaitableAsyncIteratorWithSource
-from .enums import BroadcasterTypeEnum, UserTypeEnum, ModEventEnum
 from .rewards import CustomReward
 from .utils import parse_timestamp
-from .channel import Channel
 
 if TYPE_CHECKING:
     from .http import HTTPHandler
-    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent, Prediction
-    from .types.extensions import ExtensionBuilder as ExtensionBuilderType, Extension as ExtensionType
+    from .models import BitsLeaderboard, Clip, ExtensionBuilder, FollowEvent, Prediction, Tag
+    from .types.extensions import Extension as ExtensionType, ExtensionBuilder as ExtensionBuilderType
 
 
 __all__ = (
@@ -142,7 +142,7 @@ class PartialUser:
         --------
         :class:`User` The full user associated with this :class:`PartialUser`
         """
-        data = await self._http.get_users(ids=[self.id], target=self, force=force) # TODO client cache
+        data = await self._http.get_users(ids=[self.id], target=self, force=force)  # TODO client cache
         return data[0]
 
     async def edit(self, description: str) -> None:
@@ -208,12 +208,11 @@ class PartialUser:
         if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
             return HTTPAwaitableAsyncIteratorWithSource(self._cached_rewards[1])
 
-
         self._cached_rewards = (time.monotonic(), [])
 
         def adapter(handler: HTTPHandler, data) -> CustomReward:
             resp = CustomReward(handler, data, self)
-            self._cached_rewards[1].append(resp) # type: ignore
+            self._cached_rewards[1].append(resp)  # type: ignore
             return resp
 
         data: HTTPAwaitableAsyncIterator[CustomReward] = self._http.get_rewards(self, self.id, only_manageable, ids)
@@ -905,7 +904,6 @@ class PartialUser:
 
         data = await self._http.patch_poll(broadcaster_id=str(self.id), target=self, id=poll_id, status=status)
         return Poll(self._http, data[0])
-    
 
 
 class BitLeaderboardUser(PartialUser):
@@ -2423,6 +2421,7 @@ class Goal:
 
     def __repr__(self):
         return f"<Goal id={self.id} broadcaster={self.broadcaster} description={self.description} current_amount={self.current_amount} target_amount={self.target_amount} created_at={self.created_at}>"
+
 
 class ChatSettings:
     """

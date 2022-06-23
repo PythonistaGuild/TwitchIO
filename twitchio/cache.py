@@ -25,7 +25,6 @@ from typing import Optional
 
 
 class Cache:
-
     def __init__(self, *, size: Optional[int] = None):
         self.size = size if size else 99999999  # Arbitrarily large size...
 

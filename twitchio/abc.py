@@ -31,11 +31,10 @@ if TYPE_CHECKING:
 
 
 class Messageable(metaclass=abc.ABCMeta):
-
     def __init__(self, **attrs):
-        self._name: str = attrs['name']
+        self._name: str = attrs["name"]
 
-        self._websocket: Websocket = attrs['websocket']
+        self._websocket: Websocket = attrs["websocket"]
 
     @property
     @abc.abstractmethod

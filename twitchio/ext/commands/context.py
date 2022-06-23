@@ -4,6 +4,7 @@ from typing import Optional
 
 from twitchio import Channel, Message
 from twitchio.abc import Messageable
+
 from .errors import *
 
 if typing.TYPE_CHECKING:
@@ -12,20 +13,19 @@ if typing.TYPE_CHECKING:
 
 
 class Context(Messageable):
-
-    def __init__(self, message: Message, bot: 'Bot', **attrs):
-        attrs['name'] = message.channel.name
-        attrs['websocket'] = message.channel._websocket
+    def __init__(self, message: Message, bot: "Bot", **attrs):
+        attrs["name"] = message.channel.name
+        attrs["websocket"] = message.channel._websocket
         super().__init__(**attrs)
 
         self.message: Message = message
         self._message_copy = copy.copy(message)
         if "reply-parent-msg-id" in self._message_copy.tags:
-            _, _, self._message_copy.content = self._message_copy.content.partition(' ')
+            _, _, self._message_copy.content = self._message_copy.content.partition(" ")
 
         self.channel: Channel = self.message.channel
 
-        self.bot: 'Bot' = bot
+        self.bot: "Bot" = bot
 
         self.prefix = self._get_prefix()
         self.command = self._get_command()
@@ -36,7 +36,7 @@ class Context(Messageable):
     def _get_command_string(self) -> str:
         return self._message_copy.content.removeprefix(self.prefix).split()[0]
 
-    def _get_command(self) -> Optional['Command']:
+    def _get_command(self) -> Optional["Command"]:
         if not self.is_valid:
             return None
 
@@ -73,10 +73,9 @@ class Context(Messageable):
 
     async def invoke(self) -> None:
         if not self.is_valid:
-            raise InvalidInvocationContext('This Context is invalid for command invocation.')
+            raise InvalidInvocationContext("This Context is invalid for command invocation.")
 
         if not self.command:
             raise CommandNotFoundError(f'The command "{self._get_command_string()}" could not be found.')
 
         await self.command.invoke(context=self)
-

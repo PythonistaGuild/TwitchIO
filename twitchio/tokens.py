@@ -21,26 +21,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from __future__ import annotations
-from typing import Optional, Union, Dict, Set, List, TYPE_CHECKING, Tuple
+
+import time
+from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 
 import aiohttp
-import time
 from yarl import URL
 
 from .exceptions import InvalidToken, RefreshFailure
 from .utils import json_loader
 
 if TYPE_CHECKING:
-    from .models import PartialUser, User
-    from .http import HTTPHandler
     from .client import Client
+    from .http import HTTPHandler
+    from .models import PartialUser, User
 
-__all__ = (
-    "BaseToken",
-    "Token",
-    "BaseTokenHandler",
-    "SimpleTokenHandler"
-)
+__all__ = ("BaseToken", "Token", "BaseTokenHandler", "SimpleTokenHandler")
 
 VALIDATE_URL = URL("https://id.twitch.tv/oauth2/validate")
 REFRESH_URL = URL("https://id.twitch.tv/oauth2/refresh")
@@ -56,9 +52,10 @@ class BaseToken:
     -----------
     access_token: :class:`str`
         The access token to use
-    
+
     .. versionadded:: 3.0
     """
+
     def __init__(self, access_token: str) -> None:
         self.access_token: str = access_token
 
@@ -79,7 +76,7 @@ class BaseToken:
         -------
         :error:`~twitchio.InvalidToken`
             This token is invalid
-        
+
         Returns
         --------
         :class:`str`
@@ -99,8 +96,9 @@ class Token(BaseToken):
         The token itself. This should **not** be prefixed with ``oauth:``!
     refresh_token: Optional[:class:`str`]
         The reresh token associated with the access token. This is not useful unless you have passed ``client_secret`` to your :class:`~twitchio.Client`/:class:`~twitchio.ext.commands.Bot`
-    
+
     """
+
     def __init__(self, access_token: str, refresh_token: Optional[str] = None) -> None:
         super().__init__(access_token)
         self.refresh_token: Optional[str] = refresh_token
@@ -179,6 +177,7 @@ class Token(BaseToken):
 
         else:
             from .models import PartialUser
+
             self._scopes = data["scopes"]
             self._user = PartialUser(http, data["user_id"], data["login"])
 
@@ -199,7 +198,7 @@ class Token(BaseToken):
         -------
         :error:`~twitchio.InvalidToken`
             This token is invalid
-        
+
         Returns
         --------
         :class:`str`
@@ -209,7 +208,7 @@ class Token(BaseToken):
             await self.validate(http, handler, session)
 
         return self.access_token
-    
+
     def has_scope(self, scope: str) -> Optional[bool]:
         """
         A helper function which determines whether the given token has a given scope or not.
@@ -219,7 +218,7 @@ class Token(BaseToken):
         -----------
         scope: :class:`str`
             The scope to check this token for
-        
+
         Returns
         --------
         Optional[:class:`bool`]
@@ -227,7 +226,7 @@ class Token(BaseToken):
         """
         if not self._scopes:
             return None
-        
+
         return scope in self._scopes
 
 
@@ -286,8 +285,8 @@ class BaseTokenHandler:
             token = await self.get_user_token(user, scope)
             if not http._session:
                 await http.prepare()
-            
-            await token.validate(http, self, http._session) # type: ignore
+
+            await token.validate(http, self, http._session)  # type: ignore
         except Exception as e:
             # TODO fire error handlers
             raise
@@ -304,22 +303,24 @@ class BaseTokenHandler:
         except Exception as e:
             # TODO fire error handlers
             raise
-    
+
     async def _client_get_irc_login(self, client: Client, shard_id: int) -> Tuple[str, PartialUser]:
         try:
             token = await self.get_irc_token(shard_id)
         except Exception as e:
-            raise # TODO fire error handlers
+            raise  # TODO fire error handlers
 
         if not client._http._session:
             await client._http.prepare()
-        
-        resp = await token.get(client._http, self, client._http._session) # type: ignore
+
+        resp = await token.get(client._http, self, client._http._session)  # type: ignore
 
         if not token.has_scope("chat:login") and not token.has_scope("chat:read"):
-            raise InvalidToken(f"The token given for user {token._user} does not have the chat:login or chat:read scope.")
-        
-        return resp, token._user # type: ignore
+            raise InvalidToken(
+                f"The token given for user {token._user} does not have the chat:login or chat:read scope."
+            )
+
+        return resp, token._user  # type: ignore
 
     async def get_client_credentials(self) -> Tuple[str, Optional[str]]:
         """|coro|
@@ -329,7 +330,7 @@ class BaseTokenHandler:
         The client secret is required to automatically refresh user tokens when they expire, however it is not required to access the twitch API.
         """
         raise NotImplementedError
-    
+
     async def get_irc_token(self, shard_id: int) -> Token:
         """|coro|
         Method to be overriden in a subclass.
@@ -339,7 +340,7 @@ class BaseTokenHandler:
         -----------
         shard_id: :class:`int`
             The shard that is attempting to connect.
-        
+
         Returns
         -------
         :class:`Token`

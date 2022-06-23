@@ -1,4 +1,5 @@
-from typing import Literal, TypedDict, Dict
+from typing import Dict, Literal, TypedDict
+
 from typing_extensions import NotRequired
 
 
@@ -8,6 +9,7 @@ class Extension(TypedDict):
     version: str
     x: NotRequired[int]
     y: NotRequired[int]
+
 
 class ExtensionBuilder(TypedDict):
     panel: Dict[str, Extension]

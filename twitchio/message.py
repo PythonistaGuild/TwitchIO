@@ -23,10 +23,11 @@ SOFTWARE.
 from typing import Optional
 
 from .channel import Channel
-from .parser import IRCPayload
 from .chatter import PartialChatter
+from .parser import IRCPayload
 
 __all__ = ("Message",)
+
 
 class Message:
     """TwitchIO Message object representing a messages received via Twitch.
@@ -46,31 +47,14 @@ class Message:
         The raw message string received via Twitch.
     """
 
-    __slots__ = (
-        '_tags',
-        '_id',
-        '_tid',
-        'content',
-        'channel',
-        'author',
-        '_badges',
-        'echo',
-        'raw',
-        'timestamp'
-    )
+    __slots__ = ("_tags", "_id", "_tid", "content", "channel", "author", "_badges", "echo", "raw", "timestamp")
 
-    def __init__(self,
-                 payload: IRCPayload,
-                 *,
-                 channel: Optional[Channel],
-                 chatter: PartialChatter,
-                 echo: bool = False
-                 ):
+    def __init__(self, payload: IRCPayload, *, channel: Optional[Channel], chatter: PartialChatter, echo: bool = False):
         self._tags = payload.tags
         self._badges: dict = payload.badges
 
-        self._id: str = self._tags.get('id') or self._tags.get('message-id')
-        self._tid: str = self._tags.get('thread-id')
+        self._id: str = self._tags.get("id") or self._tags.get("message-id")
+        self._tid: str = self._tags.get("thread-id")
         self.content: Optional[str] = payload.message
         self.channel: Optional[Channel] = channel
         self.author: PartialChatter = chatter
@@ -81,12 +65,14 @@ class Message:
         self.timestamp = ...
 
     def __repr__(self):
-        return f'Message: ' \
-               f'id={self.id}, ' \
-               f'author=<{self.author}>, ' \
-               f'channel=<{self.channel}>, ' \
-               f'echo={self.echo}, ' \
-               f'timestamp={self.timestamp}'
+        return (
+            f"Message: "
+            f"id={self.id}, "
+            f"author=<{self.author}>, "
+            f"channel=<{self.channel}>, "
+            f"echo={self.echo}, "
+            f"timestamp={self.timestamp}"
+        )
 
     def __str__(self):
         return self.content

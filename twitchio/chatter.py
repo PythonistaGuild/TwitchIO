@@ -26,39 +26,32 @@ from .parser import IRCPayload
 
 __all__ = ("PartialChatter",)
 
+
 class PartialChatter:
 
-    __slots__ = (
-        '_name',
-        '_colour',
-        '_display_name',
-        '_mod',
-        '_turbo',
-        '_id',
-        'tags',
-        'badges'
-    )
+    __slots__ = ("_name", "_colour", "_display_name", "_mod", "_turbo", "_id", "tags", "badges")
 
-    def __init__(self,
-                 payload: IRCPayload,
-                 ):
+    def __init__(
+        self,
+        payload: IRCPayload,
+    ):
         self._name = payload.user
 
         tags = payload.tags
         badges = payload.badges
 
         if tags:
-            self._colour = tags.get('color')
-            self._display_name = tags.get('display-name')
-            self._mod = tags.get('mod')
-            self._turbo = tags.get('turbo')
-            self._id = tags.get('user-id')
+            self._colour = tags.get("color")
+            self._display_name = tags.get("display-name")
+            self._mod = tags.get("mod")
+            self._turbo = tags.get("turbo")
+            self._id = tags.get("user-id")
 
         self.tags = tags
         self.badges = badges
 
     def __repr__(self):
-        return f'PartialUser: id={self._id}, name={self._name}'
+        return f"PartialUser: id={self._id}, name={self._name}"
 
     def __str__(self):
         return self._name
@@ -88,7 +81,7 @@ class PartialChatter:
     def colour(self) -> Optional[str]:
         """The users colour."""
         if self._colour:
-            return hex(self._colour.removeprefix('#'))
+            return hex(self._colour.removeprefix("#"))
 
     color = colour
 

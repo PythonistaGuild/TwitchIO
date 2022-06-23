@@ -29,27 +29,23 @@ from .chatter import PartialChatter
 
 __all__ = ("Channel",)
 
+
 class Channel(Messageable):
 
-    __slots__ = (
-        '_name',
-        '_id',
-        '_websocket',
-        '_chatters'
-                 )
+    __slots__ = ("_name", "_id", "_websocket", "_chatters")
 
     def __init__(self, **attrs):
         super().__init__(**attrs)
-        self._id: Optional[int] = attrs.get('id')
+        self._id: Optional[int] = attrs.get("id")
         self._chatters: Cache = Cache()
 
     def __repr__(self) -> str:
-        return f'Channel: name={self._name}, shard_index={self._websocket.shard_index}'
+        return f"Channel: name={self._name}, shard_index={self._websocket.shard_index}"
 
     async def send(self, content: str) -> None:
         """|coro|
         Sends a whisper message to the channel's user.
-        
+
         Parameters
         -----------
         content: :class:`str`
@@ -61,7 +57,7 @@ class Channel(Messageable):
     def name(self) -> str:
         """
         The channel name.
-        
+
         Returns
         --------
         :class:`str`
@@ -72,7 +68,7 @@ class Channel(Messageable):
     def id(self) -> Optional[int]:
         """
         The channel ID.
-        
+
         Returns
         --------
         Optional[:class:`int`]
@@ -94,7 +90,7 @@ class Channel(Messageable):
     def chatters(self) -> Dict[str, PartialChatter]:
         """
         A mapping of the channel's chatter cache.
-        
+
         Returns
         --------
         Dict[:class:`str`, :class:`~twitchio.PartialChatter`]
@@ -105,16 +101,16 @@ class Channel(Messageable):
         """Method which returns a chatter from the channel's cache.
 
         Could be ``None`` if the chatter is not in cache.
-        
+
         Parameters
         -----------
         name: :class:`str`
             The name of the chatter to find
-        
+
         Returns
         --------
         Optional[:class:`~twitchio.PartialChatter`]
         """
-        name = name.lstrip('#').lower()
+        name = name.lstrip("#").lower()
 
         return self._chatters.get(name, default=None)

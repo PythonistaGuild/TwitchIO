@@ -27,9 +27,9 @@ __copyright__ = "Copyright 2017-2022 (c) TwitchIO"
 __version__ = "3.0.0a"
 
 from .channel import *
-from .client import *
-from .message import *
 from .chatter import *
-from .tokens import *
-from .models import *
+from .client import *
 from .exceptions import *
+from .message import *
+from .models import *
+from .tokens import *
