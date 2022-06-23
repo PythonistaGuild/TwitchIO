@@ -53,6 +53,8 @@ sphinxcontrib-asyncio = { version = "*"}
 sphinxcontrib-websupport = { version = "*"}
 Pygments = { version = "*"}
 furo = { version = "*"}
+black = "*"
+isort = "*"
 
 [tool.black]
 line-length = 120
@@ -95,5 +97,5 @@ docs = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
