@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from __future__ import annotations
-from typing import cast, Optional, Union, Dict, Set, List, TYPE_CHECKING, Tuple
+from typing import Optional, Union, Dict, Set, List, TYPE_CHECKING, Tuple
 
 import aiohttp
 import time
