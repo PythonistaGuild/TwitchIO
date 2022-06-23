@@ -6,10 +6,11 @@ Master
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to Bot and :func:`Client.from_client_credentials`
         - Fixed message content while handling commands in reply messages
+        - Add duration attribute to :class:`twitchio.Clip`
 
-- ext.commands:
-  - Bug fixes
-      - Add type conversion for variable positional arguments
+- ext.commands
+    - Bug fixes
+        - Add type conversion for variable positional arguments
       
 - ext.pubsub
     - Bug fixes

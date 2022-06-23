@@ -200,6 +200,8 @@ class Clip:
         When the clip was created.
     thumbnail_url: :class:`str`
         The url of the clip thumbnail.
+    duration: :class:`float`
+        Duration of the Clip in seconds (up to 0.1 precision).
     """
 
     __slots__ = (
@@ -215,6 +217,7 @@ class Clip:
         "views",
         "created_at",
         "thumbnail_url",
+        "duration",
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -230,6 +233,7 @@ class Clip:
         self.views: int = data["view_count"]
         self.created_at = parse_timestamp(data["created_at"])
         self.thumbnail_url: str = data["thumbnail_url"]
+        self.duration: float = data["duration"]
 
     def __repr__(self):
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
