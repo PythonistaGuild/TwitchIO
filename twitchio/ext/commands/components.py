@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Dict
 
 from .commands import Command
@@ -6,11 +7,14 @@ __all__ = ("Component",)
 
 
 class Component:
+    __commands: Dict[str, Command]
+    __component_name__: str
+
     def __new__(cls, *args, **kwargs):
         new = super().__new__(cls)
         new.__dict__["__component_name__"] = cls.__name__
         # noinspection PyTypeHints
-        new.__commands: dict[str, Command] = {}
+        new.__commands = {}
 
         for name, value in cls.__dict__.items():
 
@@ -25,7 +29,6 @@ class Component:
 
     @property
     def name(self) -> str:
-        # noinspection PyUnresolvedReferences
         return self.__component_name__
 
     @property
@@ -37,19 +40,19 @@ class Component:
         raise NotImplementedError
 
     async def component_check(self) -> bool:
-        pass
+        return True
 
     async def component_on_load(self) -> None:
-        pass
+        ...
 
     async def component_on_unload(self) -> None:
-        pass
+        ...
 
     async def component_before_invoke(self) -> None:
-        pass
+        ...
 
     async def component_after_invoke(self) -> None:
-        pass
+        ...
 
     async def component_command_error(self) -> None:
-        pass
+        ...

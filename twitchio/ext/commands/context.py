@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import copy
 import typing
-from typing import Optional
+from typing import Optional, cast
 
 from twitchio import Channel, Message
 from twitchio.abc import Messageable
@@ -14,8 +16,8 @@ if typing.TYPE_CHECKING:
 
 class Context(Messageable):
     def __init__(self, message: Message, bot: "Bot", **attrs):
-        attrs["name"] = message.channel.name
-        attrs["websocket"] = message.channel._websocket
+        attrs["name"] = cast(Channel, message.channel).name
+        attrs["websocket"] = cast(Channel, message.channel)._websocket
         super().__init__(**attrs)
 
         self.message: Message = message
@@ -23,9 +25,9 @@ class Context(Messageable):
         if "reply-parent-msg-id" in self._message_copy.tags:
             _, _, self._message_copy.content = self._message_copy.content.partition(" ")
 
-        self.channel: Channel = self.message.channel
+        self.channel: Channel = cast(Channel, self.message.channel)
 
-        self.bot: "Bot" = bot
+        self.bot: Bot = bot
 
         self.prefix = self._get_prefix()
         self.command = self._get_command()
@@ -34,9 +36,9 @@ class Context(Messageable):
         self.kwargs: dict = {}
 
     def _get_command_string(self) -> str:
-        return self._message_copy.content.removeprefix(self.prefix).split()[0]
+        return self._message_copy.content.removeprefix(cast(str, self.prefix)).split()[0]
 
-    def _get_command(self) -> Optional["Command"]:
+    def _get_command(self) -> Optional[Command]:
         if not self.is_valid:
             return None
 
@@ -49,12 +51,12 @@ class Context(Messageable):
 
         return cmd
 
-    def _get_prefix(self) -> Optional[str]:
+    def _get_prefix(self) -> str:
         for prefix in self.bot.prefixes:
             if self._message_copy.content.startswith(prefix):
                 return prefix
 
-        return None
+        raise ValueError("No prefix found")
 
     @property
     def is_valid(self) -> bool:

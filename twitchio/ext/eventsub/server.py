@@ -23,9 +23,8 @@ SOFTWARE.
 import asyncio
 import enum
 import logging
-from typing import Optional, Union
+from typing import List, Optional, Union
 
-import aiohttp
 import yarl
 from aiohttp import web
 
@@ -60,17 +59,17 @@ class EventSubClient(web.Application):
         client_secret: str,
         host: Optional[str] = "https://0.0.0.0",
         port: Optional[int] = 4000,
-        webhook_callback: Optional[str] = "/callback",
+        webhook_callback: str = "/callback",
     ):
         super().__init__()
 
-        callback = f'/{webhook_callback.removeprefix("/")}'
+        callback = f'/{webhook_callback.lstrip("/")}'
 
-        host = yarl.URL(f"{host}:{port}")
-        if host.scheme != "https":
+        host_ = yarl.URL(f"{host}:{port}")
+        if host_.scheme != "https":
             raise RuntimeError("EventSubClient host parameter must use https, not http.")
 
-        self._host = host
+        self._host = host_
 
         routes = [web.post(callback, self._callback)]
         self.add_routes(routes)
@@ -78,16 +77,16 @@ class EventSubClient(web.Application):
         self._client_id = client_id
         self._client_secret = client_secret
 
-        self._client: Client = None  # type: ignore
+        self._client: Optional[Client] = None
         self._client_ready = asyncio.Event()
 
     async def subscribe(
-        self, topics: Union[EventSubType, list[EventSubType]], channels: list[Union[str, int, Channel]]
+        self, topics: Union[EventSubType, List[EventSubType]], channels: List[Union[str, int, Channel]]
     ) -> None:
         pass
 
-    async def _callback(self, request: web.Request):
-        pass
+    async def _callback(self, request: web.Request) -> web.Response:
+        ...
 
     async def _run(self) -> None:
         logger.info(f"Starting EventSub sever on host: {self._host.host}, port: {self._host.port}")

@@ -4,32 +4,32 @@ import asyncio
 import inspect
 import shlex
 from types import FunctionType
-from typing import AnyStr, Collection, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Callable, Collection, Coroutine, Dict, Any, Optional, Type, TypeVar, Union, List, cast
 
 from .context import Context
 
 __all__ = ("Command", "command")
 
-Callback = TypeVar("Callback", bound=FunctionType)
+Callback = Callable[..., Coroutine[Any, Any, None]]
 
 
-class Command:
+class Command():
     def __init__(
         self,
         callback: Callback,
         *,
         name: Optional[str] = None,
-        aliases: Optional[List[str]] = None,
+        aliases: Optional[Collection[str]] = None,
         positional_delimiter: Optional[str] = "=",
         **kwargs,
     ):
         self._callback = callback
-        self._name = name
+        self._name = name or callback.__name__
         self._aliases = aliases or []
         self._pos_delim = positional_delimiter
 
         sig = inspect.signature(callback)
-        self.params = sig.parameters.copy()  # type: ignore
+        self.params = sig.parameters.copy()
 
         self._instance = None
         self._component = kwargs.pop("__component__", None)
@@ -43,13 +43,13 @@ class Command:
 
     @property
     def aliases(self) -> list:
-        return self._aliases
+        return list(self._aliases)
 
     def _parse_args(
         self, to_parse: str, /
     ) -> tuple[
-        dict[str, dict[str, int | str | list[str] | None] | dict[str, int | str] | dict[str, int | list[str]]],
-        dict[str, str],
+        Dict[str, Dict[str, Union[int, str, List[str], None, Dict[str, Union[int, str]],  Dict[str, int | list[str]]]]],
+        Dict[str, str],
     ]:
 
         splat = shlex.split(to_parse)
@@ -96,7 +96,8 @@ class Command:
     async def invoke(self, context: Context) -> None:
         content = context._message_copy.content
 
-        to_parse = content.removeprefix(context.prefix)
+        prefix = context.prefix or ""
+        to_parse = content.removeprefix(context.prefix or "")
         to_parse = to_parse.removeprefix(context.invoked_with)
         to_parse = to_parse.strip()
 
@@ -112,24 +113,24 @@ class Command:
 
         await self._callback(self._instance, context, *args, **kwargs)
 
+CommandT = TypeVar("CommandT", bound=Command)
 
 def command(
     *,
     name: Optional[str] = None,
     aliases: Optional[Collection[str]] = None,
-    cls: Optional[Command] = Command,
+    cls: Type[CommandT] = Command,
     positional_delimiter: Optional[str] = "=",
 ):
-    # noinspection PyTypeChecker
     if cls and not issubclass(cls, Command):
         raise TypeError(f"cls parameter must derive from {Command!r}.")
 
-    def wrapped(func: Callback):
+    def wrapped(func: Callback) -> CommandT:
         if not asyncio.iscoroutinefunction(func):
             raise TypeError("Command callbacks must be coroutines.")
 
-        return cls(
-            name=name or func.__name__, callback=func, aliases=aliases, positional_delimiter=positional_delimiter
-        )
+        return cast(CommandT, cls(
+            name=name or func.__name__, callback=func, aliases=aliases or [], positional_delimiter=positional_delimiter
+        ))
 
     return wrapped

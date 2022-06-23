@@ -5,7 +5,7 @@ import importlib.util
 import sys
 import traceback
 import types
-from typing import Coroutine, Dict, List, Optional, Union
+from typing import Callable, Coroutine, Dict, List, Optional, Type, Union, Any
 
 from twitchio import Client, Message
 
@@ -16,7 +16,7 @@ from .errors import *
 
 
 class Bot(Client):
-    def __init__(self, prefix: Union[list, callable, Coroutine], *args, **kwargs):
+    def __init__(self, prefix: Union[List, Callable[..., str], Callable[..., Coroutine[Any, Any, str]]], *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.__commands: Dict[str, Command] = {}
@@ -45,13 +45,13 @@ class Bot(Client):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._prepare_prefixes())
 
-        super().run(token=token)
+        super().run()
 
     async def start(self, token: Optional[str] = None) -> None:
         if not self._in_context:
             raise RuntimeError('"bot.start" can only be used within the bot async context manager.')
 
-        await super().start(token=token)
+        await super().start()
 
     @property
     def prefixes(self) -> List[str]:
@@ -70,11 +70,10 @@ class Bot(Client):
         return self.__extensions.copy()
 
     async def _prepare_prefixes(self) -> None:
-        if asyncio.iscoroutine(self._unassigned_prefixes):
-            prefixes = await self._unassigned_prefixes(self)
-
-        elif callable(self._unassigned_prefixes):
+        if callable(self._unassigned_prefixes):
             prefixes = self._unassigned_prefixes(self)
+            if asyncio.iscoroutine(prefixes):
+                prefixes = await prefixes
 
         else:
             prefixes = self._unassigned_prefixes
@@ -90,8 +89,7 @@ class Bot(Client):
         else:
             raise TypeError("prefix parameter must be a str, list of str or callable/coroutine returning either.")
 
-    def get_context(self, message: Message, *, cls: Optional[Context] = Context) -> Context:
-        # noinspection PyTypeChecker
+    def get_context(self, message: Message, *, cls: Type[Context] = Context) -> Context:
         if cls and not issubclass(cls, Context):
             raise TypeError(f"cls parameter must derive from {Context!r}.")
 
@@ -113,7 +111,7 @@ class Bot(Client):
         if not asyncio.iscoroutinefunction(command._callback):
             raise TypeError("Command callbacks must be coroutines.")
 
-        command._instance = command._component or self
+        command._instance = command._component or self # type: ignore
 
         self.__commands[command.name] = command
 
@@ -198,7 +196,7 @@ class Bot(Client):
         sys.modules[name] = module
 
         try:
-            spec.loader.exec_module(module)
+            spec.loader.exec_module(module) # type: ignore
         except Exception as e:
             del sys.modules[name]
             raise ExtensionLoadFailureError(e) from e

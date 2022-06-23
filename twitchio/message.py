@@ -20,7 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import Optional
+from typing import Optional, cast
 
 from .channel import Channel
 from .chatter import PartialChatter
@@ -53,9 +53,9 @@ class Message:
         self._tags = payload.tags
         self._badges: dict = payload.badges
 
-        self._id: str = self._tags.get("id") or self._tags.get("message-id")
-        self._tid: str = self._tags.get("thread-id")
-        self.content: Optional[str] = payload.message
+        self._id: str = self._tags.get("id") or self._tags.get("message-id") # type: ignore
+        self._tid: Optional[str] = self._tags.get("thread-id")
+        self.content: str = cast(str, payload.message)
         self.channel: Optional[Channel] = channel
         self.author: PartialChatter = chatter
 

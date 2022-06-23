@@ -27,7 +27,7 @@ import asyncio
 import datetime
 import sys
 import traceback
-from typing import Callable, Optional
+from typing import Any, Callable, Coroutine, Optional, cast
 
 __all__ = ("Routine", "routine")
 
@@ -71,12 +71,12 @@ class Routine:
     ):
         self._coro = coro
         self._loop = loop or asyncio.get_event_loop()
-        self._task: asyncio.Task = None  # type: ignore
+        self._task: Optional[asyncio.Task] = None
 
         self._time = time
         self._delta = delta
 
-        self._start_time: datetime.datetime = None  # type: ignore
+        self._start_time: Optional[datetime.datetime] = None
 
         self._completed_loops = 0
 
@@ -86,7 +86,7 @@ class Routine:
 
         self._before = None
         self._after = None
-        self._error = None
+        self._error: Optional[Callable[..., Coroutine[Any, Any, None]]] = None
 
         self._stop_set = False
         self._restarting = False
@@ -124,9 +124,9 @@ class Routine:
         ----------
         stop_on_error: Optional[bool]
             Whether or not to stop and cancel the routine on error. Defaults to True.
-        \*args
+        \\*args
             The args to pass to the routine.
-        \*\*kwargs
+        \\*\\*kwargs
             The kwargs to pass to the routine.
 
         Returns
@@ -167,7 +167,7 @@ class Routine:
 
             Consider using :meth:`stop` if a graceful stop, which will complete the current iteration, is desired.
         """
-        if self._can_be_cancelled():
+        if self._can_be_cancelled() and self._task:
             self._task.cancel()
 
         if not self._restarting:
@@ -184,9 +184,9 @@ class Routine:
             If True the restart will cancel the currently running routine effective immediately and restart.
             If False a graceful stop will occur, which allows the routine to finish it's current iteration.
             Defaults to True.
-        \*args
+        \\*args
             The args to pass to the routine.
-        \*\*kwargs
+        \\*\\*kwargs
             The kwargs to pass to the routine.
 
 
@@ -200,10 +200,11 @@ class Routine:
         self._remaining_iterations = self._iterations
 
         def restart_when_over(fut, *, args=args, kwargs=kwargs):
-            self._task.remove_done_callback(restart_when_over)
+            if self._task:
+                self._task.remove_done_callback(restart_when_over)
             self.start(*args, **kwargs)
 
-        if self._can_be_cancelled():
+        if self._can_be_cancelled() and self._task:
             self._task.add_done_callback(restart_when_over)
 
             if force:
@@ -225,7 +226,7 @@ class Routine:
 
         self._after = coro
 
-    def error(self, coro: Callable):
+    def error(self, coro: Callable[..., Coroutine[Any, Any, None]]):
         """A decorator to assign a coroutine as the error handler for this routine.
 
         The error handler takes in one argument: the exception caught.
@@ -260,7 +261,7 @@ class Routine:
         """
         return self._start_time
 
-    def _can_be_cancelled(self) -> bool:
+    def _can_be_cancelled(self) -> Optional[bool]:
         return self._task and not self._task.done()
 
     async def _routine(self, *args, **kwargs) -> None:
@@ -275,7 +276,8 @@ class Routine:
                 else:
                     await self._before()
         except Exception as e:
-            await self._error(e)
+            if self._error:
+                await self._error(e)
 
             if self._stop_on_error:
                 return self.cancel()
@@ -285,7 +287,7 @@ class Routine:
             await asyncio.sleep(wait)
 
         if self._wait_first and not self._time:
-            await asyncio.sleep(self._delta)
+            await asyncio.sleep(cast(float, self._delta))
 
         if self._remaining_iterations == 0:
             self._remaining_iterations = self._iterations
@@ -299,13 +301,14 @@ class Routine:
                 else:
                     await self._coro(*args, **kwargs)
             except Exception as e:
-                await self._error(e)
+                if self._error:
+                    await self._error(e)
 
                 if self._stop_on_error:
                     return self.cancel()
 
             try:
-                self._remaining_iterations -= 1
+                self._remaining_iterations -= 1 # type: ignore
             except TypeError:
                 pass
             else:
@@ -319,7 +322,7 @@ class Routine:
             if self._time:
                 sleep = compute_timedelta(self._time + datetime.timedelta(days=self._completed_loops))
             else:
-                sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
+                sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + (self._delta or 0), 0)
 
             self._completed_loops += 1
             await asyncio.sleep(sleep)
@@ -331,7 +334,8 @@ class Routine:
                 else:
                     await self._after()
         except Exception as e:
-            await self._error(e)
+            if self._error:
+                await self._error(e)
         finally:
             return self.cancel()
 
@@ -392,7 +396,7 @@ def routine(
         if not time_:
             delta = compute_timedelta(
                 datetime.datetime.now(datetime.timezone.utc)
-                + datetime.timedelta(seconds=seconds, minutes=minutes, hours=hours)
+                + datetime.timedelta(seconds=seconds or 0, minutes=minutes or 0, hours=hours or 0)
             )
         else:
             delta = None

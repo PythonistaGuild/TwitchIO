@@ -29,9 +29,10 @@ import subprocess
 import threading
 import time
 from functools import partial
-from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
+from typing_extensions import Self
 
-import pyaudio
+import pyaudio # type: ignore
 from yt_dlp import YoutubeDL
 
 __all__ = ("Sound", "AudioPlayer")
@@ -40,17 +41,15 @@ __all__ = ("Sound", "AudioPlayer")
 logger = logging.getLogger(__name__)
 
 
-AP = TypeVar("AP", bound="AudioPlayer")
 
 has_ffmpeg: bool
 try:
     proc = subprocess.Popen("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.kill()
 except FileNotFoundError:
     has_ffmpeg = False
 else:
     has_ffmpeg = True
-finally:
-    proc.kill()
 
 
 __all__ = ("Sound", "AudioPlayer")
@@ -174,7 +173,7 @@ class Sound:
         self._rate = 48000
 
     @classmethod
-    async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):
+    async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.AbstractEventLoop] = None):
         """|coro|
 
         Search songs via YouTube ready to be played.
@@ -236,7 +235,7 @@ class AudioPlayer:
         self._pa = pyaudio.PyAudio()
         self._stream = None
 
-        self._current: Sound = None  # type: ignore
+        self._current: Optional[Sound] = None
 
         self._paused: bool = False
         self._playing: bool = False
@@ -261,7 +260,7 @@ class AudioPlayer:
                 continue
 
             self._devices[index] = OutputDevice(
-                name=device["name"], index=device["index"], channels=device["maxOutputChannels"]
+                name=str(device["name"]), index=int(device["index"]), channels=int(device["maxOutputChannels"])
             )
 
     def play(self, sound: Sound, *, replace: bool = False) -> None:
@@ -288,6 +287,9 @@ class AudioPlayer:
             format=pyaudio.paInt16, output=True, channels=sound.channels, rate=sound.rate, output_device_index=device
         )
 
+        if not sound.proc or not sound.proc.stdout:
+            return
+        
         bytes_ = sound.proc.stdout.read(4096)
 
         self._playing = True
@@ -309,7 +311,8 @@ class AudioPlayer:
         asyncio.run_coroutine_threadsafe(self._callback(), loop=self._loop)
 
     def _clean(self, sound: Sound):
-        sound.proc.kill()
+        if sound.proc:
+            sound.proc.kill()
         self._stream = None
 
         self._current = None
@@ -380,6 +383,9 @@ class AudioPlayer:
     def active_device(self, device: OutputDevice) -> None:
         if not isinstance(device, OutputDevice):
             raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
+        
+        if not self._current:
+            return
 
         self._use_device = device
         if not self._stream:
@@ -399,7 +405,7 @@ class AudioPlayer:
         self._paused = False
 
     @classmethod
-    def with_device(cls, *, callback: Callable[..., Coroutine[Any, Any, None]], device: OutputDevice) -> AP:
+    def with_device(cls, *, callback: Callable[..., Coroutine[Any, Any, None]], device: OutputDevice) -> Self:
         """Method which returns a player ready to be used with the given :class:`OutputDevice`.
 
         Returns
