@@ -308,7 +308,7 @@ class Routine:
                     return self.cancel()
 
             try:
-                self._remaining_iterations -= 1 # type: ignore
+                self._remaining_iterations -= 1  # type: ignore
             except TypeError:
                 pass
             else:
@@ -322,7 +322,9 @@ class Routine:
             if self._time:
                 sleep = compute_timedelta(self._time + datetime.timedelta(days=self._completed_loops))
             else:
-                sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + (self._delta or 0), 0)
+                sleep = max(
+                    (start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + (self._delta or 0), 0
+                )
 
             self._completed_loops += 1
             await asyncio.sleep(sleep)

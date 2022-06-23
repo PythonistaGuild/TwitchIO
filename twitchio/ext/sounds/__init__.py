@@ -30,16 +30,15 @@ import threading
 import time
 from functools import partial
 from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
-from typing_extensions import Self
 
-import pyaudio # type: ignore
+import pyaudio  # type: ignore
+from typing_extensions import Self
 from yt_dlp import YoutubeDL
 
 __all__ = ("Sound", "AudioPlayer")
 
 
 logger = logging.getLogger(__name__)
-
 
 
 has_ffmpeg: bool
@@ -289,7 +288,7 @@ class AudioPlayer:
 
         if not sound.proc or not sound.proc.stdout:
             return
-        
+
         bytes_ = sound.proc.stdout.read(4096)
 
         self._playing = True
@@ -383,7 +382,7 @@ class AudioPlayer:
     def active_device(self, device: OutputDevice) -> None:
         if not isinstance(device, OutputDevice):
             raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
-        
+
         if not self._current:
             return
 

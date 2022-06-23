@@ -53,7 +53,7 @@ class Message:
         self._tags = payload.tags
         self._badges: dict = payload.badges
 
-        self._id: str = self._tags.get("id") or self._tags.get("message-id") # type: ignore
+        self._id: str = self._tags.get("id") or self._tags.get("message-id")  # type: ignore
         self._tid: Optional[str] = self._tags.get("thread-id")
         self.content: str = cast(str, payload.message)
         self.channel: Optional[Channel] = channel

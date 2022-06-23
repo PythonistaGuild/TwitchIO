@@ -4,7 +4,7 @@ import asyncio
 import inspect
 import shlex
 from types import FunctionType
-from typing import Callable, Collection, Coroutine, Dict, Any, Optional, Type, TypeVar, Union, List, cast
+from typing import Any, Callable, Collection, Coroutine, Dict, List, Optional, Type, TypeVar, Union, cast
 
 from .context import Context
 
@@ -13,7 +13,7 @@ __all__ = ("Command", "command")
 Callback = Callable[..., Coroutine[Any, Any, None]]
 
 
-class Command():
+class Command:
     def __init__(
         self,
         callback: Callback,
@@ -48,7 +48,7 @@ class Command():
     def _parse_args(
         self, to_parse: str, /
     ) -> tuple[
-        Dict[str, Dict[str, Union[int, str, List[str], None, Dict[str, Union[int, str]],  Dict[str, int | list[str]]]]],
+        Dict[str, Dict[str, Union[int, str, List[str], None, Dict[str, Union[int, str]], Dict[str, int | list[str]]]]],
         Dict[str, str],
     ]:
 
@@ -113,7 +113,9 @@ class Command():
 
         await self._callback(self._instance, context, *args, **kwargs)
 
+
 CommandT = TypeVar("CommandT", bound=Command)
+
 
 def command(
     *,
@@ -129,8 +131,14 @@ def command(
         if not asyncio.iscoroutinefunction(func):
             raise TypeError("Command callbacks must be coroutines.")
 
-        return cast(CommandT, cls(
-            name=name or func.__name__, callback=func, aliases=aliases or [], positional_delimiter=positional_delimiter
-        ))
+        return cast(
+            CommandT,
+            cls(
+                name=name or func.__name__,
+                callback=func,
+                aliases=aliases or [],
+                positional_delimiter=positional_delimiter,
+            ),
+        )
 
     return wrapped

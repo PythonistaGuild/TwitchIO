@@ -5,7 +5,7 @@ import importlib.util
 import sys
 import traceback
 import types
-from typing import Callable, Coroutine, Dict, List, Optional, Type, Union, Any
+from typing import Any, Callable, Coroutine, Dict, List, Optional, Type, Union
 
 from twitchio import Client, Message
 
@@ -16,7 +16,9 @@ from .errors import *
 
 
 class Bot(Client):
-    def __init__(self, prefix: Union[List, Callable[..., str], Callable[..., Coroutine[Any, Any, str]]], *args, **kwargs):
+    def __init__(
+        self, prefix: Union[List, Callable[..., str], Callable[..., Coroutine[Any, Any, str]]], *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
 
         self.__commands: Dict[str, Command] = {}
@@ -111,7 +113,7 @@ class Bot(Client):
         if not asyncio.iscoroutinefunction(command._callback):
             raise TypeError("Command callbacks must be coroutines.")
 
-        command._instance = command._component or self # type: ignore
+        command._instance = command._component or self  # type: ignore
 
         self.__commands[command.name] = command
 
@@ -196,7 +198,7 @@ class Bot(Client):
         sys.modules[name] = module
 
         try:
-            spec.loader.exec_module(module) # type: ignore
+            spec.loader.exec_module(module)  # type: ignore
         except Exception as e:
             del sys.modules[name]
             raise ExtensionLoadFailureError(e) from e
