@@ -78,7 +78,7 @@ setup(
     packages=[
         "twitchio",
         "twitchio.ext.commands",
-        "twitchio.ext.pubsub",
+        #"twitchio.ext.pubsub", uncomment this once the pubsub ext is made
         "twitchio.ext.routines",
         "twitchio.ext.eventsub",
         "twitchio.ext.sounds",
