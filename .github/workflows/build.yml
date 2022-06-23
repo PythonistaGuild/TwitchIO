@@ -70,14 +70,18 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: install black
+    - name: install deps
       run: |
         python -m ensurepip
-        pip install black
+        pip install black isort
 
-    - name: run linter
+    - name: run black
       run: |
-        black twitchio --line-length 120 --verbose --check
+        black twitchio --verbose --check
+    
+    - name: run isort
+      run: |
+        isort twitchio --check
   
   pyright: # adapted from rapptz/discord.py's pyright lint
     runs-on: ubuntu-latest

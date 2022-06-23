@@ -96,7 +96,6 @@ class Command:
     async def invoke(self, context: Context) -> None:
         content = context._message_copy.content
 
-        prefix = context.prefix or ""
         to_parse = content.removeprefix(context.prefix or "")
         to_parse = to_parse.removeprefix(context.invoked_with)
         to_parse = to_parse.strip()
