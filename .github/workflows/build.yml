@@ -84,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ '3.8' ]
+        python-version: [ '3.9' ]
 
     name: pyright ${{ matrix.python-version }}
     steps:
