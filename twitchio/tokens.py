@@ -35,6 +35,13 @@ if TYPE_CHECKING:
     from .http import HTTPHandler
     from .client import Client
 
+__all__ = (
+    "BaseToken",
+    "Token",
+    "BaseTokenHandler",
+    "SimpleTokenHandler"
+)
+
 VALIDATE_URL = URL("https://id.twitch.tv/oauth2/validate")
 REFRESH_URL = URL("https://id.twitch.tv/oauth2/refresh")
 

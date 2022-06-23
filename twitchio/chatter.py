@@ -24,6 +24,7 @@ from typing import Optional
 
 from .parser import IRCPayload
 
+__all__ = ("PartialChatter",)
 
 class PartialChatter:
 

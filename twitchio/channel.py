@@ -27,6 +27,7 @@ from .abc import Messageable
 from .cache import Cache
 from .chatter import PartialChatter
 
+__all__ = ("Channel",)
 
 class Channel(Messageable):
 

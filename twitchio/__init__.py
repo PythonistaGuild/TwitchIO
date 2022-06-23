@@ -26,11 +26,10 @@ __license__ = "MIT"
 __copyright__ = "Copyright 2017-2022 (c) TwitchIO"
 __version__ = "3.0.0"
 
-from .channel import Channel
-from .client import Client
-from .message import Message
-from .parser import IRCPayload
-from .chatter import PartialChatter
-from .tokens import Token, BaseTokenHandler, SimpleTokenHandler
+from .channel import *
+from .client import *
+from .message import *
+from .chatter import *
+from .tokens import *
 from .models import *
 from .exceptions import *

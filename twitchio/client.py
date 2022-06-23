@@ -44,6 +44,7 @@ if TYPE_CHECKING:
 
 _initial_channels_T = Optional[Union[List[str], Tuple[str], Callable[[], List[str]], Coroutine[Any, Any, None]]]
 
+__all__ = ("Client",)
 
 class Client:
     """THe main Twitch HTTP and IRC Client.

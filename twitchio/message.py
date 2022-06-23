@@ -26,6 +26,7 @@ from .channel import Channel
 from .parser import IRCPayload
 from .chatter import PartialChatter
 
+__all__ = ("Message",)
 
 class Message:
     """TwitchIO Message object representing a messages received via Twitch.
