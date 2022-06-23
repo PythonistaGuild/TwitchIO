@@ -339,6 +339,8 @@ class Bot(Client):
         context = await self.get_context(message)
         await self.invoke(context)
 
+        message.content = original_content
+
     async def invoke(self, context):
         # TODO Docs
         if not context.prefix or not context.is_valid:
