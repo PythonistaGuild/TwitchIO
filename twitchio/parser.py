@@ -129,7 +129,7 @@ class IRCPayload:
         elif zero.startswith("@"):
             action = parts[2] if user else parts[1]
 
-            zero = zero.removeprefix("@")
+            zero = zero.lstrip("@")
 
             raw_tags = zero.split(";")
             for tag in raw_tags:
@@ -159,7 +159,7 @@ class IRCPayload:
             names = data.split(":")[-1].split()
             message = None
             user = parts[2]
-            channel = parts[4].removeprefix("#")
+            channel = parts[4].lstrip("#")
         else:
             names = None
             message = data.split(":")[-1]
