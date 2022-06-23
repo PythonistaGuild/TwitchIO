@@ -294,7 +294,7 @@ class Bot(Client):
         content = message.content
         if "reply-parent-msg-id" in message.tags:  # Remove @username from reply message
             content = content.split(" ", 1)[1]
-        content = content[len(prefix)::].lstrip()  # Strip prefix and remainder whitespace
+        content = content[len(prefix) : :].lstrip()  # Strip prefix and remainder whitespace
         view = StringParser()
         parsed = view.process_string(content)  # Return the string as a dict view
 
