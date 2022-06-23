@@ -329,10 +329,14 @@ class Bot(Client):
             The message object to get content of and context for.
 
         """
+        original_content = message.content
+
         if "reply-parent-msg-id" in message.tags:
             message.content = message.content.split(" ", 1)[1]
         context = await self.get_context(message)
         await self.invoke(context)
+
+        message.content = original_content
 
     async def invoke(self, context):
         # TODO Docs
