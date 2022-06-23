@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from __future__ import annotations
+from typing import Optional
 
 __all__ = (
     "TwitchIOException",
@@ -69,10 +70,11 @@ class HTTPException(TwitchIOException):
 
 
 class HTTPResponseException(HTTPException):
-    def __init__(self, response: aiohttp.ClientResponse, data: ErrorType) -> None:
+    def __init__(self, response: aiohttp.ClientResponse, data: ErrorType, *, message: Optional[str] = None) -> None:
         self.status = response.status
-        self.message = data["message"]
-        super().__init__(data["message"])
+        self._response = response
+        self.message = message or data["message"]
+        super().__init__(self.message)
 
 
 class Unauthorized(HTTPResponseException):
