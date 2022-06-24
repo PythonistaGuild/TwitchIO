@@ -70,7 +70,7 @@ include = [
     "twitchio",
     "twitchio/ext/commands",
     "twitchio/ext/eventsub",
-    "twitchio/ext/pubsub",
+#    "twitchio/ext/pubsub",
     "twitchio/ext/routines",
     "twitchio/ext/sounds"
 ]
