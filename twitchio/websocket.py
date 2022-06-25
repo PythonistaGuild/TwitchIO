@@ -340,7 +340,11 @@ class WSConnection:
                 self.is_ready.set()
             else:
                 self._cache_add(parsed)
-        elif code in {2, 3, 4, 366, 372, 375, 376}:
+        elif code in {2, 3, 4, 366, 372, 375}:
+            return
+        elif code == 376:
+            if not self._initial_channels:
+                self.is_ready.set()
             return
         elif self.is_ready.is_set():
             return
