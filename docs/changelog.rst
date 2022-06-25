@@ -4,8 +4,9 @@ Master
 ======
 - TwitchIO
     - Bug fixes
-        - Added ``self.registered_callbacks = {}`` to Bot and :func:`Client.from_client_credentials`
+        - Added ``self.registered_callbacks = {}`` to :func:`~twitchio.Client.from_client_credentials`
         - Add duration attribute to :class:`twitchio.Clip`
+        - Allow empty or missing initial_channels to trigger :func:`~twitchio.Client.event_ready`.
 
 - ext.commands
     - Bug fixes
