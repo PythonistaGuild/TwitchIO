@@ -395,3 +395,24 @@ class SimpleTokenHandler(BaseTokenHandler):
 
     async def get_irc_token(self, shard_id: int) -> Token:
         return self.user_token
+
+
+class IRCTokenHandler(BaseTokenHandler):
+    """
+    A token handler to be used for IRC-only connections.
+    You will not be able to make API calls while using this token handler.
+    This handler does not accept a Client ID, or refresh token.
+    If you want functionality such as refreshing your token, use the :class:`SimpleTokenHandler`, or subclass :class:`BaseTokenHandler`
+
+    Attributes
+    -----------
+    user_token: :class:`Token`
+        The token to use for all requests
+    """
+
+    def __init__(self, access_token: str) -> None:
+        super().__init__()
+        self.user_token = Token(access_token)
+
+    async def get_irc_token(self, shard_id: int) -> Token:
+        return self.user_token
