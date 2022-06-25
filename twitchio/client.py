@@ -28,12 +28,13 @@ import sys
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, Dict, List, Optional, Tuple, Union
 
-from twitchio.http import HTTPHandler
+from twitchio.http import HTTPAwaitableAsyncIterator, HTTPHandler
 
 from .channel import Channel
 from .chatter import PartialChatter
 from .limiter import IRCRateLimiter
 from .message import Message
+from .models import PartialUser, User
 from .parser import IRCPayload
 from .shards import ShardInfo
 from .tokens import BaseTokenHandler
@@ -97,7 +98,7 @@ class Client:
         self._initial_channels: _initial_channels_T = initial_channels or []
 
         self._limiter = IRCRateLimiter(status="verified" if verified else "user", bucket="joins")
-        self._http = HTTPHandler(None, token_handler, **kwargs)
+        self._http = HTTPHandler(None, token_handler, client=self, **kwargs)
 
         self._eventsub: Optional[EventSubClient] = None
         if eventsub:
@@ -261,7 +262,7 @@ class Client:
     def get_message(self, id_: str, /) -> Optional[Message]:
         """Method which returns a message from cache if it exists.
 
-        Could be None if the message is not in cache.
+        Could be ``None`` if the message is not in cache.
 
         Parameters
         ----------
@@ -282,6 +283,69 @@ class Client:
                 break
 
         return message
+
+    async def fetch_users(
+        self, names: Optional[List[str]] = None, ids: Optional[List[int]] = None, target: Optional[PartialUser] = None
+    ) -> List[User]:
+        """|coro|
+
+        Fetches users from twitch. You can provide any combination of up to 100 names and ids, but you must pass at least 1.
+
+        Parameters
+        -----------
+        names: Optional[List[:class:`str`]]
+            A list of usernames
+        ids: Optional[List[Union[:class:`str`, :class:`int`]]
+            A list of IDs
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
+
+        Returns
+        --------
+        List[:class:`~twitchio.User`]
+        """
+        if not names and not ids:
+            raise ValueError("No names or ids passed to fetch_users")
+
+        data: HTTPAwaitableAsyncIterator[User] = self._http.get_users(ids=ids, logins=names, target=target)
+        data.set_adapter(lambda http, data: User(http, data))
+
+        return await data
+
+    async def fetch_user(
+        self, name: Optional[str] = None, id: Optional[int] = None, target: Optional[PartialUser] = None
+    ) -> User:
+        """|coro|
+
+        Fetches a user from twitch. This is the same as :meth:`~Client.fetch_users`, but only returns one :class:`~twitchio.User`, instead of a list.
+        You may only provide either name or id, not both.
+
+        Parameters
+        -----------
+        name: Optional[:class:`str`]
+            A username
+        id: Optional[:class:`int`]
+            A user ID
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
+
+        Returns
+        --------
+        :class:`~twitchio.User`
+        """
+        if not name and not id:
+            raise ValueError("Expected a name or id")
+
+        if name and id:
+            raise ValueError("Expected a name or id, got nothing")
+
+        data: HTTPAwaitableAsyncIterator[User] = self._http.get_users(
+            ids=[id] if id else None, logins=[name] if name else None, target=target
+        )
+        data.set_adapter(lambda http, data: User(http, data))
+        resp = await data
+
+        return resp[0]
 
     async def event_shard_ready(self, number: int) -> None:
         """|coro|

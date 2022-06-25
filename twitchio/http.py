@@ -33,6 +33,7 @@ from typing import (
     Callable,
     ClassVar,
     Dict,
+    Generator,
     Generic,
     List,
     Literal,
@@ -53,6 +54,7 @@ from .tokens import BaseToken, BaseTokenHandler
 from .utils import MISSING, json_dumper, json_loader
 
 if TYPE_CHECKING:
+    from .client import Client
     from .models import PartialUser, User
     from .types.extensions import ExtensionBuilder as ExtensionBuilderType
     from .types.payloads import BasePayload
@@ -145,7 +147,7 @@ class HTTPAwaitableAsyncIterator(Generic[T]):
         self.page = MISSING
         return [self.adapter(self.http, x) for x in data]
 
-    def __await__(self) -> Any:
+    def __await__(self) -> Generator[Any, None, List[T]]:
         return self._await_and_discard().__await__()
 
     def __aiter__(self):
@@ -184,6 +186,7 @@ class HTTPHandler(Generic[TokenHandlerT, T]):
         proxy: Optional[str] = None,
         proxy_auth: Optional[aiohttp.BasicAuth] = None,
         trace: Optional[aiohttp.TraceConfig] = None,
+        client: Optional[Client] = None,
         **_,
     ) -> None:
         self.loop: Optional[asyncio.AbstractEventLoop] = loop
@@ -195,6 +198,7 @@ class HTTPHandler(Generic[TokenHandlerT, T]):
         self._session: Optional[aiohttp.ClientSession] = None
 
         self.buckets = HTTPRateLimiter()
+        self.client: Optional[Client] = client
 
     async def prepare(self):
         if not self.loop:
@@ -928,7 +932,7 @@ class HTTPHandler(Generic[TokenHandlerT, T]):
         )
 
     def get_users(
-        self, ids: List[int], logins: List[str], target: Optional[PartialUser] = None
+        self, ids: Optional[List[int]], logins: Optional[List[str]], target: Optional[PartialUser] = None
     ) -> HTTPAwaitableAsyncIterator:
         q = []
         if ids:
