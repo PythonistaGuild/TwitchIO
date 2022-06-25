@@ -128,22 +128,19 @@ class PartialUser:
         if self.name in self._http.client._connection._cache:
             return Channel(name=self.name, websocket=self._http.client._connection)
 
-    async def fetch(self, force=False) -> User:
+    async def fetch(self) -> User:
         """|coro|
 
-        Fetches the full user from the api or cache
-
-        Parameters
-        -----------
-        force : :class:`bool`
-            Whether to force a fetch from the api or try to get from the cache first. Defaults to False
+        Fetches the full user from the api
 
         Returns
         --------
         :class:`User` The full user associated with this :class:`PartialUser`
         """
-        data = await self._http.get_users(ids=[self.id], target=self, force=force)  # TODO client cache
-        return data[0]
+        if not self._http.client:
+            raise RuntimeError("No client attached to underlying HTTP session")
+
+        return await self._http.client.fetch_user(id=self.id, target=self)
 
     async def edit(self, description: str) -> None:
         """|coro|
