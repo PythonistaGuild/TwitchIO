@@ -398,32 +398,32 @@ class CustomReward:
         The cost of the reward in Channel Points
     prompt: :class:`str`
         The prompt of the reward
-    enabled: :class:`bool`
+    enabled: Optional[:class:`bool`]
         Whether or not the reward is enabled. Will be `None` for Redemption events.
-    paused: :class:`bool`
+    paused: Optional[:class:`bool`]
         Whether or not the reward is paused. Will be `None` for Redemption events.
-    in_stock: :class:`bool`
+    in_stock: Optional[:class:`bool`]
         Whether or not the reward is in stock. Will be `None` for Redemption events.
-    cooldown_until: :class:`datetime.datetime`
+    cooldown_until: Optional[:class:`datetime.datetime`]
         How long until the reward is off cooldown and can be redeemed again. Will be `None` for Redemption events.
-    input_required: :class:`bool`
+    input_required: Optional[:class:`bool`]
         Whether or not the reward requires an input. Will be `None` for Redemption events.
-    redemptions_skip_queue: :class:`bool`
+    redemptions_skip_queue: Optional[:class:`bool`]
         Whether or not redemptions for this reward skips the queue. Will be `None` for Redemption events.
-    redemptions_current_stream: :class:`int`
+    redemptions_current_stream: Optional[:class:`int`]
         How many redemptions of this reward have been redeemed for this stream. Will be `None` for Redemption events.
-    max_per_stream: (:class:`bool`, :class:`int`)
+    max_per_stream: Tuple[:class:`bool`, :class:`int`]
         Whether or not a per-stream redemption limit is in place, and if so, the maximum number of redemptions allowed
         per stream. Will be `None` for Redemption events.
-    max_per_user_per_stream: (:class:`bool`, :class:`int`)
+    max_per_user_per_stream: Tuple[:class:`bool`, :class:`int`]
         Whether or not a per-user-per-stream redemption limit is in place, and if so, the maximum number of redemptions
         allowed per user per stream. Will be `None` for Redemption events.
-    cooldown: (:class:`bool`, :class:`int`)
+    cooldown: Tuple[:class:`bool`, :class:`int`]
         Whether or not a global cooldown is in place, and if so, the number of seconds until the reward can be redeemed
         again. Will be `None` for Redemption events.
-    background_color: :class:`str`
+    background_color: Optional[:class:`str`]
         Hexadecimal color code for the background of the reward.
-    image: :class:`str`
+    image: Optional[:class:`str`]
         Image URL for the reward.
     """
 
