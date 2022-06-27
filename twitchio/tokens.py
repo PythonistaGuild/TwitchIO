@@ -22,8 +22,10 @@ SOFTWARE.
 """
 from __future__ import annotations
 
+import copy
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
+from typing_extensions import Self
 
 import aiohttp
 from yarl import URL
@@ -235,9 +237,14 @@ class BaseTokenHandler:
     A base class to manage user tokens.
     Ill fill this in later
     """
+    client: Client
 
     def __init__(self) -> None:
         self.__cache: Dict[Union[User, PartialUser], Set[Token]] = {}
+
+    def _post_init(self, client: Client) -> Self:
+        self.client = client
+        return self
 
     async def get_user_token(self, user: Union[User, PartialUser], scopes: List[str]) -> Token:
         """|coro|
@@ -413,6 +420,9 @@ class IRCTokenHandler(BaseTokenHandler):
     def __init__(self, access_token: str) -> None:
         super().__init__()
         self.user_token = Token(access_token)
+
+    async def get_client_credentials(self) -> Tuple[str, Optional[str]]:
+        return None, None  # type: ignore
 
     async def get_irc_token(self, shard_id: int) -> Token:
         return self.user_token

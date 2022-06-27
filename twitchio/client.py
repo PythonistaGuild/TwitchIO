@@ -87,6 +87,7 @@ class Client:
         eventsub: Optional[EventSubClient] = None,
         **kwargs,
     ):
+        self._token_handler: BaseTokenHandler = token_handler._post_init(self)
         self._heartbeat = heartbeat
         self._verified = verified
         self._join_timeout = join_timeout
@@ -98,7 +99,7 @@ class Client:
         self._initial_channels: _initial_channels_T = initial_channels or []
 
         self._limiter = IRCRateLimiter(status="verified" if verified else "user", bucket="joins")
-        self._http = HTTPHandler(None, token_handler, client=self, **kwargs)
+        self._http = HTTPHandler(None, self._token_handler, client=self, **kwargs)
 
         self._eventsub: Optional[EventSubClient] = None
         if eventsub:
@@ -108,7 +109,6 @@ class Client:
 
         self.loop: Optional[asyncio.AbstractEventLoop] = None
         self._kwargs: Dict[str, Any] = kwargs
-        self._token_handler: BaseTokenHandler = token_handler
 
         self._is_closed = False
         self._has_acquired = False
