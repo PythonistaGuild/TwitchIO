@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 import re
 import typing
+import logging
 
 if typing.TYPE_CHECKING:
     from .websocket import WSConnection
@@ -46,6 +47,7 @@ ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "USERNOTICE", "WHISPER")
 USER_SUB = re.compile(r":(?P<user>.*)!")
 TMI = "tmi.twitch.tv"
 
+logger = logging.getLogger("twitchio.parser")
 
 def parser(data: str, nick: str):
     groups = data.split()
@@ -54,6 +56,8 @@ def parser(data: str, nick: str):
     message = None
     user = None
     badges = None
+
+    logger.debug(f'---DATA--- {data}')
 
     if action == "PING":
         return dict(action="PING")
@@ -122,6 +126,13 @@ def parser(data: str, nick: str):
                 break
             else:
                 batches.append(b)
+
+    actcode = action or code
+    if actcode:
+        level = logging.DEBUG
+        if actcode not in ["JOIN", "PART"]:
+            level = logging.INFO
+        logger.log(level, f'    parsed <{actcode}><{channel}><{user}><{message}>')
 
     return dict(
         data=data,
