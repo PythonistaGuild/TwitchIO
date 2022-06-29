@@ -793,7 +793,6 @@ class PartialUser:
         --------
         List[:class:`twitchio.ChannelTeams`]
         """
-        from .models import ChannelTeams
 
         data = await self._http.get_channel_teams(
             broadcaster_id=str(self.id),
@@ -801,15 +800,13 @@ class PartialUser:
 
         return [ChannelTeams(self._http, x) for x in data]
 
-    async def fetch_polls(self, token: str, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20):
+    async def fetch_polls(self, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20):
         """|coro|
 
         Fetches a list of polls for the specified channel/broadcaster.
 
         Parameters
         -----------
-        token: :class:`str`
-            An oauth token with the user:read:broadcast scope
         poll_ids: Optional[List[:class:`str`]]
             List of poll IDs to return. Maximum: 100
         first: Optional[:class:`int`]
@@ -819,14 +816,12 @@ class PartialUser:
         --------
         List[:class:`twitchio.Poll`]
         """
-        from .models import Poll
 
         data = await self._http.get_polls(broadcaster_id=str(self.id), target=self, poll_ids=poll_ids, first=first)
         return [Poll(self._http, x) for x in data["data"]] if data["data"] else None
 
     async def create_poll(
         self,
-        token: str,
         title: str,
         choices: List[str],
         duration: int,
@@ -841,8 +836,6 @@ class PartialUser:
 
         Parameters
         -----------
-        token: :class:`str`
-            An oauth token with the user:read:broadcast scope
         title: :class:`str`
             Question displayed for the poll.
         choices: List[:class:`str`]
@@ -862,7 +855,6 @@ class PartialUser:
         --------
         List[:class:`twitchio.Poll`]
         """
-        from .models import Poll
 
         data = await self._http.post_poll(
             broadcaster_id=str(self.id),
@@ -884,8 +876,6 @@ class PartialUser:
 
         Parameters
         -----------
-        token: :class:`str`
-            An oauth token with the user:read:broadcast scope
         poll_id: :class:`str`
             ID of the poll.
         status: Literal["TERMINATED", "ARCHIVED"]
@@ -897,7 +887,6 @@ class PartialUser:
         --------
         :class:`twitchio.Poll`
         """
-        from .models import Poll
 
         data = await self._http.patch_poll(broadcaster_id=str(self.id), target=self, id=poll_id, status=status)
         return Poll(self._http, data[0])
