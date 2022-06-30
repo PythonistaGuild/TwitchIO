@@ -49,6 +49,7 @@ MESSAGE_RE = re.compile(r":(?P<useraddr>\S+) (?P<action>\S+) #(?P<channel>\S+)( 
 
 logger = logging.getLogger("twitchio.parser")
 
+
 def parser(data: str, nick: str):
     groups = data.split()
     action = groups[1] if groups[1] == "JOIN" else groups[-2]
@@ -57,18 +58,17 @@ def parser(data: str, nick: str):
     user = None
     badges = None
 
-    logger.debug(f'---DATA--- {data}')
+    logger.debug(f"---DATA--- {data}")
 
     if action == "PING":
         return dict(action="PING")
 
-    elif (  groups[1] in ACTIONS
-         or groups[2] in ACTIONS
-         or (len(groups)>3 and groups[3] in {"PRIVMSG", "PRIVMSG(ECHO)"})
-         ):
+    elif (
+        groups[1] in ACTIONS or groups[2] in ACTIONS or (len(groups) > 3 and groups[3] in {"PRIVMSG", "PRIVMSG(ECHO)"})
+    ):
         result = re.search(MESSAGE_RE, data)
         if not result:
-            logger.error(f' ****** MESSAGE_RE Failed! ******')
+            logger.error(f" ****** MESSAGE_RE Failed! ******")
             return None  # raise exception?
         user = result.group("useraddr").split("!")[0]
         action = result.group("action")
@@ -107,7 +107,7 @@ def parser(data: str, nick: str):
         if channel[0] == "#":
             channel = channel[1:]
         else:
-            logger.warning(f' (353) parse failed? ||{channel}||')
+            logger.warning(f" (353) parse failed? ||{channel}||")
 
         for b in groups[5:-1]:
             if b[0] == ":":
@@ -124,7 +124,7 @@ def parser(data: str, nick: str):
         level = logging.DEBUG
         if actcode not in ["JOIN", "PART"]:
             level = logging.INFO
-        logger.log(level, f'    parsed <{actcode}><{channel}><{user}><{message}>')
+        logger.log(level, f"    parsed <{actcode}><{channel}><{user}><{message}>")
 
     return dict(
         data=data,
