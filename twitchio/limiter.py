@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -141,11 +141,7 @@ class HTTPRateLimiter:
             return self.buckets[user]
 
         name: str
-        if user:
-            name = cast(str, user.name)
-        else:
-            name = "Client-Credential"
-
+        name = cast(str, user.name) if user else "Client-Credential"
         bucket = RateLimitBucket(name)
         self.buckets[user] = bucket
         return bucket

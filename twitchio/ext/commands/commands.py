@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import inspect
 import shlex
-from types import FunctionType
 from typing import Any, Callable, Collection, Coroutine, Dict, List, Optional, Type, TypeVar, Union, cast
 
 from typing_extensions import reveal_type
@@ -83,10 +82,10 @@ class Command:
                 positionals[name] = {"index": index, "value": splat_copy.pop(0)}
 
             elif param.kind == param.KEYWORD_ONLY:
-                keywords[name] = " ".join(v for v in splat_copy)
+                keywords[name] = " ".join(splat_copy)
 
             else:
-                positionals[name] = {"index": index, "value": [v for v in splat_copy]}
+                positionals[name] = {"index": index, "value": list(splat_copy)}
 
             index += 1
 

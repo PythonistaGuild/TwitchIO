@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2022 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ from typing import Optional
 
 class Cache:
     def __init__(self, *, size: Optional[int] = None):
-        self.size = size if size else 99999999  # Arbitrarily large size...
+        self.size = size or 99999999 # Arbitrarily large size...
 
         self.nodes = collections.OrderedDict()
 

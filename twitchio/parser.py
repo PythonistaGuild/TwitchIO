@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2021 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -82,10 +82,7 @@ class IRCPayload:
 
     @classmethod
     def parse(cls, data: str) -> list:
-        if not data:
-            return []
-
-        return [cls._parse(data) for data in data.split("\n")]
+        return [cls._parse(data) for data in data.split("\n")] if data else []
 
     @classmethod
     def _parse(cls, data: str):

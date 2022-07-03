@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2022 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -240,15 +240,12 @@ class HTTPHandler(Generic[TokenHandlerT, T]):
         return token
 
     async def request(self, route: Route) -> Any:
-        headers = {}
-
         token: BaseToken = await self._get_token_from_route(route)
         client_id, _ = await self.token_handler.get_client_credentials()
         is_fresh_token = False
 
         raw_token = await token.get(self, self.token_handler, cast(aiohttp.ClientSession, self._session))
-        headers["Authorization"] = f"Bearer {raw_token}"
-        headers["Client-ID"] = client_id
+        headers = {"Authorization": f"Bearer {raw_token}", "Client-ID": client_id}
         bucket: RateLimitBucket = self.buckets.get_bucket(route.target)
 
         await bucket.acquire()

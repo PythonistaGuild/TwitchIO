@@ -105,7 +105,7 @@ class Bot(Client):
 
     def add_command(self, command: Command) -> None:
         if not isinstance(command, Command):
-            raise TypeError(f"The command argument must be a subclass of commands.Command.")
+            raise TypeError("The command argument must be a subclass of commands.Command.")
 
         if command.name in self.commands or any(x in self.commands for x in command.aliases):
             raise ValueError(f'Command "{command.name}" is already registered command or alias.')
@@ -119,9 +119,9 @@ class Bot(Client):
 
     def remove_command(self, command: Command) -> None:
         if not isinstance(command, Command):
-            raise TypeError(f"The command argument must be a subclass of commands.Command.")
+            raise TypeError("The command argument must be a subclass of commands.Command.")
 
-        if command.name not in self.commands and not any(x in self.commands for x in command.aliases):
+        if command.name not in self.commands and all(x not in self.commands for x in command.aliases):
             raise ValueError(f'Command "{command.name}" is not an already registered command or alias.')
 
         del self.__commands[command.name]
@@ -155,8 +155,9 @@ class Bot(Client):
         if isinstance(component, str):
             try:
                 component = self.__components[component]
-            except KeyError:
-                raise ComponentNotFoundError(f'The component "{component}" is not currently loaded.')
+            except KeyError as e:
+                raise ComponentNotFoundError(f'The component "{component}" is not currently loaded.') from e
+
 
         elif not isinstance(component, Component):
             raise TypeError(f'component argument must be of type "commands.Component" or str, not {type(component)}.')
@@ -176,8 +177,8 @@ class Bot(Client):
     def _get_extension_name(self, extension: str, package: Optional[str]) -> str:
         try:
             return importlib.util.resolve_name(extension, package)
-        except ImportError:
-            raise ExtensionNotFoundError(f'The extension "{extension}" was not found.')
+        except ImportError as e:
+            raise ExtensionNotFoundError(f'The extension "{extension}" was not found.') from e
 
     async def _remove_extension_remnants(self, name: str):
         for component_name, component in self.__components.copy().items():
@@ -205,9 +206,10 @@ class Bot(Client):
 
         try:
             entry = getattr(module, "setup")
-        except AttributeError:
+        except AttributeError as exc:
             del sys.modules[name]
-            raise NoExtensionEntryPoint(f'The extension "{extension}" has no setup coroutine.')
+            raise NoExtensionEntryPoint(f'The extension "{extension}" has no setup coroutine.') from exc
+
 
         if not asyncio.iscoroutinefunction(entry):
             del sys.modules[name]
