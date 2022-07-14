@@ -80,7 +80,7 @@ exclude = [
     "dist",
     "docs",
 ]
-reportMissingImports = "ignore"
+reportMissingImports = "none"
 reportUnnecessaryTypeIgnoreComment = "warning"
 pythonVersion = "3.9"
 typeCheckingMode = "basic"

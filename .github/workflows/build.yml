@@ -116,5 +116,5 @@ jobs:
         uses: jakebailey/pyright-action@v1
         with:
           version: '1.1.255'
-          warnings: true
-          no-comments: false
+          warnings: false
+          no-comments: true
