@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2022 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@ SOFTWARE.
 """
 from __future__ import annotations
 
-import copy
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
 from typing_extensions import Self
@@ -177,11 +176,10 @@ class Token(BaseToken):
         if "login" not in data:
             raise InvalidToken("The token provided is an app access token. These cannot be used with the Token object")
 
-        else:
-            from .models import PartialUser
+        from .models import PartialUser
 
-            self._scopes = data["scopes"]
-            self._user = PartialUser(http, data["user_id"], data["login"])
+        self._scopes = data["scopes"]
+        self._user = PartialUser(http, data["user_id"], data["login"])
 
     async def get(self, http: HTTPHandler, handler: BaseTokenHandler, session: aiohttp.ClientSession) -> str:
         """|coro|
@@ -226,10 +224,7 @@ class Token(BaseToken):
         Optional[:class:`bool`]
             Whether this token has the scope or not
         """
-        if not self._scopes:
-            return None
-
-        return scope in self._scopes
+        return scope in self._scopes if self._scopes else None
 
 
 class BaseTokenHandler:
@@ -392,10 +387,7 @@ class SimpleTokenHandler(BaseTokenHandler):
         return self.user_token
 
     async def get_client_token(self) -> str:
-        if self.client_token:
-            return self.client_token
-
-        return self.user_token.access_token
+        return self.client_token or self.user_token.access_token
 
     async def get_client_credentials(self) -> Tuple[str, Optional[str]]:
         return self.client_id, self.client_secret

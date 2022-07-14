@@ -1,6 +1,6 @@
 """MIT License
 
-Copyright (c) 2017-2022 TwitchIO
+Copyright (c) 2017-present TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -203,9 +203,7 @@ class Client:
 
         await self._shard()
 
-        shard_tasks = []
-        for shard in self._shards.values():
-            shard_tasks.append(asyncio.create_task(shard._websocket._connect()))
+        shard_tasks = [asyncio.create_task(shard._websocket._connect()) for shard in self._shards.values()]
 
         await asyncio.wait(shard_tasks)
 
