@@ -346,14 +346,14 @@ class TwitchHTTP:
         broadcaster_id: int,
         title: str,
         cost: int,
-        prompt: str = None,
-        is_enabled: bool = True,
-        background_color: str = None,
-        user_input_required: bool = False,
-        max_per_stream: int = None,
-        max_per_user: int = None,
-        global_cooldown: int = None,
-        fufill_immediatly: bool = False,
+        prompt: Optional[str] = None,
+        is_enabled: Optional[bool] = True,
+        background_color: Optional[str] = None,
+        user_input_required: Optional[bool] = False,
+        max_per_stream: Optional[int] = None,
+        max_per_user: Optional[int] = None,
+        global_cooldown: Optional[int] = None,
+        fufill_immediatly: Optional[bool] = False,
     ):
         params = [("broadcaster_id", str(broadcaster_id))]
         data = {
@@ -366,10 +366,10 @@ class TwitchHTTP:
         }
         if max_per_stream:
             data["max_per_stream"] = max_per_stream
-            data["max_per_stream_enabled"] = True
+            data["is_max_per_stream_enabled"] = True
         if max_per_user:
             data["max_per_user_per_stream"] = max_per_user
-            data["max_per_user_per_stream_enabled"] = True
+            data["is_max_per_user_per_stream_enabled"] = True
         if background_color:
             data["background_color"] = background_color
         if global_cooldown:

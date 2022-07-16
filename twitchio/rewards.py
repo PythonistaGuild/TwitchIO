@@ -33,8 +33,6 @@ from .utils import parse_timestamp
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .user import PartialUser
-
-
 __all__ = "CustomReward", "CustomRewardRedemption"
 
 
@@ -73,7 +71,6 @@ class CustomReward:
             self._broadcaster_id = obj["broadcaster_id"]
         except KeyError:
             self._broadcaster_id = obj["channel_id"]
-
         self.id = obj["id"]
         self.image = obj["image"]["url_1x"] if obj["image"] else obj["default_image"]["url_1x"]
         self.background_color = obj["background_color"]
@@ -106,7 +103,6 @@ class CustomReward:
                 obj["global_cooldown"]["is_enabled"],
                 obj["global_cooldown"]["global_cooldown_seconds"],
             )
-
         self.paused = obj["is_paused"]
         self.in_stock = obj["is_in_stock"]
         self.redemptions_skip_queue = obj["should_redemptions_skip_request_queue"]
@@ -194,7 +190,6 @@ class CustomReward:
                 if reward["id"] == self.id:
                     self.__init__(self._http, reward, self._channel)
                     break
-
         return self
 
     async def delete(self, token: str):
@@ -262,6 +257,7 @@ class CustomReward:
 
     def __repr__(self):
         return f"<CustomReward id={self.id} title={self.title} cost={self.cost}>"
+
 
 class CustomRewardRedemption:
 
