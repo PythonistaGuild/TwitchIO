@@ -462,12 +462,12 @@ class TwitchHTTP:
     async def update_reward_redemption_status(
         self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool
     ):
-        params = [("id", custom_reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
-        status = "FULFILLED" if status else "CANCELLED"
+        params = [("id", reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", custom_reward_id)]
+        status = "FULFILLED" if status else "CANCELED"
         return await self.request(
             Route(
                 "PATCH",
-                "/channel_points/custom_rewards/redemptions",
+                "channel_points/custom_rewards/redemptions",
                 query=params,
                 body={"status": status},
                 token=token,

@@ -260,6 +260,8 @@ class CustomReward:
         else:
             return [CustomRewardRedemption(x, self._http, self) for x in data]
 
+    def __repr__(self):
+        return f"<CustomReward id={self.id} title={self.title} cost={self.cost}>"
 
 class CustomRewardRedemption:
 
@@ -310,7 +312,7 @@ class CustomRewardRedemption:
                 ) from error
             raise
         else:
-            self.__init__(data["data"], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
+            self.__init__(data[0], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
             return self
 
     async def refund(self, token: str):
@@ -344,5 +346,5 @@ class CustomRewardRedemption:
                 ) from error
             raise
         else:
-            self.__init__(data["data"], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
+            self.__init__(data[0], self._http, self.reward if isinstance(self.reward, CustomReward) else None)
             return self
