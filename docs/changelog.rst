@@ -3,10 +3,15 @@
 Master
 ======
 - TwitchIO
+    - Additions
+        - Added :func:`twitchio.PartialUser.create_custom_reward` to allow custom reward creations
+        - Add duration attribute to :class:`~twitchio.Clip`
+        - Added repr for :class:`~twitchio.CustomReward`
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to :func:`~twitchio.Client.from_client_credentials`
-        - Add duration attribute to :class:`twitchio.Clip`
         - Allow empty or missing initial_channels to trigger :func:`~twitchio.Client.event_ready`.
+        - Corrected :func:`twitchio.CustomRewardRedemption.fulfill` endpoint typo and creation
+        - Corrected :func:`twitchio.CustomRewardRedemption.refund` endpoint typo and creation
 
 - ext.commands
     - Bug fixes
@@ -24,7 +29,10 @@ Massive documentation updates
 - TwitchIO
     - Additions
         - Added ``retain_cache`` kwarg to Client and Bot. Default is True.
-        - Poll endpoints added :func:`twitchio.PartialUser.fetch_polls` :func:`twitchio.PartialUser.create_poll` and :func:`twitchio.PartialUser.end_poll`
+        - Poll endpoints added:
+            - :func:`twitchio.PartialUser.fetch_polls`
+            - :func:`twitchio.PartialUser.create_poll`
+            - :func:`twitchio.PartialUser.end_poll`
         - Added :func:`twitchio.PartialUser.fetch_goals` method
         - Added :func:`twitchio.PartialUser.fetch_chat_settings` and :func:`twitchio.PartialUser.update_chat_settings` methods
         - Added :func:`twitchio.Client.part_channels` method
@@ -36,14 +44,14 @@ Massive documentation updates
         - Fix bug where # prefixed channel names and capitals in initial_channels would not trigger :func:`~twitchio.Client.event_ready`
         - Adjusted join channel rate limit handling
         - :func:`twitchio.PartialUser.create_clip` has been fixed by converting bool to string in http request
-        - :func:`twitchio.Client.fetch_cheermotes` color attribute corrected
+        - :func:`~twitchio.Client.fetch_cheermotes` color attribute corrected
         - :func:`twitchio.PartialUser.fetch_channel_teams` returns empty list if no teams found rather than unhandled error
         - Fix :class:`twitchio.CustomRewardRedemption` so :func:`twitchio.CustomReward.get_redemptions` returns correctly
 
 - ext.commands
-    - :func:`Bot.handle_commands` now also invokes on threads / replies
+    - :func:`twitchio.ext.commands.Bot.handle_commands` now also invokes on threads / replies
     - Cooldowns are now handled correctly per bucket.
-    - Fix issue with :func:`Bot.reload_module` where module is reloaded incorrectly if exception occurs
+    - Fix issue with :func:`twitchio.ext.commands.Bot.reload_module` where module is reloaded incorrectly if exception occurs
     - Additions
         - :func:`twitchio.ext.commands.Bot.handle_commands` now also invokes on threads / replies
 
@@ -70,7 +78,7 @@ Massive documentation updates
     - Fix :func:`twitchio.Client.wait_for_ready`
     - Remove loop= parameter inside :func:`twitchio.Client.wait_for` for 3.10 compatibility
     - Add ``is_broadcaster`` check to :class:`twitchio.PartialChatter`. This is accessible as ``Context.author.is_broadcaster``
-    - :func:`User.fetch_follow` will now return ``None`` if the FollowEvent does not exists
+    - :func:`twitchio.PartialUser.fetch_follow` will now return ``None`` if the FollowEvent does not exists
     - TwitchIO will now correctly handle error raised when only the prefix is typed in chat
     - Fix paginate logic in :func:`TwitchHTTP.request`
 
