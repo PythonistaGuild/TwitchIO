@@ -97,6 +97,7 @@ if on_rtd:
 else:
     extensions.append("sphinx.ext.napoleon")
 
+napoleon_use_rtype = True
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_private_with_doc = False
