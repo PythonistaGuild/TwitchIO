@@ -9,9 +9,10 @@ Master
         - Added repr for :class:`~twitchio.CustomReward`
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to :func:`~twitchio.Client.from_client_credentials`
-        - Allow empty or missing initial_channels to trigger :func:`~twitchio.Client.event_ready`.
+        - Allow empty or missing initial_channels to trigger :func:`~twitchio.Client.event_ready`
         - Corrected :func:`twitchio.CustomRewardRedemption.fulfill` endpoint typo and creation
         - Corrected :func:`twitchio.CustomRewardRedemption.refund` endpoint typo and creation
+        - Changed :func:`~twitchio.Client.join_channels` logic to handle bigger channel lists better
 
 - ext.commands
     - Bug fixes
