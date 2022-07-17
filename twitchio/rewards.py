@@ -39,6 +39,41 @@ __all__ = "CustomReward", "CustomRewardRedemption"
 class CustomReward:
     """
     Represents a Custom Reward object, as given by the api. Use :func:`User.get_custom_rewards` to fetch these
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The id of the custom reward
+    title: :class:`str`
+        The title of the custom reward
+    image: :class:`str`
+        The url of the image of the custom reward
+    background_color: :class:`str`
+        The background color of the custom reward
+    enabled: :class:`bool`
+        Whether the custom reward is enabled
+    cost: :class:`int`
+        The cost of the custom reward
+    prompt: :class:`str`
+        The prompt of the custom reward
+    input_required: :class:`bool`
+        Whether the custom reward requires input
+    max_per_stream: Tuple[:class:`bool`, :class:`int`]
+        Whether the custom reward is limited to a certain amount per stream, and how many
+    max_per_user_stream: Tuple[:class:`bool`, :class:`int`]
+        Whether the custom reward is limited to a certain amount per user per stream, and how many
+    cooldown: Tuple[:class:`bool`, :class:`int`]
+        Whether the custom reward has a cooldown, and how long it is
+    paused: :class:`bool`
+        Whether the custom reward is paused
+    in_stock: :class:`bool`
+        Whether the custom reward is in stock
+    redemptions_skip_queue: :class:`bool`
+        Whether the custom reward's redemptions skip the request queue
+    redemptions_current_stream: :class:`bool`
+        Whether the custom reward's redemptions are only valid for the current stream
+    cooldown_until: :class:`datetime.datetime`
+        The datetime the custom reward's cooldown will expire
     """
 
     __slots__ = (
@@ -112,41 +147,56 @@ class CustomReward:
     async def edit(
         self,
         token: str,
-        title: str = None,
-        prompt: str = None,
-        cost: int = None,
-        background_color: str = None,
-        enabled: bool = None,
-        input_required: bool = None,
-        max_per_stream_enabled: bool = None,
-        max_per_stream: int = None,
-        max_per_user_per_stream_enabled: bool = None,
-        max_per_user_per_stream: int = None,
-        global_cooldown_enabled: bool = None,
-        global_cooldown: int = None,
-        paused: bool = None,
-        redemptions_skip_queue: bool = None,
+        title: Optional[str] = None,
+        prompt: Optional[str] = None,
+        cost: Optional[int] = None,
+        background_color: Optional[str] = None,
+        enabled: Optional[bool] = None,
+        input_required: Optional[bool] = None,
+        max_per_stream_enabled: Optional[bool] = None,
+        max_per_stream: Optional[int] = None,
+        max_per_user_per_stream_enabled: Optional[bool] = None,
+        max_per_user_per_stream: Optional[int] = None,
+        global_cooldown_enabled: Optional[bool] = None,
+        global_cooldown: Optional[int] = None,
+        paused: Optional[bool] = None,
+        redemptions_skip_queue: Optional[bool] = None,
     ):
         """
         Edits the reward. Note that apps can only modify rewards they have made.
 
         Parameters
         -----------
-        token: the bearer token for the channel of the reward
-        title: the new title of the reward
-        prompt: the new prompt for the reward
-        cost: the new cost for the reward
-        background_color: the new background color for the reward
-        enabled: whether the reward is enabled or not
-        input_required: whether user input is required or not
-        max_per_stream_enabled: whether the stream limit should be enabled
-        max_per_stream: how many times this can be redeemed per stream
-        max_per_user_per_stream_enabled: whether the user stream limit should be enabled
-        max_per_user_per_stream: how many times a user can redeem this reward per stream
-        global_cooldown_enabled: whether the global cooldown should be enabled
-        global_cooldown: how many seconds the global cooldown should be
-        paused: whether redemptions on this reward should be paused or not
-        redemptions_skip_queue: whether redemptions skip the request queue or not
+        token: :class:`str`
+            The bearer token for the channel of the reward
+        title: Optional[:class:`str`]
+            The new title of the reward
+        prompt: Optional[:class:`str`]
+            The new prompt for the reward
+        cost: Optional[:class:`int`]
+            The new cost for the reward
+        background_color: Optional[:class:`str`]
+            The new background color for the reward
+        enabled: Optional[:class:`bool`]
+            Whether the reward is enabled or not
+        input_required: Optional[:class:`bool`]
+            Whether user input is required or not
+        max_per_stream_enabled: Optional[:class:`bool`]
+            Whether the stream limit should be enabled
+        max_per_stream: Optional[:class:`int`]
+            How many times this can be redeemed per stream
+        max_per_user_per_stream_enabled: Optional[:class:`bool`]
+            Whether the user stream limit should be enabled
+        max_per_user_per_stream: Optional[:class:`int`]
+            How many times a user can redeem this reward per stream
+        global_cooldown_enabled: Optional[:class:`bool`]
+            Whether the global cooldown should be enabled
+        global_cooldown: Optional[:class:`int`]
+            How many seconds the global cooldown should be
+        paused: Optional[:class:`bool`]
+            Whether redemptions on this reward should be paused or not
+        redemptions_skip_queue: Optional[:class:`bool`]
+            Whether redemptions skip the request queue or not
 
         Returns
         --------
