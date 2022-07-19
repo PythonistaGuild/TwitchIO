@@ -38,6 +38,24 @@ __all__ = (
 
 
 class Bucket(enum.Enum):
+    """
+    Enum values for the different cooldown buckets.
+
+    Parameters
+    ------------
+    default: :class:`enum.Enum`
+        The default bucket.
+    channel: :class:`enum.Enum`
+        Cooldown is shared amongst all chatters per channel.
+    member: :class:`enum.Enum`
+        Cooldown operates on a per channel basis per user.
+    user: :class:`enum.Enum`
+        Cooldown operates on a user basis across all channels.
+    subscriber: :class:`enum.Enum`
+        Cooldown for subscribers.
+    mod: :class:`enum.Enum`
+        Cooldown for mods.
+    """
 
     default = 0
     channel = 1
@@ -48,6 +66,41 @@ class Bucket(enum.Enum):
 
 
 class Cooldown:
+    """
+    Cooldown decorator values.
+
+    Parameters
+    ------------
+    rate: :class:`int`
+        How many times the command can be invoked before triggering a cooldown inside a time frame.
+    per: :class:`float`
+        The amount of time in seconds to wait for a cooldown when triggered.
+    bucket: :class:`Bucket`
+        The bucket that the cooldown is in.
+
+    Examples
+    ----------
+
+    .. code:: py
+
+        # Restrict a command to once every 10 seconds on a per channel basis.
+        @commands.cooldown(rate=1, per=10, bucket=commands.Bucket.channel)
+        @commands.command()
+        async def my_command(self, ctx: commands.Context):
+            pass
+
+        # Restrict a command to once every 30 seconds for each individual channel a user is in.
+        @commands.cooldown(rate=1, per=30, bucket=commands.Bucket.member)
+        @commands.command()
+        async def my_command(self, ctx: commands.Context):
+            pass
+
+        # Restrict a command to 5 times every 60 seconds globally for a user.
+        @commands.cooldown(rate=5, per=60, bucket=commands.Bucket.user)
+        @commands.command()
+        async def my_command(self, ctx: commands.Context):
+            pass
+    """
 
     __slots__ = ("_rate", "_per", "bucket", "_window", "_tokens", "_cache")
 
