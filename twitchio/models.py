@@ -202,6 +202,9 @@ class Clip:
         The url of the clip thumbnail.
     duration: :class:`float`
         Duration of the Clip in seconds (up to 0.1 precision).
+    vod_offset: Optional[:class:`int`]
+        The zero-based offset, in seconds, to where the clip starts in the video (VOD) or stream.
+        This can be None if the parent no longer exists
     """
 
     __slots__ = (
@@ -218,6 +221,7 @@ class Clip:
         "created_at",
         "thumbnail_url",
         "duration",
+        "vod_offset",
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -234,6 +238,7 @@ class Clip:
         self.created_at = parse_timestamp(data["created_at"])
         self.thumbnail_url: str = data["thumbnail_url"]
         self.duration: float = data["duration"]
+        self.vod_offset: Optional[int] = data["vod_offset"]
 
     def __repr__(self):
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
@@ -1458,7 +1463,7 @@ class Goal:
         User of the broadcaster.
     type: :class:`str`
         The type of goal.
-        Valid values: follower, subscription and new_subscription.
+        Valid values: follower, subscription, subscription_count, new_subscription and new_subscription_count.
     description: :class:`str`
         A description of the goal, if specified.
     current_amount: :class:`int`

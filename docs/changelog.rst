@@ -5,7 +5,7 @@ Master
 - TwitchIO
     - Additions
         - Added :func:`twitchio.PartialUser.create_custom_reward` to allow custom reward creations
-        - Add duration attribute to :class:`~twitchio.Clip`
+        - Add ``duration`` and ``vod_offset`` attributes to :class:`~twitchio.Clip`
         - Added repr for :class:`~twitchio.CustomReward`
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to :func:`~twitchio.Client.from_client_credentials`
