@@ -487,16 +487,17 @@ class TwitchHTTP:
         return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
 
     async def patch_prediction(
-        self, token: str, broadcaster_id: int, prediction_id: str, status: str, winning_outcome_id: str = None
+        self, token: str, broadcaster_id: str, prediction_id: str, status: str, winning_outcome_id: Optional[str] = None
     ):
         body = {
-            "broadcaster_id": str(broadcaster_id),
+            "broadcaster_id": broadcaster_id,
             "id": prediction_id,
             "status": status,
         }
 
-        if status == "RESOLVED":
+        if status == "RESOLVED" and winning_outcome_id:
             body["winning_outcome_id"] = winning_outcome_id
+
         return await self.request(
             Route(
                 "PATCH",

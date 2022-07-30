@@ -199,7 +199,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:edit:broadcast scope
+            An oauth token with the ``channel:manage:redemptions`` scope
         title: :class:`str`
             The title of the reward
         cost: :class:`int`
@@ -255,12 +255,12 @@ class PartialUser:
     ) -> "BitsLeaderboard":
         """|coro|
 
-        Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
+        Fetches the bits leaderboard for the channel. This requires an OAuth token with the ``bits:read`` scope.
 
         Parameters
         -----------
         token: :class:`str`
-            the OAuth token with the bits:read scope
+            the OAuth token with the ``bits:read`` scope
         period: Optional[:class:`str`]
             one of `day`, `week`, `month`, `year`, or `all`, defaults to `all`
         started_at: Optional[:class:`datetime.datetime`]
@@ -276,7 +276,7 @@ class PartialUser:
     async def start_commercial(self, token: str, length: int) -> dict:
         """|coro|
 
-        Starts a commercial on the channel. Requires an OAuth token with the `channel:edit:commercial` scope.
+        Starts a commercial on the channel. Requires an OAuth token with the ``channel:edit:commercial`` scope.
 
         Parameters
         -----------
@@ -296,7 +296,7 @@ class PartialUser:
         """|coro|
 
         Creates a clip on the channel. Note that clips are not created instantly, so you will have to query
-        :meth:`~get_clips` to confirm the clip was created. Requires an OAuth token with the `clips:edit` scope
+        :meth:`~get_clips` to confirm the clip was created. Requires an OAuth token with the ``clips:edit`` scope
 
         Parameters
         -----------
@@ -331,7 +331,7 @@ class PartialUser:
     async def fetch_hypetrain_events(self, id: str = None, token: str = None):
         """|coro|
 
-        Fetches hypetrain event from the api. Needs a token with the channel:read:hype_train scope.
+        Fetches hypetrain event from the api. Needs a token with the ``channel:read:hype_train`` scope.
 
         Parameters
         -----------
@@ -358,7 +358,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         userids: List[Union[:class:`str`, :class:`int`]]
             An optional list of userids to fetch. Will fetch all bans if this is not passed
         """
@@ -373,7 +373,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         userids: List[:class:`int`]
             An optional list of users to fetch ban/unban events for
 
@@ -394,7 +394,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         userids: List[:class:`int`]
             An optional list of users to check mod status of
 
@@ -413,7 +413,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
 
         Returns
         --------
@@ -432,7 +432,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         query: List[:class:`AutomodCheckMessage`]
             A list of :class:`twitchio.AutomodCheckMessage`
 
@@ -453,7 +453,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the channel:read:stream_key scope
+            The oauth token with the ``channel:read:stream_key`` scope
 
         Returns
         --------
@@ -532,7 +532,7 @@ class PartialUser:
         userid: :class:`int`
             The user id to follow this user with
         token: :class:`str`
-            An oauth token with the user:edit:follows scope
+            An oauth token with the ``user:edit:follows`` scope
         notifications: :class:`bool`
             Whether to allow push notifications when this user goes live. Defaults to False
         """
@@ -550,7 +550,7 @@ class PartialUser:
         userid: :class:`int`
             The user id to unfollow this user with
         token: :class:`str`
-            An oauth token with the user:edit:follows scope
+            An oauth token with the ``user:edit:follows`` scope
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
@@ -562,7 +562,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:read:subscriptions scope
+            An oauth token with the ``channel:read:subscriptions`` scope
         userids: Optional[List[:class:`int`]]
             An optional list of userids to look for
 
@@ -583,7 +583,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:edit:broadcast scope
+            An oauth token with the ``user:edit:broadcast`` scope
         description: :class:`str`
             An optional description of the marker
 
@@ -605,7 +605,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:edit:broadcast scope
+            An oauth token with the ``user:edit:broadcast`` scope
         video_id: :class:`str`
             A specific video o fetch from. Defaults to the most recent stream if not passed
 
@@ -627,7 +627,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``user:read:broadcast`` scope
 
         Returns
         --------
@@ -647,7 +647,7 @@ class PartialUser:
         Parameters
         -----------
         token: Optional[:class:`str`]
-            An oauth token with the user:read:broadcast *or* user:edit:broadcast scope
+            An oauth token with the ``user:read:broadcast`` *or* ``user:edit:broadcast`` scope
 
         Returns
         --------
@@ -666,7 +666,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with user:edit:broadcast scope
+            An oauth token with ``user:edit:broadcast`` scope
         extensions: :class:`twitchio.ExtensionBuilder`
             A :class:`twitchio.ExtensionBuilder` to be given to the twitch api
 
@@ -705,7 +705,7 @@ class PartialUser:
         return [Video(self._http, x, self) for x in data]
 
     async def end_prediction(
-        self, token: str, prediction_id: str, status: str, winning_outcome_id: str = None
+        self, token: str, prediction_id: str, status: str, winning_outcome_id: Optional[str] = None
     ) -> "Prediction":
         """|coro|
 
@@ -714,9 +714,16 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:predictions scope
+            An oauth token with the ``channel:manage:predictions`` scope
         prediction_id: :class:`str`
             ID of the prediction to end.
+        status: :class:`str`
+            Status of the prediction. Valid values are:
+            RESOLVED - Winning outcome has been choson and points distributed.
+            CANCELED - Prediction canceled and points refunded
+            LOCKED - Viewers can no longer make predictions.
+        winning_outcome_id: Optional[:class:`str`]
+            ID of the winning outcome. This is required if status is RESOLVED
 
         Returns
         --------
@@ -742,7 +749,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:predictions scope
+            An oauth token with the ``channel:manage:predictions`` scope
         prediction_id: :class:`str`
             ID of the prediction to receive information about.
 
@@ -765,7 +772,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:predictions scope
+            An oauth token with the ``channel:manage:predictions`` scope
         title: :class:`str`
             Title for the prediction (max of 45 characters)
         blue_outcome: :class:`str`
@@ -799,7 +806,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:broadcast scope
+            An oauth token with the ``channel:manage:broadcast`` scope
         game_id: :class:`int`
             Optional game ID being played on the channel. Use 0 to unset the game.
         language: :class:`str`
@@ -878,7 +885,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``user:read:broadcast`` scope
         poll_ids: Optional[List[:class:`str`]]
             List of poll IDs to return. Maximum: 100
         first: Optional[:class:`int`]
@@ -911,7 +918,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``user:read:broadcast`` scope
         title: :class:`str`
             Question displayed for the poll.
         choices: List[:class:`str`]
@@ -954,7 +961,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``user:read:broadcast`` scope
         poll_id: :class:`str`
             ID of the poll.
         status: :class:`str`
@@ -979,7 +986,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``user:read:broadcast`` scope
 
         Returns
         --------
@@ -998,10 +1005,10 @@ class PartialUser:
         Parameters
         -----------
         token: Optional[:class:`str`]
-            An oauth token with the moderator:read:chat_settings scope. Required if moderator_id is provided.
+            An oauth token with the ``moderator:read:chat_settings`` scope. Required if moderator_id is provided.
         moderator_id: Optional[:class:`int`]
             The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires moderator:read:chat_settings scope.
+            Requires ``moderator:read:chat_settings`` scope.
 
         Returns
         --------
@@ -1035,10 +1042,10 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the moderator:manage:chat_settings scope.
+            An oauth token with the ``moderator:manage:chat_settings`` scope.
         moderator_id: :class:`int`
             The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires moderator:manage:chat_settings scope.
+            Requires ``moderator:manage:chat_settings`` scope.
         emote_mode: Optional[:class:`bool`]
             A boolean to determine whether chat must contain only emotes or not.
         follower_mode: Optional[:class:`bool`]
@@ -1091,10 +1098,10 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the moderator:manage:chat_settings scope.
+            An oauth token with the ``moderator:manage:chat_settings`` scope.
         moderator_id: :class:`int`
             The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires moderator:manage:announcements scope.
+            Requires ``moderator:manage:announcements`` scope.
         message: :class:`str`
             The message to be sent.
         color: Optional[:class:`str`]
@@ -1120,10 +1127,10 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the moderator:manage:chat_settings scope.
+            An oauth token with the ``moderator:manage:chat_settings`` scope.
         moderator_id: :class:`int`
             The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires moderator:manage:chat_messages scope.
+            Requires ``moderator:manage:chat_messages`` scope.
         message_id: Optional[:class:`str`]
             The ID of the message to be deleted.
             The message must have been created within the last 6 hours.
@@ -1146,7 +1153,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:read:vips or moderator:manage:chat_settings scope.
+            An oauth token with the ``channel:read:vips`` or ``moderator:manage:chat_settings`` scope.
             Must be the broadcaster's token.
         first: Optional[:class:`int`]
             The maximum number of items to return per page in the response.
@@ -1174,7 +1181,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:vips scope.
+            An oauth token with the ``channel:manage:vips scope``.
             Must be the broadcaster's token.
         user_id: :class:`int`
             The ID of the user to add as a VIP.
@@ -1194,7 +1201,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:vips scope.
+            An oauth token with the ``channel:manage:vips`` scope.
             Must be the broadcaster's token.
         user_id: :class:`int`
             The ID of the user to remove as a VIP.
@@ -1214,7 +1221,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:moderators scope.
+            An oauth token with the ``channel:manage:moderators`` scope.
             Must be the broadcaster's token.
         user_id: :class:`str`
             The ID of the user to add as a moderator.
@@ -1234,7 +1241,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:moderators scope.
+            An oauth token with the ``channel:manage:moderators`` scope.
             Must be the broadcaster's token.
         user_id: :class:`str`
             The ID of the user to remove as a moderator.
@@ -1257,7 +1264,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:raids scope
+            An oauth token with the ``channel:manage:raids`` scope
             Must be the broadcaster's token.
         to_broadcaster_id: :class:`int`
             The ID of the broadcaster to raid.
@@ -1284,7 +1291,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:raids scope
+            An oauth token with the ``channel:manage:raids`` scope
             Must be the broadcaster's token.
 
         Returns

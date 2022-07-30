@@ -95,6 +95,14 @@ Chatter
 .. autoclass:: Chatter
     :members:
 
+ChatterColor
+-------------
+.. attributetable:: ChatterColor
+
+.. autoclass:: ChatterColor
+    :members:
+    :inherited-members:
+
 CheerEmote
 ------------
 .. attributetable:: CheerEmote
@@ -248,6 +256,14 @@ Predictions
 .. attributetable:: Predictor
 
 .. autoclass:: Predictor
+    :members:
+    :inherited-members:
+
+Raid
+-----
+.. attributetable:: Raid
+
+.. autoclass:: Raid
     :members:
     :inherited-members:
 

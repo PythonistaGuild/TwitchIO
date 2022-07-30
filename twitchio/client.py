@@ -704,7 +704,7 @@ class Client:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:videos scope
+            An oauth token with the ``channel:manage:videos`` scope
         ids: List[:class:`int`]
             A list of video ids from the channel of the oauth token to delete
 
@@ -718,7 +718,7 @@ class Client:
 
         return resp
 
-    async def fetch_chatters_colors(self, user_ids: List[int],  token: Optional[str] = None):
+    async def fetch_chatters_colors(self, user_ids: List[int], token: Optional[str] = None):
         """|coro|
 
         Fetches the color of a chatter.
@@ -728,7 +728,7 @@ class Client:
         user_ids: List[:class:`int`]
             List of user ids to fetch the colors for
         token: Optional[:class:`str`]
-            An oauth token with the channel:read:redirect scope
+            An optional user oauth token
 
         Returns
         --------
@@ -745,7 +745,7 @@ class Client:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:manage:chat_color scope.
+            An oauth token with the ``user:manage:chat_color`` scope.
         user_id: :class:`int`
             The ID of the user whose color is being updated, this must match the user ID in the token.
         color: :class:`str`
@@ -756,9 +756,7 @@ class Client:
         --------
             None
         """
-        await self._http.put_user_chat_color(
-            token=token, user_id=str(user_id), color=color
-        )
+        await self._http.put_user_chat_color(token=token, user_id=str(user_id), color=color)
 
     async def get_webhook_subscriptions(self):
         """|coro|
