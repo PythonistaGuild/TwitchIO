@@ -70,6 +70,8 @@ __all__ = (
     "PollChoice",
     "Goal",
     "ChatSettings",
+    "Raid",
+    "ChatterColor"
 )
 
 
@@ -1559,3 +1561,47 @@ class ChatSettings:
 
     def __repr__(self):
         return f"<ChatSettings broadcaster={self.broadcaster} emote_mode={self.emote_mode} follower_mode={self.follower_mode} slow_mode={self.slow_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
+
+
+class ChatterColor:
+    """
+    Represents chatters current name color.
+
+    Attributes
+    -----------
+    user: :class:`~twitchio.PartialUser`
+        PartialUser of the chatter.
+    color: :class:`str`
+        The color of the chatter's name.
+    """
+
+    __slots__ = ("user", "color")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.user = PartialUser(http, data["user_id"], data["user_login"])
+        self.color: str = data["color"]
+
+    def __repr__(self):
+        return f"<ChatterColor user={self.user} color={self.color}>"
+
+
+class Raid:
+    """
+    Represents a raid for a broadcaster / channel
+
+    Attributes
+    -----------
+    created_at: :class:`datetime.datetime`
+        Date and time of when the raid started.
+    is_mature: :class:`bool`
+        Indicates whether the stream being raided is marked as mature.
+    """
+
+    __slots__ = ("created_at", "is_mature")
+
+    def __init__(self, data: dict):
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.is_mature: bool = data["is_mature"]
+
+    def __repr__(self):
+        return f"<Raid created_at={self.created_at} is_mature={self.is_mature}>"

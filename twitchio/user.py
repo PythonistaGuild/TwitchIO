@@ -990,17 +990,18 @@ class PartialUser:
         data = await self._http.get_goals(broadcaster_id=str(self.id), token=token)
         return [Goal(self._http, x) for x in data]
 
-    async def fetch_chat_settings(self, moderator_id: Optional[int] = None, token: Optional[str] = None):
+    async def fetch_chat_settings(self, token: Optional[str] = None, moderator_id: Optional[int] = None):
         """|coro|
 
         Fetches the current chat settings for this channel/broadcaster.
 
         Parameters
         -----------
-        moderator_id: Optional[:class:`int`]
-            The ID of a user that has permission to moderate the broadcaster's chat room.
         token: Optional[:class:`str`]
             An oauth token with the moderator:read:chat_settings scope. Required if moderator_id is provided.
+        moderator_id: Optional[:class:`int`]
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            Requires moderator:read:chat_settings scope.
 
         Returns
         --------
@@ -1015,8 +1016,8 @@ class PartialUser:
 
     async def update_chat_settings(
         self,
-        moderator_id: int,
         token: str,
+        moderator_id: int,
         emote_mode: Optional[bool] = None,
         follower_mode: Optional[bool] = None,
         follower_mode_duration: Optional[int] = None,
@@ -1033,10 +1034,11 @@ class PartialUser:
 
         Parameters
         -----------
-        moderator_id: :class:`int`
-            The ID of a user that has permission to moderate the broadcaster's chat room.
         token: :class:`str`
             An oauth token with the moderator:manage:chat_settings scope.
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            Requires moderator:manage:chat_settings scope.
         emote_mode: Optional[:class:`bool`]
             A boolean to determine whether chat must contain only emotes or not.
         follower_mode: Optional[:class:`bool`]
@@ -1080,6 +1082,217 @@ class PartialUser:
             non_moderator_chat_delay_duration=non_moderator_chat_delay_duration,
         )
         return ChatSettings(self._http, data[0])
+
+    async def chat_announcement(self, token: str, moderator_id: int, message: str, color: Optional[str] = "primary"):
+        """|coro|
+
+        Sends a chat announcement to the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the moderator:manage:chat_settings scope.
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            Requires moderator:manage:announcements scope.
+        message: :class:`str`
+            The message to be sent.
+        color: Optional[:class:`str`]
+            The color of the message. Valid values:
+            blue, green orange, pruple. The default is primary.
+        Returns
+        --------
+        None
+        """
+        await self._http.post_chat_announcement(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            token=token,
+            message=message,
+            color=color,
+        )
+
+    async def delete_chat_messages(self, token: str, moderator_id: int, message_id: Optional[str] = None):
+        """|coro|
+
+        Deletes a chat message, or clears chat, in the specified channel/broadcaster's chat.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the moderator:manage:chat_settings scope.
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            Requires moderator:manage:chat_messages scope.
+        message_id: Optional[:class:`str`]
+            The ID of the message to be deleted.
+            The message must have been created within the last 6 hours.
+            The message must not belong to the broadcaster.
+            If not specified, the request removes all messages in the broadcaster's chat room.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.delete_chat_messages(
+            broadcaster_id=str(self.id), token=token, moderator_id=str(moderator_id), message_id=message_id
+        )
+
+    async def fetch_channel_vips(self, token: str, first: int = 20, user_ids: Optional[List[str]] = None):
+        """|coro|
+
+        Fetches the list of VIPs for the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:read:vips or moderator:manage:chat_settings scope.
+            Must be the broadcaster's token.
+        first: Optional[:class:`int`]
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100. The default is 20.
+        user_ids: Optional[:class:`list`]
+            A list of user IDs to filter the results by.
+            The maximum number of IDs that you may specify is 100. Ignores those users in the list that aren't VIPs.
+
+        Returns
+        --------
+        List[:class:`twitchio.PartialUser`]
+        """
+
+        data = await self._http.get_channel_vips(
+            broadcaster_id=str(self.id), token=token, first=first, user_ids=user_ids
+        )
+        return [PartialUser(self._http, x["user_id"], x["user_login"]) for x in data]
+
+    async def add_channel_vip(self, token: str, user_id: int):
+        """|coro|
+
+        Adds a VIP to the specified channel/broadcaster.
+        The channel may add a maximum of 10 VIPs within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:vips scope.
+            Must be the broadcaster's token.
+        user_id: :class:`int`
+            The ID of the user to add as a VIP.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.post_channel_vip(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def remove_channel_vip(self, token: str, user_id: int):
+        """|coro|
+
+        Removes a VIP from the specified channel/broadcaster.
+        The channel may remove a maximum of 10 vips within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:vips scope.
+            Must be the broadcaster's token.
+        user_id: :class:`int`
+            The ID of the user to remove as a VIP.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.delete_channel_vip(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def add_channel_moderator(self, token: str, user_id: int):
+        """|coro|
+
+        Adds a moderator to the specified channel/broadcaster.
+        The channel may add a maximum of 10 moderators within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:moderators scope.
+            Must be the broadcaster's token.
+        user_id: :class:`str`
+            The ID of the user to add as a moderator.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.post_channel_moderator(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def remove_channel_moderator(self, token: str, user_id: int):
+        """|coro|
+
+        Removes a moderator from the specified channel/broadcaster.
+        The channel may remove a maximum of 10 moderators within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:moderators scope.
+            Must be the broadcaster's token.
+        user_id: :class:`str`
+            The ID of the user to remove as a moderator.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.delete_channel_moderator(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def start_raid(self, token: str, to_broadcaster_id: int):
+        """|coro|
+
+        Starts a raid for the channel/broadcaster.
+        The UTC date and time, in RFC3339 format, when the raid request was created.
+        A Boolean value that indicates whether the channel being raided contains mature content.
+
+        Rate Limit: The limit is 10 requests within a 10-minute window.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:raids scope
+            Must be the broadcaster's token.
+        to_broadcaster_id: :class:`int`
+            The ID of the broadcaster to raid.
+
+        Returns
+        --------
+        :class:`twitchio.Raid`
+        """
+
+        data = await self._http.post_raid(
+            from_broadcaster_id=str(self.id), token=token, to_broadcaster_id=str(to_broadcaster_id)
+        )
+
+        from .models import Raid
+
+        return Raid(data[0])
+
+    async def cancel_raid(self, token: str):
+        """|coro|
+
+        Cancels a raid for the channel/broadcaster.
+        The limit is 10 requests within a 10-minute window.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the channel:manage:raids scope
+            Must be the broadcaster's token.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.delete_raid(broadcaster_id=str(self.id), token=token)
 
 
 class BitLeaderboardUser(PartialUser):
