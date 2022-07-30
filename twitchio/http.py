@@ -1005,15 +1005,15 @@ class TwitchHTTP:
         return await self.request(Route("DELETE", "moderation/moderators", query=q, token=token))
 
     async def get_channel_vips(
-        self, token: str, broadcaster_id: str, first: int = 20, user_ids: Optional[List[str]] = None
+        self, token: str, broadcaster_id: str, first: int = 20, user_ids: Optional[List[int]] = None
     ):
         q = [("broadcaster_id", broadcaster_id), ("first", first)]
         if first > 100:
             raise ValueError("You can only get up to 100 VIPs at once")
-        if user_ids and len(user_ids) <= 100:
-            q.extend(("user_id", user_id) for user_id in user_ids)
-        else:
-            raise ValueError("You can can only specify up to 100 VIPs")
+        if user_ids:
+            if len(user_ids) > 100:
+                raise ValueError("You can can only specify up to 100 VIPs")
+            q.extend(("user_id", str(user_id)) for user_id in user_ids)
         return await self.request(Route("GET", "channels/vips", query=q, token=token))
 
     async def post_channel_vip(self, token: str, broadcaster_id: str, user_id: str):

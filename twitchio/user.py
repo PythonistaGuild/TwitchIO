@@ -1145,7 +1145,7 @@ class PartialUser:
             broadcaster_id=str(self.id), token=token, moderator_id=str(moderator_id), message_id=message_id
         )
 
-    async def fetch_channel_vips(self, token: str, first: int = 20, user_ids: Optional[List[str]] = None):
+    async def fetch_channel_vips(self, token: str, first: int = 20, user_ids: Optional[List[int]] = None):
         """|coro|
 
         Fetches the list of VIPs for the specified channel/broadcaster.
@@ -1158,7 +1158,7 @@ class PartialUser:
         first: Optional[:class:`int`]
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100. The default is 20.
-        user_ids: Optional[:class:`list`]
+        user_ids: Optional[List[:class:`int`]]
             A list of user IDs to filter the results by.
             The maximum number of IDs that you may specify is 100. Ignores those users in the list that aren't VIPs.
 
