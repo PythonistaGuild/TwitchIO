@@ -71,7 +71,7 @@ __all__ = (
     "Goal",
     "ChatSettings",
     "Raid",
-    "ChatterColor"
+    "ChatterColor",
 )
 
 
