@@ -368,6 +368,8 @@ class PartialUser:
     async def fetch_ban_events(self, token: str, userids: List[int] = None):
         """|coro|
 
+        This has been deprecated and will be removed in a future release.
+
         Fetches ban/unban events from the User's channel.
 
         Parameters
@@ -1300,6 +1302,128 @@ class PartialUser:
         """
 
         await self._http.delete_raid(broadcaster_id=str(self.id), token=token)
+
+    async def ban_user(self, token: str, moderator_id: int, user_id, reason: str):
+        """|coro|
+
+        Bans a user from the channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user access token with the ``moderator:manage:banned_users`` scope
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            If the broadcaster wants to ban the user set this parameter to the broadcaster's ID.
+        user_id: :class:`int`
+            The ID of the user to ban.
+        reason: :class:`str`
+            The reason for the ban.
+
+        Returns
+        --------
+        :class:`twitchio.Ban`
+        """
+        from .models import Ban
+
+        data = await self._http.post_ban_timeout_user(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            user_id=str(user_id),
+            reason=reason,
+            token=token,
+        )
+        return Ban(self._http, data[0])
+
+    async def timeout_user(self, token: str, moderator_id: int, user_id: int, duration: int, reason: str):
+        """|coro|
+
+        Timeouts a user from the channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user access token with the ``moderator:manage:banned_users`` scope
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            If the broadcaster wants to timeout the user set this parameter to the broadcaster's ID.
+        duration: :class:`int`
+            The duration of the timeout in seconds.
+            The minimum timeout is 1 second and the maximum is 1,209,600 seconds (2 weeks).
+            To end a user's timeout early, set this field to 1, or send an Unban user request.
+        reason: :class:`str`
+            The reason for the timeout.
+
+        Returns
+        --------
+        :class:`twitchio.Timeout`
+        """
+        from .models import Timeout
+
+        data = await self._http.post_ban_timeout_user(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            user_id=str(user_id),
+            duration=duration,
+            reason=reason,
+            token=token,
+        )
+        return Timeout(self._http, data[0])
+
+    async def unban_user(self, token: str, moderator_id: int, user_id):
+        """|coro|
+
+        Unbans a user or removes a timeout from the channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user access token with the ``moderator:manage:banned_users`` scope
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            If the broadcaster wants to ban the user set this parameter to the broadcaster's ID.
+        user_id: :class:`int`
+            The ID of the user to unban.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.delete_ban_timeout_user(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            user_id=str(user_id),
+            token=token,
+        )
+
+    async def send_whisper(self, token: str, user_id: int, message: str):
+        """|coro|
+
+        Sends a whisper to a user.
+        Important Notes:
+        - The user sending the whisper must have a verified phone number.
+        - The API may silently drop whispers that it suspects of violating Twitch policies.
+        - You may whisper to a maximum of 40 unique recipients per day. Within the per day limit.
+        - You may whisper a maximum of 3 whispers per second and a maximum of 100 whispers per minute.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``user:manage:whispers`` scope.
+        user_id: :class:`int`
+            The ID of the user to send the whisper to.
+        message: :class:`str`
+            The message to send.
+            500 characters if the user you're sending the message to hasn't whispered you before.
+            10,000 characters if the user you're sending the message to has whispered you before.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.post_whisper(token=token, from_user_id=str(self.id), to_user_id=str(user_id), message=message)
 
 
 class BitLeaderboardUser(PartialUser):

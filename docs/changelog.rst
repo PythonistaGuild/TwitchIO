@@ -15,6 +15,10 @@ Master
             - :func:`twitchio.PartialUser.remove_channel_moderator`
             - :func:`twitchio.PartialUser.start_raid`
             - :func:`twitchio.PartialUser.cancel_raid`
+            - :func:`twitchio.PartialUser.ban_user`
+            - :func:`twitchio.PartialUser.timeout_user`
+            - :func:`twitchio.PartialUser.unban_user`
+            - :func:`twitchio.PartialUser.send_whisper`
         - Added following new Client methods:
             - :func:`~twitchio.Client.fetch_chatters_colors`
             - :func:`~twitchio.Client.update_chatter_color`

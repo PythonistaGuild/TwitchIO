@@ -348,6 +348,8 @@ class HypeTrainEvent:
 
 class BanEvent:
     """
+    This has been deprecated.
+
     Represents a user being banned from a channel.
 
     Attributes
@@ -1605,3 +1607,62 @@ class Raid:
 
     def __repr__(self):
         return f"<Raid created_at={self.created_at} is_mature={self.is_mature}>"
+
+
+class Ban:
+    """
+    Represents a ban for a broadcaster / channel
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster whose chat room the user was banned from chatting in.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that banned the user.
+    user: :class:`~twitchio.PartialUser`
+        The user that was banned.
+    created_at: :class:`datetime.datetime`
+        Date and time of when the ban was created.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "user", "created_at")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.broadcaster = PartialUser(http, data["broadcaster_id"], None)
+        self.moderator = PartialUser(http, data["moderator_id"], None)
+        self.user = PartialUser(http, data["user_id"], None)
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+
+    def __repr__(self):
+        return f"<Ban broadcaster={self.broadcaster} user={self.user} created_at={self.created_at}>"
+
+
+class Timeout:
+    """
+    Represents a timeout for a broadcaster / channel
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster whose chat room the user was timed out from chatting in.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that timed the user out.
+    user: :class:`~twitchio.PartialUser`
+        The user that was timed out.
+    created_at: :class:`datetime.datetime`
+        Date and time of when the timeout was created.
+    end_time: :class:`datetime.datetime`
+        Date and time of when the timeout will end.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "user", "created_at", "end_time")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.broadcaster = PartialUser(http, data["broadcaster_id"], None)
+        self.moderator = PartialUser(http, data["moderator_id"], None)
+        self.user = PartialUser(http, data["user_id"], None)
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.end_time: datetime.datetime = parse_timestamp(data["end_time"])
+
+    def __repr__(self):
+        return f"<Timeout broadcaster={self.broadcaster} user={self.user} created_at={self.created_at} end_time={self.end_time}>"

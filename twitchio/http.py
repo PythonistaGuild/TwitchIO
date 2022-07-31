@@ -1036,3 +1036,30 @@ class TwitchHTTP:
     async def delete_raid(self, token: str, broadcaster_id: str):
         q = [("broadcaster_id", broadcaster_id)]
         return await self.request(Route("DELETE", "raids", query=q, token=token))
+
+    async def post_ban_timeout_user(
+        self,
+        token: str,
+        broadcaster_id: str,
+        moderator_id: str,
+        user_id: str,
+        reason: str,
+        duration: Optional[int] = None,
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        body = {"data": {"user_id": user_id, "reason": reason}}
+        if duration:
+            if duration < 1 or duration > 1209600:
+                raise ValueError("Duration must be between 1 and 1209600 seconds")
+            body["data"]["duration"] = str(duration)
+        return await self.request(Route("POST", "moderation/bans", query=q, body=body, token=token))
+
+    async def delete_ban_timeout_user(
+        self,
+        token: str,
+        broadcaster_id: str,
+        moderator_id: str,
+        user_id: str,
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id), ("user_id", user_id)]
+        return await self.request(Route("DELETE", "moderation/bans", query=q, token=token))
