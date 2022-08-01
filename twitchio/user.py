@@ -887,7 +887,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the ``user:read:broadcast`` scope
+            An oauth token with the ``channel:read:polls`` scope
         poll_ids: Optional[List[:class:`str`]]
             List of poll IDs to return. Maximum: 100
         first: Optional[:class:`int`]
@@ -964,7 +964,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the ``user:read:broadcast`` scope
+            An oauth token with the ``channel:manage:polls`` scope
         poll_id: :class:`str`
             ID of the poll.
         status: :class:`str`
@@ -989,7 +989,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the ``user:read:broadcast`` scope
+            An oauth token with the ``channel:read:goals`` scope
 
         Returns
         --------
