@@ -920,7 +920,8 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the ``user:read:broadcast`` scope
+            An oauth token with the ``channel:manage:polls`` scope.
+            User ID in token must match the broadcaster's ID.
         title: :class:`str`
             Question displayed for the poll.
         choices: List[:class:`str`]
