@@ -24,6 +24,7 @@ Master
             - :func:`~twitchio.Client.update_chatter_color`
         - Add ``duration`` and ``vod_offset`` attributes to :class:`~twitchio.Clip`
         - Added repr for :class:`~twitchio.CustomReward`
+        - Add extra attributes to :class:`~twitchio.UserBan`
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to :func:`~twitchio.Client.from_client_credentials`
         - Allow empty or missing initial_channels to trigger :func:`~twitchio.Client.event_ready`

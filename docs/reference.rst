@@ -27,6 +27,14 @@ AutomodCheckResponse
     :members:
     :inherited-members:
 
+Ban
+----------
+.. attributetable:: Ban
+
+.. autoclass:: Ban
+    :members:
+    :inherited-members:
+
 BanEvent
 ----------
 .. attributetable:: BanEvent
@@ -329,6 +337,14 @@ Team
 .. attributetable:: Team
 
 .. autoclass:: Team
+    :members:
+    :inherited-members:
+
+Timeout
+----------
+.. attributetable:: Timeout
+
+.. autoclass:: Timeout
     :members:
     :inherited-members:
 

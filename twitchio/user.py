@@ -1438,14 +1438,39 @@ class BitLeaderboardUser(PartialUser):
 
 
 class UserBan(PartialUser):
+    """
+    Represents a banned user or one in timeout.
 
-    __slots__ = ("expires_at",)
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the banned user.
+    name: :class:`str`
+        The name of the banned user.
+    created_at: :class:`datetime.datetime`
+        The date and time the ban was created.
+    expires_at: Optional[:class:`datetime.datetime`]
+        The date and time the timeout will expire.
+        Is None if it's a ban.
+    reason: :class:`str`
+        The reason for the ban/timeout.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that banned the user.
+    """
+
+    __slots__ = ("created_at", "expires_at", "reason", "moderator")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        super(UserBan, self).__init__(http, name=data["user_login"], id=data["user_id"])
-        self.expires_at = (
-            datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ") if data["expires_at"] else None
+        super(UserBan, self).__init__(http, id=data["user_id"], name=data["user_login"])
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.expires_at: Optional[datetime.datetime] = (
+            parse_timestamp(data["expires_at"]) if data["expires_at"] else None
         )
+        self.reason: str = data["reason"]
+        self.moderator = PartialUser(http, id=data["moderator_id"], name=data["moderator_login"])
+
+    def __repr__(self):
+        return f"<UserBan {super().__repr__()} created_at={self.created_at} expires_at={self.expires_at} reason={self.reason}>"
 
 
 class SearchUser(PartialUser):

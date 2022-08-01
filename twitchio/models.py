@@ -72,6 +72,8 @@ __all__ = (
     "ChatSettings",
     "Raid",
     "ChatterColor",
+    "Timeout",
+    "Ban",
 )
 
 
