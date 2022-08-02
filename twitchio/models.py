@@ -1100,6 +1100,7 @@ class Predictor:
     def __repr__(self):
         return f"<Predictor user={self.user} channel_points_used={self.channel_points_used} channel_points_won={self.channel_points_won}>"
 
+
 class PredictionOutcome:
     """
     Represents a prediction outcome
@@ -1131,11 +1132,11 @@ class PredictionOutcome:
         if data["top_predictors"]:
             self.top_predictors: List[Predictor] = [Predictor(http, x) for x in data["top_predictors"]]
         else:
- 
+
             self.top_predictors: List[Predictor] = None
+
     def __repr__(self):
         return f"<PredictionOutcome outcome_id={self.outcome_id} title={self.title} channel_points={self.channel_points} color={self.color} users={self.users}>"
-
 
     @property
     def colour(self) -> str:
