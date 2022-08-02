@@ -24,6 +24,7 @@ Master
             - :func:`~twitchio.Client.update_chatter_color`
         - Add ``duration`` and ``vod_offset`` attributes to :class:`~twitchio.Clip`
         - Added repr for :class:`~twitchio.CustomReward`
+        - Added repr for :class:`~twitchio.PredictionOutcome`
         - Add extra attributes to :class:`~twitchio.UserBan`
     - Bug fixes
         - Added ``self.registered_callbacks = {}`` to :func:`~twitchio.Client.from_client_credentials`
@@ -31,6 +32,7 @@ Master
         - Corrected :func:`twitchio.CustomRewardRedemption.fulfill` endpoint typo and creation
         - Corrected :func:`twitchio.CustomRewardRedemption.refund` endpoint typo and creation
         - Changed :func:`~twitchio.Client.join_channels` logic to handle bigger channel lists better
+        - Corrected :class:`~twitchio.Predictor` slots and user keys, repr has also been added
 
 - ext.commands
     - Bug fixes

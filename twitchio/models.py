@@ -1090,13 +1090,15 @@ class Predictor:
         Number of Channel Points won by the user.
     """
 
-    __slots__ = ("outcome_id", "title", "channel_points", "color")
+    __slots__ = ("channel_points_used", "channel_points_won", "user")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.channel_points_used: int = data["channel_points_used"]
         self.channel_points_won: int = data["channel_points_won"]
-        self.user = PartialUser(http, data["user"]["id"], data["user"]["name"])
+        self.user = PartialUser(http, data["user_id"], data["user_login"])
 
+    def __repr__(self):
+        return f"<Predictor user={self.user} channel_points_used={self.channel_points_used} channel_points_won={self.channel_points_won}>"
 
 class PredictionOutcome:
     """
@@ -1129,7 +1131,11 @@ class PredictionOutcome:
         if data["top_predictors"]:
             self.top_predictors: List[Predictor] = [Predictor(http, x) for x in data["top_predictors"]]
         else:
+ 
             self.top_predictors: List[Predictor] = None
+    def __repr__(self):
+        return f"<PredictionOutcome outcome_id={self.outcome_id} title={self.title} channel_points={self.channel_points} color={self.color} users={self.users}>"
+
 
     @property
     def colour(self) -> str:
