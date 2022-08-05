@@ -440,15 +440,20 @@ class Client:
         data = await self._http.get_clips(ids=ids)
         return [models.Clip(self._http, d) for d in data]
 
-    async def fetch_channel(self, broadcaster: str):
+    async def fetch_channel(self, broadcaster: str, token: Optional[str] = None):
         """|coro|
 
         Retrieve channel information from the API.
+
+        .. note::
+            This will be deprecated in 3.0. It's recommended to use :func:`~fetch_channels` instead.
 
         Parameters
         -----------
         broadcaster: str
             The channel name or ID to request from API. Returns empty dict if no channel was found.
+        token: Optional[:class:`str`]
+            An optional OAuth token to use instead of the bot OAuth token.
 
         Returns
         --------
@@ -459,9 +464,9 @@ class Client:
             get_id = await self.fetch_users(names=[broadcaster.lower()])
             if not get_id:
                 raise IndexError("Invalid channel name.")
-            broadcaster = get_id[0].id
+            broadcaster = str(get_id[0].id)
         try:
-            data = await self._http.get_channels(broadcaster)
+            data = await self._http.get_channels(broadcaster_id=broadcaster, token=token)
 
             from .models import ChannelInfo
 
@@ -469,6 +474,28 @@ class Client:
 
         except HTTPException:
             raise HTTPException("Incorrect channel ID.")
+
+    async def fetch_channels(self, broadcaster_ids: List[int], token: Optional[str] = None):
+        """|coro|
+
+        Retrieve information for up to 100 channels from the API.
+
+        Parameters
+        -----------
+        broadcaster_ids: List[:class:`int`]
+            The channel ids to request from API.
+        token: Optional[:class:`str`]
+            An optional OAuth token to use instead of the bot OAuth token
+
+        Returns
+        --------
+            List[:class:`twitchio.ChannelInfo`]
+        """
+        from .models import ChannelInfo
+
+        data = await self._http.get_channels_new(broadcaster_ids=broadcaster_ids, token=token)
+        return [ChannelInfo(self._http, data=d) for d in data]
+
 
     async def fetch_videos(
         self,

@@ -22,6 +22,7 @@ Master
         - Added following new Client methods:
             - :func:`~twitchio.Client.fetch_chatters_colors`
             - :func:`~twitchio.Client.update_chatter_color`
+            - :func:`~twitchio.Client.fetch_channels`
         - Add ``duration`` and ``vod_offset`` attributes to :class:`~twitchio.Clip`
         - Added repr for :class:`~twitchio.CustomReward`
         - Added repr for :class:`~twitchio.PredictionOutcome`

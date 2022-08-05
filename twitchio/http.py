@@ -683,8 +683,15 @@ class TwitchHTTP:
             )
         )
 
-    async def get_channels(self, broadcaster_id: str, token: str = None):
+    async def get_channels(self, broadcaster_id: str, token: Optional[str]= None):
         return await self.request(Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token))
+
+
+    async def get_channels_new(self, broadcaster_ids: List[int], token: Optional[str] = None):
+        if len(broadcaster_ids) > 100:
+            raise ValueError("Maximum of 100 broadcaster_ids")
+        q = [("broadcaster_id", str(broadcaster_id)) for broadcaster_id in broadcaster_ids]
+        return await self.request(Route("GET", "channels", query=q, token=token))
 
     async def patch_channel(
         self, token: str, broadcaster_id: str, game_id: str = None, language: str = None, title: str = None
