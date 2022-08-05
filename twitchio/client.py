@@ -496,7 +496,6 @@ class Client:
         data = await self._http.get_channels_new(broadcaster_ids=broadcaster_ids, token=token)
         return [ChannelInfo(self._http, data=d) for d in data]
 
-
     async def fetch_videos(
         self,
         ids: List[int] = None,

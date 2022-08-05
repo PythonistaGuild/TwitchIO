@@ -683,9 +683,8 @@ class TwitchHTTP:
             )
         )
 
-    async def get_channels(self, broadcaster_id: str, token: Optional[str]= None):
+    async def get_channels(self, broadcaster_id: str, token: Optional[str] = None):
         return await self.request(Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token))
-
 
     async def get_channels_new(self, broadcaster_ids: List[int], token: Optional[str] = None):
         if len(broadcaster_ids) > 100:
