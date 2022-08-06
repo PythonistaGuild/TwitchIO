@@ -51,6 +51,13 @@ Master
 
 - ext.eventsub
     - Additions
+        - Added Gift Subcriptions subscriptions for gifting other users Subs:
+            - Subscribed via :func:`twitchio.ext.eventsub.EventSubClient.subscribe_channel_subscription_gifts`
+            - Callback function is :func:`twitchio.ext.eventsub.event_eventsub_notification_subscription_gift`
+        - Added Resubscription Message subscriptions for Resub messages:
+            - Subscribed via :func:`twitchio.ext.eventsub.EventSubClient.subscribe_channel_subscription_messages`
+            - Callback function is :func:`twitchio.ext.eventsub.event_eventsub_notification_subscription_message`
+        - Added :func:`twitchio.ext.eventsub.EventSubClient.delete_all_active_subscriptions` for convenience
         - Created an Eventsub-specific :class:`~twitchio.ext.eventsub.CustomReward` model
 
 2.3.0
