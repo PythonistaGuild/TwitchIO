@@ -36,6 +36,7 @@ Master
         - Corrected :class:`~twitchio.Predictor` slots and user keys, repr has also been added
         - Updated IRC parser to not strip colons from beginning of messages
         - Updated IRC parser to not remove multiple spaces when clumped together
+        - Fixed :func:`twitchio.Client.start` exiting immediatly
 
 - ext.commands
     - Bug fixes

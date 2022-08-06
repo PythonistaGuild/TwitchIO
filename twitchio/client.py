@@ -99,6 +99,7 @@ class Client:
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
         self.registered_callbacks: Dict[Callable, str] = {}
+        self._closing: Optional[asyncio.Event] = None
 
     @classmethod
     def from_client_credentials(
@@ -159,7 +160,9 @@ class Client:
         except KeyboardInterrupt:
             pass
         finally:
-            self.loop.run_until_complete(self.close())
+            if not self._closing.is_set():
+                self.loop.run_until_complete(self.close())
+
             self.loop.close()
 
     async def start(self):
@@ -174,14 +177,17 @@ class Client:
             )
         try:
             await self.connect()
+            await self._closing.wait()
         finally:
-            await self.close()
+            if not self._closing.is_set():
+                await self.close()
 
     async def connect(self):
         """|coro|
 
         Connects to the twitch IRC server
         """
+        self._closing = asyncio.Event()
         await self._connection._connect()
 
     async def close(self):
@@ -189,6 +195,7 @@ class Client:
 
         Cleanly disconnects from the twitch IRC server
         """
+        self._closing.set()
         await self._connection._close()
 
     def run_event(self, event_name, *args):
