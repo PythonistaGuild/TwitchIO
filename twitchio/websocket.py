@@ -385,7 +385,10 @@ class WSConnection:
             self._cache.pop(channel, None)
         channel = Channel(name=channel, websocket=self)
         user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
-
+        try:
+            self._cache[channel.name].discard(user)
+        except KeyError:
+            pass
         self.dispatch("part", user)
 
     async def _privmsg(self, parsed):  # TODO(Update Cache properly)

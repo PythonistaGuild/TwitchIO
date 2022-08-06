@@ -37,6 +37,7 @@ Master
         - Updated IRC parser to not strip colons from beginning of messages
         - Updated IRC parser to not remove multiple spaces when clumped together
         - Fixed :func:`twitchio.Client.start` exiting immediatly
+        - Chatters will now update correctly when someone leaves chat
 
 - ext.commands
     - Bug fixes
