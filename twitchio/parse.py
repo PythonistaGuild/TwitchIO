@@ -26,6 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 import re
 import typing
+import logging
 
 if typing.TYPE_CHECKING:
     from .websocket import WSConnection
@@ -44,7 +45,9 @@ ACTIONS = (
 )
 ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "USERNOTICE", "WHISPER")
 USER_SUB = re.compile(r":(?P<user>.*)!")
-TMI = "tmi.twitch.tv"
+MESSAGE_RE = re.compile(r":(?P<useraddr>\S+) (?P<action>\S+) #(?P<channel>\S+)( :(?P<message>.*))?$")
+
+logger = logging.getLogger("twitchio.parser")
 
 
 def parser(data: str, nick: str):
@@ -55,33 +58,22 @@ def parser(data: str, nick: str):
     user = None
     badges = None
 
+    logger.debug(f"---DATA--- {data}")
+
     if action == "PING":
         return dict(action="PING")
 
-    elif groups[2] in {"PRIVMSG", "PRIVMSG(ECHO)"}:
-        action = groups[2]
-        channel = groups[3].lstrip("#")
-        message = " ".join(groups[4:]).lstrip(":")
-        user = re.search(USER_SUB, groups[1]).group("user")
-
-    elif groups[2] == "WHISPER":
-        action = groups[2]
-        message = " ".join(groups[4:]).lstrip(":")
-        user = re.search(USER_SUB, groups[1]).group("user")
-
-    elif groups[2] == "USERNOTICE":
-        action = groups[2]
-        channel = groups[3].lstrip("#")
-        message = " ".join(groups[4:]).lstrip(":")
-
-    elif action in ACTIONS:
-        channel = groups[-1].lstrip("#")
-
-    elif groups[3] in {"PRIVMSG", "PRIVMSG(ECHO)"}:
-        action = groups[3]
-        channel = groups[4].lstrip("#")
-        message = " ".join(groups[5:]).lstrip(":")
-        user = re.search(USER_SUB, groups[2]).group("user")
+    elif (
+        groups[1] in ACTIONS or groups[2] in ACTIONS or (len(groups) > 3 and groups[3] in {"PRIVMSG", "PRIVMSG(ECHO)"})
+    ):
+        result = re.search(MESSAGE_RE, data)
+        if not result:
+            logger.error(f" ****** MESSAGE_RE Failed! ******")
+            return None  # raise exception?
+        user = result.group("useraddr").split("!")[0]
+        action = result.group("action")
+        channel = result.group("channel")
+        message = result.group("message")
 
     if action in ACTIONS2:
         prebadge = groups[0].split(";")
@@ -111,17 +103,28 @@ def parser(data: str, nick: str):
 
     batches = []
     if code == 353:
-        if not channel:
-            channel = groups[4].lstrip("#")
+        channel = groups[4]
+        if channel[0] == "#":
+            channel = channel[1:]
+        else:
+            logger.warning(f" (353) parse failed? ||{channel}||")
 
         for b in groups[5:-1]:
-            b = b.lstrip(":")
+            if b[0] == ":":
+                b = b[1:]
 
             if "\r\n:" in b:
                 batches.append(b.split("\r\n:")[0])
                 break
             else:
                 batches.append(b)
+
+    actcode = action or code
+    if actcode:
+        level = logging.DEBUG
+        if actcode not in ["JOIN", "PART"]:
+            level = logging.INFO
+        logger.log(level, f"    parsed <{actcode}><{channel}><{user}><{message}>")
 
     return dict(
         data=data,
