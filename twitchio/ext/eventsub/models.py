@@ -4,8 +4,7 @@ import hmac
 import hashlib
 import logging
 from enum import Enum
-from typing import Dict, TYPE_CHECKING, Optional, Type, Union
-from typing_extensions import Literal
+from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Literal, Tuple
 
 from aiohttp import web
 
@@ -456,33 +455,33 @@ class CustomReward:
         self.cost: int = data["cost"]
         self.prompt: str = data["prompt"]
 
-        self.enabled: bool = data.get("is_enabled", None)
-        self.paused: bool = data.get("is_paused", None)
-        self.in_stock: bool = data.get("is_in_stock", None)
+        self.enabled: Optional[bool] = data.get("is_enabled", None)
+        self.paused: Optional[bool] = data.get("is_paused", None)
+        self.in_stock: Optional[bool] = data.get("is_in_stock", None)
 
-        self.cooldown_until: datetime.datetime = (
+        self.cooldown_until: Optional[datetime.datetime] = (
             _parse_datetime(data["cooldown_expires_at"]) if data.get("cooldown_expires_at", None) else None
         )
 
-        self.input_required: bool = data.get("is_user_input_required", None)
-        self.redemptions_skip_queue: bool = data.get("should_redemptions_skip_request_queue", None)
-        self.redemptions_current_stream: bool = data.get("redemptions_redeemed_current_stream", None)
+        self.input_required: Optional[bool] = data.get("is_user_input_required", None)
+        self.redemptions_skip_queue: Optional[bool] = data.get("should_redemptions_skip_request_queue", None)
+        self.redemptions_current_stream: Optional[bool] = data.get("redemptions_redeemed_current_stream", None)
 
-        self.max_per_stream: tuple[bool, int] = (
+        self.max_per_stream: Tuple[Optional[bool], Optional[int]] = (
             data.get("max_per_stream", {}).get("is_enabled"),
             data.get("max_per_stream", {}).get("value"),
         )
-        self.max_per_user_stream: tuple[bool, int] = (
+        self.max_per_user_stream: Tuple[Optional[bool], Optional[int]] = (
             data.get("max_per_user_per_stream", {}).get("is_enabled"),
             data.get("max_per_user_per_stream", {}).get("value"),
         )
-        self.cooldown: tuple[bool, int] = (
+        self.cooldown: Tuple[Optional[bool], Optional[int]] = (
             data.get("global_cooldown", {}).get("is_enabled"),
             data.get("global_cooldown", {}).get("seconds"),
         )
 
-        self.background_color: str = data.get("background_color", None)
-        self.image: str = data.get("image", data.get("default_image", {})).get("url_1x", None)
+        self.background_color: Optional[str] = data.get("background_color", None)
+        self.image: Optional[str] = data.get("image", data.get("default_image", {})).get("url_1x", None)
 
 
 class CustomRewardAddUpdateRemoveData(EventData):
