@@ -48,6 +48,10 @@ Master
     - Bug fixes
         - :class:`~twitchio.ext.pubsub.PubSubModerationAction` now handles missing keys
 
+- ext.eventsub
+    - Additions
+        - Created an Eventsub-specific :class:`~twitchio.ext.eventsub.CustomReward` model
+
 2.3.0
 =====
 Massive documentation updates
