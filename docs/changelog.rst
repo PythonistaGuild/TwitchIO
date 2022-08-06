@@ -34,6 +34,8 @@ Master
         - Corrected :func:`twitchio.CustomRewardRedemption.refund` endpoint typo and creation
         - Changed :func:`~twitchio.Client.join_channels` logic to handle bigger channel lists better
         - Corrected :class:`~twitchio.Predictor` slots and user keys, repr has also been added
+        - Updated IRC parser to not strip colons from beginning of messages
+        - Updated IRC parser to not remove multiple spaces when clumped together
 
 - ext.commands
     - Bug fixes

@@ -58,8 +58,6 @@ def parser(data: str, nick: str):
     user = None
     badges = None
 
-    logger.debug(f"---DATA--- {data}")
-
     if action == "PING":
         return dict(action="PING")
 
@@ -118,13 +116,6 @@ def parser(data: str, nick: str):
                 break
             else:
                 batches.append(b)
-
-    actcode = action or code
-    if actcode:
-        level = logging.DEBUG
-        if actcode not in ["JOIN", "PART"]:
-            level = logging.INFO
-        logger.log(level, f"    parsed <{actcode}><{channel}><{user}><{message}>")
 
     return dict(
         data=data,
