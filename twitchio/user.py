@@ -1567,7 +1567,9 @@ class User(PartialUser):
         self.description: str = data["description"]
         self.profile_image: str = data["profile_image_url"]
         self.offline_image: str = data["offline_image_url"]
-        self.view_count: Tuple[int] = (data.get("view_count", 0),)  # this isn't supposed to be a tuple but too late to fix it!
+        self.view_count: Tuple[int] = (
+            data.get("view_count", 0),
+        )  # this isn't supposed to be a tuple but too late to fix it!
         self.created_at = parse_timestamp(data["created_at"])
         self.email: Optional[str] = data.get("email")
         self._cached_rewards = None
