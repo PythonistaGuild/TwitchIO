@@ -242,7 +242,7 @@ class ChannelSubscriptionGiftData(EventData):
     """
     A Subscription Gift event
     Explicitly, the act of giving another user a Subscription.
-    Receiving a gift-subscription uses ChannelSubscribeData above, with is_gift==True
+    Receiving a gift-subscription uses ChannelSubscribeData above, with is_gift is ``True``
 
     Attributes
     -----------
@@ -256,7 +256,7 @@ class ChannelSubscriptionGiftData(EventData):
         The tier of the subscription
     total: :class:`int`
         The total number of subs gifted by a user at once
-    cumulative: Optional[:class:`int`]
+    cumulative_total: Optional[:class:`int`]
         The total number of subs gifted by a user overall. Will be ``None`` if ``is_anonymous`` is ``True``
     """
 
@@ -265,10 +265,10 @@ class ChannelSubscriptionGiftData(EventData):
     def __init__(self, client: EventSubClient, data: dict):
         self.is_anonymous: bool = data["is_anonymous"]
         self.user: Optional[PartialUser] = _transform_user(client, data, "user") if not self.is_anonymous else None
-        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.broadcaster: Optional[PartialUser] = _transform_user(client, data, "broadcaster_user")
         self.tier = int(data["tier"])
         self.total = int(data["total"])
-        self.cumulative = int(data["cumulative_total"]) if not self.is_anonymous else None
+        self.cumulative_total: Optional[int] = int(data["cumulative_total"]) if not self.is_anonymous else None
 
 
 class ChannelSubscriptionMessageData(EventData):
@@ -286,9 +286,9 @@ class ChannelSubscriptionMessageData(EventData):
         The tier of the subscription
     message: :class:`str`
         The user's resubscription message
-    emote_data: :class:`List[Dict]`
+    emote_data: :class:`list`
         emote data within the user's resubscription message. Not the emotes themselves
-    cumulative: :class:`int`
+    cumulative_months: :class:`int`
         The total number of months a user has subscribed to the channel
     streak: Optional[:class:`int`]
         The total number of months subscribed in a row. ``None`` if the user declines to share it.
@@ -302,11 +302,11 @@ class ChannelSubscriptionMessageData(EventData):
         self.user = _transform_user(client, data, "user")
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.tier = int(data["tier"])
-        self.message = data["message"]["text"]
+        self.message: str = data["message"]["text"]
         self.emote_data: List[Dict] = data["message"].get("emotes", [])
-        self.cumulative = data["cumulative_months"]
-        self.streak = data["streak_months"]
-        self.duration = data["duration_months"]
+        self.cumulative_months: int = data["cumulative_months"]
+        self.streak: Optional[int] = data["streak_months"]
+        self.duration: int = data["duration_months"]
 
 
 class ChannelCheerData(EventData):
