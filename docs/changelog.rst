@@ -7,20 +7,20 @@ Master
         - Added :func:`~twitchio.Client.event_reconnect` to :class:`~twitchio.Client`
         - Add attribute docs to :class:`~twitchio.PartialUser` and :class:`~twitchio.User`
         - Added following new :class:`~twitchio.PartialUser` methods:
-            - :func:`twitchio.PartialUser.create_custom_reward`
-            - :func:`twitchio.PartialUser.chat_announcement`
-            - :func:`twitchio.PartialUser.delete_chat_messages`
-            - :func:`twitchio.PartialUser.fetch_channel_vips`
-            - :func:`twitchio.PartialUser.add_channel_vip`
-            - :func:`twitchio.PartialUser.remove_channel_vip`
-            - :func:`twitchio.PartialUser.add_channel_moderator`
-            - :func:`twitchio.PartialUser.remove_channel_moderator`
-            - :func:`twitchio.PartialUser.start_raid`
-            - :func:`twitchio.PartialUser.cancel_raid`
-            - :func:`twitchio.PartialUser.ban_user`
-            - :func:`twitchio.PartialUser.timeout_user`
-            - :func:`twitchio.PartialUser.unban_user`
-            - :func:`twitchio.PartialUser.send_whisper`
+            - :func:`~twitchio.PartialUser.create_custom_reward`
+            - :func:`~twitchio.PartialUser.chat_announcement`
+            - :func:`~twitchio.PartialUser.delete_chat_messages`
+            - :func:`~twitchio.PartialUser.fetch_channel_vips`
+            - :func:`~twitchio.PartialUser.add_channel_vip`
+            - :func:`~twitchio.PartialUser.remove_channel_vip`
+            - :func:`~twitchio.PartialUser.add_channel_moderator`
+            - :func:`~twitchio.PartialUser.remove_channel_moderator`
+            - :func:`~twitchio.PartialUser.start_raid`
+            - :func:`~twitchio.PartialUser.cancel_raid`
+            - :func:`~twitchio.PartialUser.ban_user`
+            - :func:`~twitchio.PartialUser.timeout_user`
+            - :func:`~twitchio.PartialUser.unban_user`
+            - :func:`~twitchio.PartialUser.send_whisper`
         - Added following new :class:`~twitchio.Client` methods:
             - :func:`~twitchio.Client.fetch_chatters_colors`
             - :func:`~twitchio.Client.update_chatter_color`
