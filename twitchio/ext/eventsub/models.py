@@ -4,7 +4,8 @@ import hmac
 import hashlib
 import logging
 from enum import Enum
-from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Literal, Tuple
+from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Tuple, List
+from typing_extensions import Literal
 
 from aiohttp import web
 
