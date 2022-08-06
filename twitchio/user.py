@@ -46,6 +46,16 @@ __all__ = (
 
 
 class PartialUser:
+    """
+    A class that contains minimal data about a user from the API.
+
+    Attributes
+    -----------
+    id: :class:`int`
+        The user's ID.
+    name: Optional[:class:`str`]
+        The user's name. In most cases, this is provided. There are however, rare cases where it is not.
+    """
 
     __slots__ = "id", "name", "_http", "_cached_rewards"
 
@@ -1492,6 +1502,44 @@ class SearchUser(PartialUser):
 
 
 class User(PartialUser):
+    """
+    A full user object, containing data from the users endpoint.
+
+    Attributes
+    -----------
+    id: :class:`int`
+        The user's ID
+    name: :class:`str`
+        The user's login name
+    display_name: :class:`str`
+        The name that is displayed in twitch chat. For the most part, this is simply a change of capitalization
+    type: :class:`~twitchio.UserTypeEnum`
+        The user's type. This will normally be :class:`~twitchio.UserTypeEnum.none`, unless they are twitch staff or admin
+    broadcaster_type: :class:`~twitchio.BroadcasterTypeEnum`
+        What type of broacaster the user is. none, affiliate, or partner
+    description: :class:`str`
+        The user's bio
+    profile_image: :class:`str`
+        The user's profile image URL
+    offline_image: :class:`str`
+        The user's offline image splash URL
+    view_count: Tuple[int]
+        The amount of views this channel has
+
+        .. warning::
+
+            This field has been deprecated by twitch, and is no longer updated.
+            See `here <https://discuss.dev.twitch.tv/t/get-users-api-endpoint-view-count-deprecation/37777>`_ for more information.
+
+        .. note::
+
+            This field is a tuple due to a mistake when creating the models.
+            Due to semver principals, this cannot be fixed until version 3.0 (at which time we will be removing the field entirely).
+    created_at: :class:`datetime.datetime`
+        When the user created their account
+    email: Optional[class:`str`]
+        The user's email. This is only returned if you have the ``user:read:email`` scope on the token used to make the request
+    """
 
     __slots__ = (
         "_http",
@@ -1519,7 +1567,7 @@ class User(PartialUser):
         self.description: str = data["description"]
         self.profile_image: str = data["profile_image_url"]
         self.offline_image: str = data["offline_image_url"]
-        self.view_count: Tuple[int] = (data["view_count"],)  # this isn't supposed to be a tuple but too late to fix it!
+        self.view_count: Tuple[int] = (data.get("view_count", 0),)  # this isn't supposed to be a tuple but too late to fix it!
         self.created_at = parse_timestamp(data["created_at"])
         self.email: Optional[str] = data.get("email")
         self._cached_rewards = None

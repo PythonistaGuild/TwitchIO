@@ -4,7 +4,8 @@ Master
 ======
 - TwitchIO
     - Additions
-        - Added following new PartialUser methods:
+        - Add attribute docs to :class:`~twitchio.PartialUser` and :class:`~twitchio.User`
+        - Added following new :class:`~twitchio.PartialUser` methods:
             - :func:`twitchio.PartialUser.create_custom_reward`
             - :func:`twitchio.PartialUser.chat_announcement`
             - :func:`twitchio.PartialUser.delete_chat_messages`
@@ -19,7 +20,7 @@ Master
             - :func:`twitchio.PartialUser.timeout_user`
             - :func:`twitchio.PartialUser.unban_user`
             - :func:`twitchio.PartialUser.send_whisper`
-        - Added following new Client methods:
+        - Added following new :class:`~twitchio.Client` methods:
             - :func:`~twitchio.Client.fetch_chatters_colors`
             - :func:`~twitchio.Client.update_chatter_color`
             - :func:`~twitchio.Client.fetch_channels`
