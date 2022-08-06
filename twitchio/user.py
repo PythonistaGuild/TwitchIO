@@ -178,17 +178,89 @@ class PartialUser:
             self._cached_rewards = time.monotonic(), values
             return values
 
+    async def create_custom_reward(
+        self,
+        token: str,
+        title: str,
+        cost: int,
+        prompt: Optional[str] = None,
+        enabled: Optional[bool] = True,
+        background_color: Optional[str] = None,
+        input_required: Optional[bool] = False,
+        max_per_stream: Optional[int] = None,
+        max_per_user_per_stream: Optional[int] = None,
+        global_cooldown: Optional[int] = None,
+        redemptions_skip_queue: Optional[bool] = False,
+    ) -> "CustomReward":
+        """|coro|
+
+        Creates a custom reward for the user.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:redemptions`` scope
+        title: :class:`str`
+            The title of the reward
+        cost: :class:`int`
+            The cost of the reward
+        prompt: Optional[:class:`str`]
+            The prompt for the reward. Defaults to None
+        enabled: Optional[:class:`bool`]
+            Whether the reward is enabled. Defaults to True
+        background_color: Optional[:class:`str`]
+            The background color of the reward. Defaults to None
+        input_required: Optional[:class:`bool`]
+            Whether the reward requires input. Defaults to False
+        max_per_stream: Optional[:class:`int`]
+            The maximum number of times the reward can be redeemed per stream. Defaults to None
+        max_per_user_per_stream: Optional[:class:`int`]
+            The maximum number of times the reward can be redeemed per user per stream. Defaults to None
+        global_cooldown: Optional[:class:`int`]
+            The global cooldown of the reward. Defaults to None
+        redemptions_skip_queue: Optional[:class:`bool`]
+            Whether the reward skips the queue when redeemed. Defaults to False
+        """
+        try:
+            data = await self._http.create_reward(
+                token,
+                self.id,
+                title,
+                cost,
+                prompt,
+                enabled,
+                background_color,
+                input_required,
+                max_per_stream,
+                max_per_user_per_stream,
+                global_cooldown,
+                redemptions_skip_queue,
+            )
+            return CustomReward(self._http, data[0], self)
+        except Unauthorized as error:
+            raise Unauthorized("The given token is invalid", "", 401) from error
+        except HTTPException as error:
+            status = error.args[2]
+            if status == 403:
+                raise HTTPException(
+                    "The custom reward was created by a different application, or channel points are "
+                    "not available for the broadcaster (403)",
+                    error.args[1],
+                    403,
+                ) from error
+            raise
+
     async def fetch_bits_leaderboard(
         self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
     ) -> "BitsLeaderboard":
         """|coro|
 
-        Fetches the bits leaderboard for the channel. This requires an OAuth token with the bits:read scope.
+        Fetches the bits leaderboard for the channel. This requires an OAuth token with the ``bits:read`` scope.
 
         Parameters
         -----------
         token: :class:`str`
-            the OAuth token with the bits:read scope
+            the OAuth token with the ``bits:read`` scope
         period: Optional[:class:`str`]
             one of `day`, `week`, `month`, `year`, or `all`, defaults to `all`
         started_at: Optional[:class:`datetime.datetime`]
@@ -204,7 +276,7 @@ class PartialUser:
     async def start_commercial(self, token: str, length: int) -> dict:
         """|coro|
 
-        Starts a commercial on the channel. Requires an OAuth token with the `channel:edit:commercial` scope.
+        Starts a commercial on the channel. Requires an OAuth token with the ``channel:edit:commercial`` scope.
 
         Parameters
         -----------
@@ -224,7 +296,7 @@ class PartialUser:
         """|coro|
 
         Creates a clip on the channel. Note that clips are not created instantly, so you will have to query
-        :meth:`~get_clips` to confirm the clip was created. Requires an OAuth token with the `clips:edit` scope
+        :meth:`~get_clips` to confirm the clip was created. Requires an OAuth token with the ``clips:edit`` scope
 
         Parameters
         -----------
@@ -259,7 +331,7 @@ class PartialUser:
     async def fetch_hypetrain_events(self, id: str = None, token: str = None):
         """|coro|
 
-        Fetches hypetrain event from the api. Needs a token with the channel:read:hype_train scope.
+        Fetches hypetrain event from the api. Needs a token with the ``channel:read:hype_train`` scope.
 
         Parameters
         -----------
@@ -286,7 +358,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         userids: List[Union[:class:`str`, :class:`int`]]
             An optional list of userids to fetch. Will fetch all bans if this is not passed
         """
@@ -296,12 +368,14 @@ class PartialUser:
     async def fetch_ban_events(self, token: str, userids: List[int] = None):
         """|coro|
 
+        This has been deprecated and will be removed in a future release.
+
         Fetches ban/unban events from the User's channel.
 
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         userids: List[:class:`int`]
             An optional list of users to fetch ban/unban events for
 
@@ -322,7 +396,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         userids: List[:class:`int`]
             An optional list of users to check mod status of
 
@@ -341,7 +415,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
 
         Returns
         --------
@@ -360,7 +434,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the moderation:read scope.
+            The oauth token with the ``moderation:read`` scope.
         query: List[:class:`AutomodCheckMessage`]
             A list of :class:`twitchio.AutomodCheckMessage`
 
@@ -381,7 +455,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the channel:read:stream_key scope
+            The oauth token with the ``channel:read:stream_key`` scope
 
         Returns
         --------
@@ -460,7 +534,7 @@ class PartialUser:
         userid: :class:`int`
             The user id to follow this user with
         token: :class:`str`
-            An oauth token with the user:edit:follows scope
+            An oauth token with the ``user:edit:follows`` scope
         notifications: :class:`bool`
             Whether to allow push notifications when this user goes live. Defaults to False
         """
@@ -478,7 +552,7 @@ class PartialUser:
         userid: :class:`int`
             The user id to unfollow this user with
         token: :class:`str`
-            An oauth token with the user:edit:follows scope
+            An oauth token with the ``user:edit:follows`` scope
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
@@ -490,7 +564,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:read:subscriptions scope
+            An oauth token with the ``channel:read:subscriptions`` scope
         userids: Optional[List[:class:`int`]]
             An optional list of userids to look for
 
@@ -511,7 +585,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:edit:broadcast scope
+            An oauth token with the ``user:edit:broadcast`` scope
         description: :class:`str`
             An optional description of the marker
 
@@ -533,7 +607,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:edit:broadcast scope
+            An oauth token with the ``user:edit:broadcast`` scope
         video_id: :class:`str`
             A specific video o fetch from. Defaults to the most recent stream if not passed
 
@@ -555,7 +629,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``user:read:broadcast`` scope
 
         Returns
         --------
@@ -575,7 +649,7 @@ class PartialUser:
         Parameters
         -----------
         token: Optional[:class:`str`]
-            An oauth token with the user:read:broadcast *or* user:edit:broadcast scope
+            An oauth token with the ``user:read:broadcast`` *or* ``user:edit:broadcast`` scope
 
         Returns
         --------
@@ -594,7 +668,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with user:edit:broadcast scope
+            An oauth token with ``user:edit:broadcast`` scope
         extensions: :class:`twitchio.ExtensionBuilder`
             A :class:`twitchio.ExtensionBuilder` to be given to the twitch api
 
@@ -633,7 +707,7 @@ class PartialUser:
         return [Video(self._http, x, self) for x in data]
 
     async def end_prediction(
-        self, token: str, prediction_id: str, status: str, winning_outcome_id: str = None
+        self, token: str, prediction_id: str, status: str, winning_outcome_id: Optional[str] = None
     ) -> "Prediction":
         """|coro|
 
@@ -642,9 +716,16 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:predictions scope
+            An oauth token with the ``channel:manage:predictions`` scope
         prediction_id: :class:`str`
             ID of the prediction to end.
+        status: :class:`str`
+            Status of the prediction. Valid values are:
+            RESOLVED - Winning outcome has been choson and points distributed.
+            CANCELED - Prediction canceled and points refunded
+            LOCKED - Viewers can no longer make predictions.
+        winning_outcome_id: Optional[:class:`str`]
+            ID of the winning outcome. This is required if status is RESOLVED
 
         Returns
         --------
@@ -670,7 +751,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:predictions scope
+            An oauth token with the ``channel:manage:predictions`` scope
         prediction_id: :class:`str`
             ID of the prediction to receive information about.
 
@@ -693,7 +774,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:predictions scope
+            An oauth token with the ``channel:manage:predictions`` scope
         title: :class:`str`
             Title for the prediction (max of 45 characters)
         blue_outcome: :class:`str`
@@ -727,7 +808,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:broadcast scope
+            An oauth token with the ``channel:manage:broadcast`` scope
         game_id: :class:`int`
             Optional game ID being played on the channel. Use 0 to unset the game.
         language: :class:`str`
@@ -806,7 +887,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``channel:read:polls`` scope
         poll_ids: Optional[List[:class:`str`]]
             List of poll IDs to return. Maximum: 100
         first: Optional[:class:`int`]
@@ -839,7 +920,8 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``channel:manage:polls`` scope.
+            User ID in token must match the broadcaster's ID.
         title: :class:`str`
             Question displayed for the poll.
         choices: List[:class:`str`]
@@ -882,7 +964,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``channel:manage:polls`` scope
         poll_id: :class:`str`
             ID of the poll.
         status: :class:`str`
@@ -907,7 +989,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the user:read:broadcast scope
+            An oauth token with the ``channel:read:goals`` scope
 
         Returns
         --------
@@ -918,17 +1000,18 @@ class PartialUser:
         data = await self._http.get_goals(broadcaster_id=str(self.id), token=token)
         return [Goal(self._http, x) for x in data]
 
-    async def fetch_chat_settings(self, moderator_id: Optional[int] = None, token: Optional[str] = None):
+    async def fetch_chat_settings(self, token: Optional[str] = None, moderator_id: Optional[int] = None):
         """|coro|
 
         Fetches the current chat settings for this channel/broadcaster.
 
         Parameters
         -----------
+        token: Optional[:class:`str`]
+            An oauth token with the ``moderator:read:chat_settings`` scope. Required if moderator_id is provided.
         moderator_id: Optional[:class:`int`]
             The ID of a user that has permission to moderate the broadcaster's chat room.
-        token: Optional[:class:`str`]
-            An oauth token with the moderator:read:chat_settings scope. Required if moderator_id is provided.
+            Requires ``moderator:read:chat_settings`` scope.
 
         Returns
         --------
@@ -943,8 +1026,8 @@ class PartialUser:
 
     async def update_chat_settings(
         self,
-        moderator_id: int,
         token: str,
+        moderator_id: int,
         emote_mode: Optional[bool] = None,
         follower_mode: Optional[bool] = None,
         follower_mode_duration: Optional[int] = None,
@@ -961,10 +1044,11 @@ class PartialUser:
 
         Parameters
         -----------
+        token: :class:`str`
+            An oauth token with the ``moderator:manage:chat_settings`` scope.
         moderator_id: :class:`int`
             The ID of a user that has permission to moderate the broadcaster's chat room.
-        token: :class:`str`
-            An oauth token with the moderator:manage:chat_settings scope.
+            Requires ``moderator:manage:chat_settings`` scope.
         emote_mode: Optional[:class:`bool`]
             A boolean to determine whether chat must contain only emotes or not.
         follower_mode: Optional[:class:`bool`]
@@ -1009,6 +1093,339 @@ class PartialUser:
         )
         return ChatSettings(self._http, data[0])
 
+    async def chat_announcement(self, token: str, moderator_id: int, message: str, color: Optional[str] = "primary"):
+        """|coro|
+
+        Sends a chat announcement to the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``moderator:manage:chat_settings`` scope.
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            Requires ``moderator:manage:announcements`` scope.
+        message: :class:`str`
+            The message to be sent.
+        color: Optional[:class:`str`]
+            The color of the message. Valid values:
+            blue, green orange, pruple. The default is primary.
+        Returns
+        --------
+        None
+        """
+        await self._http.post_chat_announcement(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            token=token,
+            message=message,
+            color=color,
+        )
+
+    async def delete_chat_messages(self, token: str, moderator_id: int, message_id: Optional[str] = None):
+        """|coro|
+
+        Deletes a chat message, or clears chat, in the specified channel/broadcaster's chat.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``moderator:manage:chat_settings`` scope.
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            Requires ``moderator:manage:chat_messages`` scope.
+        message_id: Optional[:class:`str`]
+            The ID of the message to be deleted.
+            The message must have been created within the last 6 hours.
+            The message must not belong to the broadcaster.
+            If not specified, the request removes all messages in the broadcaster's chat room.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.delete_chat_messages(
+            broadcaster_id=str(self.id), token=token, moderator_id=str(moderator_id), message_id=message_id
+        )
+
+    async def fetch_channel_vips(self, token: str, first: int = 20, user_ids: Optional[List[int]] = None):
+        """|coro|
+
+        Fetches the list of VIPs for the specified channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:read:vips`` or ``moderator:manage:chat_settings`` scope.
+            Must be the broadcaster's token.
+        first: Optional[:class:`int`]
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100. The default is 20.
+        user_ids: Optional[List[:class:`int`]]
+            A list of user IDs to filter the results by.
+            The maximum number of IDs that you may specify is 100. Ignores those users in the list that aren't VIPs.
+
+        Returns
+        --------
+        List[:class:`twitchio.PartialUser`]
+        """
+
+        data = await self._http.get_channel_vips(
+            broadcaster_id=str(self.id), token=token, first=first, user_ids=user_ids
+        )
+        return [PartialUser(self._http, x["user_id"], x["user_login"]) for x in data]
+
+    async def add_channel_vip(self, token: str, user_id: int):
+        """|coro|
+
+        Adds a VIP to the specified channel/broadcaster.
+        The channel may add a maximum of 10 VIPs within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:vips scope``.
+            Must be the broadcaster's token.
+        user_id: :class:`int`
+            The ID of the user to add as a VIP.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.post_channel_vip(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def remove_channel_vip(self, token: str, user_id: int):
+        """|coro|
+
+        Removes a VIP from the specified channel/broadcaster.
+        The channel may remove a maximum of 10 vips within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:vips`` scope.
+            Must be the broadcaster's token.
+        user_id: :class:`int`
+            The ID of the user to remove as a VIP.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.delete_channel_vip(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def add_channel_moderator(self, token: str, user_id: int):
+        """|coro|
+
+        Adds a moderator to the specified channel/broadcaster.
+        The channel may add a maximum of 10 moderators within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:moderators`` scope.
+            Must be the broadcaster's token.
+        user_id: :class:`str`
+            The ID of the user to add as a moderator.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.post_channel_moderator(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def remove_channel_moderator(self, token: str, user_id: int):
+        """|coro|
+
+        Removes a moderator from the specified channel/broadcaster.
+        The channel may remove a maximum of 10 moderators within a 10 seconds period.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:moderators`` scope.
+            Must be the broadcaster's token.
+        user_id: :class:`str`
+            The ID of the user to remove as a moderator.
+
+        Returns
+        --------
+        None
+        """
+        await self._http.delete_channel_moderator(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
+
+    async def start_raid(self, token: str, to_broadcaster_id: int):
+        """|coro|
+
+        Starts a raid for the channel/broadcaster.
+        The UTC date and time, in RFC3339 format, when the raid request was created.
+        A Boolean value that indicates whether the channel being raided contains mature content.
+
+        Rate Limit: The limit is 10 requests within a 10-minute window.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:raids`` scope
+            Must be the broadcaster's token.
+        to_broadcaster_id: :class:`int`
+            The ID of the broadcaster to raid.
+
+        Returns
+        --------
+        :class:`twitchio.Raid`
+        """
+
+        data = await self._http.post_raid(
+            from_broadcaster_id=str(self.id), token=token, to_broadcaster_id=str(to_broadcaster_id)
+        )
+
+        from .models import Raid
+
+        return Raid(data[0])
+
+    async def cancel_raid(self, token: str):
+        """|coro|
+
+        Cancels a raid for the channel/broadcaster.
+        The limit is 10 requests within a 10-minute window.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:raids`` scope
+            Must be the broadcaster's token.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.delete_raid(broadcaster_id=str(self.id), token=token)
+
+    async def ban_user(self, token: str, moderator_id: int, user_id, reason: str):
+        """|coro|
+
+        Bans a user from the channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user access token with the ``moderator:manage:banned_users`` scope
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            If the broadcaster wants to ban the user set this parameter to the broadcaster's ID.
+        user_id: :class:`int`
+            The ID of the user to ban.
+        reason: :class:`str`
+            The reason for the ban.
+
+        Returns
+        --------
+        :class:`twitchio.Ban`
+        """
+        from .models import Ban
+
+        data = await self._http.post_ban_timeout_user(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            user_id=str(user_id),
+            reason=reason,
+            token=token,
+        )
+        return Ban(self._http, data[0])
+
+    async def timeout_user(self, token: str, moderator_id: int, user_id: int, duration: int, reason: str):
+        """|coro|
+
+        Timeouts a user from the channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user access token with the ``moderator:manage:banned_users`` scope
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            If the broadcaster wants to timeout the user set this parameter to the broadcaster's ID.
+        duration: :class:`int`
+            The duration of the timeout in seconds.
+            The minimum timeout is 1 second and the maximum is 1,209,600 seconds (2 weeks).
+            To end a user's timeout early, set this field to 1, or send an Unban user request.
+        reason: :class:`str`
+            The reason for the timeout.
+
+        Returns
+        --------
+        :class:`twitchio.Timeout`
+        """
+        from .models import Timeout
+
+        data = await self._http.post_ban_timeout_user(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            user_id=str(user_id),
+            duration=duration,
+            reason=reason,
+            token=token,
+        )
+        return Timeout(self._http, data[0])
+
+    async def unban_user(self, token: str, moderator_id: int, user_id):
+        """|coro|
+
+        Unbans a user or removes a timeout from the channel/broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user access token with the ``moderator:manage:banned_users`` scope
+        moderator_id: :class:`int`
+            The ID of a user that has permission to moderate the broadcaster's chat room.
+            If the broadcaster wants to ban the user set this parameter to the broadcaster's ID.
+        user_id: :class:`int`
+            The ID of the user to unban.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.delete_ban_timeout_user(
+            broadcaster_id=str(self.id),
+            moderator_id=str(moderator_id),
+            user_id=str(user_id),
+            token=token,
+        )
+
+    async def send_whisper(self, token: str, user_id: int, message: str):
+        """|coro|
+
+        Sends a whisper to a user.
+        Important Notes:
+        - The user sending the whisper must have a verified phone number.
+        - The API may silently drop whispers that it suspects of violating Twitch policies.
+        - You may whisper to a maximum of 40 unique recipients per day. Within the per day limit.
+        - You may whisper a maximum of 3 whispers per second and a maximum of 100 whispers per minute.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``user:manage:whispers`` scope.
+        user_id: :class:`int`
+            The ID of the user to send the whisper to.
+        message: :class:`str`
+            The message to send.
+            500 characters if the user you're sending the message to hasn't whispered you before.
+            10,000 characters if the user you're sending the message to has whispered you before.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.post_whisper(token=token, from_user_id=str(self.id), to_user_id=str(user_id), message=message)
+
 
 class BitLeaderboardUser(PartialUser):
 
@@ -1021,14 +1438,39 @@ class BitLeaderboardUser(PartialUser):
 
 
 class UserBan(PartialUser):
+    """
+    Represents a banned user or one in timeout.
 
-    __slots__ = ("expires_at",)
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the banned user.
+    name: :class:`str`
+        The name of the banned user.
+    created_at: :class:`datetime.datetime`
+        The date and time the ban was created.
+    expires_at: Optional[:class:`datetime.datetime`]
+        The date and time the timeout will expire.
+        Is None if it's a ban.
+    reason: :class:`str`
+        The reason for the ban/timeout.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that banned the user.
+    """
+
+    __slots__ = ("created_at", "expires_at", "reason", "moderator")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        super(UserBan, self).__init__(http, name=data["user_login"], id=data["user_id"])
-        self.expires_at = (
-            datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ") if data["expires_at"] else None
+        super(UserBan, self).__init__(http, id=data["user_id"], name=data["user_login"])
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.expires_at: Optional[datetime.datetime] = (
+            parse_timestamp(data["expires_at"]) if data["expires_at"] else None
         )
+        self.reason: str = data["reason"]
+        self.moderator = PartialUser(http, id=data["moderator_id"], name=data["moderator_login"])
+
+    def __repr__(self):
+        return f"<UserBan {super().__repr__()} created_at={self.created_at} expires_at={self.expires_at} reason={self.reason}>"
 
 
 class SearchUser(PartialUser):

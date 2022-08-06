@@ -99,6 +99,7 @@ class Client:
         self._events = {}
         self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
         self.registered_callbacks: Dict[Callable, str] = {}
+        self._closing: Optional[asyncio.Event] = None
 
     @classmethod
     def from_client_credentials(
@@ -159,7 +160,9 @@ class Client:
         except KeyboardInterrupt:
             pass
         finally:
-            self.loop.run_until_complete(self.close())
+            if not self._closing.is_set():
+                self.loop.run_until_complete(self.close())
+
             self.loop.close()
 
     async def start(self):
@@ -174,14 +177,17 @@ class Client:
             )
         try:
             await self.connect()
+            await self._closing.wait()
         finally:
-            await self.close()
+            if not self._closing.is_set():
+                await self.close()
 
     async def connect(self):
         """|coro|
 
         Connects to the twitch IRC server
         """
+        self._closing = asyncio.Event()
         await self._connection._connect()
 
     async def close(self):
@@ -189,6 +195,7 @@ class Client:
 
         Cleanly disconnects from the twitch IRC server
         """
+        self._closing.set()
         await self._connection._close()
 
     def run_event(self, event_name, *args):
@@ -440,15 +447,20 @@ class Client:
         data = await self._http.get_clips(ids=ids)
         return [models.Clip(self._http, d) for d in data]
 
-    async def fetch_channel(self, broadcaster: str):
+    async def fetch_channel(self, broadcaster: str, token: Optional[str] = None):
         """|coro|
 
         Retrieve channel information from the API.
+
+        .. note::
+            This will be deprecated in 3.0. It's recommended to use :func:`~fetch_channels` instead.
 
         Parameters
         -----------
         broadcaster: str
             The channel name or ID to request from API. Returns empty dict if no channel was found.
+        token: Optional[:class:`str`]
+            An optional OAuth token to use instead of the bot OAuth token.
 
         Returns
         --------
@@ -459,9 +471,9 @@ class Client:
             get_id = await self.fetch_users(names=[broadcaster.lower()])
             if not get_id:
                 raise IndexError("Invalid channel name.")
-            broadcaster = get_id[0].id
+            broadcaster = str(get_id[0].id)
         try:
-            data = await self._http.get_channels(broadcaster)
+            data = await self._http.get_channels(broadcaster_id=broadcaster, token=token)
 
             from .models import ChannelInfo
 
@@ -469,6 +481,27 @@ class Client:
 
         except HTTPException:
             raise HTTPException("Incorrect channel ID.")
+
+    async def fetch_channels(self, broadcaster_ids: List[int], token: Optional[str] = None):
+        """|coro|
+
+        Retrieve information for up to 100 channels from the API.
+
+        Parameters
+        -----------
+        broadcaster_ids: List[:class:`int`]
+            The channel ids to request from API.
+        token: Optional[:class:`str`]
+            An optional OAuth token to use instead of the bot OAuth token
+
+        Returns
+        --------
+            List[:class:`twitchio.ChannelInfo`]
+        """
+        from .models import ChannelInfo
+
+        data = await self._http.get_channels_new(broadcaster_ids=broadcaster_ids, token=token)
+        return [ChannelInfo(self._http, data=d) for d in data]
 
     async def fetch_videos(
         self,
@@ -704,7 +737,7 @@ class Client:
         Parameters
         -----------
         token: :class:`str`
-            An oauth token with the channel:manage:videos scope
+            An oauth token with the ``channel:manage:videos`` scope
         ids: List[:class:`int`]
             A list of video ids from the channel of the oauth token to delete
 
@@ -717,6 +750,46 @@ class Client:
             resp.append(await self._http.delete_videos(token, chunk))
 
         return resp
+
+    async def fetch_chatters_colors(self, user_ids: List[int], token: Optional[str] = None):
+        """|coro|
+
+        Fetches the color of a chatter.
+
+        Parameters
+        -----------
+        user_ids: List[:class:`int`]
+            List of user ids to fetch the colors for
+        token: Optional[:class:`str`]
+            An optional user oauth token
+
+        Returns
+        --------
+            List[:class:`twitchio.ChatterColor`]
+        """
+        data = await self._http.get_user_chat_color(user_ids, token)
+        return [models.ChatterColor(self._http, x) for x in data]
+
+    async def update_chatter_color(self, token: str, user_id: int, color: str):
+        """|coro|
+
+        Updates the color of the specified user in the specified channel/broadcaster's chat.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``user:manage:chat_color`` scope.
+        user_id: :class:`int`
+            The ID of the user whose color is being updated, this must match the user ID in the token.
+        color: :class:`str`
+            Turbo and Prime users may specify a named color or a Hex color code like #9146FF.
+            Please see the Twitch documentation for more information.
+
+        Returns
+        --------
+            None
+        """
+        await self._http.put_user_chat_color(token=token, user_id=str(user_id), color=color)
 
     async def get_webhook_subscriptions(self):
         """|coro|

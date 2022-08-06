@@ -228,6 +228,12 @@ API Reference
     :members:
     :inherited-members:
 
+.. attributetable::: CustomReward
+
+.. autoclass:: CustomReward
+    :members:
+    :inherited-members:
+
 .. attributetable::: CustomRewardAddUpdateRemoveData
 
 .. autoclass:: CustomRewardAddUpdateRemoveData

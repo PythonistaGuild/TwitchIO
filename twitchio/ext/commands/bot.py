@@ -171,12 +171,14 @@ class Bot(Client):
     async def get_prefix(self, message):
         # TODO Docs
         prefixes = await self.__get_prefixes__(message)
-
+        message_content = message.content
+        if "reply-parent-msg-id" in message.tags:
+            message_content = message_content.split(" ", 1)[1]
         if not isinstance(prefixes, str):
             for prefix in prefixes:
-                if message.content.startswith(prefix):
+                if message_content.startswith(prefix):
                     return prefix
-        elif message.content.startswith(prefixes):
+        elif message_content.startswith(prefixes):
             return prefixes
         else:
             return None
@@ -287,7 +289,10 @@ class Bot(Client):
         prefix = await self.get_prefix(message)
         if not prefix:
             return cls(message=message, prefix=prefix, valid=False, bot=self)
-        content = message.content[len(prefix) : :].lstrip()  # Strip prefix and remainder whitespace
+        content = message.content
+        if "reply-parent-msg-id" in message.tags:  # Remove @username from reply message
+            content = content.split(" ", 1)[1]
+        content = content[len(prefix) : :].lstrip()  # Strip prefix and remainder whitespace
         view = StringParser()
         parsed = view.process_string(content)  # Return the string as a dict view
 
@@ -329,8 +334,6 @@ class Bot(Client):
             The message object to get content of and context for.
 
         """
-        if "reply-parent-msg-id" in message.tags:
-            message.content = message.content.split(" ")[1]
         context = await self.get_context(message)
         await self.invoke(context)
 

@@ -346,14 +346,14 @@ class TwitchHTTP:
         broadcaster_id: int,
         title: str,
         cost: int,
-        prompt: str = None,
-        is_enabled: bool = True,
-        background_color: str = None,
-        user_input_required: bool = False,
-        max_per_stream: int = None,
-        max_per_user: int = None,
-        global_cooldown: int = None,
-        fufill_immediatly: bool = False,
+        prompt: Optional[str] = None,
+        is_enabled: Optional[bool] = True,
+        background_color: Optional[str] = None,
+        user_input_required: Optional[bool] = False,
+        max_per_stream: Optional[int] = None,
+        max_per_user: Optional[int] = None,
+        global_cooldown: Optional[int] = None,
+        fufill_immediatly: Optional[bool] = False,
     ):
         params = [("broadcaster_id", str(broadcaster_id))]
         data = {
@@ -366,10 +366,10 @@ class TwitchHTTP:
         }
         if max_per_stream:
             data["max_per_stream"] = max_per_stream
-            data["max_per_stream_enabled"] = True
+            data["is_max_per_stream_enabled"] = True
         if max_per_user:
             data["max_per_user_per_stream"] = max_per_user
-            data["max_per_user_per_stream_enabled"] = True
+            data["is_max_per_user_per_stream_enabled"] = True
         if background_color:
             data["background_color"] = background_color
         if global_cooldown:
@@ -389,20 +389,20 @@ class TwitchHTTP:
         token: str,
         broadcaster_id: int,
         reward_id: str,
-        title: str = None,
-        prompt: str = None,
-        cost: int = None,
-        background_color: str = None,
-        enabled: bool = None,
-        input_required: bool = None,
-        max_per_stream_enabled: bool = None,
-        max_per_stream: int = None,
-        max_per_user_per_stream_enabled: bool = None,
-        max_per_user_per_stream: int = None,
-        global_cooldown_enabled: bool = None,
-        global_cooldown: int = None,
-        paused: bool = None,
-        redemptions_skip_queue: bool = None,
+        title: Optional[str] = None,
+        prompt: Optional[str] = None,
+        cost: Optional[int] = None,
+        background_color: Optional[str] = None,
+        enabled: Optional[bool] = None,
+        input_required: Optional[bool] = None,
+        max_per_stream_enabled: Optional[bool] = None,
+        max_per_stream: Optional[int] = None,
+        max_per_user_per_stream_enabled: Optional[bool] = None,
+        max_per_user_per_stream: Optional[int] = None,
+        global_cooldown_enabled: Optional[bool] = None,
+        global_cooldown: Optional[int] = None,
+        paused: Optional[bool] = None,
+        redemptions_skip_queue: Optional[bool] = None,
     ):
         data = {
             "title": title,
@@ -462,12 +462,12 @@ class TwitchHTTP:
     async def update_reward_redemption_status(
         self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool
     ):
-        params = [("id", custom_reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
-        status = "FULFILLED" if status else "CANCELLED"
+        params = [("id", reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", custom_reward_id)]
+        status = "FULFILLED" if status else "CANCELED"
         return await self.request(
             Route(
                 "PATCH",
-                "/channel_points/custom_rewards/redemptions",
+                "channel_points/custom_rewards/redemptions",
                 query=params,
                 body={"status": status},
                 token=token,
@@ -487,16 +487,17 @@ class TwitchHTTP:
         return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
 
     async def patch_prediction(
-        self, token: str, broadcaster_id: int, prediction_id: str, status: str, winning_outcome_id: str = None
+        self, token: str, broadcaster_id: str, prediction_id: str, status: str, winning_outcome_id: Optional[str] = None
     ):
         body = {
-            "broadcaster_id": str(broadcaster_id),
+            "broadcaster_id": broadcaster_id,
             "id": prediction_id,
             "status": status,
         }
 
-        if status == "RESOLVED":
+        if status == "RESOLVED" and winning_outcome_id:
             body["winning_outcome_id"] = winning_outcome_id
+
         return await self.request(
             Route(
                 "PATCH",
@@ -682,8 +683,14 @@ class TwitchHTTP:
             )
         )
 
-    async def get_channels(self, broadcaster_id: str, token: str = None):
+    async def get_channels(self, broadcaster_id: str, token: Optional[str] = None):
         return await self.request(Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token))
+
+    async def get_channels_new(self, broadcaster_ids: List[int], token: Optional[str] = None):
+        if len(broadcaster_ids) > 100:
+            raise ValueError("Maximum of 100 broadcaster_ids")
+        q = [("broadcaster_id", str(broadcaster_id)) for broadcaster_id in broadcaster_ids]
+        return await self.request(Route("GET", "channels", query=q, token=token))
 
     async def patch_channel(
         self, token: str, broadcaster_id: str, game_id: str = None, language: str = None, title: str = None
@@ -927,7 +934,7 @@ class TwitchHTTP:
         return await self.request(Route("GET", "goals", query=[("broadcaster_id", broadcaster_id)], token=token))
 
     async def get_chat_settings(
-        self, broadcaster_id: str, moderator_id: Optional[str] = None, token: Optional[str] = None
+        self, broadcaster_id: str, token: Optional[str] = None, moderator_id: Optional[str] = None
     ):
         q = [("broadcaster_id", broadcaster_id)]
         if moderator_id and token:
@@ -936,9 +943,9 @@ class TwitchHTTP:
 
     async def patch_chat_settings(
         self,
+        token: str,
         broadcaster_id: str,
         moderator_id: str,
-        token: str,
         emote_mode: Optional[bool] = None,
         follower_mode: Optional[bool] = None,
         follower_mode_duration: Optional[int] = None,
@@ -969,3 +976,96 @@ class TwitchHTTP:
         }
         data = {k: v for k, v in data.items() if v is not None}
         return await self.request(Route("PATCH", "chat/settings", query=q, body=data, token=token))
+
+    async def post_chat_announcement(
+        self, token: str, broadcaster_id: str, moderator_id: str, message: str, color: Optional[str] = "primary"
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        body = {"message": message, "color": color}
+        return await self.request(Route("POST", "chat/announcements", query=q, body=body, token=token))
+
+    async def delete_chat_messages(
+        self, token: str, broadcaster_id: str, moderator_id: str, message_id: Optional[str] = None
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        if message_id:
+            q.append(("message_id", message_id))
+        return await self.request(Route("DELETE", "moderation/chat", query=q, token=token))
+
+    async def put_user_chat_color(self, token: str, user_id: str, color: str):
+        q = [("user_id", user_id), ("color", color)]
+        return await self.request(Route("PUT", "chat/color", query=q, token=token))
+
+    async def get_user_chat_color(self, user_ids: List[int], token: Optional[str] = None):
+        if len(user_ids) > 100:
+            raise ValueError("You can only get up to 100 user chat colors at once")
+        q = [("user_id", str(user_id)) for user_id in user_ids]
+        return await self.request(Route("GET", "chat/color", query=q, token=token))
+
+    async def post_channel_moderator(self, token: str, broadcaster_id: str, user_id: str):
+        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
+        return await self.request(Route("POST", "moderation/moderators", query=q, token=token))
+
+    async def delete_channel_moderator(self, token: str, broadcaster_id: str, user_id: str):
+        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
+        return await self.request(Route("DELETE", "moderation/moderators", query=q, token=token))
+
+    async def get_channel_vips(
+        self, token: str, broadcaster_id: str, first: int = 20, user_ids: Optional[List[int]] = None
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("first", first)]
+        if first > 100:
+            raise ValueError("You can only get up to 100 VIPs at once")
+        if user_ids:
+            if len(user_ids) > 100:
+                raise ValueError("You can can only specify up to 100 VIPs")
+            q.extend(("user_id", str(user_id)) for user_id in user_ids)
+        return await self.request(Route("GET", "channels/vips", query=q, token=token))
+
+    async def post_channel_vip(self, token: str, broadcaster_id: str, user_id: str):
+        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
+        return await self.request(Route("POST", "channels/vips", query=q, token=token))
+
+    async def delete_channel_vip(self, token: str, broadcaster_id: str, user_id: str):
+        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
+        return await self.request(Route("DELETE", "channels/vips", query=q, token=token))
+
+    async def post_whisper(self, token: str, from_user_id: str, to_user_id: str, message: str):
+        q = [("from_user_id", from_user_id), ("to_user_id", to_user_id)]
+        body = {"message": message}
+        return await self.request(Route("POST", "whispers", query=q, body=body, token=token))
+
+    async def post_raid(self, token: str, from_broadcaster_id: str, to_broadcaster_id: str):
+        q = [("from_broadcaster_id", from_broadcaster_id), ("to_broadcaster_id", to_broadcaster_id)]
+        return await self.request(Route("POST", "raids", query=q, token=token))
+
+    async def delete_raid(self, token: str, broadcaster_id: str):
+        q = [("broadcaster_id", broadcaster_id)]
+        return await self.request(Route("DELETE", "raids", query=q, token=token))
+
+    async def post_ban_timeout_user(
+        self,
+        token: str,
+        broadcaster_id: str,
+        moderator_id: str,
+        user_id: str,
+        reason: str,
+        duration: Optional[int] = None,
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        body = {"data": {"user_id": user_id, "reason": reason}}
+        if duration:
+            if duration < 1 or duration > 1209600:
+                raise ValueError("Duration must be between 1 and 1209600 seconds")
+            body["data"]["duration"] = str(duration)
+        return await self.request(Route("POST", "moderation/bans", query=q, body=body, token=token))
+
+    async def delete_ban_timeout_user(
+        self,
+        token: str,
+        broadcaster_id: str,
+        moderator_id: str,
+        user_id: str,
+    ):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id), ("user_id", user_id)]
+        return await self.request(Route("DELETE", "moderation/bans", query=q, token=token))

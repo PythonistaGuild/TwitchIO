@@ -27,6 +27,14 @@ AutomodCheckResponse
     :members:
     :inherited-members:
 
+Ban
+----------
+.. attributetable:: Ban
+
+.. autoclass:: Ban
+    :members:
+    :inherited-members:
+
 BanEvent
 ----------
 .. attributetable:: BanEvent
@@ -94,6 +102,14 @@ Chatter
 
 .. autoclass:: Chatter
     :members:
+
+ChatterColor
+-------------
+.. attributetable:: ChatterColor
+
+.. autoclass:: ChatterColor
+    :members:
+    :inherited-members:
 
 CheerEmote
 ------------
@@ -251,6 +267,14 @@ Predictions
     :members:
     :inherited-members:
 
+Raid
+-----
+.. attributetable:: Raid
+
+.. autoclass:: Raid
+    :members:
+    :inherited-members:
+
 Schedules
 ----------
 .. attributetable:: Schedule
@@ -313,6 +337,14 @@ Team
 .. attributetable:: Team
 
 .. autoclass:: Team
+    :members:
+    :inherited-members:
+
+Timeout
+----------
+.. attributetable:: Timeout
+
+.. autoclass:: Timeout
     :members:
     :inherited-members:
 

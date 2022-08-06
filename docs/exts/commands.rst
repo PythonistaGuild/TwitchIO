@@ -43,7 +43,6 @@ Cog
 
 Cooldowns
 -----------
-
 .. autoclass:: Bucket
     :members:
 

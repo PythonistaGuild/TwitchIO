@@ -92,11 +92,10 @@ html_static_path = ["_static"]
 html_css_files = ["styles/furo.css"]
 html_js_files = ["js/custom.js"]
 
-if on_rtd:
-    extensions.append("sphinxcontrib.napoleon")
-else:
-    extensions.append("sphinx.ext.napoleon")
 
+extensions.append("sphinx.ext.napoleon")
+
+napoleon_use_rtype = False
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_include_private_with_doc = False

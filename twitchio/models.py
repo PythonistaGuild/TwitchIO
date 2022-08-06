@@ -70,6 +70,10 @@ __all__ = (
     "PollChoice",
     "Goal",
     "ChatSettings",
+    "Raid",
+    "ChatterColor",
+    "Timeout",
+    "Ban",
 )
 
 
@@ -200,6 +204,11 @@ class Clip:
         When the clip was created.
     thumbnail_url: :class:`str`
         The url of the clip thumbnail.
+    duration: :class:`float`
+        Duration of the Clip in seconds (up to 0.1 precision).
+    vod_offset: Optional[:class:`int`]
+        The zero-based offset, in seconds, to where the clip starts in the video (VOD) or stream.
+        This can be None if the parent no longer exists
     """
 
     __slots__ = (
@@ -215,6 +224,8 @@ class Clip:
         "views",
         "created_at",
         "thumbnail_url",
+        "duration",
+        "vod_offset",
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -230,6 +241,8 @@ class Clip:
         self.views: int = data["view_count"]
         self.created_at = parse_timestamp(data["created_at"])
         self.thumbnail_url: str = data["thumbnail_url"]
+        self.duration: float = data["duration"]
+        self.vod_offset: Optional[int] = data["vod_offset"]
 
     def __repr__(self):
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
@@ -337,6 +350,8 @@ class HypeTrainEvent:
 
 class BanEvent:
     """
+    This has been deprecated.
+
     Represents a user being banned from a channel.
 
     Attributes
@@ -1075,12 +1090,15 @@ class Predictor:
         Number of Channel Points won by the user.
     """
 
-    __slots__ = ("outcome_id", "title", "channel_points", "color")
+    __slots__ = ("channel_points_used", "channel_points_won", "user")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.channel_points_used: int = data["channel_points_used"]
         self.channel_points_won: int = data["channel_points_won"]
-        self.user = PartialUser(http, data["user"]["id"], data["user"]["name"])
+        self.user = PartialUser(http, data["user_id"], data["user_login"])
+
+    def __repr__(self):
+        return f"<Predictor user={self.user} channel_points_used={self.channel_points_used} channel_points_won={self.channel_points_won}>"
 
 
 class PredictionOutcome:
@@ -1114,7 +1132,11 @@ class PredictionOutcome:
         if data["top_predictors"]:
             self.top_predictors: List[Predictor] = [Predictor(http, x) for x in data["top_predictors"]]
         else:
+
             self.top_predictors: List[Predictor] = None
+
+    def __repr__(self):
+        return f"<PredictionOutcome outcome_id={self.outcome_id} title={self.title} channel_points={self.channel_points} color={self.color} users={self.users}>"
 
     @property
     def colour(self) -> str:
@@ -1454,7 +1476,7 @@ class Goal:
         User of the broadcaster.
     type: :class:`str`
         The type of goal.
-        Valid values: follower, subscription and new_subscription.
+        Valid values: follower, subscription, subscription_count, new_subscription and new_subscription_count.
     description: :class:`str`
         A description of the goal, if specified.
     current_amount: :class:`int`
@@ -1550,3 +1572,106 @@ class ChatSettings:
 
     def __repr__(self):
         return f"<ChatSettings broadcaster={self.broadcaster} emote_mode={self.emote_mode} follower_mode={self.follower_mode} slow_mode={self.slow_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
+
+
+class ChatterColor:
+    """
+    Represents chatters current name color.
+
+    Attributes
+    -----------
+    user: :class:`~twitchio.PartialUser`
+        PartialUser of the chatter.
+    color: :class:`str`
+        The color of the chatter's name.
+    """
+
+    __slots__ = ("user", "color")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.user = PartialUser(http, data["user_id"], data["user_login"])
+        self.color: str = data["color"]
+
+    def __repr__(self):
+        return f"<ChatterColor user={self.user} color={self.color}>"
+
+
+class Raid:
+    """
+    Represents a raid for a broadcaster / channel
+
+    Attributes
+    -----------
+    created_at: :class:`datetime.datetime`
+        Date and time of when the raid started.
+    is_mature: :class:`bool`
+        Indicates whether the stream being raided is marked as mature.
+    """
+
+    __slots__ = ("created_at", "is_mature")
+
+    def __init__(self, data: dict):
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.is_mature: bool = data["is_mature"]
+
+    def __repr__(self):
+        return f"<Raid created_at={self.created_at} is_mature={self.is_mature}>"
+
+
+class Ban:
+    """
+    Represents a ban for a broadcaster / channel
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster whose chat room the user was banned from chatting in.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that banned the user.
+    user: :class:`~twitchio.PartialUser`
+        The user that was banned.
+    created_at: :class:`datetime.datetime`
+        Date and time of when the ban was created.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "user", "created_at")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.broadcaster = PartialUser(http, data["broadcaster_id"], None)
+        self.moderator = PartialUser(http, data["moderator_id"], None)
+        self.user = PartialUser(http, data["user_id"], None)
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+
+    def __repr__(self):
+        return f"<Ban broadcaster={self.broadcaster} user={self.user} created_at={self.created_at}>"
+
+
+class Timeout:
+    """
+    Represents a timeout for a broadcaster / channel
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster whose chat room the user was timed out from chatting in.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that timed the user out.
+    user: :class:`~twitchio.PartialUser`
+        The user that was timed out.
+    created_at: :class:`datetime.datetime`
+        Date and time of when the timeout was created.
+    end_time: :class:`datetime.datetime`
+        Date and time of when the timeout will end.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "user", "created_at", "end_time")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.broadcaster = PartialUser(http, data["broadcaster_id"], None)
+        self.moderator = PartialUser(http, data["moderator_id"], None)
+        self.user = PartialUser(http, data["user_id"], None)
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.end_time: datetime.datetime = parse_timestamp(data["end_time"])
+
+    def __repr__(self):
+        return f"<Timeout broadcaster={self.broadcaster} user={self.user} created_at={self.created_at} end_time={self.end_time}>"
