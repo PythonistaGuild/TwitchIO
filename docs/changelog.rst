@@ -4,6 +4,7 @@ Master
 ======
 - TwitchIO
     - Additions
+        - Added :func:`~twitchio.Client.event_reconnect` to :class:`~twitchio.Client`
         - Add attribute docs to :class:`~twitchio.PartialUser` and :class:`~twitchio.User`
         - Added following new :class:`~twitchio.PartialUser` methods:
             - :func:`twitchio.PartialUser.create_custom_reward`
@@ -39,6 +40,7 @@ Master
         - Updated IRC parser to not remove multiple spaces when clumped together
         - Fixed :func:`twitchio.Client.start` exiting immediatly
         - Chatters will now update correctly when someone leaves chat
+        - Fixed a crash when twitch sends a RECONNECT notice
 
 - ext.commands
     - Bug fixes

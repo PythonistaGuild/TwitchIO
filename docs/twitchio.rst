@@ -24,6 +24,7 @@ Event Reference
 -----------------
 
 .. automethod:: Client.event_ready()
+.. automethod:: Client.event_reconnect()
 .. automethod:: Client.event_raw_data(data: str)
 .. automethod:: Client.event_message(message: Message)
 .. automethod:: Client.event_join(channel: Channel, user: User)

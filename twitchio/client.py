@@ -969,6 +969,13 @@ class Client:
         """
         pass
 
+    async def event_reconnect(self):
+        """|coro|
+
+        Event called when twitch sends a RECONNECT notice.
+        The library will automatically handle reconnecting when such an event is received
+        """
+
     async def event_raw_data(self, data: str):
         """|coro|
 

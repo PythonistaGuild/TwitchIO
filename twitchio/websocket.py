@@ -148,7 +148,7 @@ class WSConnection:
 
         if not self._last_ping:
             self._last_ping = time.time()
-        while not self._websocket.closed:
+        while not self._websocket.closed and not self._reconnect_requested:
             msg = await self._websocket.receive()  # Receive data...
 
             if msg.type is aiohttp.WSMsgType.CLOSED:
@@ -165,6 +165,7 @@ class WSConnection:
                         continue
                     task = asyncio.create_task(self._process_data(event))
                     task.add_done_callback(partial(self._task_callback, event))  # Process our raw data
+
         asyncio.create_task(self._connect())
 
     def _task_callback(self, data, task):
@@ -487,6 +488,9 @@ class WSConnection:
     async def _reconnect(self, parsed):
         log.debug("ACTION: RECONNECT:: Twitch has gracefully closed the connection and will reconnect.")
         self._reconnect_requested = True
+        self._keeper.cancel()
+        self._loop.create_task(self._connect())
+        self.dispatch("reconnect")
 
     def dispatch(self, event: str, *args, **kwargs):
         log.debug(f"Dispatching event: {event}")

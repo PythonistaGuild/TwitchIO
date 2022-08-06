@@ -39,13 +39,13 @@ ACTIONS = (
     "PRIVMSG(ECHO)",
     "USERSTATE",
     "MODE",
-    "RECONNECT",
     "WHISPER",
     "USERNOTICE",
 )
 ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "USERNOTICE", "WHISPER")
 USER_SUB = re.compile(r":(?P<user>.*)!")
 MESSAGE_RE = re.compile(r":(?P<useraddr>\S+) (?P<action>\S+) #(?P<channel>\S+)( :(?P<message>.*))?$")
+FAST_RETURN = {"RECONNECT": {"code": 0, "action": "RECONNECT"}, "PING": {"action": "PING"}}
 
 logger = logging.getLogger("twitchio.parser")
 
@@ -58,11 +58,18 @@ def parser(data: str, nick: str):
     user = None
     badges = None
 
-    if action == "PING":
-        return dict(action="PING")
+    _group_len = len(groups)
+
+    if action in FAST_RETURN:
+        return FAST_RETURN[action]
+
+    elif groups[1] in FAST_RETURN:
+        return FAST_RETURN[groups[1]]
 
     elif (
-        groups[1] in ACTIONS or groups[2] in ACTIONS or (len(groups) > 3 and groups[3] in {"PRIVMSG", "PRIVMSG(ECHO)"})
+        groups[1] in ACTIONS
+        or (_group_len > 2 and groups[2] in ACTIONS)
+        or (_group_len > 3 and groups[3] in {"PRIVMSG", "PRIVMSG(ECHO)"})
     ):
         result = re.search(MESSAGE_RE, data)
         if not result:
