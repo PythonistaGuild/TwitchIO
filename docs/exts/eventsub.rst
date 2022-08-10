@@ -152,6 +152,13 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a prediction ends on a channel you've subscribed to.
 
+.. function:: event_eventsub_notification_stream_start(event: StreamOnlineData)
+
+    Called when a stream starts on a channel you've subscribed to.
+
+.. function:: event_eventsub_notification_stream_end(event: StreamOfflineData)
+
+    Called when a stream ends on a channel you've subscribed to.
 
 API Reference
 --------------
