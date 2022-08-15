@@ -1,5 +1,11 @@
 :orphan:
 
+Master
+======
+- ext.commands
+    - Bug fixes
+        - Make sure double-quotes are properly tokenized for bot commands
+
 2.4.0
 ======
 - TwitchIO
