@@ -2,6 +2,14 @@
 
 Master
 ======
+- TwitchIO
+    - Additions
+        - Added :func:`~twitchio.Client.event_channel_join_failure` event:
+            - This is dispatched when the bot fails to join a channel
+            - This also makes the channel join error message in logs optional
+    - Bug fixes
+        - Fix channel join failures causing `ValueError: list.remove(x): x not in list` when joining channels after the initial start
+
 - ext.commands
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
