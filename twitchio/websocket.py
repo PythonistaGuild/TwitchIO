@@ -294,7 +294,7 @@ class WSConnection:
         try:
             await asyncio.wait_for(fut, timeout=timeout)
         except asyncio.TimeoutError:
-            log.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
+            self.dispatch("channel_join_failure", channel)
             self._join_pending.pop(channel)
 
             data = (
@@ -343,7 +343,7 @@ class WSConnection:
             self.dispatch("ready")
             self._init = True
         elif code == 353:
-            if parsed["channel"] == "TWITCHIOFAILURE":
+            if parsed["channel"] == "TWITCHIOFAILURE" and parsed["batches"][0] in self._initial_channels:
                 self._initial_channels.remove(parsed["batches"][0])
             if parsed["channel"] in [c.lower().lstrip("#") for c in self._initial_channels] and not self._init:
                 self._join_load[parsed["channel"]] = None
