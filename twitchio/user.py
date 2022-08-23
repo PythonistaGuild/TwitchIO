@@ -1358,6 +1358,8 @@ class PartialUser:
         moderator_id: :class:`int`
             The ID of a user that has permission to moderate the broadcaster's chat room.
             If the broadcaster wants to timeout the user set this parameter to the broadcaster's ID.
+        user_id: :class:`int`
+            The ID of the user that you wish to timeout.
         duration: :class:`int`
             The duration of the timeout in seconds.
             The minimum timeout is 1 second and the maximum is 1,209,600 seconds (2 weeks).
