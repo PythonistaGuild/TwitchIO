@@ -2,6 +2,10 @@
 
 Master
 ======
+- TwitchIO
+    - Bug fixes
+        - Fix whispers that were not able to be parsed
+
 - ext.commands
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
