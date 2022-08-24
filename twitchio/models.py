@@ -972,7 +972,7 @@ class Stream:
         self.started_at = parse_timestamp(data["started_at"])
         self.language: str = data["language"]
         self.thumbnail_url: str = data["thumbnail_url"]
-        self.tag_ids: List[str] = data["tag_ids"]
+        self.tag_ids: List[str] = data["tag_ids"] or []
         self.is_mature: bool = data["is_mature"]
 
     def __repr__(self):
