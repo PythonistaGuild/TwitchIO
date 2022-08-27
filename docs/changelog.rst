@@ -10,6 +10,10 @@ Master
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
 
+- ext.sound
+    - Bug fixes
+        - Make system calls to ffmpeg are more robust (works on windows and linux)
+
 2.4.0
 ======
 - TwitchIO
@@ -56,7 +60,7 @@ Master
     - Bug fixes
         - Add type conversion for variable positional arguments
         - Fixed message content while handling commands in reply messages
-      
+
 - ext.pubsub
     - Bug fixes
         - :class:`~twitchio.ext.pubsub.PubSubModerationAction` now handles missing keys

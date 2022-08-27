@@ -43,13 +43,20 @@ logger = logging.getLogger(__name__)
 
 AP = TypeVar("AP", bound="AudioPlayer")
 
-has_ffmpeg: bool
+ffmpeg_bin: str = None
 try:
-    proc = subprocess.Popen("ffmpeg -version", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        ["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
 except FileNotFoundError:
-    has_ffmpeg = False
+    try:
+        proc = subprocess.Popen(["ffmpeg.exe", "-version"])
+    except FileNotFoundError:
+        ffmpeg_bin = None
+    else:
+        ffmpeg_bin = "ffmpeg.exe"
 else:
-    has_ffmpeg = True
+    ffmpeg_bin = "ffmpeg"
 
 
 __all__ = ("Sound", "AudioPlayer")
@@ -127,19 +134,26 @@ class Sound:
 
     YTDL = YoutubeDL(YTDLOPTS)
 
-    def __init__(self, source: Optional[Union[str, io.BufferedIOBase]] = None, *, info: Optional[dict] = None):
+    def __init__(
+        self,
+        source: Optional[Union[str, io.BufferedIOBase]] = None,
+        *,
+        info: Optional[dict] = None,
+    ):
         self.title = None
         self.url = None
 
         self.proc = None
 
-        if not has_ffmpeg:
-            raise RuntimeError("ffmpeg is required to create and play Sounds. For more information visit: ...")
+        if ffmpeg_bin is None:
+            raise RuntimeError(
+                "ffmpeg is required to create and play Sounds. Check your is present in your Path"
+            )
 
         if info:
             self.proc = subprocess.Popen(
                 [
-                    "ffmpeg.exe",
+                    ffmpeg_bin,
                     "-reconnect",
                     "1",
                     "-reconnect_streamed",
@@ -165,7 +179,17 @@ class Sound:
             self.title = source
 
             self.proc = subprocess.Popen(
-                ["ffmpeg.exe", "-i", source, "-loglevel", "panic", "-vn", "-f", "s16le", "pipe:1"],
+                [
+                    ffmpeg_bin,
+                    "-i",
+                    source,
+                    "-loglevel",
+                    "panic",
+                    "-vn",
+                    "-f",
+                    "s16le",
+                    "pipe:1",
+                ],
                 stdout=subprocess.PIPE,
             )
 
@@ -173,7 +197,9 @@ class Sound:
         self._rate = 48000
 
     @classmethod
-    async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):
+    async def ytdl_search(
+        cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None
+    ):
         """|coro|
 
         Search songs via YouTube ready to be played.
@@ -260,7 +286,9 @@ class AudioPlayer:
                 continue
 
             self._devices[index] = OutputDevice(
-                name=device["name"], index=device["index"], channels=device["maxOutputChannels"]
+                name=device["name"],
+                index=device["index"],
+                channels=device["maxOutputChannels"],
             )
 
     def play(self, sound: Sound, *, replace: bool = False) -> None:
@@ -276,7 +304,9 @@ class AudioPlayer:
         elif self._playing and not replace:
             return
 
-        self._thread = threading.Thread(target=self._play_run, args=([sound]), daemon=True)
+        self._thread = threading.Thread(
+            target=self._play_run, args=([sound]), daemon=True
+        )
         self._thread.start()
 
     def _play_run(self, sound: Sound):
@@ -284,7 +314,11 @@ class AudioPlayer:
 
         device = self._use_device.index if self._use_device else None
         self._stream = self._pa.open(
-            format=pyaudio.paInt16, output=True, channels=sound.channels, rate=sound.rate, output_device_index=device
+            format=pyaudio.paInt16,
+            output=True,
+            channels=sound.channels,
+            rate=sound.rate,
+            output_device_index=device,
         )
 
         bytes_ = sound.proc.stdout.read(4096)
@@ -378,7 +412,9 @@ class AudioPlayer:
     @active_device.setter
     def active_device(self, device: OutputDevice) -> None:
         if not isinstance(device, OutputDevice):
-            raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
+            raise TypeError(
+                f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>."
+            )
 
         self._use_device = device
         if not self._stream:
@@ -398,7 +434,9 @@ class AudioPlayer:
         self._paused = False
 
     @classmethod
-    def with_device(cls, *, callback: Callable[..., Coroutine[Any, Any, None]], device: OutputDevice) -> AP:
+    def with_device(
+        cls, *, callback: Callable[..., Coroutine[Any, Any, None]], device: OutputDevice
+    ) -> AP:
         """Method which returns a player ready to be used with the given :class:`OutputDevice`.
 
         Returns
@@ -406,7 +444,9 @@ class AudioPlayer:
             :class:`OutputDevice`
         """
         if not isinstance(device, OutputDevice):
-            raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
+            raise TypeError(
+                f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>."
+            )
 
         self = cls(callback=callback)
         self._use_device = device
