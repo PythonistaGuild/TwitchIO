@@ -45,9 +45,7 @@ AP = TypeVar("AP", bound="AudioPlayer")
 
 ffmpeg_bin: str = None
 try:
-    proc = subprocess.Popen(
-        ["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
+    proc = subprocess.Popen(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except FileNotFoundError:
     try:
         proc = subprocess.Popen(["ffmpeg.exe", "-version"])
@@ -146,9 +144,7 @@ class Sound:
         self.proc = None
 
         if ffmpeg_bin is None:
-            raise RuntimeError(
-                "ffmpeg is required to create and play Sounds. Check your is present in your Path"
-            )
+            raise RuntimeError("ffmpeg is required to create and play Sounds. Check your is present in your Path")
 
         if info:
             self.proc = subprocess.Popen(
@@ -197,9 +193,7 @@ class Sound:
         self._rate = 48000
 
     @classmethod
-    async def ytdl_search(
-        cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None
-    ):
+    async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):
         """|coro|
 
         Search songs via YouTube ready to be played.
@@ -304,9 +298,7 @@ class AudioPlayer:
         elif self._playing and not replace:
             return
 
-        self._thread = threading.Thread(
-            target=self._play_run, args=([sound]), daemon=True
-        )
+        self._thread = threading.Thread(target=self._play_run, args=([sound]), daemon=True)
         self._thread.start()
 
     def _play_run(self, sound: Sound):
@@ -412,9 +404,7 @@ class AudioPlayer:
     @active_device.setter
     def active_device(self, device: OutputDevice) -> None:
         if not isinstance(device, OutputDevice):
-            raise TypeError(
-                f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>."
-            )
+            raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
 
         self._use_device = device
         if not self._stream:
@@ -434,9 +424,7 @@ class AudioPlayer:
         self._paused = False
 
     @classmethod
-    def with_device(
-        cls, *, callback: Callable[..., Coroutine[Any, Any, None]], device: OutputDevice
-    ) -> AP:
+    def with_device(cls, *, callback: Callable[..., Coroutine[Any, Any, None]], device: OutputDevice) -> AP:
         """Method which returns a player ready to be used with the given :class:`OutputDevice`.
 
         Returns
@@ -444,9 +432,7 @@ class AudioPlayer:
             :class:`OutputDevice`
         """
         if not isinstance(device, OutputDevice):
-            raise TypeError(
-                f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>."
-            )
+            raise TypeError(f"Parameter <device> must be of type <{type(OutputDevice)}> not <{type(device)}>.")
 
         self = cls(callback=callback)
         self._use_device = device
