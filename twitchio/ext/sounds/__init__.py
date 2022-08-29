@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 
 AP = TypeVar("AP", bound="AudioPlayer")
 
-ffmpeg_bin: str = None
+ffmpeg_bin: Optional[str] = None
 try:
     proc = subprocess.Popen(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 except FileNotFoundError:
