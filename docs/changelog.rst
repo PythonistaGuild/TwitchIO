@@ -10,6 +10,16 @@ Master
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
 
+- ext.eventsub
+    - Additions
+        - Goal subscriptions have been Added
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_goal_begin`
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_goal_progress`
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_goal_end`
+            - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_begin`
+            - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
+            - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
+
 2.4.0
 ======
 - TwitchIO
