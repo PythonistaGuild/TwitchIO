@@ -113,7 +113,7 @@ class BaseEvent:
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
         if not hmac.compare_digest(digest, self.headers.signature[7:]):
-            logger.warning(f"Recieved a message with an invalid signature, discarding.")
+            logger.warning(f"Received a message with an invalid signature, discarding.")
             return web.Response(status=400)
 
         return web.Response(status=200)
@@ -144,7 +144,7 @@ class ChallengeEvent(BaseEvent):
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
         if not hmac.compare_digest(digest, self.headers.signature[7:]):
-            logger.warning(f"Recieved a message with an invalid signature, discarding.")
+            logger.warning(f"Received a message with an invalid signature, discarding.")
             return web.Response(status=400)
 
         return web.Response(status=200, text=self.challenge)
@@ -420,17 +420,17 @@ class ChannelRaidData(EventData):
     -----------
     raider: :class:`twitchio.PartialUser`
         The person initiating the raid
-    reciever: :class:`twitchio.PartialUser`
+    receiver: :class:`twitchio.PartialUser`
         The person recieving the raid
     viewer_count: :class:`int`
         The amount of people raiding
     """
 
-    __slots__ = "raider", "reciever", "viewer_count"
+    __slots__ = "raider", "receiver", "viewer_count"
 
     def __init__(self, client: EventSubClient, data: dict):
         self.raider = _transform_user(client, data, "from_broadcaster_user")
-        self.reciever = _transform_user(client, data, "to_broadcaster_user")
+        self.receiver = _transform_user(client, data, "to_broadcaster_user")
         self.viewer_count: int = data["viewers"]
 
 
