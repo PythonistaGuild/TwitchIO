@@ -478,7 +478,7 @@ class TwitchHTTP:
         self,
         token: str,
         broadcaster_id: int,
-        prediction_id: str = None,
+        prediction_id: Optional[str] = None,
     ):
         params = [("broadcaster_id", str(broadcaster_id))]
 
@@ -540,10 +540,10 @@ class TwitchHTTP:
         self,
         broadcaster_id: int = None,
         game_id: str = None,
-        ids: List[str] = None,
-        started_at: datetime.datetime = None,
-        ended_at: datetime.datetime = None,
-        token: str = None,
+        ids: Optional[List[str]] = None,
+        started_at: Optional[datetime.datetime] = None,
+        ended_at: Optional[datetime.datetime] = None,
+        token: Optional[str] = None,
     ):
         q = [
             ("broadcaster_id", broadcaster_id),
@@ -590,7 +590,7 @@ class TwitchHTTP:
             q.extend(("name", name) for name in game_names)
         return await self.request(Route("GET", "games", query=q))
 
-    async def get_hype_train(self, broadcaster_id: str, id: str = None, token: str = None):
+    async def get_hype_train(self, broadcaster_id: str, id: Optional[str] = None, token: str = None):
         return await self.request(
             Route(
                 "GET",
@@ -651,17 +651,17 @@ class TwitchHTTP:
 
     async def get_streams(
         self,
-        game_ids: List[str] = None,
-        user_ids: List[str] = None,
-        user_logins: List[str] = None,
-        languages: List[str] = None,
-        token: str = None,
+        game_ids: Optional[List[int]] = None,
+        user_ids: Optional[List[int]] = None,
+        user_logins: Optional[List[str]] = None,
+        languages: Optional[List[str]] = None,
+        token: Optional[str] = None,
     ):
         q = []
         if game_ids:
-            q.extend(("game_id", g) for g in game_ids)
+            q.extend(("game_id", str(g)) for g in game_ids)
         if user_ids:
-            q.extend(("user_id", u) for u in user_ids)
+            q.extend(("user_id", str(u)) for u in user_ids)
         if user_logins:
             q.extend(("user_login", l) for l in user_logins)
         if languages:
@@ -737,13 +737,13 @@ class TwitchHTTP:
             q.extend(("id", id) for id in segment_ids)
         return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
 
-    async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
+    async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: Optional[List[str]] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", u) for u in user_ids)
         return await self.request(Route("GET", "subscriptions", query=q, token=token))
 
-    async def get_stream_tags(self, tag_ids: List[str] = None):
+    async def get_stream_tags(self, tag_ids: Optional[List[str]] = None):
         q = []
         if tag_ids:
             q.extend(("tag_id", u) for u in tag_ids)
@@ -858,7 +858,7 @@ class TwitchHTTP:
     async def get_webhook_subs(self):
         return await self.request(Route("GET", "webhooks/subscriptions"))
 
-    async def get_teams(self, team_name: str = None, team_id: str = None):
+    async def get_teams(self, team_name: Optional[str] = None, team_id: Optional[str] = None):
         if team_name:
             q = [("name", team_name)]
         elif team_id:

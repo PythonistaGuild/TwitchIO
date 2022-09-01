@@ -601,7 +601,7 @@ class PartialUser:
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
-    async def fetch_subscriptions(self, token: str, userids: List[int] = None):
+    async def fetch_subscriptions(self, token: str, userids: Optional[List[int]] = None):
         """|coro|
 
         Fetches the subscriptions for this channel.
