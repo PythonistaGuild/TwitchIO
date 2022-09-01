@@ -778,7 +778,7 @@ class TwitchHTTP:
             Route("DELETE", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token)
         )
 
-    async def get_users(self, ids: List[int], logins: List[str], token: str = None):
+    async def get_users(self, ids: List[int], logins: List[str], token: Optional[str] = None):
         q = []
         if ids:
             q.extend(("id", id) for id in ids)
@@ -786,7 +786,9 @@ class TwitchHTTP:
             q.extend(("login", login) for login in logins)
         return await self.request(Route("GET", "users", query=q, token=token))
 
-    async def get_user_follows(self, from_id: str = None, to_id: str = None, token: str = None):
+    async def get_user_follows(
+        self, from_id: Optional[str] = None, to_id: Optional[str] = None, token: Optional[str] = None
+    ):
         return await self.request(
             Route(
                 "GET",
@@ -1069,3 +1071,17 @@ class TwitchHTTP:
     ):
         q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id), ("user_id", user_id)]
         return await self.request(Route("DELETE", "moderation/bans", query=q, token=token))
+
+    async def get_follow_count(
+        self, from_id: Optional[str] = None, to_id: Optional[str] = None, token: Optional[str] = None
+    ):
+        return await self.request(
+            Route(
+                "GET",
+                "users/follows",
+                query=[x for x in [("from_id", from_id), ("to_id", to_id)] if x[1] is not None],
+                token=token,
+            ),
+            full_body=True,
+            paginate=False,
+        )

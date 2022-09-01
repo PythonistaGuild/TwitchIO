@@ -4,7 +4,11 @@ Master
 ======
 - TwitchIO
     - Additions
-        - Added :func:`~twitchio.Chatter.is_vip` property to Chatter
+        - Added :attr:`~twitchio.Chatter.is_vip` property to Chatter
+        - New PartialUser methods
+            - :func:`~twitchio.PartialUser.fetch_follower_count` to fetch total follower count of a User
+            - :func:`~twitchio.PartialUser.fetch_following_count` to fetch total following count of a User
+
     - Bug fixes
         - Fix whispers that were not able to be parsed
 
@@ -106,7 +110,7 @@ Massive documentation updates
         - Fix bug where # prefixed channel names and capitals in initial_channels would not trigger :func:`~twitchio.Client.event_ready`
         - Adjusted join channel rate limit handling
         - :func:`twitchio.PartialUser.create_clip` has been fixed by converting bool to string in http request
-        - :func:`~twitchio.Client.fetch_cheermotes` color attribute corrected
+        - :attr:`~twitchio.Client.fetch_cheermotes` color attribute corrected
         - :func:`twitchio.PartialUser.fetch_channel_teams` returns empty list if no teams found rather than unhandled error
         - Fix :class:`twitchio.CustomRewardRedemption` so :func:`twitchio.CustomReward.get_redemptions` returns correctly
 
@@ -134,13 +138,13 @@ Massive documentation updates
 
 - TwitchIO
     - Loosen aiohttp requirements to allow 3.8.1
-    - :class:`twitchio.Stream` was missing from ``__all__``. It is now available in the twitchio namespace.
+    - :class:`~twitchio.Stream` was missing from ``__all__``. It is now available in the twitchio namespace.
     - Added ``.status``, ``.reason`` and ``.extra`` to :class:`HTTPException`
     - Fix ``Message._timestamp`` value when tag is not provided by twitch
-    - Fix :func:`twitchio.Client.wait_for_ready`
-    - Remove loop= parameter inside :func:`twitchio.Client.wait_for` for 3.10 compatibility
-    - Add ``is_broadcaster`` check to :class:`twitchio.PartialChatter`. This is accessible as ``Context.author.is_broadcaster``
-    - :func:`twitchio.PartialUser.fetch_follow` will now return ``None`` if the FollowEvent does not exists
+    - Fix :func:`~twitchio.Client.wait_for_ready`
+    - Remove loop= parameter inside :func:`~twitchio.Client.wait_for` for 3.10 compatibility
+    - Add :attr:`~twitchio.Chatter.is_broadcaster` check to :class:`~twitchio.PartialChatter`. This is accessible as ``Context.author.is_broadcaster``
+    - :func:`~twitchio.PartialUser.fetch_follow` will now return ``None`` if the FollowEvent does not exists
     - TwitchIO will now correctly handle error raised when only the prefix is typed in chat
     - Fix paginate logic in :func:`TwitchHTTP.request`
 
