@@ -3,6 +3,8 @@
 Master
 ======
 - TwitchIO
+    - Additions
+        - Added :func:`~twitchio.Chatter.is_vip` property to Chatter
     - Bug fixes
         - Fix whispers that were not able to be parsed
 

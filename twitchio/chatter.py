@@ -122,6 +122,7 @@ class Chatter(PartialChatter):
             self._mod = None
             self._display_name = None
             self._colour = None
+            self._vip = None
             return
 
         self.id = self._tags.get("user-id")
@@ -131,9 +132,10 @@ class Chatter(PartialChatter):
         self._mod = int(self._tags["mod"])
         self._display_name = self._tags["display-name"]
         self._colour = self._tags["color"]
+        self._vip = int(self._tags.get("vip", 0))
 
         if self._badges:
-            self._cached_badges = {k: v for k, v in [badge.split("/") for badge in self._badges.split(",")]}
+            self._cached_badges = dict([badge.split("/") for badge in self._badges.split(",")])
 
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]  # noqa
@@ -154,10 +156,7 @@ class Chatter(PartialChatter):
     @property
     def badges(self) -> dict:
         """The users badges."""
-        if self._cached_badges:
-            return self._cached_badges.copy()
-
-        return {}
+        return self._cached_badges.copy() if self._cached_badges else {}
 
     @property
     def display_name(self) -> str:
@@ -188,10 +187,12 @@ class Chatter(PartialChatter):
     @property
     def is_mod(self) -> bool:
         """A boolean indicating whether the User is a moderator of the current channel."""
-        if self._mod == 1:
-            return True
+        return True if self._mod == 1 else self.channel.name == self.name.lower()
 
-        return self.channel.name == self.name.lower()
+    @property
+    def is_vip(self) -> bool:
+        """A boolean indicating whether the User is a VIP of the current channel."""
+        return bool(self._vip)
 
     @property
     def is_turbo(self) -> Optional[bool]:
