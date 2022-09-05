@@ -296,7 +296,7 @@ class ChannelSubscriptionMessageData(EventData):
         The length of the subscription. Typically 1, but some users may buy subscriptions for several months.
     """
 
-    __slots__ = "user", "broadcaster", "tier", "message", "emote_data", "cumulative", "streak", "duration"
+    __slots__ = "user", "broadcaster", "tier", "message", "emote_data", "cumulative_months", "streak", "duration"
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "user")
