@@ -82,6 +82,8 @@ __all__ = (
     "PollChoice",
     "Goal",
     "ChatSettings",
+    "ChatterColor",
+    "Raid",
 )
 
 
@@ -902,15 +904,40 @@ class BitLeaderboardUser(PartialUser):
         self.score: int = data["score"]
 
 
-class UserBan(PartialUser):
+class UserBan(PartialUser): # TODO will probably rework this
+    """
+    Represents a banned user or one in timeout.
 
-    __slots__ = ("expires_at",)
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the banned user.
+    name: :class:`str`
+        The name of the banned user.
+    created_at: :class:`datetime.datetime`
+        The date and time the ban was created.
+    expires_at: Optional[:class:`datetime.datetime`]
+        The date and time the timeout will expire.
+        Is None if it's a ban.
+    reason: :class:`str`
+        The reason for the ban/timeout.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that banned the user.
+    """
+
+    __slots__ = ("created_at", "expires_at", "reason", "moderator")
 
     def __init__(self, http: HTTPHandler, data: dict):
-        super(UserBan, self).__init__(http, name=data["user_login"], id=data["user_id"])
-        self.expires_at = (
-            datetime.datetime.strptime(data["expires_at"], "%Y-%m-%dT%H:%M:%SZ") if data["expires_at"] else None
+        super(UserBan, self).__init__(http, id=data["user_id"], name=data["user_login"])
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.expires_at: Optional[datetime.datetime] = (
+            parse_timestamp(data["expires_at"]) if data["expires_at"] else None
         )
+        self.reason: str = data["reason"]
+        self.moderator = PartialUser(http, id=data["moderator_id"], name=data["moderator_login"])
+
+    def __repr__(self):
+        return f"<UserBan {super().__repr__()} created_at={self.created_at} expires_at={self.expires_at} reason={self.reason}>"
 
 
 class SearchUser(PartialUser):
@@ -1004,8 +1031,8 @@ class CheerEmoteTier:
         The minimum bits for the tier
     id: :class:`str`
         The ID of the tier
-    colour: :class:`str`
-        The colour of the tier
+    color: :class:`str`
+        The color of the tier
     images: :class:`dict`
         contains two dicts, ``light`` and ``dark``. Each item will have an ``animated`` and ``static`` item,
         which will contain yet another dict, with sizes ``1``, ``1.5``, ``2``, ``3``, and ``4``.
@@ -1016,12 +1043,12 @@ class CheerEmoteTier:
         Indicates whether twitch hides the emote from the bits card.
     """
 
-    __slots__ = "min_bits", "id", "colour", "images", "can_cheer", "show_in_bits_card"
+    __slots__ = "min_bits", "id", "color", "images", "can_cheer", "show_in_bits_card"
 
     def __init__(self, data: dict):
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
-        self.colour: str = data["colour"]
+        self.color: str = data["color"]
         self.images = data["images"]  # TODO types
         self.can_cheer: bool = data["can_cheer"]
         self.show_in_bits_card: bool = data["show_in_bits_card"]
@@ -1425,7 +1452,7 @@ class Game:
 
     __slots__ = "id", "name", "box_art_url"
 
-    def __init__(self, data: dict) -> None:
+    def __init__(self, http: HTTPHandler, data: dict) -> None:
         self.id: int = int(data["id"])
         self.name: str = data["name"]
         self.box_art_url: str = data["box_art_url"]
@@ -1782,7 +1809,7 @@ class Tag:
 
     __slots__ = "id", "auto", "localization_names", "localization_descriptions"
 
-    def __init__(self, data: dict) -> None:
+    def __init__(self, http: HTTPHandler, data: dict) -> None:
         self.id: str = data["tag_id"]
         self.auto: bool = data["is_auto"]
         self.localization_names: Dict[str, str] = data["localization_names"]
@@ -2472,3 +2499,47 @@ class ChatSettings:
 
     def __repr__(self):
         return f"<ChatSettings broadcaster={self.broadcaster} emote_mode={self.emote_mode} follower_mode={self.follower_mode} slow_mode={self.slow_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
+
+
+class ChatterColor:
+    """
+    Represents chatters current name color.
+
+    Attributes
+    -----------
+    user: :class:`~twitchio.PartialUser`
+        PartialUser of the chatter.
+    color: :class:`str`
+        The color of the chatter's name.
+    """
+
+    __slots__ = ("user", "color")
+
+    def __init__(self, http: HTTPHandler, data: dict):
+        self.user = PartialUser(http, data["user_id"], data["user_login"])
+        self.color: str = data["color"]
+
+    def __repr__(self):
+        return f"<ChatterColor user={self.user} color={self.color}>"
+
+
+class Raid:
+    """
+    Represents a raid for a broadcaster / channel
+
+    Attributes
+    -----------
+    created_at: :class:`datetime.datetime`
+        Date and time of when the raid started.
+    is_mature: :class:`bool`
+        Indicates whether the stream being raided is marked as mature.
+    """
+
+    __slots__ = ("created_at", "is_mature")
+
+    def __init__(self, data: dict):
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.is_mature: bool = data["is_mature"]
+
+    def __repr__(self):
+        return f"<Raid created_at={self.created_at} is_mature={self.is_mature}>"

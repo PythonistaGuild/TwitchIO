@@ -32,9 +32,10 @@ from twitchio.http import HTTPAwaitableAsyncIterator, HTTPHandler
 
 from .channel import Channel
 from .chatter import PartialChatter
+from .exceptions import HTTPException
 from .limiter import IRCRateLimiter
 from .message import Message
-from .models import PartialUser, User
+from .models import *
 from .parser import IRCPayload
 from .shards import ShardInfo
 from .tokens import BaseTokenHandler
@@ -344,6 +345,336 @@ class Client:
         resp = await data
 
         return resp[0]
+
+    async def fetch_cheermotes(
+        self, user_id: Optional[int] = None, target: Optional[PartialUser] = None
+    ) -> List[CheerEmote]:
+        """|coro|
+
+
+        Fetches cheermotes from the twitch API
+
+        Parameters
+        -----------
+        user_id: Optional[:class:`int`]
+            The channel id to fetch from.
+
+        Returns
+        --------
+            List[:class:`twitchio.CheerEmote`]
+        """
+        data = await self._http.get_cheermotes(str(user_id) if user_id else None, target=target)
+        return [CheerEmote(self._http, x) for x in data["data"]]
+
+    async def search_channels(
+        self, query: str, *, live_only=False, target: Optional[PartialUser] = None
+    ) -> List[SearchUser]:
+        """|coro|
+
+        Searches channels for the given query
+
+        Parameters
+        -----------
+        query: :class:`str`
+            The query to search for
+        live_only: :class:`bool`
+            Only search live channels. Defaults to False
+
+        Returns
+        --------
+            List[:class:`twitchio.SearchUser`]
+        """
+
+        data: HTTPAwaitableAsyncIterator[SearchUser] = self._http.get_search_channels(
+            query, live=live_only, target=target
+        )
+        data.set_adapter(lambda http, data: SearchUser(http, data))
+
+        return await data
+
+    async def search_categories(self, query: str, target: Optional[PartialUser] = None) -> List[Game]:
+        """|coro|
+
+        Searches twitches categories
+
+        Parameters
+        -----------
+        query: :class:`str`
+            The query to search for
+
+        Returns
+        --------
+            List[:class:`twitchio.Game`]
+        """
+
+        data: HTTPAwaitableAsyncIterator[Game] = self._http.get_search_categories(query=query, target=target)
+        data.set_adapter(lambda http, data: Game(http, data))
+
+        return await data
+
+    async def fetch_channel_info(
+        self, broadcaster_ids: List[int], target: Optional[PartialUser] = None
+    ) -> List[ChannelInfo]:
+        """|coro|
+
+        Retrieve channel information from the API.
+
+        Parameters
+        -----------
+        broadcaster_ids: List[str]
+            A list of channel IDs to request from API. Returns empty list if no channel was found.
+            You may specify a maximum of 100 IDs.
+
+        Returns
+        --------
+            List[:class:`twitchio.ChannelInfo`]
+        """
+
+        try:
+
+            data = await self._http.get_channels(broadcaster_ids=broadcaster_ids, target=target)
+
+            return [ChannelInfo(self._http, c) for c in data["data"]]
+
+        except HTTPException as e:
+            raise HTTPException("Incorrect channel ID provided") from e
+
+    async def fetch_clips(self, ids: List[str], target: Optional[PartialUser] = None) -> List[Clip]:
+        """|coro|
+
+        Fetches clips by clip id.
+        To fetch clips by user id, use :meth:`twitchio.PartialUser.fetch_clips`
+
+        Parameters
+        -----------
+        ids: List[:class:`str`]
+            A list of clip ids
+
+        Returns
+        --------
+            List[:class:`twitchio.Clip`]
+        """
+
+        data: HTTPAwaitableAsyncIterator[Clip] = self._http.get_clips(ids=ids, target=target)
+        data.set_adapter(lambda http, data: Clip(http, data))
+
+        return await data
+
+    async def fetch_videos(
+        self,
+        ids: Optional[List[int]] = None,
+        game_id: Optional[int] = None,
+        period=None,
+        sort=None,
+        type=None,
+        language=None,
+        target: Optional[PartialUser] = None,
+    ) -> List[Video]:
+        """|coro|
+
+        Fetches videos by id or game id.
+        To fetch videos by user id, use :meth:`twitchio.PartialUser.fetch_videos`
+
+        Parameters
+        -----------
+        ids: Optional[List[:class:`int`]]
+            A list of video ids up to 100.
+        game_id: Optional[:class:`int`]
+            A game to fetch videos from. Limit 1.
+        period: Optional[:class:`str`]
+            The period for which to fetch videos. Valid values are `all`, `day`, `week`, `month`. Defaults to `all`.
+            Cannot be used when video id(s) are passed
+        sort: :class:`str`
+            Sort orders of the videos. Valid values are `time`, `trending`, `views`, Defaults to `time`.
+            Cannot be used when video id(s) are passed
+        type: Optional[:class:`str`]
+            Type of the videos to fetch. Valid values are `upload`, `archive`, `highlight`. Defaults to `all`.
+            Cannot be used when video id(s) are passed
+        language: Optional[:class:`str`]
+            Language of the videos to fetch. Must be an `ISO-639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ two letter code.
+            Cannot be used when video id(s) are passed
+
+        Returns
+        --------
+            List[:class:`twitchio.Video`]
+        """
+
+        data: HTTPAwaitableAsyncIterator[Video] = self._http.get_videos(
+            ids=ids, game_id=game_id, period=period, sort=sort, type=type, language=language, target=target
+        )
+        data.set_adapter(lambda http, data: Video(http, data))
+
+        return await data
+
+    async def fetch_chatters_colors(
+        self, user_ids: List[int], target: Optional[PartialUser] = None
+    ) -> List[ChatterColor]:
+        """|coro|
+
+        Fetches the color of a chatter.
+
+        Parameters
+        -----------
+        user_ids: List[:class:`int`]
+            List of user ids to fetch the colors for
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
+
+        Returns
+        --------
+            List[:class:`twitchio.ChatterColor`]
+        """
+        data = await self._http.get_user_chat_color(user_ids, target)
+        return [ChatterColor(self._http, x) for x in data["data"]]
+
+    async def fetch_games(
+        self, ids: Optional[List[int]] = None, names: Optional[List[str]] = None, target: Optional[PartialUser] = None
+    ) -> List[Game]:
+        """|coro|
+
+        Fetches games by id or name.
+        At least one id or name must be provided
+
+        Parameters
+        -----------
+        ids: Optional[List[:class:`int`]]
+            An optional list of game ids
+        names: Optional[List[:class:`str`]]
+            An optional list of game names
+
+        Returns
+        --------
+            List[:class:`twitchio.Game`]
+        """
+
+        data: HTTPAwaitableAsyncIterator[Game] = self._http.get_games(game_ids=ids, game_names=names, target=target)
+        data.set_adapter(lambda http, data: Game(http, data))
+
+        return await data
+
+    async def fetch_streams(
+        self,
+        user_ids: Optional[List[int]] = None,
+        game_ids: Optional[List[int]] = None,
+        user_logins: Optional[List[str]] = None,
+        languages: Optional[List[str]] = None,
+        target: Optional[PartialUser] = None,
+    ) -> List[Stream]:
+        """|coro|
+
+        Fetches live streams from the helix API
+
+        Parameters
+        -----------
+        user_ids: Optional[List[:class:`int`]]
+            user ids of people whose streams to fetch
+        game_ids: Optional[List[:class:`int`]]
+            game ids of streams to fetch
+        user_logins: Optional[List[:class:`str`]]
+            user login names of people whose streams to fetch
+        languages: Optional[List[:class:`str`]]
+            language for the stream(s). ISO 639-1 or two letter code for supported stream language
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
+
+
+        Returns
+        --------
+        List[:class:`twitchio.Stream`]
+        """
+
+        data: HTTPAwaitableAsyncIterator[Stream] = self._http.get_streams(
+            game_ids=game_ids,
+            user_ids=user_ids,
+            user_logins=user_logins,
+            languages=languages,
+            target=target,
+        )
+        data.set_adapter(lambda http, data: Stream(http, data))
+
+        return await data
+
+    async def fetch_top_games(self, target: Optional[PartialUser] = None) -> List[Game]:
+        """|coro|
+
+        Fetches the top games from the api
+
+        Returns
+        --------
+            List[:class:`twitchio.Game`]
+        """
+        data: HTTPAwaitableAsyncIterator[Game] = self._http.get_top_games(target=target)
+        data.set_adapter(lambda http, data: Game(http, data))
+
+        return await data
+
+    async def fetch_tags(self, ids: Optional[List[str]] = None, target: Optional[PartialUser] = None) -> List[Tag]:
+        """|coro|
+
+        Fetches stream tags.
+
+        Parameters
+        -----------
+        ids: Optional[List[:class:`str`]]
+            The ids of the tags to fetch
+
+        Returns
+        --------
+            List[:class:`twitchio.Tag`]
+        """
+
+        data: HTTPAwaitableAsyncIterator[Tag] = self._http.get_stream_tags(tag_ids=ids, target=target)
+        data.set_adapter(lambda http, data: Tag(http, data))
+
+        return await data
+
+    async def fetch_team(
+        self, team_name: Optional[str] = None, team_id: Optional[int] = None, target: Optional[PartialUser] = None
+    ) -> Team:
+        """|coro|
+
+        Fetches information for a specific Twitch Team.
+
+        Parameters
+        -----------
+        name: Optional[:class:`str`]
+            Team name to fetch
+        id: Optional[:class:`int`]
+            Team id to fetch
+
+        Returns
+        --------
+        :class:`twitchio.Team`
+        """
+
+        data = await self._http.get_teams(
+            team_name=team_name,
+            team_id=team_id,
+            target=target,
+        )
+        return Team(self._http, data["data"][0])
+
+    async def delete_videos(self, target: PartialUser, ids: List[int]) -> List[int]:
+        """|coro|
+
+        Delete videos from the api. Returns the video ids that were successfully deleted.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token with the ``channel:manage:videos`` scope
+        ids: List[:class:`int`]
+            A list of video ids from the channel of the oauth token to delete
+
+        Returns
+        --------
+            List[:class:`int`]
+        """
+        resp = []
+        for chunk in [ids[x : x + 3] for x in range(0, len(ids), 3)]:
+            resp.append(await self._http.delete_videos(target, chunk))
+
+        return resp
 
     async def event_shard_ready(self, number: int) -> None:
         """|coro|
