@@ -464,10 +464,10 @@ class Client:
         self,
         ids: Optional[List[int]] = None,
         game_id: Optional[int] = None,
-        period=None,
-        sort=None,
-        type=None,
-        language=None,
+        period: Optional[str] = "all",
+        sort: Optional[str] = "time",
+        type: Optional[str] = "all",
+        language: Optional[str] = None,
         target: Optional[PartialUser] = None,
     ) -> List[Video]:
         """|coro|
@@ -484,7 +484,7 @@ class Client:
         period: Optional[:class:`str`]
             The period for which to fetch videos. Valid values are `all`, `day`, `week`, `month`. Defaults to `all`.
             Cannot be used when video id(s) are passed
-        sort: :class:`str`
+        sort: Optional[:class:`str`]
             Sort orders of the videos. Valid values are `time`, `trending`, `views`, Defaults to `time`.
             Cannot be used when video id(s) are passed
         type: Optional[:class:`str`]
