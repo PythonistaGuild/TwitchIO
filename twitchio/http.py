@@ -334,6 +334,12 @@ class TwitchHTTP:
     async def get_cheermotes(self, broadcaster_id: str):
         return await self.request(Route("GET", "bits/cheermotes", "", query=[("broadcaster_id", broadcaster_id)]))
 
+    async def get_channel_emotes(self, broadcaster_id: str):
+        return await self.request(Route("GET", "chat/emotes", "", query=[("broadcaster_id", broadcaster_id)]))
+
+    async def get_global_emotes(self):
+        return await self.request(Route("GET", "chat/emotes/global", ""))
+
     async def get_extension_transactions(self, extension_id: str, ids: List[Any] = None):
         q = [("extension_id", extension_id)]
         if ids:
