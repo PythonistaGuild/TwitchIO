@@ -1392,7 +1392,7 @@ class Poll:
         Indicates if Bits can be used for voting.
 
         .. warning::
-        
+
             Twitch have removed support for voting with bits.
             This will return as False
 
