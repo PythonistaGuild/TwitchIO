@@ -725,6 +725,12 @@ class PollChoice:
         The title of the choice
     bits_votes: :class:`int`
         How many votes were cast using Bits
+
+        .. warning::
+
+            Twitch have removed support for voting with bits.
+            This will return as 0
+
     channel_points_votes: :class:`int`
         How many votes were cast using Channel Points
     votes: :class:`int`
@@ -751,6 +757,12 @@ class BitsVoting:
         Whether users can use Bits to vote on the poll
     amount_per_vote: :class:`int`
         How many Bits are required to cast an extra vote
+
+        .. warning::
+
+            Twitch have removed support for voting with bits.
+            This will return as False and 0 respectively
+
     """
 
     __slots__ = "is_enabled", "amount_per_vote"
@@ -815,6 +827,11 @@ class PollBeginProgressData(EventData):
         The choices in the poll
     bits_voting: :class:`BitsVoting`
         Information on voting on the poll with Bits
+
+        .. warning::
+
+            Twitch have removed support for voting with bits.
+
     channel_points_voting: :class:`ChannelPointsVoting`
         Information on voting on the poll with Channel Points
     started_at: :class:`datetime.datetime`
@@ -862,6 +879,11 @@ class PollEndData(EventData):
         The choices in the poll
     bits_voting: :class:`BitsVoting`
         Information on voting on the poll with Bits
+
+        .. warning::
+
+            Twitch have removed support for voting with bits.
+
     channel_points_voting: :class:`ChannelPointsVoting`
         Information on voting on the poll with Channel Points
     status: :class:`PollStatus`

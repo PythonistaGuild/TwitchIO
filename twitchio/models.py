@@ -1373,6 +1373,11 @@ class Poll:
     """
     Represents a list of Polls for a broadcaster / channel
 
+    .. note::
+
+        Twitch have removed support for voting with bits.
+        By default bits_votes, bits_voting_enabled and bits_per_vote will be received as either 0 or False.
+
     Attributes
     -----------
     id: :class:`str`
@@ -1385,8 +1390,20 @@ class Poll:
         The poll choices.
     bits_voting_enabled: :class:`bool`
         Indicates if Bits can be used for voting.
+
+        .. warning::
+        
+            Twitch have removed support for voting with bits.
+            This will return as False
+
     bits_per_vote: :class:`int`
         Number of Bits required to vote once with Bits.
+
+        .. warning::
+
+            Twitch have removed support for voting with bits.
+            This will return as 0
+
     channel_points_voting_enabled: :class:`bool`
         Indicates if Channel Points can be used for voting.
     channel_points_per_vote: :class:`int`
@@ -1449,6 +1466,12 @@ class PollChoice:
         Number of votes received via Channel Points.
     bits_votes: :class:`int`
         Number of votes received via Bits.
+
+        .. warning::
+
+            Twitch have removed support for voting with bits.
+            This will return as 0
+
     """
 
     __slots__ = ("id", "title", "votes", "channel_points_votes", "bits_votes")
