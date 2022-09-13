@@ -25,6 +25,8 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_begin`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
+    - Bug fixes
+        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires` 
 
 2.4.0
 ======
