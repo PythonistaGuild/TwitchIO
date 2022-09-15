@@ -11,7 +11,6 @@ Master
 
     - Bug fixes
         - Fix whispers that were not able to be parsed
-        - Set correct/more descriptive "type" of PubSubModerationActionChannelTerms (from "channel_terms_action" to "add_blocked_term"/"delete_blocked_term")
 
 - ext.commands
     - Bug fixes
@@ -27,7 +26,11 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
     - Bug fixes
-        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires` 
+        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
+        
+- ext.pubsub
+    - Bug fixes      
+        - "type" of PubSubModerationActionChannelTerms is now more descriptive
 
 2.4.0
 ======
