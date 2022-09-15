@@ -329,7 +329,7 @@ class PubSubModerationActionChannelTerms(PubSubMessage):
 
     def __init__(self, client: Client, topic: str, data: dict):
         super().__init__(client, topic, data)
-        self.type: str = data["message"]["type"]
+        self.type: str = data["message"]["data"]["type"]
         self.channel_id = int(data["message"]["data"]["channel_id"])
         self.id: str = data["message"]["data"]["id"]
         self.text: str = data["message"]["data"]["text"]
