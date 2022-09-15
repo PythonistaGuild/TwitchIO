@@ -11,6 +11,7 @@ Master
 
     - Bug fixes
         - Fix whispers that were not able to be parsed
+        - Fix settings correct/more specific type of PubSubModerationActionChannelTerms
 
 - ext.commands
     - Bug fixes
