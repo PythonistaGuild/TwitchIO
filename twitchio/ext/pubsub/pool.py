@@ -92,7 +92,7 @@ class PubSubPool:
             raise ValueError("group is the only supported mode.")
 
         for p in self._pool:
-            if len(p.max_topics) + len(topics) <= p.max_topics:
+            if p.max_topics + len(topics) <= p.max_topics:
                 return p
 
         if len(self._pool) < self._max_size:
