@@ -15,6 +15,11 @@ Master
 - ext.commands
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
+        
+- ext.pubsub
+    - Bug fixes      
+        - Unsubscribing from Pubsubevents works again
+        - Websocket automatically handles "RECONNECT" requests by Twitch
 
 - ext.eventsub
     - Additions
