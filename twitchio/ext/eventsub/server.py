@@ -141,6 +141,15 @@ class EventSubClient(web.Application):
     def subscribe_channel_moderators_remove(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_remove, broadcaster)
 
+    def subscribe_channel_goal_begin(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_begin, broadcaster)
+
+    def subscribe_channel_goal_progress(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_progress, broadcaster)
+
+    def subscribe_channel_goal_end(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_end, broadcaster)
+
     def subscribe_channel_hypetrain_begin(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.hypetrain_begin, broadcaster)
 

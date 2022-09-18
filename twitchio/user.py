@@ -474,7 +474,7 @@ class PartialUser:
         data = await self._http.get_stream_key(token, str(self.id))
         return data
 
-    async def fetch_following(self, token: str = None) -> List["FollowEvent"]:
+    async def fetch_following(self, token: Optional[str] = None) -> List["FollowEvent"]:
         """|coro|
 
         Fetches a list of users that this user is following.
@@ -493,7 +493,7 @@ class PartialUser:
         data = await self._http.get_user_follows(token=token, from_id=str(self.id))
         return [FollowEvent(self._http, d, from_=self) for d in data]
 
-    async def fetch_followers(self, token: str = None):
+    async def fetch_followers(self, token: Optional[str] = None):
         """|coro|
 
         Fetches a list of users that are following this user.
@@ -509,10 +509,10 @@ class PartialUser:
         """
         from .models import FollowEvent
 
-        data = await self._http.get_user_follows(to_id=str(self.id))
+        data = await self._http.get_user_follows(token=token, to_id=str(self.id))
         return [FollowEvent(self._http, d, to=self) for d in data]
 
-    async def fetch_follow(self, to_user: "PartialUser", token: str = None):
+    async def fetch_follow(self, to_user: "PartialUser", token: Optional[str] = None):
         """|coro|
 
         Check if a user follows another user or when they followed a user.
@@ -531,8 +531,43 @@ class PartialUser:
             raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
         from .models import FollowEvent
 
-        data = await self._http.get_user_follows(from_id=str(self.id), to_id=str(to_user.id))
+        data = await self._http.get_user_follows(token=token, from_id=str(self.id), to_id=str(to_user.id))
         return FollowEvent(self._http, data[0]) if data else None
+
+    async def fetch_follower_count(self, token: Optional[str] = None) -> int:
+        """|coro|
+
+        Fetches a list of users that are following this user.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+            :class:`int`
+        """
+
+        data = await self._http.get_follow_count(token=token, to_id=str(self.id))
+        return data["total"]
+
+    async def fetch_following_count(self, token: Optional[str] = None) -> int:
+        """|coro|
+
+        Fetches a list of users that this user is following.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+            :class:`int`
+        """
+        data = await self._http.get_follow_count(token=token, from_id=str(self.id))
+        return data["total"]
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
@@ -566,7 +601,7 @@ class PartialUser:
         """
         await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
 
-    async def fetch_subscriptions(self, token: str, userids: List[int] = None):
+    async def fetch_subscriptions(self, token: str, userids: Optional[List[int]] = None):
         """|coro|
 
         Fetches the subscriptions for this channel.
