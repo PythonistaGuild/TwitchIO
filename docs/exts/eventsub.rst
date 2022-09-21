@@ -160,6 +160,30 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a stream ends on a channel you've subscribed to.
 
+.. function:: event_eventsub_notification_channel_goal_begin(event: ChannelGoalBeginProgressData)
+
+    Called when a streamer starts a goal on their channel.
+
+.. function:: event_eventsub_notification_channel_goal_progress(event: ChannelGoalBeginProgressData)
+
+    Called when there is an update event to a channel's goal.
+
+.. function:: event_eventsub_notification_channel_goal_end(event: ChannelGoalEndData)
+
+    Called when someone ends a goal on their channel.
+
+.. function:: event_eventsub_notification_hypetrain_begin(event: HypeTrainBeginProgressData)
+
+    Called when a hype train starts on their channel.
+
+.. function:: event_eventsub_notification_hypetrain_progress(event: HypeTrainBeginProgressData)
+
+    Called when a hype train receives an update on their channel.
+
+.. function:: event_eventsub_notification_hypetrain_end(event: HypeTrainEndData)
+
+    Called when a hype train ends on their channel.
+
 API Reference
 --------------
 
@@ -232,6 +256,18 @@ API Reference
 .. attributetable::: ChannelModeratorAddRemoveData
 
 .. autoclass:: ChannelModeratorAddRemoveData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelGoalBeginProgressData
+
+.. autoclass:: ChannelGoalBeginProgressData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelGoalEndData
+
+.. autoclass:: ChannelGoalEndData
     :members:
     :inherited-members:
 

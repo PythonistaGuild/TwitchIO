@@ -605,7 +605,7 @@ class Client:
         data = await self._http.get_games(ids, names)
         return [models.Game(d) for d in data]
 
-    async def fetch_tags(self, ids: List[str] = None):
+    async def fetch_tags(self, ids: Optional[List[str]] = None):
         """|coro|
 
         Fetches stream tags.
@@ -624,11 +624,11 @@ class Client:
 
     async def fetch_streams(
         self,
-        user_ids: List[int] = None,
-        game_ids: List[int] = None,
-        user_logins: List[str] = None,
-        languages: List[str] = None,
-        token: str = None,
+        user_ids: Optional[List[int]] = None,
+        game_ids: Optional[List[int]] = None,
+        user_logins: Optional[List[str]] = None,
+        languages: Optional[List[str]] = None,
+        token: Optional[str] = None,
     ):
         """|coro|
 
@@ -665,8 +665,8 @@ class Client:
 
     async def fetch_teams(
         self,
-        team_name: str = None,
-        team_id: str = None,
+        team_name: Optional[str] = None,
+        team_id: Optional[str] = None,
     ):
         """|coro|
 

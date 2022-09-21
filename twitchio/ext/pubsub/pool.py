@@ -66,6 +66,7 @@ class PubSubPool:
         if node is None:
             node = PubSubWebsocket(self.client, max_topics=self._max_connection_topics)
             await node.connect()
+            self._pool.append(node)
 
         await node.subscribe_topics(topics)
         self._topics.update({t: node for t in topics})
@@ -81,7 +82,7 @@ class PubSubPool:
 
         """
         for node, vals in itertools.groupby(topics, lambda t: self._topics[t]):
-            await node.unsubscribe_topic(vals)
+            await node.unsubscribe_topic(list(vals))
             if not node.topics:
                 await node.disconnect()
                 self._pool.remove(node)
@@ -91,7 +92,7 @@ class PubSubPool:
             raise ValueError("group is the only supported mode.")
 
         for p in self._pool:
-            if len(p.max_topics) + len(topics) <= p.max_topics:
+            if p.max_topics + len(topics) <= p.max_topics:
                 return p
 
         if len(self._pool) < self._max_size:

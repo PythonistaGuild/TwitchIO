@@ -44,7 +44,7 @@ ACTIONS = (
 )
 ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "USERNOTICE", "WHISPER")
 USER_SUB = re.compile(r":(?P<user>.*)!")
-MESSAGE_RE = re.compile(r":(?P<useraddr>\S+) (?P<action>\S+) #(?P<channel>\S+)( :(?P<message>.*))?$")
+MESSAGE_RE = re.compile(r":(?P<useraddr>\S+) (?P<action>\S+) (?P<channel>\S+)( :(?P<message>.*))?$")
 FAST_RETURN = {"RECONNECT": {"code": 0, "action": "RECONNECT"}, "PING": {"action": "PING"}}
 
 logger = logging.getLogger("twitchio.parser")
@@ -73,12 +73,18 @@ def parser(data: str, nick: str):
     ):
         result = re.search(MESSAGE_RE, data)
         if not result:
-            logger.error(f" ****** MESSAGE_RE Failed! ******")
+            logger.error("****** MESSAGE_RE Failed! ******")
             return None  # raise exception?
         user = result.group("useraddr").split("!")[0]
         action = result.group("action")
-        channel = result.group("channel")
+        channel = result.group("channel").lstrip("#")
         message = result.group("message")
+
+    if action == "WHISPER":
+        channel = None
+
+    if action == "USERSTATE":
+        user = None
 
     if action in ACTIONS2:
         prebadge = groups[0].split(";")
