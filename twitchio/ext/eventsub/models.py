@@ -36,7 +36,16 @@ class EmptyObject:
 
 
 class Subscription:
-    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at"
+    __slots__ = (
+        "id",
+        "status",
+        "type",
+        "version",
+        "cost",
+        "condition",
+        "transport",
+        "created_at",
+    )
 
     def __init__(self, data: dict):
         self.id: str = data["id"]
@@ -76,9 +85,15 @@ class Headers:
         self.message_retry: int = int(request.headers["Twitch-Eventsub-Message-Retry"])
         self.message_type: str = request.headers["Twitch-Eventsub-Message-Type"]
         self.signature: str = request.headers["Twitch-Eventsub-Message-Signature"]
-        self.subscription_type: str = request.headers["Twitch-Eventsub-Subscription-Type"]
-        self.subscription_version: str = request.headers["Twitch-Eventsub-Subscription-Version"]
-        self.timestamp = _parse_datetime(request.headers["Twitch-Eventsub-Message-Timestamp"])
+        self.subscription_type: str = request.headers[
+            "Twitch-Eventsub-Subscription-Type"
+        ]
+        self.subscription_version: str = request.headers[
+            "Twitch-Eventsub-Subscription-Version"
+        ]
+        self.timestamp = _parse_datetime(
+            request.headers["Twitch-Eventsub-Message-Timestamp"]
+        )
         self._raw_timestamp = request.headers["Twitch-Eventsub-Message-Timestamp"]
 
 
@@ -108,9 +123,13 @@ class BaseEvent:
         pass
 
     def verify(self):
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
+        hmac_message = (
+            self.headers.message_id + self.headers._raw_timestamp + self._raw_data
+        ).encode("utf-8")
         secret = self._client.secret.encode("utf-8")
-        digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
+        digest = hmac.new(
+            secret, msg=hmac_message, digestmod=hashlib.sha256
+        ).hexdigest()
 
         if not hmac.compare_digest(digest, self.headers.signature[7:]):
             logger.warning(f"Recieved a message with an invalid signature, discarding.")
@@ -139,9 +158,13 @@ class ChallengeEvent(BaseEvent):
         self.challenge: str = data["challenge"]
 
     def verify(self):
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
+        hmac_message = (
+            self.headers.message_id + self.headers._raw_timestamp + self._raw_data
+        ).encode("utf-8")
         secret = self._client.secret.encode("utf-8")
-        digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
+        digest = hmac.new(
+            secret, msg=hmac_message, digestmod=hashlib.sha256
+        ).hexdigest()
 
         if not hmac.compare_digest(digest, self.headers.signature[7:]):
             logger.warning(f"Recieved a message with an invalid signature, discarding.")
@@ -201,16 +224,28 @@ class ChannelBanData(EventData):
         Whether the ban is permanent
     """
 
-    __slots__ = "user", "broadcaster", "moderator", "reason", "ends_at", "permenant", "permanent"
+    __slots__ = (
+        "user",
+        "broadcaster",
+        "moderator",
+        "reason",
+        "ends_at",
+        "permenant",
+        "permanent",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "user")
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.moderator = _transform_user(client, data, "moderator_user")
         self.reason: str = data["reason"]
-        self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(data["ends_at"])
+        self.ends_at: Optional[datetime.datetime] = data["ends_at"] and _parse_datetime(
+            data["ends_at"]
+        )
         self.permenant: bool = data["is_permanent"]
-        self.permanent = self.permenant  # fix the spelling while keeping backwards compat
+        self.permanent = (
+            self.permenant
+        )  # fix the spelling while keeping backwards compat
 
 
 class ChannelSubscribeData(EventData):
@@ -260,15 +295,28 @@ class ChannelSubscriptionGiftData(EventData):
         The total number of subs gifted by a user overall. Will be ``None`` if ``is_anonymous`` is ``True``
     """
 
-    __slots__ = "is_anonymous", "user", "broadcaster", "tier", "total", "cumulative_total"
+    __slots__ = (
+        "is_anonymous",
+        "user",
+        "broadcaster",
+        "tier",
+        "total",
+        "cumulative_total",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.is_anonymous: bool = data["is_anonymous"]
-        self.user: Optional[PartialUser] = None if self.is_anonymous else _transform_user(client, data, "user")
-        self.broadcaster: Optional[PartialUser] = _transform_user(client, data, "broadcaster_user")
+        self.user: Optional[PartialUser] = (
+            None if self.is_anonymous else _transform_user(client, data, "user")
+        )
+        self.broadcaster: Optional[PartialUser] = _transform_user(
+            client, data, "broadcaster_user"
+        )
         self.tier = int(data["tier"])
         self.total = int(data["total"])
-        self.cumulative_total: Optional[int] = None if self.is_anonymous else int(data["cumulative_total"])
+        self.cumulative_total: Optional[int] = (
+            None if self.is_anonymous else int(data["cumulative_total"])
+        )
 
 
 class ChannelSubscriptionMessageData(EventData):
@@ -296,7 +344,16 @@ class ChannelSubscriptionMessageData(EventData):
         The length of the subscription. Typically 1, but some users may buy subscriptions for several months.
     """
 
-    __slots__ = "user", "broadcaster", "tier", "message", "emote_data", "cumulative_months", "streak", "duration"
+    __slots__ = (
+        "user",
+        "broadcaster",
+        "tier",
+        "message",
+        "emote_data",
+        "cumulative_months",
+        "streak",
+        "duration",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "user")
@@ -331,7 +388,9 @@ class ChannelCheerData(EventData):
 
     def __init__(self, client: EventSubClient, data: dict):
         self.is_anonymous: bool = data["is_anonymous"]
-        self.user: Optional[PartialUser] = _transform_user(client, data, "user") if not self.is_anonymous else None
+        self.user: Optional[PartialUser] = (
+            _transform_user(client, data, "user") if not self.is_anonymous else None
+        )
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.message: str = data["message"]
         self.bits = int(data["bits"])
@@ -357,7 +416,14 @@ class ChannelUpdateData(EventData):
         Whether the channel is marked as mature by the broadcaster
     """
 
-    __slots__ = "broadcaster", "title", "language", "category_id", "category_name", "is_mature"
+    __slots__ = (
+        "broadcaster",
+        "title",
+        "language",
+        "category_id",
+        "category_name",
+        "is_mature",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
@@ -532,12 +598,18 @@ class CustomReward:
         self.in_stock: Optional[bool] = data.get("is_in_stock", None)
 
         self.cooldown_until: Optional[datetime.datetime] = (
-            _parse_datetime(data["cooldown_expires_at"]) if data.get("cooldown_expires_at", None) else None
+            _parse_datetime(data["cooldown_expires_at"])
+            if data.get("cooldown_expires_at", None)
+            else None
         )
 
         self.input_required: Optional[bool] = data.get("is_user_input_required", None)
-        self.redemptions_skip_queue: Optional[bool] = data.get("should_redemptions_skip_request_queue", None)
-        self.redemptions_current_stream: Optional[bool] = data.get("redemptions_redeemed_current_stream", None)
+        self.redemptions_skip_queue: Optional[bool] = data.get(
+            "should_redemptions_skip_request_queue", None
+        )
+        self.redemptions_current_stream: Optional[bool] = data.get(
+            "redemptions_redeemed_current_stream", None
+        )
 
         self.max_per_stream: Tuple[Optional[bool], Optional[int]] = (
             data.get("max_per_stream", {}).get("is_enabled"),
@@ -553,7 +625,9 @@ class CustomReward:
         )
 
         self.background_color: Optional[str] = data.get("background_color", None)
-        self.image: Optional[str] = data.get("image", data.get("default_image", {})).get("url_1x", None)
+        self.image: Optional[str] = data.get(
+            "image", data.get("default_image", {})
+        ).get("url_1x", None)
 
 
 class CustomRewardAddUpdateRemoveData(EventData):
@@ -607,7 +681,9 @@ class CustomRewardRedemptionAddUpdateData(EventData):
         self.user = _transform_user(client, data, "user")
         self.id: str = data["id"]
         self.input: str = data["user_input"]
-        self.status: Literal["unknown", "unfulfilled", "fulfilled", "cancelled"] = data["status"]
+        self.status: Literal["unknown", "unfulfilled", "fulfilled", "cancelled"] = data[
+            "status"
+        ]
         self.redeemed_at = _parse_datetime(data["redeemed_at"])
         self.reward = CustomReward(data["reward"], self.broadcaster)
 
@@ -630,7 +706,9 @@ class HypeTrainContributor:
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "user")
-        self.type: Literal["bits", "subscription"] = data["type"]  # one of bits, subscription
+        self.type: Literal["bits", "subscription"] = data[
+            "type"
+        ]  # one of bits, subscription
         self.total: int = data["total"]
 
 
@@ -645,6 +723,8 @@ class HypeTrainBeginProgressData(EventData):
         The channel the Hype Train occurred in
     total_points: :class:`int`
         The total amounts of points in the Hype Train
+    level: :class:`int`
+        The current level of the Hype Train. Returns None if there's no level
     progress: :class:`int`
         The progress of the Hype Train towards the next level
     goal: :class:`int`
@@ -662,6 +742,7 @@ class HypeTrainBeginProgressData(EventData):
     __slots__ = (
         "broadcaster",
         "total_points",
+        "level",
         "progress",
         "goal",
         "top_contributions",
@@ -673,11 +754,14 @@ class HypeTrainBeginProgressData(EventData):
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.total_points: int = data["total"]
+        self.level: int = data["level"] or None
         self.progress: int = data["progress"]
         self.goal: int = data["goal"]
         self.started = _parse_datetime(data["started_at"])
         self.expires = _parse_datetime(data["expires_at"])
-        self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
+        self.top_contributions = [
+            HypeTrainContributor(client, d) for d in data["top_contributions"]
+        ]
         self.last_contribution = HypeTrainContributor(client, data["last_contribution"])
 
 
@@ -701,7 +785,15 @@ class HypeTrainEndData(EventData):
         When another Hype Train can begin
     """
 
-    __slots__ = "broadcaster", "level", "total_points", "top_contributions", "started", "ended", "cooldown_ends_at"
+    __slots__ = (
+        "broadcaster",
+        "level",
+        "total_points",
+        "top_contributions",
+        "started",
+        "ended",
+        "cooldown_ends_at",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
@@ -710,7 +802,9 @@ class HypeTrainEndData(EventData):
         self.started = _parse_datetime(data["started_at"])
         self.ended = _parse_datetime(data["ended_at"])
         self.cooldown_ends_at = _parse_datetime(data["cooldown_ends_at"])
-        self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
+        self.top_contributions = [
+            HypeTrainContributor(client, d) for d in data["top_contributions"]
+        ]
 
 
 class PollChoice:
@@ -961,7 +1055,14 @@ class PredictionOutcome:
         The top predictors of the outcome
     """
 
-    __slots__ = "outcome_id", "title", "channel_points", "color", "users", "top_predictors"
+    __slots__ = (
+        "outcome_id",
+        "title",
+        "channel_points",
+        "color",
+        "users",
+        "top_predictors",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.outcome_id: str = data["id"]
@@ -969,7 +1070,9 @@ class PredictionOutcome:
         self.channel_points: int = data.get("channel_points", 0)
         self.color: str = data["color"]
         self.users: int = data.get("users", 0)
-        self.top_predictors = [Predictor(client, x) for x in data.get("top_predictors", [])]
+        self.top_predictors = [
+            Predictor(client, x) for x in data.get("top_predictors", [])
+        ]
 
     @property
     def colour(self) -> str:
@@ -1013,7 +1116,14 @@ class PredictionBeginProgressData(EventData):
         When the prediction is set to be locked
     """
 
-    __slots__ = "broadcaster", "prediction_id", "title", "outcomes", "started_at", "locks_at"
+    __slots__ = (
+        "broadcaster",
+        "prediction_id",
+        "title",
+        "outcomes",
+        "started_at",
+        "locks_at",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
@@ -1044,7 +1154,14 @@ class PredictionLockData(EventData):
         When the prediction was locked
     """
 
-    __slots__ = "broadcaster", "prediction_id", "title", "outcomes", "started_at", "locked_at"
+    __slots__ = (
+        "broadcaster",
+        "prediction_id",
+        "title",
+        "outcomes",
+        "started_at",
+        "locked_at",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
@@ -1121,7 +1238,9 @@ class StreamOnlineData(EventData):
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
-        self.type: Literal["live", "playlist", "watch_party", "premier", "rerun"] = data["type"]
+        self.type: Literal[
+            "live", "playlist", "watch_party", "premier", "rerun"
+        ] = data["type"]
         self.started_at = _parse_datetime(data["started_at"])
 
 
@@ -1204,7 +1323,15 @@ class ChannelGoalBeginProgressData(EventData):
         The datetime the goal was started
     """
 
-    __slots__ = "user", "id", "type", "description", "current_amount", "target_amount", "started_at"
+    __slots__ = (
+        "user",
+        "id",
+        "type",
+        "description",
+        "current_amount",
+        "target_amount",
+        "started_at",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "broadcaster_user")
@@ -1297,8 +1424,16 @@ _DataType = Union[
 
 class _SubTypesMeta(type):
     def __new__(mcs, clsname, bases, attributes):
-        attributes["_type_map"] = {args[0]: args[2] for name, args in attributes.items() if not name.startswith("_")}
-        attributes["_name_map"] = {args[0]: name for name, args in attributes.items() if not name.startswith("_")}
+        attributes["_type_map"] = {
+            args[0]: args[2]
+            for name, args in attributes.items()
+            if not name.startswith("_")
+        }
+        attributes["_name_map"] = {
+            args[0]: name
+            for name, args in attributes.items()
+            if not name.startswith("_")
+        }
         return super().__new__(mcs, clsname, bases, attributes)
 
 
@@ -1309,7 +1444,11 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     follow = "channel.follow", 1, ChannelFollowData
     subscription = "channel.subscribe", 1, ChannelSubscribeData
     subscription_gift = "channel.subscription.gift", 1, ChannelSubscriptionGiftData
-    subscription_message = "channel.subscription.message", 1, ChannelSubscriptionMessageData
+    subscription_message = (
+        "channel.subscription.message",
+        1,
+        ChannelSubscriptionMessageData,
+    )
     cheer = "channel.cheer", 1, ChannelCheerData
     raid = "channel.raid", 1, ChannelRaidData
     ban = "channel.ban", 1, ChannelBanData
@@ -1317,10 +1456,26 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
     channel_update = "channel.update", 1, ChannelUpdateData
     channel_moderator_add = "channel.moderator.add", 1, ChannelModeratorAddRemoveData
-    channel_moderator_remove = "channel.moderator.remove", 1, ChannelModeratorAddRemoveData
-    channel_reward_add = "channel.channel_points_custom_reward.add", 1, CustomRewardAddUpdateRemoveData
-    channel_reward_update = "channel.channel_points_custom_reward.update", 1, CustomRewardAddUpdateRemoveData
-    channel_reward_remove = "channel.channel_points_custom_reward.remove", 1, CustomRewardAddUpdateRemoveData
+    channel_moderator_remove = (
+        "channel.moderator.remove",
+        1,
+        ChannelModeratorAddRemoveData,
+    )
+    channel_reward_add = (
+        "channel.channel_points_custom_reward.add",
+        1,
+        CustomRewardAddUpdateRemoveData,
+    )
+    channel_reward_update = (
+        "channel.channel_points_custom_reward.update",
+        1,
+        CustomRewardAddUpdateRemoveData,
+    )
+    channel_reward_remove = (
+        "channel.channel_points_custom_reward.remove",
+        1,
+        CustomRewardAddUpdateRemoveData,
+    )
     channel_reward_redeem = (
         "channel.channel_points_custom_reward_redemption.add",
         1,
@@ -1352,7 +1507,11 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     stream_start = "stream.online", 1, StreamOnlineData
     stream_end = "stream.offline", 1, StreamOfflineData
 
-    user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
+    user_authorization_revoke = (
+        "user.authorization.revoke",
+        1,
+        UserAuthorizationRevokedData,
+    )
 
     user_update = "user.update", 1, UserUpdateData
 
