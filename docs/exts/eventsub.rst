@@ -172,11 +172,11 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when someone ends a goal on their channel.
 
-.. function:: event_eventsub_notification_hypetrain_begin(event: HypeTrainBeginProgressData)
+.. function:: event_eventsub_notification_hypetrain_begin(event: HypeTrainBeginData)
 
     Called when a hype train starts on their channel.
 
-.. function:: event_eventsub_notification_hypetrain_progress(event: HypeTrainBeginProgressData)
+.. function:: event_eventsub_notification_hypetrain_progress(event: HypeTrainProgressData)
 
     Called when a hype train receives an update on their channel.
 
@@ -295,9 +295,15 @@ API Reference
     :members:
     :inherited-members:
 
-.. attributetable::: HypeTrainBeginProgressData
+.. attributetable::: HypeTrainBeginData
 
-.. autoclass:: HypeTrainBeginProgressData
+.. autoclass:: HypeTrainBeginData
+    :members:
+    :inherited-members:
+
+.. attributetable::: HypeTrainProgressData
+
+.. autoclass:: HypeTrainProgressData
     :members:
     :inherited-members:
 
