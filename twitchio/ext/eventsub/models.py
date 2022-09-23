@@ -634,9 +634,9 @@ class HypeTrainContributor:
         self.total: int = data["total"]
 
 
-class HypeTrainBeginProgressData(EventData):
+class HypeTrainBeginData(EventData):
     """
-    A Hype Train Begin/Progress event
+    A Hype Train Begin event
 
     Attributes
     -----------
@@ -672,6 +672,57 @@ class HypeTrainBeginProgressData(EventData):
 
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.total_points: int = data["total"]
+        self.progress: int = data["progress"]
+        self.goal: int = data["goal"]
+        self.started = _parse_datetime(data["started_at"])
+        self.expires = _parse_datetime(data["expires_at"])
+        self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
+        self.last_contribution = HypeTrainContributor(client, data["last_contribution"])
+
+
+class HypeTrainProgressData(EventData):
+    """
+    A Hype Train Progress event
+
+    Attributes
+    -----------
+
+    broadcaster: :class:`twitchio.PartialUser`
+        The channel the Hype Train occurred in
+    total_points: :class:`int`
+        The total amounts of points in the Hype Train
+    level: :class:'int'
+        The current level of the Hype Train
+    progress: :class:`int`
+        The progress of the Hype Train towards the next level
+    goal: :class:`int`
+        The goal to reach the next level
+    started: :class:`datetime.datetime`
+        When the Hype Train started
+    expires: :class:`datetime.datetime`
+        When the Hype Train ends
+    top_contributions: List[:class:`HypeTrainContributor`]
+        The top contributions of the Hype Train
+    last_contribution: :class:`HypeTrainContributor`
+        The last contributor to the Hype Train
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "total_points",
+        "level",
+        "progress",
+        "goal",
+        "top_contributions",
+        "last_contribution",
+        "started",
+        "expires",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.level: int = data["level"]
         self.total_points: int = data["total"]
         self.progress: int = data["progress"]
         self.goal: int = data["goal"]
@@ -1281,7 +1332,8 @@ _DataType = Union[
     ChannelGoalEndData,
     CustomRewardAddUpdateRemoveData,
     CustomRewardRedemptionAddUpdateData,
-    HypeTrainBeginProgressData,
+    HypeTrainBeginData,
+    HypeTrainProgressData,
     HypeTrainEndData,
     PollBeginProgressData,
     PollEndData,
@@ -1336,8 +1388,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     channel_goal_progress = "channel.goal.progress", 1, ChannelGoalBeginProgressData
     channel_goal_end = "channel.goal.end", 1, ChannelGoalEndData
 
-    hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
-    hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData
+    hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginData
+    hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainProgressData
     hypetrain_end = "channel.hype_train.end", 1, HypeTrainEndData
 
     poll_begin = "channel.poll.begin", 1, PollBeginProgressData
