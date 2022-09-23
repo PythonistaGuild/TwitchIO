@@ -754,7 +754,10 @@ class HypeTrainBeginProgressData(EventData):
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.total_points: int = data["total"]
-        self.level: int = data["level"] or None
+        if "level" in data:
+            self.level: int = data["level"]
+        else:
+            self.level: int = None
         self.progress: int = data["progress"]
         self.goal: int = data["goal"]
         self.started = _parse_datetime(data["started_at"])
