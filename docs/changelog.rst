@@ -4,12 +4,16 @@ Master
 ======
 - TwitchIO
     - Additions
+        - Added :func:`~twitchio.Client.event_channel_join_failure` event:
+            - This is dispatched when the bot fails to join a channel
+            - This also makes the channel join error message in logs optional
+    - Bug fixes
+        - Fix channel join failures causing `ValueError: list.remove(x): x not in list` when joining channels after the initial start
         - Added :attr:`~twitchio.Chatter.is_vip` property to Chatter
         - New PartialUser methods
             - :func:`~twitchio.PartialUser.fetch_follower_count` to fetch total follower count of a User
             - :func:`~twitchio.PartialUser.fetch_following_count` to fetch total following count of a User
 
-    - Bug fixes
         - Fix whispers that were not able to be parsed
         - Fix USERSTATE parsing incorrect user
 
