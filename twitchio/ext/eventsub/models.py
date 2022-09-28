@@ -676,7 +676,7 @@ class HypeTrainBeginProgressData(EventData):
         self.progress: int = data["progress"]
         self.goal: int = data["goal"]
         self.started = _parse_datetime(data["started_at"])
-        self.expires = _parse_datetime(data["expire_at"])
+        self.expires = _parse_datetime(data["expires_at"])
         self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
         self.last_contribution = HypeTrainContributor(client, data["last_contribution"])
 

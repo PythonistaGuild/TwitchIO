@@ -194,7 +194,7 @@ main {
 
 .main {
     display: flex;
-    flex: 1
+    flex: 1;
     justify-content: space-evenly!important;
 }
 
@@ -1011,7 +1011,7 @@ article {
 @media(max-width: 52em) {
     .content {
         overflow-x:auto;
-        width: 100%
+        width: 100%!important;
     }
 }
 

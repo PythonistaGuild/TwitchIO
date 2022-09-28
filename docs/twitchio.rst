@@ -18,7 +18,8 @@ Client
     :members:
     :exclude-members: event_ready, event_raw_data, event_message,
                       event_join, event_part, event_mode, event_userstate,
-                      event_raw_usernotice, event_usernotice_subscription, event_error
+                      event_raw_usernotice, event_usernotice_subscription, event_error,
+                      event_channel_join_failure
 
 Event Reference
 -----------------
@@ -34,6 +35,7 @@ Event Reference
 .. automethod:: Client.event_raw_usernotice(channel: Channel, tags: dict)
 .. automethod:: Client.event_usernotice_subscription(metadata)
 .. automethod:: Client.event_error(error: Exception, data: Optional[str] = None)
+.. automethod:: Client.event_channel_join_failure(channel: str)
 
 Exceptions
 ------------

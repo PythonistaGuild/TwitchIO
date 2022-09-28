@@ -73,7 +73,7 @@ def parser(data: str, nick: str):
     ):
         result = re.search(MESSAGE_RE, data)
         if not result:
-            logger.error(f" ****** MESSAGE_RE Failed! ******")
+            logger.error("****** MESSAGE_RE Failed! ******")
             return None  # raise exception?
         user = result.group("useraddr").split("!")[0]
         action = result.group("action")
@@ -82,6 +82,9 @@ def parser(data: str, nick: str):
 
     if action == "WHISPER":
         channel = None
+
+    if action == "USERSTATE":
+        user = None
 
     if action in ACTIONS2:
         prebadge = groups[0].split(";")

@@ -4,17 +4,34 @@ Master
 ======
 - TwitchIO
     - Additions
+        - Added :func:`~twitchio.Client.event_channel_join_failure` event:
+            - This is dispatched when the bot fails to join a channel
+            - This also makes the channel join error message in logs optional
+    - Bug fixes
+        - Fix channel join failures causing `ValueError: list.remove(x): x not in list` when joining channels after the initial start
         - Added :attr:`~twitchio.Chatter.is_vip` property to Chatter
         - New PartialUser methods
             - :func:`~twitchio.PartialUser.fetch_follower_count` to fetch total follower count of a User
             - :func:`~twitchio.PartialUser.fetch_following_count` to fetch total following count of a User
 
-    - Bug fixes
         - Fix whispers that were not able to be parsed
+        - Fix USERSTATE parsing incorrect user
 
 - ext.commands
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
+        
+- ext.pubsub
+    - Additions
+        - Websocket automatically handles "RECONNECT" requests by Twitch
+    - Bug fixes      
+        - Unsubscribing from Pubsubevents works again
+
+
+
+- ext.sound
+    - Bug fixes
+        - Make system calls to ffmpeg are more robust (works on windows and linux)
 
 - ext.eventsub
     - Additions
@@ -25,6 +42,10 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_begin`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
+
+    - Bug fixes
+        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires` 
+
 
 2.4.0
 ======
@@ -72,7 +93,7 @@ Master
     - Bug fixes
         - Add type conversion for variable positional arguments
         - Fixed message content while handling commands in reply messages
-      
+
 - ext.pubsub
     - Bug fixes
         - :class:`~twitchio.ext.pubsub.PubSubModerationAction` now handles missing keys

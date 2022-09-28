@@ -1038,3 +1038,16 @@ class Client:
         channel: :class:`.Channel`
             The channel that was joined.
         """
+        pass
+
+    async def event_channel_join_failure(self, channel: str):
+        """|coro|
+
+        Event called when the bot fails to join a channel.
+
+        Parameters
+        ----------
+        channel: `str`
+            The channel name that was attempted to be joined.
+        """
+        logger.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
