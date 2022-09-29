@@ -238,11 +238,11 @@ class ChannelEmote(GlobalEmote):
         The type of emote.
     set_id: :class:`str`
         An ID that identifies the emote set that the emote belongs to.
-    format: :class:`list`
+    format: :class:`list[str]`
         The formats that the emote is available in.
-    scale: :class:`list`
+    scale: :class:`list[str]`
         The sizes that the emote is available in.
-    theme_mode: :class:`list`
+    theme_mode: :class:`list[str]`
         The background themes that the emote is available in.
     """
 
@@ -273,7 +273,7 @@ class ChannelEmote(GlobalEmote):
 
     def __repr__(self):
         return f"<ChannelEmote id={self.id} name={self.name} type={self.type}>"
-
+ChannelEmote()
 
 class Clip:
     """

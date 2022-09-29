@@ -582,20 +582,6 @@ class PartialUser:
 
         data = await self._http.get_channel_emotes(str(self.id))
         return [ChannelEmote(self._http, x) for x in data]
-    
-    async def fetch_global_emotes(self):
-        """|coro|
-
-        Fetches global emotes from the twitch API
-
-        Returns
-        --------
-            List[:class:`twitchio.GlobalEmote`]
-        """
-        from .models import GlobalEmote
-
-        data = await self._http.get_global_emotes()
-        return [GlobalEmote(self._http, x) for x in data]
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
