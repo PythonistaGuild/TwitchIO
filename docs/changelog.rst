@@ -4,6 +4,15 @@ Master
 ======
 - TwitchIO
     - Additions
+        - Added following new :class:`~twitchio.PartialUser` methods:
+            - :func:`~twitchio.PartialUser.fetch_channel_emotes`
+            - :func:`~twitchio.PartialUser.fetch_global_emotes`
+
+
+2.5.0
+======
+- TwitchIO
+    - Additions
         - Added :func:`~twitchio.Client.event_channel_join_failure` event:
             - This is dispatched when the bot fails to join a channel
             - This also makes the channel join error message in logs optional

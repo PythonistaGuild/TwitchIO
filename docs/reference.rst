@@ -66,6 +66,14 @@ Channel
     :members:
     :inherited-members:
 
+ChannelEmote
+------------
+.. attributetable:: ChannelEmote
+
+.. autoclass:: ChannelEmote
+    :members:
+    :inherited-members:
+
 ChannelInfo
 ------------
 .. attributetable:: ChannelInfo
@@ -180,6 +188,14 @@ Game
 .. attributetable:: Game
 
 .. autoclass:: Game
+    :members:
+    :inherited-members:
+
+GlobalEmote
+------------
+.. attributetable:: GlobalEmote
+
+.. autoclass:: GlobalEmote
     :members:
     :inherited-members:
 

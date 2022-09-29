@@ -37,6 +37,8 @@ __all__ = (
     "Clip",
     "CheerEmote",
     "CheerEmoteTier",
+    "GlobalEmote",
+    "ChannelEmote",
     "HypeTrainContribution",
     "HypeTrainEvent",
     "BanEvent",
@@ -173,7 +175,52 @@ class CheerEmote:
     def __repr__(self):
         return f"<CheerEmote prefix={self.prefix} type={self.type} order={self.order}>"
 
-class ChannelEmote:
+
+class GlobalEmote:
+    """
+    Represents a Global Emote
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the emote.
+    name: :class:`str`
+        The name of the emote.
+    images: :class:`dict`
+        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
+    format: :class:`list`
+        The formats that the emote is available in.
+    scale: :class:`list`
+        The sizes that the emote is available in.
+    theme_mode: :class:`list`
+        The background themes that the emote is available in.
+    """
+
+    __slots__ = (
+        "_http", 
+        "id", 
+        "name", 
+        "images", 
+        "format", 
+        "scale", 
+        "theme_mode", 
+        "template"
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self._http = http
+        self.id: str = data["id"]
+        self.name: str = data["name"]
+        self.images: dict = data["images"]
+        self.format: List[str] = data["format"]
+        self.scale: List[str] = data["scale"]
+        self.theme_mode: List[str] = data["theme_mode"]
+
+    def __repr__(self):
+        return f"<GlobalEmote id={self.id} name={self.name}"
+
+
+class ChannelEmote(GlobalEmote):
     """
     Represents a Channel Emote
 
@@ -199,57 +246,33 @@ class ChannelEmote:
         The background themes that the emote is available in.
     """
 
-    __slots__ =  '_http' ,'id' ,'name' ,'images' ,'tier' ,'type' ,'set_id' ,'format' ,'scale' ,'theme_mode'
+    __slots__ = (
+        "_http" ,
+        "id" ,
+        "name" ,
+        "images" ,
+        "tier" ,
+        "type" ,
+        "set_id" ,
+        "format" ,
+        "scale" ,
+        "theme_mode"
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
         self.id: str = data["id"]
         self.name: str = data["name"]
-        self.images = data["images"]
-        self.tier = data["tier"]
-        self.type = data["emote_type"]
+        self.images: dict = data["images"]
+        self.tier: str = data["tier"]
+        self.type: str = data["emote_type"]
         self.set_id: str = data["emote_set_id"]
-        self.format = data["format"]
-        self.scale = data["scale"]
-        self.theme_mode = data["theme_mode"]
+        self.format: List[str] = data["format"]
+        self.scale: List[str] = data["scale"]
+        self.theme_mode: List[str] = data["theme_mode"]
 
     def __repr__(self):
         return f"<ChannelEmote id={self.id} name={self.name} type={self.type}>"
-
-
-class GlobalEmote:
-    """
-    Represents a Global Emote
-
-    Attributes
-    -----------
-    id: :class:`str`
-        The ID of the emote.
-    name: :class:`str`
-        The name of the emote.
-    images: :class:`dict`
-        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
-    format: :class:`list`
-        The formats that the emote is available in.
-    scale: :class:`list`
-        The sizes that the emote is available in.
-    theme_mode: :class:`list`
-        The background themes that the emote is available in.
-    """
-
-    __slots__ =  '_http', 'id', 'name', 'images', 'format', 'scale', 'theme_mode', 'template'
-
-    def __init__(self, http: "TwitchHTTP", data: dict):
-        self._http = http
-        self.id: str = data["id"]
-        self.name: str = data["name"]
-        self.images = data["images"]
-        self.format = data["format"]
-        self.scale = data["scale"]
-        self.theme_mode = data["theme_mode"]
-
-    def __repr__(self):
-        return f"<GlobalEmote id={self.id} name={self.name} type={self.type}>"
 
 
 class Clip:

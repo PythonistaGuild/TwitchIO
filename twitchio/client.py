@@ -555,55 +555,6 @@ class Client:
         )
         return [Video(self._http, x) for x in data]
 
-    async def fetch_cheermotes(self, user_id: int = None):
-        """|coro|
-
-
-        Fetches cheermotes from the twitch API
-
-        Parameters
-        -----------
-        user_id: Optional[:class:`int`]
-            The channel id to fetch from.
-
-        Returns
-        --------
-            List[:class:`twitchio.CheerEmote`]
-        """
-        data = await self._http.get_cheermotes(str(user_id) if user_id else None)
-        return [models.CheerEmote(self._http, x) for x in data]
-
-    async def fetch_channel_emotes(self, user_id: int = None):
-        """|coro|
-
-
-        Fetches channel from the twitch API
-
-        Parameters
-        -----------
-        user_id: Optional[:class:`int`]
-            The channel id to fetch from.
-
-        Returns
-        --------
-            List[:class:`twitchio.ChannelEmote`]
-        """
-        data = await self._http.get_channel_emotes(str(user_id) if user_id else None)
-        return [models.ChannelEmote(self._http, x) for x in data]
-    
-    async def fetch_global_emotes(self):
-        """|coro|
-
-
-        Fetches global emotes from the twitch API
-
-        Returns
-        --------
-            List[:class:`twitchio.GlobalEmote`]
-        """
-        data = await self._http.get_global_emotes()
-        return [models.GlobalEmote(self._http, x) for x in data]
-
     async def fetch_top_games(self) -> List[models.Game]:
         """|coro|
 
@@ -1038,16 +989,3 @@ class Client:
         channel: :class:`.Channel`
             The channel that was joined.
         """
-        pass
-
-    async def event_channel_join_failure(self, channel: str):
-        """|coro|
-
-        Event called when the bot fails to join a channel.
-
-        Parameters
-        ----------
-        channel: `str`
-            The channel name that was attempted to be joined.
-        """
-        logger.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
