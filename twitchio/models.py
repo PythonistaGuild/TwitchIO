@@ -273,7 +273,7 @@ class ChannelEmote(GlobalEmote):
 
     def __repr__(self):
         return f"<ChannelEmote id={self.id} name={self.name} type={self.type}>"
-ChannelEmote()
+
 
 class Clip:
     """
