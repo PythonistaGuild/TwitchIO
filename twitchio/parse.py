@@ -83,9 +83,6 @@ def parser(data: str, nick: str):
     if action == "WHISPER":
         channel = None
 
-    if action == "USERSTATE":
-        user = None
-
     if action in ACTIONS2:
         prebadge = groups[0].split(";")
         badges = {}
@@ -97,6 +94,12 @@ def parser(data: str, nick: str):
                 badges[badge[0]] = badge[1]
             except IndexError:
                 pass
+
+    if action == "USERSTATE" and badges.get("display-name"):
+        user = badges.get("display-name").lower()
+
+    if action == "USERNOTICE" and badges.get("login"):
+        user = badges.get("login").lower()
 
     if action not in ACTIONS and action not in ACTIONS2:
         action = None
@@ -120,6 +123,8 @@ def parser(data: str, nick: str):
         else:
             logger.warning(f" (353) parse failed? ||{channel}||")
 
+    if user is None:
+        user = groups[-1][1:].lower()
         for b in groups[5:-1]:
             if b[0] == ":":
                 b = b[1:]

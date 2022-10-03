@@ -125,6 +125,8 @@ class WSConnection:
             data = await self._client._http.validate(token=self._token)
             self.nick = data["login"]
             self.user_id = int(data["user_id"])
+        else:
+            self.nick = self._client._http.nick
         session = self._client._http.session
 
         try:

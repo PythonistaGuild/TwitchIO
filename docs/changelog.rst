@@ -16,6 +16,7 @@ Master
 
         - Fix whispers that were not able to be parsed
         - Fix USERSTATE parsing incorrect user
+        - Fix errors when event loop is started using `run_until_complete` to call methods prior to :func:`~twitchio.Client.run`
 
 - ext.commands
     - Bug fixes
