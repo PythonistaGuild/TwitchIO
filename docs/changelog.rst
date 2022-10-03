@@ -18,6 +18,10 @@ Master
         - Fix USERSTATE parsing incorrect user
         - Fix errors when event loop is started using `run_until_complete` to call methods prior to :func:`~twitchio.Client.run`
 
+- ext.routines
+    - Additions
+        - Added the :func:`~twitchio.ext.routines.Routine.change_interval` method.
+
 - ext.commands
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
