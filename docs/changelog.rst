@@ -17,6 +17,7 @@ Master
         - Fix whispers that were not able to be parsed
         - Fix USERSTATE parsing incorrect user
         - Fix errors when event loop is started using `run_until_complete` to call methods prior to :func:`~twitchio.Client.run`
+        - Improved handling of USERNOTICE messages and the tags created for :func:`~twitchio.Client.event_raw_usernotice`
 
 - ext.routines
     - Additions
@@ -31,8 +32,6 @@ Master
         - Websocket automatically handles "RECONNECT" requests by Twitch
     - Bug fixes      
         - Unsubscribing from Pubsubevents works again
-
-
 
 - ext.sound
     - Bug fixes

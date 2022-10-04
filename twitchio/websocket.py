@@ -443,7 +443,8 @@ class WSConnection:
 
         channel = Channel(name=parsed["channel"], websocket=self)
         rawData = parsed["groups"][0]
-        tags = dict(x.split("=") for x in rawData.split(";"))
+        tags = dict(x.split("=", 1) for x in rawData.split(";"))
+        tags["user-type"] = tags["user-type"].split(":tmi.twitch.tv")[0].strip()
 
         self.dispatch("raw_usernotice", channel, tags)
 

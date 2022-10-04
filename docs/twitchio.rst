@@ -19,7 +19,7 @@ Client
     :exclude-members: event_ready, event_raw_data, event_message,
                       event_join, event_part, event_mode, event_userstate,
                       event_raw_usernotice, event_usernotice_subscription, event_error,
-                      event_channel_join_failure
+                      event_channel_join_failure, event_reconnect
 
 Event Reference
 -----------------
