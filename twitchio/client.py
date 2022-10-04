@@ -572,6 +572,20 @@ class Client:
         """
         data = await self._http.get_cheermotes(str(user_id) if user_id else None)
         return [models.CheerEmote(self._http, x) for x in data]
+        
+    async def fetch_global_emotes(self):
+        """|coro|
+
+        Fetches global emotes from the twitch API
+
+        Returns
+        --------
+            List[:class:`twitchio.GlobalEmote`]
+        """
+        from .models import GlobalEmote
+
+        data = await self._http.get_global_emotes()
+        return [GlobalEmote(self._http, x) for x in data]
 
     async def fetch_top_games(self) -> List[models.Game]:
         """|coro|

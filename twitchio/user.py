@@ -568,6 +568,20 @@ class PartialUser:
         """
         data = await self._http.get_follow_count(token=token, from_id=str(self.id))
         return data["total"]
+    
+    async def fetch_channel_emotes(self):
+        """|coro|
+
+        Fetches channel emotes from the user
+
+        Returns
+        --------
+            List[:class:`twitchio.ChannelEmote`]
+        """
+        from .models import ChannelEmote
+
+        data = await self._http.get_channel_emotes(str(self.id))
+        return [ChannelEmote(self._http, x) for x in data]
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|

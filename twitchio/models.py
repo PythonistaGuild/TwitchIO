@@ -37,6 +37,8 @@ __all__ = (
     "Clip",
     "CheerEmote",
     "CheerEmoteTier",
+    "GlobalEmote",
+    "ChannelEmote",
     "HypeTrainContribution",
     "HypeTrainEvent",
     "BanEvent",
@@ -172,6 +174,90 @@ class CheerEmote:
 
     def __repr__(self):
         return f"<CheerEmote prefix={self.prefix} type={self.type} order={self.order}>"
+
+
+class GlobalEmote:
+    """
+    Represents a Global Emote
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the emote.
+    name: :class:`str`
+        The name of the emote.
+    images: :class:`dict`
+        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
+    format: List[:class:`str`]
+        The formats that the emote is available in.
+    scale: List[:class:`str`]
+        The sizes that the emote is available in.
+    theme_mode: List[:class:`str`]
+        The background themes that the emote is available in.
+    """
+
+    __slots__ = (
+        "id", 
+        "name", 
+        "images", 
+        "format", 
+        "scale", 
+        "theme_mode", 
+        "template"
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.id: str = data["id"]
+        self.name: str = data["name"]
+        self.images: dict = data["images"]
+        self.format: List[str] = data["format"]
+        self.scale: List[str] = data["scale"]
+        self.theme_mode: List[str] = data["theme_mode"]
+
+    def __repr__(self):
+        return f"<GlobalEmote id={self.id} name={self.name}"
+
+
+class ChannelEmote(GlobalEmote):
+    """
+    Represents a Channel Emote
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the emote.
+    name: :class:`str`
+        The name of the emote.
+    images: :class:`dict`
+        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
+    tier: :class:`str`
+        The subscriber tier at which the emote is unlocked.
+    type: :class:`str`
+        The type of emote.
+    set_id: :class:`str`
+        An ID that identifies the emote set that the emote belongs to.
+    format: List[:class:`str`]
+        The formats that the emote is available in.
+    scale: List[:class:`str`]
+        The sizes that the emote is available in.
+    theme_mode: List[:class:`str`]
+        The background themes that the emote is available in.
+    """
+
+    __slots__ = (
+        "tier",
+        "type",
+        "set_id"
+    )
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        super().__init__(http, data)
+        self.tier: str = data["tier"]
+        self.type: str = data["emote_type"]
+        self.set_id: str = data["emote_set_id"]
+
+    def __repr__(self):
+        return f"<ChannelEmote id={self.id} name={self.name} type={self.type}>"
 
 
 class Clip:
