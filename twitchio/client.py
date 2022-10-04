@@ -572,7 +572,7 @@ class Client:
         """
         data = await self._http.get_cheermotes(str(user_id) if user_id else None)
         return [models.CheerEmote(self._http, x) for x in data]
-        
+
     async def fetch_global_emotes(self):
         """|coro|
 

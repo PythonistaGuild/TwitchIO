@@ -568,7 +568,7 @@ class PartialUser:
         """
         data = await self._http.get_follow_count(token=token, from_id=str(self.id))
         return data["total"]
-    
+
     async def fetch_channel_emotes(self):
         """|coro|
 

@@ -196,15 +196,7 @@ class GlobalEmote:
         The background themes that the emote is available in.
     """
 
-    __slots__ = (
-        "id", 
-        "name", 
-        "images", 
-        "format", 
-        "scale", 
-        "theme_mode", 
-        "template"
-    )
+    __slots__ = ("id", "name", "images", "format", "scale", "theme_mode", "template")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.id: str = data["id"]
@@ -244,11 +236,7 @@ class ChannelEmote(GlobalEmote):
         The background themes that the emote is available in.
     """
 
-    __slots__ = (
-        "tier",
-        "type",
-        "set_id"
-    )
+    __slots__ = ("tier", "type", "set_id")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         super().__init__(http, data)
