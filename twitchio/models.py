@@ -188,16 +188,15 @@ class GlobalEmote:
         The name of the emote.
     images: :class:`dict`
         Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
-    format: :class:`list`
+    format: List[:class:`str`]
         The formats that the emote is available in.
-    scale: :class:`list`
+    scale: List[:class:`str`]
         The sizes that the emote is available in.
-    theme_mode: :class:`list`
+    theme_mode: List[:class:`str`]
         The background themes that the emote is available in.
     """
 
     __slots__ = (
-        "_http", 
         "id", 
         "name", 
         "images", 
@@ -208,7 +207,6 @@ class GlobalEmote:
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        self._http = http
         self.id: str = data["id"]
         self.name: str = data["name"]
         self.images: dict = data["images"]
@@ -238,38 +236,25 @@ class ChannelEmote(GlobalEmote):
         The type of emote.
     set_id: :class:`str`
         An ID that identifies the emote set that the emote belongs to.
-    format: :class:`list[str]`
+    format: List[:class:`str`]
         The formats that the emote is available in.
-    scale: :class:`list[str]`
+    scale: List[:class:`str`]
         The sizes that the emote is available in.
-    theme_mode: :class:`list[str]`
+    theme_mode: List[:class:`str`]
         The background themes that the emote is available in.
     """
 
     __slots__ = (
-        "_http" ,
-        "id" ,
-        "name" ,
-        "images" ,
-        "tier" ,
-        "type" ,
-        "set_id" ,
-        "format" ,
-        "scale" ,
-        "theme_mode"
+        "tier",
+        "type",
+        "set_id"
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-        self._http = http
-        self.id: str = data["id"]
-        self.name: str = data["name"]
-        self.images: dict = data["images"]
+        super().__init__(http, data)
         self.tier: str = data["tier"]
         self.type: str = data["emote_type"]
         self.set_id: str = data["emote_set_id"]
-        self.format: List[str] = data["format"]
-        self.scale: List[str] = data["scale"]
-        self.theme_mode: List[str] = data["theme_mode"]
 
     def __repr__(self):
         return f"<ChannelEmote id={self.id} name={self.name} type={self.type}>"
