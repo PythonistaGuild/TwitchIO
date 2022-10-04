@@ -232,13 +232,13 @@ class Routine:
         self._after = coro
 
     def change_interval(
-            self,
-            *,
-            seconds: Optional[float] = 0,
-            minutes: Optional[float] = 0,
-            hours: Optional[float] = 0,
-            time: Optional[datetime.datetime] = None,
-            wait_first: Optional[bool] = False,
+        self,
+        *,
+        seconds: Optional[float] = 0,
+        minutes: Optional[float] = 0,
+        hours: Optional[float] = 0,
+        time: Optional[datetime.datetime] = None,
+        wait_first: Optional[bool] = False,
     ) -> None:
         """Method which schedules the running interval of the task to change.
 
@@ -291,7 +291,7 @@ class Routine:
             self._time = time_
 
         kwargs: dict = self._kwargs
-        kwargs['force'] = not wait_first
+        kwargs["force"] = not wait_first
 
         self.restart(*self._args, **kwargs)
 
