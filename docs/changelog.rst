@@ -30,7 +30,7 @@ Master
         
 - ext.pubsub
     - Bug fixes      
-        - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` is now more descriptive
+        - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
 
 2.4.0
 ======
