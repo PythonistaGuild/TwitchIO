@@ -26,7 +26,7 @@ Master
         - Websocket automatically handles "RECONNECT" requests by Twitch
     - Bug fixes      
         - Unsubscribing from Pubsubevents works again
-
+        - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
 
 
 - ext.sound
