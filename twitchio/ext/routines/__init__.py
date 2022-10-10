@@ -97,6 +97,9 @@ class Routine:
 
         self._instance = None
 
+        self._args: tuple | None = None
+        self._kwargs: dict | None = None
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
@@ -142,6 +145,8 @@ class Routine:
         """
         if self._task is not None and not self._task.done() and not self._restarting:
             raise RuntimeError(f"Routine {self._coro.__name__!r} is already running and is not done.")
+
+        self._args, self._kwargs = args, kwargs
 
         self._restarting = False
         self._task = self._loop.create_task(self._routine(*args, **kwargs))
@@ -225,6 +230,70 @@ class Routine:
             raise TypeError(f"Expected coroutine function not type, {type(coro).__name__!r}.")
 
         self._after = coro
+
+    def change_interval(
+        self,
+        *,
+        seconds: Optional[float] = 0,
+        minutes: Optional[float] = 0,
+        hours: Optional[float] = 0,
+        time: Optional[datetime.datetime] = None,
+        wait_first: Optional[bool] = False,
+    ) -> None:
+        """Method which schedules the running interval of the task to change.
+
+        Parameters
+        ----------
+        seconds: Optional[float]
+            The seconds to wait before the next iteration of the routine.
+        minutes: Optional[float]
+            The minutes to wait before the next iteration of the routine.
+        hours: Optional[float]
+            The hours to wait before the next iteration of the routine.
+        time: Optional[datetime.datetime]
+            A specific time to run this routine at. If a naive datetime is passed, your system local time will be used.
+        wait_first: Optional[bool]
+            Whether to wait the specified time before running the first iteration at the new interval.
+            Defaults to False.
+
+        Raises
+        ------
+        RuntimeError
+            Raised when the time argument and any hours, minutes or seconds is passed together.
+
+
+        .. warning::
+
+            The time argument can not be passed in conjunction with hours, minutes or seconds.
+            This behaviour is intended as it allows the time to be exact every day.
+        """
+        time_ = time
+
+        if any((seconds, minutes, hours)) and time_:
+            raise RuntimeError(
+                "Argument <time> can not be used in conjunction with any <seconds>, <minutes> or <hours> argument(s)."
+            )
+
+        if not time_:
+            delta = compute_timedelta(
+                datetime.datetime.now(datetime.timezone.utc)
+                + datetime.timedelta(seconds=seconds, minutes=minutes, hours=hours)
+            )
+
+            self._delta = delta
+        else:
+            now = datetime.datetime.now(time_.tzinfo)
+            if time_ < now:
+                time_ = datetime.datetime.combine(now.date(), time_.time())
+            if time_ < now:
+                time_ = time_ + datetime.timedelta(days=1)
+
+            self._time = time_
+
+        kwargs: dict = self._kwargs
+        kwargs["force"] = not wait_first
+
+        self.restart(*self._args, **kwargs)
 
     def error(self, coro: Callable):
         """A decorator to assign a coroutine as the error handler for this routine.

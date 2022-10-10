@@ -1,9 +1,12 @@
-:orphan:
+:orphan:     
+
 
 Master
 ======
 - TwitchIO
     - Additions
+        - Added :func:`~twitchio.PartialUser.fetch_channel_emotes` to :class:`~twitchio.PartialUser`
+        - Added :func:`~twitchio.Client.fetch_global_emotes` to :class:`~twitchio.Client`
         - Added :func:`~twitchio.Client.event_channel_join_failure` event:
             - This is dispatched when the bot fails to join a channel
             - This also makes the channel join error message in logs optional
@@ -16,6 +19,12 @@ Master
 
         - Fix whispers that were not able to be parsed
         - Fix USERSTATE parsing incorrect user
+        - Fix errors when event loop is started using `run_until_complete` to call methods prior to :func:`~twitchio.Client.run`
+        - Improved handling of USERNOTICE messages and the tags created for :func:`~twitchio.Client.event_raw_usernotice`
+
+- ext.routines
+    - Additions
+        - Added the :func:`~twitchio.ext.routines.Routine.change_interval` method.
 
 - ext.commands
     - Bug fixes
@@ -27,7 +36,6 @@ Master
     - Bug fixes      
         - Unsubscribing from Pubsubevents works again
         - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
-
 
 - ext.sound
     - Bug fixes

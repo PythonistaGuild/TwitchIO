@@ -125,6 +125,8 @@ class WSConnection:
             data = await self._client._http.validate(token=self._token)
             self.nick = data["login"]
             self.user_id = int(data["user_id"])
+        else:
+            self.nick = self._client._http.nick
         session = self._client._http.session
 
         try:
@@ -441,7 +443,8 @@ class WSConnection:
 
         channel = Channel(name=parsed["channel"], websocket=self)
         rawData = parsed["groups"][0]
-        tags = dict(x.split("=") for x in rawData.split(";"))
+        tags = dict(x.split("=", 1) for x in rawData.split(";"))
+        tags["user-type"] = tags["user-type"].split(":tmi.twitch.tv")[0].strip()
 
         self.dispatch("raw_usernotice", channel, tags)
 
