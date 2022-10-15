@@ -40,7 +40,7 @@ class Message:
     echo: :class:`bool`
         Boolean representing if this is a self-message or not.
     first: :class:`bool`
-        Boolean representing whether it's a first message or not. Could be None.
+        Boolean representing whether it's a first message or not.
 
     """
 
