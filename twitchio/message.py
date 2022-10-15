@@ -65,7 +65,7 @@ class Message:
         self.echo = kwargs.get("echo", False)
 
         if self._tags is not None:
-            self.first = self._tags.get("first-msg")
+            first = self._tags.get("first-msg")
             if self.first == "1":
                 self.first = True
             elif self.first == "0":
