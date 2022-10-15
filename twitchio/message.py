@@ -71,7 +71,7 @@ class Message:
             else:
                 self.first = False
         else:
-            self.first = None
+            self.first = False
 
         try:
             self._id = self._tags["id"]
