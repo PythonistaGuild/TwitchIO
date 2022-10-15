@@ -66,7 +66,7 @@ class Message:
 
         if self._tags is not None:
             first = self._tags.get("first-msg")
-            if self.first == "1":
+            if first == "1":
                 self.first = True
             else:
                 self.first = False
