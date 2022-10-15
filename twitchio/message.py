@@ -23,7 +23,6 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import datetime
-import time
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
