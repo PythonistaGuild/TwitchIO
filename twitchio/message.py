@@ -64,14 +64,11 @@ class Message:
         self._tags = kwargs.get("tags")
         self.echo = kwargs.get("echo", False)
 
+        self.first = False
         if self._tags is not None:
             first = self._tags.get("first-msg")
             if first == "1":
                 self.first = True
-            else:
-                self.first = False
-        else:
-            self.first = False
 
         try:
             self._id = self._tags["id"]
