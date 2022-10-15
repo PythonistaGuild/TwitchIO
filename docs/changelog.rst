@@ -5,6 +5,7 @@ Master
 ======
 - TwitchIO
     - Additions
+        - Added :attr:`~twitchio.Message.first` to :class:`~twitchio.Message`
         - Added :func:`~twitchio.PartialUser.fetch_channel_emotes` to :class:`~twitchio.PartialUser`
         - Added :func:`~twitchio.Client.fetch_global_emotes` to :class:`~twitchio.Client`
         - Added :func:`~twitchio.Client.event_channel_join_failure` event:
