@@ -54,10 +54,11 @@ class StringParser:
                 self.index += 1
                 self.start = self.count + 1
 
-            elif loc == '"' and self.start == self.count:  # only tokenize if they're a new word
+            elif loc == '"':
                 if not self.ignore:
-                    self.start = self.count + 1
-                    self.ignore = True
+                    if self.start == self.count:  # only tokenize if they're a new word
+                        self.start = self.count + 1
+                        self.ignore = True
                 else:
                     self.words[self.index] = msg[self.start : self.count]
                     self.index += 1
