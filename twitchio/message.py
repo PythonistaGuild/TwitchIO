@@ -39,6 +39,8 @@ class Message:
         The content of this message.
     echo: :class:`bool`
         Boolean representing if this is a self-message or not.
+    first: :class:`bool`
+        Boolean representing whether it's a first message or not. Could be None.
 
     """
 
@@ -47,6 +49,7 @@ class Message:
         "content",
         "_author",
         "echo",
+        "first",
         "_timestamp",
         "_channel",
         "_tags",
@@ -60,6 +63,15 @@ class Message:
         self._channel = kwargs.get("channel")
         self._tags = kwargs.get("tags")
         self.echo = kwargs.get("echo", False)
+
+        if self._tags is not None:
+            self.first = self._tags.get("first-msg")
+            if self.first == "1":
+                self.first = True
+            elif self.first == "0":
+                self.first = False
+        else:
+            self.first = None
 
         try:
             self._id = self._tags["id"]
