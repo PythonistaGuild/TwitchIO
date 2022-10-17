@@ -53,7 +53,11 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
 
     - Bug fixes
-        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires` 
+        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
+        
+- ext.pubsub
+    - Bug fixes      
+        - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
 
 
 2.4.0
