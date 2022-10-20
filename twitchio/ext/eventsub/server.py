@@ -22,7 +22,7 @@ logger = logging.getLogger("twitchio.ext.eventsub")
 _message_types = {
     "webhook_callback_verification": models.ChallengeEvent,
     "notification": models.NotificationEvent,
-    "revokation": models.RevokationEvent,
+    "revocation": models.RevokationEvent,
 }
 
 
@@ -234,7 +234,7 @@ class EventSubClient(web.Application):
             self.client.run_event(
                 f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}", event
             )
-        elif typ == "revokation":
+        elif typ == "revocation":
             self.client.run_event("eventsub_revokation", event)
 
         return response

@@ -1,4 +1,4 @@
-:orphan:     
+:orphan:
 
 
 Master
@@ -30,11 +30,11 @@ Master
 - ext.commands
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
-        
+
 - ext.pubsub
     - Additions
         - Websocket automatically handles "RECONNECT" requests by Twitch
-    - Bug fixes      
+    - Bug fixes
         - Unsubscribing from Pubsubevents works again
         - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
 
@@ -53,10 +53,11 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
 
     - Bug fixes
-        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
-        
+        - Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
+        - Correct typo "revokation" to "revocation" in server _message_types.
+
 - ext.pubsub
-    - Bug fixes      
+    - Bug fixes
         - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
 
 
