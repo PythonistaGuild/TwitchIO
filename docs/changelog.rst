@@ -1,4 +1,4 @@
-:orphan:     
+:orphan:
 
 
 Master
@@ -37,6 +37,7 @@ Master
     - Bug fixes      
         - Unsubscribing from Pubsubevents works again
         - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
+        - :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
 
 - ext.sound
     - Bug fixes
@@ -51,14 +52,10 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_begin`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
+        - HypeTrainBeginProgressData now has the :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.level`
 
     - Bug fixes
         Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
-        
-- ext.pubsub
-    - Bug fixes      
-        - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
-
 
 2.4.0
 ======
