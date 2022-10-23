@@ -87,7 +87,7 @@ class Channel(Messageable):
         return self._chatters.get(self._name, default=None)
 
     @property
-    def chatters(self) -> Dict[str, PartialChatter]:
+    def chatters(self) -> dict[str, PartialChatter]:
         """
         A mapping of the channel's chatter cache.
 
@@ -95,7 +95,7 @@ class Channel(Messageable):
         --------
         Dict[:class:`str`, :class:`~twitchio.PartialChatter`]
         """
-        return copy.copy(self._chatters.items())
+        return copy.copy(self._chatters.nodes)
 
     def get_chatter(self, name: str) -> Optional[PartialChatter]:
         """Method which returns a chatter from the channel's cache.

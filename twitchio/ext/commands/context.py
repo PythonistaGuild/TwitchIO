@@ -36,9 +36,9 @@ class Context(Messageable):
         self.args: tuple = ()
         self.kwargs: dict = {}
 
-        self.component: Component | None = None
+        self._component: Component | None = None
         if self.command and self.command._component:
-            self.component = self.command._component
+            self._component = self.command._component
 
     def _get_command_string(self) -> str:
         return self._message_copy.content.removeprefix(cast(str, self.prefix)).split()[0]
@@ -78,6 +78,10 @@ class Context(Messageable):
     def name(self) -> str:
         return self.channel.name
 
+    @property
+    def component(self) -> Optional[Component]:
+        return self._component
+
     async def invoke(self, *, parse_args_first: bool = True) -> None:
         try:
             # There was no valid prefix found...
@@ -90,7 +94,7 @@ class Context(Messageable):
 
             # Do arg parsing before any invocations or checks...
             if parse_args_first:
-                self.command.parse_args(self)
+                await self.command.parse_args(self)
 
             # Invoke before_invoke... Global > Component > Command
             await self.bot.before_invoke(self)
