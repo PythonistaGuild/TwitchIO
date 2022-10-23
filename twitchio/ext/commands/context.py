@@ -16,7 +16,7 @@ if typing.TYPE_CHECKING:
 
 
 class Context(Messageable):
-    def __init__(self, message: Message, bot: "Bot", **attrs):
+    def __init__(self, message: Message, bot: Bot, **attrs):
         attrs["name"] = cast(Channel, message.channel).name
         attrs["websocket"] = cast(Channel, message.channel)._websocket
         super().__init__(**attrs)
@@ -30,8 +30,8 @@ class Context(Messageable):
 
         self.bot: Bot = bot
 
-        self.prefix: Optional[str] = self._get_prefix()
-        self.command = self._get_command()
+        self.prefix: str | None = self._get_prefix()
+        self.command: Command | None = self._get_command()
 
         self.args: tuple = ()
         self.kwargs: dict = {}
