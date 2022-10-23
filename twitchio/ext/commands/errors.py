@@ -44,3 +44,15 @@ class ExtensionUnloadFailureError(TwitchIOCommandError):
 
 class NoExtensionEntryPoint(TwitchIOCommandError):
     pass
+
+
+class BadConverterError(TwitchIOCommandError):
+    pass
+
+
+class BadArgumentError(TwitchIOCommandError):
+    pass
+
+
+class MissingArgumentError(TwitchIOCommandError):
+    pass
