@@ -120,14 +120,15 @@ class Command:
 
         self._parsed = True
 
-    def _resolve_converter(self, type_) -> Any:
+    def _resolve_converter(self, type_: Any) -> Any:
         if isinstance(type_, (str, int)):
             return type_
 
         converter = _converter_mapping.get(type_, None)
 
         if converter is None and isinstance(type_, type):
-            if hasattr(type_, 'convert') and asyncio.iscoroutinefunction(type_.convert):
+            convert = getattr(type_, 'convert', None)
+            if asyncio.iscoroutinefunction(convert):
                 return type_
             else:
                 raise BadConverterError(

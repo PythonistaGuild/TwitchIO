@@ -126,7 +126,7 @@ class Client:
 
     async def _shard(self):
         if inspect.iscoroutinefunction(self._initial_channels):
-            channels = await self._initial_channels()  # type: ignore
+            channels = await self._initial_channels()
 
         elif callable(self._initial_channels):
             channels = self._initial_channels()
@@ -508,7 +508,7 @@ class Client:
         """
 
         data: HTTPAwaitableAsyncIterator[Video] = self._http.get_videos(
-            ids=ids, game_id=game_id, period=period, sort=sort, type=type, language=language, target=target
+            ids=ids, game_id=str(game_id), period=period, sort=sort, type=type, language=language, target=target
         )
         data.set_adapter(lambda http, data: Video(http, data))
 

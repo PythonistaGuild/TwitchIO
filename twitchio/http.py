@@ -261,9 +261,12 @@ class HTTPHandler(Generic[TokenHandlerT, T]):
                 async with cast(aiohttp.ClientSession, self._session).request(
                     route.method, url, headers=headers
                 ) as response:
-                    data: Union[str, BasePayload] = await response.text("utf-8")
+                    _data: str = await response.text("utf-8")
+                    data: Union[str, BasePayload]
                     if response.headers["Content-Type"].startswith("application/json"):
-                        data = json_loader(data)
+                        data = json_loader(_data)
+                    else:
+                        data = _data
 
                     if response.status not in (400, 401):
                         bucket.update(response)
@@ -989,8 +992,8 @@ class HTTPHandler(Generic[TokenHandlerT, T]):
     def get_videos(
         self,
         ids: Optional[List[int]] = None,
-        user_id: Optional[int] = None,
-        game_id: Optional[int] = None,
+        user_id: Optional[str] = None,
+        game_id: Optional[str] = None,
         sort: Optional[str] = "time",
         type: Optional[str] = "all",
         period: Optional[str] = "all",

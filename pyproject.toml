@@ -19,9 +19,6 @@ classifiers= [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Development Status :: 2 - Pre-Alpha",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Topic :: Internet",
     "Topic :: Software Development :: Libraries",
@@ -82,7 +79,7 @@ exclude = [
 ]
 reportMissingImports = "none"
 reportUnnecessaryTypeIgnoreComment = "warning"
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 typeCheckingMode = "basic"
 
 [tool.poetry.extras]

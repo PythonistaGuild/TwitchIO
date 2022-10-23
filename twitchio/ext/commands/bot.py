@@ -271,6 +271,6 @@ class Bot(Client):
               file=sys.stderr)
 
         if error.original:
-            error = error.original
+            error = error.original # type: ignore
 
         traceback.print_exception(type(error), error, error.__traceback__)

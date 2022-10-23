@@ -166,7 +166,7 @@ class PartialUser:
             List[:class:`Tag`]
         """
         data = await self._http.get_channel_tags(str(self.id))
-        return [Tag(x) for x in data["data"]]
+        return [Tag(self._http, x) for x in data["data"]]
 
     async def replace_tags(self, tags: List[Union[str, Tag]]) -> None:
         """|coro|
@@ -802,7 +802,7 @@ class PartialUser:
 
         return [ChannelTeams(self._http, x) for x in data]
 
-    async def fetch_polls(self, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20):
+    def fetch_polls(self, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20) -> HTTPAwaitableAsyncIterator[Poll]:
         """|coro|
 
         Fetches a list of polls for the specified channel/broadcaster.
@@ -819,8 +819,9 @@ class PartialUser:
         List[:class:`twitchio.Poll`]
         """
 
-        data = await self._http.get_polls(broadcaster_id=str(self.id), target=self, poll_ids=poll_ids, first=first)
-        return [Poll(self._http, x) for x in data["data"]] if data["data"] else None
+        data: HTTPAwaitableAsyncIterator[Poll] = self._http.get_polls(broadcaster_id=str(self.id), target=self, poll_ids=poll_ids, first=first)
+        data.set_adapter(lambda handler, data: Poll(handler, data))
+        return data
 
     async def create_poll(
         self,

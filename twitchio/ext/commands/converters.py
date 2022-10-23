@@ -20,7 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TYPE_CHECKING
+from __future__ import annotations
+from typing import Any, TYPE_CHECKING, Callable
 
 from twitchio import PartialChatter
 from .errors import BadArgumentError
@@ -32,7 +33,7 @@ if TYPE_CHECKING:
 __all__ = ('_converter_mapping', )
 
 
-async def BoolConverter(context: 'Context', argument) -> bool:
+async def BoolConverter(context: Context, argument) -> bool:
     if isinstance(argument, str):
         argument = argument.lower()
 
@@ -42,10 +43,10 @@ async def BoolConverter(context: 'Context', argument) -> bool:
     elif argument in ("no", "n", "0", "false", "off", False, 0):
         return False
 
-    raise BadArgument(f'Expected a boolean value, got "{argument}" instead.')
+    raise BadArgumentError(f'Expected a boolean value, got "{argument}" instead.')
 
 
-async def ChatterConverter(context: 'Context', argument) -> PartialChatter:
+async def ChatterConverter(context: Context, argument) -> PartialChatter:
     channel = context.channel
 
     chatter = channel.get_chatter(argument)
@@ -55,7 +56,7 @@ async def ChatterConverter(context: 'Context', argument) -> PartialChatter:
     return chatter
 
 
-_converter_mapping = {
+_converter_mapping: dict[type, type | Callable[[Context, str], Any]] = {
     bool: BoolConverter,
     PartialChatter: ChatterConverter
 }
