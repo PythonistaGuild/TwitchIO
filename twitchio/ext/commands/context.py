@@ -36,9 +36,9 @@ class Context(Messageable):
         self.args: tuple = ()
         self.kwargs: dict = {}
 
-        self.component: Component | None = None
+        self._component: Component | None = None
         if self.command and self.command._component:
-            self.component = self.command._component
+            self._component = self.command._component
 
     def _get_command_string(self) -> str:
         return self._message_copy.content.removeprefix(cast(str, self.prefix)).split()[0]
@@ -77,6 +77,10 @@ class Context(Messageable):
     @property
     def name(self) -> str:
         return self.channel.name
+
+    @property
+    def component(self) -> Optional[Component]:
+        return self._component
 
     async def invoke(self, *, parse_args_first: bool = True) -> None:
         try:
