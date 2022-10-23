@@ -358,6 +358,8 @@ class Client:
         -----------
         user_id: Optional[:class:`int`]
             The channel id to fetch from.
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
 
         Returns
         --------
@@ -401,6 +403,8 @@ class Client:
         -----------
         query: :class:`str`
             The query to search for
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
 
         Returns
         --------
@@ -449,6 +453,8 @@ class Client:
         -----------
         ids: List[:class:`str`]
             A list of clip ids
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
 
         Returns
         --------
@@ -493,6 +499,8 @@ class Client:
         language: Optional[:class:`str`]
             Language of the videos to fetch. Must be an `ISO-639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ two letter code.
             Cannot be used when video id(s) are passed
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
 
         Returns
         --------
@@ -541,6 +549,8 @@ class Client:
             An optional list of game ids
         names: Optional[List[:class:`str`]]
             An optional list of game names
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
 
         Returns
         --------
@@ -599,6 +609,11 @@ class Client:
 
         Fetches the top games from the api
 
+        Parameters
+        ----------
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
+
         Returns
         --------
             List[:class:`twitchio.Game`]
@@ -617,6 +632,8 @@ class Client:
         -----------
         ids: Optional[List[:class:`str`]]
             The ids of the tags to fetch
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
 
         Returns
         --------
@@ -641,6 +658,8 @@ class Client:
             Team name to fetch
         id: Optional[:class:`int`]
             Team id to fetch
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
 
         Returns
         --------
@@ -661,10 +680,12 @@ class Client:
 
         Parameters
         -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:videos`` scope
+        target: Optional[:class:`~twitchio.PartialUser`]
+            The target of this HTTP call. Passing a user will tell the library to put this call under the authorized token for that user, if one exists in your token handler
+            ``channel:manage:videos`` scope is required
         ids: List[:class:`int`]
             A list of video ids from the channel of the oauth token to delete
+
 
         Returns
         --------
