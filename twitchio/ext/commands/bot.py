@@ -17,7 +17,7 @@ from .errors import *
 
 class Bot(Client):
     def __init__(
-        self, prefix: Union[List, Callable[..., str], Callable[..., Coroutine[Any, Any, str]]], *args, **kwargs
+        self, prefix: Union[str, List, Callable[..., str], Callable[..., Coroutine[Any, Any, str]]], *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
 
