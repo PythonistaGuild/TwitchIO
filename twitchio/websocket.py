@@ -126,7 +126,7 @@ class WSConnection:
                 data = await self._client._http.validate(token=self._token)
             except AuthenticationError:
                 await self._client._http.session.close()
-                self._client._closing.set() # clean up and error out (this is called to avoid calling Client.close in start()
+                self._client._closing.set()  # clean up and error out (this is called to avoid calling Client.close in start()
                 raise
             self.nick = data["login"]
             self.user_id = int(data["user_id"])

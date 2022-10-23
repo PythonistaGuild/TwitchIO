@@ -156,7 +156,7 @@ class Client:
         """
         try:
             task = self.loop.create_task(self.connect())
-            self.loop.run_until_complete(task) # this'll raise if the connect fails
+            self.loop.run_until_complete(task)  # this'll raise if the connect fails
             self.loop.run_forever()
         except KeyboardInterrupt:
             pass
