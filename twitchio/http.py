@@ -1235,7 +1235,7 @@ class HTTPHandler(Generic[TokenHandlerT, T]):
         return await self.request(Route("POST", "raids", None, parameters=q, target=target))
 
     async def delete_raid(self, target: PartialUser, broadcaster_id: str):
-        q = [("broadcaster_id", broadcaster_id)]
+        q = [("broadcaster_id", broadcaster_id), None]
         return await self.request(Route("DELETE", "raids", None, parameters=q, target=target))
 
     async def post_ban_timeout_user(
