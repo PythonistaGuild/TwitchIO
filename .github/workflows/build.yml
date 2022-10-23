@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.10"]
 
     steps:
       - name: Checkout
@@ -68,7 +68,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: 3.10
 
     - name: install deps
       run: |
@@ -88,7 +88,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ '3.9' ]
+        python-version: [ '3.10' ]
 
     name: pyright ${{ matrix.python-version }}
     steps:
