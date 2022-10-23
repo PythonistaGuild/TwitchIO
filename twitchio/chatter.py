@@ -51,7 +51,7 @@ class PartialChatter:
         self.badges = badges
 
     def __repr__(self):
-        return f"PartialUser: id={self._id}, name={self._name}"
+        return f"PartialChatter: id={self._id}, name={self._name}"
 
     def __str__(self):
         return self._name
