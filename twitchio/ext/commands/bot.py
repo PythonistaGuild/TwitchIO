@@ -158,7 +158,6 @@ class Bot(Client):
             except KeyError as e:
                 raise ComponentNotFoundError(f'The component "{component}" is not currently loaded.') from e
 
-
         elif not isinstance(component, Component):
             raise TypeError(f'component argument must be of type "commands.Component" or str, not {type(component)}.')
 
@@ -209,7 +208,6 @@ class Bot(Client):
         except AttributeError as exc:
             del sys.modules[name]
             raise NoExtensionEntryPoint(f'The extension "{extension}" has no setup coroutine.') from exc
-
 
         if not asyncio.iscoroutinefunction(entry):
             del sys.modules[name]

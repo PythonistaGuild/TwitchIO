@@ -904,7 +904,7 @@ class BitLeaderboardUser(PartialUser):
         self.score: int = data["score"]
 
 
-class UserBan(PartialUser): # TODO will probably rework this
+class UserBan(PartialUser):  # TODO will probably rework this
     """
     Represents a banned user or one in timeout.
 
