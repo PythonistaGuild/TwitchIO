@@ -74,4 +74,4 @@ class Cache:
         return self.nodes.values()
 
     def items(self):
-        return self.items()
+        return self.nodes.items()
