@@ -51,12 +51,12 @@ class Context(Messageable):
 
         return cmd
 
-    def _get_prefix(self) -> str:
+    def _get_prefix(self) -> Optional[str]:
         for prefix in self.bot.prefixes:
             if self._message_copy.content.startswith(prefix):
                 return prefix
 
-        raise ValueError("No prefix found")
+        return None
 
     @property
     def is_valid(self) -> bool:
