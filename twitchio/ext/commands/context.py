@@ -80,4 +80,6 @@ class Context(Messageable):
         if not self.command:
             raise CommandNotFoundError(f'The command "{self._get_command_string()}" could not be found.')
 
+        await self.bot.before_invoke(self)
         await self.command.invoke(context=self)
+        await self.bot.after_invoke(self)

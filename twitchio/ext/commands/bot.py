@@ -256,3 +256,9 @@ class Bot(Client):
 
         await self.unload_extension(name)
         await self.load_extension(name)
+
+    async def before_invoke(self, context: Context) -> None:
+        pass
+
+    async def after_invoke(self, context: Context) -> None:
+        pass
