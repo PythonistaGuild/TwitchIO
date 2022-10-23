@@ -35,6 +35,8 @@ class Command:
         self._instance = None
         self._component = kwargs.pop("__component__", None)
 
+        self._parsed: bool = False
+
     async def __call__(self, *args, **kwargs):
         await self._callback(*args, **kwargs)
 
@@ -94,7 +96,7 @@ class Command:
     def _reposition_args(self, args) -> tuple:
         return tuple(v["value"] for k, v in sorted(args.items(), key=lambda item: item[1]["index"]))
 
-    async def invoke(self, context: Context) -> None:
+    def parse_args(self, context: Context) -> None:
         content = context._message_copy.content
 
         to_parse = content.removeprefix(context.prefix or "")
@@ -111,7 +113,13 @@ class Command:
         context.args = args
         context.kwargs = kwargs
 
-        await self._callback(self._instance, context, *args, **kwargs)
+        self._parsed = True
+
+    async def invoke(self, context: Context) -> None:
+        if not self._parsed:
+            self.parse_args(context)
+
+        await self._callback(self._instance, context, *context.args, **context.kwargs)
 
 
 CommandT = TypeVar("CommandT", bound=Command)
