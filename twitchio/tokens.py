@@ -232,6 +232,7 @@ class BaseTokenHandler:
     A base class to manage user tokens.
     Ill fill this in later
     """
+
     client: Client
 
     def __init__(self) -> None:

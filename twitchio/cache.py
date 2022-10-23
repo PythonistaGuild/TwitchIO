@@ -26,7 +26,7 @@ from typing import Optional
 
 class Cache:
     def __init__(self, *, size: Optional[int] = None):
-        self.size = size or 99999999 # Arbitrarily large size...
+        self.size = size or 99999999  # Arbitrarily large size...
 
         self.nodes = collections.OrderedDict()
 
