@@ -267,10 +267,11 @@ class Bot(Client):
         pass
 
     async def event_command_error(self, context: Context, error: TwitchIOCommandError) -> None:
-        print(f'\nIgnoring Exception in command invocation "{context.prefix}{context.invoked_with}":\n',
-              file=sys.stderr)
+        print(
+            f'\nIgnoring Exception in command invocation "{context.prefix}{context.invoked_with}":\n', file=sys.stderr
+        )
 
         if error.original:
-            error = error.original # type: ignore
+            error = error.original  # type: ignore
 
         traceback.print_exception(type(error), error, error.__traceback__)

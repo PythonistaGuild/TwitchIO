@@ -21,16 +21,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING, Callable
+
+from typing import TYPE_CHECKING, Any, Callable
 
 from twitchio import PartialChatter
+
 from .errors import BadArgumentError
 
 if TYPE_CHECKING:
     from .context import Context
 
 
-__all__ = ('_converter_mapping', )
+__all__ = ("_converter_mapping",)
 
 
 async def BoolConverter(context: Context, argument) -> bool:
@@ -58,5 +60,5 @@ async def ChatterConverter(context: Context, argument) -> PartialChatter:
 
 _converter_mapping: dict[type, type | Callable[[Context, str], Any]] = {
     bool: BoolConverter,
-    PartialChatter: ChatterConverter
+    PartialChatter: ChatterConverter,
 }
