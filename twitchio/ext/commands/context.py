@@ -94,7 +94,7 @@ class Context(Messageable):
 
             # Do arg parsing before any invocations or checks...
             if parse_args_first:
-                self.command.parse_args(self)
+                await self.command.parse_args(self)
 
             # Invoke before_invoke... Global > Component > Command
             await self.bot.before_invoke(self)

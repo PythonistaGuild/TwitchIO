@@ -8,6 +8,9 @@ from typing import Any, Callable, Collection, Coroutine, Dict, List, Optional, T
 from typing_extensions import reveal_type
 
 from .context import Context
+from .converters import _converter_mapping
+from .errors import BadArgumentError, BadConverterError, MissingArgumentError
+
 
 __all__ = ("Command", "command")
 
@@ -96,7 +99,7 @@ class Command:
     def _reposition_args(self, args) -> tuple:
         return tuple(v["value"] for k, v in sorted(args.items(), key=lambda item: item[1]["index"]))
 
-    def parse_args(self, context: Context) -> None:
+    async def parse_args(self, context: Context) -> None:
         content = context._message_copy.content
 
         to_parse = content.removeprefix(context.prefix or "")
@@ -110,14 +113,75 @@ class Command:
             args = ()
             kwargs = {}
 
+        args, kwargs = await self._convert_args(context, args, kwargs)
+
         context.args = args
         context.kwargs = kwargs
 
         self._parsed = True
 
+    def _resolve_converter(self, type_) -> Any:
+        if isinstance(type_, (str, int)):
+            return type_
+
+        converter = _converter_mapping.get(type_, None)
+
+        if converter is None and isinstance(type_, type):
+            if hasattr(type_, 'convert') and asyncio.iscoroutinefunction(type_.convert):
+                return type_
+            else:
+                raise BadConverterError(
+                    f'The converter "{type_}" is not a coroutine or is missing the "convert" coroutine.'
+                )
+
+        return converter
+
+    async def _convert_args(self, context: Context, args: tuple, kwargs: dict) -> tuple[tuple, dict]:
+        params = self.params
+        index: int = 0
+
+        newargs, newkws = [], {}
+
+        for name, param in params.items():
+            if index < 2:
+                index += 1
+                continue
+
+            default = param.default
+
+            try:
+                arg = kwargs[name]
+            except KeyError:
+                try:
+                    arg = args[index - 2]
+                except IndexError:
+
+                    if not isinstance(default, type):
+                        newargs.append(default)
+                        continue
+                    else:
+                        raise MissingArgumentError(f'The argument "{name}" is missing.')
+
+            converter = self._resolve_converter(param.annotation)
+            if hasattr(converter, 'convert'):
+                arg = await converter.convert(context, arg)
+            else:
+                arg = await converter(context, arg)
+
+            try:
+                kwargs[name]
+            except KeyError:
+                newargs.append(arg)
+            else:
+                newkws[name] = arg
+
+            index += 1
+
+        return tuple(newargs), kwargs
+
     async def invoke(self, context: Context) -> None:
         if not self._parsed:
-            self.parse_args(context)
+            await self.parse_args(context)
 
         await self._callback(self._instance, context, *context.args, **context.kwargs)
 
