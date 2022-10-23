@@ -12,6 +12,7 @@ Master
             - This is dispatched when the bot fails to join a channel
             - This also makes the channel join error message in logs optional
     - Bug fixes
+        - Fix AuthenticationError not being properly propagated when a bad token is given
         - Fix channel join failures causing `ValueError: list.remove(x): x not in list` when joining channels after the initial start
         - Added :attr:`~twitchio.Chatter.is_vip` property to Chatter
         - New PartialUser methods
