@@ -1,6 +1,5 @@
 sphinx
 docutils<0.18
-sphinxcontrib-napoleon
 sphinxcontrib-asyncio
 sphinxcontrib-websupport
 sphinxext-opengraph
