@@ -29,7 +29,7 @@ class Context(Messageable):
 
         self.bot: Bot = bot
 
-        self.prefix = self._get_prefix()
+        self.prefix: Optional[str] = self._get_prefix()
         self.command = self._get_command()
 
         self.args: tuple = ()
