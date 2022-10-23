@@ -257,8 +257,20 @@ class Bot(Client):
         await self.unload_extension(name)
         await self.load_extension(name)
 
+    async def event_message(self, message: Message) -> None:
+        await self.process_commands(message)
+
     async def before_invoke(self, context: Context) -> None:
         pass
 
     async def after_invoke(self, context: Context) -> None:
         pass
+
+    async def event_command_error(self, context: Context, error: TwitchIOCommandError) -> None:
+        print(f'\nIgnoring Exception in command invocation "{context.prefix}{context.invoked_with}":\n',
+              file=sys.stderr)
+
+        if error.original:
+            error = error.original
+
+        traceback.print_exception(type(error), error, error.__traceback__)

@@ -74,12 +74,21 @@ class Context(Messageable):
         return self.channel.name
 
     async def invoke(self) -> None:
-        if not self.is_valid:
-            raise InvalidInvocationContext("This Context is invalid for command invocation.")
+        try:
 
-        if not self.command:
-            raise CommandNotFoundError(f'The command "{self._get_command_string()}" could not be found.')
+            if not self.is_valid:
+                raise InvalidInvocationContext("This Context is invalid for command invocation.")
 
-        await self.bot.before_invoke(self)
-        await self.command.invoke(context=self)
-        await self.bot.after_invoke(self)
+            if not self.command:
+                raise CommandNotFoundError(f'The command "{self._get_command_string()}" could not be found.')
+
+            await self.bot.before_invoke(self)
+            await self.command.invoke(context=self)
+            await self.bot.after_invoke(self)
+
+        except TwitchIOCommandError as e:
+            await self.bot.event_command_error(self, e)
+
+        except Exception as e:
+            exception = TwitchIOCommandError(str(e), original=e)
+            await self.bot.event_command_error(self, exception)
