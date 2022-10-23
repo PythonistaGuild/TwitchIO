@@ -12,6 +12,7 @@ from .errors import *
 if typing.TYPE_CHECKING:
     from .bot import Bot
     from .commands import Command
+    from .components import Component
 
 
 class Context(Messageable):
@@ -34,6 +35,10 @@ class Context(Messageable):
 
         self.args: tuple = ()
         self.kwargs: dict = {}
+
+        self.component: Component | None = None
+        if self.command and self.command._component:
+            self.component = self.command._component
 
     def _get_command_string(self) -> str:
         return self._message_copy.content.removeprefix(cast(str, self.prefix)).split()[0]
@@ -73,18 +78,32 @@ class Context(Messageable):
     def name(self) -> str:
         return self.channel.name
 
-    async def invoke(self) -> None:
+    async def invoke(self, *, parse_args_first: bool = True) -> None:
         try:
-
+            # There was no valid prefix found...
             if not self.is_valid:
                 raise InvalidInvocationContext("This Context is invalid for command invocation.")
 
+            # No Command was found for this Context object.
             if not self.command:
                 raise CommandNotFoundError(f'The command "{self._get_command_string()}" could not be found.')
 
+            # Do arg parsing before any invocations or checks...
+            if parse_args_first:
+                self.command.parse_args(self)
+
+            # Invoke before_invoke... Global > Component > Command
             await self.bot.before_invoke(self)
+            if self.component:
+                await self.component.component_before_invoke(self)
+
+            # Actual command invocation... Parses args here if parse_args_first is False.
             await self.command.invoke(context=self)
+
+            # Invoke after_invoke... Global > Component > Command
             await self.bot.after_invoke(self)
+            if self.component:
+                await self.component.component_after_invoke(self)
 
         except TwitchIOCommandError as e:
             await self.bot.event_command_error(self, e)
