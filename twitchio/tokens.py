@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from .http import HTTPHandler
     from .models import PartialUser, User
 
-__all__ = ("BaseToken", "Token", "BaseTokenHandler", "SimpleTokenHandler")
+__all__ = ("BaseToken", "Token", "BaseTokenHandler", "SimpleTokenHandler", "IRCTokenHandler")
 
 VALIDATE_URL = URL("https://id.twitch.tv/oauth2/validate")
 REFRESH_URL = URL("https://id.twitch.tv/oauth2/refresh")
