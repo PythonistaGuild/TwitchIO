@@ -24,9 +24,9 @@ from __future__ import annotations
 
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Set, Tuple, Union
-from typing_extensions import Self
 
 import aiohttp
+from typing_extensions import Self
 from yarl import URL
 
 from .exceptions import InvalidToken, RefreshFailure
