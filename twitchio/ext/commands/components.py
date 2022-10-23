@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 from .commands import Command
 
@@ -53,10 +53,10 @@ class Component:
     async def component_on_unload(self) -> None:
         ...
 
-    async def component_before_invoke(self, context: 'Context') -> None:
+    async def component_before_invoke(self, context: "Context") -> None:
         ...
 
-    async def component_after_invoke(self, context: 'Context') -> None:
+    async def component_after_invoke(self, context: "Context") -> None:
         ...
 
     async def component_command_error(self) -> None:

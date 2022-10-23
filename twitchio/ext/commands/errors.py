@@ -1,9 +1,8 @@
 class TwitchIOCommandError(Exception):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
-        self.original: Exception | None = kwargs.get('original', None)
+        self.original: Exception | None = kwargs.get("original", None)
 
 
 class CommandNotFoundError(TwitchIOCommandError):

@@ -802,7 +802,9 @@ class PartialUser:
 
         return [ChannelTeams(self._http, x) for x in data]
 
-    def fetch_polls(self, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20) -> HTTPAwaitableAsyncIterator[Poll]:
+    def fetch_polls(
+        self, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20
+    ) -> HTTPAwaitableAsyncIterator[Poll]:
         """|coro|
 
         Fetches a list of polls for the specified channel/broadcaster.
@@ -819,7 +821,9 @@ class PartialUser:
         List[:class:`twitchio.Poll`]
         """
 
-        data: HTTPAwaitableAsyncIterator[Poll] = self._http.get_polls(broadcaster_id=str(self.id), target=self, poll_ids=poll_ids, first=first)
+        data: HTTPAwaitableAsyncIterator[Poll] = self._http.get_polls(
+            broadcaster_id=str(self.id), target=self, poll_ids=poll_ids, first=first
+        )
         data.set_adapter(lambda handler, data: Poll(handler, data))
         return data
 

@@ -11,7 +11,6 @@ from .context import Context
 from .converters import _converter_mapping
 from .errors import BadArgumentError, BadConverterError, MissingArgumentError
 
-
 __all__ = ("Command", "command")
 
 Callback = Callable[..., Coroutine[Any, Any, None]]
@@ -127,7 +126,7 @@ class Command:
         converter = _converter_mapping.get(type_, None)
 
         if converter is None and isinstance(type_, type):
-            convert = getattr(type_, 'convert', None)
+            convert = getattr(type_, "convert", None)
             if asyncio.iscoroutinefunction(convert):
                 return type_
             else:
@@ -164,7 +163,7 @@ class Command:
                         raise MissingArgumentError(f'The argument "{name}" is missing.')
 
             converter = self._resolve_converter(param.annotation)
-            if hasattr(converter, 'convert'):
+            if hasattr(converter, "convert"):
                 arg = await converter.convert(context, arg)
             else:
                 arg = await converter(context, arg)
