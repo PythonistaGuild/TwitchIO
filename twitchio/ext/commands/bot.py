@@ -43,13 +43,13 @@ class Bot(Client):
 
         await super().__aexit__(exc_type, exc_val, exc_tb)
 
-    def run(self, token: Optional[str] = None) -> None:
+    def run(self) -> None:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._prepare_prefixes())
 
         super().run()
 
-    async def start(self, token: Optional[str] = None) -> None:
+    async def start(self) -> None:
         if not self._in_context:
             raise RuntimeError('"bot.start" can only be used within the bot async context manager.')
 
