@@ -107,9 +107,9 @@ class PartialUser:
 
     __slots__ = "id", "name", "_http", "_cached_rewards"
 
-    def __init__(self, http: HTTPHandler, id: Union[int, str], name: Optional[str]):
+    def __init__(self, http: HTTPHandler, id: int | str, name: str | None):
         self.id: int = int(id)
-        self.name: Optional[str] = name
+        self.name: str | None = name
         self._http: HTTPHandler = http
 
         self._cached_rewards: Optional[Tuple[float, List[CustomReward]]] = None
@@ -118,7 +118,7 @@ class PartialUser:
         return f"<PartialUser id={self.id}, name={self.name}>"
 
     @property
-    def channel(self) -> Optional[Channel]:
+    def channel(self) -> Channel | None:
         """
         Returns the :class:`~twitchio.Channel` associated with this user. Could be ``None`` if you are not part of the channel's chat
 
@@ -126,9 +126,11 @@ class PartialUser:
         --------
         Optional[:class:`~twitchio.Channel`]
         """
-
-        if self.name in self._http.client._connection._cache:
-            return Channel(name=self.name, websocket=self._http.client._connection)
+        if not self.name:
+            return None
+        client = self._http.client
+        if client:
+            return client.get_channel(self.name)
 
     async def fetch(self) -> User:
         """|coro|
