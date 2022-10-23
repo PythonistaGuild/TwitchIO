@@ -139,7 +139,7 @@ class Client:
         if not isinstance(channels, (list, tuple)):
             raise TypeError("initial_channels must return a list or tuple of str.")
 
-        chunked = [channels[x : x + self._shard_limit] for x in range(0, len(channels), self._shard_limit)]
+        chunked = [channels[x: x + self._shard_limit] for x in range(0, len(channels), self._shard_limit)]
 
         for index, chunk in enumerate(chunked, 1):
             self._shards[index] = ShardInfo(
