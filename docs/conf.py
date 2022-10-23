@@ -43,6 +43,7 @@ with open('../twitchio/__init__.py') as f:
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.extlinks",
+    "sphinx.ext.napoleon",
     "sphinxcontrib.asyncio",
     "sphinx.ext.intersphinx",
     "attributetable",
@@ -92,7 +93,6 @@ html_static_path = ["_static"]
 html_css_files = ["styles/furo.css"]
 html_js_files = ["js/custom.js"]
 
-extensions.append("sphinx.ext.napoleon")
 
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
