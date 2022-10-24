@@ -1,6 +1,6 @@
 :orphan:
 
-.. _parsing:
+.. _commandparsing-ref:
 
 Command Parsing
 ===============

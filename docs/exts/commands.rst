@@ -5,4 +5,4 @@ Commands Ext
 Guides
 ~~~~~~
 
-- :doc:`guides/commandparsing`
+- :doc:`../guides/commandparsing`
