@@ -115,6 +115,6 @@ jobs:
       - name: Run Pyright
         uses: jakebailey/pyright-action@v1
         with:
-          version: '1.1.255'
+          version: '1.1.276'
           warnings: false
           no-comments: true
