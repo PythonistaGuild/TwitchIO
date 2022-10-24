@@ -11,7 +11,7 @@ The Basics
 ~~~~~~~~~~
 A basic command signature might look something like this:
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, arg: str) -> None:
@@ -33,7 +33,7 @@ This will result in ``arg`` being equal to ``"hello"``.
 
 To solve this issue, you can set a default to your argument, E.g:
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, arg: str = 'Hello World!') -> None:
@@ -57,7 +57,7 @@ Commands, just like normal Python functions, can have multiple arguments.
 
 Example:
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, arg1: str, arg2: str) -> None:
@@ -81,7 +81,7 @@ that will consume everything passed after all other argument parsing has taken p
 
 Consider the following:
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, arg: str, *, rest: str) -> None:
@@ -91,7 +91,7 @@ Consider the following:
 If we were to invoke this command like, ``?test hello this is a test``, ``arg`` would equal to ``"hello"`` and
 ``rest`` would equal ``"this is a test"``. Of course you can omit the first argument and only pass a consume rest argument, like so:
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, *, rest: str) -> None:
@@ -124,7 +124,7 @@ For example, if you wanted one of your arguments to be converted to an ``int`` w
 your signature might look like this:
 
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, arg: int) -> None:
@@ -140,7 +140,7 @@ This is because ``hello`` can not be converted to an ``int``.
 Lets say you wanted to grab a ``PartialChatter`` object from the channel you are in, to see various information about a user.
 
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, chatter: twitchio.PartialChatter) -> None:
@@ -159,7 +159,7 @@ Both solutions, take two parameters, ``context`` (``commands.Context``) and ``ar
 For example lets make a simple converter to convert a hex string to a Python hex object.
 
 
-.. code-block:: python-3
+.. code-block:: python3
 
     async def hex_converter(context: commands.Context, argument: str) -> hex:
         argument = argument.removeprefix('#')
@@ -175,7 +175,7 @@ For example lets make a simple converter to convert a hex string to a Python hex
 Now we can use this converter in our command signature:
 
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, arg: hex_converter) -> None:
@@ -188,7 +188,7 @@ We could invoke this command like, ``?test #C0FFEE``, which will return a Python
 You could also make a class with a convert coroutine, for example, lets say we wanted to convert our argument to a special class named ``Thing``:
 
 
-.. code-block:: python-3
+.. code-block:: python3
 
     class Thing:
 
@@ -203,7 +203,7 @@ You could also make a class with a convert coroutine, for example, lets say we w
 Now we can use this converter in our command signature:
 
 
-.. code-block:: python-3
+.. code-block:: python3
 
     @commands.command()
     async def test(self, ctx: commands.Context, arg: Thing) -> None:
