@@ -122,7 +122,12 @@ class WSConnection:
         if self.is_alive:
             await self._websocket.close()  # If for some reason we are in a weird state, close it before retrying.
         if not self._client._http.nick:
-            data = await self._client._http.validate(token=self._token)
+            try:
+                data = await self._client._http.validate(token=self._token)
+            except AuthenticationError:
+                await self._client._http.session.close()
+                self._client._closing.set()  # clean up and error out (this is called to avoid calling Client.close in start()
+                raise
             self.nick = data["login"]
             self.user_id = int(data["user_id"])
         else:
