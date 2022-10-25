@@ -214,3 +214,74 @@ We could invoke our command like, ``?test secret``, and now ``arg`` will be equa
 
 
 Of course these are but minimal examples showcasing the basics of how converters work.
+
+
+Special Arguments
+~~~~~~~~~~~~~~~~~
+TwitchIO introduces a new type of argument parsing. These arguments make use of the ``positional only`` syntax introduced in Python 3.8.
+Every command, by default, has a ``positional_delimiter`` equal to `=`.
+
+You can change this by passing the ``positional_delimiter`` argument in the command decorator.
+
+
+.. code-block:: python3
+
+    @commands.command(positional_delimiter=':')
+
+
+To start using special arguments, you must first define them with the ``positional only`` syntax.
+
+
+.. code-block:: python3
+
+    @commands.command()
+    async def test(self, ctx: commands.Context, arg: str, /) -> None:
+        ...
+
+
+Every arg you define before the `/` is positional only, and will make use of the new TwitchIO Special Argument parsing.
+Lets take a look at a quick example:
+
+
+.. code-block:: python3
+
+    @commands.command()
+    async def test(self, ctx: commands.Context, user: twitchio.PartialChatter, /) -> None:
+        print(user.colour)
+
+
+In the above example we define a special argument ``user`` with the default delimiter `=`.
+We would invoke this command like, ``?test user=chillymosh``.
+
+
+You can have more than one special argument, and the order of special arguments being passed does not matter, for instance:
+
+
+.. code-block:: python3
+
+    @commands.command(positional_delimiter=':')
+    async def test(self, ctx: commands.Context, user: twitchio.PartialChatter, other: str, /) -> None:
+        print(user)
+        print(reason)
+
+
+In the above example we could invoke our command like, ``?test user:chillymosh other:hello`` or ``?test other:hello user:chillymosh``.
+Each argument will be sorted for you.
+
+
+You can also still use other argument types after special arguments, for example:
+
+.. code-block:: python3
+
+    @commands.command()
+    async def test(self, ctx: commands.Context, user: twitchio.PartialChatter, /, *, rest: str) -> None:
+        print(user)
+        print(rest)
+
+
+In the above example everything will be consume by ``rest`` other than the ``user`` arg.
+For example you could invoke your command in the following ways:
+
+
+- ``?test Hello World! user=chillymosh``
+- ``?test user=chillymosh Hello World!``
