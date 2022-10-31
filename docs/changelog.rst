@@ -53,7 +53,14 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_begin`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
+
+        - Channel subscription end
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_subscription_end`
+        - User authorization grant
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_user_authorization_granted`
+
         - HypeTrainBeginProgressData now has the :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.level`
+
 
     - Bug fixes
         Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`

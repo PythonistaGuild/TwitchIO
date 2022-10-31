@@ -120,6 +120,9 @@ class EventSubClient(web.Application):
     def subscribe_channel_subscriptions(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription, broadcaster)
 
+    def subscribe_channel_subscription_end(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_end, broadcaster)
+
     def subscribe_channel_subscription_gifts(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_gift, broadcaster)
 
@@ -210,6 +213,11 @@ class EventSubClient(web.Application):
 
     def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster)
+
+    async def subscribe_user_authorization_granted(self):
+        return await self._http.create_subscription(
+            models.SubscriptionTypes.user_authorization_grant, {"client_id": self.client._http.client_id}
+        )
 
     async def subscribe_user_authorization_revoked(self):
         return await self._http.create_subscription(
