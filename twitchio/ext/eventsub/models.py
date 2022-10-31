@@ -682,6 +682,8 @@ class HypeTrainBeginProgressData(EventData):
         The top contributions of the Hype Train
     last_contribution: :class:`HypeTrainContributor`
         The last contributor to the Hype Train
+    level: :class:`int`
+        The current level of the Hype Train
     """
 
     __slots__ = (
@@ -693,6 +695,7 @@ class HypeTrainBeginProgressData(EventData):
         "last_contribution",
         "started",
         "expires",
+        "level",
     )
 
     def __init__(self, client: EventSubClient, data: dict):
@@ -704,6 +707,7 @@ class HypeTrainBeginProgressData(EventData):
         self.expires = _parse_datetime(data["expires_at"])
         self.top_contributions = [HypeTrainContributor(client, d) for d in data["top_contributions"]]
         self.last_contribution = HypeTrainContributor(client, data["last_contribution"])
+        self.level: int = data["level"]
 
 
 class HypeTrainEndData(EventData):
