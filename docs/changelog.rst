@@ -12,6 +12,7 @@ Master
             - This is dispatched when the bot fails to join a channel
             - This also makes the channel join error message in logs optional
     - Bug fixes
+        - Fix AuthenticationError not being properly propagated when a bad token is given
         - Fix channel join failures causing `ValueError: list.remove(x): x not in list` when joining channels after the initial start
         - Added :attr:`~twitchio.Chatter.is_vip` property to Chatter
         - New PartialUser methods
@@ -37,6 +38,7 @@ Master
     - Bug fixes
         - Unsubscribing from Pubsubevents works again
         - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
+        - :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
 
 - ext.sound
     - Bug fixes
@@ -51,6 +53,7 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_begin`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
+        - HypeTrainBeginProgressData now has the :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.level`
 
     - Bug fixes
         - Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
@@ -59,6 +62,8 @@ Master
 - ext.pubsub
     - Bug fixes
         - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
+
+        - Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
 
 
 2.4.0

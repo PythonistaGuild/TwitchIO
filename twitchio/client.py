@@ -30,7 +30,7 @@ import traceback
 import sys
 from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict
 
-from twitchio.errors import HTTPException
+from twitchio.errors import HTTPException, AuthenticationError
 from . import models
 from .websocket import WSConnection
 from .http import TwitchHTTP
@@ -155,7 +155,8 @@ class Client:
         connects to the twitch IRC server, and cleans up when done.
         """
         try:
-            self.loop.create_task(self.connect())
+            task = self.loop.create_task(self.connect())
+            self.loop.run_until_complete(task)  # this'll raise if the connect fails
             self.loop.run_forever()
         except KeyboardInterrupt:
             pass
