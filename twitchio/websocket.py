@@ -142,10 +142,9 @@ class WSConnection:
 
             await asyncio.sleep(retry)
             return asyncio.create_task(self._connect())
-        if time.time() > self._last_ping + 240 or self._reconnect_requested:
-            # Re-authenticate as we have surpassed a PING request or Twitch issued a RECONNECT.
-            await self.authenticate(self._initial_channels)
-            self._reconnect_requested = False
+
+        await self.authenticate(self._initial_channels)
+
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
         self._ws_ready_event.set()
 

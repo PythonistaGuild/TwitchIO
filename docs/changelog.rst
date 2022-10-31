@@ -31,11 +31,11 @@ Master
 - ext.commands
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
-        
+
 - ext.pubsub
     - Additions
         - Websocket automatically handles "RECONNECT" requests by Twitch
-    - Bug fixes      
+    - Bug fixes
         - Unsubscribing from Pubsubevents works again
         - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
         - :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
@@ -53,10 +53,25 @@ Master
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_begin`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_progress`
             - :func:`~twitchio.ext.eventsub.event_eventsub_notification_channel_goal_end`
+
+        - Channel subscription end
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_subscription_end`
+        - User authorization grant
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_user_authorization_granted`
+
         - HypeTrainBeginProgressData now has the :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.level`
 
+
     - Bug fixes
-        Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
+        - Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
+        - Correct typo "revokation" to "revocation" in server _message_types.
+
+- ext.pubsub
+    - Bug fixes
+        - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
+
+        - Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
+
 
 2.4.0
 ======

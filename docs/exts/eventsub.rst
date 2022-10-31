@@ -89,6 +89,10 @@ Event Reference
 ----------------
 This is a list of events dispatched by the eventsub ext.
 
+.. function:: event_eventsub_notification_user_authorization_grant(event: UserAuthorizationGrantedData)
+
+    Called when your app has had access granted on a channel.
+
 .. function:: event_eventsub_revokation(event: RevokationEvent)
 
     Called when your app has had access revoked on a channel.
@@ -107,6 +111,10 @@ This is a list of events dispatched by the eventsub ext.
 .. function:: event_eventsub_notification_subscription(event: ChannelSubscribeData)
 
     Called when someone subscribes to a channel that you've subscribed to.
+
+.. function:: event_eventsub_notification_subscription_end(event: ChannelSubscriptionEndData)
+
+    Called when a subscription to a channel that you've subscribed to ends.
 
 .. function:: event_eventsub_notification_subscription_gift(event: ChannelSubscriptionGiftData)
 
