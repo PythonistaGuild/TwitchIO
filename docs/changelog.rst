@@ -32,14 +32,6 @@
     - Bug fixes
         - Make sure double-quotes are properly tokenized for bot commands
 
-- ext.pubsub
-    - Additions
-        - Websocket automatically handles "RECONNECT" requests by Twitch
-    - Bug fixes
-        - Unsubscribing from Pubsubevents works again
-        - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
-        - :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
-
 - ext.sound
     - Bug fixes
         - Make system calls to ffmpeg are more robust (works on windows and linux)
@@ -67,11 +59,14 @@
         - Correct typo "revokation" to "revocation" in server _message_types.
 
 - ext.pubsub
+    - Additions
+        - Websocket automatically handles "RECONNECT" requests by Twitch
     - Bug fixes
         - "type" of :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
-
         - Correct typo in :class:`~twitchio.ext.eventsub.HypeTrainBeginProgressData` attribute :attr:`~twitchio.ext.eventsub.HypeTrainBeginProgressData.expires`
-
+        - Unsubscribing from PubSub events works again
+        - Fix a forgotten nonce in :func:`~twitchio.ext.pubsub.websocket._send_topics`
+        - :class:`~twitchio.ext.pubsub.PubSubModerationActionChannelTerms` now uses the correct type data
 
 2.4.0
 ======
