@@ -313,6 +313,8 @@ class WSConnection:
     async def _process_data(self, data: str):
         data = data.rstrip()
         parsed = parser(data, self.nick)
+        
+        if parsed is None: return
 
         if parsed["action"] == "PING":
             return await self._ping()
