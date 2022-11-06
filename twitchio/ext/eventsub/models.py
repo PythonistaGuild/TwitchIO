@@ -121,8 +121,14 @@ class WebsocketHeaders:
         self.message_type: Literal["notification", "revocation", "reconnect", "session_keepalive"] = meta["message_type"]
         self.message_retry: int = 0 # don't make breaking changes with the Header class
         self.signature: str = ""
-        self.subscription_type: str = frame["payload"]["subscription"]["type"]
-        self.subscription_version: str = frame["payload"]["subscription"]["version"]
+        self.subscription_type: Optional[str]
+        self.subscription_version: Optional[str]
+        if frame["payload"]:
+            self.subscription_type = frame["payload"]["subscription"]["type"]
+            self.subscription_version = frame["payload"]["subscription"]["version"]
+        else:
+            self.subscription_type = None
+            self.subscription_version = None
 
 
 class BaseEvent:
@@ -157,16 +163,19 @@ class BaseEvent:
             data = _data
 
         self.headers: Union[Headers, WebsocketHeaders]
-        self.subscription: Subscription
 
         if request:
             data: dict = _loads(_data)
             self.headers = Headers(request)
-            self.subscription = Subscription(data["subscription"])
+            self.subscription: Subscription = Subscription(data["subscription"])
             self.setup(data)
         else:
             self.headers = WebsocketHeaders(data)
-            self.subscription = Subscription(data["payload"]["subscription"])
+            self.subscription: Optional[Subscription]
+            if data["payload"]:
+                self.subscription = Subscription(data["payload"]["subscription"])
+            else:
+                self.subscription = None
             self.setup(data["payload"])
 
 

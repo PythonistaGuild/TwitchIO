@@ -180,6 +180,9 @@ class Websocket:
                 await self.connect()
                 return
 
+            except Exception as e:
+                logger.error("Exception in the pump function!", exc_info=e)
+
     def parse_frame(self, frame: dict) -> _messages:
         type_: str = frame["metadata"]["message_type"]
         return _message_types[type_](self, frame, None)
