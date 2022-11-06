@@ -87,6 +87,7 @@ class Websocket:
         self.client = client
         self._http = http
         self._subscription_pool = _WakeupList[_Subscription]()
+        self._subscription_pool.add_append_callback(self._wakeup_and_connect)
         self._sock: Optional[aiohttp.ClientWebSocketResponse] = None
         self._pump_task: Optional[asyncio.Task] = None
         self._timeout: Optional[int] = None
@@ -118,8 +119,6 @@ class Websocket:
         if self.is_connected:
             await self._subscribe(obj)
             return
-
-        await self.connect()
 
     async def connect(self, reconnect_url: Optional[str] = None):
         if not self._subscription_pool:
