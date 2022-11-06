@@ -68,7 +68,7 @@ class EventSubClient(web.Application):
             user = user.id
 
         user = str(user)
-        return await self._http.create_subscription(models.SubscriptionTypes.user_update, {"user_id": user})
+        return await self._http.create_webhook_subscription(models.SubscriptionTypes.user_update, {"user_id": user})
 
     async def subscribe_channel_raid(
         self, from_broadcaster: Union[PartialUser, str, int] = None, to_broadcaster: Union[PartialUser, str, int] = None
@@ -87,7 +87,7 @@ class EventSubClient(web.Application):
             broadcaster = broadcaster.id
 
         broadcaster = str(broadcaster)
-        return await self._http.create_subscription(models.SubscriptionTypes.raid, {who: broadcaster})
+        return await self._http.create_webhook_subscription(models.SubscriptionTypes.raid, {who: broadcaster})
 
     async def _subscribe_channel_points_reward(
         self, event, broadcaster: Union[PartialUser, str, int], reward_id: str = None
@@ -100,7 +100,7 @@ class EventSubClient(web.Application):
         if reward_id:
             data["reward_id"] = reward_id
 
-        return await self._http.create_subscription(event, data)
+        return await self._http.create_webhook_subscription(event, data)
 
     async def _subscribe_with_broadcaster(
         self, event: Tuple[str, int, Type[models._DataType]], broadcaster: Union[PartialUser, str, int]
@@ -109,7 +109,7 @@ class EventSubClient(web.Application):
             broadcaster = broadcaster.id
 
         broadcaster = str(broadcaster)
-        return await self._http.create_subscription(event, {"broadcaster_user_id": broadcaster})
+        return await self._http.create_webhook_subscription(event, {"broadcaster_user_id": broadcaster})
 
     def subscribe_channel_bans(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.ban, broadcaster)
@@ -215,12 +215,12 @@ class EventSubClient(web.Application):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster)
 
     async def subscribe_user_authorization_granted(self):
-        return await self._http.create_subscription(
+        return await self._http.create_webhook_subscription(
             models.SubscriptionTypes.user_authorization_grant, {"client_id": self.client._http.client_id}
         )
 
     async def subscribe_user_authorization_revoked(self):
-        return await self._http.create_subscription(
+        return await self._http.create_webhook_subscription(
             models.SubscriptionTypes.user_authorization_revoke, {"client_id": self.client._http.client_id}
         )
 
