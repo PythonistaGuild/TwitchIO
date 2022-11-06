@@ -137,8 +137,8 @@ class BaseEvent:
 
     Attributes
     -----------
-    subscription: :class:`Subscription`
-        The subscription attached to the message
+    subscription: Optional[:class:`Subscription`]
+        The subscription attached to the message. This is only optional when using the websocket eventsub transport
     headers: :class`Headers`
         The headers received with the message
     """
@@ -163,15 +163,15 @@ class BaseEvent:
             data = _data
 
         self.headers: Union[Headers, WebsocketHeaders]
+        self.subscription: Optional[Subscription]
 
         if request:
             data: dict = _loads(_data)
             self.headers = Headers(request)
-            self.subscription: Subscription = Subscription(data["subscription"])
+            self.subscription = Subscription(data["subscription"])
             self.setup(data)
         else:
             self.headers = WebsocketHeaders(data)
-            self.subscription: Optional[Subscription]
             if data["payload"]:
                 self.subscription = Subscription(data["payload"]["subscription"])
             else:
