@@ -551,6 +551,11 @@ class TwitchHTTP:
         ended_at: Optional[datetime.datetime] = None,
         token: Optional[str] = None,
     ):
+        if started_at and started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=datetime.timezone.utc)
+        if ended_at and ended_at.tzinfo is None:
+            ended_at = ended_at.replace(tzinfo=datetime.timezone.utc)
+
         q = [
             ("broadcaster_id", broadcaster_id),
             ("game_id", game_id),

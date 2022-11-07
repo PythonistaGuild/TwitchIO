@@ -322,11 +322,22 @@ class PartialUser:
         data = await self._http.post_create_clip(token, self.id, has_delay)
         return data[0]
 
-    async def fetch_clips(self) -> List["Clip"]:
+    async def fetch_clips(
+        self, started_at: Optional[datetime.datetime] = None, ended_at: Optional[datetime.datetime] = None
+    ) -> List["Clip"]:
         """|coro|
 
         Fetches clips from the api. This will only return clips from the specified user.
         Use :class:`Client.fetch_clips` to fetch clips by id
+
+        Parameters
+        -----------
+        started_at: Optional[:class:`datetime.datetime`]
+            Starting date/time for returned clips.
+            If this is specified, ended_at also should be specified; otherwise, the ended_at date/time will be 1 week after the started_at value.
+        ended_at: Optional[:class:`datetime.datetime`]
+            Ending date/time for returned clips.
+            If this is specified, started_at also must be specified; otherwise, the time period is ignored.
 
         Returns
         --------
@@ -334,7 +345,7 @@ class PartialUser:
         """
         from .models import Clip
 
-        data = await self._http.get_clips(self.id)
+        data = await self._http.get_clips(self.id, started_at=started_at, ended_at=ended_at)
 
         return [Clip(self._http, x) for x in data]
 

@@ -1,6 +1,12 @@
 :orphan:
 
 
+Master
+======
+- TwitchIO
+    - Additions
+        - Added optional ``started_at`` and ``ended_at`` arguments to :func:`~twitchio.PartialUser.fetch_clips`
+
 2.5.0
 ======
 - TwitchIO
