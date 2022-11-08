@@ -333,7 +333,7 @@ class HypeTrainContribution:
         If type is ``SUBS``, aggregate total where 500, 1000, or 2500 represent tier 1, 2, or 3 subscriptions respectively.
         For example, if top contributor has gifted a tier 1, 2, and 3 subscription, total would be 4000.
     type: :class:`str`
-        Identifies the contribution method, either BITS or SUBS.
+        Identifies the contribution method, either BITS, SUBS or OTHER.
     user: :class:`~twitchio.PartialUser`
         The user making the contribution.
     """

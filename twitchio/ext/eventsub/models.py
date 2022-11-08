@@ -646,7 +646,7 @@ class HypeTrainContributor:
     user: :class:`twitchio.PartialUser`
         The user
     type: :class:`str`
-        One of "bits" or "subscription". The way they contributed to the hype train
+        One of "bits, "subscription" or "other". The way they contributed to the hype train
     total: :class:`int`
         How many points they've contributed to the Hype Train
     """
@@ -655,7 +655,7 @@ class HypeTrainContributor:
 
     def __init__(self, client: EventSubClient, data: dict):
         self.user = _transform_user(client, data, "user")
-        self.type: Literal["bits", "subscription"] = data["type"]  # one of bits, subscription
+        self.type: Literal["bits", "subscription", "other"] = data["type"]  # one of bits, subscription
         self.total: int = data["total"]
 
 
