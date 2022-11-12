@@ -104,7 +104,7 @@ class TwitchHTTP:
         limit: Optional[int] = None,
         full_body: bool = False,
         force_app_token: bool = False,
-        max_elements_per_page: Optional[int] = 100
+        max_elements_per_page: Optional[int] = None
     ):
         """
         Fulfills an API request
@@ -119,7 +119,7 @@ class TwitchHTTP:
             The (maximum) total number of data to return. Defaults to None
         full_body : class:`bool`
             Whether to return the full response body or to accumulate the `data` key. Defaults to False.
-            `paginate` must be False if this is True.
+            `paginate` is inefficient if this is True.
         force_app_token : :class:`bool`
             Forcibly use the client_id and client_secret generated token, if available.
             Otherwise, fail the request immediately.
@@ -130,8 +130,6 @@ class TwitchHTTP:
             Moreover, some endpoints doesn't use pagination or doesn't allow to specify the number of output elements,
             In that situation, this parameter must be set to None to avoid the usage of `first` HTTP parameter.
         """
-        if full_body:
-            assert not paginate
         if (not self.client_id or not self.nick) and self.token:
             await self.validate(token=self.token)
         if not self.client_id:
@@ -385,7 +383,10 @@ class TwitchHTTP:
         q = [("extension_id", extension_id)]
         if ids:
             q.extend(("id", id) for id in ids)
-        return await self.request(Route("GET", "extensions/transactions", "", query=q))
+        return await self.request(
+            Route("GET", "extensions/transactions", "", query=q),
+            max_elements_per_page=100
+        )
 
     async def create_reward(
         self,
@@ -497,14 +498,18 @@ class TwitchHTTP:
         sort: str = "OLDEST",
         first: int = 20,
     ):
-        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id), ("first", first)]
+        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id)]
         if redemption_id:
             params.append(("id", redemption_id))
         if status:
             params.append(("status", status))
         if sort:
             params.append(("sort", sort))
-        return await self.request(Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token))
+        return await self.request(
+            Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token),
+            limit=first,
+            max_elements_per_page=50
+        )
 
     async def update_reward_redemption_status(
         self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool
@@ -531,7 +536,10 @@ class TwitchHTTP:
 
         if prediction_id:
             params.extend(("prediction_id", prediction_id))
-        return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
+        return await self.request(
+            Route("GET", "predictions", query=params, token=token),
+            max_elements_per_page=25
+        )
 
     async def patch_prediction(
         self, token: str, broadcaster_id: str, prediction_id: str, status: str, winning_outcome_id: Optional[str] = None
@@ -607,7 +615,10 @@ class TwitchHTTP:
             q.extend(("id", id) for id in ids)
         query = [x for x in q if x[1] is not None]
 
-        return await self.request(Route("GET", "clips", query=query, token=token))
+        return await self.request(
+            Route("GET", "clips", query=query, token=token),
+            max_elements_per_page=100
+        )
 
     async def post_entitlements_upload(self, manifest_id: str, type="bulk_drops_grant"):
         return await self.request(
@@ -616,7 +627,8 @@ class TwitchHTTP:
 
     async def get_entitlements(self, id: str = None, user_id: str = None, game_id: str = None):
         return await self.request(
-            Route("GET", "entitlements/drops", query=[("id", id), ("user_id", user_id), ("game_id", game_id)])
+            Route("GET", "entitlements/drops", query=[("id", id), ("user_id", user_id), ("game_id", game_id)]),
+            max_elements_per_page=1000
         )
 
     async def get_code_status(self, codes: List[str], user_id: int):
@@ -632,7 +644,10 @@ class TwitchHTTP:
         return await self.request(Route("POST", "entitlements/code", query=q))
 
     async def get_top_games(self):
-        return await self.request(Route("GET", "games/top"))
+        return await self.request(
+            Route("GET", "games/top"),
+            max_elements_per_page=100
+        )
 
     async def get_games(self, game_ids: List[Any], game_names: List[str]):
         q = []
@@ -649,7 +664,8 @@ class TwitchHTTP:
                 "hypetrain/events",
                 query=[x for x in [("broadcaster_id", broadcaster_id), ("id", id)] if x[1] is not None],
                 token=token,
-            )
+            ),
+            max_elements_per_page=100
         )
 
     async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]]):
@@ -674,13 +690,19 @@ class TwitchHTTP:
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-        return await self.request(Route("GET", "moderation/banned", query=q, token=token))
+        return await self.request(
+            Route("GET", "moderation/banned", query=q, token=token),
+            max_elements_per_page=100
+        )
 
     async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
-        return await self.request(Route("GET", "moderation/moderators", query=q, token=token))
+        return await self.request(
+            Route("GET", "moderation/moderators", query=q, token=token),
+            max_elements_per_page=100
+        )
 
     async def get_channel_mod_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
@@ -689,11 +711,15 @@ class TwitchHTTP:
         return await self.request(Route("GET", "moderation/moderators/events", query=q, token=token))
 
     async def get_search_categories(self, query: str, token: str = None):
-        return await self.request(Route("GET", "search/categories", query=[("query", query)], token=token))
+        return await self.request(
+            Route("GET", "search/categories", query=[("query", query)], token=token),
+            max_elements_per_page=100
+        )
 
     async def get_search_channels(self, query: str, token: str = None, live: bool = False):
         return await self.request(
-            Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
+            Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token),
+            max_elements_per_page=100
         )
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
@@ -718,7 +744,10 @@ class TwitchHTTP:
             q.extend(("user_login", l) for l in user_logins)
         if languages:
             q.extend(("language", l) for l in languages)
-        return await self.request(Route("GET", "streams", query=q, token=token))
+        return await self.request(
+            Route("GET", "streams", query=q, token=token),
+            max_elements_per_page=100
+        )
 
     async def post_stream_marker(self, token: str, user_id: str, description: str = None):
         return await self.request(
@@ -732,7 +761,8 @@ class TwitchHTTP:
                 "streams/markers",
                 query=[x for x in [("user_id", user_id), ("video_id", video_id)] if x[1] is not None],
                 token=token,
-            )
+            ),
+            max_elements_per_page=100
         )
 
     async def get_channels(self, broadcaster_id: str, token: Optional[str] = None):
@@ -778,7 +808,6 @@ class TwitchHTTP:
             x
             for x in [
                 ("broadcaster_id", broadcaster_id),
-                ("first", first),
                 ("start_time", start_time),
                 ("utc_offset", utc_offset),
             ]
@@ -787,19 +816,30 @@ class TwitchHTTP:
 
         if segment_ids:
             q.extend(("id", id) for id in segment_ids)
-        return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
+        return await self.request(
+            Route("GET", "schedule", query=q),
+            full_body=True,
+            limit=first,
+            max_elements_per_page=25
+        )
 
     async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: Optional[List[str]] = None):
         q = [("broadcaster_id", broadcaster_id)]
         if user_ids:
             q.extend(("user_id", u) for u in user_ids)
-        return await self.request(Route("GET", "subscriptions", query=q, token=token))
+        return await self.request(
+            Route("GET", "subscriptions", query=q, token=token),
+            max_elements_per_page=100
+        )
 
     async def get_stream_tags(self, tag_ids: Optional[List[str]] = None):
         q = []
         if tag_ids:
             q.extend(("tag_id", u) for u in tag_ids)
-        return await self.request(Route("GET", "tags/streams", query=q or None))
+        return await self.request(
+            Route("GET", "tags/streams", query=q or None),
+            max_elements_per_page=100
+        )
 
     async def get_channel_tags(self, broadcaster_id: str):
         return await self.request(Route("GET", "streams/tags", query=[("broadcaster_id", broadcaster_id)]))
@@ -847,7 +887,8 @@ class TwitchHTTP:
                 "users/follows",
                 query=[x for x in [("from_id", from_id), ("to_id", to_id)] if x[1] is not None],
                 token=token,
-            )
+            ),
+            max_elements_per_page=100
         )
 
     async def put_update_user(self, token: str, description: str):
@@ -898,7 +939,18 @@ class TwitchHTTP:
 
         if ids:
             q.extend(("id", id) for id in ids)
-        return await self.request(Route("GET", "videos", query=q, token=token))
+
+        # According to documentation, `first` parameter should only be specified when user_id or game_id are specified
+        if (user_id is None) and (game_id is None):
+            return await self.request(
+                Route("GET", "videos", query=q, token=token),
+                max_elements_per_page=None
+            )
+
+        return await self.request(
+            Route("GET", "videos", query=q, token=token),
+            max_elements_per_page=100
+        )
 
     async def delete_videos(self, token: str, ids: List[int]):
         q = [("id", str(x)) for x in ids]
@@ -934,11 +986,16 @@ class TwitchHTTP:
             raise ValueError("poll_ids can only have up to 100 entries")
         if first and (first > 25 or first < 1):
             raise ValueError("first can only be between 1 and 20")
-        q = [("broadcaster_id", broadcaster_id), ("first", first)]
+        q = [("broadcaster_id", broadcaster_id)]
 
         if poll_ids:
             q.extend(("id", poll_id) for poll_id in poll_ids)
-        return await self.request(Route("GET", "polls", query=q, token=token), paginate=False, full_body=True)
+        return await self.request(
+            Route("GET", "polls", query=q, token=token),
+            full_body=True,
+            limit=first,
+            max_elements_per_page=20
+        )
 
     async def post_poll(
         self,
@@ -1067,14 +1124,18 @@ class TwitchHTTP:
     async def get_channel_vips(
         self, token: str, broadcaster_id: str, first: int = 20, user_ids: Optional[List[int]] = None
     ):
-        q = [("broadcaster_id", broadcaster_id), ("first", first)]
+        q = [("broadcaster_id", broadcaster_id)]
         if first > 100:
             raise ValueError("You can only get up to 100 VIPs at once")
         if user_ids:
             if len(user_ids) > 100:
                 raise ValueError("You can can only specify up to 100 VIPs")
             q.extend(("user_id", str(user_id)) for user_id in user_ids)
-        return await self.request(Route("GET", "channels/vips", query=q, token=token))
+        return await self.request(
+            Route("GET", "channels/vips", query=q, token=token),
+            limit=first,
+            max_elements_per_page=100
+        )
 
     async def post_channel_vip(self, token: str, broadcaster_id: str, user_id: str):
         q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
