@@ -9,10 +9,9 @@ Master
         - Updated docstring regarding new  HypeTrain contribution  method ``OTHER`` for :attr:`~twitchio.HypeTrainContribution.type`
         - Add support for ``ciso8601`` if installed
         - Added ``speed`` install flag (``pip install twitchio[speed]``) to install all available speedups
-
+        - API endpoint call can now return the maximum number of data allowed by their "first" parameter.
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing
-
 - ext.eventsub
     - Additions
         - Updated docs regarding new HypeTrain contribution method ``other`` for :attr:`~twitchio.ext.eventsub.HypeTrainContributor.type`
