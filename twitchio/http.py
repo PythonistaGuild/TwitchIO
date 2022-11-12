@@ -97,7 +97,15 @@ class TwitchHTTP:
         self.bucket = RateBucket(method="http")
         self.scopes = kwargs.get("scopes", [])
 
-    async def request(self, route: Route, *, paginate=True, limit=100, full_body=False, force_app_token=False):
+    async def request(
+        self,
+        route: Route, *,
+        paginate: bool = True,
+        limit: Optional[int] = None,
+        full_body: bool = False,
+        force_app_token: bool = False,
+        max_elements_per_page: Optional[int] = 100
+    ):
         """
         Fulfills an API request
 
@@ -106,13 +114,21 @@ class TwitchHTTP:
         route : :class:`twitchio.http.Route`
             The route to follow
         paginate : :class:`bool`
-            whether or not to paginate the requests where possible. Defaults to True
+            Whether or not to paginate the requests where possible. Defaults to True
         limit : :class:`int`
-            The data limit per request when paginating. Defaults to 100
+            The (maximum) total number of data to return. Defaults to None
         full_body : class:`bool`
-            Whether to return the full response body or to accumulate the `data` key. Defaults to False. `paginate` must be False if this is True.
+            Whether to return the full response body or to accumulate the `data` key. Defaults to False.
+            `paginate` must be False if this is True.
         force_app_token : :class:`bool`
-            Forcibly use the client_id and client_secret generated token, if available. Otherwise fail the request immediately
+            Forcibly use the client_id and client_secret generated token, if available.
+            Otherwise, fail the request immediately.
+        max_elements_per_page : :class:`int`
+            The maximum number of elements per page.
+            For paginated endpoints, this is the maximum value of the `first` parameter of the HTTP Request
+            This value is usually equal to 100, but for some specific endpoint, this value can be different.
+            Moreover, some endpoints doesn't use pagination or doesn't allow to specify the number of output elements,
+            In that situation, this parameter must be set to None to avoid the usage of `first` HTTP parameter.
         """
         if full_body:
             assert not paginate
@@ -121,6 +137,11 @@ class TwitchHTTP:
         if not self.client_id:
             raise errors.NoClientID("A Client ID is required to use the Twitch API")
         headers = route.headers or {}
+
+        # When limit is not specified, it means we want the maximum number of elements allowed in only one request
+        # This number is equal to the value of the `max_elements_per_page`parameter
+        if limit is None:
+            limit = max_elements_per_page
 
         if force_app_token and "Authorization" not in headers:
             if not self.client_secret:
@@ -132,7 +153,8 @@ class TwitchHTTP:
                 headers["Authorization"] = f"Bearer {self.app_token}"
         elif not self.token and not self.client_secret and "Authorization" not in headers:
             raise errors.NoToken(
-                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
+                "Authorization is required to use the Twitch API. "
+                "Pass token and/or client_secret to the Client constructor"
             )
         if "Authorization" not in headers:
             if not self.token:
@@ -147,14 +169,22 @@ class TwitchHTTP:
         cursor = None
         data = []
 
-        def reached_limit():
-            return limit and len(data) >= limit
+        def reached_limit() -> bool:
+            # If we are not using pagination, we are done at the end of the request
+            if paginate is False:
+                return True
 
-        def get_limit():
+            # If we don't have any limit, we use the build-in limit of the endpoint,
+            # (which should be equal to `max_elements_per_page`).
+            # In that case, we are done after the first request.
             if limit is None:
-                return "100"
+                return True
+
+            return len(data) >= limit
+
+        def get_nb_elements_in_next_page() -> str:
             to_get = limit - len(data)
-            return str(to_get) if to_get < 100 else "100"
+            return str(min(to_get, max_elements_per_page))
 
         is_finished = False
         while not is_finished:
@@ -164,7 +194,12 @@ class TwitchHTTP:
                 q = route.query or []
                 if cursor is not None:
                     q = [("after", cursor), *q]
-                q = [("first", get_limit()), *q]
+
+                # HTTP `first` parameter specify the maximum number of elements the returned page will contain.
+                # If `max_elements_per_page` is None, it means the endpoint doesn't use this parameter
+                # In this case, we don't specify it
+                if max_elements_per_page is not None:
+                    q = [("first", get_nb_elements_in_next_page()), *q]
                 path = path.with_query(q)
             body, is_text = await self._request(route, path, headers)
             if is_text:
@@ -180,7 +215,7 @@ class TwitchHTTP:
             else:
                 if not cursor:
                     break
-            is_finished = reached_limit() if limit is not None else True if paginate else True
+            is_finished = reached_limit()
         return data
 
     async def _request(self, route, path, headers, utilize_bucket=True):
