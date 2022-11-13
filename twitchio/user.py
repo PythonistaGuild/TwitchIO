@@ -261,7 +261,11 @@ class PartialUser:
             raise
 
     async def fetch_bits_leaderboard(
-        self, token: str, period: str = "all", user_id: int = None, started_at: datetime.datetime = None
+        self,
+        token: str,
+        period: str = "all",
+        user_id: Optional[int] = None,
+        started_at: Optional[datetime.datetime] = None,
     ) -> "BitsLeaderboard":
         """|coro|
 
@@ -280,7 +284,7 @@ class PartialUser:
         """
         from .models import BitsLeaderboard
 
-        data = await self._http.get_bits_board(token, period, user_id, started_at)
+        data = await self._http.get_bits_board(token, period, str(user_id), started_at)
         return BitsLeaderboard(self._http, data)
 
     async def start_commercial(self, token: str, length: int) -> dict:

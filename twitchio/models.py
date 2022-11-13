@@ -87,7 +87,7 @@ class BitsLeaderboard:
     ------------
     started_at: :class:`datetime.datetime`
         The time the leaderboard started.
-    ended_at: :class`datetime.datetime`
+    ended_at: :class:`datetime.datetime`
         The time the leaderboard ended.
     leaders: List[:class:`BitLeaderboardUser`]
         The current leaders of the Leaderboard.
@@ -97,8 +97,10 @@ class BitsLeaderboard:
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
-        self.started_at = datetime.datetime.fromisoformat(data["date_range"]["started_at"])
-        self.ended_at = datetime.datetime.fromisoformat(data["date_range"]["ended_at"])
+        self.started_at = (
+            parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
+        )
+        self.ended_at = parse_timestamp(data["date_range"]["ended_at"]) if data["date_range"]["ended_at"] else None
         self.leaders = [BitLeaderboardUser(http, x) for x in data["data"]]
 
     def __repr__(self):
