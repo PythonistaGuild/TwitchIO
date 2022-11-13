@@ -85,9 +85,9 @@ class BitsLeaderboard:
 
     Attributes
     ------------
-    started_at: :class:`datetime.datetime`
+    started_at: Optional[:class:`datetime.datetime`]
         The time the leaderboard started.
-    ended_at: :class:`datetime.datetime`
+    ended_at: Optional[:class:`datetime.datetime`]
         The time the leaderboard ended.
     leaders: List[:class:`BitLeaderboardUser`]
         The current leaders of the Leaderboard.
