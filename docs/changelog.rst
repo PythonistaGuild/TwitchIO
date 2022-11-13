@@ -7,6 +7,8 @@ Master
     - Additions
         - Added optional ``started_at`` and ``ended_at`` arguments to :func:`~twitchio.PartialUser.fetch_clips`
         - Updated docstring regarding new  HypeTrain contribution  method ``OTHER`` for :attr:`~twitchio.HypeTrainContribution.type`
+    - Bug fixes
+        - Fix an issue when using the method `User.fetch_bits_leaderboard` without the `started_at` argument.
 - ext.eventsub
     - Additions
         - Updated docs regarding new HypeTrain contribution method ``other`` for :attr:`~twitchio.ext.eventsub.HypeTrainContributor.type`
