@@ -97,8 +97,12 @@ class BitsLeaderboard:
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
-        self.started_at = datetime.datetime.fromisoformat(data["date_range"]["started_at"])
-        self.ended_at = datetime.datetime.fromisoformat(data["date_range"]["ended_at"])
+
+        started_at_raw = data["date_range"]["started_at"]
+        ended_at_raw = data["date_range"]["started_at"]
+
+        self.started_at = datetime.datetime.fromisoformat(started_at_raw) if started_at_raw else None
+        self.ended_at = datetime.datetime.fromisoformat(ended_at_raw) if ended_at_raw else None
         self.leaders = [BitLeaderboardUser(http, x) for x in data["data"]]
 
     def __repr__(self):

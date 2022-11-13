@@ -58,6 +58,10 @@ class Route:
         headers: dict = None,
         token: str = None,
     ):
+        # Remove None parameters from query parameters
+        if query is not None:
+            query = [x for x in query if (x is not None) and (x[1] is not None)]
+
         self.headers = headers or {}
         self.method = method
         self.query = query
@@ -564,9 +568,8 @@ class TwitchHTTP:
         ]
         if ids:
             q.extend(("id", id) for id in ids)
-        query = [x for x in q if x[1] is not None]
 
-        return await self.request(Route("GET", "clips", query=query, token=token))
+        return await self.request(Route("GET", "clips", query=q, token=token))
 
     async def post_entitlements_upload(self, manifest_id: str, type="bulk_drops_grant"):
         return await self.request(
