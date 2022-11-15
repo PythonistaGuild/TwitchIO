@@ -1,5 +1,11 @@
 import datetime
-import iso8601
+
+try:
+    import ciso8601
+    HAS_CISO = True
+except (ImportError, ModuleNotFoundError):
+    HAS_CISO = False
+    import iso8601
 
 __all__ = ("parse_timestamp",)
 
@@ -18,4 +24,7 @@ def parse_timestamp(timestamp: str) -> datetime.datetime:
         The parsed timestamp.
 
     """
+    if HAS_CISO:
+        return ciso8601.parse_datetime(timestamp)
+
     return iso8601.parse_date(timestamp, datetime.timezone.utc)
