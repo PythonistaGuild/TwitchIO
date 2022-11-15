@@ -315,18 +315,24 @@ class TwitchHTTP:
         raise NotImplementedError  # TODO
 
     async def get_bits_board(
-        self, token: str, period: str = "all", user_id: str = None, started_at: datetime.datetime = None
+        self,
+        token: str,
+        period: str = "all",
+        user_id: Optional[str] = None,
+        started_at: Optional[datetime.datetime] = None,
     ):
         assert period in {"all", "day", "week", "month", "year"}
+        query = [
+            ("period", period),
+            ("started_at", started_at.isoformat() if started_at else None),
+            ("user_id", user_id),
+        ]
+
         route = Route(
             "GET",
             "bits/leaderboard",
             "",
-            query=[
-                ("period", period),
-                ("started_at", started_at.isoformat() if started_at else None),
-                ("user_id", user_id),
-            ],
+            query=[q for q in query if q[1] is not None],
             token=token,
         )
         return await self.request(route, full_body=True, paginate=False)
@@ -551,6 +557,11 @@ class TwitchHTTP:
         ended_at: Optional[datetime.datetime] = None,
         token: Optional[str] = None,
     ):
+        if started_at and started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=datetime.timezone.utc)
+        if ended_at and ended_at.tzinfo is None:
+            ended_at = ended_at.replace(tzinfo=datetime.timezone.utc)
+
         q = [
             ("broadcaster_id", broadcaster_id),
             ("game_id", game_id),
