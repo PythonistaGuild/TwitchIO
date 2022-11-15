@@ -52,7 +52,12 @@ sounds = [
     "yt-dlp>=2022.2.4",
     'pyaudio==0.2.11; platform_system!="Windows"',
 ]
-extras_require = {"sounds": sounds}
+speed = [
+    "ujson>=5.2,<6",
+    "ciso8601>=2.2,<2.3",
+    "cchardet>=2.1,<2.2"
+]
+extras_require = {"sounds": sounds, "speed": speed}
 
 setup(
     name="twitchio",
