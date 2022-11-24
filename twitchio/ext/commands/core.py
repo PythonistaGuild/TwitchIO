@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from twitchio import Message, Chatter, PartialChatter, Channel, User, PartialUser
     from . import Cog, Bot
     from .stringparser import StringParser
-__all__ = ("Command", "command", "Group", "Context", "cooldown")
+__all__ = ("Command", "command", "Group", "group", "Context", "cooldown")
 
 
 def _boolconverter(param: str):
