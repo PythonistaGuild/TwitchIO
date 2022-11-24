@@ -113,9 +113,10 @@ class Cog(metaclass=CogMeta):
             if isinstance(method, Command):
                 method._instance = self
                 method.cog = self
-
-                self._commands[method.name] = method
-                bot.add_command(method)
+                
+                if method.parent is None:
+                    self._commands[method.name] = method
+                    bot.add_command(method)
 
         events = self._events.copy()
         self._events = {}
