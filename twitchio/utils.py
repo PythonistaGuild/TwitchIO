@@ -2,6 +2,7 @@ import datetime
 
 try:
     import ciso8601
+
     HAS_CISO = True
 except (ImportError, ModuleNotFoundError):
     HAS_CISO = False
