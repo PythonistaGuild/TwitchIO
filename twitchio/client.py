@@ -600,7 +600,9 @@ class Client:
         data = await self._http.get_top_games()
         return [models.Game(d) for d in data]
 
-    async def fetch_games(self, ids: List[int] = None, names: List[str] = None) -> List[models.Game]:
+    async def fetch_games(
+        self, ids: Optional[List[int]] = None, names: Optional[List[str]] = None, igdb_ids: Optional[List[int]] = None
+    ) -> List[models.Game]:
         """|coro|
 
         Fetches games by id or name.
@@ -612,12 +614,15 @@ class Client:
             An optional list of game ids
         names: Optional[List[:class:`str`]]
             An optional list of game names
+        igdb_ids: Optional[List[:class:`int`]]
+            An optional list of IGDB game ids
 
         Returns
         --------
             List[:class:`twitchio.Game`]
         """
-        data = await self._http.get_games(ids, names)
+
+        data = await self._http.get_games(ids, names, igdb_ids)
         return [models.Game(d) for d in data]
 
     async def fetch_tags(self, ids: Optional[List[str]] = None):
