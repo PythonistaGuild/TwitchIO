@@ -14,6 +14,8 @@ Master
 
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing
+        - Fix auto reconnect of websocket. Created tasks by asyncio.create_task() need to be referred to prevent task disappearing (garbage collection).
+
 
 - ext.eventsub
     - Additions
