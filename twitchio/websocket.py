@@ -114,9 +114,7 @@ class WSConnection:
     async def _task_cleanup(self):
         while self.is_ready:
             # keep all undone tasks
-            self._background_tasks = list(
-                filter(lambda task: not task.done(), self._background_tasks)
-            )
+            self._background_tasks = list(filter(lambda task: not task.done(), self._background_tasks))
 
             # cleanup tasks every 5 minute
             await asyncio.sleep(5 * 60)
@@ -200,9 +198,7 @@ class WSConnection:
             log.error("Authentication error. Please check your credentials and try again.")
             self._close()
         elif exc:
-            self._background_tasks.append(
-                asyncio.create_task(self.event_error(exc, data))
-            )
+            self._background_tasks.append(asyncio.create_task(self.event_error(exc, data)))
 
     async def send(self, message: str):
         message = message.strip()
@@ -314,7 +310,6 @@ class WSConnection:
                 for channel in channels:
                     task = asyncio.create_task(self._join_channel(channel, 11))
                     self._background_tasks.append(task)
-
 
     async def _join_channel(self, entry: str, timeout: int):
         channel = re.sub("[#]", "", entry).lower()
@@ -547,7 +542,6 @@ class WSConnection:
 
         for task in self._background_tasks:
             task.cancel()
-
 
         self.is_ready.clear()
 
