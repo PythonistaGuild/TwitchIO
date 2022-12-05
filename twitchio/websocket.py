@@ -116,8 +116,8 @@ class WSConnection:
             # keep all undone tasks
             self._background_tasks = list(filter(lambda task: not task.done(), self._background_tasks))
 
-            # cleanup tasks every 5 minute
-            await asyncio.sleep(5 * 60)
+            # cleanup tasks every 30 seconds
+            await asyncio.sleep(30)
 
     @property
     def is_alive(self) -> bool:
@@ -132,8 +132,6 @@ class WSConnection:
 
         if self._keeper:
             self._keeper.cancel()  # Stop our current keep alive.
-        if self._task_cleaner:
-            self._task_cleaner.cancel()  # Stop our current task cleaner.
         if self.is_alive:
             await self._websocket.close()  # If for some reason we are in a weird state, close it before retrying.
         if not self._client._http.nick:
@@ -161,7 +159,10 @@ class WSConnection:
         await self.authenticate(self._initial_channels)
 
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
-        self._task_cleaner = asyncio.create_task(self._task_cleanup())  # Create our task cleaner.
+
+        if not self._task_cleaner:
+            self._task_cleaner = asyncio.create_task(self._task_cleanup())  # Create our task cleaner.
+
         self._ws_ready_event.set()
 
     async def _keep_alive(self):
