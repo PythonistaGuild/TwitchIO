@@ -156,7 +156,7 @@ class WSConnection:
             log.error(f"Websocket connection failure: {e}:: Attempting reconnect in {retry} seconds.")
 
             await asyncio.sleep(retry)
-            await self._connect()
+            return await self._connect()
 
         await self.authenticate(self._initial_channels)
 
@@ -541,7 +541,8 @@ class WSConnection:
         self._task_cleaner.cancel()
 
         for task in self._background_tasks:
-            task.cancel()
+            if not task.done():
+                task.cancel()
 
         self.is_ready.clear()
 
