@@ -317,9 +317,7 @@ class WSConnection:
         await self.send(f"JOIN #{channel}\r\n")
 
         self._join_pending[channel] = fut = self._loop.create_future()
-        self._background_tasks.append(
-            asyncio.create_task(self._join_future_handle(fut, channel, timeout))
-        )
+        self._background_tasks.append(asyncio.create_task(self._join_future_handle(fut, channel, timeout)))
 
     async def _join_future_handle(self, fut: asyncio.Future, channel: str, timeout: int):
         try:
@@ -416,7 +414,13 @@ class WSConnection:
         if not self._retain_cache:
             self._cache.pop(channel, None)
         channel = Channel(name=channel, websocket=self)
-        user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
+        user = Chatter(
+            name=parsed["user"],
+            bot=self._client,
+            websocket=self,
+            channel=channel,
+            tags=parsed["badges"],
+        )
         try:
             self._cache[channel.name].discard(user)
         except KeyError:
@@ -434,7 +438,11 @@ class WSConnection:
             channel = Channel(name=parsed["channel"], websocket=self)
             self._cache_add(parsed)
             user = Chatter(
-                tags=parsed["badges"], name=parsed["user"], channel=channel, bot=self._client, websocket=self
+                tags=parsed["badges"],
+                name=parsed["user"],
+                channel=channel,
+                bot=self._client,
+                websocket=self,
             )
         message = Message(
             raw_data=parsed["data"],
@@ -452,7 +460,12 @@ class WSConnection:
 
         channel = Channel(name=parsed["channel"], websocket=self)
         message = Message(
-            raw_data=parsed["data"], content=parsed["message"], author=None, channel=channel, tags={}, echo=True
+            raw_data=parsed["data"],
+            content=parsed["message"],
+            author=None,
+            channel=channel,
+            tags={},
+            echo=True,
         )
 
         self.dispatch("message", message)
@@ -463,7 +476,13 @@ class WSConnection:
 
         channel = Channel(name=parsed["channel"], websocket=self)
         name = parsed["user"] or parsed["nick"]
-        user = Chatter(tags=parsed["badges"], name=name, channel=channel, bot=self._client, websocket=self)
+        user = Chatter(
+            tags=parsed["badges"],
+            name=name,
+            channel=channel,
+            bot=self._client,
+            websocket=self,
+        )
 
         self.dispatch("userstate", user)
 
@@ -491,7 +510,13 @@ class WSConnection:
         if parsed["user"] != self._client.nick:
             self._cache_add(parsed)
         channel = Channel(name=channel, websocket=self)
-        user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
+        user = Chatter(
+            name=parsed["user"],
+            bot=self._client,
+            websocket=self,
+            channel=channel,
+            tags=parsed["badges"],
+        )
 
         if user.name == self._client.nick:
             self.dispatch("channel_joined", channel)
@@ -510,7 +535,13 @@ class WSConnection:
                 self._cache[channel].add(user)
         else:
             name = parsed["user"] or parsed["nick"]
-            user = Chatter(bot=self._client, name=name, websocket=self, channel=channel_, tags=parsed["badges"])
+            user = Chatter(
+                bot=self._client,
+                name=name,
+                websocket=self,
+                channel=channel_,
+                tags=parsed["badges"],
+            )
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
 
