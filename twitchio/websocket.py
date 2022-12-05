@@ -106,6 +106,21 @@ class WSConnection:
 
         self._client = client
 
+        # https://docs.python.org/3/library/asyncio-task.html#creating-tasks
+        # -> Important: Save a reference to the tasks, to avoid a task disappearing mid-execution.
+        self._background_tasks: list[asyncio.Task] = []
+        self._task_cleaner: Optional[asyncio.Task] = None
+
+    async def _task_cleanup(self):
+        while self.is_ready:
+            # keep all undone tasks
+            self._background_tasks = list(
+                filter(lambda task: not task.done(), self._background_tasks)
+            )
+
+            # cleanup tasks every 5 minute
+            await asyncio.sleep(5 * 60)
+
     @property
     def is_alive(self) -> bool:
         return self._websocket is not None and not self._websocket.closed
@@ -119,6 +134,8 @@ class WSConnection:
 
         if self._keeper:
             self._keeper.cancel()  # Stop our current keep alive.
+        if self._task_cleaner:
+            self._task_cleaner.cancel()  # Stop our current task cleaner.
         if self.is_alive:
             await self._websocket.close()  # If for some reason we are in a weird state, close it before retrying.
         if not self._client._http.nick:
@@ -141,11 +158,12 @@ class WSConnection:
             log.error(f"Websocket connection failure: {e}:: Attempting reconnect in {retry} seconds.")
 
             await asyncio.sleep(retry)
-            return asyncio.create_task(self._connect())
+            await self._connect()
 
         await self.authenticate(self._initial_channels)
 
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
+        self._task_cleaner = asyncio.create_task(self._task_cleanup())  # Create our task cleaner.
         self._ws_ready_event.set()
 
     async def _keep_alive(self):
@@ -171,8 +189,9 @@ class WSConnection:
                         continue
                     task = asyncio.create_task(self._process_data(event))
                     task.add_done_callback(partial(self._task_callback, event))  # Process our raw data
+                    self._background_tasks.append(task)
 
-        asyncio.create_task(self._connect())
+        await self._connect()
 
     def _task_callback(self, data, task):
         exc = task.exception()
@@ -181,7 +200,9 @@ class WSConnection:
             log.error("Authentication error. Please check your credentials and try again.")
             self._close()
         elif exc:
-            asyncio.create_task(self.event_error(exc, data))
+            self._background_tasks.append(
+                asyncio.create_task(self.event_error(exc, data))
+            )
 
     async def send(self, message: str):
         message = message.strip()
@@ -196,6 +217,7 @@ class WSConnection:
 
             task = asyncio.create_task(self._process_data(dummy))
             task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
+            self._background_tasks.append(task)
         await self._websocket.send_str(message + "\r\n")
 
     async def reply(self, msg_id: str, message: str):
@@ -210,6 +232,7 @@ class WSConnection:
             dummy = f"> @reply-parent-msg-id={msg_id} :{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO) #{channel} {content}\r\n"
             task = asyncio.create_task(self._process_data(dummy))
             task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
+            self._background_tasks.append(task)
         await self._websocket.send_str(f"@reply-parent-msg-id={msg_id} {message} \r\n")
 
     async def authenticate(self, channels: Union[list, tuple]):
@@ -283,18 +306,22 @@ class WSConnection:
                 chunks = [channels[i : i + 20] for i in range(0, len(channels), 20)]
                 for chunk in chunks:
                     for channel in chunk:
-                        asyncio.create_task(self._join_channel(channel, timeout))
+                        task = asyncio.create_task(self._join_channel(channel, timeout))
+                        self._background_tasks.append(task)
+
                     await asyncio.sleep(11)
             else:
                 for channel in channels:
-                    asyncio.create_task(self._join_channel(channel, 11))
+                    task = asyncio.create_task(self._join_channel(channel, 11))
+                    self._background_tasks.append(task)
+
 
     async def _join_channel(self, entry: str, timeout: int):
         channel = re.sub("[#]", "", entry).lower()
         await self.send(f"JOIN #{channel}\r\n")
 
         self._join_pending[channel] = fut = self._loop.create_future()
-        asyncio.create_task(self._join_future_handle(fut, channel, timeout))
+        await self._join_future_handle(fut, channel, timeout)
 
     async def _join_future_handle(self, fut: asyncio.Future, channel: str, timeout: int):
         try:
@@ -516,6 +543,12 @@ class WSConnection:
 
     async def _close(self):
         self._keeper.cancel()
+        self._task_cleaner.cancel()
+
+        for task in self._background_tasks:
+            task.cancel()
+
+
         self.is_ready.clear()
 
         futures = self._fetch_futures()
