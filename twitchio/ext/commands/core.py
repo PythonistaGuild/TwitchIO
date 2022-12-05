@@ -44,9 +44,9 @@ __all__ = ("Command", "command", "Group", "Context", "cooldown")
 
 def _boolconverter(param: str):
     param = param.lower()
-    if param in ("yes", "y", "1", "true", "on"):
+    if param in {"yes", "y", "1", "true", "on"}:
         return True
-    elif param in ("no", "n", "0", "false", "off"):
+    elif param in {"no", "n", "0", "false", "off"}:
         return False
     raise BadArgument(f"Expected a boolean value, got {param}")
 
@@ -205,10 +205,7 @@ class Command:
             context.bot.run_event("command_error", context, limited[0])
             return
         instance = self._instance
-        if instance:
-            args = [instance, context]
-        else:
-            args = [context]
+        args = [instance, context] if instance else [context]
         await try_run(context.bot.global_before_invoke(context))
 
         if self._before_invoke:

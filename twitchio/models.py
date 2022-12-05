@@ -1076,6 +1076,7 @@ class ChannelInfo:
         Language of the channel.
     delay: :class:`int`
         Stream delay in seconds.
+        This defaults to 0 if the broadcaster_id does not match the user access token.
     """
 
     __slots__ = ("user", "game_id", "game_name", "title", "language", "delay")
