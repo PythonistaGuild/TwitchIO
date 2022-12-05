@@ -108,7 +108,7 @@ class WSConnection:
 
         # https://docs.python.org/3/library/asyncio-task.html#creating-tasks
         # -> Important: Save a reference to the tasks, to avoid a task disappearing mid-execution.
-        self._background_tasks: list[asyncio.Task] = []
+        self._background_tasks: List[asyncio.Task] = []
         self._task_cleaner: Optional[asyncio.Task] = None
 
     async def _task_cleanup(self):
