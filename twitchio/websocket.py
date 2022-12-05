@@ -317,7 +317,9 @@ class WSConnection:
         await self.send(f"JOIN #{channel}\r\n")
 
         self._join_pending[channel] = fut = self._loop.create_future()
-        await self._join_future_handle(fut, channel, timeout)
+        self._background_tasks.append(
+            asyncio.create_task(self._join_future_handle(fut, channel, timeout))
+        )
 
     async def _join_future_handle(self, fut: asyncio.Future, channel: str, timeout: int):
         try:
