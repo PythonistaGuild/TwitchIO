@@ -190,9 +190,7 @@ class WSConnection:
                     task.add_done_callback(partial(self._task_callback, event))  # Process our raw data
                     self._background_tasks.append(task)
 
-        self._background_tasks.append(
-            asyncio.create_task(self._connect())
-        )
+        self._background_tasks.append(asyncio.create_task(self._connect()))
 
     def _task_callback(self, data, task):
         exc = task.exception()
@@ -203,9 +201,7 @@ class WSConnection:
         elif exc:
             # event_error task need to be shielded to avoid cancelling in self._close() function
             # we need ensure, that the event will print its traceback
-            shielded_task = asyncio.shield(
-                asyncio.create_task(self.event_error(exc, data))
-            )
+            shielded_task = asyncio.shield(asyncio.create_task(self.event_error(exc, data)))
             self._background_tasks.append(shielded_task)
 
     async def send(self, message: str):
