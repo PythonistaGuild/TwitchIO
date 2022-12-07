@@ -190,7 +190,9 @@ class WSConnection:
                     task.add_done_callback(partial(self._task_callback, event))  # Process our raw data
                     self._background_tasks.append(task)
 
-        await self._connect()
+        self._background_tasks.append(
+            asyncio.create_task(self._connect())
+        )
 
     def _task_callback(self, data, task):
         exc = task.exception()
