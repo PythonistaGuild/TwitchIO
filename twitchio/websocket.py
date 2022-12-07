@@ -201,7 +201,12 @@ class WSConnection:
             log.error("Authentication error. Please check your credentials and try again.")
             self._close()
         elif exc:
-            self._background_tasks.append(asyncio.create_task(self.event_error(exc, data)))
+            # event_error task need to be shielded to avoid cancelling in self._close() function
+            # we need ensure, that the event will print its traceback
+            shielded_task = asyncio.shield(
+                asyncio.create_task(self.event_error(exc, data))
+            )
+            self._background_tasks.append(shielded_task)
 
     async def send(self, message: str):
         message = message.strip()
