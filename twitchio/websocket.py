@@ -112,7 +112,7 @@ class WSConnection:
         self._task_cleaner: Optional[asyncio.Task] = None
 
     async def _task_cleanup(self):
-        while self.is_ready:
+        while True:
             # keep all undone tasks
             self._background_tasks = list(filter(lambda task: not task.done(), self._background_tasks))
 
@@ -160,7 +160,7 @@ class WSConnection:
 
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
 
-        if not self._task_cleaner:
+        if not self._task_cleaner or self._task_cleaner.done():
             self._task_cleaner = asyncio.create_task(self._task_cleanup())  # Create our task cleaner.
 
         self._ws_ready_event.set()
@@ -572,7 +572,9 @@ class WSConnection:
 
     async def _close(self):
         self._keeper.cancel()
-        self._task_cleaner.cancel()
+
+        if self._task_cleaner and not self._task_cleaner.done():
+            self._task_cleaner.cancel()
 
         for task in self._background_tasks:
             if not task.done():
