@@ -9,6 +9,8 @@ Master
         - Updated docstring regarding new  HypeTrain contribution  method ``OTHER`` for :attr:`~twitchio.HypeTrainContribution.type`
         - Add support for ``ciso8601`` if installed
         - Added ``speed`` install flag (``pip install twitchio[speed]``) to install all available speedups
+        - Added :attr:`~twitchio.Game.igdb_id` to :class:`~twitchio.Game`
+        - Added ``igdb_ids`` argument to :func:`~twitchio.Client.fetch_games`
 
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing

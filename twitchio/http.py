@@ -599,12 +599,18 @@ class TwitchHTTP:
     async def get_top_games(self):
         return await self.request(Route("GET", "games/top"))
 
-    async def get_games(self, game_ids: List[Any], game_names: List[str]):
+    async def get_games(
+        self, game_ids: Optional[List[Any]], game_names: Optional[List[str]], igdb_ids: Optional[List[int]]
+    ):
+        if not any((game_ids, game_names, igdb_ids)):
+            raise ValueError("At least one of game id, name or IGDB id must be provided.")
         q = []
         if game_ids:
             q.extend(("id", id) for id in game_ids)
         if game_names:
             q.extend(("name", name) for name in game_names)
+        if igdb_ids:
+            q.extend(("igdb_id", id) for id in igdb_ids)
         return await self.request(Route("GET", "games", query=q))
 
     async def get_hype_train(self, broadcaster_id: str, id: Optional[str] = None, token: str = None):

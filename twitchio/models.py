@@ -610,15 +610,18 @@ class Game:
     name: :class:`str`
         Game name.
     box_art_url: :class:`str`
-        Template URL for the game’s box art.
+        Template URL for the game's box art.
+    igdb_id: Optional[:class:`int`]
+        The IGDB ID of the game. If this is not available to Twitch it will return None
     """
 
-    __slots__ = "id", "name", "box_art_url"
+    __slots__ = "id", "name", "box_art_url", "igdb_id"
 
     def __init__(self, data: dict):
         self.id: int = int(data["id"])
         self.name: str = data["name"]
         self.box_art_url: str = data["box_art_url"]
+        self.igdb_id: Optional[int] = int(data["igdb_id"]) if data["igdb_id"] else None
 
     def __repr__(self):
         return f"<Game id={self.id} name={self.name}>"
@@ -1073,6 +1076,7 @@ class ChannelInfo:
         Language of the channel.
     delay: :class:`int`
         Stream delay in seconds.
+        This defaults to 0 if the broadcaster_id does not match the user access token.
     """
 
     __slots__ = ("user", "game_id", "game_name", "title", "language", "delay")
