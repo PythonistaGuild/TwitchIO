@@ -3,7 +3,7 @@ name: Build
 on:
   push:
   pull_request:
-    types: [opened, edited]
+    types: [opened, edited, synchronize]
 
 jobs:
   lib:
