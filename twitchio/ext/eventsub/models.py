@@ -75,11 +75,18 @@ class Headers:
         self.message_id: str = request.headers["Twitch-Eventsub-Message-Id"]
         self.message_retry: int = int(request.headers["Twitch-Eventsub-Message-Retry"])
         self.message_type: str = request.headers["Twitch-Eventsub-Message-Type"]
-        self.signature: str = request.headers["Twitch-Eventsub-Message-Signature"]
+        try:
+            self.signature: str = request.headers["Twitch-Eventsub-Message-Signature"]
+        except:
+            self.signature: str = ""
         self.subscription_type: str = request.headers["Twitch-Eventsub-Subscription-Type"]
         self.subscription_version: str = request.headers["Twitch-Eventsub-Subscription-Version"]
-        self.timestamp = _parse_datetime(request.headers["Twitch-Eventsub-Message-Timestamp"])
-        self._raw_timestamp = request.headers["Twitch-Eventsub-Message-Timestamp"]
+        try:
+            self.timestamp = _parse_datetime(request.headers["Twitch-Eventsub-Message-Timestamp"])
+            self._raw_timestamp = request.headers["Twitch-Eventsub-Message-Timestamp"]
+        except:
+            self.timestamp = None
+            self._raw_timestamp = ""
 
 
 class BaseEvent:
