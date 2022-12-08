@@ -234,7 +234,7 @@ class EventSubClient(web.Application):
             logger.warning(f"Unexpected message type: {typ}")
             return web.Response(status=400)
 
-        logger.debug(f"Recived a message type: {typ}")
+        logger.debug(f"Received a message type: {typ}")
         event = _message_types[typ](self, payload, request)
         response = event.verify()
 

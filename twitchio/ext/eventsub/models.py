@@ -113,7 +113,7 @@ class BaseEvent:
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
         if not hmac.compare_digest(digest, self.headers.signature[7:]):
-            logger.warning(f"Recieved a message with an invalid signature, discarding.")
+            logger.warning(f"Received a message with an invalid signature, discarding.")
             return web.Response(status=400)
 
         return web.Response(status=200)
@@ -144,7 +144,7 @@ class ChallengeEvent(BaseEvent):
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
         if not hmac.compare_digest(digest, self.headers.signature[7:]):
-            logger.warning(f"Recieved a message with an invalid signature, discarding.")
+            logger.warning(f"Received a message with an invalid signature, discarding.")
             return web.Response(status=400)
 
         return web.Response(status=200, text=self.challenge)
