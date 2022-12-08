@@ -243,10 +243,11 @@ class EventSubClient(web.Application):
             return response
 
         if typ == "notification":
-            self.client.run_event(
-                f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}", event
-            )
+            event_name = f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}"
+            logger.info(event_name)
+            self.client.run_event(event_name, event)
         elif typ == "revocation":
+            logger.info("eventsub_revokation")
             self.client.run_event("eventsub_revokation", event)
 
         return response
