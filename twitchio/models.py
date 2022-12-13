@@ -1262,7 +1262,7 @@ class ScheduleSegment:
         The ID for the scheduled broadcast.
     start_time: :class:`datetime.datetime`
         Scheduled start time for the scheduled broadcast
-    end_time: :class:`datetime.datetime`
+    end_time: Optional[:class:`datetime.datetime`]
         Scheduled end time for the scheduled broadcast
     title: :class:`str`
         Title for the scheduled broadcast.
