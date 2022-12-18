@@ -1262,7 +1262,7 @@ class ScheduleSegment:
         The ID for the scheduled broadcast.
     start_time: :class:`datetime.datetime`
         Scheduled start time for the scheduled broadcast
-    end_time: :class:`datetime.datetime`
+    end_time: Optional[:class:`datetime.datetime`]
         Scheduled end time for the scheduled broadcast
     title: :class:`str`
         Title for the scheduled broadcast.
@@ -1279,7 +1279,7 @@ class ScheduleSegment:
     def __init__(self, data: dict):
         self.id: str = data["id"]
         self.start_time = parse_timestamp(data["start_time"])
-        self.end_time = parse_timestamp(data["end_time"])
+        self.end_time = parse_timestamp(data["end_time"]) if data["end_time"] else None
         self.title: str = data["title"]
         self.canceled_until = parse_timestamp(data["canceled_until"]) if data["canceled_until"] else None
         self.category = ScheduleCategory(data["category"]) if data["category"] else None
