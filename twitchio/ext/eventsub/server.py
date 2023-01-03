@@ -238,6 +238,9 @@ class EventSubClient(web.Application):
         event = _message_types[typ](self, payload, request)
         response = event.verify()
 
+        if response.status != 200:
+            return response
+
         if typ == "notification":
             self.client.run_event(
                 f"eventsub_notification_{models.SubscriptionTypes._name_map[event.subscription.type]}", event
