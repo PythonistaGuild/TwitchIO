@@ -520,20 +520,13 @@ class TwitchHTTP:
         )
 
     async def post_prediction(
-        self, token: str, broadcaster_id: int, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
+        self, token: str, broadcaster_id: int, title: str, outcomes: list, prediction_window: int
     ):
         body = {
             "broadcaster_id": broadcaster_id,
             "title": title,
             "prediction_window": prediction_window,
-            "outcomes": [
-                {
-                    "title": blue_outcome,
-                },
-                {
-                    "title": pink_outcome,
-                },
-            ],
+            "outcomes": [{'title': i} for i in outcomes],
         }
         return await self.request(
             Route("POST", "predictions", body=body, token=token),

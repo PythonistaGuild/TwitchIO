@@ -839,7 +839,7 @@ class PartialUser:
         return [Prediction(self._http, d) for d in data]
 
     async def create_prediction(
-        self, token: str, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
+        self, token: str, title: str, outcomes: list, prediction_window: int
     ) -> "Prediction":
         """|coro|
 
@@ -851,10 +851,8 @@ class PartialUser:
             An oauth token with the ``channel:manage:predictions`` scope
         title: :class:`str`
             Title for the prediction (max of 45 characters)
-        blue_outcome: :class:`str`
-            Text for the first outcome people can vote for. (max 25 characters)
-        pink_outcome: :class:`str`
-            Text for the second outcome people can vote for. (max 25 characters)
+        outcomes: List[:class:`str`]
+            List of text for the outcomes people can vote for. (2 <= outcomes <= 10 , max 25 characters for each)
         prediction_window: :class:`int`
             Total duration for the prediction (in seconds)
 
@@ -868,8 +866,7 @@ class PartialUser:
             token,
             broadcaster_id=str(self.id),
             title=title,
-            blue_outcome=blue_outcome,
-            pink_outcome=pink_outcome,
+            outcomes=outcomes,
             prediction_window=prediction_window,
         )
         return Prediction(self._http, data[0])
