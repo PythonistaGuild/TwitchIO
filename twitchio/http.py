@@ -1114,3 +1114,8 @@ class TwitchHTTP:
         return await self.request(
             Route("GET", "moderation/shield_mode", query=q, token=token), paginate=False, full_body=False
         )
+
+    async def put_shield_mode_status(self, token: str, broadcaster_id: str, moderator_id: str, is_active: bool):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        body = {"is_active": is_active}
+        return await self.request(Route("PUT", "moderation/shield_mode", query=q, body=body, token=token))
