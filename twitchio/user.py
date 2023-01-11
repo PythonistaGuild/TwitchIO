@@ -1524,6 +1524,32 @@ class PartialUser:
 
         return ShieldStatus(self._http, data[0])
 
+    async def update_shield_mode_status(self, token: str, moderator_id: int, is_active: bool):
+        """|coro|
+
+        Updates the user's Shield Mode activation status.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+        moderator_id: :class:`int`
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+        is_active: :class:`bool`
+            A Boolean value that determines whether to activate Shield Mode. Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
+
+        Returns
+        --------
+        :class:`twitchio.ShieldStatus`
+        """
+        from .models import ShieldStatus
+
+        data = await self._http.put_shield_mode_status(
+            broadcaster_id=str(self.id), moderator_id=str(moderator_id), is_active=is_active, token=token
+        )
+
+        return ShieldStatus(self._http, data[0])
+
 
 class BitLeaderboardUser(PartialUser):
 
