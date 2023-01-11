@@ -1790,3 +1790,37 @@ class Timeout:
 
     def __repr__(self):
         return f"<Timeout broadcaster={self.broadcaster} user={self.user} created_at={self.created_at} end_time={self.end_time}>"
+
+
+class ShieldStatus:
+    """
+    Represents a Shield Mode activation status.
+
+    Attributes
+    -----------
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that last activated Shield Mode.
+    display_name: :class:`str`
+        The moderator's display name. Is an empty string if Shield Mode hasn't been previously activated.
+    last_activated_at: :class:`datetime.datetime`
+        The UTC datetime of when Shield Mode was last activated.
+        Is an empty string if Shield Mode hasn't been previously activated.
+    is_active: :class:`bool`
+        A Boolean value that determines whether Shield Mode is active.
+        Is true if the broadcaster activated Shield Mode; otherwise, false.
+    """
+
+    __slots__ = ("moderator", "display_name", "last_activated_at", "is_active")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.moderator: Optional[PartialUser] = (
+            PartialUser(http, data["moderator_id"], data["moderator_login"]) if data["moderator_id"] else None
+        )
+        self.display_name: Optional[str] = data.get("moderator_name")
+        self.is_active: bool = data["is_active"]
+        self.last_activated_at: Optional[datetime.datetime] = (
+            parse_timestamp(data["last_activated_at"]) if data["last_activated_at"] else None
+        )
+
+    def __repr__(self):
+        return f"<ShieldStatus moderator={self.moderator} is_active={self.is_active} last_activated_at={self.last_activated_at}>"

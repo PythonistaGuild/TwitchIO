@@ -1502,6 +1502,30 @@ class PartialUser:
 
         await self._http.post_whisper(token=token, from_user_id=str(self.id), to_user_id=str(user_id), message=message)
 
+    async def fetch_shield_mode_status(self, token: str, moderator_id: int):
+        """|coro|
+
+        Fetches the user's Shield Mode activation status.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+        moderator_id: :class:`int`
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+
+        Returns
+        --------
+        :class:`twitchio.ShieldStatus`
+        """
+        from .models import ShieldStatus
+
+        data = await self._http.get_shield_mode_status(
+            broadcaster_id=str(self.id), moderator_id=str(moderator_id), token=token
+        )
+
+        return ShieldStatus(self._http, data[0])
+
 
 class BitLeaderboardUser(PartialUser):
 

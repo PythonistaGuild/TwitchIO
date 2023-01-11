@@ -1108,3 +1108,9 @@ class TwitchHTTP:
             full_body=True,
             paginate=False,
         )
+
+    async def get_shield_mode_status(self, token: str, broadcaster_id: str, moderator_id: str):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        return await self.request(
+            Route("GET", "moderation/shield_mode", query=q, token=token), paginate=False, full_body=False
+        )
