@@ -1021,8 +1021,15 @@ class Stream:
         Thumbnail URL of the stream.
     tag_ids: List[:class:`str`]
         Tag IDs that apply to the stream.
+
+        .. warning::
+
+            This field will be deprecated by twitch in 2023.
+
     is_mature: :class:`bool`
         Indicates whether the stream is intended for mature audience.
+    tags: List[:class:`str`]
+        The tags applied to the channel.
     """
 
     __slots__ = (
@@ -1038,6 +1045,7 @@ class Stream:
         "thumbnail_url",
         "tag_ids",
         "is_mature",
+        "tags",
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -1053,6 +1061,7 @@ class Stream:
         self.thumbnail_url: str = data["thumbnail_url"]
         self.tag_ids: List[str] = data["tag_ids"] or []
         self.is_mature: bool = data["is_mature"]
+        self.tags: List[str] = data["tags"]
 
     def __repr__(self):
         return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
@@ -1077,9 +1086,11 @@ class ChannelInfo:
     delay: :class:`int`
         Stream delay in seconds.
         This defaults to 0 if the broadcaster_id does not match the user access token.
+    tags: List[:class:`str`]
+        The tags applied to the channel.
     """
 
-    __slots__ = ("user", "game_id", "game_name", "title", "language", "delay")
+    __slots__ = ("user", "game_id", "game_name", "title", "language", "delay", "tags")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
@@ -1088,6 +1099,7 @@ class ChannelInfo:
         self.title: str = data["title"]
         self.language: str = data["broadcaster_language"]
         self.delay: int = data["delay"]
+        self.tags: List[str] = data["tags"]
 
     def __repr__(self):
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"

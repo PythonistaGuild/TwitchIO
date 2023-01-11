@@ -1548,8 +1548,52 @@ class UserBan(PartialUser):
 
 
 class SearchUser(PartialUser):
+    """
+    Represents a User that has been searched for.
 
-    __slots__ = "game_id", "name", "display_name", "language", "title", "thumbnail_url", "live", "started_at", "tag_ids"
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the user.
+    name: :class:`str`
+        The name of the user.
+    display_name: :class:`str`
+        The broadcaster's display name.
+    game_id: :class:`str`
+        The ID of the game that the broadcaster is playing or last played.
+    title: :class:`str`
+        The stream's title. Is an empty string if the broadcaster didn't set it.
+    thumbnail_url :class:`str`
+        A URL to a thumbnail of the broadcaster's profile image.
+    language :class:`str`
+        The ISO 639-1 two-letter language code of the language used by the broadcaster. For example, en for English.
+    live: :class:`bool`
+        A Boolean value that determines whether the broadcaster is streaming live. Is true if the broadcaster is streaming live; otherwise, false.
+    started_at: :class:`datetime.datetime`
+        The UTC date and time of when the broadcaster started streaming.
+    tag_ids: List[:class:`str`]
+        Tag IDs that apply to the stream.
+
+        .. warning::
+
+            This field will be deprecated by twitch in 2023.
+
+    tags: List[:class:`str`]
+        The tags applied to the channel.
+    """
+
+    __slots__ = (
+        "game_id",
+        "name",
+        "display_name",
+        "language",
+        "title",
+        "thumbnail_url",
+        "live",
+        "started_at",
+        "tag_ids",
+        "tags",
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
@@ -1563,6 +1607,7 @@ class SearchUser(PartialUser):
         self.live: bool = data["is_live"]
         self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data["tag_ids"]
+        self.tags: List[str] = data["tags"]
 
 
 class User(PartialUser):
