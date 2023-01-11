@@ -12,6 +12,7 @@ Master
         - Added :attr:`~twitchio.Game.igdb_id` to :class:`~twitchio.Game`
         - Added ``igdb_ids`` argument to :func:`~twitchio.Client.fetch_games`
         - Added ``tags`` attribute to :class:`~twitchio.Stream`, :class:`~twitchio.ChannelInfo` and :class:`~twitchio.SearchUser`
+        - Added :func:`~twitchio.PartialUser.fetch_shield_mode_status`
 
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing
