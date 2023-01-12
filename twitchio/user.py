@@ -166,7 +166,7 @@ class PartialUser:
 
         Returns
         -------
-            List[:class:`twitchio.CustomReward`]
+        List[:class:`twitchio.CustomReward`]
         """
         if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
             return self._cached_rewards[1]
@@ -1552,6 +1552,27 @@ class PartialUser:
         )
 
         return ShieldStatus(self._http, data[0])
+
+    async def fetch_followed_streams(self, token: str):
+        """|coro|
+
+        Fetches a list of broadcasters that the user follows and that are streaming live.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``user:read:follows`` scope.
+
+        Returns
+        --------
+        List[:class:`twitchio.Stream`]
+        """
+
+        data = await self._http.get_followed_streams(broadcaster_id=str(self.id), token=token)
+
+        from .models import Stream
+
+        return [Stream(self._http, x) for x in data]
 
 
 class BitLeaderboardUser(PartialUser):

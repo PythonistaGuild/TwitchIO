@@ -1119,3 +1119,6 @@ class TwitchHTTP:
         q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
         body = {"is_active": is_active}
         return await self.request(Route("PUT", "moderation/shield_mode", query=q, body=body, token=token))
+
+    async def get_followed_streams(self, broadcaster_id: str, token: str):
+        return await self.request(Route("GET", "streams/followed", query=[("user_id", broadcaster_id)], token=token))
