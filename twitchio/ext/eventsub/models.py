@@ -1314,6 +1314,50 @@ class ChannelGoalEndData(EventData):
         self.ended_at: datetime.datetime = _parse_datetime(data["ended_at"])
 
 
+class ShieldModeBegin:
+    """
+    Represents a Shield Mode activation status.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster whose Shield Mode status was updated.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that updated the Shield Mode staus.
+    started_at: :class:`datetime.datetime`
+        The UTC datetime of when Shield Mode was last activated.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "started_at")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
+
+
+class ShieldModeEnd:
+    """
+    Represents a Shield Mode activation status.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster whose Shield Mode status was updated.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that updated the Shield Mode staus.
+    ended_at: :class:`datetime.datetime`
+        The UTC datetime of when Shield Mode was last deactivated.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "ended_at")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.ended_at: datetime.datetime = _parse_datetime(data["ended_at"])
+
+
 _DataType = Union[
     ChannelBanData,
     ChannelUnbanData,
@@ -1342,6 +1386,8 @@ _DataType = Union[
     UserAuthorizationGrantedData,
     UserAuthorizationRevokedData,
     UserUpdateData,
+    ShieldModeBegin,
+    ShieldModeEnd,
 ]
 
 
@@ -1386,6 +1432,9 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     channel_goal_begin = "channel.goal.begin", 1, ChannelGoalBeginProgressData
     channel_goal_progress = "channel.goal.progress", 1, ChannelGoalBeginProgressData
     channel_goal_end = "channel.goal.end", 1, ChannelGoalEndData
+
+    channel_shield_mode_begin = "channel.shield_mode.begin", 1, ShieldModeBegin
+    channel_shield_mode_end = "channel.shield_mode.end", 1, ShieldModeEnd
 
     hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
     hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData

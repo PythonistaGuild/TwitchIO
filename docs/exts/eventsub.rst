@@ -192,6 +192,14 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a hype train ends on their channel.
 
+.. function:: event_eventsub_notification_channel_shield_mode_begin(event: ShieldModeBegin)
+
+    Called when a channel's Shield Mode status is activated.
+
+.. function:: event_eventsub_notification_channel_shield_mode_end(event: ShieldModeEnd)
+
+    Called when a channel's Shield Mode status is deactivated.
+
 API Reference
 --------------
 
@@ -384,6 +392,18 @@ API Reference
 .. attributetable::: PredictionEndData
 
 .. autoclass:: PredictionEndData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ShieldModeBegin
+
+.. autoclass:: ShieldModeBegin
+    :members:
+    :inherited-members:
+
+.. attributetable::: ShieldModeEnd
+
+.. autoclass:: ShieldModeEnd
     :members:
     :inherited-members:
 

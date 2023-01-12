@@ -24,6 +24,9 @@ Master
 - ext.eventsub
     - Additions
         - Updated docs regarding new HypeTrain contribution method ``other`` for :attr:`~twitchio.ext.eventsub.HypeTrainContributor.type`
+        - Added Shield Status events
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shield_mode_begin`
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shield_mode_end`
 
 2.5.0
 ======

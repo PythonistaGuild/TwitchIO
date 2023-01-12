@@ -111,6 +111,23 @@ class EventSubClient(web.Application):
         broadcaster = str(broadcaster)
         return await self._http.create_subscription(event, {"broadcaster_user_id": broadcaster})
 
+    async def _subscribe_with_broadcaster_moderator(
+        self,
+        event: Tuple[str, int, Type[models._DataType]],
+        broadcaster: Union[PartialUser, str, int],
+        moderator: Union[PartialUser, str, int],
+    ):
+        if isinstance(broadcaster, PartialUser):
+            broadcaster = broadcaster.id
+        if isinstance(moderator, PartialUser):
+            moderator = moderator.id
+
+        broadcaster = str(broadcaster)
+        moderator = str(moderator)
+        return await self._http.create_subscription(
+            event, {"broadcaster_user_id": broadcaster, "moderator_user_id": moderator}
+        )
+
     def subscribe_channel_bans(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.ban, broadcaster)
 
@@ -213,6 +230,20 @@ class EventSubClient(web.Application):
 
     def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster)
+
+    def subscribe_channel_shield_mode_begin(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_begin, broadcaster, moderator
+        )
+
+    def subscribe_channel_shield_mode_end(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator
+        )
 
     async def subscribe_user_authorization_granted(self):
         return await self._http.create_subscription(
