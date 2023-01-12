@@ -76,6 +76,7 @@ __all__ = (
     "ChatterColor",
     "Timeout",
     "Ban",
+    "ShieldStatus",
 )
 
 

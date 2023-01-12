@@ -152,20 +152,21 @@ class PartialUser:
         """|coro|
 
         Fetches the channels custom rewards (aka channel points) from the api.
+
         Parameters
         ----------
-        token : :class:`str`
+        token: :class:`str`
             The users oauth token.
         only_manageable : :class:`bool`
             Whether to fetch all rewards or only ones you can manage. Defaults to false.
-        ids : List[:class:`int`]
+        ids: List[:class:`int`]
             An optional list of reward ids
-        force : :class:`bool`
+        force: :class:`bool`
             Whether to force a fetch or try to get from cache. Defaults to False
 
         Returns
         -------
-
+        List[:class:`twitchio.CustomReward`]
         """
         if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
             return self._cached_rewards[1]
