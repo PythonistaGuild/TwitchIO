@@ -14,6 +14,7 @@ Master
         - Added ``tags`` attribute to :class:`~twitchio.Stream`, :class:`~twitchio.ChannelInfo` and :class:`~twitchio.SearchUser`
         - Added :func:`~twitchio.PartialUser.fetch_shield_mode_status`
         - Added :func:`~twitchio.PartialUser.update_shield_mode_status`
+        - Added :func:`~twitchio.PartialUser.fetch_followed_streams`
 
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing
