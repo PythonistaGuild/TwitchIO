@@ -52,7 +52,9 @@ class EventSubClient(web.Application):
         for subscription_id in active_subscriptions:
             await self.delete_subscription(subscription_id)
 
-    async def get_subscriptions(self, status: str = None, sub_type: str = None, user_id: str = None):
+    async def get_subscriptions(
+        self, status: Optional[str] = None, sub_type: Optional[str] = None, user_id: Optional[int] = None
+    ):
         # All possible statuses are:
         #
         #     enabled: designates that the subscription is in an operable state and is valid.
