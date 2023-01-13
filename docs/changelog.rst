@@ -27,7 +27,7 @@ Master
         - Added Shield Status events
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shield_mode_begin`
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shield_mode_end`
-        - Added support for `type` and `user_id` queries on :func:`~twitchio.ext.eventsub.EventSubClient.get_subscriptions`
+        - Added support for ``type`` and ``user_id`` queries on :func:`~twitchio.ext.eventsub.EventSubClient.get_subscriptions`
 
 2.5.0
 ======
