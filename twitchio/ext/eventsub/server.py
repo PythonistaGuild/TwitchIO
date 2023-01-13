@@ -52,7 +52,7 @@ class EventSubClient(web.Application):
         for subscription_id in active_subscriptions:
             await self.delete_subscription(subscription_id)
 
-    async def get_subscriptions(self, status: str = None):
+    async def get_subscriptions(self, status: str = None, sub_type: str = None, user_id: str = None):
         # All possible statuses are:
         #
         #     enabled: designates that the subscription is in an operable state and is valid.
@@ -61,7 +61,7 @@ class EventSubClient(web.Application):
         #     notification_failures_exceeded: notification delivery failure rate was too high.
         #     authorization_revoked: authorization for user(s) in the condition was revoked.
         #     user_removed: a user in the condition of the subscription was removed.
-        return await self._http.get_subscriptions(status)
+        return await self._http.get_subscriptions(status, sub_type, user_id)
 
     async def subscribe_user_updated(self, user: Union[PartialUser, str, int]):
         if isinstance(user, PartialUser):

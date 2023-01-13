@@ -36,10 +36,14 @@ class EventSubHTTP:
             Route("DELETE", "eventsub/subscriptions", query=[("id", subscription)]), paginate=False
         )
 
-    async def get_subscriptions(self, status: str = None):
+    async def get_subscriptions(self, status: str = None, sub_type: str = None, user_id: str = None):
         qs = []
         if status:
             qs.append(("status", status))
+        if sub_type:
+            qs.append(("type", sub_type))
+        if user_id:
+            qs.append(("user_id", user_id))
 
         return [
             models.Subscription(d)
