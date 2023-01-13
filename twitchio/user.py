@@ -157,7 +157,7 @@ class PartialUser:
         ----------
         token: :class:`str`
             The users oauth token.
-        only_manageable : :class:`bool`
+        only_manageable: :class:`bool`
             Whether to fetch all rewards or only ones you can manage. Defaults to false.
         ids: List[:class:`int`]
             An optional list of reward ids
@@ -368,8 +368,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.HypeTrainEvent`]
-            A list of hypetrain events
+        List[:class:`twitchio.HypeTrainEvent`]
         """
         from .models import HypeTrainEvent
 
@@ -407,7 +406,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.BanEvent`]
+        List[:class:`twitchio.BanEvent`]
         """
         from .models import BanEvent
 
@@ -428,7 +427,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.PartialUser`]
+        List[:class:`twitchio.PartialUser`]
         """
         data = await self._http.get_channel_moderators(token, str(self.id), user_ids=userids)
         return [PartialUser(self._http, d["user_id"], d["user_name"]) for d in data]
@@ -445,7 +444,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.ModEvent`]
+        List[:class:`twitchio.ModEvent`]
         """
         from .models import ModEvent
 
@@ -466,7 +465,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.AutomodCheckResponse`]
+        List[:class:`twitchio.AutomodCheckResponse`]
         """
         from .models import AutomodCheckResponse
 
@@ -485,7 +484,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`str`
+        :class:`str`
         """
         data = await self._http.get_stream_key(token, str(self.id))
         return data
@@ -502,7 +501,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.FollowEvent`]
+        List[:class:`twitchio.FollowEvent`]
         """
         from .models import FollowEvent
 
@@ -521,7 +520,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.FollowEvent`]
+        List[:class:`twitchio.FollowEvent`]
         """
         from .models import FollowEvent
 
@@ -541,7 +540,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.FollowEvent`
+        :class:`twitchio.FollowEvent`
         """
         if not isinstance(to_user, PartialUser):
             raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
@@ -562,7 +561,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`int`
+        :class:`int`
         """
 
         data = await self._http.get_follow_count(token=token, to_id=str(self.id))
@@ -580,7 +579,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`int`
+        :class:`int`
         """
         data = await self._http.get_follow_count(token=token, from_id=str(self.id))
         return data["total"]
@@ -592,7 +591,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.ChannelEmote`]
+        List[:class:`twitchio.ChannelEmote`]
         """
         from .models import ChannelEmote
 
@@ -645,7 +644,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.SubscriptionEvent`]
+        List[:class:`twitchio.SubscriptionEvent`]
         """
         from .models import SubscriptionEvent
 
@@ -666,7 +665,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Marker`
+        :class:`twitchio.Marker`
         """
         from .models import Marker
 
@@ -688,7 +687,7 @@ class PartialUser:
 
         Returns
         --------
-            Optional[:class:`twitchio.VideoMarkers`]
+        Optional[:class:`twitchio.VideoMarkers`]
         """
         from .models import VideoMarkers
 
@@ -708,7 +707,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.Extension`]
+        List[:class:`twitchio.Extension`]
         """
         from .models import Extension
 
@@ -728,7 +727,7 @@ class PartialUser:
 
         Returns
         --------
-            Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
+        Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
         """
         from .models import ActiveExtension
 
@@ -749,7 +748,7 @@ class PartialUser:
 
         Returns
         --------
-            Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
+        Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
         """
         from .models import ActiveExtension
 
@@ -774,7 +773,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.Video`]
+        List[:class:`twitchio.Video`]
         """
         from .models import Video
 
@@ -804,7 +803,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Prediction`
+        :class:`twitchio.Prediction`
         """
         from .models import Prediction
 
@@ -832,7 +831,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Prediction`
+        :class:`twitchio.Prediction`
         """
         from .models import Prediction
 
@@ -861,7 +860,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Prediction`
+        :class:`twitchio.Prediction`
         """
         from .models import Prediction
 
@@ -924,7 +923,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Schedule`
+        :class:`twitchio.Schedule`
         """
         from .models import Schedule
 
