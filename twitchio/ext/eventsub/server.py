@@ -245,6 +245,20 @@ class EventSubClient(web.Application):
             models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator
         )
 
+    def subscribe_channel_shoutout_create(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator
+        )
+
+    def subscribe_channel_shoutout_receive(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator
+        )
+
     async def subscribe_user_authorization_granted(self):
         return await self._http.create_subscription(
             models.SubscriptionTypes.user_authorization_grant, {"client_id": self.client._http.client_id}

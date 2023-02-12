@@ -1582,7 +1582,7 @@ class PartialUser:
         Parameters
         -----------
         token: :class:`str`
-            An oauth user token with the ``moderator:manage:shoutouts``scope.
+            An oauth user token with the ``moderator:manage:shoutouts`` scope.
         to_broadcaster: :class:`int`
             The ID of the broadcaster that is recieving the shoutout.
         moderator_id: :class:`int`

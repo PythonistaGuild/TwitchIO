@@ -192,13 +192,21 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a hype train ends on their channel.
 
-.. function:: event_eventsub_notification_channel_shield_mode_begin(event: ShieldModeBegin)
+.. function:: event_eventsub_notification_channel_shield_mode_begin(event: ChannelShieldModeBeginData)
 
     Called when a channel's Shield Mode status is activated.
 
-.. function:: event_eventsub_notification_channel_shield_mode_end(event: ShieldModeEnd)
+.. function:: event_eventsub_notification_channel_shield_mode_end(event: ChannelShieldModeEndData)
 
     Called when a channel's Shield Mode status is deactivated.
+
+.. function:: event_eventsub_notification_channel_shoutout_create(event: ChannelShoutoutCreateData)
+
+    Called when a channel sends a shoutout.
+
+.. function:: event_eventsub_notification_channel_shoutout_receive(event: ChannelShoutoutReceiveData)
+
+    Called when a channel receives a shoutout.
 
 API Reference
 --------------
@@ -224,6 +232,30 @@ API Reference
 .. attributetable::: ChannelBanData
 
 .. autoclass:: ChannelBanData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShieldModeBeginData
+
+.. autoclass:: ChannelShieldModeBeginData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShieldModeEndData
+
+.. autoclass:: ChannelShieldModeEndData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShoutoutCreateData
+
+.. autoclass:: ChannelShoutoutCreateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShoutoutReceiveData
+
+.. autoclass:: ChannelShoutoutReceiveData
     :members:
     :inherited-members:
 
@@ -392,18 +424,6 @@ API Reference
 .. attributetable::: PredictionEndData
 
 .. autoclass:: PredictionEndData
-    :members:
-    :inherited-members:
-
-.. attributetable::: ShieldModeBegin
-
-.. autoclass:: ShieldModeBegin
-    :members:
-    :inherited-members:
-
-.. attributetable::: ShieldModeEnd
-
-.. autoclass:: ShieldModeEnd
     :members:
     :inherited-members:
 

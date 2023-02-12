@@ -15,6 +15,7 @@ Master
         - Added :func:`~twitchio.PartialUser.fetch_shield_mode_status`
         - Added :func:`~twitchio.PartialUser.update_shield_mode_status`
         - Added :func:`~twitchio.PartialUser.fetch_followed_streams`
+        - Added :func:`~twitchio.PartialUser.shoutout`
 
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing
@@ -27,6 +28,9 @@ Master
         - Added Shield Status events
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shield_mode_begin`
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shield_mode_end`
+        - Added Shoutout events
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_create`
+            - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_receive`
 
 2.5.0
 ======
