@@ -1573,6 +1573,33 @@ class PartialUser:
 
         return [Stream(self._http, x) for x in data]
 
+    async def shoutout(self, token: str, to_broadcaster_id: int, moderator_id: int):
+        """|coro|
+        Sends a Shoutout to the specified broadcaster.
+        ``Rate Limits``: The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
+        Requires a user access token that includes the ``moderator:manage:shoutouts`` scope.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``moderator:manage:shoutouts``scope.
+        to_broadcaster: :class:`int`
+            The ID of the broadcaster that is recieving the shoutout.
+        moderator_id: :class:`int`
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.post_shoutout(
+            token=token,
+            broadcaster_id=str(self.id),
+            to_broadcaster_id=str(to_broadcaster_id),
+            moderator_id=str(moderator_id),
+        )
+
 
 class BitLeaderboardUser(PartialUser):
 

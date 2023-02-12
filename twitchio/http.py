@@ -1122,3 +1122,11 @@ class TwitchHTTP:
 
     async def get_followed_streams(self, broadcaster_id: str, token: str):
         return await self.request(Route("GET", "streams/followed", query=[("user_id", broadcaster_id)], token=token))
+
+    async def post_shoutout(self, token: str, broadcaster_id: str, moderator_id: str, to_broadcaster_id: str):
+        q = [
+            ("from_broadcaster_id", broadcaster_id),
+            ("moderator_id", moderator_id),
+            ("to_broadcaster_id", to_broadcaster_id),
+        ]
+        return await self.request(Route("POST", "chat/shoutouts", query=q, token=token))
