@@ -37,7 +37,6 @@ __all__ = (
 
 
 class _topic:
-
     __slots__ = "__topic__", "__args__"
 
     def __init__(self, topic: str, args: List[Type]):

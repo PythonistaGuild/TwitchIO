@@ -1602,7 +1602,6 @@ class PartialUser:
 
 
 class BitLeaderboardUser(PartialUser):
-
     __slots__ = "rank", "score"
 
     def __init__(self, http: "TwitchHTTP", data: dict):

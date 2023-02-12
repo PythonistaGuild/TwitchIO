@@ -80,7 +80,6 @@ class Client:
         heartbeat: Optional[float] = 30.0,
         retain_cache: Optional[bool] = True,
     ):
-
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
         self._heartbeat = heartbeat
 

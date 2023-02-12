@@ -36,7 +36,6 @@ __all__ = ("PartialChatter", "Chatter")
 
 
 class PartialChatter(Messageable):
-
     __messageable_channel__ = False
 
     def __init__(self, websocket, **kwargs):
@@ -89,7 +88,6 @@ class PartialChatter(Messageable):
 
 
 class Chatter(PartialChatter):
-
     __slots__ = (
         "_name",
         "_channel",
@@ -231,7 +229,6 @@ class Chatter(PartialChatter):
 
 
 class WhisperChatter(PartialChatter):
-
     __messageable_channel__ = False
 
     def __init__(self, websocket: "WSConnection", **kwargs):
