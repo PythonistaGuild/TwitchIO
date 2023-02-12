@@ -249,14 +249,14 @@ class EventSubClient(web.Application):
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
     ):
         return self._subscribe_with_broadcaster_moderator(
-            models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator
+            models.SubscriptionTypes.channel_shoutout_create, broadcaster, moderator
         )
 
     def subscribe_channel_shoutout_receive(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
     ):
         return self._subscribe_with_broadcaster_moderator(
-            models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator
+            models.SubscriptionTypes.channel_shoutout_receive, broadcaster, moderator
         )
 
     async def subscribe_user_authorization_granted(self):
