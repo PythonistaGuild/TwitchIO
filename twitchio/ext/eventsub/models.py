@@ -1314,7 +1314,7 @@ class ChannelGoalEndData(EventData):
         self.ended_at: datetime.datetime = _parse_datetime(data["ended_at"])
 
 
-class ShieldModeBegin:
+class ChannelShieldModeBeginData(EventData):
     """
     Represents a Shield Mode activation status.
 
@@ -1336,7 +1336,7 @@ class ShieldModeBegin:
         self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
 
 
-class ShieldModeEnd:
+class ChannelShieldModeEndData(EventData):
     """
     Represents a Shield Mode activation status.
 
@@ -1356,6 +1356,77 @@ class ShieldModeEnd:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.ended_at: datetime.datetime = _parse_datetime(data["ended_at"])
+
+
+class ChannelShoutoutCreateData(EventData):
+    """
+    Represents a Shoutout event being sent.
+
+    Requires the ``moderator:read:shoutouts`` or ``moderator:manage:shoutouts`` scope.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster from who sent the shoutout event.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator who sent the shoutout event.
+    to_broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster who the shoutout was sent to.
+    started_at: :class:`datetime.datetime`
+        The datetime the shoutout was sent.
+    viewer_count: :class:`int`
+        The viewer count at the time of the shoutout
+    cooldown_ends_at: :class:`datetime.datetime`
+        The datetime the broadcaster can send another shoutout.
+    target_cooldown_ends_at: :class:`datetime.datetime`
+        The datetime the broadcaster can send another shoutout to the same broadcaster.
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "to_broadcaster",
+        "started_at",
+        "viewer_count",
+        "cooldown_ends_at",
+        "target_cooldown_ends_at",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.to_broadcaster: PartialUser = _transform_user(client, data, "to_broadcaster_user")
+        self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
+        self.viewer_count: int = data["viewer_count"]
+        self.cooldown_ends_at: datetime.datetime = _parse_datetime(data["cooldown_ends_at"])
+        self.target_cooldown_ends_at: datetime.datetime = _parse_datetime(data["target_cooldown_ends_at"])
+
+
+class ChannelShoutoutReceiveData(EventData):
+    """
+    Represents a Shoutout event being received.
+
+    Requires the ``moderator:read:shoutouts`` or ``moderator:manage:shoutouts`` scope.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster receiving shoutout event.
+    from_broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster who sent the shoutout.
+    started_at: :class:`datetime.datetime`
+        The datetime the shoutout was sent.
+    viewer_count: :class:`int`
+        The viewer count at the time of the shoutout
+    """
+
+    __slots__ = ("broadcaster", "from_broadcaster", "started_at", "viewer_count")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.from_broadcaster: PartialUser = _transform_user(client, data, "to_broadcaster_user")
+        self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
+        self.viewer_count: int = data["viewer_count"]
 
 
 _DataType = Union[
@@ -1386,8 +1457,10 @@ _DataType = Union[
     UserAuthorizationGrantedData,
     UserAuthorizationRevokedData,
     UserUpdateData,
-    ShieldModeBegin,
-    ShieldModeEnd,
+    ChannelShieldModeBeginData,
+    ChannelShieldModeEndData,
+    ChannelShoutoutCreateData,
+    ChannelShoutoutReceiveData,
 ]
 
 
@@ -1433,8 +1506,11 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     channel_goal_progress = "channel.goal.progress", 1, ChannelGoalBeginProgressData
     channel_goal_end = "channel.goal.end", 1, ChannelGoalEndData
 
-    channel_shield_mode_begin = "channel.shield_mode.begin", 1, ShieldModeBegin
-    channel_shield_mode_end = "channel.shield_mode.end", 1, ShieldModeEnd
+    channel_shield_mode_begin = "channel.shield_mode.begin", 1, ChannelShieldModeBeginData
+    channel_shield_mode_end = "channel.shield_mode.end", 1, ChannelShieldModeEndData
+
+    channel_shoutout_create = "channel.shoutout.create", 1, ChannelShoutoutCreateData
+    channel_shoutout_receive = "channel.shoutout.receive", 1, ChannelShoutoutReceiveData
 
     hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
     hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData

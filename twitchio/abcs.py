@@ -50,7 +50,6 @@ limiter = IRCLimiterMapping()
 
 
 class Messageable(abc.ABC):
-
     __slots__ = ()
 
     @abc.abstractmethod

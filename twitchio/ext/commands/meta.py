@@ -122,7 +122,6 @@ class Cog(metaclass=CogMeta):
 
         for event, callbacks in events.items():
             for callback in callbacks:
-
                 callback = partial(callback, self)
                 bot.add_event(callback=callback, name=event)
 

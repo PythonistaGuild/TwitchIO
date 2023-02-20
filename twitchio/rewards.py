@@ -310,7 +310,6 @@ class CustomReward:
 
 
 class CustomRewardRedemption:
-
     __slots__ = "_http", "_broadcaster_id", "id", "user_id", "user_name", "input", "status", "redeemed_at", "reward"
 
     def __init__(self, obj: dict, http: "TwitchHTTP", parent: Optional[CustomReward]):

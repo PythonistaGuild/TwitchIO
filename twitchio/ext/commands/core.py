@@ -335,7 +335,6 @@ class Group(Command):
 
 
 class Context(Messageable):
-
     __messageable_channel__ = True
 
     def __init__(self, message: Message, bot: Bot, **attrs) -> None:

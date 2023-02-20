@@ -69,7 +69,6 @@ class HTTPException(TwitchIOException):
     def __init__(
         self, message: str, *, reason: Optional[str] = None, status: Optional[int] = None, extra: Optional[Any] = None
     ):
-
         self.message = message
         self.reason = reason
         self.status = status

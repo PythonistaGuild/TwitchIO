@@ -48,7 +48,6 @@ __all__ = ("PubSubWebsocket",)
 
 
 class PubSubWebsocket:
-
     __slots__ = (
         "session",
         "topics",

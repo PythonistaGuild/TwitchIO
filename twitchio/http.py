@@ -44,7 +44,6 @@ logger = logging.getLogger("twitchio.http")
 
 
 class Route:
-
     BASE_URL = "https://api.twitch.tv/helix"
 
     __slots__ = "path", "body", "headers", "query", "method"
@@ -78,7 +77,6 @@ class Route:
 
 
 class TwitchHTTP:
-
     TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
     def __init__(
@@ -923,7 +921,6 @@ class TwitchHTTP:
         channel_points_voting_enabled: Optional[bool] = False,
         channel_points_per_vote: Optional[int] = None,
     ):
-
         if len(title) > 60:
             raise ValueError("title must be less than or equal to 60 characters")
         if len(choices) < 2 or len(choices) > 5:
@@ -1122,3 +1119,11 @@ class TwitchHTTP:
 
     async def get_followed_streams(self, broadcaster_id: str, token: str):
         return await self.request(Route("GET", "streams/followed", query=[("user_id", broadcaster_id)], token=token))
+
+    async def post_shoutout(self, token: str, broadcaster_id: str, moderator_id: str, to_broadcaster_id: str):
+        q = [
+            ("from_broadcaster_id", broadcaster_id),
+            ("moderator_id", moderator_id),
+            ("to_broadcaster_id", to_broadcaster_id),
+        ]
+        return await self.request(Route("POST", "chat/shoutouts", query=q, token=token))

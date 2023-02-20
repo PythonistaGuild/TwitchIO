@@ -982,7 +982,6 @@ class Tag:
 
 
 class WebhookSubscription:
-
     __slots__ = "callback", "expires_at", "topic"
 
     def __init__(self, data: dict):
@@ -1225,7 +1224,6 @@ class PredictionOutcome:
         if data["top_predictors"]:
             self.top_predictors: List[Predictor] = [Predictor(http, x) for x in data["top_predictors"]]
         else:
-
             self.top_predictors: List[Predictor] = None
 
     def __repr__(self):
@@ -1388,7 +1386,6 @@ class Team:
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-
         self.users: List[PartialUser] = [PartialUser(http, x["user_id"], x["user_login"]) for x in data["users"]]
         self.background_image_url: str = data["background_image_url"]
         self.banner: str = data["banner"]
@@ -1446,7 +1443,6 @@ class ChannelTeams:
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-
         self.broadcaster: PartialUser = PartialUser(http, data["broadcaster_id"], data["broadcaster_login"])
         self.background_image_url: str = data["background_image_url"]
         self.banner: str = data["banner"]
