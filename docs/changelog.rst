@@ -34,6 +34,10 @@ Master
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_create`
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_receive`
 
+- ext.pubsub
+    - Bug fixes
+        - Fix forced RECONNECT messages
+
 2.5.0
 ======
 - TwitchIO

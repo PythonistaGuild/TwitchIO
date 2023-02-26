@@ -203,3 +203,7 @@ class PubSubWebsocket:
         elif message["nonce"]:
             logger.debug(f"Received OK response for nonce {message['nonce']}")
             self.client.run_event("pubsub_nonce", message)
+
+    async def handle_reconnect(self, message: dict):
+        logger.warning("Received RECONNECT response from pubsub edge. Reconnecting")
+        await asyncio.shield(self.reconnect())
