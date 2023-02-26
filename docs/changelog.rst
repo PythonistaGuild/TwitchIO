@@ -23,6 +23,8 @@ Master
         - Fix auto reconnect of websocket. Created tasks by asyncio.create_task() need to be referred to prevent task disappearing (garbage collection).
 
 - ext.eventsub
+    - Documentation
+        - Updated quickstart example to reflect proper usage of callback
     - Additions
         - Updated docs regarding new HypeTrain contribution method ``other`` for :attr:`~twitchio.ext.eventsub.HypeTrainContributor.type`
         - Added Shield Status events
