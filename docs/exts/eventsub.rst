@@ -11,7 +11,7 @@ Twitch will send you an HTTP request containing information on the event. This e
 integrating seamlessly into the twitchio Client event dispatching system.
 
 .. warning::
-    This ext requires you to have a public facing ip, and to be able to receive inbound requests.
+    This ext requires you to have a public facing ip AND domain, and to be able to receive inbound requests.
 
 .. note::
     Twitch requires EventSub targets to have TLS/SSL enabled (https). TwitchIO does not support this, as such you should
@@ -26,7 +26,7 @@ A Quick Example
     import twitchio
     from twitchio.ext import eventsub, commands
     bot = commands.Bot(token="...")
-    eventsub_client = eventsub.EventSubClient(bot, "some_secret_string", "/callback")
+    eventsub_client = eventsub.EventSubClient(bot, "some_secret_string", "https://your-url.here/callback")
     # when subscribing (you can only await inside coroutines)
 
     await eventsub_client.subscribe_channel_subscriptions(channel_ID)
@@ -64,7 +64,7 @@ Running Eventsub Inside a Commands Bot
             self.loop.create_task(esclient.listen(port=4000))
 
             try:
-                await esclient.subscribe_channel_follows(broadcaster=channel_ID)
+                await esclient.subscribe_channel_follows_v2(broadcaster=some_channel_ID, moderator=a_channel_mod_ID)
             except twitchio.HTTPException:
                 pass
 

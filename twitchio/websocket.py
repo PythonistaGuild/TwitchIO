@@ -205,7 +205,7 @@ class WSConnection:
             self._background_tasks.append(shielded_task)
 
     async def send(self, message: str):
-        message = message.strip()
+        message = message.strip().replace("\n", "")
         log.debug(f" > {message}")
 
         if message.startswith("PRIVMSG #"):
@@ -221,7 +221,7 @@ class WSConnection:
         await self._websocket.send_str(message + "\r\n")
 
     async def reply(self, msg_id: str, message: str):
-        message = message.strip()
+        message = message.strip().replace("\n", "")
         log.debug(f" > {message}")
 
         if message.startswith("PRIVMSG #"):

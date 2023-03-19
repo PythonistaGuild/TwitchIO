@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import socket
+import warnings
 from typing import Union, Tuple, Type, Optional, Any
 from collections.abc import Iterable
 
@@ -155,7 +156,17 @@ class EventSubClient(web.Application):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_update, broadcaster)
 
     def subscribe_channel_follows(self, broadcaster: Union[PartialUser, str, int]):
+        """
+        .. warning::
+            This endpoint is deprecated, use :func:`~EventSubClient.subscribe_channel_follows_v2`
+
+        """
+        warnings.warn("subscribe_channel_follows is deprecated, use subscribe_channel_follows_v2 instead.", DeprecationWarning, 2)
+
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.follow, broadcaster)
+
+    def subscribe_channel_follows_v2(self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster_moderator(models.SubscriptionTypes.followV2, broadcaster, moderator)
 
     def subscribe_channel_moderators_add(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_add, broadcaster)

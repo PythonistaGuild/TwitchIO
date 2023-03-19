@@ -20,9 +20,12 @@ Master
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing
         - Fix parsing :class:`~twitchio.ScheduleSegment` where :attr:`~twitchio.ScheduleSegment.end_time` is None
-        - Fix auto reconnect of websocket. Created tasks by asyncio.create_task() need to be referred to prevent task disappearing (garbage collection).
+        - Fix auto reconnect of websocket. Created tasks by asyncio.create_task() need to be referred to prevent task disappearing (garbage collection)
+        - Strip newlines from message content when sending or replying to IRC websocket
 
 - ext.eventsub
+    - Documentation
+        - Updated quickstart example to reflect proper usage of callback
     - Additions
         - Updated docs regarding new HypeTrain contribution method ``other`` for :attr:`~twitchio.ext.eventsub.HypeTrainContributor.type`
         - Added Shield Status events
@@ -31,7 +34,21 @@ Master
         - Added Shoutout events
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_create`
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_receive`
+        - Added :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows_v2`
         - Added support for ``type`` and ``user_id`` queries on :func:`~twitchio.ext.eventsub.EventSubClient.get_subscriptions`
+
+    - Deprecations
+        - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows`, use :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows_v2`
+
+
+- ext.pubsub
+    - Bug fixes
+        - Fix forced RECONNECT messages
+
+    - Additions
+        - Added proper message when wrong type is passed to a topic argument
+        - Added auth failure hook: :func:`~twitchio.ext.pubsub.PubSubPool.auth_fail_hook`
+        - Added reconnect hook: :func:`~twitchio.ext.pubsub.PubSubPool.reconnect_hook`
 
 2.5.0
 ======
