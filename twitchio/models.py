@@ -76,6 +76,7 @@ __all__ = (
     "ChatterColor",
     "Timeout",
     "Ban",
+    "ShieldStatus",
 )
 
 
@@ -610,15 +611,18 @@ class Game:
     name: :class:`str`
         Game name.
     box_art_url: :class:`str`
-        Template URL for the game’s box art.
+        Template URL for the game's box art.
+    igdb_id: Optional[:class:`int`]
+        The IGDB ID of the game. If this is not available to Twitch it will return None
     """
 
-    __slots__ = "id", "name", "box_art_url"
+    __slots__ = "id", "name", "box_art_url", "igdb_id"
 
     def __init__(self, data: dict):
         self.id: int = int(data["id"])
         self.name: str = data["name"]
         self.box_art_url: str = data["box_art_url"]
+        self.igdb_id: Optional[int] = int(data["igdb_id"]) if data["igdb_id"] else None
 
     def __repr__(self):
         return f"<Game id={self.id} name={self.name}>"
@@ -978,7 +982,6 @@ class Tag:
 
 
 class WebhookSubscription:
-
     __slots__ = "callback", "expires_at", "topic"
 
     def __init__(self, data: dict):
@@ -1018,8 +1021,15 @@ class Stream:
         Thumbnail URL of the stream.
     tag_ids: List[:class:`str`]
         Tag IDs that apply to the stream.
+
+        .. warning::
+
+            This field will be deprecated by twitch in 2023.
+
     is_mature: :class:`bool`
         Indicates whether the stream is intended for mature audience.
+    tags: List[:class:`str`]
+        The tags applied to the channel.
     """
 
     __slots__ = (
@@ -1035,6 +1045,7 @@ class Stream:
         "thumbnail_url",
         "tag_ids",
         "is_mature",
+        "tags",
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -1050,6 +1061,7 @@ class Stream:
         self.thumbnail_url: str = data["thumbnail_url"]
         self.tag_ids: List[str] = data["tag_ids"] or []
         self.is_mature: bool = data["is_mature"]
+        self.tags: List[str] = data["tags"]
 
     def __repr__(self):
         return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
@@ -1073,9 +1085,12 @@ class ChannelInfo:
         Language of the channel.
     delay: :class:`int`
         Stream delay in seconds.
+        This defaults to 0 if the broadcaster_id does not match the user access token.
+    tags: List[:class:`str`]
+        The tags applied to the channel.
     """
 
-    __slots__ = ("user", "game_id", "game_name", "title", "language", "delay")
+    __slots__ = ("user", "game_id", "game_name", "title", "language", "delay", "tags")
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
@@ -1084,6 +1099,7 @@ class ChannelInfo:
         self.title: str = data["title"]
         self.language: str = data["broadcaster_language"]
         self.delay: int = data["delay"]
+        self.tags: List[str] = data["tags"]
 
     def __repr__(self):
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
@@ -1208,7 +1224,6 @@ class PredictionOutcome:
         if data["top_predictors"]:
             self.top_predictors: List[Predictor] = [Predictor(http, x) for x in data["top_predictors"]]
         else:
-
             self.top_predictors: List[Predictor] = None
 
     def __repr__(self):
@@ -1258,7 +1273,7 @@ class ScheduleSegment:
         The ID for the scheduled broadcast.
     start_time: :class:`datetime.datetime`
         Scheduled start time for the scheduled broadcast
-    end_time: :class:`datetime.datetime`
+    end_time: Optional[:class:`datetime.datetime`]
         Scheduled end time for the scheduled broadcast
     title: :class:`str`
         Title for the scheduled broadcast.
@@ -1275,7 +1290,7 @@ class ScheduleSegment:
     def __init__(self, data: dict):
         self.id: str = data["id"]
         self.start_time = parse_timestamp(data["start_time"])
-        self.end_time = parse_timestamp(data["end_time"])
+        self.end_time = parse_timestamp(data["end_time"]) if data["end_time"] else None
         self.title: str = data["title"]
         self.canceled_until = parse_timestamp(data["canceled_until"]) if data["canceled_until"] else None
         self.category = ScheduleCategory(data["category"]) if data["category"] else None
@@ -1371,7 +1386,6 @@ class Team:
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-
         self.users: List[PartialUser] = [PartialUser(http, x["user_id"], x["user_login"]) for x in data["users"]]
         self.background_image_url: str = data["background_image_url"]
         self.banner: str = data["banner"]
@@ -1429,7 +1443,6 @@ class ChannelTeams:
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
-
         self.broadcaster: PartialUser = PartialUser(http, data["broadcaster_id"], data["broadcaster_login"])
         self.background_image_url: str = data["background_image_url"]
         self.banner: str = data["banner"]
@@ -1774,3 +1787,37 @@ class Timeout:
 
     def __repr__(self):
         return f"<Timeout broadcaster={self.broadcaster} user={self.user} created_at={self.created_at} end_time={self.end_time}>"
+
+
+class ShieldStatus:
+    """
+    Represents a Shield Mode activation status.
+
+    Attributes
+    -----------
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator that last activated Shield Mode.
+    display_name: :class:`str`
+        The moderator's display name. Is an empty string if Shield Mode hasn't been previously activated.
+    last_activated_at: :class:`datetime.datetime`
+        The UTC datetime of when Shield Mode was last activated.
+        Is an empty string if Shield Mode hasn't been previously activated.
+    is_active: :class:`bool`
+        A Boolean value that determines whether Shield Mode is active.
+        Is true if the broadcaster activated Shield Mode; otherwise, false.
+    """
+
+    __slots__ = ("moderator", "display_name", "last_activated_at", "is_active")
+
+    def __init__(self, http: "TwitchHTTP", data: dict):
+        self.moderator: Optional[PartialUser] = (
+            PartialUser(http, data["moderator_id"], data["moderator_login"]) if data["moderator_id"] else None
+        )
+        self.display_name: Optional[str] = data.get("moderator_name")
+        self.is_active: bool = data["is_active"]
+        self.last_activated_at: Optional[datetime.datetime] = (
+            parse_timestamp(data["last_activated_at"]) if data["last_activated_at"] else None
+        )
+
+    def __repr__(self):
+        return f"<ShieldStatus moderator={self.moderator} is_active={self.is_active} last_activated_at={self.last_activated_at}>"

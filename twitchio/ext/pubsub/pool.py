@@ -21,8 +21,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-
+import copy
 import itertools
+import logging
 from typing import List, Optional
 
 from twitchio import Client
@@ -32,6 +33,8 @@ from . import models
 
 
 __all__ = ("PubSubPool",)
+
+logger = logging.getLogger("twitchio.ext.eventsub.pool")
 
 
 class PubSubPool:
@@ -64,7 +67,7 @@ class PubSubPool:
         """
         node = self._find_node(topics)
         if node is None:
-            node = PubSubWebsocket(self.client, max_topics=self._max_connection_topics)
+            node = PubSubWebsocket(self.client, pool=self, max_topics=self._max_connection_topics)
             await node.connect()
             self._pool.append(node)
 
@@ -86,6 +89,72 @@ class PubSubPool:
             if not node.topics:
                 await node.disconnect()
                 self._pool.remove(node)
+
+    async def _process_auth_fail(self, nonce: str, node: PubSubWebsocket) -> None:
+        topics = [topic for topic in self._topics if topic._nonce == nonce]
+
+        for topic in topics:
+            topic._nonce = None
+            del self._topics[topic]
+            node.topics.remove(topic)
+
+        try:
+            await self.auth_fail_hook(topics)
+        except Exception as e:
+            logger.error("Error occurred while calling auth_fail_hook.", exc_info=e)
+
+    async def auth_fail_hook(self, topics: List[Topic]):
+        """
+        This is a hook that can be overridden in a subclass.
+
+
+        Parameters
+        ----------
+        node
+        topics: List[:class:`Topic`]
+            The topcs that this node has.
+
+        Returns
+        -------
+        List[:class:`Topic`]
+            The list of topics this node should have. Any additions, modifications, or removals will be respected.
+        """
+
+    async def _process_reconnect_hook(self, node: PubSubWebsocket) -> None:
+        topics = copy.copy(node.topics)
+
+        for topic in topics:
+            self._topics.pop(topic, None)
+
+        try:
+            new_topics = await self.reconnect_hook(node, topics)
+        except Exception as e:
+            new_topics = node.topics
+            logger.error("Error occurred while calling reconnect_hook.", exc_info=e)
+
+        for topic in new_topics:
+            self._topics[topic] = node
+
+        node.topics = new_topics
+
+    async def reconnect_hook(self, node: PubSubWebsocket, topics: List[Topic]) -> List[Topic]:
+        """
+        This is a low-level hook that can be overridden in a subclass.
+        it is called whenever a node has to reconnect for any reason, from the twitch edge lagging out to being told to by twitch.
+        This hook allows you to modify the topics, potentially updating tokens or removing topics altogether.
+
+        Parameters
+        ----------
+        node
+        topics: List[:class:`Topic`]
+            The topcs that this node has.
+
+        Returns
+        -------
+        List[:class:`Topic`]
+            The list of topics this node should have. Any additions, modifications, or removals will be respected.
+        """
+        return topics
 
     def _find_node(self, topics: List[Topic]) -> Optional[PubSubWebsocket]:
         if self._mode != "group":

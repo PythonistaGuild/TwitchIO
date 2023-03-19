@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import socket
+import warnings
 from typing import Union, Tuple, Type, Optional, Any
 from collections.abc import Iterable
 
@@ -52,7 +53,9 @@ class EventSubClient(web.Application):
         for subscription_id in active_subscriptions:
             await self.delete_subscription(subscription_id)
 
-    async def get_subscriptions(self, status: str = None):
+    async def get_subscriptions(
+        self, status: Optional[str] = None, sub_type: Optional[str] = None, user_id: Optional[int] = None
+    ):
         # All possible statuses are:
         #
         #     enabled: designates that the subscription is in an operable state and is valid.
@@ -61,7 +64,7 @@ class EventSubClient(web.Application):
         #     notification_failures_exceeded: notification delivery failure rate was too high.
         #     authorization_revoked: authorization for user(s) in the condition was revoked.
         #     user_removed: a user in the condition of the subscription was removed.
-        return await self._http.get_subscriptions(status)
+        return await self._http.get_subscriptions(status, sub_type, user_id)
 
     async def subscribe_user_updated(self, user: Union[PartialUser, str, int]):
         if isinstance(user, PartialUser):
@@ -111,6 +114,23 @@ class EventSubClient(web.Application):
         broadcaster = str(broadcaster)
         return await self._http.create_subscription(event, {"broadcaster_user_id": broadcaster})
 
+    async def _subscribe_with_broadcaster_moderator(
+        self,
+        event: Tuple[str, int, Type[models._DataType]],
+        broadcaster: Union[PartialUser, str, int],
+        moderator: Union[PartialUser, str, int],
+    ):
+        if isinstance(broadcaster, PartialUser):
+            broadcaster = broadcaster.id
+        if isinstance(moderator, PartialUser):
+            moderator = moderator.id
+
+        broadcaster = str(broadcaster)
+        moderator = str(moderator)
+        return await self._http.create_subscription(
+            event, {"broadcaster_user_id": broadcaster, "moderator_user_id": moderator}
+        )
+
     def subscribe_channel_bans(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.ban, broadcaster)
 
@@ -136,7 +156,21 @@ class EventSubClient(web.Application):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_update, broadcaster)
 
     def subscribe_channel_follows(self, broadcaster: Union[PartialUser, str, int]):
+        """
+        .. warning::
+            This endpoint is deprecated, use :func:`~EventSubClient.subscribe_channel_follows_v2`
+
+        """
+        warnings.warn(
+            "subscribe_channel_follows is deprecated, use subscribe_channel_follows_v2 instead.", DeprecationWarning, 2
+        )
+
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.follow, broadcaster)
+
+    def subscribe_channel_follows_v2(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(models.SubscriptionTypes.followV2, broadcaster, moderator)
 
     def subscribe_channel_moderators_add(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_add, broadcaster)
@@ -214,6 +248,34 @@ class EventSubClient(web.Application):
     def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster)
 
+    def subscribe_channel_shield_mode_begin(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_begin, broadcaster, moderator
+        )
+
+    def subscribe_channel_shield_mode_end(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator
+        )
+
+    def subscribe_channel_shoutout_create(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shoutout_create, broadcaster, moderator
+        )
+
+    def subscribe_channel_shoutout_receive(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shoutout_receive, broadcaster, moderator
+        )
+
     async def subscribe_user_authorization_granted(self):
         return await self._http.create_subscription(
             models.SubscriptionTypes.user_authorization_grant, {"client_id": self.client._http.client_id}
@@ -237,6 +299,9 @@ class EventSubClient(web.Application):
         logger.debug(f"Recived a message type: {typ}")
         event = _message_types[typ](self, payload, request)
         response = event.verify()
+
+        if response.status != 200:
+            return response
 
         if typ == "notification":
             self.client.run_event(

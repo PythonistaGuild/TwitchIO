@@ -106,6 +106,19 @@ class WSConnection:
 
         self._client = client
 
+        # https://docs.python.org/3/library/asyncio-task.html#creating-tasks
+        # -> Important: Save a reference to the tasks, to avoid a task disappearing mid-execution.
+        self._background_tasks: List[asyncio.Task] = []
+        self._task_cleaner: Optional[asyncio.Task] = None
+
+    async def _task_cleanup(self):
+        while True:
+            # keep all undone tasks
+            self._background_tasks = list(filter(lambda task: not task.done(), self._background_tasks))
+
+            # cleanup tasks every 30 seconds
+            await asyncio.sleep(30)
+
     @property
     def is_alive(self) -> bool:
         return self._websocket is not None and not self._websocket.closed
@@ -141,11 +154,15 @@ class WSConnection:
             log.error(f"Websocket connection failure: {e}:: Attempting reconnect in {retry} seconds.")
 
             await asyncio.sleep(retry)
-            return asyncio.create_task(self._connect())
+            return await self._connect()
 
         await self.authenticate(self._initial_channels)
 
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
+
+        if not self._task_cleaner or self._task_cleaner.done():
+            self._task_cleaner = asyncio.create_task(self._task_cleanup())  # Create our task cleaner.
+
         self._ws_ready_event.set()
 
     async def _keep_alive(self):
@@ -171,8 +188,9 @@ class WSConnection:
                         continue
                     task = asyncio.create_task(self._process_data(event))
                     task.add_done_callback(partial(self._task_callback, event))  # Process our raw data
+                    self._background_tasks.append(task)
 
-        asyncio.create_task(self._connect())
+        self._background_tasks.append(asyncio.create_task(self._connect()))
 
     def _task_callback(self, data, task):
         exc = task.exception()
@@ -181,10 +199,13 @@ class WSConnection:
             log.error("Authentication error. Please check your credentials and try again.")
             self._close()
         elif exc:
-            asyncio.create_task(self.event_error(exc, data))
+            # event_error task need to be shielded to avoid cancelling in self._close() function
+            # we need ensure, that the event will print its traceback
+            shielded_task = asyncio.shield(asyncio.create_task(self.event_error(exc, data)))
+            self._background_tasks.append(shielded_task)
 
     async def send(self, message: str):
-        message = message.strip()
+        message = message.strip().replace("\n", "")
         log.debug(f" > {message}")
 
         if message.startswith("PRIVMSG #"):
@@ -196,10 +217,11 @@ class WSConnection:
 
             task = asyncio.create_task(self._process_data(dummy))
             task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
+            self._background_tasks.append(task)
         await self._websocket.send_str(message + "\r\n")
 
     async def reply(self, msg_id: str, message: str):
-        message = message.strip()
+        message = message.strip().replace("\n", "")
         log.debug(f" > {message}")
 
         if message.startswith("PRIVMSG #"):
@@ -210,6 +232,7 @@ class WSConnection:
             dummy = f"> @reply-parent-msg-id={msg_id} :{self.nick}!{self.nick}@{self.nick}.tmi.twitch.tv PRIVMSG(ECHO) #{channel} {content}\r\n"
             task = asyncio.create_task(self._process_data(dummy))
             task.add_done_callback(partial(self._task_callback, dummy))  # Process our raw data
+            self._background_tasks.append(task)
         await self._websocket.send_str(f"@reply-parent-msg-id={msg_id} {message} \r\n")
 
     async def authenticate(self, channels: Union[list, tuple]):
@@ -283,18 +306,21 @@ class WSConnection:
                 chunks = [channels[i : i + 20] for i in range(0, len(channels), 20)]
                 for chunk in chunks:
                     for channel in chunk:
-                        asyncio.create_task(self._join_channel(channel, timeout))
+                        task = asyncio.create_task(self._join_channel(channel, timeout))
+                        self._background_tasks.append(task)
+
                     await asyncio.sleep(11)
             else:
                 for channel in channels:
-                    asyncio.create_task(self._join_channel(channel, 11))
+                    task = asyncio.create_task(self._join_channel(channel, 11))
+                    self._background_tasks.append(task)
 
     async def _join_channel(self, entry: str, timeout: int):
         channel = re.sub("[#]", "", entry).lower()
         await self.send(f"JOIN #{channel}\r\n")
 
         self._join_pending[channel] = fut = self._loop.create_future()
-        asyncio.create_task(self._join_future_handle(fut, channel, timeout))
+        self._background_tasks.append(asyncio.create_task(self._join_future_handle(fut, channel, timeout)))
 
     async def _join_future_handle(self, fut: asyncio.Future, channel: str, timeout: int):
         try:
@@ -391,7 +417,13 @@ class WSConnection:
         if not self._retain_cache:
             self._cache.pop(channel, None)
         channel = Channel(name=channel, websocket=self)
-        user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
+        user = Chatter(
+            name=parsed["user"],
+            bot=self._client,
+            websocket=self,
+            channel=channel,
+            tags=parsed["badges"],
+        )
         try:
             self._cache[channel.name].discard(user)
         except KeyError:
@@ -409,7 +441,11 @@ class WSConnection:
             channel = Channel(name=parsed["channel"], websocket=self)
             self._cache_add(parsed)
             user = Chatter(
-                tags=parsed["badges"], name=parsed["user"], channel=channel, bot=self._client, websocket=self
+                tags=parsed["badges"],
+                name=parsed["user"],
+                channel=channel,
+                bot=self._client,
+                websocket=self,
             )
         message = Message(
             raw_data=parsed["data"],
@@ -427,7 +463,12 @@ class WSConnection:
 
         channel = Channel(name=parsed["channel"], websocket=self)
         message = Message(
-            raw_data=parsed["data"], content=parsed["message"], author=None, channel=channel, tags={}, echo=True
+            raw_data=parsed["data"],
+            content=parsed["message"],
+            author=None,
+            channel=channel,
+            tags={},
+            echo=True,
         )
 
         self.dispatch("message", message)
@@ -438,7 +479,13 @@ class WSConnection:
 
         channel = Channel(name=parsed["channel"], websocket=self)
         name = parsed["user"] or parsed["nick"]
-        user = Chatter(tags=parsed["badges"], name=name, channel=channel, bot=self._client, websocket=self)
+        user = Chatter(
+            tags=parsed["badges"],
+            name=name,
+            channel=channel,
+            bot=self._client,
+            websocket=self,
+        )
 
         self.dispatch("userstate", user)
 
@@ -466,7 +513,13 @@ class WSConnection:
         if parsed["user"] != self._client.nick:
             self._cache_add(parsed)
         channel = Channel(name=channel, websocket=self)
-        user = Chatter(name=parsed["user"], bot=self._client, websocket=self, channel=channel, tags=parsed["badges"])
+        user = Chatter(
+            name=parsed["user"],
+            bot=self._client,
+            websocket=self,
+            channel=channel,
+            tags=parsed["badges"],
+        )
 
         if user.name == self._client.nick:
             self.dispatch("channel_joined", channel)
@@ -485,7 +538,13 @@ class WSConnection:
                 self._cache[channel].add(user)
         else:
             name = parsed["user"] or parsed["nick"]
-            user = Chatter(bot=self._client, name=name, websocket=self, channel=channel_, tags=parsed["badges"])
+            user = Chatter(
+                bot=self._client,
+                name=name,
+                websocket=self,
+                channel=channel_,
+                tags=parsed["badges"],
+            )
             self._cache[channel].discard(user)
             self._cache[channel].add(user)
 
@@ -516,6 +575,14 @@ class WSConnection:
 
     async def _close(self):
         self._keeper.cancel()
+
+        if self._task_cleaner and not self._task_cleaner.done():
+            self._task_cleaner.cancel()
+
+        for task in self._background_tasks:
+            if not task.done():
+                task.cancel()
+
         self.is_ready.clear()
 
         futures = self._fetch_futures()

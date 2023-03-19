@@ -44,7 +44,6 @@ logger = logging.getLogger("twitchio.http")
 
 
 class Route:
-
     BASE_URL = "https://api.twitch.tv/helix"
 
     __slots__ = "path", "body", "headers", "query", "method"
@@ -78,7 +77,6 @@ class Route:
 
 
 class TwitchHTTP:
-
     TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
 
     def __init__(
@@ -599,12 +597,18 @@ class TwitchHTTP:
     async def get_top_games(self):
         return await self.request(Route("GET", "games/top"))
 
-    async def get_games(self, game_ids: List[Any], game_names: List[str]):
+    async def get_games(
+        self, game_ids: Optional[List[Any]], game_names: Optional[List[str]], igdb_ids: Optional[List[int]]
+    ):
+        if not any((game_ids, game_names, igdb_ids)):
+            raise ValueError("At least one of game id, name or IGDB id must be provided.")
         q = []
         if game_ids:
             q.extend(("id", id) for id in game_ids)
         if game_names:
             q.extend(("name", name) for name in game_names)
+        if igdb_ids:
+            q.extend(("igdb_id", id) for id in igdb_ids)
         return await self.request(Route("GET", "games", query=q))
 
     async def get_hype_train(self, broadcaster_id: str, id: Optional[str] = None, token: str = None):
@@ -917,7 +921,6 @@ class TwitchHTTP:
         channel_points_voting_enabled: Optional[bool] = False,
         channel_points_per_vote: Optional[int] = None,
     ):
-
         if len(title) > 60:
             raise ValueError("title must be less than or equal to 60 characters")
         if len(choices) < 2 or len(choices) > 5:
@@ -1102,3 +1105,25 @@ class TwitchHTTP:
             full_body=True,
             paginate=False,
         )
+
+    async def get_shield_mode_status(self, token: str, broadcaster_id: str, moderator_id: str):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        return await self.request(
+            Route("GET", "moderation/shield_mode", query=q, token=token), paginate=False, full_body=False
+        )
+
+    async def put_shield_mode_status(self, token: str, broadcaster_id: str, moderator_id: str, is_active: bool):
+        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
+        body = {"is_active": is_active}
+        return await self.request(Route("PUT", "moderation/shield_mode", query=q, body=body, token=token))
+
+    async def get_followed_streams(self, broadcaster_id: str, token: str):
+        return await self.request(Route("GET", "streams/followed", query=[("user_id", broadcaster_id)], token=token))
+
+    async def post_shoutout(self, token: str, broadcaster_id: str, moderator_id: str, to_broadcaster_id: str):
+        q = [
+            ("from_broadcaster_id", broadcaster_id),
+            ("moderator_id", moderator_id),
+            ("to_broadcaster_id", to_broadcaster_id),
+        ]
+        return await self.request(Route("POST", "chat/shoutouts", query=q, token=token))

@@ -21,19 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
 
 import asyncio
 import logging
 import time
 import uuid
 from itertools import groupby
-from typing import Optional, List
+from typing import Optional, List, TYPE_CHECKING
 
 import aiohttp
 
 from twitchio import Client
 from .topics import Topic
 from . import models
+
+if TYPE_CHECKING:
+    from .pool import PubSubPool
 
 try:
     import ujson as json
@@ -48,10 +52,10 @@ __all__ = ("PubSubWebsocket",)
 
 
 class PubSubWebsocket:
-
     __slots__ = (
         "session",
         "topics",
+        "pool",
         "client",
         "connection",
         "_latency",
@@ -64,11 +68,12 @@ class PubSubWebsocket:
 
     ENDPOINT = "wss://pubsub-edge.twitch.tv"
 
-    def __init__(self, client: Client, *, max_topics=50):
+    def __init__(self, client: Client, pool: PubSubPool, *, max_topics=50):
         self.max_topics = max_topics
         self.session = None
         self.connection: Optional[aiohttp.ClientWebSocketResponse] = None
         self.topics: List[Topic] = []
+        self.pool = pool
         self.client = client
         self._latency = None
         self._closing = False
@@ -111,6 +116,7 @@ class PubSubWebsocket:
 
     async def reconnect(self):
         await self.disconnect()
+        await self.pool._process_reconnect_hook(self)
         await self.connect()
 
     async def _send_initial_topics(self):
@@ -119,10 +125,11 @@ class PubSubWebsocket:
     async def _send_topics(self, topics: List[Topic], type="LISTEN"):
         for tok, _topics in groupby(topics, key=lambda val: val.token):
             nonce = ("%032x" % uuid.uuid4().int)[:8]
+
             payload = {
                 "type": type,
                 "nonce": nonce,
-                "data": {"topics": [x.present for x in _topics], "auth_token": tok},
+                "data": {"topics": [x._present_set_nonce(nonce) for x in _topics], "auth_token": tok},
             }
             logger.debug(f"Sending {type} payload with nonce '{nonce}': {payload}")
             await self.send(payload)
@@ -151,7 +158,7 @@ class PubSubWebsocket:
 
             handle = getattr(self, "handle_" + data["type"].lower().replace("-", "_"), None)
             if handle:
-                self.client.loop.create_task(handle(data))
+                self.client.loop.create_task(handle(data), name=f"pubsub-handle-event: {data['type']}")
             else:
                 print(data)
                 logger.debug(f"Pubsub event referencing unknown event '{data['type']}'. Discarding")
@@ -198,9 +205,17 @@ class PubSubWebsocket:
         if message["error"]:
             logger.error(f"Received errored response for nonce {message['nonce']}: {message['error']}")
             self.client.run_event("pubsub_error", message)
+            if message["error"] == "ERR_BADAUTH":
+                nonce = message["nonce"]
+                await self.pool._process_auth_fail(nonce, self)
+
         elif message["type"] == "RECONNECT":
             logger.warning("Received RECONNECT response from pubsub edge. Reconnecting")
             await asyncio.shield(self.reconnect())
         elif message["nonce"]:
             logger.debug(f"Received OK response for nonce {message['nonce']}")
             self.client.run_event("pubsub_nonce", message)
+
+    async def handle_reconnect(self, message: dict):
+        logger.warning("Received RECONNECT response from pubsub edge. Reconnecting")
+        await asyncio.shield(self.reconnect())

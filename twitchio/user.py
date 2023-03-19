@@ -152,20 +152,21 @@ class PartialUser:
         """|coro|
 
         Fetches the channels custom rewards (aka channel points) from the api.
+
         Parameters
         ----------
-        token : :class:`str`
+        token: :class:`str`
             The users oauth token.
-        only_manageable : :class:`bool`
+        only_manageable: :class:`bool`
             Whether to fetch all rewards or only ones you can manage. Defaults to false.
-        ids : List[:class:`int`]
+        ids: List[:class:`int`]
             An optional list of reward ids
-        force : :class:`bool`
+        force: :class:`bool`
             Whether to force a fetch or try to get from cache. Defaults to False
 
         Returns
         -------
-
+        List[:class:`twitchio.CustomReward`]
         """
         if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
             return self._cached_rewards[1]
@@ -367,8 +368,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.HypeTrainEvent`]
-            A list of hypetrain events
+        List[:class:`twitchio.HypeTrainEvent`]
         """
         from .models import HypeTrainEvent
 
@@ -406,7 +406,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.BanEvent`]
+        List[:class:`twitchio.BanEvent`]
         """
         from .models import BanEvent
 
@@ -427,7 +427,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.PartialUser`]
+        List[:class:`twitchio.PartialUser`]
         """
         data = await self._http.get_channel_moderators(token, str(self.id), user_ids=userids)
         return [PartialUser(self._http, d["user_id"], d["user_name"]) for d in data]
@@ -444,7 +444,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.ModEvent`]
+        List[:class:`twitchio.ModEvent`]
         """
         from .models import ModEvent
 
@@ -465,7 +465,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.AutomodCheckResponse`]
+        List[:class:`twitchio.AutomodCheckResponse`]
         """
         from .models import AutomodCheckResponse
 
@@ -484,7 +484,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`str`
+        :class:`str`
         """
         data = await self._http.get_stream_key(token, str(self.id))
         return data
@@ -501,7 +501,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.FollowEvent`]
+        List[:class:`twitchio.FollowEvent`]
         """
         from .models import FollowEvent
 
@@ -520,7 +520,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.FollowEvent`]
+        List[:class:`twitchio.FollowEvent`]
         """
         from .models import FollowEvent
 
@@ -540,7 +540,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.FollowEvent`
+        :class:`twitchio.FollowEvent`
         """
         if not isinstance(to_user, PartialUser):
             raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
@@ -561,7 +561,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`int`
+        :class:`int`
         """
 
         data = await self._http.get_follow_count(token=token, to_id=str(self.id))
@@ -579,7 +579,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`int`
+        :class:`int`
         """
         data = await self._http.get_follow_count(token=token, from_id=str(self.id))
         return data["total"]
@@ -591,7 +591,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.ChannelEmote`]
+        List[:class:`twitchio.ChannelEmote`]
         """
         from .models import ChannelEmote
 
@@ -644,7 +644,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.SubscriptionEvent`]
+        List[:class:`twitchio.SubscriptionEvent`]
         """
         from .models import SubscriptionEvent
 
@@ -665,7 +665,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Marker`
+        :class:`twitchio.Marker`
         """
         from .models import Marker
 
@@ -687,7 +687,7 @@ class PartialUser:
 
         Returns
         --------
-            Optional[:class:`twitchio.VideoMarkers`]
+        Optional[:class:`twitchio.VideoMarkers`]
         """
         from .models import VideoMarkers
 
@@ -707,7 +707,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.Extension`]
+        List[:class:`twitchio.Extension`]
         """
         from .models import Extension
 
@@ -727,7 +727,7 @@ class PartialUser:
 
         Returns
         --------
-            Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
+        Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
         """
         from .models import ActiveExtension
 
@@ -748,7 +748,7 @@ class PartialUser:
 
         Returns
         --------
-            Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
+        Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
         """
         from .models import ActiveExtension
 
@@ -773,7 +773,7 @@ class PartialUser:
 
         Returns
         --------
-            List[:class:`twitchio.Video`]
+        List[:class:`twitchio.Video`]
         """
         from .models import Video
 
@@ -803,7 +803,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Prediction`
+        :class:`twitchio.Prediction`
         """
         from .models import Prediction
 
@@ -831,7 +831,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Prediction`
+        :class:`twitchio.Prediction`
         """
         from .models import Prediction
 
@@ -860,7 +860,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Prediction`
+        :class:`twitchio.Prediction`
         """
         from .models import Prediction
 
@@ -923,7 +923,7 @@ class PartialUser:
 
         Returns
         --------
-            :class:`twitchio.Schedule`
+        :class:`twitchio.Schedule`
         """
         from .models import Schedule
 
@@ -1502,9 +1502,106 @@ class PartialUser:
 
         await self._http.post_whisper(token=token, from_user_id=str(self.id), to_user_id=str(user_id), message=message)
 
+    async def fetch_shield_mode_status(self, token: str, moderator_id: int):
+        """|coro|
+
+        Fetches the user's Shield Mode activation status.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+        moderator_id: :class:`int`
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+
+        Returns
+        --------
+        :class:`twitchio.ShieldStatus`
+        """
+        from .models import ShieldStatus
+
+        data = await self._http.get_shield_mode_status(
+            broadcaster_id=str(self.id), moderator_id=str(moderator_id), token=token
+        )
+
+        return ShieldStatus(self._http, data[0])
+
+    async def update_shield_mode_status(self, token: str, moderator_id: int, is_active: bool):
+        """|coro|
+
+        Updates the user's Shield Mode activation status.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+        moderator_id: :class:`int`
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+        is_active: :class:`bool`
+            A Boolean value that determines whether to activate Shield Mode. Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
+
+        Returns
+        --------
+        :class:`twitchio.ShieldStatus`
+        """
+        from .models import ShieldStatus
+
+        data = await self._http.put_shield_mode_status(
+            broadcaster_id=str(self.id), moderator_id=str(moderator_id), is_active=is_active, token=token
+        )
+
+        return ShieldStatus(self._http, data[0])
+
+    async def fetch_followed_streams(self, token: str):
+        """|coro|
+
+        Fetches a list of broadcasters that the user follows and that are streaming live.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``user:read:follows`` scope.
+
+        Returns
+        --------
+        List[:class:`twitchio.Stream`]
+        """
+
+        data = await self._http.get_followed_streams(broadcaster_id=str(self.id), token=token)
+
+        from .models import Stream
+
+        return [Stream(self._http, x) for x in data]
+
+    async def shoutout(self, token: str, to_broadcaster_id: int, moderator_id: int):
+        """|coro|
+        Sends a Shoutout to the specified broadcaster.
+        ``Rate Limits``: The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
+        Requires a user access token that includes the ``moderator:manage:shoutouts`` scope.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth user token with the ``moderator:manage:shoutouts`` scope.
+        to_broadcaster: :class:`int`
+            The ID of the broadcaster that is recieving the shoutout.
+        moderator_id: :class:`int`
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+
+        Returns
+        --------
+        None
+        """
+
+        await self._http.post_shoutout(
+            token=token,
+            broadcaster_id=str(self.id),
+            to_broadcaster_id=str(to_broadcaster_id),
+            moderator_id=str(moderator_id),
+        )
+
 
 class BitLeaderboardUser(PartialUser):
-
     __slots__ = "rank", "score"
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -1550,8 +1647,52 @@ class UserBan(PartialUser):
 
 
 class SearchUser(PartialUser):
+    """
+    Represents a User that has been searched for.
 
-    __slots__ = "game_id", "name", "display_name", "language", "title", "thumbnail_url", "live", "started_at", "tag_ids"
+    Attributes
+    ----------
+    id: :class:`int`
+        The ID of the user.
+    name: :class:`str`
+        The name of the user.
+    display_name: :class:`str`
+        The broadcaster's display name.
+    game_id: :class:`str`
+        The ID of the game that the broadcaster is playing or last played.
+    title: :class:`str`
+        The stream's title. Is an empty string if the broadcaster didn't set it.
+    thumbnail_url :class:`str`
+        A URL to a thumbnail of the broadcaster's profile image.
+    language :class:`str`
+        The ISO 639-1 two-letter language code of the language used by the broadcaster. For example, en for English.
+    live: :class:`bool`
+        A Boolean value that determines whether the broadcaster is streaming live. Is true if the broadcaster is streaming live; otherwise, false.
+    started_at: :class:`datetime.datetime`
+        The UTC date and time of when the broadcaster started streaming.
+    tag_ids: List[:class:`str`]
+        Tag IDs that apply to the stream.
+
+        .. warning::
+
+            This field will be deprecated by twitch in 2023.
+
+    tags: List[:class:`str`]
+        The tags applied to the channel.
+    """
+
+    __slots__ = (
+        "game_id",
+        "name",
+        "display_name",
+        "language",
+        "title",
+        "thumbnail_url",
+        "live",
+        "started_at",
+        "tag_ids",
+        "tags",
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self._http = http
@@ -1565,6 +1706,7 @@ class SearchUser(PartialUser):
         self.live: bool = data["is_live"]
         self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data["tag_ids"]
+        self.tags: List[str] = data["tags"]
 
 
 class User(PartialUser):

@@ -36,10 +36,18 @@ class EventSubHTTP:
             Route("DELETE", "eventsub/subscriptions", query=[("id", subscription)]), paginate=False
         )
 
-    async def get_subscriptions(self, status: str = None):
+    async def get_subscriptions(
+        self, status: Optional[str] = None, sub_type: Optional[str] = None, user_id: Optional[int] = None
+    ):
         qs = []
         if status:
             qs.append(("status", status))
+        if sub_type:
+            qs.append(("type", sub_type))
+        if user_id:
+            qs.append(("user_id", str(user_id)))
+        if len(qs) > 1:
+            raise ValueError("You cannot specify more than one filter.")
 
         return [
             models.Subscription(d)
