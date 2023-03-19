@@ -16,12 +16,14 @@ Master
         - Added :func:`~twitchio.PartialUser.update_shield_mode_status`
         - Added :func:`~twitchio.PartialUser.fetch_followed_streams`
         - Added :func:`~twitchio.PartialUser.shoutout`
+        - Added ``type`` arg to :func:`~twitchio.Client.fetch_streams`
 
     - Bug fixes
         - Fix :func:`~twitchio.PartialUser.fetch_bits_leaderboard` not handling ``started_at`` and :class:`~twitchio.BitsLeaderboard` not correctly parsing
         - Fix parsing :class:`~twitchio.ScheduleSegment` where :attr:`~twitchio.ScheduleSegment.end_time` is None
         - Fix auto reconnect of websocket. Created tasks by asyncio.create_task() need to be referred to prevent task disappearing (garbage collection)
         - Strip newlines from message content when sending or replying to IRC websocket
+        - Removed unnessecary assert from :func:`~twitchio.Client.fetch_streams`
 
 - ext.eventsub
     - Documentation
