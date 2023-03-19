@@ -36,6 +36,7 @@ __all__ = ("PubSubPool",)
 
 logger = logging.getLogger("twitchio.ext.eventsub.pool")
 
+
 class PubSubPool:
     """
     The pool that manages connections to the pubsub server, and handles distributing topics across the connections.
@@ -101,7 +102,6 @@ class PubSubPool:
             await self.auth_fail_hook(topics)
         except Exception as e:
             logger.error("Error occurred while calling auth_fail_hook.", exc_info=e)
-
 
     async def auth_fail_hook(self, topics: list[Topic]):
         """

@@ -75,7 +75,9 @@ class Topic(_topic):
 
     def __getitem__(self, item):
         assert len(self.args) < len(self.__args__), ValueError("Too many arguments")
-        assert isinstance(item, self.__args__[len(self.args)]), ValueError(f"Got {item!r}, excepted {self.__args__[len(self.args)]}")  # noqa
+        assert isinstance(item, self.__args__[len(self.args)]), ValueError(
+            f"Got {item!r}, excepted {self.__args__[len(self.args)]}"
+        )  # noqa
         self.args.append(item)
         return self
 
