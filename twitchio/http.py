@@ -26,7 +26,7 @@ import asyncio
 import copy
 import datetime
 import logging
-from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict, Optional
+from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict, Optional, Literal
 
 import aiohttp
 from yarl import URL
@@ -676,9 +676,10 @@ class TwitchHTTP:
         user_ids: Optional[List[int]] = None,
         user_logins: Optional[List[str]] = None,
         languages: Optional[List[str]] = None,
+        type_: Literal["all", "live"] = "all",
         token: Optional[str] = None,
     ):
-        q = []
+        q = [("type", type_)]
         if game_ids:
             q.extend(("game_id", str(g)) for g in game_ids)
         if user_ids:

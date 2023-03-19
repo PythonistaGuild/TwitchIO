@@ -28,7 +28,7 @@ import warnings
 import logging
 import traceback
 import sys
-from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict
+from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict, Literal
 
 from twitchio.errors import HTTPException, AuthenticationError
 from . import models
@@ -648,6 +648,7 @@ class Client:
         user_logins: Optional[List[str]] = None,
         languages: Optional[List[str]] = None,
         token: Optional[str] = None,
+        type: Literal["all", "live"] = "all"
     ):
         """|coro|
 
@@ -665,6 +666,8 @@ class Client:
             language for the stream(s). ISO 639-1 or two letter code for supported stream language
         token: Optional[:class:`str`]
             An optional OAuth token to use instead of the bot OAuth token
+        type: Literal["all", "live"]
+            One of ``"all"`` or ``"live"``. Defaults to ``"all"``. Specifies what type of stream to fetch.
 
         Returns
         --------
@@ -672,12 +675,12 @@ class Client:
         """
         from .models import Stream
 
-        assert user_ids or game_ids or user_logins
         data = await self._http.get_streams(
             game_ids=game_ids,
             user_ids=user_ids,
             user_logins=user_logins,
             languages=languages,
+            type_=type,
             token=token,
         )
         return [Stream(self._http, x) for x in data]
