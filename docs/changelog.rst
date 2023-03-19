@@ -35,6 +35,7 @@ Master
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_create`
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_receive`
         - Added :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows_v2`
+        - Added support for ``type`` and ``user_id`` queries on :func:`~twitchio.ext.eventsub.EventSubClient.get_subscriptions`
 
     - Deprecations
         - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows`, use :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows_v2`
