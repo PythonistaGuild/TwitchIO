@@ -236,7 +236,7 @@ class CustomReward:
                 ) from error
             raise
         else:
-            for reward in data["data"]:
+            for reward in data:
                 if reward["id"] == self.id:
                     self.__init__(self._http, reward, self._channel)
                     break
