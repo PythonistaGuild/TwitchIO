@@ -1476,6 +1476,7 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     _name_map: Dict[str, str]
 
     follow = "channel.follow", 1, ChannelFollowData
+    followV2 = "channel.follow", 2, ChannelFollowData
     subscription = "channel.subscribe", 1, ChannelSubscribeData
     subscription_end = "channel.subscription.end", 1, ChannelSubscriptionEndData
     subscription_gift = "channel.subscription.gift", 1, ChannelSubscriptionGiftData

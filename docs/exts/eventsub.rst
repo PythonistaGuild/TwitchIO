@@ -64,7 +64,7 @@ Running Eventsub Inside a Commands Bot
             self.loop.create_task(esclient.listen(port=4000))
 
             try:
-                await esclient.subscribe_channel_follows(broadcaster=channel_ID)
+                await esclient.subscribe_channel_follows_v2(broadcaster=some_channel_ID, moderator=a_channel_mod_ID)
             except twitchio.HTTPException:
                 pass
 

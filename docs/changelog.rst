@@ -34,6 +34,11 @@ Master
         - Added Shoutout events
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_create`
             - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_shoutout_receive`
+        - Added :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows_v2`
+
+    - Deprecations
+        - :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows`, use :func:`~twitchio.ext.eventsub.EventSubClient.subscribe_channel_follows_v2`
+
 
 - ext.pubsub
     - Bug fixes
