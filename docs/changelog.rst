@@ -44,6 +44,11 @@ Master
     - Bug fixes
         - Fix forced RECONNECT messages
 
+    - Additions
+        - Added proper message when wrong type is passed to a topic argument
+        - Added auth failure hook: :func:`~twitchio.ext.pubsub.PubSubPool.auth_fail_hook`
+        - Added reconnect hook: :func:`~twitchio.ext.pubsub.PubSubPool.reconnect_hook`
+
 2.5.0
 ======
 - TwitchIO

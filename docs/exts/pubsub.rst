@@ -212,6 +212,32 @@ If the topic requires multiple channel ids, they should be passed as such:
         listen_to_id = 12345
         topic = pubsub.whispers(user_token)[listen_to_id]
 
+Hooks
+------
+
+There are two hooks available in the PubSubPool class. To access these hooks, subclass the PubSubPool.
+After subclassing, use the subclass like normal.
+
+The ``auth_fail_hook`` is called whenever you attempt to subscribe to a topic and the auth token is invalid.
+From the hook, you are able to fix your token (maybe you need to prompt the user for a new token), and then subscribe again.
+
+The ``reconnect_hook`` is called whenevever a node has to reconnect to twitch, for any reason. The node will wait for you to
+return a list of topics before reconnecting. Any modifications to the topics will be applied to the node.
+
+.. code-block:: python3
+
+    from typing import List
+    from twitchio.ext import pubsub
+
+    class MyPool(pubsub.PubSubPool):
+        async def auth_fail_hook(self, topics: List[pubsub.Topic]) -> None:
+            fixed_topics = fix_my_auth_tokens(topics) # somehow fix your auth tokens
+            await self.subscribe_topics(topics)
+
+        async def reconnect_hook(self, node: pubsub.PubSubWebsocket, topics: List[pubsub.Topic]) -> List[pubsub.Topic]:
+            return topics
+
+
 Api Reference
 --------------
 
