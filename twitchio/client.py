@@ -648,7 +648,7 @@ class Client:
         user_logins: Optional[List[str]] = None,
         languages: Optional[List[str]] = None,
         token: Optional[str] = None,
-        type: Literal["all", "live"] = "all"
+        type: Literal["all", "live"] = "all",
     ):
         """|coro|
 
