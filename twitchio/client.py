@@ -28,9 +28,10 @@ import warnings
 import logging
 import traceback
 import sys
-from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict, Literal
+from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict
+from typing_extensions import Literal
 
-from twitchio.errors import HTTPException, AuthenticationError
+from twitchio.errors import HTTPException
 from . import models
 from .websocket import WSConnection
 from .http import TwitchHTTP

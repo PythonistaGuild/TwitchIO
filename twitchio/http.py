@@ -26,7 +26,8 @@ import asyncio
 import copy
 import datetime
 import logging
-from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict, Optional, Literal
+from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict, Optional
+from typing_extensions import Literal
 
 import aiohttp
 from yarl import URL
