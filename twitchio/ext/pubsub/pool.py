@@ -103,7 +103,7 @@ class PubSubPool:
         except Exception as e:
             logger.error("Error occurred while calling auth_fail_hook.", exc_info=e)
 
-    async def auth_fail_hook(self, topics: list[Topic]):
+    async def auth_fail_hook(self, topics: List[Topic]):
         """
         This is a hook that can be overridden in a subclass.
 
