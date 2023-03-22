@@ -77,7 +77,7 @@ Running Eventsub Inside a Commands Bot
 
 
     @esbot.event()
-    async def event_eventsub_notification_follow(payload: eventsub.ChannelFollowData) -> None:
+    async def event_eventsub_notification_followV2(payload: eventsub.ChannelFollowData) -> None:
         print('Received event!')
         channel = bot.get_channel('channel')
         await channel.send(f'{payload.data.user.name} followed woohoo!')
