@@ -622,7 +622,7 @@ class Game:
         self.id: int = int(data["id"])
         self.name: str = data["name"]
         self.box_art_url: str = data["box_art_url"]
-        self.igdb_id: Optional[int] = int(data["igdb_id"]) if data["igdb_id"] else None
+        self.igdb_id: Optional[int] = data.get("igdb_id") and int(data["igdb_id"])
 
     def __repr__(self):
         return f"<Game id={self.id} name={self.name}>"

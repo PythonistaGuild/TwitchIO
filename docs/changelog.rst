@@ -1,5 +1,10 @@
 :orphan:
 
+Master
+======
+- TwitchIO
+    - Bug fixes
+        - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
 
 2.6.0
 ======
