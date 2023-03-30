@@ -5,6 +5,7 @@ Master
 - TwitchIO
     - Bug fixes
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
+        - Made Chatter :attr:`~twitchio.Chatter.id` property public
 
 2.6.0
 ======
