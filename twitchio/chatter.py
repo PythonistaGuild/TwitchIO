@@ -123,7 +123,7 @@ class Chatter(PartialChatter):
             self._vip = None
             return
 
-        self._id = int(self._tags.get("user-id"))
+        self._id = int(self._tags.get("user-id", 0))
         self._badges = self._tags.get("badges")
         self._turbo = self._tags.get("turbo")
         self._sub = int(self._tags["subscriber"])
