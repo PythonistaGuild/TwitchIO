@@ -217,7 +217,7 @@ class Sound:
         return self._channels
 
     @channels.setter
-    def channels(self, channels):
+    def channels(self, channels: int):
         """Set audio source channels."""
         self._channels = channels
 
@@ -227,7 +227,7 @@ class Sound:
         return self._rate
 
     @rate.setter
-    def rate(self, rate):
+    def rate(self, rate: int):
         """Set audio source sample rate."""
         self._rate = rate
 
