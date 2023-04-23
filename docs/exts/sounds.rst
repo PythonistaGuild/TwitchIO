@@ -92,13 +92,13 @@ This bot will search YouTube for a relevant video and playback its audio.
 **Sound with a Local File:**
 
 This Sound will target a local file on your machine. Pass the location to source. You
-may manually set the bitrate and number of channels if needed.
+may manually set the sample rate and number of channels if needed.
 
 .. code-block:: python3
 
     sound = sounds.Sound(source='my_audio.mp3')
     sound.channels = 1 # play mono channel
-    sound.rate = 24_000 # set bitrate
+    sound.rate = 24_000 # set sample
 
 
 **Multiple Players:**
