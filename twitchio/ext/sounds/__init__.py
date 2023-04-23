@@ -216,10 +216,20 @@ class Sound:
         """The audio source channels."""
         return self._channels
 
+    @channels.setter
+    def channels(self, channels):
+        """Set audio source channels."""
+        self._channels = channels
+
     @property
     def rate(self):
         """The audio source sample rate."""
         return self._rate
+
+    @rate.setter
+    def rate(self, rate):
+        """Set audio source sample rate."""
+        self._rate = rate
 
     @property
     def source(self):
