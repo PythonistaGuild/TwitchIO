@@ -97,7 +97,7 @@ may manually set the bitrate and number of channels if needed.
 .. code-block:: python3
 
     sound = sounds.Sound(source='my_audio.mp3')
-    sound.channel = 1 # play mono channel
+    sound.channels = 1 # play mono channel
     sound.rate = 24_000 # set bitrate
 
 
