@@ -7,6 +7,9 @@ Master
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
         - Made Chatter :attr:`~twitchio.Chatter.id` property public
 
+- ext.sounds
+    - Bug fixes
+        - Added setters for Sounds.rate and Sounds.channels properties
 2.6.0
 ======
 - TwitchIO
