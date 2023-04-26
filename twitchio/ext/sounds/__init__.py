@@ -33,6 +33,7 @@ from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar, Unio
 
 import pyaudio
 from yt_dlp import YoutubeDL
+from tinytag import TinyTag
 
 
 __all__ = ("Sound", "AudioPlayer")
@@ -173,6 +174,9 @@ class Sound:
 
         elif isinstance(source, str):
             self.title = source
+            tag = TinyTag.get(source)
+            self._rate = tag.samplerate
+            self._channels = tag.channels
 
             self.proc = subprocess.Popen(
                 [
@@ -189,8 +193,6 @@ class Sound:
                 stdout=subprocess.PIPE,
             )
 
-        self._channels = 2
-        self._rate = 48000
 
     @classmethod
     async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):
