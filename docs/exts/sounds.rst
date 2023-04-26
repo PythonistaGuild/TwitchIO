@@ -92,7 +92,8 @@ This bot will search YouTube for a relevant video and playback its audio.
 **Sound with a Local File:**
 
 This Sound will target a local file on your machine. Pass the location to source. You
-may manually set the sample rate and number of channels if needed.
+may manually set the sample rate and number of channels if needed, however it should
+be automatically detected.
 
 .. code-block:: python3
 
