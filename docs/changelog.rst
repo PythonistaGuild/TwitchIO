@@ -7,9 +7,18 @@ Master
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
         - Made Chatter :attr:`~twitchio.Chatter.id` property public
 
+
 - ext.sounds
     - Bug fixes
         - Added setters for Sounds.rate and Sounds.channels properties
+
+- Other
+    - [speed] extra
+        - Added wheels on external pypi index for cchardet and ciso8601
+        - Bumped ciso8601 from >=2.2,<2.3 to >=2.2,<3
+        - Bumped cchardet from >=2.1,<2.2 to >=2.1,<3
+
+
 2.6.0
 ======
 - TwitchIO

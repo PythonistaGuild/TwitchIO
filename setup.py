@@ -54,8 +54,8 @@ sounds = [
 ]
 speed = [
     "ujson>=5.2,<6",
-    "ciso8601>=2.2,<2.3",
-    "cchardet>=2.1,<2.2"
+    "ciso8601>=2.2,<3",
+    "cchardet>=2.1,<3"
 ]
 extras_require = {"sounds": sounds, "speed": speed}
 
