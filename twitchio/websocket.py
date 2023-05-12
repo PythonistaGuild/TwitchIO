@@ -346,7 +346,8 @@ class WSConnection:
             return await self._code(parsed, parsed["code"])
         elif data.startswith(":tmi.twitch.tv NOTICE * :Login unsuccessful"):
             log.error(
-                f'Login unsuccessful with token "{self._token}". ' f'Please check you are using a User Token and not an App Token, also check your scopes and try again.'
+                f'Login unsuccessful with token "{self._token}". '
+                f"Please check you are using a User Token and not an App Token, also check your scopes and try again."
             )
             return await self._close()
         partial_ = self._actions.get(parsed["action"])
