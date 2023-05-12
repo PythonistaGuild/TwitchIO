@@ -1129,3 +1129,9 @@ class TwitchHTTP:
             ("to_broadcaster_id", to_broadcaster_id),
         ]
         return await self.request(Route("POST", "chat/shoutouts", query=q, token=token))
+
+    async def get_global_chat_badges(self):
+        return await self.request(Route("GET", "chat/badges/global", ""))
+
+    async def get_channel_chat_badges(self, broadcaster_id: str):
+        return await self.request(Route("GET", "chat/badges", "", query=[("broadcaster_id", broadcaster_id)]))

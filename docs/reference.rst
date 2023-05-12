@@ -90,6 +90,22 @@ ChannelTeams
     :members:
     :inherited-members:
 
+ChatBadge
+----------
+.. attributetable:: ChatBadge
+
+.. autoclass:: ChatBadge
+    :members:
+    :inherited-members:
+
+ChatBadgeVersions
+------------------
+.. attributetable:: ChatBadgeVersions
+
+.. autoclass:: ChatBadgeVersions
+    :members:
+    :inherited-members:
+
 ChatSettings
 -------------
 .. attributetable:: ChatSettings

@@ -1600,6 +1600,21 @@ class PartialUser:
             moderator_id=str(moderator_id),
         )
 
+    async def fetch_chat_badges(self):
+        """|coro|
+
+        Fetches broadcaster's list of custom chat badges.
+        The list is empty if the broadcaster hasn't created custom chat badges.
+
+        Returns:
+        List[:class:`twitchio.ChatBadge`]
+        """
+
+        from .models import ChatBadge
+
+        data = await self._http.get_channel_chat_badges(broadcaster_id=str(self.id))
+        return [ChatBadge(x) for x in data]
+
 
 class BitLeaderboardUser(PartialUser):
     __slots__ = "rank", "score"

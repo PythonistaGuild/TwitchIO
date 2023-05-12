@@ -814,6 +814,18 @@ class Client:
         """
         await self._http.put_user_chat_color(token=token, user_id=str(user_id), color=color)
 
+    async def fetch_global_chat_badges(self):
+        """|coro|
+
+        Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
+
+        Returns:
+        List[:class:`twitchio.ChatBadge`]
+        """
+
+        data = await self._http.get_global_chat_badges()
+        return [models.ChatBadge(x) for x in data]
+
     async def get_webhook_subscriptions(self):
         """|coro|
 

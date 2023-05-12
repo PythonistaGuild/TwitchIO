@@ -77,6 +77,8 @@ __all__ = (
     "Timeout",
     "Ban",
     "ShieldStatus",
+    "ChatBadge",
+    "ChatBadgeVersions",
 )
 
 
@@ -1821,3 +1823,74 @@ class ShieldStatus:
 
     def __repr__(self):
         return f"<ShieldStatus moderator={self.moderator} is_active={self.is_active} last_activated_at={self.last_activated_at}>"
+
+
+class ChatBadge:
+    """
+    Represents chat badges.
+
+    Attributes
+    -----------
+    set_id: :class:`str`
+        An ID that identifies this set of chat badges. For example, Bits or Subscriber.
+    versions: List[:class:`~twitchio.ChatBadgeVersions`]
+        The list of chat badges in this set.
+    """
+
+    __slots__ = ("set_id", "versions")
+
+    def __init__(self, data: dict):
+        self.set_id: str = data["set_id"]
+        self.versions: List[ChatBadgeVersions] = [ChatBadgeVersions(version_data) for version_data in data["versions"]]
+
+    def __repr__(self):
+        return f"<ChatBadge set_id={self.set_id} versions={self.versions}>"
+
+
+class ChatBadgeVersions:
+    """
+    Represents the different versions of the chat badge.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        An ID that identifies this version of the badge. The ID can be any value.
+    image_url_1x: :class:`str`
+        URL to the small version (18px x 18px) of the badge.
+    image_url_2x: :class:`str`
+        URL to the medium version (36px x 36px) of the badge.
+    image_url_4x: :class:`str`
+        URL to the large version (72px x 72px) of the badge.
+    title: :class:`str`
+        The title of the badge.
+    description: :class:`str`
+        The description of the badge.
+    click_action: Optional[:class:`str`]
+        The action to take when clicking on the badge. This can be None if no action is specified
+    click_url: Optional[:class:`str`]
+        The URL to navigate to when clicking on the badge. This can be None if no URL is specified.
+    """
+
+    __slots__ = (
+        "id",
+        "image_url_1x",
+        "image_url_2x",
+        "image_url_4x",
+        "title",
+        "description",
+        "click_url",
+        "click_action",
+    )
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.image_url_1x: str = data["image_url_1x"]
+        self.image_url_2x: str = data["image_url_2x"]
+        self.image_url_4x: str = data["image_url_4x"]
+        self.title: str = data["title"]
+        self.description: str = data["description"]
+        self.click_action: Optional[str] = data.get("click_action")
+        self.click_url: Optional[str] = data.get("click_url")
+
+    def __repr__(self):
+        return f"<ChatBadgeVersions id={self.id} title={self.title}>"
