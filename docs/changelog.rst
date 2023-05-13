@@ -6,6 +6,8 @@ Master
     - Additions
         - Added :func:`~twitchio.Client.fetch_global_chat_badges`
         - Added User method :func:`~twitchio.PartialUser.fetch_chat_badges`
+        - Added repr for :class:`~twitchio.SearchUser`
+
     - Bug fixes
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
         - Made Chatter :attr:`~twitchio.Chatter.id` property public

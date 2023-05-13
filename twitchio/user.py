@@ -1723,6 +1723,9 @@ class SearchUser(PartialUser):
         self.tag_ids: List[str] = data["tag_ids"]
         self.tags: List[str] = data["tags"]
 
+    def __repr__(self):
+        return f"<SearchUser id={self.id} display_name={self.name} language={self.language} game_id={self.game_id} title={self.title} live={self.live}>"
+
 
 class User(PartialUser):
     """
