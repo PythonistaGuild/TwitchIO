@@ -335,6 +335,36 @@ class Group(Command):
 
 
 class Context(Messageable):
+    """
+    A class that represents the context in which a command is being invoked under.
+
+    This class contains the meta data to help you understand more about the invocation context.
+    This class is not created manually and is instead passed around to commands as the first parameter.
+
+    Attributes
+    -----------
+    message: :class:`~twitchio.Message`
+        The message that triggered the command being executed.
+    channel: :class:`~twitchio.Channel`
+        The channel the command was invoked in.
+    author: Union[:class:`~twitchio.PartialChatter`, :class:`~twitchio.Chatter`]
+        The Chatter object of the user in chat that invoked the command.
+    prefix: Optional[:class:`str`]
+        The prefix that was used to invoke the command.
+    command: Optional[:class:`~twitchio.ext.commands.Command`]
+        The command that was invoked
+    cog: Optional[:class:`~twitchio.ext.commands.Cog`]
+        The cog that contains the command that was invoked.
+    args: Optional[List[:class:`Any`]]
+        List of arguments that were passed to the command.
+    kwargs: Optional[Dict[:class:`str`, :class:`Any`]]
+        List of kwargs that were passed to the command.
+    view: Optional[:class:`~twitchio.ext.commmands.StringParser`]
+        StringParser object that breaks down the command string received.
+    bot: :class:`~twitchio.ext.commands.Bot`
+        The bot that contains the command that was invoked.
+    """
+
     __messageable_channel__ = True
 
     def __init__(self, message: Message, bot: Bot, **attrs) -> None:
