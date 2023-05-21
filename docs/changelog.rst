@@ -12,6 +12,7 @@ Master
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
         - Made Chatter :attr:`~twitchio.Chatter.id` property public
         - :func:`~twitchio.Client.event_token_expired` will now be called correctly when response is ``401 Invalid OAuth token``
+        - Fix reconnect loop when Twitch sends a RECONNECT via IRC websocket
 
 - Other
     - [speed] extra

@@ -158,6 +158,7 @@ class WSConnection:
 
         await self.authenticate(self._initial_channels)
 
+        self._reconnect_requested = False
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
 
         if not self._task_cleaner or self._task_cleaner.done():
