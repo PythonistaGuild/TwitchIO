@@ -207,14 +207,15 @@ class TwitchHTTP:
                         return await resp.json(), False
                     return await resp.text(encoding="utf-8"), True
                 if resp.status == 401:
-                    if "WWW-Authenticate" in resp.headers:
+                    message_json = await resp.json()
+                    if "Invalid OAuth token" in message_json.get("message", ""):
                         try:
                             await self._generate_login()
                         except:
                             raise errors.Unauthorized(
                                 "Your oauth token is invalid, and a new one could not be generated"
                             )
-                    print(resp.reason, await resp.json(), resp)
+                    print(resp.reason, message_json, resp)
                     raise errors.Unauthorized("You're not authorized to use this route.")
                 if resp.status == 429:
                     reason = "Ratelimit Reached"
