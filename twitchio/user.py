@@ -1167,7 +1167,7 @@ class PartialUser:
         )
         return ChatSettings(self._http, data[0])
 
-    async def chat_announcement(self, token: str, moderator_id: int, message: str, color: Optional[str] = "primary"):
+    async def chat_announcement(self, token: str, moderator_id: int, message: str, color: Optional[str] = None):
         """|coro|
 
         Sends a chat announcement to the specified channel/broadcaster.
@@ -1183,7 +1183,7 @@ class PartialUser:
             The message to be sent.
         color: Optional[:class:`str`]
             The color of the message. Valid values:
-            blue, green orange, pruple. The default is primary.
+            blue, green orange, purple. The default is primary.
         Returns
         --------
         None
