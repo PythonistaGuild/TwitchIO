@@ -603,6 +603,10 @@ class PartialUser:
 
         Follows the user
 
+        .. warning::
+
+            This method is obsolete as Twitch removed the endpoint.
+
         Parameters
         -----------
         userid: :class:`int`
