@@ -1055,3 +1055,54 @@ class Client:
             The channel name that was attempted to be joined.
         """
         logger.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
+
+    async def event_raw_notice(self, data: str):
+        """|coro|
+
+
+        Event called with the raw NOTICE data received by Twitch.
+
+        Parameters
+        ------------
+        data: str
+            The raw NOTICE data received from Twitch.
+
+        Example
+        ---------
+        .. code:: py
+
+            @bot.event()
+            async def event_raw_notice(data):
+                print(data)
+        """
+        pass
+
+    async def event_notice(self, msg_id: str, channel: Channel, message: str):
+        """|coro|
+
+
+        Event called with the NOTICE data received by Twitch.
+
+        .. tip::
+
+            For more information on NOTICE msg_ids visit:
+            https://dev.twitch.tv/docs/irc/msg-id/
+
+        Parameters
+        ------------
+        msg_id: str
+            The msg_id that indicates what the NOTICE type.
+        channel: str
+            The channel the NOTICE message originated from.
+        message: str
+            The message of the NOTICE.
+
+        Example
+        ---------
+        .. code:: py
+
+            @bot.event()
+            async def event_notice(msg_id, channel, message):
+                print(data)
+        """
+        pass
