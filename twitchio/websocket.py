@@ -503,10 +503,16 @@ class WSConnection:
         self.dispatch("raw_usernotice", channel, tags)
 
     async def _notice(self, parsed):
-        log.debug(f'ACTION: NOTICE:: {parsed["channel"]}')
-        msg_id = parsed["groups"][0].split("=")[1]
-        channel = Channel(name=parsed["channel"], websocket=self)
         message = parsed["message"]
+        log.debug(f"ACTION: NOTICE:: {message}")
+
+        try:
+            msg_id = parsed["groups"][0].split("=")[1]
+            channel = Channel(name=parsed["channel"], websocket=self)
+        except (KeyError, IndexError) as e:
+            log.debug(f"Exception occured whilst parsing NOTICE: {e}")
+            msg_id = None
+            channel = None
 
         self.dispatch("raw_notice", parsed["data"])
         self.dispatch("notice", msg_id, channel, message)
