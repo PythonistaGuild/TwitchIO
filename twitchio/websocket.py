@@ -515,7 +515,7 @@ class WSConnection:
             channel = None
 
         self.dispatch("raw_notice", parsed["data"])
-        self.dispatch("notice", msg_id, channel, message)
+        self.dispatch("notice", message, msg_id, channel)
 
     async def _join(self, parsed):
         log.debug(f'ACTION: JOIN:: {parsed["channel"]}')

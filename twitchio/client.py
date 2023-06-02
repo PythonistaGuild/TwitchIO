@@ -1077,7 +1077,7 @@ class Client:
         """
         pass
 
-    async def event_notice(self, msg_id: str, channel: Channel, message: str):
+    async def event_notice(self, message: str, msg_id: Optional[str], channel: Optional[Channel]):
         """|coro|
 
 
@@ -1090,19 +1090,19 @@ class Client:
 
         Parameters
         ------------
-        msg_id: str
-            The msg_id that indicates what the NOTICE type.
-        channel: str
-            The channel the NOTICE message originated from.
-        message: str
+        message: :class:`str`
             The message of the NOTICE.
+        msg_id: Optional[:class:`str`]
+            The msg_id that indicates what the NOTICE type.
+        channel: Optional[:class:`~twitchio.Channel`]
+            The channel the NOTICE message originated from.
 
         Example
         ---------
         .. code:: py
 
             @bot.event()
-            async def event_notice(msg_id, channel, message):
-                print(data)
+            async def event_notice(message, msg_id, channel):
+                print(message)
         """
         pass
