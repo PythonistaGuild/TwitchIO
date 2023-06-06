@@ -65,7 +65,7 @@ class Command:
     ------------
     name: :class:`str`
         The name of the command.
-    cog: :class:`~twitchio.Cog`
+    cog: :class:`~twitchio.ext.commands.Cog`
         The cog this command belongs to.
     aliases: Optional[Union[:class:`list`, :class:`tuple`]]
         Aliases that can be used to also invoke the command.
