@@ -52,6 +52,25 @@ def _boolconverter(param: str):
 
 
 class Command:
+    """A class for implementing bot commands.
+
+    Parameters
+    ------------
+    name: :class:`str`
+        The name of the command.
+    func: :class:`Callable`
+        The coroutine that executes when the command is invoked.
+
+    Attributes
+    ------------
+    name: :class:`str`
+        The name of the command.
+    cog: :class:`~twitchio.Cog`
+        The cog this command belongs to.
+    aliases: Optional[Union[:class:`list`, :class:`tuple`]]
+        Aliases that can be used to also invoke the command.
+    """
+
     def __init__(self, name: str, func: Callable, **attrs) -> None:
         if not inspect.iscoroutinefunction(func):
             raise TypeError("Command callback must be a coroutine.")
