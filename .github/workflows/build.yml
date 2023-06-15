@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.10", "3.11"]
+        python-version: ["3.8", "3.11"]
 
     steps:
       - name: Checkout
@@ -26,12 +26,13 @@ jobs:
 
       - name: Install Deps
         run: |
-          python -m ensurepip
-          pip install wheel setuptools
+          pip install --update pip
+          pip install --update wheel setuptools
+          pip install --update build
           pip install -r requirements.txt
 
       - name: Build
-        run: python setup.py sdist bdist_wheel
+        run: python -m build
 
   docs:
     runs-on: ubuntu-latest
