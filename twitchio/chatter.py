@@ -137,7 +137,7 @@ class Chatter(PartialChatter):
 
     def __repr__(self):
         return f"<Chatter name: {self._name}, channel: {self._channel}>"
-    
+
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]  # noqa
         for user in cache:
