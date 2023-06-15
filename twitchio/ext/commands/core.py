@@ -27,8 +27,7 @@ import inspect
 
 import itertools
 import copy
-from typing import Any, Union, Optional, Callable, Awaitable, Tuple, TYPE_CHECKING, List, Type, Set, TypeVar
-from typing_extensions import Literal
+from typing import Any, Union, Optional, Callable, Awaitable, Tuple, TYPE_CHECKING, List, Type, Set, TypeVar, Literal
 
 from twitchio.abcs import Messageable
 from .cooldowns import *
