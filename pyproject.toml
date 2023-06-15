@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twitchio"
+description = "An asynchronous Python IRC and API wrapper for Twitch."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "TwitchIO"}]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "aiohttp>=3.6.0,<4",
+    "iso8601",
+    "typing-extensions",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+sounds = [
+    "yt-dlp>=2022.2.4",
+    'pyaudio==0.2.11; platform_system!="Windows"',
+]
+speed = [
+    "ujson>=5.2,<6",
+    "ciso8601>=2.2,<3",
+    "cchardet>=2.1,<3",
+]
+
+[project.urls]
+Home = "https://github.com/TwitchIO/TwitchIO"
+
+[tool.setuptools.dynamic]
+version = { attr = "twitchio.__version__" }
