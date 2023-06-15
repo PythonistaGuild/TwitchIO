@@ -46,3 +46,6 @@ Home = "https://github.com/TwitchIO/TwitchIO"
 
 [tool.setuptools.dynamic]
 version = { attr = "twitchio.__version__" }
+
+[tool.black]
+line-length = 120
