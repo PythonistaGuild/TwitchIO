@@ -43,6 +43,8 @@ speed = [
 
 [project.urls]
 Home = "https://github.com/TwitchIO/TwitchIO"
+Tracker = "https://github.com/TwitchIO/TwitchIO/issues"
+Documentation = "https://twitchio.dev/"
 
 [tool.setuptools.dynamic]
 version = { attr = "twitchio.__version__" }
