@@ -421,7 +421,7 @@ class TwitchHTTP:
             "prompt": prompt,
             "cost": cost,
             "background_color": background_color,
-            "enabled": enabled,
+            "is_enabled": enabled,
             "is_user_input_required": input_required,
             "is_max_per_stream_enabled": max_per_stream_enabled,
             "max_per_stream": max_per_stream,

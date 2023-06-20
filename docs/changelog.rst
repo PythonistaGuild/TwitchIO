@@ -16,6 +16,7 @@ Master
         - Made Chatter :attr:`~twitchio.Chatter.id` property public
         - :func:`~twitchio.Client.event_token_expired` will now be called correctly when response is ``401 Invalid OAuth token``
         - Fix reconnect loop when Twitch sends a RECONNECT via IRC websocket
+        - Fix :func:`~twitchio.CustomReward.edit` so it now can enable the reward
 
 - Other
     - [speed] extra
