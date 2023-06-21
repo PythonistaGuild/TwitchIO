@@ -104,20 +104,32 @@ class PubSubPool:
             logger.error("Error occurred while calling auth_fail_hook.", exc_info=e)
 
     async def auth_fail_hook(self, topics: List[Topic]):
-        """
+        """|coro|
         This is a hook that can be overridden in a subclass.
+        From this hook, you can refresh expired tokens (or prompt a user for new ones), and resubscribe to the events.
 
+        .. note::
+        
+            The topics will not be automatically resubscribed to. You must do it yourself by calling :meth:`~PubSubPool.subscribe_topics` with the topics after obtaining new tokens.
 
+        An example of what this method should do:
+        
+        .. code:: python
+
+            class MyPubSubPool(pubsub.PubSubPool):
+                async def auth_fail_hook(self, topics: List[pubsub.Topic]):
+                    token = topics[0].token
+                    new_token = await some_imaginary_function_that_refreshes_tokens(token)
+
+                    for topic in topics:
+                        topic.token = new_token
+
+                    await self.subscribe_topics(topics)
+        
         Parameters
         ----------
-        node
         topics: List[:class:`Topic`]
-            The topcs that this node has.
-
-        Returns
-        -------
-        List[:class:`Topic`]
-            The list of topics this node should have. Any additions, modifications, or removals will be respected.
+            The topics that have been deauthorized. Typically these will all contain the same token.
         """
 
     async def _process_reconnect_hook(self, node: PubSubWebsocket) -> None:
@@ -145,9 +157,10 @@ class PubSubPool:
 
         Parameters
         ----------
-        node
+        node: :class:`PubSubWebsocket`
+            The node that is reconnecting.
         topics: List[:class:`Topic`]
-            The topcs that this node has.
+            The topics that this node has.
 
         Returns
         -------
