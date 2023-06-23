@@ -10,6 +10,9 @@ Master
         - Added two new events
             - Added :func:`~twitchio.Client.event_notice`
             - Added :func:`~twitchio.Client.event_raw_notice`
+
+        - Added :class:`~twitchio.message.HypeChatData` for hype chat events
+        - Added :attr:`~twitchio.message.Message.hype_chat_data` for hype chat events
             
     - Bug fixes
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
