@@ -29,8 +29,9 @@ import logging
 import traceback
 import sys
 from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict
+from typing_extensions import Literal
 
-from twitchio.errors import HTTPException, AuthenticationError
+from twitchio.errors import HTTPException
 from . import models
 from .websocket import WSConnection
 from .http import TwitchHTTP
@@ -80,7 +81,6 @@ class Client:
         heartbeat: Optional[float] = 30.0,
         retain_cache: Optional[bool] = True,
     ):
-
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
         self._heartbeat = heartbeat
 
@@ -295,7 +295,7 @@ class Client:
 
         Returns
         --------
-            The arguments passed to the event.
+        The arguments passed to the event.
         """
         fut = self.loop.create_future()
         tup = (event, predicate, fut)
@@ -325,7 +325,7 @@ class Client:
 
         Returns
         --------
-            :class:`.Channel`
+        :class:`.Channel`
         """
         name = name.lower()
 
@@ -393,7 +393,7 @@ class Client:
 
         Returns
         --------
-            :class:`twitchio.PartialUser`
+        :class:`twitchio.PartialUser`
         """
         return PartialUser(self._http, user_id, user_name)
 
@@ -443,7 +443,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.Clip`]
+        List[:class:`twitchio.Clip`]
         """
         data = await self._http.get_clips(ids=ids)
         return [models.Clip(self._http, d) for d in data]
@@ -465,7 +465,7 @@ class Client:
 
         Returns
         --------
-            :class:`twitchio.ChannelInfo`
+        :class:`twitchio.ChannelInfo`
         """
 
         if not broadcaster.isdigit():
@@ -497,7 +497,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.ChannelInfo`]
+        List[:class:`twitchio.ChannelInfo`]
         """
         from .models import ChannelInfo
 
@@ -541,7 +541,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.Video`]
+        List[:class:`twitchio.Video`]
         """
         from .models import Video
 
@@ -569,7 +569,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.CheerEmote`]
+        List[:class:`twitchio.CheerEmote`]
         """
         data = await self._http.get_cheermotes(str(user_id) if user_id else None)
         return [models.CheerEmote(self._http, x) for x in data]
@@ -581,7 +581,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.GlobalEmote`]
+        List[:class:`twitchio.GlobalEmote`]
         """
         from .models import GlobalEmote
 
@@ -595,12 +595,14 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.Game`]
+        List[:class:`twitchio.Game`]
         """
         data = await self._http.get_top_games()
         return [models.Game(d) for d in data]
 
-    async def fetch_games(self, ids: List[int] = None, names: List[str] = None) -> List[models.Game]:
+    async def fetch_games(
+        self, ids: Optional[List[int]] = None, names: Optional[List[str]] = None, igdb_ids: Optional[List[int]] = None
+    ) -> List[models.Game]:
         """|coro|
 
         Fetches games by id or name.
@@ -612,12 +614,15 @@ class Client:
             An optional list of game ids
         names: Optional[List[:class:`str`]]
             An optional list of game names
+        igdb_ids: Optional[List[:class:`int`]]
+            An optional list of IGDB game ids
 
         Returns
         --------
-            List[:class:`twitchio.Game`]
+        List[:class:`twitchio.Game`]
         """
-        data = await self._http.get_games(ids, names)
+
+        data = await self._http.get_games(ids, names, igdb_ids)
         return [models.Game(d) for d in data]
 
     async def fetch_tags(self, ids: Optional[List[str]] = None):
@@ -632,7 +637,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.Tag`]
+        List[:class:`twitchio.Tag`]
         """
         data = await self._http.get_stream_tags(ids)
         return [models.Tag(x) for x in data]
@@ -644,6 +649,7 @@ class Client:
         user_logins: Optional[List[str]] = None,
         languages: Optional[List[str]] = None,
         token: Optional[str] = None,
+        type: Literal["all", "live"] = "all",
     ):
         """|coro|
 
@@ -661,6 +667,8 @@ class Client:
             language for the stream(s). ISO 639-1 or two letter code for supported stream language
         token: Optional[:class:`str`]
             An optional OAuth token to use instead of the bot OAuth token
+        type: Literal["all", "live"]
+            One of ``"all"`` or ``"live"``. Defaults to ``"all"``. Specifies what type of stream to fetch.
 
         Returns
         --------
@@ -668,12 +676,12 @@ class Client:
         """
         from .models import Stream
 
-        assert user_ids or game_ids or user_logins
         data = await self._http.get_streams(
             game_ids=game_ids,
             user_ids=user_ids,
             user_logins=user_logins,
             languages=languages,
+            type_=type,
             token=token,
         )
         return [Stream(self._http, x) for x in data]
@@ -720,7 +728,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.Game`]
+        List[:class:`twitchio.Game`]
         """
         data = await self._http.get_search_categories(query)
         return [models.Game(x) for x in data]
@@ -739,7 +747,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.SearchUser`]
+        List[:class:`twitchio.SearchUser`]
         """
         data = await self._http.get_search_channels(query, live=live_only)
         return [SearchUser(self._http, x) for x in data]
@@ -758,7 +766,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`int`]
+        List[:class:`int`]
         """
         resp = []
         for chunk in [ids[x : x + 3] for x in range(0, len(ids), 3)]:
@@ -780,7 +788,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.ChatterColor`]
+        List[:class:`twitchio.ChatterColor`]
         """
         data = await self._http.get_user_chat_color(user_ids, token)
         return [models.ChatterColor(self._http, x) for x in data]
@@ -802,7 +810,7 @@ class Client:
 
         Returns
         --------
-            None
+        None
         """
         await self._http.put_user_chat_color(token=token, user_id=str(user_id), color=color)
 
@@ -813,7 +821,7 @@ class Client:
 
         Returns
         --------
-            List[:class:`twitchio.WebhookSubscription`]
+        List[:class:`twitchio.WebhookSubscription`]
         """
         data = await self._http.get_webhook_subs()
         return [models.WebhookSubscription(x) for x in data]

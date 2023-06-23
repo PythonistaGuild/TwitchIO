@@ -11,7 +11,7 @@ Twitch will send you an HTTP request containing information on the event. This e
 integrating seamlessly into the twitchio Client event dispatching system.
 
 .. warning::
-    This ext requires you to have a public facing ip, and to be able to receive inbound requests.
+    This ext requires you to have a public facing ip AND domain, and to be able to receive inbound requests.
 
 .. note::
     Twitch requires EventSub targets to have TLS/SSL enabled (https). TwitchIO does not support this, as such you should
@@ -26,7 +26,7 @@ A Quick Example
     import twitchio
     from twitchio.ext import eventsub, commands
     bot = commands.Bot(token="...")
-    eventsub_client = eventsub.EventSubClient(bot, "some_secret_string", "/callback")
+    eventsub_client = eventsub.EventSubClient(bot, "some_secret_string", "https://your-url.here/callback")
     # when subscribing (you can only await inside coroutines)
 
     await eventsub_client.subscribe_channel_subscriptions(channel_ID)
@@ -64,7 +64,7 @@ Running Eventsub Inside a Commands Bot
             self.loop.create_task(esclient.listen(port=4000))
 
             try:
-                await esclient.subscribe_channel_follows(broadcaster=channel_ID)
+                await esclient.subscribe_channel_follows_v2(broadcaster=some_channel_ID, moderator=a_channel_mod_ID)
             except twitchio.HTTPException:
                 pass
 
@@ -77,7 +77,7 @@ Running Eventsub Inside a Commands Bot
 
 
     @esbot.event()
-    async def event_eventsub_notification_follow(payload: eventsub.ChannelFollowData) -> None:
+    async def event_eventsub_notification_followV2(payload: eventsub.ChannelFollowData) -> None:
         print('Received event!')
         channel = bot.get_channel('channel')
         await channel.send(f'{payload.data.user.name} followed woohoo!')
@@ -192,6 +192,22 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a hype train ends on their channel.
 
+.. function:: event_eventsub_notification_channel_shield_mode_begin(event: ChannelShieldModeBeginData)
+
+    Called when a channel's Shield Mode status is activated.
+
+.. function:: event_eventsub_notification_channel_shield_mode_end(event: ChannelShieldModeEndData)
+
+    Called when a channel's Shield Mode status is deactivated.
+
+.. function:: event_eventsub_notification_channel_shoutout_create(event: ChannelShoutoutCreateData)
+
+    Called when a channel sends a shoutout.
+
+.. function:: event_eventsub_notification_channel_shoutout_receive(event: ChannelShoutoutReceiveData)
+
+    Called when a channel receives a shoutout.
+
 API Reference
 --------------
 
@@ -216,6 +232,30 @@ API Reference
 .. attributetable::: ChannelBanData
 
 .. autoclass:: ChannelBanData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShieldModeBeginData
+
+.. autoclass:: ChannelShieldModeBeginData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShieldModeEndData
+
+.. autoclass:: ChannelShieldModeEndData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShoutoutCreateData
+
+.. autoclass:: ChannelShoutoutCreateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelShoutoutReceiveData
+
+.. autoclass:: ChannelShoutoutReceiveData
     :members:
     :inherited-members:
 

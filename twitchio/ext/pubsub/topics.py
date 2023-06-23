@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
-
+import uuid
 from typing import Optional, List, Type
 
 
@@ -37,7 +37,6 @@ __all__ = (
 
 
 class _topic:
-
     __slots__ = "__topic__", "__args__"
 
     def __init__(self, topic: str, args: List[Type]):
@@ -66,16 +65,19 @@ class Topic(_topic):
         The arguments to substitute in to the topic string
     """
 
-    __slots__ = "token", "args"
+    __slots__ = "token", "args", "_nonce"
 
     def __init__(self, topic, args):
         super().__init__(topic, args)
         self.token = None
+        self._nonce = None
         self.args = []
 
     def __getitem__(self, item):
         assert len(self.args) < len(self.__args__), ValueError("Too many arguments")
-        assert isinstance(item, self.__args__[len(self.args)])  # noqa
+        assert isinstance(item, self.__args__[len(self.args)]), ValueError(
+            f"Got {item!r}, excepted {self.__args__[len(self.args)]}"
+        )  # noqa
         self.args.append(item)
         return self
 
@@ -90,11 +92,18 @@ class Topic(_topic):
         except:
             return None
 
+    def _present_set_nonce(self, nonce: str) -> Optional[str]:
+        self._nonce = nonce
+        return self.present
+
     def __eq__(self, other):
         return other is self or (isinstance(other, Topic) and other.present == self.present)
 
     def __hash__(self):
         return hash(self.present)
+
+    def __repr__(self):
+        return f"<Topic {self.__topic__} args={self.args}>"
 
 
 bits = _topic("channel-bits-events-v2.{0}", [int])

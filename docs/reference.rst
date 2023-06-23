@@ -324,6 +324,13 @@ SearchUser
 .. autoclass:: SearchUser
     :members:
 
+ShieldStatus
+------------
+.. attributetable:: ShieldStatus
+
+.. autoclass:: ShieldStatus
+    :members:
+
 Stream
 ----------
 .. attributetable:: Stream

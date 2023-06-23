@@ -38,7 +38,7 @@ __all__ = "CustomReward", "CustomRewardRedemption"
 
 class CustomReward:
     """
-    Represents a Custom Reward object, as given by the api. Use :func:`User.get_custom_rewards` to fetch these
+    Represents a Custom Reward object, as given by the api. Use :func:`~twitchio.PartialUser.get_custom_rewards` to fetch these
 
     Attributes
     -----------
@@ -236,7 +236,7 @@ class CustomReward:
                 ) from error
             raise
         else:
-            for reward in data["data"]:
+            for reward in data:
                 if reward["id"] == self.id:
                     self.__init__(self._http, reward, self._channel)
                     break
@@ -310,7 +310,6 @@ class CustomReward:
 
 
 class CustomRewardRedemption:
-
     __slots__ = "_http", "_broadcaster_id", "id", "user_id", "user_name", "input", "status", "redeemed_at", "reward"
 
     def __init__(self, obj: dict, http: "TwitchHTTP", parent: Optional[CustomReward]):

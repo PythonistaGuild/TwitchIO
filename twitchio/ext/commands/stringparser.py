@@ -37,7 +37,6 @@ class StringParser:
         self.ignore = False
 
     def process_string(self, msg: str) -> Dict[int, str]:
-
         while True:
             try:
                 loc = msg[self.count]
