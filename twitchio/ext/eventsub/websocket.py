@@ -81,7 +81,7 @@ class _WakeupList(list, Generic[_T]):
 
 
 class Websocket:
-    URL = "wss://eventsub-beta.wss.twitch.tv/ws"
+    URL = "wss://eventsub.wss.twitch.tv/ws"
 
     def __init__(self, client: Client, http: http.EventSubHTTP):
         self.client = client
