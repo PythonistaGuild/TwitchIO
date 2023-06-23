@@ -23,12 +23,36 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import datetime
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, Optional
 
 if TYPE_CHECKING:
     from .channel import Channel
     from .chatter import Chatter, PartialChatter
 
+class HypeChatData:
+    """
+    Represents information about hype chats.
+
+    Attributes
+    -----------
+    amount: :class:`int`
+        The amount paid.
+    canonical_amount: :class:`int`
+        The canonical amount paid(?) # FIXME: figure this out before next version release
+    currency: :class:`str`
+        The currency paid in, in standard form (eg. USD, EUR, GBP).
+    is_system_message: :class:`bool`
+        Whether this Hype Chat originated from a user or Twitch.
+    level: :class:`str`
+        The level this Hype Chat reached. For some reason this is a spelled out number (ex ``TWO``).
+    """
+
+    def __init__(self, tags: dict) -> None:
+        self.amount: int = int(tags["pinned-chat-paid-amount"])
+        self.canonical_amount: int = int(tags["pinned-chat-paid-canonical-amount"])
+        self.currency: str = tags["pinned-chat-paid-currency"]
+        self.is_system_message: bool = tags["pinned-chat-paid-is-system-message"] == "1"
+        self.level: str = tags["pinned-chat-paid-level"]
 
 class Message:
     """
@@ -40,12 +64,14 @@ class Message:
         Boolean representing if this is a self-message or not.
     first: :class:`bool`
         Boolean representing whether it's a first message or not.
-
+    hype_chat_data: Optional[:class:`HypeChatData`]
+        Any hype chat information associated with the message. This will be ``None`` when the message is not a hype chat.
     """
 
     __slots__ = (
         "_raw_data",
         "content",
+        "hype_chat_data",
         "_author",
         "echo",
         "first",
@@ -75,6 +101,11 @@ class Message:
         except KeyError:
             self._id = None
             self._timestamp = datetime.datetime.now().timestamp() * 1000
+
+        if "pinned-chat-paid-amount" in self._tags:
+            self.hype_chat_data: Optional[HypeChatData] = HypeChatData(self._tags)
+        else:
+            self.hype_chat_data: Optional[HypeChatData] = None
 
     @property
     def id(self) -> str:
