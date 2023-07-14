@@ -64,14 +64,12 @@ class Routine:
         self,
         *,
         coro: Callable,
-        loop: Optional[asyncio.AbstractEventLoop] = None,
         iterations: Optional[int] = None,
         time: Optional[datetime.datetime] = None,
         delta: Optional[float] = None,
         wait_first: Optional[bool] = False,
     ):
         self._coro = coro
-        self._loop = loop or asyncio.get_event_loop()
         self._task: asyncio.Task = None  # type: ignore
 
         self._time = time
@@ -106,7 +104,6 @@ class Routine:
 
         copy = Routine(
             coro=self._coro,
-            loop=self._loop,
             iterations=self._iterations,
             time=self._time,
             delta=self._delta,
@@ -149,7 +146,7 @@ class Routine:
         self._args, self._kwargs = args, kwargs
 
         self._restarting = False
-        self._task = self._loop.create_task(self._routine(*args, **kwargs))
+        self._task = asyncio.create_task(self._routine(*args, **kwargs))
 
         if not self._error:
             self._error = self.on_error
