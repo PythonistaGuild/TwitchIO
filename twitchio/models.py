@@ -1090,9 +1090,23 @@ class ChannelInfo:
         This defaults to 0 if the broadcaster_id does not match the user access token.
     tags: List[:class:`str`]
         The tags applied to the channel.
+    content_classification_labels: List[:class:`str`]
+        The CCLs applied to the channel.
+    is_branded_content: :class:`bool`
+        Boolean flag indicating if the channel has branded content.
     """
 
-    __slots__ = ("user", "game_id", "game_name", "title", "language", "delay", "tags")
+    __slots__ = (
+        "user",
+        "game_id",
+        "game_name",
+        "title",
+        "language",
+        "delay",
+        "tags",
+        "content_classification_labels",
+        "is_branded_content",
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
@@ -1102,6 +1116,8 @@ class ChannelInfo:
         self.language: str = data["broadcaster_language"]
         self.delay: int = data["delay"]
         self.tags: List[str] = data["tags"]
+        self.content_classification_labels: List[str] = data["content_classification_labels"]
+        self.is_branded_content: bool = data["is_branded_content"]
 
     def __repr__(self):
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"

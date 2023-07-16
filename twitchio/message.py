@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from .channel import Channel
     from .chatter import Chatter, PartialChatter
 
+
 class HypeChatData:
     """
     Represents information about hype chats.
@@ -53,6 +54,7 @@ class HypeChatData:
         self.currency: str = tags["pinned-chat-paid-currency"]
         self.is_system_message: bool = tags["pinned-chat-paid-is-system-message"] == "1"
         self.level: str = tags["pinned-chat-paid-level"]
+
 
 class Message:
     """

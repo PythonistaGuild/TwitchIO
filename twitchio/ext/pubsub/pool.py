@@ -109,11 +109,11 @@ class PubSubPool:
         From this hook, you can refresh expired tokens (or prompt a user for new ones), and resubscribe to the events.
 
         .. note::
-        
+
             The topics will not be automatically resubscribed to. You must do it yourself by calling :meth:`~PubSubPool.subscribe_topics` with the topics after obtaining new tokens.
 
         An example of what this method should do:
-        
+
         .. code:: python
 
             class MyPubSubPool(pubsub.PubSubPool):
@@ -125,7 +125,7 @@ class PubSubPool:
                         topic.token = new_token
 
                     await self.subscribe_topics(topics)
-        
+
         Parameters
         ----------
         topics: List[:class:`Topic`]
