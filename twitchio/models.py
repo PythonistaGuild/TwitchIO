@@ -1910,3 +1910,28 @@ class ChatBadgeVersions:
 
     def __repr__(self):
         return f"<ChatBadgeVersions id={self.id} title={self.title}>"
+
+
+class ContentClassificationLabel:
+    """
+    Represents a Content Classification Label.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        Unique identifier for the CCL.
+    description: :class:`str`
+        Localized description of the CCL.
+    name: :class:`str`
+        Localized name of the CCL.
+    """
+
+    __slots__ = ("id", "description", "name")
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.description: str = data["description"]
+        self.name: str = data["name"]
+
+    def __repr__(self):
+        return f"<ContentClassificationLabel id={self.id}>"

@@ -1136,3 +1136,7 @@ class TwitchHTTP:
 
     async def get_channel_chat_badges(self, broadcaster_id: str):
         return await self.request(Route("GET", "chat/badges", "", query=[("broadcaster_id", broadcaster_id)]))
+
+    async def get_content_classification_labels(self, locale: Optional[str] = None):
+        q = [("locale", locale)] if locale is not None else []
+        return await self.request(Route("GET", "content_classification_labels", "", query=q))

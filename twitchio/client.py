@@ -826,6 +826,18 @@ class Client:
         data = await self._http.get_global_chat_badges()
         return [models.ChatBadge(x) for x in data]
 
+    async def fetch_content_classification_labels(self, locale: Optional[str] = None):
+        """|coro|
+
+        Fetches information about Twitch content classification labels.
+
+        Returns:
+        List[:class:`twitchio.ContentClassificationLabel`]
+        """
+
+        data = await self._http.get_content_classification_labels(locale)
+        return [models.ContentClassificationLabel(x) for x in data]
+
     async def get_webhook_subscriptions(self):
         """|coro|
 
