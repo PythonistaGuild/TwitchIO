@@ -79,6 +79,7 @@ __all__ = (
     "ShieldStatus",
     "ChatBadge",
     "ChatBadgeVersions",
+    "ContentClassificationLabel",
 )
 
 

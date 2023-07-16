@@ -13,6 +13,9 @@ Master
 
         - Added :class:`~twitchio.message.HypeChatData` for hype chat events
         - Added :attr:`~twitchio.message.Message.hype_chat_data` for hype chat events
+        - Added :func:`~twitchio.Client.fetch_content_classification_labels` along with :class:`~twitchio.ContentClassificationLabel`
+        - Added :attr:`~twitchio.ChannelInfo.content_classification_labels` and :attr:`~twitchio.ChannelInfo.is_branded_content` to :class:`~twitchio.ChannelInfo`
+        - Added new parameters to :func:`~twitchio.PartialUser.modify_stream` for ``is_branded_content`` and ``content_classification_labels``
             
     - Bug fixes
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`

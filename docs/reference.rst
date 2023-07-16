@@ -159,6 +159,14 @@ Clip
     :members:
     :inherited-members:
 
+ContentClassificationLabel
+---------------------------
+.. attributetable:: ContentClassificationLabel
+
+.. autoclass:: ContentClassificationLabel
+    :members:
+    :inherited-members:
+
 CustomReward
 --------------
 .. attributetable:: CustomReward
