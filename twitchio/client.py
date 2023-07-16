@@ -819,7 +819,8 @@ class Client:
 
         Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
 
-        Returns:
+        Returns
+        --------
         List[:class:`twitchio.ChatBadge`]
         """
 
@@ -837,10 +838,10 @@ class Client:
             Locale for the Content Classification Labels.
             You may specify a maximum of 1 locale. Default: “en-US”
 
-        Returns:
+        Returns
+        --------
         List[:class:`twitchio.ContentClassificationLabel`]
         """
-
         locale = "en-US" if locale is None else locale
         data = await self._http.get_content_classification_labels(locale)
         return [models.ContentClassificationLabel(x) for x in data]

@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Optional, Union, Tuple
+from typing import TYPE_CHECKING, List, Optional, Union, Tuple, Dict
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
@@ -878,7 +878,15 @@ class PartialUser:
         )
         return Prediction(self._http, data[0])
 
-    async def modify_stream(self, token: str, game_id: int = None, language: str = None, title: str = None):
+    async def modify_stream(
+        self,
+        token: str,
+        game_id: int = None,
+        language: str = None,
+        title: str = None,
+        content_classification_labels: List[Dict[str, Union[str, bool]]] = None,
+        is_branded_content: bool = None,
+    ):
         """|coro|
 
         Modify stream information
@@ -893,6 +901,19 @@ class PartialUser:
             Optional language of the channel. A language value must be either the ISO 639-1 two-letter code for a supported stream language or “other”.
         title: :class:`str`
             Optional title of the stream.
+        content_classification_labels: List[Dict[:class:`str`, Union[:class:`str`, :class:`bool`]]]
+            List of labels that should be set as the Channel's CCLs.
+        is_branded_content: :class:`bool`
+            Boolean flag indicating if the channel has branded content.
+
+                .. note::
+
+                    Example of a content classification labels
+                    .. code:: py
+
+                        ccl = [{"id": "Gambling", "is_enabled": False}, {"id": "DrugsIntoxication", "is_enabled": False}]
+                        await my_partial_user.modify_stream(token="abcd", content_classification_labels=ccl)
+
         """
         if game_id is not None:
             game_id = str(game_id)
@@ -902,6 +923,8 @@ class PartialUser:
             game_id=game_id,
             language=language,
             title=title,
+            content_classification_labels=content_classification_labels,
+            is_branded_content=is_branded_content,
         )
 
     async def fetch_schedule(
