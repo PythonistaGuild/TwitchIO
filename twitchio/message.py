@@ -38,19 +38,23 @@ class HypeChatData:
     -----------
     amount: :class:`int`
         The amount paid.
-    canonical_amount: :class:`int`
-        The canonical amount paid(?) # FIXME: figure this out before next version release
+    exponent: :class:`int`
+        Indicates how many decimal points this currency represents partial amounts in.
+        Decimal points start from the right side of the value defined in pinned-chat-paid-amount.
     currency: :class:`str`
-        The currency paid in, in standard form (eg. USD, EUR, GBP).
+        The currency paid in, uses ISO 4217 alphabetic currency code (eg. USD, EUR, GBP).
+        The ISO 4217 alphabetic currency code the user has sent the Hype Chat in.
     is_system_message: :class:`bool`
-        Whether this Hype Chat originated from a user or Twitch.
+        A Boolean value that determines if the message sent with the Hype Chat was filled in by the system.
+        If True, the user entered no message and the body message was automatically filled in by the system.
+        If False, the user provided their own message to send with the Hype Chat.
     level: :class:`str`
-        The level this Hype Chat reached. For some reason this is a spelled out number (ex ``TWO``).
+        The level of the Hype Chat, in English. e.g. ONE, TWO, THREE up to TEN.
     """
 
     def __init__(self, tags: dict) -> None:
         self.amount: int = int(tags["pinned-chat-paid-amount"])
-        self.canonical_amount: int = int(tags["pinned-chat-paid-canonical-amount"])
+        self.exponent: int = int(tags["pinned-chat-paid-exponent"])
         self.currency: str = tags["pinned-chat-paid-currency"]
         self.is_system_message: bool = tags["pinned-chat-paid-is-system-message"] == "1"
         self.level: str = tags["pinned-chat-paid-level"]
