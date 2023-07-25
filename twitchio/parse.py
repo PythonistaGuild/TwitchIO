@@ -31,17 +31,7 @@ import logging
 if typing.TYPE_CHECKING:
     from .websocket import WSConnection
 
-ACTIONS = (
-    "JOIN",
-    "PART",
-    "PING",
-    "PRIVMSG",
-    "PRIVMSG(ECHO)",
-    "USERSTATE",
-    "MODE",
-    "WHISPER",
-    "USERNOTICE",
-)
+ACTIONS = ("JOIN", "PART", "PING", "PRIVMSG", "PRIVMSG(ECHO)", "USERSTATE", "MODE", "WHISPER", "USERNOTICE", "NOTICE")
 ACTIONS2 = ("USERSTATE", "ROOMSTATE", "PRIVMSG", "USERNOTICE", "WHISPER")
 USER_SUB = re.compile(r":(?P<user>.*)!")
 MESSAGE_RE = re.compile(r":(?P<useraddr>\S+) (?P<action>\S+) (?P<channel>\S+)( :(?P<message>.*))?$")

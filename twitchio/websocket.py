@@ -82,6 +82,7 @@ class WSConnection:
             "PRIVMSG(ECHO)": self._privmsg_echo,
             "USERSTATE": self._userstate,
             "USERNOTICE": self._usernotice,
+            "NOTICE": self._notice,
             "JOIN": self._join,
             "MODE": self._mode,
             "RECONNECT": self._reconnect,
@@ -158,6 +159,7 @@ class WSConnection:
 
         await self.authenticate(self._initial_channels)
 
+        self._reconnect_requested = False
         self._keeper = asyncio.create_task(self._keep_alive())  # Create our keep alive.
 
         if not self._task_cleaner or self._task_cleaner.done():
@@ -346,7 +348,8 @@ class WSConnection:
             return await self._code(parsed, parsed["code"])
         elif data.startswith(":tmi.twitch.tv NOTICE * :Login unsuccessful"):
             log.error(
-                f'Login unsuccessful with token "{self._token}". ' f'Check your scopes for "chat_login" and try again.'
+                f'Login unsuccessful with token "{self._token}". '
+                f"Please check you are using a User Token and not an App Token, also check your scopes and try again."
             )
             return await self._close()
         partial_ = self._actions.get(parsed["action"])
@@ -498,6 +501,21 @@ class WSConnection:
         tags["user-type"] = tags["user-type"].split(":tmi.twitch.tv")[0].strip()
 
         self.dispatch("raw_usernotice", channel, tags)
+
+    async def _notice(self, parsed):
+        message = parsed["message"]
+        log.debug(f"ACTION: NOTICE:: {message}")
+
+        try:
+            msg_id = parsed["groups"][0].split("=")[1]
+            channel = Channel(name=parsed["channel"], websocket=self)
+        except (KeyError, IndexError) as e:
+            log.debug(f"Exception occured whilst parsing NOTICE: {e}")
+            msg_id = None
+            channel = None
+
+        self.dispatch("raw_notice", parsed["data"])
+        self.dispatch("notice", message, msg_id, channel)
 
     async def _join(self, parsed):
         log.debug(f'ACTION: JOIN:: {parsed["channel"]}')

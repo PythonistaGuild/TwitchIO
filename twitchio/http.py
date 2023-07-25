@@ -207,14 +207,15 @@ class TwitchHTTP:
                         return await resp.json(), False
                     return await resp.text(encoding="utf-8"), True
                 if resp.status == 401:
-                    if "WWW-Authenticate" in resp.headers:
+                    message_json = await resp.json()
+                    if "Invalid OAuth token" in message_json.get("message", ""):
                         try:
                             await self._generate_login()
                         except:
                             raise errors.Unauthorized(
                                 "Your oauth token is invalid, and a new one could not be generated"
                             )
-                    print(resp.reason, await resp.json(), resp)
+                    print(resp.reason, message_json, resp)
                     raise errors.Unauthorized("You're not authorized to use this route.")
                 if resp.status == 429:
                     reason = "Ratelimit Reached"
@@ -420,7 +421,7 @@ class TwitchHTTP:
             "prompt": prompt,
             "cost": cost,
             "background_color": background_color,
-            "enabled": enabled,
+            "is_enabled": enabled,
             "is_user_input_required": input_required,
             "is_max_per_stream_enabled": max_per_stream_enabled,
             "max_per_stream": max_per_stream,
@@ -716,14 +717,29 @@ class TwitchHTTP:
         return await self.request(Route("GET", "channels", query=q, token=token))
 
     async def patch_channel(
-        self, token: str, broadcaster_id: str, game_id: str = None, language: str = None, title: str = None
+        self,
+        token: str,
+        broadcaster_id: str,
+        game_id: str = None,
+        language: str = None,
+        title: str = None,
+        content_classification_labels: List[Dict[str, Union[str, bool]]] = None,
+        is_branded_content: bool = None,
     ):
-        assert any((game_id, language, title))
+        assert any((game_id, language, title, content_classification_labels, is_branded_content))
         body = {
             k: v
-            for k, v in {"game_id": game_id, "broadcaster_language": language, "title": title}.items()
+            for k, v in {
+                "game_id": game_id,
+                "broadcaster_language": language,
+                "title": title,
+                "is_branded_content": is_branded_content,
+            }.items()
             if v is not None
         }
+
+        if content_classification_labels is not None:
+            body["content_classification_labels"] = content_classification_labels
 
         return await self.request(
             Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body, token=token)
@@ -1129,3 +1145,12 @@ class TwitchHTTP:
             ("to_broadcaster_id", to_broadcaster_id),
         ]
         return await self.request(Route("POST", "chat/shoutouts", query=q, token=token))
+
+    async def get_global_chat_badges(self):
+        return await self.request(Route("GET", "chat/badges/global", ""))
+
+    async def get_channel_chat_badges(self, broadcaster_id: str):
+        return await self.request(Route("GET", "chat/badges", "", query=[("broadcaster_id", broadcaster_id)]))
+
+    async def get_content_classification_labels(self, locale: str):
+        return await self.request(Route("GET", "content_classification_labels", "", query=[("locale", locale)]))

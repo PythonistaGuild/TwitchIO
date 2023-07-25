@@ -3,9 +3,26 @@
 Master
 ======
 - TwitchIO
+    - Additions
+        - Added :func:`~twitchio.Client.fetch_global_chat_badges`
+        - Added User method :func:`~twitchio.PartialUser.fetch_chat_badges`
+        - Added repr for :class:`~twitchio.SearchUser`
+        - Added two new events
+            - Added :func:`~twitchio.Client.event_notice`
+            - Added :func:`~twitchio.Client.event_raw_notice`
+
+        - Added :class:`~twitchio.message.HypeChatData` for hype chat events
+        - Added :attr:`~twitchio.message.Message.hype_chat_data` for hype chat events
+        - Added :func:`~twitchio.Client.fetch_content_classification_labels` along with :class:`~twitchio.ContentClassificationLabel`
+        - Added :attr:`~twitchio.ChannelInfo.content_classification_labels` and :attr:`~twitchio.ChannelInfo.is_branded_content` to :class:`~twitchio.ChannelInfo`
+        - Added new parameters to :func:`~twitchio.PartialUser.modify_stream` for ``is_branded_content`` and ``content_classification_labels``
+            
     - Bug fixes
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
         - Made Chatter :attr:`~twitchio.Chatter.id` property public
+        - :func:`~twitchio.Client.event_token_expired` will now be called correctly when response is ``401 Invalid OAuth token``
+        - Fix reconnect loop when Twitch sends a RECONNECT via IRC websocket
+        - Fix :func:`~twitchio.CustomReward.edit` so it now can enable the reward
 
 
 - ext.sounds

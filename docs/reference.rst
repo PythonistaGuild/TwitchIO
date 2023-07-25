@@ -90,6 +90,22 @@ ChannelTeams
     :members:
     :inherited-members:
 
+ChatBadge
+----------
+.. attributetable:: ChatBadge
+
+.. autoclass:: ChatBadge
+    :members:
+    :inherited-members:
+
+ChatBadgeVersions
+------------------
+.. attributetable:: ChatBadgeVersions
+
+.. autoclass:: ChatBadgeVersions
+    :members:
+    :inherited-members:
+
 ChatSettings
 -------------
 .. attributetable:: ChatSettings
@@ -140,6 +156,14 @@ Clip
 .. attributetable:: Clip
 
 .. autoclass:: Clip
+    :members:
+    :inherited-members:
+
+ContentClassificationLabel
+---------------------------
+.. attributetable:: ContentClassificationLabel
+
+.. autoclass:: ContentClassificationLabel
     :members:
     :inherited-members:
 
@@ -206,6 +230,13 @@ Goal
 .. autoclass:: Goal
     :members:
     :inherited-members:
+
+HypeChatData
+
+.. attributetable:: HypeChatData
+
+.. autoclass:: HypeChatData
+    :members:
 
 HypeTrainContribution
 -----------------------

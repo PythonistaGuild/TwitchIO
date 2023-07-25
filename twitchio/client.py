@@ -814,6 +814,38 @@ class Client:
         """
         await self._http.put_user_chat_color(token=token, user_id=str(user_id), color=color)
 
+    async def fetch_global_chat_badges(self):
+        """|coro|
+
+        Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
+
+        Returns
+        --------
+        List[:class:`twitchio.ChatBadge`]
+        """
+
+        data = await self._http.get_global_chat_badges()
+        return [models.ChatBadge(x) for x in data]
+
+    async def fetch_content_classification_labels(self, locale: Optional[str] = None):
+        """|coro|
+
+        Fetches information about Twitch content classification labels.
+
+        Parameters
+        -----------
+        locale: Optional[:class:`str`]
+            Locale for the Content Classification Labels.
+            You may specify a maximum of 1 locale. Default: “en-US”
+
+        Returns
+        --------
+        List[:class:`twitchio.ContentClassificationLabel`]
+        """
+        locale = "en-US" if locale is None else locale
+        data = await self._http.get_content_classification_labels(locale)
+        return [models.ContentClassificationLabel(x) for x in data]
+
     async def get_webhook_subscriptions(self):
         """|coro|
 
@@ -1043,3 +1075,54 @@ class Client:
             The channel name that was attempted to be joined.
         """
         logger.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
+
+    async def event_raw_notice(self, data: str):
+        """|coro|
+
+
+        Event called with the raw NOTICE data received by Twitch.
+
+        Parameters
+        ------------
+        data: str
+            The raw NOTICE data received from Twitch.
+
+        Example
+        ---------
+        .. code:: py
+
+            @bot.event()
+            async def event_raw_notice(data):
+                print(data)
+        """
+        pass
+
+    async def event_notice(self, message: str, msg_id: Optional[str], channel: Optional[Channel]):
+        """|coro|
+
+
+        Event called with the NOTICE data received by Twitch.
+
+        .. tip::
+
+            For more information on NOTICE msg_ids visit:
+            https://dev.twitch.tv/docs/irc/msg-id/
+
+        Parameters
+        ------------
+        message: :class:`str`
+            The message of the NOTICE.
+        msg_id: Optional[:class:`str`]
+            The msg_id that indicates what the NOTICE type.
+        channel: Optional[:class:`~twitchio.Channel`]
+            The channel the NOTICE message originated from.
+
+        Example
+        ---------
+        .. code:: py
+
+            @bot.event()
+            async def event_notice(message, msg_id, channel):
+                print(message)
+        """
+        pass
