@@ -93,10 +93,6 @@ class WebsocketHeaders:
     """
     The headers of the inbound Websocket EventSub message
 
-    ..warning:
-
-        This is a BETA feature
-
     Attributes
     -----------
     message_id: :class:`str`
