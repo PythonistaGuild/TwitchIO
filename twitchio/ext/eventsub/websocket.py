@@ -18,13 +18,14 @@ _message_types = {
     "notification": models.NotificationEvent,
     "revocation": models.RevokationEvent,
     "reconnect": models.ReconnectEvent,
-    "session_keepalive": models.KeepAliveEvent
+    "session_keepalive": models.KeepAliveEvent,
 }
 _messages = Union[models.NotificationEvent, models.RevokationEvent, models.ReconnectEvent, models.KeepAliveEvent]
 
 
 class _Subscription:
     __slots__ = "event", "condition", "token", "subscription_id", "cost"
+
     def __init__(self, event_type: Tuple[str, int, Type[models.EventData]], condition: Dict[str, str], token: str):
         self.event = event_type
         self.condition = condition
@@ -32,7 +33,9 @@ class _Subscription:
         self.subscription_id: Optional[str] = None
         self.cost: Optional[int] = None
 
+
 _T = TypeVar("_T")
+
 
 class _WakeupList(list, Generic[_T]):
     def __init__(self, *args):
@@ -45,7 +48,7 @@ class _WakeupList(list, Generic[_T]):
             loop = asyncio.get_running_loop()
             for cb in self._append_waiters:
                 loop.create_task(cb(obj))
-        except: # don't wake the waiters if theres no loop
+        except:  # don't wake the waiters if theres no loop
             pass
 
     def _wakeup_pop(self, obj: _T) -> None:
@@ -53,7 +56,7 @@ class _WakeupList(list, Generic[_T]):
             loop = asyncio.get_running_loop()
             for cb in self._pop_waiters:
                 loop.create_task(cb(obj))
-        except: # don't wake the waiters
+        except:  # don't wake the waiters
             pass
 
     def append(self, obj: _T) -> None:
@@ -93,7 +96,7 @@ class Websocket:
         self._timeout: Optional[int] = None
         self._session_id: Optional[str] = None
 
-        self.remaining_slots: int = 100 # default to 100
+        self.remaining_slots: int = 100  # default to 100
 
     @property
     def session_id(self) -> Optional[str]:
@@ -107,7 +110,9 @@ class Websocket:
         resp = await self._http.create_websocket_subscription(obj.event, obj.condition, self._session_id, obj.token)
         data = resp["data"][0]
         cost = data["cost"]
-        self.remaining_slots = resp["total_cost"] - resp["max_total_cost"] # FIXME: twitch is pretty vague about these, check back on their values later
+        self.remaining_slots = (
+            resp["total_cost"] - resp["max_total_cost"]
+        )  # FIXME: twitch is pretty vague about these, check back on their values later
         obj.cost = cost
 
         return data
@@ -122,7 +127,7 @@ class Websocket:
 
     async def connect(self, reconnect_url: Optional[str] = None):
         if not self._subscription_pool:
-            return # TODO: should this raise?
+            return  # TODO: should this raise?
 
         async with aiohttp.ClientSession() as session:
             sock = self._sock = await session.ws_connect(reconnect_url or self.URL)
@@ -137,18 +142,20 @@ class Websocket:
 
         self._pump_task = self.client.loop.create_task(self.pump())
 
-        if reconnect_url: # don't resubscribe to events
+        if reconnect_url:  # don't resubscribe to events
             return
 
         for sub in self._subscription_pool:
-            await self._subscribe(sub) # TODO: how do I return this to the end user (do I bother?)
+            await self._subscribe(sub)  # TODO: how do I return this to the end user (do I bother?)
 
     async def pump(self) -> None:
         while self.is_connected:
             try:
-                msg = await cast(aiohttp.ClientWebSocketResponse, self._sock).receive_str(timeout=self._timeout+1) # extra jitter on the timeout in case of network lag
+                msg = await cast(aiohttp.ClientWebSocketResponse, self._sock).receive_str(
+                    timeout=self._timeout + 1
+                )  # extra jitter on the timeout in case of network lag
                 if not msg:
-                    continue # TODO: should this raise?
+                    continue  # TODO: should this raise?
 
                 logger.debug("Received websocket payload: %s", msg)
                 frame: _messages = self.parse_frame(_loads(msg))
@@ -171,12 +178,16 @@ class Websocket:
                     sock = self._sock
                     self._sock = None
                     await self.connect(frame.reconnect_url)
-                    await cast(aiohttp.ClientWebSocketResponse, sock).close(code=aiohttp.WSCloseCode.GOING_AWAY, message=b"reconnecting")
+                    await cast(aiohttp.ClientWebSocketResponse, sock).close(
+                        code=aiohttp.WSCloseCode.GOING_AWAY, message=b"reconnecting"
+                    )
                     return
 
             except asyncio.TimeoutError:
                 logger.warning(f"Websocket timed out (timeout: {self._timeout}), reconnecting")
-                await cast(aiohttp.ClientWebSocketResponse, self._sock).close(code=aiohttp.WSCloseCode.ABNORMAL_CLOSURE, message=b"timeout surpassed")
+                await cast(aiohttp.ClientWebSocketResponse, self._sock).close(
+                    code=aiohttp.WSCloseCode.ABNORMAL_CLOSURE, message=b"timeout surpassed"
+                )
                 await self.connect()
                 return
 
@@ -219,7 +230,10 @@ class EventSubWSClient:
         self._assign_subscription(sub)
 
     def subscribe_channel_raid(
-        self, token: str, from_broadcaster: Union[PartialUser, str, int] = None, to_broadcaster: Union[PartialUser, str, int] = None
+        self,
+        token: str,
+        from_broadcaster: Union[PartialUser, str, int] = None,
+        to_broadcaster: Union[PartialUser, str, int] = None,
     ):
         if (not from_broadcaster and not to_broadcaster) or (from_broadcaster and to_broadcaster):
             raise ValueError("Expected 1 of from_broadcaster or to_broadcaster")
@@ -239,7 +253,11 @@ class EventSubWSClient:
         self._assign_subscription(sub)
 
     def _subscribe_channel_points_reward(
-        self, event: Tuple[str, int, Type[models._DataType]], broadcaster: Union[PartialUser, str, int], token: str, reward_id: str = None
+        self,
+        event: Tuple[str, int, Type[models._DataType]],
+        broadcaster: Union[PartialUser, str, int],
+        token: str,
+        reward_id: str = None,
     ):
         if isinstance(broadcaster, PartialUser):
             broadcaster = broadcaster.id
@@ -261,13 +279,13 @@ class EventSubWSClient:
         broadcaster = str(broadcaster)
         sub = _Subscription(event, {"broadcaster_user_id": broadcaster}, token)
         self._assign_subscription(sub)
-    
+
     def _subscribe_with_broadcaster_moderator(
         self,
         event: Tuple[str, int, Type[models._DataType]],
         broadcaster: Union[PartialUser, str, int],
         moderator: Union[PartialUser, str, int],
-        token: str
+        token: str,
     ):
         if isinstance(broadcaster, PartialUser):
             broadcaster = broadcaster.id
@@ -278,7 +296,6 @@ class EventSubWSClient:
         moderator = str(moderator)
         sub = _Subscription(event, {"broadcaster_user_id": broadcaster, "moderator_user_id": moderator}, token)
         self._assign_subscription(sub)
-
 
     def subscribe_channel_bans(self, broadcaster: Union[PartialUser, str, int], token: str):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.ban, broadcaster, token)
@@ -310,7 +327,9 @@ class EventSubWSClient:
     def subscribe_channel_follows_v2(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
-        return self._subscribe_with_broadcaster_moderator(models.SubscriptionTypes.followV2, broadcaster, moderator, token)
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.followV2, broadcaster, moderator, token
+        )
 
     def subscribe_channel_moderators_add(self, broadcaster: Union[PartialUser, str, int], token: str):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_add, broadcaster, token)
@@ -342,27 +361,37 @@ class EventSubWSClient:
     def subscribe_channel_stream_end(self, broadcaster: Union[PartialUser, str, int], token: str):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.stream_end, broadcaster, token)
 
-    def subscribe_channel_points_reward_added(self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str):
+    def subscribe_channel_points_reward_added(
+        self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str
+    ):
         return self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_add, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_reward_updated(self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str):
+    def subscribe_channel_points_reward_updated(
+        self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str
+    ):
         return self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_update, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_reward_removed(self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str):
+    def subscribe_channel_points_reward_removed(
+        self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str
+    ):
         return self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_remove, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_redeemed(self, broadcaster: Union[PartialUser, str, int], token: str, reward_id: str = None):
+    def subscribe_channel_points_redeemed(
+        self, broadcaster: Union[PartialUser, str, int], token: str, reward_id: str = None
+    ):
         return self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_redeem, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_redeem_updated(self, broadcaster: Union[PartialUser, str, int], token: str, reward_id: str = None):
+    def subscribe_channel_points_redeem_updated(
+        self, broadcaster: Union[PartialUser, str, int], token: str, reward_id: str = None
+    ):
         return self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_redeem_updated, broadcaster, token, reward_id
         )
@@ -388,7 +417,6 @@ class EventSubWSClient:
     def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int], token: str):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster, token)
 
-    
     def subscribe_channel_shield_mode_begin(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):

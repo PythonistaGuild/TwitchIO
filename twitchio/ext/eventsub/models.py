@@ -54,7 +54,7 @@ class Subscription:
         if self.transport_method is TransportType.webhook:
             self.transport.callback: str = data["transport"]["callback"]  # type: ignore
         else:
-            self.transport.callback: str = "" # type: ignore # compatibility
+            self.transport.callback: str = ""  # type: ignore # compatibility
             self.transport.session_id: str = data["transport"]["session_id"]  # type: ignore
 
 
@@ -114,12 +114,15 @@ class WebsocketHeaders:
     timestamp: :class:`datetime.datetime`
         The timestamp the message was sent at
     """
+
     def __init__(self, frame: dict):
         meta = frame["metadata"]
         self.message_id: str = meta["message_id"]
         self.timestamp = _parse_datetime(meta["message_timestamp"])
-        self.message_type: Literal["notification", "revocation", "reconnect", "session_keepalive"] = meta["message_type"]
-        self.message_retry: int = 0 # don't make breaking changes with the Header class
+        self.message_type: Literal["notification", "revocation", "reconnect", "session_keepalive"] = meta[
+            "message_type"
+        ]
+        self.message_retry: int = 0  # don't make breaking changes with the Header class
         self.signature: str = ""
         self.subscription_type: Optional[str]
         self.subscription_version: Optional[str]
@@ -153,7 +156,9 @@ class BaseEvent:
     def __init__(self, client: EventSubWSClient, _data: dict, request: None):
         ...
 
-    def __init__(self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]):
+    def __init__(
+        self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
+    ):
         self._client = client
         self._raw_data = _data
 
@@ -178,7 +183,6 @@ class BaseEvent:
                 self.subscription = None
             self.setup(data["payload"])
 
-
     def setup(self, data: dict):
         pass
 
@@ -186,7 +190,7 @@ class BaseEvent:
         """
         Only used in webhook transport types. Verifies the message is valid
         """
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8") # type: ignore
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")  # type: ignore
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -220,7 +224,7 @@ class ChallengeEvent(BaseEvent):
         self.challenge: str = data["challenge"]
 
     def verify(self):
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8") # type: ignore
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")  # type: ignore
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -261,6 +265,7 @@ class KeepAliveEvent(BaseEvent):
         These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient
 
     """
+
     pass
 
 
@@ -1650,6 +1655,7 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
 
 SubscriptionTypes = _SubscriptionTypes()
+
 
 class TransportType(Enum):
     webhook = "webhook"

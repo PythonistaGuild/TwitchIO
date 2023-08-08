@@ -18,7 +18,9 @@ class EventSubHTTP:
         self._http = client.client._http
         self._token = token
 
-    async def create_webhook_subscription(self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str]):
+    async def create_webhook_subscription(
+        self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str]
+    ):
         payload = {
             "type": event_type[0],
             "version": str(event_type[1]),
@@ -28,7 +30,9 @@ class EventSubHTTP:
         route = Route("POST", "eventsub/subscriptions", body=payload, token=self._token)
         return await self._http.request(route, paginate=False, force_app_token=True)
 
-    async def create_websocket_subscription(self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str], session_id: str, token: str):
+    async def create_websocket_subscription(
+        self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str], session_id: str, token: str
+    ):
         payload = {
             "type": event_type[0],
             "version": str(event_type[1]),
