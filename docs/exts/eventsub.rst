@@ -217,6 +217,12 @@ API Reference
     :members:
     :undoc-members:
 
+.. attributetable:: EventSubWSClient
+
+.. autoclass:: EventSubWSClient
+    :members:
+    :undoc-members:
+
 .. attributetable:: Subscription
 
 .. autoclass:: Subscription

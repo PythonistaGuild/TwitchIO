@@ -261,6 +261,24 @@ class EventSubWSClient:
         broadcaster = str(broadcaster)
         sub = _Subscription(event, {"broadcaster_user_id": broadcaster}, token)
         self._assign_subscription(sub)
+    
+    def _subscribe_with_broadcaster_moderator(
+        self,
+        event: Tuple[str, int, Type[models._DataType]],
+        broadcaster: Union[PartialUser, str, int],
+        moderator: Union[PartialUser, str, int],
+        token: str
+    ):
+        if isinstance(broadcaster, PartialUser):
+            broadcaster = broadcaster.id
+        if isinstance(moderator, PartialUser):
+            moderator = moderator.id
+
+        broadcaster = str(broadcaster)
+        moderator = str(moderator)
+        sub = _Subscription(event, {"broadcaster_user_id": broadcaster, "moderator_user_id": moderator}, token)
+        self._assign_subscription(sub)
+
 
     def subscribe_channel_bans(self, broadcaster: Union[PartialUser, str, int], token: str):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.ban, broadcaster, token)
@@ -287,7 +305,12 @@ class EventSubWSClient:
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_update, broadcaster, token)
 
     def subscribe_channel_follows(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.follow, broadcaster, token)
+        raise RuntimeError("This subscription has been removed by twitch, please use subscribe_channel_follows_v2")
+
+    def subscribe_channel_follows_v2(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        return self._subscribe_with_broadcaster_moderator(models.SubscriptionTypes.followV2, broadcaster, moderator, token)
 
     def subscribe_channel_moderators_add(self, broadcaster: Union[PartialUser, str, int], token: str):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_add, broadcaster, token)
@@ -365,10 +388,31 @@ class EventSubWSClient:
     def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int], token: str):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster, token)
 
-    def subscribe_user_authorization_granted(self, token: str):
-        sub = _Subscription(models.SubscriptionTypes.user_authorization_grant, {"client_id": self.client._http.client_id}, token)
-        self._assign_subscription(sub)
+    
+    def subscribe_channel_shield_mode_begin(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_begin, broadcaster, moderator, token
+        )
 
-    async def subscribe_user_authorization_revoked(self, token: str):
-        sub = _Subscription(models.SubscriptionTypes.user_authorization_revoke, {"client_id": self.client._http.client_id}, token)
-        self._assign_subscription(sub)
+    def subscribe_channel_shield_mode_end(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator, token
+        )
+
+    def subscribe_channel_shoutout_create(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shoutout_create, broadcaster, moderator, token
+        )
+
+    def subscribe_channel_shoutout_receive(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_shoutout_receive, broadcaster, moderator, token
+        )

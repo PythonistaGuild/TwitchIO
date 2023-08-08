@@ -24,6 +24,9 @@ Master
         - Fix reconnect loop when Twitch sends a RECONNECT via IRC websocket
         - Fix :func:`~twitchio.CustomReward.edit` so it now can enable the reward
 
+- ext.eventsub
+    - Added websocket support via eventsub.EventSubWSClient
+
 - Other
     - [speed] extra
         - Added wheels on external pypi index for cchardet and ciso8601

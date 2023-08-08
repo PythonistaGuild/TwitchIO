@@ -51,7 +51,7 @@ class EventSubClient(web.Application):
         # A convenience method
         active_subscriptions = await self.get_subscriptions("enabled")
         for subscription_id in active_subscriptions:
-            await self.delete_subscription(subscription_id)
+            await self.delete_subscription(subscription_id.id)
 
     async def get_subscriptions(
         self, status: Optional[str] = None, sub_type: Optional[str] = None, user_id: Optional[int] = None
@@ -127,7 +127,7 @@ class EventSubClient(web.Application):
 
         broadcaster = str(broadcaster)
         moderator = str(moderator)
-        return await self._http.create_subscription(
+        return await self._http.create_webhook_subscription(
             event, {"broadcaster_user_id": broadcaster, "moderator_user_id": moderator}
         )
 
