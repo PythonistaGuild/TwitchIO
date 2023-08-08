@@ -36,7 +36,7 @@ from .channel import Channel
 from .chatter import Chatter, PartialChatter
 from .enums import *
 from .errors import *
-from .message import Message
+from .message import Message, HypeChatData
 from .models import *
 from .rewards import *
 from .utils import *

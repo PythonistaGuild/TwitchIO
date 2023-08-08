@@ -77,6 +77,9 @@ __all__ = (
     "Timeout",
     "Ban",
     "ShieldStatus",
+    "ChatBadge",
+    "ChatBadgeVersions",
+    "ContentClassificationLabel",
 )
 
 
@@ -1088,9 +1091,23 @@ class ChannelInfo:
         This defaults to 0 if the broadcaster_id does not match the user access token.
     tags: List[:class:`str`]
         The tags applied to the channel.
+    content_classification_labels: List[:class:`str`]
+        The CCLs applied to the channel.
+    is_branded_content: :class:`bool`
+        Boolean flag indicating if the channel has branded content.
     """
 
-    __slots__ = ("user", "game_id", "game_name", "title", "language", "delay", "tags")
+    __slots__ = (
+        "user",
+        "game_id",
+        "game_name",
+        "title",
+        "language",
+        "delay",
+        "tags",
+        "content_classification_labels",
+        "is_branded_content",
+    )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.user = PartialUser(http, data["broadcaster_id"], data["broadcaster_name"])
@@ -1100,6 +1117,8 @@ class ChannelInfo:
         self.language: str = data["broadcaster_language"]
         self.delay: int = data["delay"]
         self.tags: List[str] = data["tags"]
+        self.content_classification_labels: List[str] = data["content_classification_labels"]
+        self.is_branded_content: bool = data["is_branded_content"]
 
     def __repr__(self):
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
@@ -1821,3 +1840,99 @@ class ShieldStatus:
 
     def __repr__(self):
         return f"<ShieldStatus moderator={self.moderator} is_active={self.is_active} last_activated_at={self.last_activated_at}>"
+
+
+class ChatBadge:
+    """
+    Represents chat badges.
+
+    Attributes
+    -----------
+    set_id: :class:`str`
+        An ID that identifies this set of chat badges. For example, Bits or Subscriber.
+    versions: List[:class:`~twitchio.ChatBadgeVersions`]
+        The list of chat badges in this set.
+    """
+
+    __slots__ = ("set_id", "versions")
+
+    def __init__(self, data: dict):
+        self.set_id: str = data["set_id"]
+        self.versions: List[ChatBadgeVersions] = [ChatBadgeVersions(version_data) for version_data in data["versions"]]
+
+    def __repr__(self):
+        return f"<ChatBadge set_id={self.set_id} versions={self.versions}>"
+
+
+class ChatBadgeVersions:
+    """
+    Represents the different versions of the chat badge.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        An ID that identifies this version of the badge. The ID can be any value.
+    image_url_1x: :class:`str`
+        URL to the small version (18px x 18px) of the badge.
+    image_url_2x: :class:`str`
+        URL to the medium version (36px x 36px) of the badge.
+    image_url_4x: :class:`str`
+        URL to the large version (72px x 72px) of the badge.
+    title: :class:`str`
+        The title of the badge.
+    description: :class:`str`
+        The description of the badge.
+    click_action: Optional[:class:`str`]
+        The action to take when clicking on the badge. This can be None if no action is specified
+    click_url: Optional[:class:`str`]
+        The URL to navigate to when clicking on the badge. This can be None if no URL is specified.
+    """
+
+    __slots__ = (
+        "id",
+        "image_url_1x",
+        "image_url_2x",
+        "image_url_4x",
+        "title",
+        "description",
+        "click_url",
+        "click_action",
+    )
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.image_url_1x: str = data["image_url_1x"]
+        self.image_url_2x: str = data["image_url_2x"]
+        self.image_url_4x: str = data["image_url_4x"]
+        self.title: str = data["title"]
+        self.description: str = data["description"]
+        self.click_action: Optional[str] = data.get("click_action")
+        self.click_url: Optional[str] = data.get("click_url")
+
+    def __repr__(self):
+        return f"<ChatBadgeVersions id={self.id} title={self.title}>"
+
+
+class ContentClassificationLabel:
+    """
+    Represents a Content Classification Label.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        Unique identifier for the CCL.
+    description: :class:`str`
+        Localized description of the CCL.
+    name: :class:`str`
+        Localized name of the CCL.
+    """
+
+    __slots__ = ("id", "description", "name")
+
+    def __init__(self, data: dict):
+        self.id: str = data["id"]
+        self.description: str = data["description"]
+        self.name: str = data["name"]
+
+    def __repr__(self):
+        return f"<ContentClassificationLabel id={self.id}>"

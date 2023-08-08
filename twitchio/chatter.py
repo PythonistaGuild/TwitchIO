@@ -135,6 +135,9 @@ class Chatter(PartialChatter):
         if self._badges:
             self._cached_badges = dict([badge.split("/") for badge in self._badges.split(",")])
 
+    def __repr__(self):
+        return f"<Chatter name: {self._name}, channel: {self._channel}>"
+
     def _bot_is_mod(self):
         cache = self._ws._cache[self._channel.name]  # noqa
         for user in cache:

@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Optional, Union, Tuple
+from typing import TYPE_CHECKING, List, Optional, Union, Tuple, Dict
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
 from .errors import HTTPException, Unauthorized
@@ -603,6 +603,10 @@ class PartialUser:
 
         Follows the user
 
+        .. warning::
+
+            This method is obsolete as Twitch removed the endpoint.
+
         Parameters
         -----------
         userid: :class:`int`
@@ -874,7 +878,15 @@ class PartialUser:
         )
         return Prediction(self._http, data[0])
 
-    async def modify_stream(self, token: str, game_id: int = None, language: str = None, title: str = None):
+    async def modify_stream(
+        self,
+        token: str,
+        game_id: int = None,
+        language: str = None,
+        title: str = None,
+        content_classification_labels: List[Dict[str, Union[str, bool]]] = None,
+        is_branded_content: bool = None,
+    ):
         """|coro|
 
         Modify stream information
@@ -889,6 +901,19 @@ class PartialUser:
             Optional language of the channel. A language value must be either the ISO 639-1 two-letter code for a supported stream language or “other”.
         title: :class:`str`
             Optional title of the stream.
+        content_classification_labels: List[Dict[:class:`str`, Union[:class:`str`, :class:`bool`]]]
+            List of labels that should be set as the Channel's CCLs.
+        is_branded_content: :class:`bool`
+            Boolean flag indicating if the channel has branded content.
+
+                .. note::
+
+                    Example of a content classification labels
+                    .. code:: py
+
+                        ccl = [{"id": "Gambling", "is_enabled": False}, {"id": "DrugsIntoxication", "is_enabled": False}]
+                        await my_partial_user.modify_stream(token="abcd", content_classification_labels=ccl)
+
         """
         if game_id is not None:
             game_id = str(game_id)
@@ -898,6 +923,8 @@ class PartialUser:
             game_id=game_id,
             language=language,
             title=title,
+            content_classification_labels=content_classification_labels,
+            is_branded_content=is_branded_content,
         )
 
     async def fetch_schedule(
@@ -1167,7 +1194,7 @@ class PartialUser:
         )
         return ChatSettings(self._http, data[0])
 
-    async def chat_announcement(self, token: str, moderator_id: int, message: str, color: Optional[str] = "primary"):
+    async def chat_announcement(self, token: str, moderator_id: int, message: str, color: Optional[str] = None):
         """|coro|
 
         Sends a chat announcement to the specified channel/broadcaster.
@@ -1183,7 +1210,7 @@ class PartialUser:
             The message to be sent.
         color: Optional[:class:`str`]
             The color of the message. Valid values:
-            blue, green orange, pruple. The default is primary.
+            blue, green orange, purple. The default is primary.
         Returns
         --------
         None
@@ -1600,6 +1627,21 @@ class PartialUser:
             moderator_id=str(moderator_id),
         )
 
+    async def fetch_chat_badges(self):
+        """|coro|
+
+        Fetches broadcaster's list of custom chat badges.
+        The list is empty if the broadcaster hasn't created custom chat badges.
+
+        Returns:
+        List[:class:`twitchio.ChatBadge`]
+        """
+
+        from .models import ChatBadge
+
+        data = await self._http.get_channel_chat_badges(broadcaster_id=str(self.id))
+        return [ChatBadge(x) for x in data]
+
 
 class BitLeaderboardUser(PartialUser):
     __slots__ = "rank", "score"
@@ -1707,6 +1749,9 @@ class SearchUser(PartialUser):
         self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
         self.tag_ids: List[str] = data["tag_ids"]
         self.tags: List[str] = data["tags"]
+
+    def __repr__(self):
+        return f"<SearchUser id={self.id} display_name={self.name} language={self.language} game_id={self.game_id} title={self.title} live={self.live}>"
 
 
 class User(PartialUser):
