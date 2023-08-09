@@ -242,7 +242,7 @@ class ReconnectEvent(BaseEvent):
     -----------
     reconnect_url: :class:`str`
         The URL to reconnect to
-    connected_at: :class:`~datetime.datetime`
+    connected_at: :class:`datetime.datetime`
         When the original websocket connected
     """
 
