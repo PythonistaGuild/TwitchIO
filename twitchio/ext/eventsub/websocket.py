@@ -7,7 +7,7 @@ import aiohttp
 from typing import Optional, TYPE_CHECKING, Tuple, Type, Dict, Callable, Generic, TypeVar, Awaitable, Union, cast, List
 from . import models, http
 from .models import _loads
-from twitchio import PartialUser
+from twitchio import PartialUser, Unauthorized, HTTPException
 
 if TYPE_CHECKING:
     from twitchio import Client
@@ -24,7 +24,7 @@ _messages = Union[models.NotificationEvent, models.RevokationEvent, models.Recon
 
 
 class _Subscription:
-    __slots__ = "event", "condition", "token", "subscription_id", "cost"
+    __slots__ = "event", "condition", "token", "subscription_id", "cost", "created"
 
     def __init__(self, event_type: Tuple[str, int, Type[models.EventData]], condition: Dict[str, str], token: str):
         self.event = event_type
@@ -32,6 +32,7 @@ class _Subscription:
         self.token = token
         self.subscription_id: Optional[str] = None
         self.cost: Optional[int] = None
+        self.created: asyncio.Future[Tuple[bool, int]] | None = asyncio.Future()
 
 
 _T = TypeVar("_T")
@@ -95,8 +96,14 @@ class Websocket:
         self._pump_task: Optional[asyncio.Task] = None
         self._timeout: Optional[int] = None
         self._session_id: Optional[str] = None
+        self._target_user_id: int | None = None  # each websocket can only have one authenticated user on it for some bizzare reason, but this isnt documented anywhere
+        self.remaining_slots: int = 300  # default to 300
 
-        self.remaining_slots: int = 100  # default to 100
+    def __hash__(self) -> int:
+        return hash(self.session_id)
+
+    def __eq__(self, __value: object) -> bool:
+        return __value is self
 
     @property
     def session_id(self) -> Optional[str]:
@@ -106,13 +113,21 @@ class Websocket:
     def is_connected(self) -> bool:
         return self._sock is not None and not self._sock.closed
 
-    async def _subscribe(self, obj: _Subscription) -> dict:
-        resp = await self._http.create_websocket_subscription(obj.event, obj.condition, self._session_id, obj.token)
+    async def _subscribe(self, obj: _Subscription) -> dict | None:
+        try:
+            resp = await self._http.create_websocket_subscription(obj.event, obj.condition, self._session_id, obj.token)
+        except HTTPException as e:
+            assert obj.created
+            obj.created.set_result((False, e.status))  # type: ignore
+            return None
+
+        else:
+            assert obj.created
+            obj.created.set_result((True, None))  # type: ignore
+
         data = resp["data"][0]
         cost = data["cost"]
-        self.remaining_slots = (
-            resp["total_cost"] - resp["max_total_cost"]
-        )  # FIXME: twitch is pretty vague about these, check back on their values later
+        self.remaining_slots = resp["max_total_cost"] - resp["total_cost"]
         obj.cost = cost
 
         return data
@@ -126,9 +141,6 @@ class Websocket:
             return
 
     async def connect(self, reconnect_url: Optional[str] = None):
-        if not self._subscription_pool:
-            return  # TODO: should this raise?
-
         async with aiohttp.ClientSession() as session:
             sock = self._sock = await session.ws_connect(reconnect_url or self.URL)
             session.detach()
@@ -146,16 +158,17 @@ class Websocket:
             return
 
         for sub in self._subscription_pool:
-            await self._subscribe(sub)  # TODO: how do I return this to the end user (do I bother?)
+            await self._subscribe(sub)
 
     async def pump(self) -> None:
+        sock: aiohttp.ClientWebSocketResponse = cast(aiohttp.ClientWebSocketResponse, self._sock)
         while self.is_connected:
             try:
-                msg = await cast(aiohttp.ClientWebSocketResponse, self._sock).receive_str(
+                msg = await sock.receive_str(
                     timeout=self._timeout + 1
                 )  # extra jitter on the timeout in case of network lag
                 if not msg:
-                    continue  # TODO: should this raise?
+                    logger.warning("Received empty payload ")
 
                 logger.debug("Received websocket payload: %s", msg)
                 frame: _messages = self.parse_frame(_loads(msg))
@@ -175,12 +188,9 @@ class Websocket:
 
                 elif isinstance(frame, models.ReconnectEvent):
                     self.client.run_event("eventsub_reconnect", frame)
-                    sock = self._sock
                     self._sock = None
                     await self.connect(frame.reconnect_url)
-                    await cast(aiohttp.ClientWebSocketResponse, sock).close(
-                        code=aiohttp.WSCloseCode.GOING_AWAY, message=b"reconnecting"
-                    )
+                    await sock.close(code=aiohttp.WSCloseCode.GOING_AWAY, message=b"reconnecting")
                     return
 
             except asyncio.TimeoutError:
@@ -191,8 +201,12 @@ class Websocket:
                 await self.connect()
                 return
 
+            except TypeError as e:
+                logger.warning(f"Received bad frame: {e.args[0]}")
+
             except Exception as e:
                 logger.error("Exception in the pump function!", exc_info=e)
+                raise
 
     def parse_frame(self, frame: dict) -> _messages:
         type_: str = frame["metadata"]["message_type"]
@@ -205,31 +219,70 @@ class EventSubWSClient:
         self._http: http.EventSubHTTP = http.EventSubHTTP(self, token=None)
 
         self._sockets: List[Websocket] = []
+        self._ready_to_subscribe: List[_Subscription] = []
 
-    async def start(self):
-        for socket in self._sockets:
-            await socket.connect()
-
-    def _assign_subscription(self, sub: _Subscription) -> None:
+    async def _assign_subscription(self, sub: _Subscription) -> None:
         if not self._sockets:
-            self._sockets.append(Websocket(self.client, self._http))
+            w = Websocket(self.client, self._http)
+            await w.connect()
 
-        for s in self._sockets:
-            if s.remaining_slots > 0:
+            self._sockets.append(w)
+
+        success = False
+        bad_sockets: set[Websocket] | None = None  # dont allocate unless we need it
+
+        while not success:
+            s: Websocket | None = None  # really it'll never be none after this point, but ok pyright
+
+            if bad_sockets is not None:
+                socks = filter(lambda sock: sock not in bad_sockets, self._sockets)  # type: ignore
+            else:
+                socks = self._sockets
+
+            for s in socks:
+                if s.remaining_slots > 0:
+                    s.add_subscription(sub)
+                    break
+
+            else:  # there are no sockets, create one and break
+                s = Websocket(self.client, self._http)
+                await s.connect()
+
                 s.add_subscription(sub)
                 return
 
-        raise RuntimeError("No available sockets :(")
+            assert sub.created is not None  # go away pyright
 
-    def subscribe_user_updated(self, user: Union[PartialUser, str, int], token: str):
+            success, status = await sub.created
+
+            if not success and status == 400:
+                # can't be on that socket due to someone else being on it, try again on a different one
+                if bad_sockets is None:
+                    bad_sockets = set()
+
+                bad_sockets.add(s)
+                sub.created = asyncio.Future()
+                continue
+
+            elif not success and status in (401, 403):
+                raise Unauthorized("You are not authorized to make this subscription", status=status)
+
+            elif not success:
+                raise RuntimeError(f"Subscription failed, reason unknown. Status: {status}")
+
+            else:
+                sub.created = None  # don't need that future to sit in memory
+                break
+
+    async def subscribe_user_updated(self, user: Union[PartialUser, str, int], token: str):
         if isinstance(user, PartialUser):
             user = user.id
 
         user = str(user)
         sub = _Subscription(models.SubscriptionTypes.user_update, {"user_id": user}, token)
-        self._assign_subscription(sub)
+        await self._assign_subscription(sub)
 
-    def subscribe_channel_raid(
+    async def subscribe_channel_raid(
         self,
         token: str,
         from_broadcaster: Union[PartialUser, str, int] = None,
@@ -250,9 +303,9 @@ class EventSubWSClient:
 
         broadcaster = str(broadcaster)
         sub = _Subscription(models.SubscriptionTypes.raid, {who: broadcaster}, token)
-        self._assign_subscription(sub)
+        await self._assign_subscription(sub)
 
-    def _subscribe_channel_points_reward(
+    async def _subscribe_channel_points_reward(
         self,
         event: Tuple[str, int, Type[models._DataType]],
         broadcaster: Union[PartialUser, str, int],
@@ -268,9 +321,9 @@ class EventSubWSClient:
             data["reward_id"] = reward_id
 
         sub = _Subscription(event, data, token)
-        self._assign_subscription(sub)
+        await self._assign_subscription(sub)
 
-    def _subscribe_with_broadcaster(
+    async def _subscribe_with_broadcaster(
         self, event: Tuple[str, int, Type[models._DataType]], broadcaster: Union[PartialUser, str, int], token: str
     ):
         if isinstance(broadcaster, PartialUser):
@@ -278,9 +331,9 @@ class EventSubWSClient:
 
         broadcaster = str(broadcaster)
         sub = _Subscription(event, {"broadcaster_user_id": broadcaster}, token)
-        self._assign_subscription(sub)
+        await self._assign_subscription(sub)
 
-    def _subscribe_with_broadcaster_moderator(
+    async def _subscribe_with_broadcaster_moderator(
         self,
         event: Tuple[str, int, Type[models._DataType]],
         broadcaster: Union[PartialUser, str, int],
@@ -295,152 +348,152 @@ class EventSubWSClient:
         broadcaster = str(broadcaster)
         moderator = str(moderator)
         sub = _Subscription(event, {"broadcaster_user_id": broadcaster, "moderator_user_id": moderator}, token)
-        self._assign_subscription(sub)
+        await self._assign_subscription(sub)
 
-    def subscribe_channel_bans(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.ban, broadcaster, token)
+    async def subscribe_channel_bans(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.ban, broadcaster, token)
 
-    def subscribe_channel_unbans(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.unban, broadcaster, token)
+    async def subscribe_channel_unbans(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.unban, broadcaster, token)
 
-    def subscribe_channel_subscriptions(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription, broadcaster, token)
+    async def subscribe_channel_subscriptions(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription, broadcaster, token)
 
-    def subscribe_channel_subscription_end(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_end, broadcaster, token)
+    async def subscribe_channel_subscription_end(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_end, broadcaster, token)
 
-    def subscribe_channel_subscription_gifts(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_gift, broadcaster, token)
+    async def subscribe_channel_subscription_gifts(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_gift, broadcaster, token)
 
-    def subscribe_channel_subscription_messages(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_message, broadcaster, token)
+    async def subscribe_channel_subscription_messages(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.subscription_message, broadcaster, token)
 
-    def subscribe_channel_cheers(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.cheer, broadcaster, token)
+    async def subscribe_channel_cheers(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.cheer, broadcaster, token)
 
-    def subscribe_channel_update(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_update, broadcaster, token)
+    async def subscribe_channel_update(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_update, broadcaster, token)
 
-    def subscribe_channel_follows(self, broadcaster: Union[PartialUser, str, int], token: str):
+    async def subscribe_channel_follows(self, broadcaster: Union[PartialUser, str, int], token: str):
         raise RuntimeError("This subscription has been removed by twitch, please use subscribe_channel_follows_v2")
 
-    def subscribe_channel_follows_v2(
+    async def subscribe_channel_follows_v2(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
-        return self._subscribe_with_broadcaster_moderator(
+        await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.followV2, broadcaster, moderator, token
         )
 
-    def subscribe_channel_moderators_add(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_add, broadcaster, token)
+    async def subscribe_channel_moderators_add(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_add, broadcaster, token)
 
-    def subscribe_channel_moderators_remove(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_remove, broadcaster, token)
+    async def subscribe_channel_moderators_remove(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_moderator_remove, broadcaster, token)
 
-    def subscribe_channel_goal_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_begin, broadcaster, token)
+    async def subscribe_channel_goal_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_begin, broadcaster, token)
 
-    def subscribe_channel_goal_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_progress, broadcaster, token)
+    async def subscribe_channel_goal_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_progress, broadcaster, token)
 
-    def subscribe_channel_goal_end(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_end, broadcaster, token)
+    async def subscribe_channel_goal_end(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_goal_end, broadcaster, token)
 
-    def subscribe_channel_hypetrain_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.hypetrain_begin, broadcaster, token)
+    async def subscribe_channel_hypetrain_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.hypetrain_begin, broadcaster, token)
 
-    def subscribe_channel_hypetrain_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.hypetrain_progress, broadcaster, token)
+    async def subscribe_channel_hypetrain_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.hypetrain_progress, broadcaster, token)
 
-    def subscribe_channel_hypetrain_end(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.hypetrain_end, broadcaster, token)
+    async def subscribe_channel_hypetrain_end(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.hypetrain_end, broadcaster, token)
 
-    def subscribe_channel_stream_start(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.stream_start, broadcaster, token)
+    async def subscribe_channel_stream_start(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.stream_start, broadcaster, token)
 
-    def subscribe_channel_stream_end(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.stream_end, broadcaster, token)
+    async def subscribe_channel_stream_end(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.stream_end, broadcaster, token)
 
-    def subscribe_channel_points_reward_added(
+    async def subscribe_channel_points_reward_added(
         self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str
     ):
-        return self._subscribe_channel_points_reward(
+        await self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_add, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_reward_updated(
+    async def subscribe_channel_points_reward_updated(
         self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str
     ):
-        return self._subscribe_channel_points_reward(
+        await self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_update, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_reward_removed(
+    async def subscribe_channel_points_reward_removed(
         self, broadcaster: Union[PartialUser, str, int], reward_id: str, token: str
     ):
-        return self._subscribe_channel_points_reward(
+        await self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_remove, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_redeemed(
+    async def subscribe_channel_points_redeemed(
         self, broadcaster: Union[PartialUser, str, int], token: str, reward_id: str = None
     ):
-        return self._subscribe_channel_points_reward(
+        await self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_redeem, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_points_redeem_updated(
+    async def subscribe_channel_points_redeem_updated(
         self, broadcaster: Union[PartialUser, str, int], token: str, reward_id: str = None
     ):
-        return self._subscribe_channel_points_reward(
+        await self._subscribe_channel_points_reward(
             models.SubscriptionTypes.channel_reward_redeem_updated, broadcaster, token, reward_id
         )
 
-    def subscribe_channel_poll_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_begin, broadcaster, token)
+    async def subscribe_channel_poll_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_begin, broadcaster, token)
 
-    def subscribe_channel_poll_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_progress, broadcaster, token)
+    async def subscribe_channel_poll_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_progress, broadcaster, token)
 
-    def subscribe_channel_poll_end(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_end, broadcaster, token)
+    async def subscribe_channel_poll_end(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.poll_end, broadcaster, token)
 
-    def subscribe_channel_prediction_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_begin, broadcaster, token)
+    async def subscribe_channel_prediction_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_begin, broadcaster, token)
 
-    def subscribe_channel_prediction_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_progress, broadcaster, token)
+    async def subscribe_channel_prediction_progress(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_progress, broadcaster, token)
 
-    def subscribe_channel_prediction_lock(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_lock, broadcaster, token)
+    async def subscribe_channel_prediction_lock(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_lock, broadcaster, token)
 
-    def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int], token: str):
-        return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster, token)
+    async def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster, token)
 
-    def subscribe_channel_shield_mode_begin(
+    async def subscribe_channel_shield_mode_begin(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
-        return self._subscribe_with_broadcaster_moderator(
+        await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.channel_shield_mode_begin, broadcaster, moderator, token
         )
 
-    def subscribe_channel_shield_mode_end(
+    async def subscribe_channel_shield_mode_end(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
-        return self._subscribe_with_broadcaster_moderator(
+        await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.channel_shield_mode_end, broadcaster, moderator, token
         )
 
-    def subscribe_channel_shoutout_create(
+    async def subscribe_channel_shoutout_create(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
-        return self._subscribe_with_broadcaster_moderator(
+        await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.channel_shoutout_create, broadcaster, moderator, token
         )
 
-    def subscribe_channel_shoutout_receive(
+    async def subscribe_channel_shoutout_receive(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
-        return self._subscribe_with_broadcaster_moderator(
+        await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.channel_shoutout_receive, broadcaster, moderator, token
         )

@@ -236,7 +236,7 @@ class ReconnectEvent(BaseEvent):
     A reconnect event. Called by twitch when the websocket needs to be disconnected for maintenance or other reasons
 
     .. note::
-        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient`
 
     Attributes
     -----------
@@ -258,7 +258,7 @@ class KeepAliveEvent(BaseEvent):
     A keep-alive event. Called by twitch when no message has been sent for more than ``keepalive_timeout``
 
     .. note::
-        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient`
 
     """
 

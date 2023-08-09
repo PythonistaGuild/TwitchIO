@@ -32,7 +32,7 @@ class EventSubHTTP:
 
     async def create_websocket_subscription(
         self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str], session_id: str, token: str
-    ):
+    ) -> dict:
         payload = {
             "type": event_type[0],
             "version": str(event_type[1]),
@@ -40,7 +40,7 @@ class EventSubHTTP:
             "transport": {"method": "websocket", "session_id": session_id},
         }
         route = Route("POST", "eventsub/subscriptions", body=payload, token=token)
-        return await self._http.request(route, paginate=False, full_body=True)
+        return await self._http.request(route, paginate=False, full_body=True)  # type: ignore
 
     async def delete_subscription(self, subscription: Union[str, Subscription]):
         if isinstance(subscription, models.Subscription):
