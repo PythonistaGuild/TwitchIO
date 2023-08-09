@@ -50,8 +50,8 @@ class EventSubClient(web.Application):
     async def delete_all_active_subscriptions(self):
         # A convenience method
         active_subscriptions = await self.get_subscriptions("enabled")
-        for subscription_id in active_subscriptions:
-            await self.delete_subscription(subscription_id.id)
+        for subscription in active_subscriptions:
+            await self.delete_subscription(subscription.id)
 
     async def get_subscriptions(
         self, status: Optional[str] = None, sub_type: Optional[str] = None, user_id: Optional[int] = None
