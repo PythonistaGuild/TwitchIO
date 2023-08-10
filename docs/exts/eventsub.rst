@@ -104,7 +104,29 @@ This is a list of events dispatched by the eventsub ext.
     .. note::
         You generally won't need to interact with this event. The ext will handle responding to the challenge automatically.
 
+.. function:: event_eventsub_keepalive(event: KeepaliveEvent)
+
+    Called when a Twitch sends a keepalive event. You do not need to use this in daily usage.
+    
+    .. note::
+        You generally won't need to interact with this event.
+
+.. function:: event_eventsub_reconnect(event: ReconnectEvent)
+
+    Called when a Twitch wishes for us to reconnect.
+    
+    .. note::
+        You generally won't need to interact with this event. The library will automatically handle reconnecting.
+
 .. function:: event_eventsub_notification_follow(event: ChannelFollowData)
+
+    Called when someone creates a follow on a channel you've subscribed to.
+
+    .. warning::
+        Twitch has removed this, please use :func:`event_eventsub_notification_followV2`
+
+
+.. function:: event_eventsub_notification_followV2(event: ChannelFollowData)
 
     Called when someone creates a follow on a channel you've subscribed to.
 
@@ -217,6 +239,12 @@ API Reference
     :members:
     :undoc-members:
 
+.. attributetable:: EventSubWSClient
+
+.. autoclass:: EventSubWSClient
+    :members:
+    :undoc-members:
+
 .. attributetable:: Subscription
 
 .. autoclass:: Subscription
@@ -226,6 +254,12 @@ API Reference
 .. attributetable:: Headers
 
 .. autoclass:: Headers
+    :members:
+    :inherited-members:
+
+.. attributetable:: WebsocketHeaders
+
+.. autoclass:: WebsocketHeaders
     :members:
     :inherited-members:
 

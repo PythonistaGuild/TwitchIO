@@ -4,7 +4,7 @@ import hmac
 import hashlib
 import logging
 from enum import Enum
-from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Tuple, List
+from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Tuple, List, overload
 from typing_extensions import Literal
 
 from aiohttp import web
@@ -13,6 +13,7 @@ from twitchio import PartialUser, parse_timestamp as _parse_datetime
 
 if TYPE_CHECKING:
     from .server import EventSubClient
+    from .websocket import EventSubWSClient
 
 try:
     import ujson as json
@@ -36,7 +37,7 @@ class EmptyObject:
 
 
 class Subscription:
-    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at"
+    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "transport_method", "created_at"
 
     def __init__(self, data: dict):
         self.id: str = data["id"]
@@ -47,8 +48,14 @@ class Subscription:
         self.condition: Dict[str, str] = data["condition"]
         self.created_at = _parse_datetime(data["created_at"])
         self.transport = EmptyObject()
-        self.transport.method: str = data["transport"]["method"]  # noqa
-        self.transport.callback: str = data["transport"]["callback"]  # noqa
+        self.transport_method: TransportType = getattr(TransportType, data["transport"]["method"])
+        self.transport.method: str = data["transport"]["method"]  # type: ignore
+
+        if self.transport_method is TransportType.webhook:
+            self.transport.callback: str = data["transport"]["callback"]  # type: ignore
+        else:
+            self.transport.callback: str = ""  # type: ignore # compatibility
+            self.transport.session_id: str = data["transport"]["session_id"]  # type: ignore
 
 
 class Headers:
@@ -82,33 +89,104 @@ class Headers:
         self._raw_timestamp = request.headers["Twitch-Eventsub-Message-Timestamp"]
 
 
+class WebsocketHeaders:
+    """
+    The headers of the inbound Websocket EventSub message
+
+    Attributes
+    -----------
+    message_id: :class:`str`
+        The unique ID of the message
+    message_type: :class:`str`
+        The type of the message coming through
+    message_retry: :class:`int`
+        Kept for compatibility with :class:`Headers`
+    signature: :class:`str`
+        Kept for compatibility with :class:`Headers`
+    subscription_type: :class:`str`
+        The type of the subscription on the inbound message
+    subscription_version: :class:`str`
+        The version of the subscription.
+    timestamp: :class:`datetime.datetime`
+        The timestamp the message was sent at
+    """
+
+    def __init__(self, frame: dict):
+        meta = frame["metadata"]
+        self.message_id: str = meta["message_id"]
+        self.timestamp = _parse_datetime(meta["message_timestamp"])
+        self.message_type: Literal["notification", "revocation", "reconnect", "session_keepalive"] = meta[
+            "message_type"
+        ]
+        self.message_retry: int = 0  # don't make breaking changes with the Header class
+        self.signature: str = ""
+        self.subscription_type: Optional[str]
+        self.subscription_version: Optional[str]
+        if frame["payload"]:
+            self.subscription_type = frame["payload"]["subscription"]["type"]
+            self.subscription_version = frame["payload"]["subscription"]["version"]
+        else:
+            self.subscription_type = None
+            self.subscription_version = None
+
+
 class BaseEvent:
     """
     The base of all the event classes
 
     Attributes
     -----------
-    subscription: :class:`Subscription`
-        The subscription attached to the message
+    subscription: Optional[:class:`Subscription`]
+        The subscription attached to the message. This is only optional when using the websocket eventsub transport
     headers: :class`Headers`
         The headers received with the message
     """
 
-    __slots__ = "_client", "_raw_data", "subscription", "headers"
+    __slots__ = ("_client", "_raw_data", "subscription", "headers")
 
-    def __init__(self, client: EventSubClient, data: str, request: web.Request):
+    @overload
+    def __init__(self, client: EventSubClient, _data: str, request: web.Request):
+        ...
+
+    @overload
+    def __init__(self, client: EventSubWSClient, _data: dict, request: None):
+        ...
+
+    def __init__(
+        self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
+    ):
         self._client = client
-        self._raw_data = data
-        _data: dict = _loads(data)
-        self.subscription = Subscription(_data["subscription"])
-        self.headers = Headers(request)
-        self.setup(_data)
+        self._raw_data = _data
+
+        if isinstance(_data, str):
+            data: dict = _loads(_data)
+        else:
+            data = _data
+
+        self.headers: Union[Headers, WebsocketHeaders]
+        self.subscription: Optional[Subscription]
+
+        if request:
+            data: dict = _loads(_data)
+            self.headers = Headers(request)
+            self.subscription = Subscription(data["subscription"])
+            self.setup(data)
+        else:
+            self.headers = WebsocketHeaders(data)
+            if data["payload"]:
+                self.subscription = Subscription(data["payload"]["subscription"])
+            else:
+                self.subscription = None
+            self.setup(data["payload"])
 
     def setup(self, data: dict):
         pass
 
     def verify(self):
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
+        """
+        Only used in webhook transport types. Verifies the message is valid
+        """
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")  # type: ignore
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -127,6 +205,9 @@ class ChallengeEvent(BaseEvent):
     """
     A challenge event.
 
+    .. note::
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubClient`
+
     Attributes
     -----------
     challenge: :class`str`
@@ -139,7 +220,7 @@ class ChallengeEvent(BaseEvent):
         self.challenge: str = data["challenge"]
 
     def verify(self):
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")  # type: ignore
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -148,6 +229,40 @@ class ChallengeEvent(BaseEvent):
             return web.Response(status=400)
 
         return web.Response(status=200, text=self.challenge)
+
+
+class ReconnectEvent(BaseEvent):
+    """
+    A reconnect event. Called by twitch when the websocket needs to be disconnected for maintenance or other reasons
+
+    .. note::
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient`
+
+    Attributes
+    -----------
+    reconnect_url: :class:`str`
+        The URL to reconnect to
+    connected_at: :class:`datetime.datetime`
+        When the original websocket connected
+    """
+
+    __slots__ = ("reconnect_url", "connected_at")
+
+    def setup(self, data: dict):
+        self.reconnect_url: str = data["session"]["reconnect_url"]
+        self.connected_at: datetime.datetime = _parse_datetime(data["session"]["connected_at"])
+
+
+class KeepAliveEvent(BaseEvent):
+    """
+    A keep-alive event. Called by twitch when no message has been sent for more than ``keepalive_timeout``
+
+    .. note::
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient`
+
+    """
+
+    pass
 
 
 class NotificationEvent(BaseEvent):
@@ -1536,3 +1651,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
 
 SubscriptionTypes = _SubscriptionTypes()
+
+
+class TransportType(Enum):
+    webhook = "webhook"
+    websocket = "websocket"

@@ -23,4 +23,5 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from .server import EventSubClient
+from .websocket import EventSubWSClient, Websocket
 from .models import *
