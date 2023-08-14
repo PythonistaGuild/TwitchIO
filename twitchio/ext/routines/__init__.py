@@ -99,6 +99,7 @@ class Routine:
 
         self._args: tuple | None = None
         self._kwargs: dict | None = None
+        self.next_event_time:datetime.datetime|None = None #type : ignore
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -174,6 +175,8 @@ class Routine:
             Consider using :meth:`stop` if a graceful stop, which will complete the current iteration, is desired.
         """
         if self._can_be_cancelled():
+            self.next_event_time =None 
+
             self._task.cancel()
 
         if not self._restarting:
@@ -319,7 +322,17 @@ class Routine:
     def remaining_iterations(self) -> Optional[int]:
         """A count of remaining iterations."""
         return self._remaining_iterations
-
+    
+    @property
+    def time_till_execution(self) -> datetime.timedelta:
+        """Return the time left as a datetime object before the next execution."""
+        
+        if self.next_event_time is None:
+            #this might be misleading...
+            return datetime.timedelta(seconds=0)
+        return max(self.next_event_time - datetime.datetime.now(),datetime.timedelta(seconds=0))
+        
+    
     @property
     def start_time(self) -> Optional[datetime.datetime]:
         """The time the routine was started.
@@ -351,10 +364,12 @@ class Routine:
                 return self.cancel()
 
         if self._time:
+            self.next_event_time = self._time
             wait = compute_timedelta(self._time)
             await asyncio.sleep(wait)
 
         if self._wait_first and not self._time:
+            self.next_event_time = self._delta+datetime.datetime.now()
             await asyncio.sleep(self._delta)
 
         if self._remaining_iterations == 0:
@@ -394,6 +409,7 @@ class Routine:
                 sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
 
             self._completed_loops += 1
+            self.next_event_time = datetime.datetime.now() + datetime.timedelta(seconds=sleep)
             await asyncio.sleep(sleep)
 
         try:
@@ -452,7 +468,7 @@ def routine(
 
     def decorator(coro: Callable) -> Routine:
         time_ = time
-
+        
         if any((seconds, minutes, hours)) and time_:
             raise RuntimeError(
                 "Argument <time> can not be used in conjunction with any <seconds>, <minutes> or <hours> argument(s)."
