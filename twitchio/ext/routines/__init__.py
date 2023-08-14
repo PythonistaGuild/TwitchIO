@@ -328,8 +328,9 @@ class Routine:
         """Return the time left as a datetime object before the next execution."""
         
         if self.next_event_time is None:
-            #this might be misleading...
+            #This might be misleading for stopped routines. Consider None return? 
             return datetime.timedelta(seconds=0)
+        # For long running routines (ie the action takes a while), 
         return max(self.next_event_time - datetime.datetime.now(),datetime.timedelta(seconds=0))
         
     
@@ -379,6 +380,13 @@ class Routine:
         while True:
             iteration += 1
             start = datetime.datetime.now(datetime.timezone.utc)
+            
+            # This will give a move accurate estimate during the sleep. HOWEVER - it will also be misleading as you could have a routine that runs longer than the sleep time
+            # as it would imply that a second invoke will be called during the execution of the current one 
+            # if self._time:
+            #     self.next_event_time =  compute_timedelta(self._time + datetime.timedelta(days=self._completed_loops))
+            # else:
+            #     self.next_event_time = max(start + self._delta, 0)
 
             try:
                 if self._instance:
@@ -409,6 +417,7 @@ class Routine:
                 sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
 
             self._completed_loops += 1
+            # I believe this will provide a more realistic capture of what is happening
             self.next_event_time = datetime.datetime.now() + datetime.timedelta(seconds=sleep)
             await asyncio.sleep(sleep)
 
