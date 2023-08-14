@@ -24,7 +24,7 @@ Master
         - Added :func:`~twitchio.Client.fetch_content_classification_labels` along with :class:`~twitchio.ContentClassificationLabel`
         - Added :attr:`~twitchio.ChannelInfo.content_classification_labels` and :attr:`~twitchio.ChannelInfo.is_branded_content` to :class:`~twitchio.ChannelInfo`
         - Added new parameters to :func:`~twitchio.PartialUser.modify_stream` for ``is_branded_content`` and ``content_classification_labels``
-        - Added :attr:`~twitchio.ext.routines.Routine.time_till_execution` and :attr:`~twitchio.ext.routines.Routine.next_event_time` for monitoring
+        - Added :attr:`~twitchio.ext.routines.Routine.next_execution_time` and :attr:`~twitchio.ext.routines.Routine.next_event_time` for monitoring
             
     - Bug fixes
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
