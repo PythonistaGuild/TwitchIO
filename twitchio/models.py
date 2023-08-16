@@ -80,6 +80,8 @@ __all__ = (
     "ChatBadge",
     "ChatBadgeVersions",
     "ContentClassificationLabel",
+    "CharityValues",
+    "CharityCampaign",
 )
 
 
@@ -1936,3 +1938,75 @@ class ContentClassificationLabel:
 
     def __repr__(self):
         return f"<ContentClassificationLabel id={self.id}>"
+
+
+class CharityValues:
+    """
+    Represents the current/target funds of a charity campaign.
+
+    Attributes
+    -----------
+    value: :class:`int`
+        The value of the campaign (either so far, or the target value).
+    decimal_places: :class:`int`
+        The decimal places to be inserted into :attr:`.value`.
+    currency: :class:`str`
+        The currency this charity is raising funds in. eg ``USD``, ``GBP``, ``EUR``.
+    """
+
+    __slots__ = ("value", "decimal_places", "currency")
+
+    def __init__(self, data: dict) -> None:
+        self.value: int = data["value"]
+        self.decimal_places: int = data["decimal_places"]
+        self.currency: str = data["currency"]
+
+
+class CharityCampaign:
+    """
+    Represents a Charity Campaign on a channel.
+
+    Attributes
+    -----------
+    campaign_id: :class:`str`
+        The ID of the running charity campaign.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster running the campaign.
+    user: :class:`~twitchio.PartialUser`
+        The user who donated.
+    charity_name: :class:`str`
+        The name of the charity.
+    charity_description: :class:`str`
+        The description of the charity.
+    charity_logo: :class:`str`
+        The logo of the charity.
+    charity_website: :class:`str`
+        The websiet of the charity.
+    current: :class:`CharityValues`
+        The current funds raised by this campaign.
+    target: :class:`CharityValues`
+        The target funds to be raised for this campaign.
+    """
+
+    __slots__ = (
+        "campaign_id",
+        "broadcaster",
+        "charity_name",
+        "charity_description",
+        "charity_logo",
+        "charity_website",
+        "current",
+        "target",
+    )
+
+    def __init__(self, data: dict, http: TwitchHTTP, broadcaster: PartialUser | None = None) -> None:
+        self.campaign_id: str = data["campaign_id"]
+        self.broadcaster: PartialUser = broadcaster or PartialUser(
+            http, data["broadcaster_id"], data["broadcaster_name"]
+        )
+        self.charity_name: str = data["charity_name"]
+        self.charity_description: str = data["charity_description"]
+        self.charity_logo: str = data["charity_logo"]
+        self.charity_website: str = data["charity_website"]
+        self.current: CharityValues = CharityValues(data["current_amount"])
+        self.target: CharityValues = CharityValues(data["target_amount"])

@@ -135,6 +135,20 @@ ChatterColor
     :members:
     :inherited-members:
 
+CharityCampaign
+----------------
+.. attributetable:: CharityCampaign
+
+.. autoclass:: CharityCampaign
+    :members:
+    :inherited-members:
+
+.. attributetable:: CharityValues
+
+.. autoclass:: CharityValues
+    :members:
+    :inherited-members:
+
 CheerEmote
 ------------
 .. attributetable:: CheerEmote

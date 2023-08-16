@@ -1173,3 +1173,8 @@ class TwitchHTTP:
 
     async def get_content_classification_labels(self, locale: str):
         return await self.request(Route("GET", "content_classification_labels", "", query=[("locale", locale)]))
+
+    async def get_channel_charity_campaigns(self, broadcaster_id: str, token: str):
+        return await self.request(
+            Route("GET", "charity/campaigns", query=[("broadcaster_id", broadcaster_id)], token=token)
+        )
