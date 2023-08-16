@@ -23,6 +23,9 @@ Master
         - :func:`~twitchio.Client.event_token_expired` will now be called correctly when response is ``401 Invalid OAuth token``
         - Fix reconnect loop when Twitch sends a RECONNECT via IRC websocket
         - Fix :func:`~twitchio.CustomReward.edit` so it now can enable the reward
+    
+    - Other Changes
+        - Updated the HTTPException to provide useful information when an error is raised.
 
 - ext.eventsub
     - Added websocket support via eventsub.EventSubWSClient

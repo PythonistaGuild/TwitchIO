@@ -190,42 +190,61 @@ class TwitchHTTP:
                 await self.bucket.wait_reset()
             async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
                 try:
-                    logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
+                    message = await resp.text(encoding="utf-8")
+                    logger.debug(f"Received a response from a request with status {resp.status}: {message}")
                 except Exception:
+                    message = None
                     logger.debug(f"Received a response from a request with status {resp.status} and without body")
+
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
                     await asyncio.sleep(2**attempt + 1)
                     continue
+
                 if utilize_bucket:
                     reset = resp.headers.get("Ratelimit-Reset")
                     remaining = resp.headers.get("Ratelimit-Remaining")
 
                     self.bucket.update(reset=reset, remaining=remaining)
+
                 if 200 <= resp.status < 300:
-                    if resp.content_type == "application/json":
-                        return await resp.json(), False
-                    return await resp.text(encoding="utf-8"), True
-                if resp.status == 401:
-                    message_json = await resp.json()
+                    if resp.content_type == "application/json" and message:
+                        return json.loads(message), False
+
+                    return message, True
+
+                elif resp.status == 400:
+                    message_json = json.loads(message)
+                    raise errors.HTTPException(
+                        f"Failed to fulfill the request", reason=message_json.get("message", ""), status=resp.status
+                    )
+
+                elif resp.status == 401:
+                    message_json = json.loads(message)
                     if "Invalid OAuth token" in message_json.get("message", ""):
                         try:
                             await self._generate_login()
+                            continue
                         except:
                             raise errors.Unauthorized(
                                 "Your oauth token is invalid, and a new one could not be generated"
                             )
-                    print(resp.reason, message_json, resp)
-                    raise errors.Unauthorized("You're not authorized to use this route.")
-                if resp.status == 429:
+
+                    raise errors.Unauthorized(
+                        "You're not authorized to use this route.",
+                        reason=message_json.get("message", ""),
+                        status=resp.status,
+                    )
+
+                elif resp.status == 429:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
                         await asyncio.sleep(3**attempt + 1)
+
                     continue
-                raise errors.HTTPException(
-                    f"Failed to fulfil request ({resp.status}).", reason=resp.reason, status=resp.status
-                )
+
+                raise errors.HTTPException(f"Failed to fulfill the request", reason=resp.reason, status=resp.status)
         raise errors.HTTPException("Failed to reach Twitch API", reason=reason, status=resp.status)
 
     async def _generate_login(self):
