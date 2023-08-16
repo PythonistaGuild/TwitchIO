@@ -1544,6 +1544,53 @@ class ChannelShoutoutReceiveData(EventData):
         self.viewer_count: int = data["viewer_count"]
 
 
+class ChannelCharityDonationData(EventData):
+    """
+    Represents a donation towards a charity campaign.
+
+    Requires the ``channel:read:charity`` scope.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the event.
+    campaign_id: :class:`str`
+        The ID of the running charity campaign.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster running the campaign.
+    user: :class:`~twitchio.PartialUser`
+        The user who donated.
+    charity_name: :class:`str`
+        The name of the charity.
+    charity_description: :class:`str`
+        The description of the charity.
+    charity_logo: :class:`str`
+        The logo of the charity.
+    charity_website: :class:`str`
+        The websiet of the charity.
+    donation_value: :class:`int`
+        The amount of money being donated.
+    donation_decimal_places: :class:`int`
+        The decimal places to put into the :attr`~.donation_amount`.
+    donation_currency: :class:`str`
+        The currency that was donated (ex. ``USD``, ``GBP``, ``EUR``)
+    """
+
+    __slots__ = ("id", "campaign_id", "broadcaster", "user", "charity_name", "charity_description", "charity_logo", "charity_website", "donation_value", "donation_decimal_places", "donation_currency")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.id: str = data["id"]
+        self.campaign_id: str = data["campaign_id"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.charity_name: str = data["charity_name"]
+        self.charity_description: str = data["charity_description"]
+        self.charity_logo: str = data["charity_logo"]
+        self.charity_website: str = data["charity_website"]
+        self.donation_value: int = data["amount"]["value"]
+        self.donation_currency: str = data["amount"]["currency"]
+        self.donation_decimal_places: int = data["amount"]["decimal_places"]
+
 _DataType = Union[
     ChannelBanData,
     ChannelUnbanData,
@@ -1576,6 +1623,7 @@ _DataType = Union[
     ChannelShieldModeEndData,
     ChannelShoutoutCreateData,
     ChannelShoutoutReceiveData,
+    ChannelCharityDonationData
 ]
 
 
@@ -1627,6 +1675,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
     channel_shoutout_create = "channel.shoutout.create", 1, ChannelShoutoutCreateData
     channel_shoutout_receive = "channel.shoutout.receive", 1, ChannelShoutoutReceiveData
+
+    channel_charity_donate = "channel.charity_campaign.donate", 1, ChannelCharityDonationData
 
     hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
     hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData

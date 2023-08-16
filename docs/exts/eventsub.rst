@@ -230,6 +230,10 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a channel receives a shoutout.
 
+.. function:: event_eventsub_notification_channel_charity_donate(event: ChannelCharityDonationData)
+
+    Called when a user donates to an active charity campaign.
+
 API Reference
 --------------
 
@@ -482,6 +486,12 @@ API Reference
 .. attributetable::: UserUpdateData
 
 .. autoclass:: UserUpdateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelCharityDonationData
+
+.. autoclass:: ChannelCharityDonationData
     :members:
     :inherited-members:
 

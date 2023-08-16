@@ -276,6 +276,9 @@ class EventSubClient(web.Application):
             models.SubscriptionTypes.channel_shoutout_receive, broadcaster, moderator
         )
 
+    def subscribe_channel_charity_donate(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_charity_donate, broadcaster)
+
     async def subscribe_user_authorization_granted(self):
         return await self._http.create_webhook_subscription(
             models.SubscriptionTypes.user_authorization_grant, {"client_id": self.client._http.client_id}
