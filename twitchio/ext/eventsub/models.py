@@ -1576,7 +1576,19 @@ class ChannelCharityDonationData(EventData):
         The currency that was donated (ex. ``USD``, ``GBP``, ``EUR``)
     """
 
-    __slots__ = ("id", "campaign_id", "broadcaster", "user", "charity_name", "charity_description", "charity_logo", "charity_website", "donation_value", "donation_decimal_places", "donation_currency")
+    __slots__ = (
+        "id",
+        "campaign_id",
+        "broadcaster",
+        "user",
+        "charity_name",
+        "charity_description",
+        "charity_logo",
+        "charity_website",
+        "donation_value",
+        "donation_decimal_places",
+        "donation_currency",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.id: str = data["id"]
@@ -1590,6 +1602,7 @@ class ChannelCharityDonationData(EventData):
         self.donation_value: int = data["amount"]["value"]
         self.donation_currency: str = data["amount"]["currency"]
         self.donation_decimal_places: int = data["amount"]["decimal_places"]
+
 
 _DataType = Union[
     ChannelBanData,
@@ -1623,7 +1636,7 @@ _DataType = Union[
     ChannelShieldModeEndData,
     ChannelShoutoutCreateData,
     ChannelShoutoutReceiveData,
-    ChannelCharityDonationData
+    ChannelCharityDonationData,
 ]
 
 
