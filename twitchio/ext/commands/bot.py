@@ -173,7 +173,9 @@ class Bot(Client):
         prefixes = await self.__get_prefixes__(message)
         message_content = message.content
         if "reply-parent-msg-id" in message.tags:
-            message_content = message_content.split(" ", 1)[1]
+            message_content = " ".join(message.content.split(" ")[1:])
+        else:
+            message_content = message.content
         if not isinstance(prefixes, str):
             for prefix in prefixes:
                 if message_content.startswith(prefix):
