@@ -1,6 +1,6 @@
 :orphan:
 
-Master
+2.7.0
 ======
 - TwitchIO
     - Additions
