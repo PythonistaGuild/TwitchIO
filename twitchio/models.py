@@ -1961,6 +1961,9 @@ class CharityValues:
         self.decimal_places: int = data["decimal_places"]
         self.currency: str = data["currency"]
 
+    def __repr__(self) -> str:
+        return f"<CharityValues value={self.value} decimal_places={self.decimal_places} currency={self.currency}>"
+
 
 class CharityCampaign:
     """
@@ -2010,3 +2013,6 @@ class CharityCampaign:
         self.charity_website: str = data["charity_website"]
         self.current: CharityValues = CharityValues(data["current_amount"])
         self.target: CharityValues = CharityValues(data["target_amount"])
+
+    def __repr__(self) -> str:
+        return f"<CharityCampaign broadcaster={self.broadcaster} campaign_id={self.campaign_id} charity_name={self.charity_name}>"
