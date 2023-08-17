@@ -4,6 +4,7 @@ Master
 ======
 - TwitchIO
     - Additions
+        - Added :func:`~twitchio.PartialUser.fetch_charity_campaigns` with :class:`~twitchio.CharityCampaign` and :class:`~twitchio.CharityValues`.
         - Added :func:`~twitchio.Client.fetch_global_chat_badges`
         - Added User method :func:`~twitchio.PartialUser.fetch_chat_badges`
         - Added repr for :class:`~twitchio.SearchUser`
@@ -28,7 +29,8 @@ Master
         - Updated the HTTPException to provide useful information when an error is raised.
 
 - ext.eventsub
-    - Added websocket support via eventsub.EventSubWSClient
+    - Added websocket support via :class:`~twitchio.ext.eventsub.EventSubWSClient`.
+    - Added support for charity donation events.
 
 - Other
     - [speed] extra
