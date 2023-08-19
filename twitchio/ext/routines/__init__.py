@@ -215,7 +215,6 @@ class Routine:
 
         if self._can_be_cancelled():
             self._task.add_done_callback(restart_when_over)
-
             if force:
                 self._task.cancel()
             else:
@@ -374,7 +373,9 @@ class Routine:
             await asyncio.sleep(wait)
 
         if self._wait_first and not self._time:
-            self.next_event_time = self._delta + datetime.datetime.now(datetime.timezone.utc)
+            self.next_event_time = datetime.timedelta(seconds=self._delta) + datetime.datetime.now(
+                datetime.timezone.utc
+            )
             await asyncio.sleep(self._delta)
 
         if self._remaining_iterations == 0:

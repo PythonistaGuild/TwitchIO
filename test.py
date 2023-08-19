@@ -6,6 +6,7 @@ import os
 load_dotenv()
 from datetime import datetime, timedelta
 
+import random
 
 THRESHOLD = 0.1
 
@@ -23,6 +24,9 @@ class Bot(commands.Bot):
     async def event_ready(self):
         print(f"Logged in as | {self.nick}")
         print(f"User id is | {self.user_id}")
+        bot.low_freq_routine.start()
+        bot.reschedule_schedule_nowait_test.start()
+        bot.test_low_freq_restart.start()
 
     @routines.routine(seconds=1.0, iterations=5)
     async def basic_timed_routine(self, arg: str):
@@ -34,35 +38,45 @@ class Bot(commands.Bot):
         if self.basic_timed_routine.remaining_iterations == 0:
             self.basic_timed_routine.start("Restarted")
 
-    @routines.routine(seconds=1.0, iterations=5, wait_first=True)
+    @routines.routine(seconds=1.0, wait_first=True)
     async def basic_timed_wait_routine(self, arg: str):
         print(f"Hello {arg}!")
 
     @routines.routine(seconds=0.1)
     async def basic_wait_test(self):
         print(self.basic_timed_wait_routine.next_execution_time)
-        if self.basic_timed_wait_routine.remaining_iterations == 0:
-            self.basic_timed_wait_routine.start("Restarted")
 
-    @routines.routine(time=datetime.now() + timedelta(seconds=5), wait_first=True)
+    @routines.routine(time=datetime.now() + timedelta(seconds=5))
     async def basic_scheduled_routine(self):
-        # Note this seems to get called twice in execution. I don't think this is a result of my changes
-        self.call_count += 1
         print(f"{self.call_count} the time is now {datetime.now()}")
 
     @routines.routine(seconds=0.1)
     async def basic_schedule_test(self):
         print(self.basic_scheduled_routine.next_execution_time)
 
-    @routines.routine(seconds=2)
+    @routines.routine(minutes=5, wait_first=True)
+    async def low_freq_routine(self):
+        print("I ran")
+
+    @routines.routine(seconds=5)
     async def restart_schedule_test(self):
-        pass
+        self.low_freq_routine.restart(force=True)
+
+    @routines.routine(seconds=1)
+    async def test_low_freq_restart(self):
+        print(self.low_freq_routine.next_execution_time)
+
+    @routines.routine(seconds=5, iterations=2, wait_first=True)
+    async def reschedule_schedule_wait_test(self):
+        print("Rescheduling")
+        self.low_freq_routine.change_interval(wait_first=True, minutes=random.random() * 2)
+
+    @routines.routine(seconds=5, iterations=2, wait_first=True)
+    async def reschedule_schedule_nowait_test(self):
+        print("Rescheduling")
+        self.low_freq_routine.change_interval(wait_first=False, minutes=random.random() * 2)
 
 
 bot = Bot()
-# bot.basic_timed_wait_routine.start("Test")
-# bot.basic_wait_test.start()
-
-bot.basic_scheduled_routine.start()
 
 bot.run()
