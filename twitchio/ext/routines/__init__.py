@@ -403,10 +403,12 @@ class Routine:
                 pass
             else:
                 if self._remaining_iterations == 0:
+                    self.next_event_time = None
                     break
 
             if self._stop_set:
                 self._stop_set = False
+                self.next_event_time = None
                 break
 
             if self._time:
