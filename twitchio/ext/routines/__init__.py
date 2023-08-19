@@ -324,7 +324,7 @@ class Routine:
         return self._remaining_iterations
 
     @property
-    def next_execution_time(self) -> datetime.timedelta | None:
+    def time_until_next_execution(self) -> datetime.timedelta | None:
         """Return the time left as a datetime object before the next execution.
 
         None will be returned if the routine is not scheduled

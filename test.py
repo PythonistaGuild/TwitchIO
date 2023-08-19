@@ -34,7 +34,7 @@ class Bot(commands.Bot):
 
     @routines.routine(seconds=0.1)
     async def basic_test(self):
-        print(self.basic_timed_routine.next_execution_time)
+        print(self.basic_timed_routine.time_until_next_execution)
         if self.basic_timed_routine.remaining_iterations == 0:
             self.basic_timed_routine.start("Restarted")
 
@@ -44,7 +44,7 @@ class Bot(commands.Bot):
 
     @routines.routine(seconds=0.1)
     async def basic_wait_test(self):
-        print(self.basic_timed_wait_routine.next_execution_time)
+        print(self.basic_timed_wait_routine.time_until_next_execution)
 
     @routines.routine(time=datetime.now() + timedelta(seconds=5))
     async def basic_scheduled_routine(self):
@@ -52,7 +52,7 @@ class Bot(commands.Bot):
 
     @routines.routine(seconds=0.1)
     async def basic_schedule_test(self):
-        print(self.basic_scheduled_routine.next_execution_time)
+        print(self.basic_scheduled_routine.time_until_next_execution)
 
     @routines.routine(minutes=5, wait_first=True)
     async def low_freq_routine(self):
@@ -64,7 +64,7 @@ class Bot(commands.Bot):
 
     @routines.routine(seconds=1)
     async def test_low_freq_restart(self):
-        print(self.low_freq_routine.next_execution_time)
+        print(self.low_freq_routine.time_until_next_execution)
 
     @routines.routine(seconds=5, iterations=2, wait_first=True)
     async def reschedule_schedule_wait_test(self):
