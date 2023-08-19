@@ -332,8 +332,9 @@ class Routine:
 
         if self.next_event_time is None:
             return None
-
-        return max(self.next_event_time - datetime.datetime.now(datetime.timezone.utc), datetime.timedelta(seconds=0))
+        
+        return max(self.next_event_time - datetime.datetime.now(self.next_event_time.tzinfo), datetime.timedelta(seconds=0))
+        
 
     @property
     def start_time(self) -> Optional[datetime.datetime]:
@@ -369,7 +370,7 @@ class Routine:
             self.next_event_time = self._time
             wait = compute_timedelta(self._time)
             await asyncio.sleep(wait)
-
+            
         if self._wait_first and not self._time:
             self.next_event_time = self._delta + datetime.datetime.now(datetime.timezone.utc)
             await asyncio.sleep(self._delta)
