@@ -22,7 +22,7 @@ class Bot(commands.Bot):
     async def event_ready(self):
         print(f"Logged in as | {self.nick}")
         print(f"User id is | {self.user_id}")
-        bot.basic_scheduled_routine.start()
+        self.basic_scheduled_routine.start()
 
     @routines.routine(time=datetime.now() + timedelta(seconds=5), wait_first=True)
     async def basic_scheduled_routine(self):
