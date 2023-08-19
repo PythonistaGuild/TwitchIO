@@ -97,9 +97,10 @@ class Routine:
 
         self._instance = None
 
-        self._args: tuple | None = None
-        self._kwargs: dict | None = None
-        self.next_event_time: datetime.datetime | None = None
+        self._args: Optional[tuple] = None
+        self._kwargs: Optional[dict] = None
+
+        self.next_event_time: Optional[datetime.datetime] = None
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -332,9 +333,10 @@ class Routine:
 
         if self.next_event_time is None:
             return None
-        
-        return max(self.next_event_time - datetime.datetime.now(self.next_event_time.tzinfo), datetime.timedelta(seconds=0))
-        
+
+        return max(
+            self.next_event_time - datetime.datetime.now(self.next_event_time.tzinfo), datetime.timedelta(seconds=0)
+        )
 
     @property
     def start_time(self) -> Optional[datetime.datetime]:
@@ -370,7 +372,7 @@ class Routine:
             self.next_event_time = self._time
             wait = compute_timedelta(self._time)
             await asyncio.sleep(wait)
-            
+
         if self._wait_first and not self._time:
             self.next_event_time = self._delta + datetime.datetime.now(datetime.timezone.utc)
             await asyncio.sleep(self._delta)
