@@ -27,7 +27,7 @@ DEALINGS IN THE SOFTWARE.
 __title__ = "TwitchIO"
 __author__ = "TwitchIO, PythonistaGuild"
 __license__ = "MIT"
-__copyright__ = "Copyright 2017-2022 (c) TwitchIO"
+__copyright__ = "Copyright 2017-2023 (c) TwitchIO"
 __version__ = "2.7.0"
 
 from .client import Client
