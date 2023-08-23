@@ -97,8 +97,10 @@ class Routine:
 
         self._instance = None
 
-        self._args: tuple | None = None
-        self._kwargs: dict | None = None
+        self._args: Optional[tuple] = None
+        self._kwargs: Optional[dict] = None
+
+        self.next_event_time: Optional[datetime.datetime] = None
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -174,6 +176,8 @@ class Routine:
             Consider using :meth:`stop` if a graceful stop, which will complete the current iteration, is desired.
         """
         if self._can_be_cancelled():
+            self.next_event_time = None
+
             self._task.cancel()
 
         if not self._restarting:
@@ -211,7 +215,6 @@ class Routine:
 
         if self._can_be_cancelled():
             self._task.add_done_callback(restart_when_over)
-
             if force:
                 self._task.cancel()
             else:
@@ -321,6 +324,20 @@ class Routine:
         return self._remaining_iterations
 
     @property
+    def time_until_next_execution(self) -> Optional[datetime.timedelta]:
+        """Return the time left as a datetime object before the next execution.
+
+        None will be returned if the routine is not scheduled
+        """
+
+        if self.next_event_time is None:
+            return None
+
+        return max(
+            self.next_event_time - datetime.datetime.now(self.next_event_time.tzinfo), datetime.timedelta(seconds=0)
+        )
+
+    @property
     def start_time(self) -> Optional[datetime.datetime]:
         """The time the routine was started.
 
@@ -351,10 +368,14 @@ class Routine:
                 return self.cancel()
 
         if self._time:
+            self.next_event_time = self._time
             wait = compute_timedelta(self._time)
             await asyncio.sleep(wait)
 
         if self._wait_first and not self._time:
+            self.next_event_time = datetime.timedelta(seconds=self._delta) + datetime.datetime.now(
+                datetime.timezone.utc
+            )
             await asyncio.sleep(self._delta)
 
         if self._remaining_iterations == 0:
@@ -382,10 +403,12 @@ class Routine:
                 pass
             else:
                 if self._remaining_iterations == 0:
+                    self.next_event_time = None
                     break
 
             if self._stop_set:
                 self._stop_set = False
+                self.next_event_time = None
                 break
 
             if self._time:
@@ -394,6 +417,9 @@ class Routine:
                 sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
 
             self._completed_loops += 1
+
+            self.next_event_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=sleep)
+
             await asyncio.sleep(sleep)
 
         try:
