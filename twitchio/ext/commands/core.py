@@ -201,8 +201,6 @@ class Command:
         # TODO Docs
         if not context.view:
             return
-        args, kwargs = await self.parse_args(context, self._instance, context.view.words, index=index)
-        context.args, context.kwargs = args, kwargs
 
         async def try_run(func, *, to_command=False):
             try:
@@ -213,6 +211,17 @@ class Command:
                 else:
                     context.bot.run_event("command_error", context, _e)
 
+        try:
+            args, kwargs = await self.parse_args(context, self._instance, context.view.words, index=index)
+        except (MissingRequiredArgument,  BadArgument) as e:
+            if self.event_error:
+                args_ = [self._instance, context] if self._instance else [context]
+                await try_run(self.event_error(*args_, e))
+
+            context.bot.run_event("command_error", context, e)
+            return
+
+        context.args, context.kwargs = args, kwargs
         check_result = await self.handle_checks(context)
 
         if check_result is not True:
