@@ -173,16 +173,14 @@ class PartialUser:
             return self._cached_rewards[1]
         try:
             data = await self._http.get_rewards(token, self.id, only_manageable, ids)
-        except Unauthorized as error:
-            raise Unauthorized("The given token is invalid", "", 401) from error
         except HTTPException as error:
             status = error.args[2]
             if status == 403:
                 raise HTTPException(
                     "The custom reward was created by a different application, or channel points are "
                     "not available for the broadcaster (403)",
-                    error.args[1],
-                    403,
+                    reason=error.args[1],
+                    status=403,
                 ) from error
             raise
         else:
@@ -249,16 +247,14 @@ class PartialUser:
                 redemptions_skip_queue,
             )
             return CustomReward(self._http, data[0], self)
-        except Unauthorized as error:
-            raise Unauthorized("The given token is invalid", "", 401) from error
         except HTTPException as error:
             status = error.args[2]
             if status == 403:
                 raise HTTPException(
                     "The custom reward was created by a different application, or channel points are "
                     "not available for the broadcaster (403)",
-                    error.args[1],
-                    403,
+                    reason=error.args[1],
+                    status=403,
                 ) from error
             raise
 
