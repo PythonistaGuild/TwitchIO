@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from . import Cog, Bot
     from .stringparser import StringParser
 
-    if sys.version_info >= (3, 8):
+    if sys.version_info >= (3, 10):
         UnionT = Union[types.UnionType, Union]
     else:
         UnionT = Union
