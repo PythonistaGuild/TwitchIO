@@ -1,5 +1,12 @@
 :orphan:
 
+Master
+======
+- TwitchIO
+    - Bug fixes
+        - Fix IndexError when getting prefix when empty message is sent in a reply.
+
+
 2.7.0
 ======
 - TwitchIO
