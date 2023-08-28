@@ -52,6 +52,8 @@ class ArgumentParsingFailed(BadArgument):
         self.original = original
         super().__init__(message)
 
+class UnionArgumentParsingFailed(ArgumentParsingFailed):
+    pass
 
 class CommandNotFound(TwitchCommandError):
     pass
