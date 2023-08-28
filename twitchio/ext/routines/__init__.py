@@ -360,7 +360,9 @@ class Routine:
         if self._remaining_iterations == 0:
             self._remaining_iterations = self._iterations
 
+        iteration: int = 0
         while True:
+            iteration += 1
             start = datetime.datetime.now(datetime.timezone.utc)
 
             try:
@@ -387,7 +389,7 @@ class Routine:
                 break
 
             if self._time:
-                sleep = compute_timedelta(self._time + datetime.timedelta(days=self._completed_loops))
+                sleep = compute_timedelta(self._time + datetime.timedelta(days=iteration))
             else:
                 sleep = max((start - datetime.datetime.now(datetime.timezone.utc)).total_seconds() + self._delta, 0)
 
