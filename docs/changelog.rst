@@ -6,6 +6,10 @@ Master
     - Bug fixes
         - Fix IndexError when getting prefix when empty message is sent in a reply.
 
+- ext.eventsub
+    - Bug fixes
+        - Fix websocket reconnection event.
+
 
 2.7.0
 ======

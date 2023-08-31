@@ -213,7 +213,7 @@ class Command:
 
         try:
             args, kwargs = await self.parse_args(context, self._instance, context.view.words, index=index)
-        except (MissingRequiredArgument,  BadArgument) as e:
+        except (MissingRequiredArgument, BadArgument) as e:
             if self.event_error:
                 args_ = [self._instance, context] if self._instance else [context]
                 await try_run(self.event_error(*args_, e))

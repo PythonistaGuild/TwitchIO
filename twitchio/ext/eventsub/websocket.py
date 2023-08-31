@@ -17,7 +17,7 @@ logger = logging.getLogger("twitchio.ext.eventsub.ws")
 _message_types = {
     "notification": models.NotificationEvent,
     "revocation": models.RevokationEvent,
-    "reconnect": models.ReconnectEvent,
+    "session_reconnect": models.ReconnectEvent,
     "session_keepalive": models.KeepAliveEvent,
 }
 _messages = Union[models.NotificationEvent, models.RevokationEvent, models.ReconnectEvent, models.KeepAliveEvent]
