@@ -134,14 +134,16 @@ class Command:
         if not self.parent:
             return self._name
         return f"{self.parent.full_name} {self._name}"
-    
+
     def _is_optional_argument(self, converter: Any):
-        return (getattr(converter, '__origin__', None) is Union or isinstance(converter, types.UnionType)) and type(None) in converter.__args__
+        return (getattr(converter, "__origin__", None) is Union or isinstance(converter, types.UnionType)) and type(
+            None
+        ) in converter.__args__
 
     def resolve_union_callback(self, converter: UnionT) -> Callable[[Context, str], Any]:
-        #print(type(converter), converter.__args__)
+        # print(type(converter), converter.__args__)
 
-        args = converter.__args__ # type: ignore # pyright doesnt like this
+        args = converter.__args__  # type: ignore # pyright doesnt like this
 
         async def _resolve(context: Context, arg: str) -> Any:
             t = EMPTY
@@ -154,39 +156,39 @@ class Command:
                     t: Any = underlying(context, arg)
                     if inspect.iscoroutine(t):
                         t = await t
-                    
+
                     break
                 except Exception as l:
                     last = l
-                    t = EMPTY # thisll get changed when t is a coroutine, but is still invalid, so roll it back
+                    t = EMPTY  # thisll get changed when t is a coroutine, but is still invalid, so roll it back
                     continue
-            
+
             if t is EMPTY:
                 fmt = f"Failed to convert argument '{arg}' to any of {', '.join(str(x) for x in args)}"
-                raise UnionArgumentParsingFailed(fmt, last) # type: ignore # if t is EMPTY, there has to be a last error
-            
+                raise UnionArgumentParsingFailed(fmt, last)  # type: ignore # if t is EMPTY, there has to be a last error
+
             return t
-        
+
         return _resolve
 
     def resolve_optional_callback(self, converter: Any) -> Callable[[Context, str], Any]:
         underlying = self._resolve_converter(converter.__args__[0])
-        
+
         async def _resolve(context: Context, arg: str) -> Any:
             try:
                 t: Any = underlying(context, arg)
                 if inspect.iscoroutine(t):
                     t = await t
-                
+
             except Exception:
-                return EMPTY # instruct the parser to roll back and ignore this argument
-                
+                return EMPTY  # instruct the parser to roll back and ignore this argument
+
             return t
-        
+
         return _resolve
 
     def _resolve_converter(self, converter: Union[Callable, Awaitable, type]) -> Callable[..., Any]:
-        #print(dir(converter))
+        # print(dir(converter))
         if (
             isinstance(converter, type)
             and converter.__module__.startswith("twitchio")
@@ -196,32 +198,32 @@ class Command:
 
         elif self._is_optional_argument(converter):
             return self.resolve_optional_callback(converter)
-        
+
         elif isinstance(converter, types.UnionType) or getattr(converter, "__origin__", None) is Union:
-            return self.resolve_union_callback(converter) # type: ignore
-        
-        elif hasattr(converter, "__metadata__"): # Annotated
-            annotated = converter.__metadata__ # type: ignore
+            return self.resolve_union_callback(converter)  # type: ignore
+
+        elif hasattr(converter, "__metadata__"):  # Annotated
+            annotated = converter.__metadata__  # type: ignore
             return self._resolve_converter(annotated[0])
-        
+
         if converter is bool:
             converter = _boolconverter
-        
+
         elif converter in (str, int):
             _original = converter
-            converter = lambda _, param: _original(param) # type: ignore # the types dont take a ctx argument, so strip that out here
-        
-        return converter # type: ignore
+            converter = lambda _, param: _original(param)  # type: ignore # the types dont take a ctx argument, so strip that out here
+
+        return converter  # type: ignore
 
     async def _convert_types(self, context: Context, param: inspect.Parameter, parsed: str) -> Any:
         converter = param.annotation
-        
+
         if converter is param.empty:
             if param.default in (param.empty, None):
                 converter = str
             else:
                 converter = type(param.default)
-        
+
         true_converter = self._resolve_converter(converter)
 
         try:
@@ -257,7 +259,7 @@ class Command:
                 try:
                     argument = parsed.pop(index)
                 except (KeyError, IndexError):
-                    if self._is_optional_argument(param.annotation): # parameter is optional and at the end.
+                    if self._is_optional_argument(param.annotation):  # parameter is optional and at the end.
                         args.append(param.default if param.default is not param.empty else None)
                         continue
 
@@ -275,7 +277,7 @@ class Command:
                         continue
                     else:
                         args.append(_parsed_arg)
-                    
+
             elif param.kind == param.KEYWORD_ONLY:
                 rest = " ".join(parsed.values())
                 if rest.startswith(" "):
@@ -313,7 +315,7 @@ class Command:
 
         try:
             args, kwargs = await self.parse_args(context, self._instance, context.view.words, index=index)
-        except (MissingRequiredArgument,  BadArgument) as e:
+        except (MissingRequiredArgument, BadArgument) as e:
             if self.event_error:
                 args_ = [self._instance, context] if self._instance else [context]
                 await try_run(self.event_error(*args_, e))
