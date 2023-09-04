@@ -253,6 +253,10 @@ class Command:
                 try:
                     argument = parsed.pop(index)
                 except (KeyError, IndexError):
+                    if self._is_optional_argument(param.annotation): # parameter is optional and at the end.
+                        args.append(param.default if param.default is not param.empty else None)
+                        continue
+
                     if param.default is param.empty:
                         raise MissingRequiredArgument(param)
                     args.append(param.default)
@@ -262,7 +266,7 @@ class Command:
                     if _parsed_arg is EMPTY:
                         parsed[index] = argument
                         index -= 1
-                        args.append(None)
+                        args.append(param.default if param.default is not param.empty else None)
 
                         continue
                     else:
