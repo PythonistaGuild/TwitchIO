@@ -63,7 +63,7 @@ class EmptyArgumentSentinel:
 EMPTY = EmptyArgumentSentinel()
 
 
-def _boolconverter(ctx: Context, param: str):
+def _boolconverter(param: str):
     param = param.lower()
     if param in {"yes", "y", "1", "true", "on"}:
         return True
@@ -140,7 +140,7 @@ class Command:
             None
         ) in converter.__args__
 
-    def resolve_union_callback(self, converter: UnionT) -> Callable[[Context, str], Any]:
+    def resolve_union_callback(self, name: str, converter: UnionT) -> Callable[[Context, str], Any]:
         # print(type(converter), converter.__args__)
 
         args = converter.__args__  # type: ignore # pyright doesnt like this
@@ -150,7 +150,7 @@ class Command:
             last = None
 
             for original in args:
-                underlying = self._resolve_converter(original)
+                underlying = self._resolve_converter(name, original)
 
                 try:
                     t: Any = underlying(context, arg)
@@ -164,15 +164,14 @@ class Command:
                     continue
 
             if t is EMPTY:
-                fmt = f"Failed to convert argument '{arg}' to any of {', '.join(str(x) for x in args)}"
-                raise UnionArgumentParsingFailed(fmt, last)  # type: ignore # if t is EMPTY, there has to be a last error
+                raise UnionArgumentParsingFailed(name, args)
 
             return t
 
         return _resolve
 
-    def resolve_optional_callback(self, converter: Any) -> Callable[[Context, str], Any]:
-        underlying = self._resolve_converter(converter.__args__[0])
+    def resolve_optional_callback(self, name: str, converter: Any) -> Callable[[Context, str], Any]:
+        underlying = self._resolve_converter(name, converter.__args__[0])
 
         async def _resolve(context: Context, arg: str) -> Any:
             try:
@@ -187,33 +186,46 @@ class Command:
 
         return _resolve
 
-    def _resolve_converter(self, converter: Union[Callable, Awaitable, type]) -> Callable[..., Any]:
-        # print(dir(converter))
+    def _resolve_converter(self, name: str, converter: Union[Callable, Awaitable, type]) -> Callable[..., Any]:
+
         if (
             isinstance(converter, type)
             and converter.__module__.startswith("twitchio")
             and converter in builtin_converter._mapping
         ):
-            return builtin_converter._mapping[converter]
+            return self._convert_builtin_type(name, converter, builtin_converter._mapping[converter])
+
+        elif converter is bool:
+            converter = self._convert_builtin_type(name, bool, _boolconverter)
+
+        elif converter in (str, int):
+            converter = self._convert_builtin_type(name, converter, converter) # type: ignore
 
         elif self._is_optional_argument(converter):
-            return self.resolve_optional_callback(converter)
+            return self.resolve_optional_callback(name, converter)
 
         elif isinstance(converter, types.UnionType) or getattr(converter, "__origin__", None) is Union:
-            return self.resolve_union_callback(converter)  # type: ignore
+            return self.resolve_union_callback(name, converter) # type: ignore
 
         elif hasattr(converter, "__metadata__"):  # Annotated
             annotated = converter.__metadata__  # type: ignore
-            return self._resolve_converter(annotated[0])
-
-        if converter is bool:
-            converter = _boolconverter
-
-        elif converter in (str, int):
-            _original = converter
-            converter = lambda _, param: _original(param)  # type: ignore # the types dont take a ctx argument, so strip that out here
+            return self._resolve_converter(name, annotated[0])
 
         return converter  # type: ignore
+    
+    def _convert_builtin_type(self, arg_name: str, original: type, converter: Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]) -> Callable[[Context, str], Awaitable[Any]]:
+        async def resolve(_, arg: str) -> Any:
+            try:
+                t = converter(arg)
+
+                if inspect.iscoroutine(t):
+                    t = await t
+                
+                return t
+            except Exception as e:
+                raise ArgumentParsingFailed(f"Failed to convert `{arg}` to expected type {original.__name__} for argument `{arg_name}`", original=e, argname=arg_name, expected=original) from e
+        
+        return resolve
 
     async def _convert_types(self, context: Context, param: inspect.Parameter, parsed: str) -> Any:
         converter = param.annotation
@@ -224,20 +236,19 @@ class Command:
             else:
                 converter = type(param.default)
 
-        true_converter = self._resolve_converter(converter)
+        true_converter = self._resolve_converter(param.name, converter)
 
         try:
             argument = true_converter(context, parsed)
             if inspect.iscoroutine(argument):
                 argument = await argument
-        except BadArgument:
+        except BadArgument as e:
+            if e.name is None:
+                e.name = param.name
+
             raise
         except Exception as e:
-            raise ArgumentParsingFailed(
-                f"Invalid argument parsed at `{param.name}` in command `{self.name}`."
-                f" Expected type {converter} got {type(parsed)}.",
-                e,
-            ) from e
+            raise ArgumentParsingFailed(f"Failed to parse `{parsed}` for argument {param.name}", original=e, argname=param.name, expected=None) from e
         return argument
 
     async def parse_args(self, context: Context, instance: Optional[Cog], parsed: dict, index=0) -> Tuple[list, dict]:
@@ -264,7 +275,8 @@ class Command:
                         continue
 
                     if param.default is param.empty:
-                        raise MissingRequiredArgument(param)
+                        raise MissingRequiredArgument(argname=param.name)
+                    
                     args.append(param.default)
                 else:
                     _parsed_arg = await self._convert_types(context, param, argument)
@@ -285,13 +297,13 @@ class Command:
                 if rest:
                     rest = await self._convert_types(context, param, rest)
                 elif param.default is param.empty:
-                    raise MissingRequiredArgument(param)
+                    raise MissingRequiredArgument(argname=param.name)
                 else:
                     rest = param.default
                 kwargs[param.name] = rest
                 parsed.clear()
                 break
-            elif param.VAR_POSITIONAL:
+            elif param.kind == param.VAR_POSITIONAL:
                 args.extend([await self._convert_types(context, param, argument) for argument in parsed.values()])
                 parsed.clear()
                 break
