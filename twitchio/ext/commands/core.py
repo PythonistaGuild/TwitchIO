@@ -200,6 +200,10 @@ class Command:
         elif isinstance(converter, types.UnionType) or getattr(converter, "__origin__", None) is Union:
             return self.resolve_union_callback(converter) # type: ignore
         
+        elif hasattr(converter, "__metadata__"): # Annotated
+            annotated = converter.__metadata__ # type: ignore
+            return self._resolve_converter(annotated[0])
+        
         if converter is bool:
             converter = _boolconverter
         
