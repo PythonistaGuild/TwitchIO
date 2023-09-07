@@ -28,7 +28,7 @@ import time
 from typing import TYPE_CHECKING, List, Optional, Union, Tuple, Dict
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
-from .errors import HTTPException, Unauthorized
+from .errors import HTTPException
 from .rewards import CustomReward
 from .utils import parse_timestamp
 
@@ -36,7 +36,17 @@ from .utils import parse_timestamp
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
-    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent, Prediction, CharityCampaign
+    from .models import (
+        BitsLeaderboard,
+        Clip,
+        ExtensionBuilder,
+        Tag,
+        FollowEvent,
+        Prediction,
+        CharityCampaign,
+        ChannelFollowerEvent,
+        ChannelFollowingEvent,
+    )
 __all__ = (
     "PartialUser",
     "BitLeaderboardUser",
@@ -491,6 +501,10 @@ class PartialUser:
 
         Fetches a list of users that this user is following.
 
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+
         Parameters
         -----------
         token: Optional[:class:`str`]
@@ -510,6 +524,10 @@ class PartialUser:
 
         Fetches a list of users that are following this user.
 
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+
         Parameters
         -----------
         token: Optional[:class:`str`]
@@ -524,10 +542,64 @@ class PartialUser:
         data = await self._http.get_user_follows(token=token, to_id=str(self.id))
         return [FollowEvent(self._http, d, to=self) for d in data]
 
+    async def fetch_channel_followers(self, token: str, user_id: Optional[int] = None) -> List[ChannelFollowerEvent]:
+        """|coro|
+
+        Fetches a list of users that are following this broadcaster.
+        Requires a user access token that includes the moderator:read:followers scope.
+        The ID in the broadcaster_id query parameter must match the user ID in the access token or the user must be a moderator for the specified broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            User access token that includes the ``moderator:read:followers`` scope for the channel.
+        user_id: Optional[:class:`int`]
+            Use this parameter to see whether the user follows this broadcaster.
+
+
+        Returns
+        --------
+        List[:class:`twitchio.FollowEvent`]
+        """
+        from .models import ChannelFollowerEvent
+
+        data = await self._http.get_channel_followers(token=token, broadcaster_id=str(self.id), user_id=user_id)
+        return [ChannelFollowerEvent(self._http, d) for d in data]
+
+    async def fetch_channel_following(
+        self, token: str, broadcaster_id: Optional[int] = None
+    ) -> List[ChannelFollowingEvent]:
+        """|coro|
+
+        Fetches a list of users that this user follows.
+        Requires a user access token that includes the ``user:read:follows`` scope.
+        The ID in the broadcaster_id query parameter must match the user ID in the access token or the user must be a moderator for the specified broadcaster.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            User access token that includes the moderator:read:followers scope for the channel.
+        broadcaster_id: Optional[:class:`int`]
+            Use this parameter to see whether the user follows this broadcaster.
+
+
+        Returns
+        --------
+        List[:class:`twitchio.ChannelFollowingEvent`]
+        """
+        from .models import ChannelFollowingEvent
+
+        data = await self._http.get_channel_followed(token=token, user_id=str(self.id), broadcaster_id=broadcaster_id)
+        return [ChannelFollowingEvent(self._http, d) for d in data]
+
     async def fetch_follow(self, to_user: "PartialUser", token: Optional[str] = None):
         """|coro|
 
         Check if a user follows another user or when they followed a user.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
 
         Parameters
         -----------
@@ -546,10 +618,50 @@ class PartialUser:
         data = await self._http.get_user_follows(token=token, from_id=str(self.id), to_id=str(to_user.id))
         return FollowEvent(self._http, data[0]) if data else None
 
+    async def fetch_channel_follower_count(self, token: Optional[str] = None) -> int:
+        """|coro|
+
+        Fetches the total number of users that are following this user.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+        :class:`int`
+        """
+
+        data = await self._http.get_channel_follower_count(token=token, broadcaster_id=str(self.id))
+        return data["total"]
+
+    async def fetch_channel_following_count(self, token: str) -> int:
+        """|coro|
+
+        Fetches the total number of users that the user is following.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+        :class:`int`
+        """
+
+        data = await self._http.get_channel_followed_count(token=token, user_id=str(self.id))
+        return data["total"]
+
     async def fetch_follower_count(self, token: Optional[str] = None) -> int:
         """|coro|
 
-        Fetches a list of users that are following this user.
+        Fetches the total number of users that are following this user.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
 
         Parameters
         -----------
@@ -568,6 +680,10 @@ class PartialUser:
         """|coro|
 
         Fetches a list of users that this user is following.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
 
         Parameters
         -----------

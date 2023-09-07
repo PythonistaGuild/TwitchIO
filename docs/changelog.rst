@@ -3,6 +3,17 @@
 Master
 ======
 - TwitchIO
+    - Additions
+        - Added the new follower / followed endpoints for :class:`~twitchio.PartialUser`:
+            - :func:`~twitchio.PartialUser.fetch_channel_followers`
+            - :func:`~twitchio.PartialUser.fetch_channel_following`
+            - :func:`~twitchio.PartialUser.fetch_channel_follower_count`
+            - :func:`~twitchio.PartialUser.fetch_channel_following_count`
+        - The deprecated methods have had warnings added in the docs.
+        - New models for the new methods have been added:
+            - :class:`~twitchio.ChannelFollowerEvent`
+            - :class:`~twitchio.ChannelFollowingEvent`
+
     - Bug fixes
         - Fix IndexError when getting prefix when empty message is sent in a reply.
 

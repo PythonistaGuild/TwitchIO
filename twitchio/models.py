@@ -82,6 +82,8 @@ __all__ = (
     "ContentClassificationLabel",
     "CharityValues",
     "CharityCampaign",
+    "ChannelFollowerEvent",
+    "ChannelFollowingEvent",
 )
 
 
@@ -508,6 +510,60 @@ class FollowEvent:
 
     def __repr__(self):
         return f"<FollowEvent from_user={self.from_user} to_user={self.to_user} followed_at={self.followed_at}>"
+
+
+class ChannelFollowerEvent:
+    """
+    Represents a ChannelFollowEvent Event.
+
+    Attributes
+    -----------
+    user: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user that followed another user.
+    followed_at: :class:`datetime.datetime`
+        When the follow happened.
+    """
+
+    __slots__ = "user", "followed_at"
+
+    def __init__(
+        self,
+        http: "TwitchHTTP",
+        data: dict,
+    ):
+        self.user: Union[User, PartialUser] = PartialUser(http, data["user_id"], data["user_login"])
+        self.followed_at = parse_timestamp(data["followed_at"])
+
+    def __repr__(self):
+        return f"<ChannelFollowerEvent user={self.user} followed_at={self.followed_at}>"
+
+
+class ChannelFollowingEvent:
+    """
+    Represents a ChannelFollowEvent Event.
+
+    Attributes
+    -----------
+    broadcaster: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user that is following another user.
+    followed_at: :class:`datetime.datetime`
+        When the follow happened.
+    """
+
+    __slots__ = "broadcaster", "followed_at"
+
+    def __init__(
+        self,
+        http: "TwitchHTTP",
+        data: dict,
+    ):
+        self.broadcaster: Union[User, PartialUser] = PartialUser(
+            http, data["broadcaster_id"], data["broadcaster_login"]
+        )
+        self.followed_at = parse_timestamp(data["followed_at"])
+
+    def __repr__(self):
+        return f"<ChannelFollowerEvent user={self.broadcaster} followed_at={self.followed_at}>"
 
 
 class SubscriptionEvent:
