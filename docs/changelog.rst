@@ -20,6 +20,7 @@ Master
 - ext.eventsub
     - Bug fixes
         - Fix websocket reconnection event.
+        - Fix another websocket reconnect issue where it tried to decode nonexistent headers.
 
 
 2.7.0

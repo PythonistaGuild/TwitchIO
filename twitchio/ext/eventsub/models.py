@@ -248,6 +248,21 @@ class ReconnectEvent(BaseEvent):
 
     __slots__ = ("reconnect_url", "connected_at")
 
+    def __init__(
+        self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
+    ):
+        # we skip the super init here because reconnect events dont have headers or subscription information
+        
+        self._client = client
+        self._raw_data = _data
+
+        if isinstance(_data, str):
+            data: dict = _loads(_data)
+        else:
+            data = _data
+        
+        self.setup(data["payload"])
+
     def setup(self, data: dict):
         self.reconnect_url: str = data["session"]["reconnect_url"]
         self.connected_at: datetime.datetime = _parse_datetime(data["session"]["connected_at"])
