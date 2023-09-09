@@ -1178,3 +1178,67 @@ class TwitchHTTP:
         return await self.request(
             Route("GET", "charity/campaigns", query=[("broadcaster_id", broadcaster_id)], token=token)
         )
+
+    async def get_channel_followers(
+        self,
+        token: str,
+        broadcaster_id: str,
+        user_id: Optional[int] = None,
+    ):
+        query = [("broadcaster_id", broadcaster_id)]
+
+        if user_id is not None:
+            query.append(("user_id", str(user_id)))
+
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followers",
+                query=query,
+                token=token,
+            )
+        )
+
+    async def get_channel_followed(
+        self,
+        token: str,
+        user_id: str,
+        broadcaster_id: Optional[int] = None,
+    ):
+        query = [("user_id", user_id)]
+
+        if broadcaster_id is not None:
+            query.append(("broadcaster_id", str(broadcaster_id)))
+
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followed",
+                query=query,
+                token=token,
+            )
+        )
+
+    async def get_channel_follower_count(self, broadcaster_id: str, token: Optional[str] = None):
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followers",
+                query=[("broadcaster_id", broadcaster_id)],
+                token=token,
+            ),
+            full_body=True,
+            paginate=False,
+        )
+
+    async def get_channel_followed_count(self, token: str, user_id: str):
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followed",
+                query=[("user_id", user_id)],
+                token=token,
+            ),
+            full_body=True,
+            paginate=False,
+        )
