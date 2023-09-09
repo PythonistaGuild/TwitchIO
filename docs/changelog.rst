@@ -6,6 +6,8 @@ Master
     - Bug fixes
         - Fix IndexError when getting prefix when empty message is sent in a reply.
 
+- Docs
+    - Added walkthrough for ext.commands
 
 2.7.0
 ======
