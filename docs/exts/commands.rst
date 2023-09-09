@@ -278,7 +278,7 @@ Lets take a look at custom converters and Annotated:
         return yarl.URL(arg) # this will raise if its an invalid URL.
 
     @bot.command(name="share")
-    async def cookie_command(ctx: commands.Context, url: Annotated[yarl.URL, url_converter]) -> None:
+    async def share_command(ctx: commands.Context, url: Annotated[yarl.URL, url_converter]) -> None:
         await ctx.send(f"{ctx.author.name} wants to share a link on {url.host}: {url}")
 
 Now that we've seen how custom converters work, let's combine them with the Union syntax to create a command that 
@@ -298,7 +298,7 @@ I've spread the command definition out over multiple lines to make it more reada
         return yarl.URL(arg) # this will raise if its an invalid URL.
 
     @bot.command(name="share")
-    async def cookie_command(
+    async def share_command(
         ctx: commands.Context,
         url: twitchio.Clip | Annotated[yarl.URL, url_converter]
     ) -> None:
@@ -397,7 +397,7 @@ Now, let's clean up our errors a bit. To do this, we'll take a mix of the code e
         return url
 
     @bot.command(name="share")
-    async def cookie_command(
+    async def share_command(
         ctx: commands.Context,
         url: Annotated[yarl.URL, youtube_converter],
         hype: int,
@@ -491,7 +491,7 @@ Let's try combining this subclass with our existing code:
         return url
 
     @bot.command(name="share")
-    async def cookie_command(
+    async def share_command(
         ctx: commands.Context,
         url: Annotated[yarl.URL, youtube_converter],
         hype: int,
@@ -578,7 +578,7 @@ If you want to raise errors from your commands, subclass :class:`TwitchCommandEr
         return url
 
     @bot.command(name="share")
-    async def cookie_command(
+    async def share_command(
         ctx: commands.Context,
         url: Annotated[yarl.URL, youtube_converter],
         hype: int,
