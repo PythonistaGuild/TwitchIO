@@ -74,6 +74,22 @@ ChannelEmote
     :members:
     :inherited-members:
 
+ChannelFollowerEvent
+---------------------
+.. attributetable:: ChannelFollowerEvent
+
+.. autoclass:: ChannelFollowerEvent
+    :members:
+    :inherited-members:
+
+ChannelFollowingEvent
+---------------------
+.. attributetable:: ChannelFollowingEvent
+
+.. autoclass:: ChannelFollowingEvent
+    :members:
+    :inherited-members:
+
 ChannelInfo
 ------------
 .. attributetable:: ChannelInfo
