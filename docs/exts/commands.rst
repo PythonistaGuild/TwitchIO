@@ -5,6 +5,10 @@
 Commands Ext
 ===========================
 
+
+Walkthrough
+------------
+
 The commands ext is meant purely for creating twitch chatbots. It gives you powerful tools, including dynamic loading/unloading/reloading
 of modules, organization of code using Cogs, and of course, commands.
 
@@ -60,6 +64,7 @@ We'll also be passing 3 initial channels to our bot, so that we can send command
     bot = commands.Bot(token="...", prefix="!", initial_channels=["iamtomahawkx", "chillymosh", "mystypy"])
 
     bot.run()
+
 ___
 
 To create a command, we'll use the following code:
@@ -500,7 +505,7 @@ Let's try combining this subclass with our existing code:
 
 Now, let's pass it some bad arguments and see what happens.
 
-.. image:: images/commands_errors_1.png
+.. image:: /images/commands_errors_1.png
 
 Now, that isn't very user intuitive, but for the purpose of this walkthrough, it'll do just fine. You can tweak that as you want!
 Let's fill this out with some more common errors:
@@ -591,6 +596,12 @@ Now, let's pass a bad URL to it:
 
 Great, we get our custom error! That's our basic error handling, anything more complex is beyond this walkthrough.
 
+.. tip::
+
+    Many Twitchio errors have additional context contained within them.
+    If you wish to build your own error messages instead of the defaults, try checking the error's attributes.
+
+___
 
 
 API Reference
