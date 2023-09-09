@@ -28,6 +28,7 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from .core import Command
 
+
 class TwitchCommandError(Exception):
     """Base TwitchIO Command Error. All command errors derive from this error."""
 
@@ -44,7 +45,7 @@ class InvalidCog(TwitchCommandError):
 
 class MissingRequiredArgument(TwitchCommandError):
     def __init__(self, *args, argname: Optional[str] = None) -> None:
-        self.name: str = (argname or "unknown")
+        self.name: str = argname or "unknown"
 
         if args:
             super().__init__(*args)
@@ -54,18 +55,20 @@ class MissingRequiredArgument(TwitchCommandError):
 
 class BadArgument(TwitchCommandError):
     def __init__(self, message: str, argname: Optional[str] = None):
-        self.name: str = argname # type: ignore # this'll get fixed in the parser handler
+        self.name: str = argname  # type: ignore # this'll get fixed in the parser handler
         self.message = message
         super().__init__(message)
 
 
 class ArgumentParsingFailed(BadArgument):
-    def __init__(self, message: str, original: Exception, argname: Optional[str] = None, expected: Optional[type] = None):
+    def __init__(
+        self, message: str, original: Exception, argname: Optional[str] = None, expected: Optional[type] = None
+    ):
         self.original: Exception = original
-        self.name: str = argname # type: ignore # in theory this'll never be None but if someone is creating this themselves itll be none.
+        self.name: str = argname  # type: ignore # in theory this'll never be None but if someone is creating this themselves itll be none.
         self.expected_type: Optional[type] = expected
 
-        Exception.__init__(self, message) # bypass badArgument
+        Exception.__init__(self, message)  # bypass badArgument
 
 
 class UnionArgumentParsingFailed(ArgumentParsingFailed):
