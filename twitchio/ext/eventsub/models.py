@@ -252,7 +252,7 @@ class ReconnectEvent(BaseEvent):
         self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
     ):
         # we skip the super init here because reconnect events dont have headers or subscription information
-        
+
         self._client = client
         self._raw_data = _data
 
@@ -260,7 +260,7 @@ class ReconnectEvent(BaseEvent):
             data: dict = _loads(_data)
         else:
             data = _data
-        
+
         self.setup(data["payload"])
 
     def setup(self, data: dict):

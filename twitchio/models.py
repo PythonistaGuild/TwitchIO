@@ -293,6 +293,8 @@ class Clip:
     vod_offset: Optional[:class:`int`]
         The zero-based offset, in seconds, to where the clip starts in the video (VOD) or stream.
         This can be None if the parent no longer exists
+    is_featured: :class:`bool`
+        Indicates if the clip is featured or not.
     """
 
     __slots__ = (
@@ -310,6 +312,7 @@ class Clip:
         "thumbnail_url",
         "duration",
         "vod_offset",
+        "is_featured",
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -327,6 +330,7 @@ class Clip:
         self.thumbnail_url: str = data["thumbnail_url"]
         self.duration: float = data["duration"]
         self.vod_offset: Optional[int] = data["vod_offset"]
+        self.is_featured: bool = data["is_featured"]
 
     def __repr__(self):
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"

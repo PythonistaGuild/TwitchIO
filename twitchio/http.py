@@ -574,6 +574,7 @@ class TwitchHTTP:
         ids: Optional[List[str]] = None,
         started_at: Optional[datetime.datetime] = None,
         ended_at: Optional[datetime.datetime] = None,
+        is_featured: Optional[bool] = None,
         token: Optional[str] = None,
     ):
         if started_at and started_at.tzinfo is None:
@@ -586,6 +587,7 @@ class TwitchHTTP:
             ("game_id", game_id),
             ("started_at", started_at.isoformat() if started_at else None),
             ("ended_at", ended_at.isoformat() if ended_at else None),
+            ("is_featured", str(is_featured) if is_featured is not None else None),
         ]
         if ids:
             q.extend(("id", id) for id in ids)
