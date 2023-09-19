@@ -55,11 +55,11 @@ async def convert_Chatter(ctx: Context, arg: str) -> Chatter:
     return resp[0]
 
 
-async def convert_PartialChatter(ctx: Context, arg: str) -> Chatter:
+async def convert_PartialChatter(ctx: Context, arg: str) -> PartialChatter:
     """
-    Actually a shorthand to :ref:`~convert_Chatter`
+    Converts the argument into a chatter in the chat. As opposed to Chatter converter, this will return a PartialChatter regardless of the cache state.
     """
-    return await convert_Chatter(ctx, arg)
+    return PartialChatter(ctx._ws, name=arg.lstrip("@"), channel=ctx.channel, message=None)
 
 
 async def convert_Clip(ctx: Context, arg: str) -> Clip:

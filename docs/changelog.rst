@@ -31,6 +31,15 @@ Master
             - ``Optional[T]`` / ``T | None``
             - ``Annotated[T, converter]`` (accessible through the ``typing_extensions`` module on older python versions)
 
+- ext.commands
+    - Additions
+        - Added support for the following typing constructs in command signatures:
+            - ``Union[A, B]`` / ``A | B``
+            - ``Optional[T]`` / ``T | None``
+            - ``Annotated[T, converter]`` (accessible through the ``typing_extensions`` module on older python versions)
+
+- Docs
+    - Added walkthrough for ext.commands
 
 2.7.0
 ======
