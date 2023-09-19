@@ -335,7 +335,10 @@ class PartialUser:
         return data[0]
 
     async def fetch_clips(
-        self, started_at: Optional[datetime.datetime] = None, ended_at: Optional[datetime.datetime] = None
+        self,
+        started_at: Optional[datetime.datetime] = None,
+        ended_at: Optional[datetime.datetime] = None,
+        is_featured: Optional[bool] = None,
     ) -> List["Clip"]:
         """|coro|
 
@@ -350,6 +353,9 @@ class PartialUser:
         ended_at: Optional[:class:`datetime.datetime`]
             Ending date/time for returned clips.
             If this is specified, started_at also must be specified; otherwise, the time period is ignored.
+        is_featured: Optional[:class:`bool`]
+            Optional bool to only return only featured clips or not featured clips.
+
 
         Returns
         --------
@@ -357,7 +363,7 @@ class PartialUser:
         """
         from .models import Clip
 
-        data = await self._http.get_clips(self.id, started_at=started_at, ended_at=ended_at)
+        data = await self._http.get_clips(self.id, started_at=started_at, ended_at=ended_at, is_featured=is_featured)
 
         return [Clip(self._http, x) for x in data]
 
