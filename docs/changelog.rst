@@ -1,5 +1,11 @@
 :orphan:
 
+2.8.1
+======
+- ext.commands
+    - Bug fixes
+        - Fixed an issue where ``CommandNotFound`` couldn't be processed from ``get_context``.
+
 2.8.0
 ======
 - TwitchIO
