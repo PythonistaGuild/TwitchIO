@@ -21,6 +21,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .core import Command
 
 
 class TwitchCommandError(Exception):
@@ -38,29 +44,52 @@ class InvalidCog(TwitchCommandError):
 
 
 class MissingRequiredArgument(TwitchCommandError):
-    pass
+    def __init__(self, *args, argname: Optional[str] = None) -> None:
+        self.name: str = argname or "unknown"
+
+        if args:
+            super().__init__(*args)
+        else:
+            super().__init__(f"Missing required argument `{self.name}`")
 
 
 class BadArgument(TwitchCommandError):
-    def __init__(self, message: str):
+    def __init__(self, message: str, argname: Optional[str] = None):
+        self.name: str = argname  # type: ignore # this'll get fixed in the parser handler
         self.message = message
         super().__init__(message)
 
 
 class ArgumentParsingFailed(BadArgument):
-    def __init__(self, message: str, original: Exception):
-        self.original = original
-        super().__init__(message)
+    def __init__(
+        self, message: str, original: Exception, argname: Optional[str] = None, expected: Optional[type] = None
+    ):
+        self.original: Exception = original
+        self.name: str = argname  # type: ignore # in theory this'll never be None but if someone is creating this themselves itll be none.
+        self.expected_type: Optional[type] = expected
+
+        Exception.__init__(self, message)  # bypass badArgument
+
+
+class UnionArgumentParsingFailed(ArgumentParsingFailed):
+    def __init__(self, argname: str, expected: tuple[type, ...]):
+        self.name: str = argname
+        self.expected_type: tuple[type, ...] = expected
+
+        self.message = f"Failed to convert argument `{self.name}` to any of the valid options"
+        Exception.__init__(self, self.message)
 
 
 class CommandNotFound(TwitchCommandError):
-    pass
+    def __init__(self, message: str, name: str) -> None:
+        self.name: str = name
+        super().__init__(message)
 
 
 class CommandOnCooldown(TwitchCommandError):
-    def __init__(self, command, retry_after):
-        self.command = command
-        self.retry_after = retry_after
+    def __init__(self, command: Command, retry_after: float):
+        self.command: Command = command
+        self.retry_after: float = retry_after
         super().__init__(f"Command <{command.name}> is on cooldown. Try again in ({retry_after:.2f})s")
 
 
