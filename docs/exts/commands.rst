@@ -521,7 +521,7 @@ Let's fill this out with some more common errors:
                 await context.send(error.message)
             
             elif isinstance(error, commands.MissingRequiredArgument):
-                await context.send("You're missing an argument: " + error.args[0].name)
+                await context.send("You're missing an argument: " + error.name)
             
             elif isinstance(error, commands.CheckFailure): # we'll explain checks later, but lets include it for now.
                 await context.send("Sorry, you cant run that command: " + error.args[0])
@@ -552,7 +552,7 @@ If you want to raise errors from your commands, subclass :class:`TwitchCommandEr
                 await context.send(error.message)
             
             elif isinstance(error, commands.MissingRequiredArgument):
-                await context.send("You're missing an argument: " + error.args[0].name)
+                await context.send("You're missing an argument: " + error.name)
             
             elif isinstance(error, commands.CheckFailure): # we'll explain checks later, but lets include it for now.
                 await context.send("Sorry, you cant run that command: " + error.args[0])
