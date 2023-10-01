@@ -636,7 +636,7 @@ G = TypeVar("G", bound="Group")
 
 
 def command(
-    *, name: str = None, aliases: Union[list, tuple] = None, cls: C = Command, no_global_checks=False
+    *, name: str = None, aliases: Union[list, tuple] = None, cls: type[C] = Command, no_global_checks=False
 ) -> Callable[[Callable], C]:
     if cls and not inspect.isclass(cls):
         raise TypeError(f"cls must be of type <class> not <{type(cls)}>")
