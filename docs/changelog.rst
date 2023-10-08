@@ -1,5 +1,11 @@
 :orphan:
 
+2.8.2
+======
+- ext.commands
+    - Bug fixes
+        - Fixed an issue where built-in converters would raise an internal ``TypeError``.
+
 2.8.1
 ======
 - ext.commands
