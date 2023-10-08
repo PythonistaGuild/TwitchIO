@@ -63,7 +63,7 @@ class EmptyArgumentSentinel:
 EMPTY = EmptyArgumentSentinel()
 
 
-def _boolconverter(param: str):
+def _boolconverter(_, param: str):
     param = param.lower()
     if param in {"yes", "y", "1", "true", "on"}:
         return True
@@ -147,10 +147,9 @@ class Command:
 
         async def _resolve(context: Context, arg: str) -> Any:
             t = EMPTY
-            last = None
 
             for original in args:
-                underlying = self._resolve_converter(name, original)
+                underlying = self._resolve_converter(name, original, context)
 
                 try:
                     t: Any = underlying(context, arg)
@@ -159,7 +158,6 @@ class Command:
 
                     break
                 except Exception as l:
-                    last = l
                     t = EMPTY  # thisll get changed when t is a coroutine, but is still invalid, so roll it back
                     continue
 
@@ -170,8 +168,8 @@ class Command:
 
         return _resolve
 
-    def resolve_optional_callback(self, name: str, converter: Any) -> Callable[[Context, str], Any]:
-        underlying = self._resolve_converter(name, converter.__args__[0])
+    def resolve_optional_callback(self, name: str, converter: Any, context: Context) -> Callable[[Context, str], Any]:
+        underlying = self._resolve_converter(name, converter.__args__[0], context)
 
         async def _resolve(context: Context, arg: str) -> Any:
             try:
@@ -186,7 +184,7 @@ class Command:
 
         return _resolve
 
-    def _resolve_converter(self, name: str, converter: Union[Callable, Awaitable, type]) -> Callable[..., Any]:
+    def _resolve_converter(self, name: str, converter: Union[Callable, Awaitable, type], ctx: Context) -> Callable[..., Any]:
         if (
             isinstance(converter, type)
             and converter.__module__.startswith("twitchio")
@@ -198,26 +196,27 @@ class Command:
             converter = self._convert_builtin_type(name, bool, _boolconverter)
 
         elif converter in (str, int):
-            converter = self._convert_builtin_type(name, converter, converter)  # type: ignore
+            original: type[str | int] = converter # type: ignore
+            converter = self._convert_builtin_type(name, original, lambda _, arg: original(arg))
 
         elif self._is_optional_argument(converter):
-            return self.resolve_optional_callback(name, converter)
+            return self.resolve_optional_callback(name, converter, ctx)
 
         elif isinstance(converter, types.UnionType) or getattr(converter, "__origin__", None) is Union:
             return self.resolve_union_callback(name, converter)  # type: ignore
 
         elif hasattr(converter, "__metadata__"):  # Annotated
             annotated = converter.__metadata__  # type: ignore
-            return self._resolve_converter(name, annotated[0])
+            return self._resolve_converter(name, annotated[0], ctx)
 
         return converter  # type: ignore
 
     def _convert_builtin_type(
-        self, arg_name: str, original: type, converter: Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
+        self, arg_name: str, original: type, converter: Union[Callable[[Context, str], Any], Callable[[Context, str], Awaitable[Any]]]
     ) -> Callable[[Context, str], Awaitable[Any]]:
-        async def resolve(_, arg: str) -> Any:
+        async def resolve(ctx, arg: str) -> Any:
             try:
-                t = converter(arg)
+                t = converter(ctx, arg)
 
                 if inspect.iscoroutine(t):
                     t = await t
@@ -242,7 +241,7 @@ class Command:
             else:
                 converter = type(param.default)
 
-        true_converter = self._resolve_converter(param.name, converter)
+        true_converter = self._resolve_converter(param.name, converter, context)
 
         try:
             argument = true_converter(context, parsed)
