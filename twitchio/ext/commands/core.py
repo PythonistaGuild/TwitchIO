@@ -184,7 +184,9 @@ class Command:
 
         return _resolve
 
-    def _resolve_converter(self, name: str, converter: Union[Callable, Awaitable, type], ctx: Context) -> Callable[..., Any]:
+    def _resolve_converter(
+        self, name: str, converter: Union[Callable, Awaitable, type], ctx: Context
+    ) -> Callable[..., Any]:
         if (
             isinstance(converter, type)
             and converter.__module__.startswith("twitchio")
@@ -196,7 +198,7 @@ class Command:
             converter = self._convert_builtin_type(name, bool, _boolconverter)
 
         elif converter in (str, int):
-            original: type[str | int] = converter # type: ignore
+            original: type[str | int] = converter  # type: ignore
             converter = self._convert_builtin_type(name, original, lambda _, arg: original(arg))
 
         elif self._is_optional_argument(converter):
@@ -212,7 +214,10 @@ class Command:
         return converter  # type: ignore
 
     def _convert_builtin_type(
-        self, arg_name: str, original: type, converter: Union[Callable[[Context, str], Any], Callable[[Context, str], Awaitable[Any]]]
+        self,
+        arg_name: str,
+        original: type,
+        converter: Union[Callable[[Context, str], Any], Callable[[Context, str], Awaitable[Any]]],
     ) -> Callable[[Context, str], Awaitable[Any]]:
         async def resolve(ctx, arg: str) -> Any:
             try:
