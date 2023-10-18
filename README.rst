@@ -104,7 +104,7 @@ Thank you to all those who contribute and help TwitchIO grow.
 
 Special thanks to:
 
-`SnowyLuma <https://github.com/SnowyLuma>`_
+`LostLuma (Lilly) <https://github.com/LostLuma>`_
 
 `Harmon <https://github.com/Harmon758>`_
 
