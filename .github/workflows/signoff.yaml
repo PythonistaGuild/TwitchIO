@@ -1,0 +1,15 @@
+name: validate-signoff
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Description Check
+        uses: pythonistaguild/pr-description-check@v1.0
+        with:
+          content: "[x] I have read and agree to the [Developer Certificate of Origin]"
