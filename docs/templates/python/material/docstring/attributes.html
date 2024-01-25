@@ -1,0 +1,90 @@
+{{ log.debug("Rendering attributes section") }}
+
+{% import "language.html" as lang with context %}
+
+{% if config.docstring_section_style == "table" %}
+  {% block table_style %}
+  <p><strong>{{ section.title or lang.t("Attributes:") }}</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>{{ lang.t("Name") }}</th>
+        <th>{{ lang.t("Type") }}</th>
+        <th>{{ lang.t("Description") }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for attribute in section.value %}
+        <tr>
+          <td><code>{{ attribute.name }}</code></td>
+          <td>
+            {% if attribute.annotation %}
+              {% with expression = attribute.annotation %}
+                <code>{% include "expression.html" with context %}</code>
+              {% endwith %}
+            {% endif %}
+          </td>
+          <td>
+            <div class="doc-md-description">
+              {{ attribute.description|convert_markdown(heading_level, html_id) }}
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endblock table_style %}
+{% elif config.docstring_section_style == "list" %}
+  {% block list_style %}
+  <p class="pythonista-docs-heading">{{ section.title or lang.t("Attributes:") }}</p>
+  <ul>
+    {% for attribute in section.value %}
+      <li class="field-body">
+        <b>{{ attribute.name }}</b>
+        {% if attribute.annotation %}
+          {% with expression = attribute.annotation %}
+            (<code>{% include "expression.html" with context %}</code>)
+          {% endwith %}
+        {% endif %}
+        –
+        <div class="doc-md-description">
+          {{ attribute.description|convert_markdown(heading_level, html_id) }}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+  {% endblock list_style %}
+{% elif config.docstring_section_style == "spacy" %}
+  {% block spacy_style %}
+  <table>
+    <thead>
+      <tr>
+        <th><b>{{ (section.title or lang.t("ATTRIBUTE")).rstrip(":").upper() }}</b></th>
+        <th><b>{{ lang.t("DESCRIPTION") }}</b></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for attribute in section.value %}
+        <tr>
+          <td><code>{{ attribute.name }}</code></td>
+          <td class="doc-attribute-details">
+            <div class="doc-md-description">
+              {{ attribute.description|convert_markdown(heading_level, html_id) }}
+            </div>
+            <p>
+              {% if attribute.annotation %}
+                <span class="doc-attribute-annotation">
+                  <b>TYPE:</b>
+                  {% with expression = attribute.annotation %}
+                    <code>{% include "expression.html" with context %}</code>
+                  {% endwith %}
+                </span>
+              {% endif %}
+            </p>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endblock spacy_style %}
+{% endif %}

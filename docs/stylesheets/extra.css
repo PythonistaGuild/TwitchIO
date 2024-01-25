@@ -1,0 +1,171 @@
+:root {
+  --md-admonition-icon--version: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.5 9A1.5 1.5 0 0 0 7 7.5 1.5 1.5 0 0 0 5.5 6 1.5 1.5 0 0 0 4 7.5 1.5 1.5 0 0 0 5.5 9m11.91 2.58c.36.36.59.86.59 1.42 0 .55-.22 1.05-.59 1.41l-5 5a1.996 1.996 0 0 1-2.83 0l-6.99-6.99C2.22 12.05 2 11.55 2 11V6c0-1.11.89-2 2-2h5c.55 0 1.05.22 1.41.58l7 7m-3.87-5.87 1-1 6.87 6.87c.37.36.59.87.59 1.42 0 .55-.22 1.05-.58 1.41l-5.38 5.38-1-1L20.75 13l-7.21-7.29Z"></path></svg>')
+}
+
+[data-md-color-scheme="pythonista"] {
+  --md-primary-fg-color:        #1D1D26;
+  --md-default-fg-color: #EAEAF3;
+  --md-default-fg-color--light: #959599;
+  --md-default-fg-color--lighter: rgba(189, 189, 224, 0.6);
+  --md-primary-bg-color: #EAEAF3;
+  --md-typeset-color: #C9C9D1;
+  --md-default-bg-color: #15151C;
+  --md-footer-bg-color: #262633;
+
+  --md-code-fg-color: #efefff;
+  --md-code-bg-color: #23232e;
+  .md-typeset code {
+    padding: 0.15rem 0.25rem;
+    border-radius: 0.15rem;
+    margin: 0 0.1rem;
+  }
+
+  --md-typeset-a-color: #c083e4;
+  --md-accent-fg-color: #daa3fa;
+  --md-admonition-bg-color: #1D1D26;
+  --md-admonition-fg-color: #efefff;
+  --md-typeset-table-color: rgb(201, 201, 209, .2);
+
+  .pythonista-tag {
+    background: var(--md-primary-fg-color);
+    padding: 0.5rem;
+    display: table;
+    border-radius: 0.5rem;
+  }
+
+  .pythonista-tag:hover {
+    filter: brightness(105%);
+  }
+
+  .pythonista-tag > svg {
+    height: 1rem;
+    width: 1rem;
+    vertical-align: bottom;
+  }
+
+  .icon-unknown {
+    color: #c083e4;
+  }
+
+  .icon-check {
+    color: #73D673;
+  }
+
+  .icon-warning {
+    color: #F7BA00;
+  }
+
+  .pythonista-docs-heading {
+    font-weight: 600;
+    font-size: 1.2em;
+    background-color: rgb(29, 29, 38, 0.4);
+  }
+
+  .md-annotation {
+    vertical-align: bottom;
+  }
+
+  .md-tooltip {
+    color: #efefff;
+    border: 0.5px solid rgb(204, 139, 241, 0.1);
+  }
+
+  .md-typeset .admonition.version,
+  .md-typeset details.version {
+    border-color: rgb(204, 139, 241, 0.6);
+  }
+  .md-typeset .version > .admonition-title,
+  .md-typeset .version > summary {
+    background-color: rgba(113, 113, 224, 0.342);;
+  }
+  .md-typeset .version > .admonition-title::before,
+  .md-typeset .version > summary::before {
+    background-color: #d5a6f3;
+    -webkit-mask-image: var(--md-admonition-icon--version);
+            mask-image: var(--md-admonition-icon--version);
+  }
+
+  .highlight > .n {
+    color: #e0c5f1;
+  }
+  .highlight > .p {
+    color: #e4e4f7;
+  }
+  .highlight > .o {
+    color: #e4e4f7;
+  }
+
+  .sfkjhsgkh {
+    color: #c083e4;
+  }
+
+  .highlight .nd {
+    color: #C7A65D;
+  }
+
+  .highlight .kc {
+    color: #929be0;
+  }
+
+  .highlight .sd {
+    color: #7ba778;
+  }
+
+  --md-code-hl-number-color: #6ca3eb;
+  --md-code-hl-function-color: #C7A65D;
+  --md-code-hl-comment-color: #676773;
+  --md-code-hl-constant-color: #D6B387;
+  --md-code-hl-keyword-color: #929be0;
+  --md-code-hl-string-color: #A6E3A1;
+  --md-code-hl-name-color: #F5C2DA;
+  --md-code-hl-operator-color: #F5C2E7;
+  --md-code-hl-punctuation-color: #F5C2DA;
+  --md-code-hl-special-color: #ff0077;
+  --md-code-hl-generic-color: #F5C2DA;
+  --md-code-hl-variable-color: #F5C2DA;
+
+  .highlight span.filename {
+    background-color: #1D1D26;
+  }
+
+  .md-typeset {
+    font-size: 0.65rem;
+  }
+
+  .quote > summary {
+    background-color: rgba(145, 62, 117, 0.4);
+  }
+
+  .md-typeset h2 {
+    font-size: 1.4em;
+    margin-top: 2rem;
+  }
+
+  .doc-label-async > code {
+    color: #F7BA00;
+    background-color: rgb(247, 186, 0, 0.05);
+    font-size: 1.05em;
+    font-weight: bold;
+  }
+
+  .doc-label-writable > code {
+    color: #73D673;
+    background-color: rgb(115, 214, 115, 0.05);
+  }
+
+  .doc-object {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #262633;
+  }
+
+  .md-logo > img {
+    opacity: 75%;
+    height: 1.25rem;
+    width: auto;
+  }
+
+  .pythonista-func-header {
+    display: block;
+  }
+
+}

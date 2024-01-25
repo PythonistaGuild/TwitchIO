@@ -1,0 +1,83 @@
+{{ log.debug("Rendering raises section") }}
+
+{% import "language.html" as lang with context %}
+
+{% if config.docstring_section_style == "table" %}
+  {% block table_style %}
+  <p><strong>{{ section.title or lang.t("Raises:") }}</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>{{ lang.t("Type") }}</th>
+        <th>{{ lang.t("Description") }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for raises in section.value %}
+        <tr>
+          <td>
+            {% if raises.annotation %}
+              {% with expression = raises.annotation %}
+                <code>{% include "expression.html" with context %}</code>
+              {% endwith %}
+            {% endif %}
+          </td>
+          <td>
+            <div class="doc-md-description">
+              {{ raises.description|convert_markdown(heading_level, html_id) }}
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endblock table_style %}
+{% elif config.docstring_section_style == "list" %}
+  {% block list_style %}
+  <p class="pythonista-docs-heading">{{ lang.t(section.title) or lang.t("Raises:") }}</p>
+  <ul>
+    {% for raises in section.value %}
+      <li class="field-body">
+        {% if raises.annotation %}
+          {% with expression = raises.annotation %}
+            <code>{% include "expression.html" with context %}</code>
+          {% endwith %}
+          –
+        {% endif %}
+        <div class="doc-md-description">
+          {{ raises.description|convert_markdown(heading_level, html_id) }}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+  {% endblock list_style %}
+{% elif config.docstring_section_style == "spacy" %}
+  {% block spacy_style %}
+  <table>
+    <thead>
+      <tr>
+        <th><b>{{ (section.title or lang.t("RAISES")).rstrip(":").upper() }}</b></th>
+        <th><b>{{ lang.t("DESCRIPTION") }}</b></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for raises in section.value %}
+        <tr>
+          <td>
+            <span class="doc-raises-annotation">
+              {% with expression = raises.annotation %}
+                <code>{% include "expression.html" with context %}</code>
+              {% endwith %}
+            </span>
+          </td>
+          <td class="doc-raises-details">
+            <div class="doc-md-description">
+              {{ raises.description|convert_markdown(heading_level, html_id) }}
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endblock spacy_style %}
+{% endif %}

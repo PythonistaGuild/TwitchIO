@@ -1,0 +1,84 @@
+site_name: TwitchIO
+copyright: Copyright &copy; 2017-Present PythonistaGuild
+repo_url: https://github.com/PythonistaGuild/TwitchIO
+repo_name: PythonistaGuild/TwitchIO
+
+theme:
+  name: "material"
+  palette:
+    scheme: pythonista
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips
+    - navigation.tabs
+    - navigation.path
+    - navigation.top
+    - search.suggest
+    - search.share
+  icon:
+    annotation: material/chevron-right-circle
+    repo: fontawesome/brands/github
+  logo: assets/logo.png
+  font:
+    text: Assistant
+
+plugins:
+  - tags
+  - search
+  - autorefs
+  - mkdocstrings:
+      custom_templates: docs/templates
+      default_handler: python
+      enable_inventory: true
+      handlers:
+        python:
+          import:
+          - https://docs.python.org/3/objects.inv
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            inherited_members: true
+            group_by_category: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            docstring_section_style: "list"
+
+extra_css:
+  - stylesheets/extra.css
+extra_javascript:
+  - javascripts/extra.js
+
+nav:
+  - Home: index.md
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - footnotes
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+
+extra:
+  social:
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/RAKc3HF
+    - icon: fontawesome/brands/github
+      link: https://github.com/PythonistaGuild/TwitchIO

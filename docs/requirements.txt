@@ -1,10 +1,3 @@
-sphinx
-docutils<0.18
-sphinxcontrib-napoleon
-sphinxcontrib-asyncio
-sphinxcontrib-websupport
-sphinxext-opengraph
-Pygments
-furo
-pyaudio==0.2.11
-yt-dlp>=2022.2.4
+mkdocs-material
+mkdocstrings-python
+mkdocstrings
