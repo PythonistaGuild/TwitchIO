@@ -8,48 +8,38 @@ starting_version = "3.0.0.dev0"
 
 [project]
 name = "twitchio"
-authors = [
-  { name="PythonistaGuild" },
-]
+authors = [{ name = "PythonistaGuild" }]
 dynamic = ["dependencies", "version"]
 description = "A fully asynchronous and modern Python wrapper around the Twitch API."
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
-        "License :: OSI Approved :: MIT License",
-        "Intended Audience :: Developers",
-        "Natural Language :: English",
-        "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Topic :: Internet",
-        "Topic :: Software Development :: Libraries",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        "Topic :: Utilities",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/PythonistaGuild/TwitchIO"
 
 [tool.setuptools]
-packages = ["twitchio", "twitchio.types"]
+packages = ["twitchio"]
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = { file = ["requirements.txt"] }
 
 [project.optional-dependencies]
-docs = [
-  "mkdocs-material", 
-  "mkdocstrings-python",
-  "mkdocstrings",
-]
+docs = ["mkdocs-material", "mkdocstrings-python", "mkdocstrings"]
 
-dev = [
-    "ruff",
-    "pyright",
-    "isort",
-]
+dev = ["ruff", "pyright", "isort"]
 
 [tool.ruff]
 line-length = 120
