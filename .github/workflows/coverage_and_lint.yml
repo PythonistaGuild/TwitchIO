@@ -1,0 +1,51 @@
+name: Type Coverage and Linting
+
+on:
+  push:
+    branches:
+      - dev/3.0
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.x"]
+
+    name: "Type Coverage and Linting @ ${{ matrix.python-version }}"
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: "Setup Python @ ${{ matrix.python-version }}"
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: "pip"
+
+      - name: "Install Python deps @ ${{ matrix.python-version }}"
+        id: install-deps
+        run: |
+          pip install -U -r requirements.txt
+      - name: "Run Pyright @ ${{ matrix.python-version }}"
+        uses: jakebailey/pyright-action@v1
+        with:
+          no-comments: ${{ matrix.python-version != '3.x' }}
+          warnings: false
+
+      - name: Lint
+        if: ${{ always() && steps.install-deps.outcome == 'success' }}
+        uses: github/super-linter/slim@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: dev/3.0
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_PYTHON_ISORT: true
+          LINTER_RULES_PATH: /
+          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
+          PYTHON_BLACK_CONFIG_FILE: pyproject.toml

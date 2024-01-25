@@ -1,0 +1,111 @@
+[build-system]
+requires = ["setuptools", "wheel", "setuptools-git-versioning<2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools-git-versioning]
+enabled = true
+starting_version = "3.0.0.dev0"
+
+[project]
+name = "twitchio"
+authors = [
+  { name="PythonistaGuild" },
+]
+dynamic = ["dependencies", "version"]
+description = "A fully asynchronous and modern Python wrapper around the Twitch API."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+        "License :: OSI Approved :: MIT License",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Topic :: Internet",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Utilities",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/PythonistaGuild/TwitchIO"
+
+[tool.setuptools]
+packages = ["twitchio", "twitchio.types"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.optional-dependencies]
+docs = [
+  "mkdocs-material", 
+  "mkdocstrings-python",
+  "mkdocstrings",
+]
+
+dev = [
+    "ruff",
+    "pyright",
+    "isort",
+]
+
+[tool.ruff]
+line-length = 120
+exclude = ["venv"]
+select = [
+    "C4",
+    "F",
+    "G",
+    "I",
+    "PTH",
+    "RUF",
+    "SIM",
+    "TCH",
+    "UP",
+    "W",
+    "PERF",
+    "ANN",
+]
+ignore = [
+    "F401",
+    "F402",
+    "F403",
+    "F405",
+    "PERF203",
+    "RUF001",
+    "RUF009",
+    "SIM105",
+    "UP034",
+    "UP038",
+    "ANN101",
+    "ANN102",
+    "ANN401",
+    "UP031",
+    "PTH123",
+]
+
+[tool.ruff.isort]
+split-on-trailing-comma = true
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "double"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pyright]
+exclude = ["venv"]
+useLibraryCodeForTypes = true
+typeCheckingMode = "strict"
+reportImportCycles = false
+reportPrivateUsage = false
