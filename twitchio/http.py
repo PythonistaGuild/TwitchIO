@@ -37,7 +37,7 @@ from .utils import _from_json  # type: ignore
 if TYPE_CHECKING:
     from typing_extensions import Unpack
 
-    from .types_ import APIRequest, HTTPMethod
+    from .types_.requests import APIRequest, HTTPMethod
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -61,7 +61,9 @@ class Route:
     BASE: str = "https://api.twitch.tv/helix/"
     ID_BASE: str = "https://id.twitch.tv/"
 
-    def __init__(self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]) -> None:
+    def __init__(
+        self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]
+    ) -> None:
         self.method = method
 
         endpoint = endpoint.removeprefix("/")
@@ -82,7 +84,6 @@ class Route:
 
 
 class HTTPClient:
-
     __slots__ = ("__session", "user_agent")
 
     def __init__(self) -> None:
@@ -97,12 +98,14 @@ class HTTPClient:
         if self.__session and not self.__session.closed:
             return
 
-        logger.debug("Initialising a new session on HTTPClient.")
+        logger.debug("Initialising a new session on %s.", self.__class__.__qualname__)
         self.__session = aiohttp.ClientSession()
 
     def clear(self) -> None:
         if self.__session and self.__session.closed:
-            logger.debug("Clearing HTTPClient session. A new session will be created on the next request.")
+            logger.debug(
+                "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
+            )
             self.__session = None
 
     async def close(self) -> None:
@@ -110,12 +113,14 @@ class HTTPClient:
             try:
                 await self.__session.close()
             except Exception as e:
-                logger.debug("Ignoring exception caught while closing HTTPClient session: %s.", e)
+                logger.debug("Ignoring exception caught while closing %s session: %s.", self.__class__.__qualname__, e)
 
             self.clear()
-            logger.debug("HTTPClient session closed successfully.")
+            logger.debug("%s session closed successfully.", self.__class__.__qualname__)
 
-    async def request(self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]) -> dict[str, Any] | str:
+    async def request(
+        self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]
+    ) -> Any:
         await self._init_session()
         assert self.__session is not None
 
@@ -124,12 +129,27 @@ class HTTPClient:
         kwargs["headers"] = headers_
 
         route: Route = Route(method, endpoint, use_id=use_id, **kwargs)
+        logger.debug("Attempting a request to %s with %s.", route, self.__class__.__qualname__)
+
         async with self.__session.request(method, route.url, **kwargs) as resp:
             data: dict[str, Any] | str = await json_or_text(resp)
 
             if resp.status >= 400:
-                logger.error('Request %s failed with status %s: %s', route, resp.status, data)
-                raise TwitchioHTTPException(f"Request {route} failed with status {resp.status}: {data}", route=route)
+                logger.error("Request %s failed with status %s: %s", route, resp.status, data)
+                raise TwitchioHTTPException(
+                    f"Request {route} failed with status {resp.status}: {data}", route=route, status=resp.status
+                )
 
         # TODO: This method is not complete. This is purely for testing purposes.
+        return data
+
+    async def request_json(
+        self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]
+    ) -> Any:
+        data = await self.request(method, endpoint, use_id=use_id, **kwargs)
+
+        if isinstance(data, str):
+            # TODO: Add a TwitchioHTTPException here.
+            raise TypeError("Expected JSON data, but received text data.")
+
         return data

@@ -21,31 +21,30 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TypeAlias, TypedDict
 
 
-__all__ = ("TwitchioException", "TwitchioHTTPException")
+__all__ = (
+    "RefreshTokenResponse",
+    "ValidateTokenResponse",
+    "OAuthResponses",
+)
 
 
-if TYPE_CHECKING:
-    from .http import Route
+class RefreshTokenResponse(TypedDict):
+    access_token: str
+    refresh_token: str
+    expires_in: int
+    scope: str | list[str]
+    token_type: str
 
 
-class TwitchioException(Exception):
-    """Base exception for TwitchIO."""
+class ValidateTokenResponse(TypedDict):
+    client_id: str
+    login: str
+    scopes: list[str]
+    user_id: str
+    expires_in: int
 
-    # TODO: Document this class.
 
-
-class TwitchioHTTPException(TwitchioException):
-    """Exception raised when an HTTP request fails."""
-
-    # TODO: Document this class.
-    # TODO: Add extra attributes to this class. E.g. response, status, etc.
-
-    def __init__(self, msg: str = "", /, *, route: Route | None = None, status: int) -> None:
-        self.route = route
-        self.status = status
-        super().__init__(msg)
+OAuthResponses: TypeAlias = RefreshTokenResponse | ValidateTokenResponse
