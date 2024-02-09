@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools-git-versioning]
 enabled = true
-starting_version = "3.0.0.dev0"
+starting_version = "3.0.0a0"
 
 [project]
 name = "twitchio"
@@ -43,9 +43,11 @@ dev = ["ruff", "pyright", "isort"]
 
 [tool.ruff]
 line-length = 120
+indent-width = 4
 exclude = ["venv"]
 select = [
     "C4",
+    "E",
     "F",
     "G",
     "I",
@@ -59,7 +61,6 @@ select = [
     "ANN",
 ]
 ignore = [
-    "F401",
     "F402",
     "F403",
     "F405",
@@ -74,6 +75,8 @@ ignore = [
     "ANN401",
     "UP031",
     "PTH123",
+    "E203", 
+    "E501",
 ]
 
 [tool.ruff.isort]
