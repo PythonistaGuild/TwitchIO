@@ -27,11 +27,20 @@ from typing import TypeAlias, TypedDict
 __all__ = (
     "RefreshTokenResponse",
     "ValidateTokenResponse",
+    "ClientCredentialsResponse",
     "OAuthResponses",
+    "UserTokenResponse",
 )
 
 
 class RefreshTokenResponse(TypedDict):
+    access_token: str
+    refresh_token: str
+    expires_in: int
+    scope: str | list[str]
+    token_type: str
+
+class UserTokenResponse(TypedDict):
     access_token: str
     refresh_token: str
     expires_in: int
@@ -46,5 +55,10 @@ class ValidateTokenResponse(TypedDict):
     user_id: str
     expires_in: int
 
+class ClientCredentialsResponse(TypedDict):
+    access_token: str
+    expires_in: int
+    token_type: str
 
-OAuthResponses: TypeAlias = RefreshTokenResponse | ValidateTokenResponse
+
+OAuthResponses: TypeAlias = RefreshTokenResponse | ValidateTokenResponse | ClientCredentialsResponse | UserTokenResponse

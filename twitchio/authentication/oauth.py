@@ -23,6 +23,7 @@ SOFTWARE.
 """
 from __future__ import annotations
 
+import urllib.parse
 from typing import TYPE_CHECKING
 
 from ..http import HTTPClient
@@ -30,15 +31,21 @@ from .payloads import *
 
 
 if TYPE_CHECKING:
-    from ..types_.responses import RefreshTokenResponse, ValidateTokenResponse
+    from ..types_.responses import (
+        ClientCredentialsResponse,
+        RefreshTokenResponse,
+        UserTokenResponse,
+        ValidateTokenResponse,
+    )
 
 
 class OAuth(HTTPClient):
-    def __init__(self, *, client_id: str, client_secret: str) -> None:
+    def __init__(self, *, client_id: str, client_secret: str, redirect_uri: str | None) -> None:
         super().__init__()
 
         self.client_id = client_id
         self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
 
     async def validate_token(self, token: str, /) -> ValidateTokenPayload:
         token = token.removeprefix("Bearer ").removeprefix("OAuth ")
@@ -64,5 +71,64 @@ class OAuth(HTTPClient):
 
         return RefreshTokenPayload(data)
 
-    async def revoke_token(self, token: str, /) -> ...:
-        raise NotImplementedError
+    async def user_access_token(self, code: str, /) -> UserTokenPayload:
+        if not self.redirect_uri:
+            raise ValueError("Missing redirect_uri")
+
+        headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
+
+        params: dict[str, str] = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": self.redirect_uri,
+            # "scope": " ".join(SCOPES), #TODO
+            # "state": #TODO
+        }
+
+        data: UserTokenResponse = await self.request_json(
+            "POST", "/oauth2/token", use_id=True, headers=headers, params=params
+        )
+
+        return UserTokenPayload(data)
+
+    async def revoke_token(self, token: str, /) -> None:
+        headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
+
+        params: dict[str, str] = {
+            "client_id": self.client_id,
+            "token": token,
+        }
+
+        await self.request_json("POST", "/oauth2/revoke", use_id=True, headers=headers, params=params)
+
+    async def client_credentials_token(self) -> ClientCredentialsPayload:
+        headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
+
+        params = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "grant_type": "client_credentials",
+        }
+
+        data: ClientCredentialsResponse = await self.request_json(
+            "POST", "/oauth2/token", use_id=True, headers=headers, params=params
+        )
+
+        return ClientCredentialsPayload(data)
+
+    def get_authorization_url(self, scopes: list[str], state: str = "") -> str:
+        if not self.redirect_uri:
+            raise ValueError("Missing redirect_uri")
+
+        base_url = "https://id.twitch.tv/oauth2/authorize"
+        params = {
+            "client_id": self.client_id,
+            "redirect_uri": urllib.parse.quote(self.redirect_uri),
+            "response_type": "code",
+            "scope": "+".join(urllib.parse.quote(scope) for scope in scopes),
+            "state": state,
+        }
+        query_string = "&".join(f"{key}={value}" for key, value in params.items())
+        return f"{base_url}?{query_string}"

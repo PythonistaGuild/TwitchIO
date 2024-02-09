@@ -34,6 +34,8 @@ if TYPE_CHECKING:
 __all__ = (
     "RefreshTokenPayload",
     "ValidateTokenPayload",
+    "ClientCredentialsPayload",
+    "UserTokenPayload",
 )
 
 
@@ -77,3 +79,27 @@ class ValidateTokenPayload(BasePayload):
         self.scopes: list[str] = raw["scopes"]
         self.user_id: str = raw["user_id"]
         self.expires_in: int = raw["expires_in"]
+
+
+class UserTokenPayload(BasePayload):
+    __slots__ = ("access_token", "refresh_token", "expires_in", "scope", "token_type")
+
+    def __init__(self, raw: UserTokenResponse, /) -> None:
+        super().__init__(raw)
+
+        self.access_token: str = raw["access_token"]
+        self.refresh_token: str = raw["refresh_token"]
+        self.expires_in: int = raw["expires_in"]
+        self.scope: str | list[str] = raw["scope"]
+        self.token_type: str = raw["token_type"]
+
+
+class ClientCredentialsPayload(BasePayload):
+    __slots__ = ("access_token", "expires_in", "token_type")
+
+    def __init__(self, raw: ClientCredentialsResponse, /) -> None:
+        super().__init__(raw)
+
+        self.access_token: str = raw["access_token"]
+        self.expires_in: int = raw["expires_in"]
+        self.token_type: str = raw["token_type"]
