@@ -31,7 +31,7 @@ import aiohttp
 
 from . import __version__
 from .exceptions import TwichioHTTPException
-from .utils import _from_json
+from .utils import _from_json  # type: ignore
 
 
 if TYPE_CHECKING:
