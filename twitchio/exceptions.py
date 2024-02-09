@@ -21,13 +21,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0a"
+from typing import TYPE_CHECKING
 
 
-from .exceptions import *
-from .http import HTTPClient as HTTPClient
+__all__ = ("TwitchioException", "TwichioHTTPException")
+
+
+if TYPE_CHECKING:
+    from .http import Route
+
+
+class TwitchioException(Exception):
+    """Base exception for TwitchIO."""
+    # TODO: Document this class.
+
+
+class TwichioHTTPException(TwitchioException):
+    """Exception raised when an HTTP request fails."""
+    # TODO: Document this class.
+    # TODO: Add extra attributes to this class. E.g. response, status, etc.
+
+    def __init__(self, msg: str = "", /, *, route: Route | None = None) -> None:
+        self.route = route
+        super().__init__(msg)
