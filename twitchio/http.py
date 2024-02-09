@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Any
 import aiohttp
 
 from . import __version__
-from .exceptions import TwichioHTTPException
+from .exceptions import TwitchioHTTPException
 from .utils import _from_json  # type: ignore
 
 
@@ -129,7 +129,7 @@ class HTTPClient:
 
             if resp.status >= 400:
                 logger.error('Request %s failed with status %s: %s', route, resp.status, data)
-                raise TwichioHTTPException(f"Request {route} failed with status {resp.status}: {data}", route=route)
+                raise TwitchioHTTPException(f"Request {route} failed with status {resp.status}: {data}", route=route)
 
         # TODO: This method is not complete. This is purely for testing purposes.
         return data
