@@ -24,7 +24,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import urllib.parse
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from ..http import HTTPClient, Route
 from .payloads import *
@@ -41,6 +41,8 @@ if TYPE_CHECKING:
 
 
 class OAuth(HTTPClient):
+    CONTENT_TYPE_HEADER: ClassVar[dict[str, str]] = {"Content-Type": "application/x-www-form-urlencoded"}
+
     def __init__(self, *, client_id: str, client_secret: str, redirect_uri: str | None = None) -> None:
         super().__init__()
 
@@ -58,16 +60,14 @@ class OAuth(HTTPClient):
         return ValidateTokenPayload(data)
 
     async def refresh_token(self, refresh_token: str, /) -> RefreshTokenPayload:
-        headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
+        params = self._create_params(
+            {
+                "grant_type": "refresh_token",
+                "refresh_token": urllib.parse.quote(refresh_token, safe=""),
+            }
+        )
 
-        params: dict[str, str] = {
-            "grant_type": "refresh_token",
-            "refresh_token": urllib.parse.quote(refresh_token, safe=""),
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-        }
-
-        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=headers, params=params)
+        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=self.CONTENT_TYPE_HEADER, params=params)
         data: RefreshTokenResponse = await self.request_json(route)
 
         return RefreshTokenPayload(data)
@@ -76,44 +76,31 @@ class OAuth(HTTPClient):
         if not self.redirect_uri:
             raise ValueError("Missing redirect_uri")
 
-        headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
+        params = self._create_params(
+            {
+                "code": code,
+                "grant_type": "authorization_code",
+                "redirect_uri": self.redirect_uri,
+                # "scope": " ".join(SCOPES), #TODO
+                # "state": #TODO
+            }
+        )
 
-        params: dict[str, str] = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "code": code,
-            "grant_type": "authorization_code",
-            "redirect_uri": self.redirect_uri,
-            # "scope": " ".join(SCOPES), #TODO
-            # "state": #TODO
-        }
-
-        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=headers, params=params)
+        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=self.CONTENT_TYPE_HEADER, params=params)
         data: UserTokenResponse = await self.request_json(route)
 
         return UserTokenPayload(data)
 
     async def revoke_token(self, token: str, /) -> None:
-        headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
+        params = self._create_params({"token": token})
 
-        params: dict[str, str] = {
-            "client_id": self.client_id,
-            "token": token,
-        }
-
-        route: Route = Route("POST", "/oauth2/revoke", use_id=True, headers=headers, params=params)
+        route: Route = Route("POST", "/oauth2/revoke", use_id=True, headers=self.CONTENT_TYPE_HEADER, params=params)
         await self.request_json(route)
 
     async def client_credentials_token(self) -> ClientCredentialsPayload:
-        headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
+        params = self._create_params({"grant_type": "client_credentials"})
 
-        params = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "grant_type": "client_credentials",
-        }
-
-        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=headers, params=params)
+        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=self.CONTENT_TYPE_HEADER, params=params)
         data: ClientCredentialsResponse = await self.request_json(route)
 
         return ClientCredentialsPayload(data)
@@ -132,3 +119,11 @@ class OAuth(HTTPClient):
 
         route: Route = Route("GET", "/oauth2/authorize", use_id=True, params=params)
         return route.url
+
+    def _create_params(self, extra_params: dict[str, str]) -> dict[str, str]:
+        params = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+        }
+        params.update(extra_params)
+        return params

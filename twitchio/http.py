@@ -85,7 +85,9 @@ class Route:
         return f"{self.method}({self.path})"
 
     @classmethod
-    def build_url(cls, path: str, use_id: bool = False, params: dict[str, str] = {}) -> str:
+    def build_url(cls, path: str, use_id: bool = False, params: dict[str, str] | None = None) -> str:
+        if params is None:
+            params = {}
         path_: str = path.lstrip("/")
 
         url: str = f"{cls.ID_BASE if use_id else cls.BASE}{path_}{cls.build_query(params)}"

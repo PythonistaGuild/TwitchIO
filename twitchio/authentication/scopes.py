@@ -150,7 +150,9 @@ class Scopes(metaclass=_ScopeMeta):
     whispers_read = _scope_property()
     whispers_edit = _scope_property()
 
-    def __init__(self, scopes: Iterable[str | _scope_property] = [], /, **kwargs: bool) -> None:
+    def __init__(self, scopes: Iterable[str | _scope_property] | None = None, /, **kwargs: bool) -> None:
+        if scopes is None:
+            scopes = []
         self._selected: set[_scope_property] = set()
 
         prop: _scope_property
