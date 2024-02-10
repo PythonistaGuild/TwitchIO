@@ -80,6 +80,9 @@ class Route:
         self.headers: dict[str, str] = kwargs.pop("headers", {})
 
     def __str__(self) -> str:
+        return self.url
+
+    def __repr__(self) -> str:
         return f"{self.method} /{self.endpoint}"
 
 
@@ -129,13 +132,13 @@ class HTTPClient:
         kwargs["headers"] = headers_
 
         route: Route = Route(method, endpoint, use_id=use_id, **kwargs)
-        logger.debug("Attempting a request to %s with %s.", route, self.__class__.__qualname__)
+        logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
 
         async with self.__session.request(method, route.url, **kwargs) as resp:
             data: dict[str, Any] | str = await json_or_text(resp)
 
             if resp.status >= 400:
-                logger.error("Request %s failed with status %s: %s", route, resp.status, data)
+                logger.error("Request %r failed with status %s: %s", route, resp.status, data)
                 raise TwitchioHTTPException(
                     f"Request {route} failed with status {resp.status}: {data}", route=route, status=resp.status
                 )
