@@ -25,8 +25,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import aiohttp
 
@@ -38,7 +37,7 @@ from .utils import _from_json  # type: ignore
 if TYPE_CHECKING:
     from typing_extensions import Unpack
 
-    from .types_.requests import APIRequest, HTTPMethod
+    from .types_.requests import APIRequest, APIRequestKwargs, HTTPMethod
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -48,7 +47,7 @@ async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
     text: str = await resp.text()
 
     try:
-        if resp.headers["Content-Type"] == "application/json":
+        if resp.headers["Content-Type"].startswith("application/json"):
             return _from_json(text)  # type: ignore
     except KeyError:
         pass
@@ -59,32 +58,53 @@ async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
 class Route:
     # TODO: Document this class.
 
-    BASE: str = "https://api.twitch.tv/helix/"
-    ID_BASE: str = "https://id.twitch.tv/"
+    BASE: ClassVar[str] = "https://api.twitch.tv/helix/"
+    ID_BASE: ClassVar[str] = "https://id.twitch.tv/"
 
     def __init__(
-        self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]
+        self, method: HTTPMethod, path: str, *, use_id: bool = False, **kwargs: Unpack[APIRequestKwargs]
     ) -> None:
+        params: dict[str, str] = kwargs.pop("params", {})
+        self._url = self.build_url(path, use_id=use_id, params=params)
+
+        self.use_id = use_id
         self.method = method
+        self.path = path
 
-        endpoint = endpoint.removeprefix("/")
-        self.endpoint = endpoint
+        self.params: dict[str, str] = params
+        self.data: dict[str, Any] = kwargs.get("data", {})
+        self.json: dict[str, Any] = kwargs.get("json", {})
+        self.headers: dict[str, str] = kwargs.get("headers", {})
 
-        if use_id:
-            self.url: str = self.ID_BASE + endpoint
-        else:
-            self.url: str = self.BASE + endpoint
-
-        self.params: dict[str, str] = kwargs.pop("params", {})
-        self.data: dict[str, Any] = kwargs.pop("data", {})
-        self.json: dict[str, Any] = kwargs.pop("json", {})
-        self.headers: dict[str, str] = kwargs.pop("headers", {})
+        self.packed: APIRequest = kwargs
 
     def __str__(self) -> str:
-        return self.url
+        return str(self._url)
 
     def __repr__(self) -> str:
-        return f"{self.method} /{self.endpoint}"
+        return f"{self.method}({self.path})"
+
+    @classmethod
+    def build_url(cls, path: str, use_id: bool = False, params: dict[str, str] = {}) -> str:
+        path_: str = path.lstrip("/")
+
+        url: str = f"{cls.ID_BASE if use_id else cls.BASE}{path_}{cls.build_query(params)}"
+        return url
+
+    def update_query(self, params: dict[str, str]) -> str:
+        self.params.update(params)
+        self.build_url(self.path, use_id=self.use_id, params=self.params)
+
+        return self._url
+
+    @property
+    def url(self) -> str:
+        return str(self._url)
+
+    @classmethod
+    def build_query(cls, params: dict[str, str]) -> str:
+        joined: str = "&".join(f"{key}={value}" for key, value in params.items())
+        return f"?{joined}" if joined else ""
 
 
 class HTTPClient:
@@ -98,7 +118,7 @@ class HTTPClient:
         ua = "TwitchioClient (https://github.com/PythonistaGuild/TwitchIO {0}) Python/{1} aiohttp/{2}"
         self.user_agent: str = ua.format(__version__, pyver, aiohttp.__version__)
 
-    @cached_property
+    @property
     def headers(self) -> dict[str, str]:
         return {"User-Agent": self.user_agent}
 
@@ -126,16 +146,13 @@ class HTTPClient:
             self.clear()
             logger.debug("%s session closed successfully.", self.__class__.__qualname__)
 
-    async def request(
-        self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]
-    ) -> Any:
+    async def request(self, route: Route) -> Any:
         await self._init_session()
         assert self.__session is not None
 
-        route: Route = Route(method, endpoint, use_id=use_id, **kwargs)
         logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
 
-        async with self.__session.request(method, route.url, **kwargs) as resp:
+        async with self.__session.request(route.method, route.url, **route.packed) as resp:
             data: dict[str, Any] | str = await json_or_text(resp)
 
             if resp.status >= 400:
@@ -147,10 +164,8 @@ class HTTPClient:
         # TODO: This method is not complete. This is purely for testing purposes.
         return data
 
-    async def request_json(
-        self, method: HTTPMethod, endpoint: str, *, use_id: bool = False, **kwargs: Unpack[APIRequest]
-    ) -> Any:
-        data = await self.request(method, endpoint, use_id=use_id, **kwargs)
+    async def request_json(self, route: Route) -> Any:
+        data = await self.request(route)
 
         if isinstance(data, str):
             # TODO: Add a TwitchioHTTPException here.

@@ -25,14 +25,20 @@ SOFTWARE.
 from typing import Any, Literal, TypeAlias, TypedDict
 
 
-__all__ = ("HTTPMethod", "APIRequest")
+__all__ = ("HTTPMethod", "APIRequestKwargs", "APIRequest")
 
 
 HTTPMethod: TypeAlias = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "CONNECT", "TRACE"]
 
 
-class APIRequest(TypedDict, total=False):
+class APIRequestKwargs(TypedDict, total=False):
     headers: dict[str, str]
     data: dict[str, Any]
     params: dict[str, str]
+    json: dict[str, Any]
+
+
+class APIRequest(TypedDict, total=False):
+    headers: dict[str, str]
+    data: dict[str, Any]
     json: dict[str, Any]

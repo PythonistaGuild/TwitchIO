@@ -52,8 +52,9 @@ class OAuth(HTTPClient):
         token = token.removeprefix("Bearer ").removeprefix("OAuth ")
 
         headers: dict[str, str] = {"Authorization": f"OAuth {token}"}
-        data: ValidateTokenResponse = await self.request_json("GET", "/oauth2/validate", use_id=True, headers=headers)
+        route: Route = Route("GET", "/oauth2/validate", use_id=True, headers=headers)
 
+        data: ValidateTokenResponse = await self.request_json(route)
         return ValidateTokenPayload(data)
 
     async def refresh_token(self, refresh_token: str, /) -> RefreshTokenPayload:
@@ -66,9 +67,8 @@ class OAuth(HTTPClient):
             "client_secret": self.client_secret,
         }
 
-        data: RefreshTokenResponse = await self.request_json(
-            "POST", "/oauth2/token", use_id=True, headers=headers, params=params
-        )
+        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=headers, params=params)
+        data: RefreshTokenResponse = await self.request_json(route)
 
         return RefreshTokenPayload(data)
 
@@ -88,9 +88,8 @@ class OAuth(HTTPClient):
             # "state": #TODO
         }
 
-        data: UserTokenResponse = await self.request_json(
-            "POST", "/oauth2/token", use_id=True, headers=headers, params=params
-        )
+        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=headers, params=params)
+        data: UserTokenResponse = await self.request_json(route)
 
         return UserTokenPayload(data)
 
@@ -102,7 +101,8 @@ class OAuth(HTTPClient):
             "token": token,
         }
 
-        await self.request_json("POST", "/oauth2/revoke", use_id=True, headers=headers, params=params)
+        route: Route = Route("POST", "/oauth2/revoke", use_id=True, headers=headers, params=params)
+        await self.request_json(route)
 
     async def client_credentials_token(self) -> ClientCredentialsPayload:
         headers: dict[str, str] = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -113,9 +113,8 @@ class OAuth(HTTPClient):
             "grant_type": "client_credentials",
         }
 
-        data: ClientCredentialsResponse = await self.request_json(
-            "POST", "/oauth2/token", use_id=True, headers=headers, params=params
-        )
+        route: Route = Route("POST", "/oauth2/token", use_id=True, headers=headers, params=params)
+        data: ClientCredentialsResponse = await self.request_json(route)
 
         return ClientCredentialsPayload(data)
 
@@ -123,7 +122,6 @@ class OAuth(HTTPClient):
         if not self.redirect_uri:
             raise ValueError("Missing redirect_uri")
 
-        route: Route = Route("GET", "/oauth2/authorize", use_id=True)
         params = {
             "client_id": self.client_id,
             "redirect_uri": urllib.parse.quote(self.redirect_uri),
@@ -132,5 +130,5 @@ class OAuth(HTTPClient):
             "state": state,
         }
 
-        query_string = "&".join(f"{key}={value}" for key, value in params.items())
-        return f"{route}?{query_string}"
+        route: Route = Route("GET", "/oauth2/authorize", use_id=True, params=params)
+        return route.url
