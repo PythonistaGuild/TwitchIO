@@ -40,6 +40,7 @@ class RefreshTokenResponse(TypedDict):
     scope: str | list[str]
     token_type: str
 
+
 class UserTokenResponse(TypedDict):
     access_token: str
     refresh_token: str
@@ -54,6 +55,7 @@ class ValidateTokenResponse(TypedDict):
     scopes: list[str]
     user_id: str
     expires_in: int
+
 
 class ClientCredentialsResponse(TypedDict):
     access_token: str

@@ -26,7 +26,7 @@ from __future__ import annotations
 import urllib.parse
 from typing import TYPE_CHECKING
 
-from ..http import HTTPClient
+from ..http import HTTPClient, Route
 from .payloads import *
 
 
@@ -37,10 +37,11 @@ if TYPE_CHECKING:
         UserTokenResponse,
         ValidateTokenResponse,
     )
+    from .scopes import Scopes
 
 
 class OAuth(HTTPClient):
-    def __init__(self, *, client_id: str, client_secret: str, redirect_uri: str | None) -> None:
+    def __init__(self, *, client_id: str, client_secret: str, redirect_uri: str | None = None) -> None:
         super().__init__()
 
         self.client_id = client_id
@@ -118,17 +119,18 @@ class OAuth(HTTPClient):
 
         return ClientCredentialsPayload(data)
 
-    def get_authorization_url(self, scopes: list[str], state: str = "") -> str:
+    def get_authorization_url(self, scopes: Scopes, state: str = "") -> str:
         if not self.redirect_uri:
             raise ValueError("Missing redirect_uri")
 
-        base_url = "https://id.twitch.tv/oauth2/authorize"
+        route: Route = Route("GET", "/oauth2/authorize", use_id=True)
         params = {
             "client_id": self.client_id,
             "redirect_uri": urllib.parse.quote(self.redirect_uri),
             "response_type": "code",
-            "scope": "+".join(urllib.parse.quote(scope) for scope in scopes),
+            "scope": scopes.urlsafe(),
             "state": state,
         }
+
         query_string = "&".join(f"{key}={value}" for key, value in params.items())
-        return f"{base_url}?{query_string}"
+        return f"{route}?{query_string}"

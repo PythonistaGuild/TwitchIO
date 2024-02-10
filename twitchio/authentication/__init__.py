@@ -24,3 +24,4 @@ SOFTWARE.
 
 from .oauth import OAuth as OAuth
 from .payloads import *
+from .scopes import Scopes as Scopes
