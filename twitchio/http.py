@@ -93,13 +93,13 @@ class Route:
 
     def update_query(self, params: dict[str, str]) -> str:
         self.params.update(params)
-        self.build_url(self.path, use_id=self.use_id, params=self.params)
+        self._url = self.build_url(self.path, use_id=self.use_id, params=self.params)
 
         return self._url
 
     @property
     def url(self) -> str:
-        return str(self._url)
+        return self._url
 
     @classmethod
     def build_query(cls, params: dict[str, str]) -> str:
