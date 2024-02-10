@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
@@ -97,12 +98,16 @@ class HTTPClient:
         ua = "TwitchioClient (https://github.com/PythonistaGuild/TwitchIO {0}) Python/{1} aiohttp/{2}"
         self.user_agent: str = ua.format(__version__, pyver, aiohttp.__version__)
 
+    @cached_property
+    def headers(self) -> dict[str, str]:
+        return {"User-Agent": self.user_agent}
+
     async def _init_session(self) -> None:
         if self.__session and not self.__session.closed:
             return
 
         logger.debug("Initialising a new session on %s.", self.__class__.__qualname__)
-        self.__session = aiohttp.ClientSession()
+        self.__session = aiohttp.ClientSession(headers=self.headers)
 
     def clear(self) -> None:
         if self.__session and self.__session.closed:
@@ -126,10 +131,6 @@ class HTTPClient:
     ) -> Any:
         await self._init_session()
         assert self.__session is not None
-
-        headers_ = kwargs.pop("headers", {})
-        headers_.setdefault("User-Agent", self.user_agent)
-        kwargs["headers"] = headers_
 
         route: Route = Route(method, endpoint, use_id=use_id, **kwargs)
         logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
