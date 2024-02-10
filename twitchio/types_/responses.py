@@ -33,7 +33,7 @@ __all__ = (
 )
 
 
-class RefreshTokenResponse(TypedDict):
+class _TokenResponseBase(TypedDict):
     access_token: str
     refresh_token: str
     expires_in: int
@@ -41,12 +41,8 @@ class RefreshTokenResponse(TypedDict):
     token_type: str
 
 
-class UserTokenResponse(TypedDict):
-    access_token: str
-    refresh_token: str
-    expires_in: int
-    scope: str | list[str]
-    token_type: str
+RefreshTokenResponse: TypeAlias = _TokenResponseBase
+UserTokenResponse: TypeAlias = _TokenResponseBase
 
 
 class ValidateTokenResponse(TypedDict):

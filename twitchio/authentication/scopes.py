@@ -188,7 +188,7 @@ class Scopes(metaclass=_ScopeMeta):
         return scope in self._selected
 
     def urlsafe(self, *, unquote: bool = False) -> str:
-        return "+".join([scope.quoted() if not unquote else scope.value for scope in self._selected])
+        return "+".join([scope.value if unquote else scope.quoted() for scope in self._selected])
 
     @property
     def selected(self) -> list[str]:
