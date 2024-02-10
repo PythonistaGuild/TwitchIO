@@ -61,7 +61,7 @@ class OAuth(HTTPClient):
 
         params: dict[str, str] = {
             "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
+            "refresh_token": urllib.parse.quote(refresh_token, safe=""),
             "client_id": self.client_id,
             "client_secret": self.client_secret,
         }
