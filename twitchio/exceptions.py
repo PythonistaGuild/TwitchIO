@@ -26,7 +26,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 
-__all__ = ("TwitchioException", "TwitchioHTTPException")
+__all__ = ("TwitchioException", "HTTPException")
 
 
 if TYPE_CHECKING:
@@ -39,7 +39,7 @@ class TwitchioException(Exception):
     # TODO: Document this class.
 
 
-class TwitchioHTTPException(TwitchioException):
+class HTTPException(TwitchioException):
     """Exception raised when an HTTP request fails."""
 
     # TODO: Document this class.

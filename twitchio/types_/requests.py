@@ -22,19 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from collections.abc import MutableMapping
 from typing import Any, Literal, TypeAlias, TypedDict
 
 
-__all__ = ("HTTPMethod", "APIRequestKwargs", "APIRequest")
+__all__ = ("HTTPMethod", "APIRequestKwargs", "APIRequest", "ParamMapping")
 
 
 HTTPMethod: TypeAlias = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "CONNECT", "TRACE"]
+ParamMapping: TypeAlias = MutableMapping[str, Any]
 
 
 class APIRequestKwargs(TypedDict, total=False):
     headers: dict[str, str]
     data: dict[str, Any]
-    params: dict[str, str]
+    params: ParamMapping
     json: dict[str, Any]
 
 

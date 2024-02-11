@@ -30,4 +30,4 @@ __version__ = "3.0.0a"
 
 from . import authentication as authentication
 from .exceptions import *
-from .http import HTTPClient as HTTPClient
+from .http import HTTPAsyncIterator as HTTPAsyncIterator, HTTPClient as HTTPClient

@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from typing import TypeAlias, TypedDict
+from typing import Any, TypeAlias, TypedDict
 
 
 __all__ = (
@@ -30,6 +30,7 @@ __all__ = (
     "ClientCredentialsResponse",
     "OAuthResponses",
     "UserTokenResponse",
+    "RawResponse",
 )
 
 
@@ -60,3 +61,4 @@ class ClientCredentialsResponse(TypedDict):
 
 
 OAuthResponses: TypeAlias = RefreshTokenResponse | ValidateTokenResponse | ClientCredentialsResponse | UserTokenResponse
+RawResponse: TypeAlias = dict[str, Any]
