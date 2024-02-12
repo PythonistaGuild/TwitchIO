@@ -129,10 +129,7 @@ class Route:
         method = urllib.parse.quote_plus if plus else urllib.parse.quote
         unquote = urllib.parse.unquote_plus if plus else urllib.parse.unquote
 
-        if unquote(value) == value:
-            return method(value, safe=safe)
-
-        return value
+        return method(value, safe=safe) if unquote(value) == value else value
 
     @property
     def url(self) -> str:
@@ -184,9 +181,9 @@ class HTTPAsyncIterator(Generic[T]):
 
         try:
             inner: list[RawResponse] = data["data"]
-        except KeyError:
+        except KeyError as e:
             # TODO: Proper exception...
-            raise ValueError('Expected "data" key not found.')
+            raise ValueError('Expected "data" key not found.') from e
 
         for value in inner:
             if self._max_results is None:
@@ -220,8 +217,8 @@ class HTTPAsyncIterator(Generic[T]):
 
         try:
             data = self._buffer.popleft()
-        except IndexError:
-            raise StopAsyncIteration
+        except IndexError as e:
+            raise StopAsyncIteration from e
 
         return data
 
