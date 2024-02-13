@@ -23,6 +23,7 @@ SOFTWARE.
 """
 from __future__ import annotations
 
+import secrets
 import urllib.parse
 from typing import TYPE_CHECKING, ClassVar
 
@@ -32,6 +33,7 @@ from .payloads import *
 
 if TYPE_CHECKING:
     from ..types_.responses import (
+        AuthorizationURLResponse,
         ClientCredentialsResponse,
         RefreshTokenResponse,
         UserTokenResponse,
@@ -43,12 +45,15 @@ if TYPE_CHECKING:
 class OAuth(HTTPClient):
     CONTENT_TYPE_HEADER: ClassVar[dict[str, str]] = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    def __init__(self, *, client_id: str, client_secret: str, redirect_uri: str | None = None) -> None:
+    def __init__(
+        self, *, client_id: str, client_secret: str, redirect_uri: str | None = None, scopes: Scopes | None = None
+    ) -> None:
         super().__init__()
 
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
+        self.scopes = scopes
 
     async def validate_token(self, token: str, /) -> ValidateTokenPayload:
         token = token.removeprefix("Bearer ").removeprefix("OAuth ")
@@ -72,15 +77,16 @@ class OAuth(HTTPClient):
 
         return RefreshTokenPayload(data)
 
-    async def user_access_token(self, code: str, /) -> UserTokenPayload:
-        if not self.redirect_uri:
-            raise ValueError("Missing redirect_uri")
+    async def user_access_token(self, code: str, /, *, redirect_uri: str | None = None) -> UserTokenPayload:
+        redirect = redirect_uri or self.redirect_uri
+        if not redirect:
+            raise ValueError('"redirect_uri" is a required parameter or attribute which is missing.')
 
         params = self._create_params(
             {
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": self.redirect_uri,
+                "redirect_uri": redirect,
                 # "scope": " ".join(SCOPES), #TODO
                 # "state": #TODO
             }
@@ -105,20 +111,47 @@ class OAuth(HTTPClient):
 
         return ClientCredentialsPayload(data)
 
-    def get_authorization_url(self, scopes: Scopes, state: str = "") -> str:
-        if not self.redirect_uri:
-            raise ValueError("Missing redirect_uri")
+    def get_authorization_url(
+        self,
+        *,
+        scopes: Scopes | None = None,
+        state: str | None = None,
+        redirect_uri: str | None = None,
+        force_verify: bool = False,
+    ) -> AuthorizationURLPayload:
+        redirect = redirect_uri or self.redirect_uri
+        if not redirect:
+            raise ValueError('"redirect_uri" is a required parameter or attribute which is missing.')
+
+        scopes = scopes or self.scopes
+        if not scopes:
+            raise ValueError('"scopes" is a required parameter or attribute which is missing.')
+
+        if state is None:
+            state = secrets.token_urlsafe(32)
 
         params = {
             "client_id": self.client_id,
-            "redirect_uri": urllib.parse.quote(self.redirect_uri),
+            "redirect_uri": urllib.parse.quote(redirect),
             "response_type": "code",
             "scope": scopes.urlsafe(),
+            "force_verify": "true" if force_verify else "false",
             "state": state,
         }
 
         route: Route = Route("GET", "/oauth2/authorize", use_id=True, params=params)
-        return route.url
+        data: AuthorizationURLResponse = {
+            "url": route.url,
+            "client_id": self.client_id,
+            "redirect_uri": redirect,
+            "response_type": "code",
+            "scopes": scopes.selected,
+            "force_verify": force_verify,
+            "state": state,
+        }
+
+        payload: AuthorizationURLPayload = AuthorizationURLPayload(data)
+        return payload
 
     def _create_params(self, extra_params: dict[str, str]) -> dict[str, str]:
         params = {

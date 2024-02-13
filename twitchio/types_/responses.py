@@ -31,6 +31,7 @@ __all__ = (
     "OAuthResponses",
     "UserTokenResponse",
     "RawResponse",
+    "AuthorizationURLResponse",
 )
 
 
@@ -60,5 +61,21 @@ class ClientCredentialsResponse(TypedDict):
     token_type: str
 
 
-OAuthResponses: TypeAlias = RefreshTokenResponse | ValidateTokenResponse | ClientCredentialsResponse | UserTokenResponse
+class AuthorizationURLResponse(TypedDict):
+    url: str
+    client_id: str
+    redirect_uri: str
+    response_type: str
+    scopes: list[str]
+    force_verify: bool
+    state: str
+
+
+OAuthResponses: TypeAlias = (
+    RefreshTokenResponse
+    | ValidateTokenResponse
+    | ClientCredentialsResponse
+    | UserTokenResponse
+    | AuthorizationURLResponse
+)
 RawResponse: TypeAlias = dict[str, Any]

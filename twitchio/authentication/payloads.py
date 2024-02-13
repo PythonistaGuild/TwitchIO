@@ -36,6 +36,7 @@ __all__ = (
     "ValidateTokenPayload",
     "ClientCredentialsPayload",
     "UserTokenPayload",
+    "AuthorizationURLPayload",
 )
 
 
@@ -103,3 +104,21 @@ class ClientCredentialsPayload(BasePayload):
         self.access_token: str = raw["access_token"]
         self.expires_in: int = raw["expires_in"]
         self.token_type: str = raw["token_type"]
+
+
+class AuthorizationURLPayload(BasePayload):
+    __slots__ = ("url", "client_id", "redirect_uri", "response_type", "scopes", "force_verify", "state")
+
+    def __init__(self, raw: AuthorizationURLResponse, /) -> None:
+        super().__init__(raw)
+
+        self.url: str = raw["url"]
+        self.client_id: str = raw["client_id"]
+        self.redirect_uri: str = raw["redirect_uri"]
+        self.response_type: str = raw["response_type"]
+        self.scopes: list[str] = raw["scopes"]
+        self.force_verify: bool = raw["force_verify"]
+        self.state: str = raw["state"]
+
+    def __str__(self) -> str:
+        return self.url
