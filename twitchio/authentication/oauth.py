@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 from __future__ import annotations
 
 import secrets
@@ -32,6 +33,8 @@ from .payloads import *
 
 
 if TYPE_CHECKING:
+    import aiohttp
+
     from ..types_.responses import (
         AuthorizationURLResponse,
         ClientCredentialsResponse,
@@ -46,9 +49,15 @@ class OAuth(HTTPClient):
     CONTENT_TYPE_HEADER: ClassVar[dict[str, str]] = {"Content-Type": "application/x-www-form-urlencoded"}
 
     def __init__(
-        self, *, client_id: str, client_secret: str, redirect_uri: str | None = None, scopes: Scopes | None = None
+        self,
+        *,
+        client_id: str,
+        client_secret: str,
+        redirect_uri: str | None = None,
+        scopes: Scopes | None = None,
+        session: aiohttp.ClientSession | None = None,
     ) -> None:
-        super().__init__()
+        super().__init__(session=session, client_id=client_id)
 
         self.client_id = client_id
         self.client_secret = client_secret

@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 from __future__ import annotations
 
 import copy
@@ -43,7 +44,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self, Unpack
 
-    from .types_.requests import APIRequest, APIRequestKwargs, HTTPMethod, ParamMapping
+    from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import RawResponse
 
 
@@ -73,18 +74,20 @@ class Route:
     ID_BASE: ClassVar[str] = "https://id.twitch.tv/"
 
     def __init__(
-        self, method: HTTPMethod, path: str, *, use_id: bool = False, **kwargs: Unpack[APIRequestKwargs]
+        self,
+        method: HTTPMethod,
+        path: str,
+        *,
+        use_id: bool = False,
+        **kwargs: Unpack[APIRequestKwargs],
     ) -> None:
         self.params: ParamMapping = kwargs.pop("params", {})
-        self.data: dict[str, Any] = kwargs.get("data", {})
         self.json: dict[str, Any] = kwargs.get("json", {})
         self.headers: dict[str, str] = kwargs.get("headers", {})
 
         self.use_id = use_id
         self.method = method
         self.path = path
-
-        self.packed: APIRequest = kwargs
 
         self._base_url: str = ""
         self._url: str = self.build_url()
@@ -145,12 +148,19 @@ class Route:
 
         return self.url
 
+    def update_headers(self, headers: dict[str, str]) -> None:
+        self.headers.update(headers)
+
 
 class HTTPAsyncIterator(Generic[T]):
     __slots__ = ("_http", "_route", "_cursor", "_first", "_max_results", "_converter", "_buffer")
 
     def __init__(
-        self, http: HTTPClient, route: Route, max_results: int | None = None, converter: PaginatedConverter[T] = None
+        self,
+        http: HTTPClient,
+        route: Route,
+        max_results: int | None = None,
+        converter: PaginatedConverter[T] = None,
     ) -> None:
         self._http = http
         self._route = route
@@ -172,7 +182,7 @@ class HTTPAsyncIterator(Generic[T]):
         if self._cursor is False:
             raise StopAsyncIteration
 
-        if self._max_results is not None and self._max_results < 0:
+        if self._max_results is not None and self._max_results <= 0:
             raise StopAsyncIteration
 
         self._route.update_params({"after": self._cursor})
@@ -224,10 +234,11 @@ class HTTPAsyncIterator(Generic[T]):
 
 
 class HTTPClient:
-    __slots__ = ("__session", "user_agent")
+    __slots__ = ("_session", "_client_id", "user_agent")
 
-    def __init__(self) -> None:
-        self.__session: aiohttp.ClientSession | None = None  # should be set on the first request
+    def __init__(self, session: aiohttp.ClientSession | None = None, *, client_id: str) -> None:
+        self._session: aiohttp.ClientSession | None = session  # should be set on the first request
+        self._client_id: str = client_id
 
         # User Agent...
         pyver = f"{sys.version_info[0]}.{sys.version_info[1]}"
@@ -236,26 +247,30 @@ class HTTPClient:
 
     @property
     def headers(self) -> dict[str, str]:
-        return {"User-Agent": self.user_agent}
+        return {"User-Agent": self.user_agent, "Client-ID": self._client_id}
 
     async def _init_session(self) -> None:
-        if self.__session and not self.__session.closed:
+        if self._session and not self._session.closed:
             return
 
         logger.debug("Initialising a new session on %s.", self.__class__.__qualname__)
-        self.__session = aiohttp.ClientSession(headers=self.headers)
+
+        session = self._session or aiohttp.ClientSession()
+        session.headers.update(self.headers)
+
+        self._session = session
 
     def clear(self) -> None:
-        if self.__session and self.__session.closed:
+        if self._session and self._session.closed:
             logger.debug(
                 "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
             )
-            self.__session = None
+            self._session = None
 
     async def close(self) -> None:
-        if self.__session and not self.__session.closed:
+        if self._session and not self._session.closed:
             try:
-                await self.__session.close()
+                await self._session.close()
             except Exception as e:
                 logger.debug("Ignoring exception caught while closing %s session: %s.", self.__class__.__qualname__, e)
 
@@ -264,17 +279,25 @@ class HTTPClient:
 
     async def request(self, route: Route) -> RawResponse | str:
         await self._init_session()
-        assert self.__session is not None
+        assert self._session is not None
 
         logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
 
-        async with self.__session.request(route.method, route.url, **route.packed) as resp:
+        async with self._session.request(
+            route.method,
+            route.url,
+            headers=route.headers,
+            json=route.json or None,
+        ) as resp:
             data: RawResponse | str = await json_or_text(resp)
 
             if resp.status >= 400:
                 logger.error("Request %r failed with status %s: %s", route, resp.status, data)
                 raise HTTPException(
-                    f"Request {route} failed with status {resp.status}: {data}", route=route, status=resp.status
+                    f"Request {route} failed with status {resp.status}: {data}",
+                    route=route,
+                    status=resp.status,
+                    extra=data,
                 )
 
         # TODO: This method is not complete. This is purely for testing purposes.
@@ -290,7 +313,11 @@ class HTTPClient:
         return data
 
     def request_paginated(
-        self, route: Route, max_results: int | None = None, *, converter: PaginatedConverter[T] | None = None
+        self,
+        route: Route,
+        max_results: int | None = None,
+        *,
+        converter: PaginatedConverter[T] | None = None,
     ) -> HTTPAsyncIterator[T]:
         iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
         return iterator
