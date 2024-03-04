@@ -1068,7 +1068,7 @@ class Stream:
         The current stream ID.
     user: :class:`~twitchio.PartialUser`
         The user who is streaming.
-    game_id: :class:`int`
+    game_id: :class:`str`
         Current game ID being played on the channel.
     game_name: :class:`str`
         Name of the game being played on the channel.
@@ -1116,7 +1116,7 @@ class Stream:
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.id: int = data["id"]
         self.user = PartialUser(http, data["user_id"], data["user_name"])
-        self.game_id: int = data["game_id"]
+        self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.type: str = data["type"]
         self.title: str = data["title"]

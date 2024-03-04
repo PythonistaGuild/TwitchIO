@@ -150,7 +150,7 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when someone cheers on a channel you've subscribed to.
 
-.. function:: event_eventsub_notification_raid(event: Channel)
+.. function:: event_eventsub_notification_raid(event: ChannelRaidData)
 
     Called when someone raids a channel you've subscribed to.
 
