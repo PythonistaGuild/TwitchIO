@@ -24,6 +24,7 @@ SOFTWARE.
 
 import asyncio
 import datetime
+import json
 import logging
 from typing import TYPE_CHECKING, TypeVar
 
@@ -242,3 +243,11 @@ class ManagedHTTPClient(OAuth):
             self._validate_task = None
 
         await super().close()
+
+    def dump(self, name: str | None = None) -> None:
+        name = name or ".tio.tokens.json"
+
+        with open(name, "w") as fp:
+            json.dump(list(self._tokens.values()), fp)
+
+        logger.info("Tokens from %s have been saved to %s.", self.__class__.__qualname__, name)
