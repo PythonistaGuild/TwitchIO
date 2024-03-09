@@ -101,6 +101,7 @@ line-ending = "auto"
 
 [tool.pyright]
 exclude = ["venv"]
+ignore = ["**/*test.py", "**/*tests.py"]
 useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false
