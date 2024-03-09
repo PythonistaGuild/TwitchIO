@@ -184,6 +184,9 @@ class Scopes(metaclass=_ScopeMeta):
     def __repr__(self) -> str:
         return f"<Scopes selected={list(self)}>"
 
+    def __str__(self) -> str:
+        return self.urlsafe()
+
     def __contains__(self, scope: _scope_property | str, /) -> bool:
         if isinstance(scope, str):
             return any(s.value == scope for s in self._selected)
