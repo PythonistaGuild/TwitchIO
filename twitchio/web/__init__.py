@@ -22,17 +22,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import TypedDict
-
-import aiohttp
-
-from ..authentication import Scopes
-from ..web import *
-
-
-class ClientOptions(TypedDict, total=False):
-    redirect_uri: str | None
-    scopes: Scopes | None
-    session: aiohttp.ClientSession | None
-    app_token: str | None
-    adapter: type[StarletteAdapter | AiohttpAdapter] | None
+from .adapters import *
