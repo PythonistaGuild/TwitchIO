@@ -4,7 +4,7 @@ import asyncio
 import logging
 
 import aiohttp
-from typing import Optional, TYPE_CHECKING, Tuple, Type, Dict, Callable, Generic, TypeVar, Awaitable, Union, cast, List, Literal
+from typing import Optional, TYPE_CHECKING, Tuple, Type, Dict, Callable, Generic, TypeVar, Awaitable, Union, cast, List
 from . import models, http
 from .models import _loads
 from twitchio import PartialUser, Unauthorized, HTTPException
@@ -32,7 +32,7 @@ class _Subscription:
         self.token = token
         self.subscription_id: Optional[str] = None
         self.cost: Optional[int] = None
-        self.created: asyncio.Future[Tuple[Literal[False], int] | Tuple[Literal[True], None]] | None = asyncio.Future()
+        self.created: asyncio.Future[Tuple[bool, int]] | None = asyncio.Future()
 
 
 _T = TypeVar("_T")
@@ -117,20 +117,18 @@ class Websocket:
         try:
             resp = await self._http.create_websocket_subscription(obj.event, obj.condition, self._session_id, obj.token)
         except HTTPException as e:
-            if obj.created:
-                obj.created.set_result((False, e.status))
-
-            else:
-                logger.error("An error (%s %s) occurred while attempting to resubscribe to an event on reconnect: %s", e.status, e.reason, e.message)
-
+            assert obj.created
+            obj.created.set_result((False, e.status))  # type: ignore
             return None
 
-        if obj.created:
-            obj.created.set_result((True, None))
+        else:
+            assert obj.created
+            obj.created.set_result((True, None))  # type: ignore
 
         data = resp["data"][0]
+        cost = data["cost"]
         self.remaining_slots = resp["max_total_cost"] - resp["total_cost"]
-        obj.cost = data["cost"]
+        obj.cost = cost
 
         return data
 
