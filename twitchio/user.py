@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
     from .models import (
+        AdSchedule,
         BitsLeaderboard,
         Clip,
         ExtensionBuilder,
@@ -334,6 +335,48 @@ class PartialUser:
         data = await self._http.post_create_clip(token, self.id, has_delay)
         return data[0]
 
+    async def fetch_ad_schedule(self, token: str) -> AdSchedule:
+        """|coro|
+
+        Fetches the streamers's ad schedule.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The user's oauth token with the ``channel:read:ads`` scope.
+
+        Returns
+        --------
+        :class:`twitchio.AdSchedule`
+        """
+        from .models import AdSchedule
+
+        data = await self._http.get_ad_schedule(token, str(self.id))
+        return AdSchedule(data[0])
+
+    async def snooze_ad(self, token: str) -> List[AdSchedule]:
+        """|coro|
+
+        Snoozes an ad on the streamer's channel.
+
+        .. note::
+            The resulting :class:`~twitchio.AdSchedule` only has data for the :attr:`~twitchio.AdSchedule.snooze_count`,
+            :attr:`~twitchio.AdSchedule.snooze_refresh_at`, and :attr:`~twitchio.AdSchedule.next_ad_at` attributes.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The user's oauth token with the ``channel:manage:ads`` scope.
+
+        Returns
+        --------
+        :class:`twitchio.AdSchedule`
+        """
+        from .models import AdSchedule
+
+        data = await self._http.post_snooze_ad(token, str(self.id))
+        return AdSchedule(data[0])
+
     async def fetch_clips(
         self,
         started_at: Optional[datetime.datetime] = None,
@@ -402,6 +445,23 @@ class PartialUser:
         """
         data = await self._http.get_channel_bans(token, str(self.id), user_ids=userids)
         return [UserBan(self._http, d) for d in data]
+
+    async def fetch_moderated_channels(self, token: str) -> List[PartialUser]:
+        """|coro|
+
+        Fetches channels that this user moderates.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token for this user with the ``user:read:moderated_channels`` scope.
+
+        Returns
+        --------
+        List[:class:`twitchio.PartialUser`]
+        """
+        data = await self._http.get_moderated_channels(token, str(self.id))
+        return [PartialUser(self._http, d["user_id"], d["user_name"]) for d in data]
 
     async def fetch_moderators(self, token: str, userids: List[int] = None):
         """|coro|

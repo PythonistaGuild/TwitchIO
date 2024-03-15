@@ -11,6 +11,13 @@ ActiveExtension
     :members:
     :inherited-members:
 
+AdSchedule
+------------
+.. attributetable:: AdSchedule
+
+.. autoclass:: AdSchedule
+    :members:
+
 AutomodCheckMessage
 ---------------------
 .. attributetable:: AutomodCheckMessage
