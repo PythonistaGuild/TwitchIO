@@ -122,7 +122,12 @@ class Websocket:
                 obj.created.set_result((False, e.status))
 
             else:
-                logger.error("An error (%s %s) occurred while attempting to resubscribe to an event on reconnect: %s", e.status, e.reason, e.message)
+                logger.error(
+                    "An error (%s %s) occurred while attempting to resubscribe to an event on reconnect: %s",
+                    e.status,
+                    e.reason,
+                    e.message,
+                )
 
             return None
 
