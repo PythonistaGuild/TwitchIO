@@ -1,5 +1,16 @@
 :orphan:
 
+Master
+=======
+- TwitchIO
+    - Bug fixes
+        - Fixed ``event_token_expired`` not applying to the current request.
+
+- ext.eventsub
+    - Bug fixes
+        - Fixed a crash where a Future could be None, causing unintentional errors.
+
+
 2.8.2
 ======
 - ext.commands
