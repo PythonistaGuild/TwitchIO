@@ -1,8 +1,15 @@
 :orphan:
 
-Master
+2.9.0
 =======
 - TwitchIO
+    - Additions
+        - Added :class:`~twitchio.AdSchedule`
+        - Added the new ad-related methods for :class:`~twitchio.PartialUser`:
+            - :func:`~twitchio.PartialUser.fetch_ad_schedule`
+            - :func:`~twitchio.PartialUser.snooze_ad`
+        - Added :func:`~twitchio.PartialUser.fetch_moderated_channels` to :class:`~twitchio.PartialUser`
+
     - Bug fixes
         - Fixed ``event_token_expired`` not applying to the current request.
 
