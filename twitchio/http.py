@@ -184,7 +184,7 @@ class TwitchHTTP:
         if "Authorization" not in headers or force_apply:
             if not self.token:
                 await self._generate_login()
-            
+
             headers["Authorization"] = f"Bearer {self.token}"
 
     async def _request(self, route, path, headers, utilize_bucket=True, force_app_token: bool = False):
