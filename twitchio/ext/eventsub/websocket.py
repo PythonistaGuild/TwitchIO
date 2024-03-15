@@ -10,6 +10,7 @@ from .models import _loads
 from twitchio import PartialUser, Unauthorized, HTTPException
 
 if TYPE_CHECKING:
+    from typing_extensions import Literal
     from twitchio import Client
 
 logger = logging.getLogger("twitchio.ext.eventsub.ws")
@@ -32,7 +33,7 @@ class _Subscription:
         self.token = token
         self.subscription_id: Optional[str] = None
         self.cost: Optional[int] = None
-        self.created: asyncio.Future[Tuple[bool, int]] | None = asyncio.Future()
+        self.created: asyncio.Future[Tuple[Literal[False], int] | Tuple[Literal[True], None]] | None = asyncio.Future()
 
 
 _T = TypeVar("_T")
@@ -117,18 +118,25 @@ class Websocket:
         try:
             resp = await self._http.create_websocket_subscription(obj.event, obj.condition, self._session_id, obj.token)
         except HTTPException as e:
-            assert obj.created
-            obj.created.set_result((False, e.status))  # type: ignore
+            if obj.created:
+                obj.created.set_result((False, e.status))
+
+            else:
+                logger.error(
+                    "An error (%s %s) occurred while attempting to resubscribe to an event on reconnect: %s",
+                    e.status,
+                    e.reason,
+                    e.message,
+                )
+
             return None
 
-        else:
-            assert obj.created
-            obj.created.set_result((True, None))  # type: ignore
+        if obj.created:
+            obj.created.set_result((True, None))
 
         data = resp["data"][0]
-        cost = data["cost"]
         self.remaining_slots = resp["max_total_cost"] - resp["total_cost"]
-        obj.cost = cost
+        obj.cost = data["cost"]
 
         return data
 
