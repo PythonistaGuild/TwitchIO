@@ -4,12 +4,13 @@ import asyncio
 import logging
 
 import aiohttp
-from typing import Optional, TYPE_CHECKING, Tuple, Type, Dict, Callable, Generic, TypeVar, Awaitable, Union, cast, List, Literal
+from typing import Optional, TYPE_CHECKING, Tuple, Type, Dict, Callable, Generic, TypeVar, Awaitable, Union, cast, List
 from . import models, http
 from .models import _loads
 from twitchio import PartialUser, Unauthorized, HTTPException
 
 if TYPE_CHECKING:
+    from typing_extensions import Literal
     from twitchio import Client
 
 logger = logging.getLogger("twitchio.ext.eventsub.ws")
