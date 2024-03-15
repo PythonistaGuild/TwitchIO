@@ -645,7 +645,6 @@ class TwitchHTTP:
         )
 
     async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]]):
-        print(msgs)
         return await self.request(
             Route(
                 "POST",
@@ -655,6 +654,14 @@ class TwitchHTTP:
                 token=token,
             )
         )
+
+    async def post_snooze_ad(self, token: str, broadcaster_id: str):
+        q = [("broadcaster_id", broadcaster_id)]
+        return await self.request(Route("POST", "channels/ads/schedule/snooze", query=q, token=token))
+
+    async def get_ad_schedule(self, token: str, broadcaster_id: str):
+        q = [("broadcaster_id", broadcaster_id)]
+        return await self.request(Route("GET", "channels/ads", query=q, token=token))
 
     async def get_channel_ban_unban_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
@@ -667,6 +674,10 @@ class TwitchHTTP:
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
         return await self.request(Route("GET", "moderation/banned", query=q, token=token))
+
+    async def get_moderated_channels(self, token: str, user_id: str):
+        q = [("user_id", user_id)]
+        return await self.request(Route("GET", "moderation/channels", query=q, token=token))
 
     async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
