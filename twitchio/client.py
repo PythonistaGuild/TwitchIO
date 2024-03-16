@@ -83,15 +83,24 @@ class Client:
         await self.setup_hook()
 
         if with_adapter:
-            self._adapter.run()
+            await self._adapter.run()
 
     async def block(self) -> None:
         # TODO: Temp METHOD for testing...
 
-        await self._blocker.wait()
+        try:
+            await self._blocker.wait()
+        except KeyboardInterrupt:
+            await self.close()
 
     async def close(self) -> None:
         await self._http.close()
+
+        if self._adapter._runner_task is not None:
+            try:
+                await self._adapter.close()
+            except Exception:
+                pass
 
         # TODO: Temp logic for testing...
         self._blocker.set()
