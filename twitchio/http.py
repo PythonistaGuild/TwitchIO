@@ -90,7 +90,7 @@ class Route:
         self.path = path
 
         self._base_url: str = ""
-        self._url: str = self.build_url()
+        self._url: str = self.build_url(duplicate_key=not use_id)
 
     def __str__(self) -> str:
         return str(self._url)
@@ -98,7 +98,7 @@ class Route:
     def __repr__(self) -> str:
         return f"{self.method}[{self.base_url}]"
 
-    def build_url(self, *, remove_none: bool = True) -> str:
+    def build_url(self, *, remove_none: bool = True, duplicate_key: bool = True) -> str:
         base = self.ID_BASE if self.use_id else self.BASE
         self.path = self.path.lstrip("/").rstrip("/")
 
@@ -122,8 +122,12 @@ class Route:
             else:
                 # At this point we should assume it's a list or tuple...
                 # If it's not that's ultimately on us...
-                joined: str = "+".join([self.encode(str(v), safe="+") for v in value])
-                url += f"{key}={joined}&"
+                if duplicate_key:
+                    for v in value:
+                        url += f"{key}={self.encode(str(v), safe='+', plus=True)}&"
+                else:
+                    joined: str = "+".join([self.encode(str(v), safe="+") for v in value])
+                    url += f"{key}={joined}&"
 
         return url.rstrip("&")
 
