@@ -90,6 +90,12 @@ class ManagedHTTPClient(OAuth):
             msg: str = f'Refreshed token was invalid. Please re-authenticate user with token: "{token}"'
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="token", original=e)
 
+        if not valid_resp.login or not valid_resp.user_id:
+            logger.info("Refreshed token is not a user token. Adding to TokenManager as an app token.")
+            self._app_token = resp.access_token
+
+            return valid_resp
+
         self._tokens[valid_resp.user_id] = {
             "user_id": valid_resp.user_id,
             "token": resp.access_token,
@@ -109,6 +115,12 @@ class ManagedHTTPClient(OAuth):
                 raise InvalidTokenException(msg, token=token, refresh=refresh, type_="token", original=e)
 
             return await self._attempt_refresh_on_add(token, refresh)
+
+        if not resp.login or not resp.user_id:
+            logger.info("Added token is not a user token. Adding to TokenManager as an app token.")
+            self._app_token = token
+
+            return resp
 
         self._tokens[resp.user_id] = {
             "user_id": resp.user_id,
@@ -132,11 +144,21 @@ class ManagedHTTPClient(OAuth):
             if data["token"] == token:
                 return data
 
+        if route.token_for and not token:
+            scoped: TokenMappingData | None = self._tokens.get(route.token_for, None)
+            if scoped:
+                return scoped
+
+        return self._app_token or token
+
     async def request(self, route: Route) -> RawResponse | str:
         if not self._session:
             await self._init_session()
 
         old: TokenMappingData | None | str = self._find_token(route)
+        if old:
+            token: str = old if isinstance(old, str) else old["token"]
+            route.update_headers({"Authorization": f"Bearer {token}"})
 
         try:
             data: RawResponse | str = await super().request(route)
@@ -244,7 +266,7 @@ class ManagedHTTPClient(OAuth):
 
         await super().close()
 
-    def dump(self, name: str | None = None) -> None:
+    async def dump(self, name: str | None = None) -> None:
         name = name or ".tio.tokens.json"
 
         with open(name, "w") as fp:

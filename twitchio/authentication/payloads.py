@@ -77,9 +77,9 @@ class ValidateTokenPayload(BasePayload):
         super().__init__(raw)
 
         self.client_id: str = raw["client_id"]
-        self.login: str = raw["login"]
+        self.login: str | None = raw.get("login", None)
         self.scopes: list[str] = raw["scopes"]
-        self.user_id: str = raw["user_id"]
+        self.user_id: str | None = raw.get("user_id", None)
         self.expires_in: int = raw["expires_in"]
 
 

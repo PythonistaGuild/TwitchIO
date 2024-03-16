@@ -68,7 +68,19 @@ async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
 
 
 class Route:
-    __slots__ = ("params", "data", "json", "headers", "use_id", "method", "path", "packed", "_base_url", "_url")
+    __slots__ = (
+        "params",
+        "data",
+        "json",
+        "headers",
+        "use_id",
+        "method",
+        "path",
+        "packed",
+        "_base_url",
+        "_url",
+        "token_for",
+    )
 
     BASE: ClassVar[str] = "https://api.twitch.tv/helix/"
     ID_BASE: ClassVar[str] = "https://id.twitch.tv/"
@@ -84,6 +96,7 @@ class Route:
         self.params: ParamMapping = kwargs.pop("params", {})
         self.json: dict[str, Any] = kwargs.get("json", {})
         self.headers: dict[str, str] = kwargs.get("headers", {})
+        self.token_for: str = str(kwargs.get("token_for", ""))
 
         self.use_id = use_id
         self.method = method
