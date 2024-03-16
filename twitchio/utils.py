@@ -68,8 +68,8 @@ class ColourFormatter(logging.Formatter):
                 logging.DEBUG: "\x1b[40;1m",
                 logging.INFO: "\x1b[38;2;100;55;215;1m",
                 logging.WARNING: "\x1b[38;2;204;189;51;1m",
-                logging.ERROR: "\x1b[38;2;161;38;46m;1m",
-                logging.CRITICAL: "\x1b[48;2;161;38;46;1m",
+                logging.ERROR: "\x1b[38;2;161;38;46m",
+                logging.CRITICAL: "\x1b[48;2;161;38;46",
             }
 
         elif self._supports_colour:
@@ -77,8 +77,8 @@ class ColourFormatter(logging.Formatter):
                 logging.DEBUG: "\x1b[40;1m",
                 logging.INFO: "\x1b[34;1m",
                 logging.WARNING: "\x1b[33;1m",
-                logging.ERROR: "\x1b[31m;1m",
-                logging.CRITICAL: "\x1b[41;1m",
+                logging.ERROR: "\x1b[31m",
+                logging.CRITICAL: "\x1b[41",
             }
 
         self._FORMATS: dict[int, logging.Formatter] = {
