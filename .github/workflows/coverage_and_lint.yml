@@ -30,7 +30,7 @@ jobs:
       - name: "Install Python deps @ ${{ matrix.python-version }}"
         id: install-deps
         run: |
-          pip install -U -r requirements.txt
+          pip install -U .[starlette]
       - name: "Run Pyright @ ${{ matrix.python-version }}"
         uses: jakebailey/pyright-action@v1
         with:

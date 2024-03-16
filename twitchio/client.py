@@ -35,9 +35,8 @@ if TYPE_CHECKING:
     import aiohttp
     from typing_extensions import Self, Unpack
 
-    from .types_.options import ClientOptions
-
     from .authentication import ClientCredentialsPayload
+    from .types_.options import ClientOptions
 
 
 class Client:
