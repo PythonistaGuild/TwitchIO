@@ -25,6 +25,8 @@ SOFTWARE.
 from __future__ import annotations
 
 import asyncio
+import logging
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
 from .authentication import ManagedHTTPClient, Scopes
@@ -32,11 +34,16 @@ from .web import AiohttpAdapter, WebAdapter
 
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
+
     import aiohttp
     from typing_extensions import Self, Unpack
 
     from .authentication import ClientCredentialsPayload
     from .types_.options import ClientOptions
+
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -62,8 +69,32 @@ class Client:
         adapter: type[WebAdapter] = options.get("adapter", None) or AiohttpAdapter
         self._adapter: WebAdapter = adapter(client=self)
 
+        # Event listeners...
+        self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
+
         # TODO: Temp logic for testing...
         self._blocker: asyncio.Event = asyncio.Event()
+
+    async def event_error(self, error: Exception, *, listener: Awaitable[None] | None = None) -> None:
+        logger.error('Ignoring Exception in listener "%s":\n', listener.__qualname__, exc_info=error)
+
+    async def _dispatch(self, listener: Awaitable[None]) -> None:
+        try:
+            await listener
+        except Exception as e:
+            try:
+                await self.event_error(e, listener=listener)
+            except Exception as inner:
+                logger.error('Ignoring Exception in listener "event_error":\n', exc_info=inner)
+
+    def dispatch(self, event: str, payload: Any | None = None) -> None:
+        # TODO: Proper payload type...
+        tasks: list[asyncio.Task[None]] = []
+
+        name: str = "event_" + event.removeprefix("event_")
+        for listener in self._listeners[name]:
+            called_: Awaitable[None] = listener(payload) if payload else listener()
+            tasks.append(asyncio.create_task(self._dispatch(called_)))
 
     async def setup_hook(self) -> None: ...
 
@@ -111,3 +142,10 @@ class Client:
 
     async def add_token(self, token: str, refresh: str) -> None:
         await self._http.add_token(token, refresh)
+
+    def add_listener(self, listener: Callable[..., Coroutine[Any, Any, None]], *, event: str | None = None) -> None:
+        name: str = event or listener.__name__
+        if not name.startswith("event_"):
+            raise ValueError('Listener and event names must start with "event_".')
+
+        self._listeners[name].add(listener)
