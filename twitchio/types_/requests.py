@@ -38,6 +38,7 @@ class APIRequestKwargs(TypedDict, total=False):
     data: dict[str, Any]
     params: ParamMapping
     json: dict[str, Any]
+    token_for: str | None
 
 
 class APIRequest(TypedDict, total=False):
