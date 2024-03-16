@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: dev/3.0
 
       - name: "Setup Python @ ${{ matrix.python-version }}"
         id: setup-python
