@@ -34,5 +34,4 @@ class ClientOptions(TypedDict, total=False):
     redirect_uri: str | None
     scopes: Scopes | None
     session: aiohttp.ClientSession | None
-    app_token: str | None
     adapter: type[StarletteAdapter | AiohttpAdapter] | None

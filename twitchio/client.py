@@ -37,6 +37,8 @@ if TYPE_CHECKING:
 
     from .types_.options import ClientOptions
 
+    from .authentication import ClientCredentialsPayload
+
 
 class Client:
     def __init__(
@@ -49,12 +51,10 @@ class Client:
         redirect_uri: str | None = options.get("redirect_uri", None)
         scopes: Scopes | None = options.get("scopes", None)
         session: aiohttp.ClientSession | None = options.get("session", None)
-        app_token: str | None = options.get("app_token", None)
 
         self._http = ManagedHTTPClient(
             client_id=client_id,
             client_secret=client_secret,
-            app_token=app_token,
             redirect_uri=redirect_uri,
             scopes=scopes,
             session=session,
@@ -68,24 +68,29 @@ class Client:
 
     async def setup_hook(self) -> None: ...
 
-    async def __aenter__(self) -> Self:
-        if not self._http._app_token:
-            payload = await self._http.client_credentials_token()
-            self._http._app_token = payload.access_token
+    async def login(self, *, token: str | None = None) -> None:
+        if not token:
+            payload: ClientCredentialsPayload = await self._http.client_credentials_token()
+            token = payload.access_token
 
+        self._http._app_token = token
+        await self.setup_hook()
+
+    async def __aenter__(self) -> Self:
         return self
 
     async def __aexit__(self, *_: Any) -> None:
         await self.close()
 
-    async def start(self, with_adapter: bool = True) -> None:
-        # TODO: Temp logic for testing...
-        await self.setup_hook()
+    async def start(self, token: str | None = None, *, with_adapter: bool = True) -> None:
+        await self.login(token=token)
 
         if with_adapter:
             await self._adapter.run()
 
-    async def block(self) -> None:
+        await self._block()
+
+    async def _block(self) -> None:
         # TODO: Temp METHOD for testing...
 
         try:

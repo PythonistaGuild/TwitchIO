@@ -58,7 +58,6 @@ class ManagedHTTPClient(OAuth):
         *,
         client_id: str,
         client_secret: str,
-        app_token: str | None = None,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
         session: aiohttp.ClientSession | None = None,
@@ -72,7 +71,7 @@ class ManagedHTTPClient(OAuth):
         )
 
         self._tokens: TokenMapping = {}
-        self._app_token = app_token
+        self._app_token: str | None = None
         self._validate_task: asyncio.Task[None] | None = None
 
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
