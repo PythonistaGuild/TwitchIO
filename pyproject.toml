@@ -38,7 +38,7 @@ dependencies = { file = ["requirements.txt"] }
 
 [project.optional-dependencies]
 docs = ["mkdocs-material", "mkdocstrings-python", "mkdocstrings"]
-
+starlette = ["starlette"]
 dev = ["ruff", "pyright", "isort"]
 
 [tool.ruff]
