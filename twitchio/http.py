@@ -30,17 +30,19 @@ import sys
 import urllib.parse
 from collections import deque
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias, TypeVar
 
 import aiohttp
 
 from . import __version__
 from .exceptions import HTTPException
+from .models import Clip, Game, SearchChannel, Stream
 from .utils import _from_json  # type: ignore
 
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    import datetime
+    from collections.abc import Generator, Sequence
 
     from typing_extensions import Self, Unpack
 
@@ -132,15 +134,12 @@ class Route:
 
             if isinstance(value, (str, int)):
                 url += f'{key}={self.encode(str(value), safe="+", plus=True)}&'
+            elif duplicate_key:
+                for v in value:
+                    url += f"{key}={self.encode(str(v), safe='+', plus=True)}&"
             else:
-                # At this point we should assume it's a list or tuple...
-                # If it's not that's ultimately on us...
-                if duplicate_key:
-                    for v in value:
-                        url += f"{key}={self.encode(str(v), safe='+', plus=True)}&"
-                else:
-                    joined: str = "+".join([self.encode(str(v), safe="+") for v in value])
-                    url += f"{key}={joined}&"
+                joined: str = "+".join([self.encode(str(v), safe="+") for v in value])
+                url += f"{key}={joined}&"
 
         return url.rstrip("&")
 
@@ -337,4 +336,164 @@ class HTTPClient:
         converter: PaginatedConverter[T] | None = None,
     ) -> HTTPAsyncIterator[T]:
         iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
+        return iterator
+
+    async def get_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> RawResponse:
+        params: dict[str, list[str | int]] = {"user_id": user_ids}
+        route: Route = Route("GET", "chat/color", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> RawResponse:
+        params = {"broadcaster_id": broadcaster_ids}
+        route: Route = Route("GET", "channels", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_cheermotes(self, broadcaster_id: str | int | None, token_for: str | None = None) -> RawResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_channel_emotes(self, broadcaster_id: str | int, token_for: str | None = None) -> RawResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "chat/emotes", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_content_classification_labels(self, locale: str, token_for: str | None = None) -> RawResponse:
+        params: dict[str, str] = {"locale": locale}
+        route: Route = Route("GET", "content_classification_labels", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_global_emotes(self, token_for: str | None = None) -> RawResponse:
+        route: Route = Route("GET", "chat/emotes/global", token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_clips(
+        self,
+        first: int,
+        broadcaster_id: str | None = None,
+        game_id: str | None = None,
+        clip_ids: list[str] | None = None,
+        started_at: datetime.datetime | None = None,
+        ended_at: datetime.datetime | None = None,
+        is_featured: bool | None = None,
+        token_for: str | None = None,
+    ) -> HTTPAsyncIterator[Clip]:
+        params: dict[str, str | int | list[str]] = {"first": first}
+        if broadcaster_id:
+            params["broadcaster_id"] = broadcaster_id
+        elif game_id:
+            params["game_id"] = game_id
+        elif clip_ids:
+            params["id"] = clip_ids
+
+        if started_at:
+            params["started_at"] = started_at.isoformat()
+        if ended_at:
+            params["ended_at"] = ended_at.isoformat()
+        if is_featured is not None:
+            params["is_featured"] = is_featured
+
+        route: Route = Route("GET", "streams", params=params, token_for=token_for)
+
+        async def converter(data: RawResponse) -> Clip:
+            return Clip(data)
+
+        iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_streams(
+        self,
+        first: int,
+        user_ids: list[int | str] | None = None,
+        game_ids: list[int | str] | None = None,
+        user_logins: list[int | str] | None = None,
+        languages: list[str] | None = None,
+        token_for: str | None = None,
+        type: Literal["all", "live"] = "all",
+    ) -> HTTPAsyncIterator[Stream]:
+        params: dict[str, str | int | Sequence[str | int]] = {"type": type, "first": first}
+
+        if user_ids is not None:
+            params["user_id"] = user_ids
+        if game_ids is not None:
+            params["game_ids"] = game_ids
+        if user_logins is not None:
+            params["user_login"] = user_logins
+        if languages is not None:
+            params["language"] = languages
+
+        route: Route = Route("GET", "streams", params=params, token_for=token_for)
+
+        async def converter(data: RawResponse) -> Stream:
+            return Stream(data)
+
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_search_categories(
+        self, query: str, first: int, token_for: str | None = None
+    ) -> HTTPAsyncIterator[Game]:
+        params: dict[str, str | int | Sequence[str | int]] = {"query": query, "first": first}
+        route: Route = Route("GET", "search/categories", params=params, token_for=token_for)
+
+        async def converter(data: RawResponse) -> Game:
+            return Game(data)
+
+        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_search_channels(
+        self, query: str, first: int, live: bool = False, token_for: str | None = None
+    ) -> HTTPAsyncIterator[SearchChannel]:
+        params: dict[str, str | int] = {"query": query, "live": live, "first": first}
+        route: Route = Route("GET", "search/channels", params=params, token_for=token_for)
+
+        async def converter(data: RawResponse) -> SearchChannel:
+            return SearchChannel(data)
+
+        iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_teams(
+        self, team_name: str | None = None, team_id: str | None = None, token_for: str | None = None
+    ) -> RawResponse:
+        params: dict[str, str] = {}
+
+        if team_name:
+            params = params = {"name": team_name}
+        elif team_id:
+            params = {"id": team_id}
+
+        route: Route = Route("GET", "teams", params=params, token_for=token_for)
+
+        return await self.request_json(route)
+
+    async def get_games(
+        self,
+        names: list[str] | None = None,
+        ids: list[str] | None = None,
+        igdb_ids: list[str] | None = None,
+        token_for: str | None = None,
+    ) -> RawResponse:
+        params: dict[str, list[str]] = {}
+
+        if names is not None:
+            params["name"] = names
+        if ids is not None:
+            params["id"] = ids
+        if igdb_ids is not None:
+            params["igdb_id"] = igdb_ids
+
+        route: Route = Route("GET", "games", params=params, token_for=token_for)
+
+        return await self.request_json(route)
+
+    async def get_top_games(self, first: int, token_for: str | None = None) -> HTTPAsyncIterator[Game]:
+        params: dict[str, int] = {"first": first}
+        route: Route = Route("GET", "games/top", params=params, token_for=token_for)
+
+        async def converter(data: RawResponse) -> Game:
+            return Game(data)
+
+        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
         return iterator

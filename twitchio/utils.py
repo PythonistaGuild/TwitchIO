@@ -3,6 +3,7 @@ import logging
 import os
 import pathlib
 import sys
+from datetime import datetime
 from typing import Any
 
 
@@ -13,8 +14,18 @@ try:
 except ImportError:
     _from_json = json.loads
 
+try:
+    from ciso8601 import parse_datetime as parse_iso
+except ImportError:
+    from datetime import timezone
 
-__all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter")
+    def parse_iso(datetime_string: str) -> datetime:
+        dt = datetime.fromisoformat(datetime_string)
+        dt = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+        return dt
+
+
+__all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter", "parse_timestamp")
 
 
 def is_docker() -> bool:
@@ -49,6 +60,24 @@ def stream_supports_rgb(stream: Any) -> bool:
         return os.environ["COLORTERM"] in ("truecolor", "24bit")
 
     return False
+
+
+def parse_timestamp(timestamp: str) -> datetime:
+    """
+    Parses a timestamp in ISO8601 format to a datetime object using either
+    ciso8601.parse_datetime or datetime.fromisoformat based on availability.
+
+    Parameters
+    ----------
+    timestamp : str
+        The ISO8601 timestamp to be parsed.
+
+    Returns
+    -------
+    datetime.datetime
+        The parsed datetime object.
+    """
+    return parse_iso(timestamp)
 
 
 class ColourFormatter(logging.Formatter):
