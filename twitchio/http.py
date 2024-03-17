@@ -705,6 +705,13 @@ class TwitchHTTP:
             Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
         )
 
+    async def get_user_emotes(self, user_id: str, broadcaster_id: Optional[str], token: str):
+        q: List = [("user_id", user_id)]
+        if broadcaster_id:
+            q.append(("broadcaster_id", broadcaster_id))
+        
+        return await self.request(Route("GET", "chat/emotes/user", query=q, token=token))
+
     async def get_stream_key(self, token: str, broadcaster_id: str):
         return await self.request(
             Route("GET", "streams/key", query=[("broadcaster_id", broadcaster_id)], token=token), paginate=False

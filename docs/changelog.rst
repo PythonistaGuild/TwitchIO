@@ -4,10 +4,11 @@
 =======
 - TwitchIO
     - Additions
-        - Added :class:`~twitchio.AdSchedule`
+        - Added :class:`~twitchio.AdSchedule` and :class:`~twitchio.Emote`
         - Added the new ad-related methods for :class:`~twitchio.PartialUser`:
             - :func:`~twitchio.PartialUser.fetch_ad_schedule`
             - :func:`~twitchio.PartialUser.snooze_ad`
+        - Added new method :func:`~twitchio.PartialUser.fetch_user_emotes` to :class:`~twitchio.PartialUser`
         - Added :func:`~twitchio.PartialUser.fetch_moderated_channels` to :class:`~twitchio.PartialUser`
 
     - Bug fixes

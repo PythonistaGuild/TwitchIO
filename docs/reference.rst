@@ -220,6 +220,13 @@ CustomRewardRedemption
     :members:
     :inherited-members:
 
+Emote
+------
+.. attributetable:: Emote
+
+.. autoclass:: Emote
+    :members:
+
 Extension
 -----------
 .. attributetable:: Extension
