@@ -121,22 +121,8 @@ class TwitchHTTP:
             raise errors.NoClientID("A Client ID is required to use the Twitch API")
         headers = route.headers or {}
 
-        if force_app_token and "Authorization" not in headers:
-            if not self.client_secret:
-                raise errors.NoToken(
-                    "An app access token is required for this route, please provide a client id and client secret"
-                )
-            if self.app_token is None:
-                await self._generate_login()
-                headers["Authorization"] = f"Bearer {self.app_token}"
-        elif not self.token and not self.client_secret and "Authorization" not in headers:
-            raise errors.NoToken(
-                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
-            )
-        if "Authorization" not in headers:
-            if not self.token:
-                await self._generate_login()
-            headers["Authorization"] = f"Bearer {self.token}"
+        await self._apply_auth(headers, force_app_token, False)
+
         headers["Client-ID"] = self.client_id
 
         if not self.session:
@@ -165,7 +151,7 @@ class TwitchHTTP:
                     q = [("after", cursor), *q]
                 q = [("first", get_limit()), *q]
                 path = path.with_query(q)
-            body, is_text = await self._request(route, path, headers)
+            body, is_text = await self._request(route, path, headers, force_app_token=force_app_token)
             if is_text:
                 return body
             if full_body:
@@ -182,7 +168,26 @@ class TwitchHTTP:
             is_finished = reached_limit() if limit is not None else True if paginate else True
         return data
 
-    async def _request(self, route, path, headers, utilize_bucket=True):
+    async def _apply_auth(self, headers: dict, force_app_token: bool, force_apply: bool) -> None:
+        if force_app_token and "Authorization" not in headers:
+            if not self.client_secret:
+                raise errors.NoToken(
+                    "An app access token is required for this route, please provide a client id and client secret"
+                )
+            if self.app_token is None:
+                await self._generate_login()
+                headers["Authorization"] = f"Bearer {self.app_token}"
+        elif not self.token and not self.client_secret and "Authorization" not in headers:
+            raise errors.NoToken(
+                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
+            )
+        if "Authorization" not in headers or force_apply:
+            if not self.token:
+                await self._generate_login()
+
+            headers["Authorization"] = f"Bearer {self.token}"
+
+    async def _request(self, route, path, headers, utilize_bucket=True, force_app_token: bool = False):
         reason = None
 
         for attempt in range(5):
@@ -224,6 +229,7 @@ class TwitchHTTP:
                     if "Invalid OAuth token" in message_json.get("message", ""):
                         try:
                             await self._generate_login()
+                            await self._apply_auth(headers, force_app_token, True)
                             continue
                         except:
                             raise errors.Unauthorized(
@@ -698,6 +704,13 @@ class TwitchHTTP:
         return await self.request(
             Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
         )
+
+    async def get_user_emotes(self, user_id: str, broadcaster_id: Optional[str], token: str):
+        q: List = [("user_id", user_id)]
+        if broadcaster_id:
+            q.append(("broadcaster_id", broadcaster_id))
+
+        return await self.request(Route("GET", "chat/emotes/user", query=q, token=token))
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
         return await self.request(

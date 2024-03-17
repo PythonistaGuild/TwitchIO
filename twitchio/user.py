@@ -40,6 +40,7 @@ if TYPE_CHECKING:
         AdSchedule,
         BitsLeaderboard,
         Clip,
+        Emote,
         ExtensionBuilder,
         Tag,
         FollowEvent,
@@ -639,6 +640,33 @@ class PartialUser:
         data = await self._http.get_channel_emotes(str(self.id))
         return [ChannelEmote(self._http, x) for x in data]
 
+    async def fetch_user_emotes(self, token: str, broadcaster: Optional[PartialUser] = None) -> List[Emote]:
+        """|coro|
+
+        Fetches emotes the user has access to. Optionally, you can filter by a broadcaster.
+
+        .. note::
+
+            As of writing, this endpoint seems extrememly unoptimized by twitch, and may (read: will) take a lot of API requests to load.
+            See https://github.com/twitchdev/issues/issues/921 .
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An OAuth token belonging to this user with the ``user:read:emotes`` scope.
+        broadcaster: Optional[:class:`~twitchio.PartialUser`]
+            A channel to filter the results with.
+            Filtering will return all emotes available to the user on that channel, including global emotes.
+
+        Returns
+        --------
+        List[:class:`~twitchio.Emote`]
+        """
+        from .models import Emote
+
+        data = await self._http.get_user_emotes(str(self.id), broadcaster and str(broadcaster.id), token)
+        return [Emote(d) for d in data]
+
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
 
@@ -665,6 +693,10 @@ class PartialUser:
         """|coro|
 
         Unfollows the user
+
+        .. warning::
+
+            This method is obsolete as Twitch removed the endpoint.
 
         Parameters
         -----------

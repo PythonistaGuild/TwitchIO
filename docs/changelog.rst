@@ -1,5 +1,25 @@
 :orphan:
 
+2.9.0
+=======
+- TwitchIO
+    - Additions
+        - Added :class:`~twitchio.AdSchedule` and :class:`~twitchio.Emote`
+        - Added the new ad-related methods for :class:`~twitchio.PartialUser`:
+            - :func:`~twitchio.PartialUser.fetch_ad_schedule`
+            - :func:`~twitchio.PartialUser.snooze_ad`
+        - Added new method :func:`~twitchio.PartialUser.fetch_user_emotes` to :class:`~twitchio.PartialUser`
+        - Added :func:`~twitchio.PartialUser.fetch_moderated_channels` to :class:`~twitchio.PartialUser`
+
+    - Bug fixes
+        - Fixed ``event_token_expired`` not applying to the current request.
+
+- ext.eventsub
+    - Bug fixes
+        - Fixed a crash where a Future could be None, causing unintentional errors.
+        - Special-cased a restart when a specific known bad frame is received.
+
+
 2.8.2
 ======
 - ext.commands
