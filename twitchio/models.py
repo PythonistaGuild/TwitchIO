@@ -659,7 +659,7 @@ class Emote:
     Represents an Emote.
 
     .. note::
-    
+
         It seems twitch is sometimes returning duplicate information from the emotes endpoint.
         To deduplicate your emotes, you can call ``set()`` on the list of emotes (or any other hashmap), which will remove the duplicates.
 
@@ -667,7 +667,7 @@ class Emote:
 
             my_list_of_emotes = await user.get_user_emotes(...)
             deduplicated_emotes = set(my_list_of_emotes)
-    
+
     Attributes
     -----------
     id: :class:`str`
@@ -701,7 +701,18 @@ class Emote:
         Whether this emote is available in dark theme background mode.
     """
 
-    __slots__ = "id", "set_id", "owner_id", "name", "type", "scales", "format_static", "format_animated", "theme_light", "theme_dark"
+    __slots__ = (
+        "id",
+        "set_id",
+        "owner_id",
+        "name",
+        "type",
+        "scales",
+        "format_static",
+        "format_animated",
+        "theme_light",
+        "theme_dark",
+    )
 
     def __init__(self, data: dict) -> None:
         self.id: str = data["id"]
@@ -714,7 +725,7 @@ class Emote:
         self.theme_light: bool = "light" in data["theme_mode"]
         self.format_static: bool = "static" in data["format"]
         self.format_animated: bool = "animated" in data["format"]
-    
+
     def url_for(self, format: Literal["static", "animated"], theme: Literal["dark", "light"], scale: str) -> str:
         """
         Returns a cdn url that can be used to download or serve the emote on a website.
@@ -729,26 +740,26 @@ class Emote:
         scale: :class:`str`
             The scale of the emote. This should be formatted in this format: ``"1.0"``.
             The scales available for this emote can be checked via :attr:`~.scales`.
-        
+
         Returns
         --------
         :class:`str`
         """
         if scale not in self.scales:
             raise ValueError(f"scale for this emote must be one of {', '.join(self.scales)}, not {scale}")
-        
+
         if (theme == "dark" and not self.theme_dark) or (theme == "light" and not self.theme_light):
             raise ValueError(f"theme {theme} is not an available value for this emote")
 
         if (format == "static" and not self.format_static) or (format == "animated" and not self.format_animated):
             raise ValueError(f"format {format} is not an available value for this emote")
-        
+
         return f"https://static-cdn.jtvnw.net/emoticons/v2/{self.id}/{format}/{theme}/{scale}"
-    
+
     def __repr__(self) -> str:
         return f"<Emote id={self.id} name={self.name}>"
 
-    def __hash__(self) -> int: # this exists so we can do set(list of emotes) to get rid of duplicates
+    def __hash__(self) -> int:  # this exists so we can do set(list of emotes) to get rid of duplicates
         return hash(self.id)
 
 

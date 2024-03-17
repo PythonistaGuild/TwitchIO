@@ -639,17 +639,17 @@ class PartialUser:
 
         data = await self._http.get_channel_emotes(str(self.id))
         return [ChannelEmote(self._http, x) for x in data]
-    
+
     async def fetch_user_emotes(self, token: str, broadcaster: Optional[PartialUser] = None) -> List[Emote]:
         """|coro|
-        
+
         Fetches emotes the user has access to. Optionally, you can filter by a broadcaster.
 
         .. note::
 
             As of writing, this endpoint seems extrememly unoptimized by twitch, and may (read: will) take a lot of API requests to load.
             See https://github.com/twitchdev/issues/issues/921 .
-        
+
         Parameters
         -----------
         token: :class:`str`
@@ -663,6 +663,7 @@ class PartialUser:
         List[:class:`~twitchio.Emote`]
         """
         from .models import Emote
+
         data = await self._http.get_user_emotes(str(self.id), broadcaster and str(broadcaster.id), token)
         return [Emote(d) for d in data]
 

@@ -709,7 +709,7 @@ class TwitchHTTP:
         q: List = [("user_id", user_id)]
         if broadcaster_id:
             q.append(("broadcaster_id", broadcaster_id))
-        
+
         return await self.request(Route("GET", "chat/emotes/user", query=q, token=token))
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
