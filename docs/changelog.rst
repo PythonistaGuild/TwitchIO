@@ -17,6 +17,7 @@
 - ext.eventsub
     - Bug fixes
         - Fixed a crash where a Future could be None, causing unintentional errors.
+        - Special-cased a restart when a specific known bad frame is received.
 
 
 2.8.2
