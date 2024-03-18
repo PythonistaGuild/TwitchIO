@@ -32,7 +32,6 @@ from typing import TYPE_CHECKING, Any, Literal
 from twitchio.http import HTTPAsyncIterator
 
 from .authentication import ManagedHTTPClient, Scopes
-from .payloads import EventErrorPayload
 from .models import (
     ChannelInfo,
     ChatterColor,
@@ -45,7 +44,7 @@ from .models import (
     Stream,
     Team,
 )
-
+from .payloads import EventErrorPayload
 from .web import AiohttpAdapter, WebAdapter
 
 

@@ -127,6 +127,8 @@ class StarletteAdapter(Starlette):
 
     async def oauth_redirect(self, request: Request) -> Response:
         scopes: str | None = request.query_params.get("scopes", None)
+        force_verify: bool = request.query_params.get("force_verify", "false").lower() == "true"
+
         if not scopes:
             scopes = str(self.client._http.scopes) if self.client._http.scopes else None
 
@@ -143,6 +145,7 @@ class StarletteAdapter(Starlette):
             payload: AuthorizationURLPayload = self.client._http.get_authorization_url(
                 scopes=scopes_,
                 redirect_uri=self._redirect_uri,
+                force_verify=force_verify,
             )
         except Exception as e:
             logger.error(
@@ -231,6 +234,8 @@ class AiohttpAdapter(web.Application):
 
     async def oauth_redirect(self, request: web.Request) -> web.Response:
         scopes: str | None = request.query.get("scopes", None)
+        force_verify: bool = request.query.get("force_verify", "false").lower() == "true"
+
         if not scopes:
             scopes = str(self.client._http.scopes) if self.client._http.scopes else None
 
@@ -247,6 +252,7 @@ class AiohttpAdapter(web.Application):
             payload: AuthorizationURLPayload = self.client._http.get_authorization_url(
                 scopes=scopes_,
                 redirect_uri=self._redirect_uri,
+                force_verify=force_verify,
             )
         except Exception as e:
             logger.error(
