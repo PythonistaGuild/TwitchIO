@@ -26,6 +26,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import twitchio
+
 from .user import PartialUser
 from .utils import parse_timestamp
 
@@ -300,19 +302,24 @@ class Game:
         Game ID.
     name: :class:`str`
         Game name.
-    box_art_url: :class:`str`
+    box_art: :class:`str`
         Template URL for the game's box art.
     igdb_id: Optional[:class:`str`]
         The IGDB ID of the game. If this is not available to Twitch it will return None
     """
 
-    __slots__ = "id", "name", "box_art_url", "igdb_id"
+    __slots__ = "id", "name", "box_art", "igdb_id"
 
     def __init__(self, data: RawResponse) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
-        self.box_art_url: str = data["box_art_url"]
         self.igdb_id: str | None = data.get("igdb_id")
+
+        # TODO:
+        # Dimensions is a tuple[int, int] of width x height or None (Defaults to None)
+        # We use this on URLS provided by Twitch that require these parameters
+        # For box art, I set dimensions to 1080x1440 which is an aspect ratio of 3:4
+        self.box_art: twitchio.Asset = twitchio.Asset(data["box_art_url"], name=f"{self.name}_box_art", dimensions=(1080, 1440))
 
     def __repr__(self) -> str:
         return f"<Game id={self.id} name={self.name}>"
@@ -332,7 +339,7 @@ class Game:
         --------
             :class:`str`
         """
-        return self.box_art_url.format(width=width, height=height)
+        return self.box_art.base_url.format(width=width, height=height)
 
 
 class GlobalEmote:
