@@ -30,6 +30,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
 from .authentication import ManagedHTTPClient, Scopes
+from .payloads import EventErrorPayload
 from .web import AiohttpAdapter, WebAdapter
 
 
@@ -70,31 +71,39 @@ class Client:
         self._adapter: WebAdapter = adapter(client=self)
 
         # Event listeners...
+        # Cog listeners should be partials with injected self...
+        # When unloading/reloading cogs, the listeners should be removed and re-added to ensure upto date state...
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
 
         # TODO: Temp logic for testing...
         self._blocker: asyncio.Event = asyncio.Event()
 
-    async def event_error(self, error: Exception, *, listener: Awaitable[None] | None = None) -> None:
-        logger.error('Ignoring Exception in listener "%s":\n', listener.__qualname__, exc_info=error)
+    async def event_error(self, payload: EventErrorPayload) -> None:
+        logger.error('Ignoring Exception in listener "%s":\n', payload.listener.__qualname__, exc_info=payload.error)
 
-    async def _dispatch(self, listener: Awaitable[None]) -> None:
+    async def _dispatch(
+        self, listener: Callable[..., Coroutine[Any, Any, None]], *, original: Any | None = None
+    ) -> None:
         try:
-            await listener
+            called_: Awaitable[None] = listener(original) if original else listener()
+            await called_
         except Exception as e:
             try:
-                await self.event_error(e, listener=listener)
+                payload: EventErrorPayload = EventErrorPayload(error=e, listener=listener, original=original)
+                await self.event_error(payload)
             except Exception as inner:
-                logger.error('Ignoring Exception in listener "event_error":\n', exc_info=inner)
+                logger.error('Ignoring Exception in listener "%s.event_error":\n', self.__qualname__, exc_info=inner)
 
     def dispatch(self, event: str, payload: Any | None = None) -> None:
         # TODO: Proper payload type...
-        tasks: list[asyncio.Task[None]] = []
-
         name: str = "event_" + event.removeprefix("event_")
-        for listener in self._listeners[name]:
-            called_: Awaitable[None] = listener(payload) if payload else listener()
-            tasks.append(asyncio.create_task(self._dispatch(called_)))
+
+        listeners: set[Callable[..., Coroutine[Any, Any, None]]] = self._listeners[name]
+        extra: Callable[..., Coroutine[Any, Any, None]] | None = getattr(self, name, None)
+        if extra:
+            listeners.add(extra)
+
+        _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
     async def setup_hook(self) -> None: ...
 
@@ -145,7 +154,14 @@ class Client:
 
     def add_listener(self, listener: Callable[..., Coroutine[Any, Any, None]], *, event: str | None = None) -> None:
         name: str = event or listener.__name__
+
         if not name.startswith("event_"):
             raise ValueError('Listener and event names must start with "event_".')
+
+        if name == "event_":
+            raise ValueError('Listener and event names cannot be named "event_".')
+
+        if not asyncio.iscoroutinefunction(listener):
+            raise ValueError("Listeners and Events must be coroutines.")
 
         self._listeners[name].add(listener)

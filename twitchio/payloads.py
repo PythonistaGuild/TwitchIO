@@ -22,13 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0a"
+from collections.abc import Callable, Coroutine
+from typing import Any
 
-from . import authentication as authentication, utils as utils, web as web
-from .client import Client as Client
-from .exceptions import *
-from .payloads import *
+
+__all__ = ("EventErrorPayload",)
+
+
+class EventErrorPayload:
+    __slots__ = ("error", "listener", "original")
+
+    def __init__(self, *, error: Exception, listener: Callable[..., Coroutine[Any, Any, None]], original: Any) -> None:
+        self.error: Exception = error
+        self.listener: Callable[..., Coroutine[Any, Any, None]] = listener
+        self.original: Any = original
