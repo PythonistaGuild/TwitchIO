@@ -45,7 +45,7 @@ from .models import (
     Team,
 )
 from .payloads import EventErrorPayload
-from .web import AiohttpAdapter, WebAdapter
+from .web import AiohttpAdapter
 
 
 if TYPE_CHECKING:
@@ -83,8 +83,8 @@ class Client:
             session=session,
         )
 
-        adapter: type[WebAdapter] = options.get("adapter", None) or AiohttpAdapter
-        self._adapter: WebAdapter = adapter(client=self)
+        adapter: Any = options.get("adapter", None) or AiohttpAdapter
+        self._adapter: Any = adapter(client=self)
 
         # Event listeners...
         # Cog listeners should be partials with injected self...
