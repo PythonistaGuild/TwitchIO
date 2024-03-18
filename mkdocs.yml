@@ -14,8 +14,10 @@ theme:
     - navigation.tabs
     - navigation.path
     - navigation.top
+    - navigation.tracking
     - search.suggest
     - search.share
+    - toc.follow
   icon:
     annotation: material/chevron-right-circle
     repo: fontawesome/brands/github
@@ -36,6 +38,7 @@ plugins:
           import:
           - https://docs.python.org/3/objects.inv
           options:
+            heading_level: 3
             docstring_style: numpy
             show_source: false
             show_symbol_type_heading: true
@@ -45,6 +48,12 @@ plugins:
             show_signature_annotations: true
             signature_crossrefs: true
             docstring_section_style: "list"
+            show_docstring_attributes: true
+            filters:
+              - "!^_"
+              - "^__"
+            summary:
+              attributes: true
 
 extra_css:
   - stylesheets/extra.css
@@ -53,6 +62,10 @@ extra_javascript:
 
 nav:
   - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installing.md
+    #- Quickstart: getting-started/quickstart.md
+    #- Examples: getting-started/examples.md
 
 markdown_extensions:
   - abbr
@@ -75,6 +88,9 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - tables
+  - pymdownx.details
+  - toc:
+      permalink: "#"
 
 extra:
   social:
@@ -82,3 +98,7 @@ extra:
       link: https://discord.gg/RAKc3HF
     - icon: fontawesome/brands/github
       link: https://github.com/PythonistaGuild/TwitchIO
+
+watch:
+  - twitchio
+  - docs

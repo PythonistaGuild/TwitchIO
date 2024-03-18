@@ -1,3 +1,4 @@
-mkdocs-material
+-i https://pypi.pythonista.gg/simple
+griffe
 mkdocstrings-python
-mkdocstrings
+mkdocs-material

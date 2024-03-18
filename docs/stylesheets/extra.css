@@ -11,6 +11,7 @@
   --md-typeset-color: #C9C9D1;
   --md-default-bg-color: #15151C;
   --md-footer-bg-color: #262633;
+  --pythonista-accent-color: #353557;
 
   --md-code-fg-color: #efefff;
   --md-code-bg-color: #23232e;
@@ -25,6 +26,10 @@
   --md-admonition-bg-color: #1D1D26;
   --md-admonition-fg-color: #efefff;
   --md-typeset-table-color: rgb(201, 201, 209, .2);
+
+  .md-header {
+    background-color: var(--pythonista-accent-color);
+  }
 
   .pythonista-tag {
     background: var(--md-primary-fg-color);
@@ -124,7 +129,23 @@
   --md-code-hl-generic-color: #F5C2DA;
   --md-code-hl-variable-color: #F5C2DA;
 
+  code {
+    background-color: var(--md-code-bg-color);
+  }
+
+  .doc-contents {
+    padding-left: 1rem;
+  }
+
+  .doc-object {
+    margin-left: -1rem;
+  }
+
   .highlight span.filename {
+    background-color: #1D1D26;
+  }
+
+  .highlight {
     background-color: #1D1D26;
   }
 
@@ -143,14 +164,34 @@
 
   .doc-label-async > code {
     color: #F7BA00;
-    background-color: rgb(247, 186, 0, 0.05);
     font-size: 1.05em;
     font-weight: bold;
+    background-color: transparent;
+  }
+  
+  .doc-symbol {
+    filter: opacity(0.8);
+    background-color: transparent;
+  }
+
+  .doc-label {
+    background-color: transparent;
+  }
+
+  .doc-heading {
+    font-size: 0.7rem;
+    font-weight: 400;
+    background-color: #1D1D26;
+    padding: 0.1rem;
+  }
+
+  .doc-symbol-attribute::after {
+    content: "attr";
   }
 
   .doc-label-writable > code {
     color: #73D673;
-    background-color: rgb(115, 214, 115, 0.05);
+    background-color: transparent;
   }
 
   .doc-object {
@@ -168,4 +209,27 @@
     display: block;
   }
 
+  .inactiveLink {
+    pointer-events: none;
+    cursor: default;
+    color: var(--md-typeset-color);
+ }
+
+ .doc-label-property {
+  display: none;
+ }
+}
+
+::-webkit-scrollbar {
+  width: 0.3rem;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--md-primary-fg-color);
+  border-radius: 0.05rem;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--pythonista-accent-color);
+  border-radius: 0.05rem;
 }
