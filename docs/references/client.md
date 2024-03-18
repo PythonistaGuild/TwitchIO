@@ -1,0 +1,2 @@
+# twitchio.Client
+::: twitchio.Client

@@ -64,8 +64,14 @@ nav:
   - Home: index.md
   - Getting Started:
     - Installation: getting-started/installing.md
-    #- Quickstart: getting-started/quickstart.md
+    - Migrating: getting-started/migrating.md
+    - Quickstart: getting-started/quickstart.md
+    - Authentication and Tokens: getting-started/authenticating.md
     #- Examples: getting-started/examples.md
+  - Guides:
+    - Placeholder: guides/placeholder.md
+  - References:
+    - Client: references/client.md
 
 markdown_extensions:
   - abbr
