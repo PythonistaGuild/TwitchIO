@@ -218,6 +218,10 @@
  .doc-label-property {
   display: none;
  }
+
+ .doc-symbol-method::after {
+  content: "def";
+ }
 }
 
 ::-webkit-scrollbar {
