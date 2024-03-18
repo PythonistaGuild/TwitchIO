@@ -544,3 +544,158 @@ class Client:
             live=live,
             token_for=token_for,
         )
+
+    def doc_test(self, thing: int = 1) -> int:
+        """This is a test method to test and view certain elements of the mkdocs style documentation.
+
+        For more information see: [`Material Docs`](https://squidfunk.github.io/mkdocs-material/reference/)
+
+        **Linking to another method/object:** [`twitchio.Client.fetch_channels`][]
+
+        **Linking to another method/object with custom name:** [`fetch_channels`][twitchio.Client.fetch_channels]
+
+        !!! warning
+            This is a warning block.
+
+        !!! note
+            This is a note block.
+
+        !!! tip
+            This is a tip block.
+
+        !!! danger
+            This is a danger block.
+
+        !!! example
+            This is an example block.
+
+        !!! info
+            This is an info block.
+
+        !!! question
+            This is a question block.
+
+        !!! quote
+            This is a quote block.
+
+        !!! abstract
+            This is an abstract block.
+
+        !!! note "This is a block with a custom title xD"
+            This is a custom note block.
+
+        !!! warning "Don't need content!"
+
+        Pythonista also adds a version block:
+
+        !!! version "3.0.0"
+            **Added** the [`fetch_channels`][twitchio.Client.fetch_channels] method.
+
+        **Tables:**
+
+        | Example          | Some other col |
+        | -----------      | -------------- |
+        | This is a test   | 123            |
+        | This is a test   | 321            |
+
+        **Pythonista Tags:**
+        :fontawesome-solid-triangle-exclamation:{ .icon-warning .pythonista-tag title="Put a message here" }
+        :fontawesome-solid-check:{ .icon-check .pythonista-tag title="Put a message here" }
+        :fontawesome-solid-question:{ .icon-unknown .pythonista-tag title="Put a message here" }
+
+
+        **Code Blocks:**
+
+        ```python
+        # This is a python code block
+        print("Hello World!")
+        ```
+
+
+        **Content Blocks:**
+
+        === "Some Code"
+
+            ```python
+            # This is a python code block
+            print("Hello World!")
+            ```
+
+        === "Some Other Code"
+
+            ```python
+            import twitchio
+
+            client = twitchio.Client()
+            ```
+
+        === "Wow!"
+
+            Cool!
+
+
+        **Emojis:**
+
+        :sweat_smile: -  Mainly used if we need an icon for something.
+
+
+        **Images:**
+
+        ![Some Image](https://dummyimage.com/600x400/eee/aaa)
+
+
+        **Lists:**
+
+        - This is a list item 1
+        - This is a list item 2
+            * An inner list item
+            * Another inner list item
+        - This is a list item 3
+
+        **Checklists:**
+
+        - [x] This is a checked list item
+        - [ ] This is an unchecked list item
+            * [x] An inner checked list item
+            * [ ] An inner unchecked list item
+
+
+        **Tool Tips:**
+
+        [Some ToolTip](# "This is a tooltip")
+
+        :octicons-bug-24:{ title="This is a tooltip with an icon" } <-- Hover little bug guy
+
+
+        **Abbreviations:**
+
+        If TIO3 defined in the docstring like below, it will be linked to the abbreviation.
+
+        *[TIO3]: TwitchIO 3.0 - The latest version of TwitchIO.
+
+
+        **Annotations:**
+
+        These are supper annoying to add to the docstring (1), but they are useful sometimes I guess... (2)
+        { .annotate }
+
+        1. Directly after the block you want to annotate, add the annotation. These sometimes break in certain blocks.
+        2. If you don't add the { .annotate } to the end of the block, the annotation will not be added.
+
+        <p class="pythonista-docs-heading">Attributes</p>
+        Attributes
+        ----------
+        test: int
+            This should link to test attribute and attribute type. You wouldn't see this in a method signature.
+            Properties don't need to be included in this attributes section.
+
+            There is no heading for the attributes section, because mkdocs-strings adds it with summaries on the class.
+
+            If for some reason we need the Attributes heading, we can add it manually as seen above with HTML.
+
+        Returns
+        -------
+        int
+            The same as numpy.
+        """
+        ...

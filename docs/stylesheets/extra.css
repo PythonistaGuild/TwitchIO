@@ -231,6 +231,20 @@
   color: #f7b900ee;
   padding: 0 0.3em;
  }
+
+ .pythonista-meth-label {
+  font-weight: 200;
+  padding: 0 0 0 0.25rem;
+ }
+
+ .meth-label-async {
+  color: #f7b900ee;
+ }
+
+ .md-typeset .task-list-indicator:before {
+  content: "";
+  background-color: var(--md-footer-bg-color);
+ }
 }
 
 ::-webkit-scrollbar {

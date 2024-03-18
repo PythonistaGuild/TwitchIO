@@ -30,10 +30,11 @@
     ) %}
 
     {% block heading scoped %}
-        {% with labels = function.labels %}
-            {% include "labels.html" with context %}
-        {% endwith %}
-        {% if config.show_symbol_type_heading %}<code class="doc-symbol doc-symbol-heading doc-symbol-{{ symbol_type }}"></code>{% endif %}
+        {% for label in function.labels|sort %}
+          {% if label == "async" %}
+            <span class="pythonista-meth-label meth-label-async">await</span>
+          {% endif %}
+        {% endfor %}
         <div class="pythonista-func-header">
             {% filter format_signature(function, config.line_length, crossrefs=config.signature_crossrefs) %}
             {{ function_name }}
