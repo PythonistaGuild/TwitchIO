@@ -99,7 +99,7 @@ pip install -U twitchio[starlette]
 pip install -U twitchio[dev]
 ```
 
-**For documentation puposes**:
+**For documentation purposes**:
 ```shell
 pip install -U twitchio[docs]
 ```
