@@ -222,6 +222,15 @@
  .doc-symbol-method::after {
   content: "def";
  }
+
+ .pythonista-toc-label {
+  font-weight: 200;
+ }
+
+ .toc-label-async {
+  color: #f7b900ee;
+  padding: 0 0.3em;
+ }
 }
 
 ::-webkit-scrollbar {
