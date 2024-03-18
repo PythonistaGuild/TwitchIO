@@ -1,2 +1,3 @@
 aiohttp>=3.9.1,<4
 typing_extensions>=4.1.0
+backports.datetime_fromisoformat>=2.0.1

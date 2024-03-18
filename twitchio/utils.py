@@ -3,8 +3,13 @@ import logging
 import os
 import pathlib
 import sys
+from datetime import datetime
 from typing import Any
 
+from backports.datetime_fromisoformat import MonkeyPatch  # type: ignore
+
+
+MonkeyPatch.patch_fromisoformat()  # type: ignore
 
 try:
     import orjson  # type: ignore
@@ -13,8 +18,7 @@ try:
 except ImportError:
     _from_json = json.loads
 
-
-__all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter")
+__all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter", "parse_timestamp")
 
 
 def is_docker() -> bool:
@@ -49,6 +53,23 @@ def stream_supports_rgb(stream: Any) -> bool:
         return os.environ["COLORTERM"] in ("truecolor", "24bit")
 
     return False
+
+
+def parse_timestamp(timestamp: str) -> datetime:
+    """
+    Parses a timestamp in ISO8601 format to a datetime object.
+
+    Parameters
+    ----------
+    timestamp : str
+        The ISO8601 timestamp to be parsed.
+
+    Returns
+    -------
+    datetime.datetime
+        The parsed datetime object.
+    """
+    return datetime.fromisoformat(timestamp)
 
 
 class ColourFormatter(logging.Formatter):
