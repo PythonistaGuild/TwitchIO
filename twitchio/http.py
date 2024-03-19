@@ -29,7 +29,7 @@ import logging
 import sys
 import urllib.parse
 from collections import deque
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias, TypeVar
 
 import aiohttp
@@ -308,7 +308,6 @@ class HTTPClient:
             data: RawResponse | str = await json_or_text(resp)
 
             if resp.status >= 400:
-                logger.error("Request %r failed with status %s: %s", route, resp.status, data)
                 raise HTTPException(
                     f"Request {route} failed with status {resp.status}: {data}",
                     route=route,
@@ -316,7 +315,6 @@ class HTTPClient:
                     extra=data,
                 )
 
-        # TODO: This method is not complete. This is purely for testing purposes.
         return data
 
     async def request_json(self, route: Route) -> Any:
@@ -327,6 +325,20 @@ class HTTPClient:
             raise TypeError("Expected JSON data, but received text data.")
 
         return data
+
+    async def _request_asset(self, url: str, *, chunk_size: int = 1024) -> AsyncIterator[bytes]:
+        await self._init_session()
+        assert self._session is not None
+
+        logger.debug('Attempting a request to asset "%r" with %s.', url, self.__class__.__qualname__)
+
+        async with self._session.get(url) as resp:
+            if resp.status != 200:
+                msg = f'Failed to get asset at "{url}" with status {resp.status}.'
+                raise HTTPException(msg, status=resp.status, extra=await resp.text())
+
+            async for chunk in resp.content.iter_chunked(chunk_size):
+                yield chunk
 
     def request_paginated(
         self,
@@ -437,7 +449,7 @@ class HTTPClient:
         route: Route = Route("GET", "search/categories", params=params, token_for=token_for)
 
         async def converter(data: RawResponse) -> Game:
-            return Game(data)
+            return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
         return iterator
@@ -493,7 +505,7 @@ class HTTPClient:
         route: Route = Route("GET", "games/top", params=params, token_for=token_for)
 
         async def converter(data: RawResponse) -> Game:
-            return Game(data)
+            return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
         return iterator

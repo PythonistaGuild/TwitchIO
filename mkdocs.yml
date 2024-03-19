@@ -72,6 +72,7 @@ nav:
     - Placeholder: guides/placeholder.md
   - References:
     - Client: references/client.md
+    - Assets: references/assets.md
 
 markdown_extensions:
   - abbr

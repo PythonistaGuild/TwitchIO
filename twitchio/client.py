@@ -481,7 +481,7 @@ class Client:
             token_for=token_for,
         )
 
-        return [Game(d) for d in data["data"]]
+        return [Game(d, http=self._http) for d in data["data"]]
 
     async def search_categories(
         self, query: str, *, token_for: str | None = None, first: int = 20

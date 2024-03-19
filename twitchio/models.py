@@ -26,8 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import twitchio
-
+from .assets import Asset
 from .user import PartialUser
 from .utils import parse_timestamp
 
@@ -35,6 +34,7 @@ from .utils import parse_timestamp
 if TYPE_CHECKING:
     import datetime
 
+    from .http import HTTPClient
     from .types_.responses import RawResponse
 
 __all__ = (
@@ -310,36 +310,14 @@ class Game:
 
     __slots__ = "id", "name", "box_art", "igdb_id"
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: RawResponse, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
         self.igdb_id: str | None = data.get("igdb_id")
-
-        # TODO:
-        # Dimensions is a tuple[int, int] of width x height or None (Defaults to None)
-        # We use this on URLS provided by Twitch that require these parameters
-        # For box art, I set dimensions to 1080x1440 which is an aspect ratio of 3:4
-        self.box_art: twitchio.Asset = twitchio.Asset(data["box_art_url"], name=f"{self.name}_box_art", dimensions=(1080, 1440))
+        self.box_art: Asset = Asset(data["box_art_url"], http=http, dimensions=(1080, 1440))
 
     def __repr__(self) -> str:
         return f"<Game id={self.id} name={self.name}>"
-
-    def art_url(self, width: int, height: int) -> str:
-        """
-        Adds width and height into the box art url
-
-        Parameters
-        -----------
-        width: :class:`int`
-            The width of the image
-        height: :class:`int`
-            The height of the image
-
-        Returns
-        --------
-            :class:`str`
-        """
-        return self.box_art.base_url.format(width=width, height=height)
 
 
 class GlobalEmote:

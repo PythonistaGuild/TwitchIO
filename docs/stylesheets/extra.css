@@ -187,6 +187,8 @@
 
   .doc-symbol-attribute::after {
     content: "attr";
+    color: #77dd77;
+    font-weight: 200;
   }
 
   .doc-label-writable > code {
@@ -221,6 +223,10 @@
 
  .doc-symbol-method::after {
   content: "def";
+ }
+
+ .doc-symbol-attribute::after {
+  content: "prop";
  }
 
  .pythonista-toc-label {
