@@ -35,7 +35,19 @@ if TYPE_CHECKING:
     import datetime
 
     from .http import HTTPClient
-    from .types_.responses import RawResponse
+    from .types_.responses import (
+        CCLResponse,
+        ChannelInfoResponse,
+        ChatterColorResponse,
+        CheerEmoteResponse,
+        CheerEmoteTierResponse,
+        GameResponse,
+        GlobalEmoteResponse,
+        RawResponse,
+        SearchChannelResponse,
+        StreamResponse,
+        TeamResponse,
+    )
 
 __all__ = (
     "ChatterColor",
@@ -66,7 +78,7 @@ class ChatterColor:
 
     __slots__ = ("user", "color")
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: ChatterColorResponse) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"])
         self.color: str = data["color"]
 
@@ -95,7 +107,7 @@ class ChannelInfo:
         This defaults to 0 if the broadcaster_id does not match the user access token.
     tags: List[:class:`str`]
         The tags applied to the channel.
-    content_classification_labels: List[:class:`str`]
+    classification_labels: List[:class:`str`]
         The CCLs applied to the channel.
     is_branded_content: :class:`bool`
         Boolean flag indicating if the channel has branded content.
@@ -109,19 +121,19 @@ class ChannelInfo:
         "language",
         "delay",
         "tags",
-        "content_classification_labels",
+        "classification_labels",
         "is_branded_content",
     )
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: ChannelInfoResponse) -> None:
         self.user = PartialUser(data["broadcaster_id"], data["broadcaster_name"])
-        self.game_id: int = data["game_id"]
+        self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.title: str = data["title"]
         self.language: str = data["broadcaster_language"]
-        self.delay: int = data["delay"]
+        self.delay: int = int(data["delay"])
         self.tags: list[str] = data["tags"]
-        self.content_classification_labels: list[str] = data["content_classification_labels"]
+        self.classification_labels: list[str] = data["content_classification_labels"]
         self.is_branded_content: bool = data["is_branded_content"]
 
     def __repr__(self) -> str:
@@ -221,7 +233,7 @@ class CheerEmoteTier:
 
     __slots__ = "min_bits", "id", "color", "images", "can_cheer", "show_in_bits_card"
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: CheerEmoteTierResponse) -> None:
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
         self.color: str = data["color"]
@@ -253,13 +265,21 @@ class CheerEmote:
         Indicates whether this emote provides a charity contribution match during charity campaigns.
     """
 
-    __slots__ = "_http", "prefix", "tiers", "type", "order", "last_updated", "charitable"
+    __slots__ = (
+        "_http",
+        "prefix",
+        "tiers",
+        "type",
+        "order",
+        "last_updated",
+        "charitable",
+    )
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: CheerEmoteResponse) -> None:
         self.prefix: str = data["prefix"]
         self.tiers = [CheerEmoteTier(d) for d in data["tiers"]]
         self.type: str = data["type"]
-        self.order: str = data["order"]
+        self.order: int = int(data["order"])
         self.last_updated = parse_timestamp(data["last_updated"])
         self.charitable: bool = data["is_charitable"]
 
@@ -283,7 +303,7 @@ class ContentClassificationLabel:
 
     __slots__ = ("id", "description", "name")
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: CCLResponse) -> None:
         self.id: str = data["id"]
         self.description: str = data["description"]
         self.name: str = data["name"]
@@ -310,7 +330,7 @@ class Game:
 
     __slots__ = "id", "name", "box_art", "igdb_id"
 
-    def __init__(self, data: RawResponse, *, http: HTTPClient) -> None:
+    def __init__(self, data: GameResponse, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
         self.igdb_id: str | None = data.get("igdb_id")
@@ -342,7 +362,7 @@ class GlobalEmote:
 
     __slots__ = ("id", "name", "images", "format", "scale", "theme_mode", "template")
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: GlobalEmoteResponse) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
         self.images: dict[str, str] = data["images"]
@@ -368,7 +388,7 @@ class SearchChannel:
         "tag_ids",
     )
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: SearchChannelResponse) -> None:
         self.display_name: str = data["display_name"]
         self.name: str = data["broadcaster_login"]
         self.id: str = data["id"]
@@ -439,8 +459,8 @@ class Stream:
         "tags",
     )
 
-    def __init__(self, data: RawResponse) -> None:
-        self.id: int = data["id"]
+    def __init__(self, data: StreamResponse) -> None:
+        self.id: str = data["id"]
         self.user = PartialUser(data["user_id"], data["user_name"])
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
@@ -499,8 +519,7 @@ class Team:
         "id",
     )
 
-    def __init__(self, data: RawResponse) -> None:
-        data = data["data"][0]
+    def __init__(self, data: TeamResponse) -> None:
         self.users: list[PartialUser] = [PartialUser(x["user_id"], x["user_login"]) for x in data["users"]]
         self.background_image_url: str = data["background_image_url"]
         self.banner: str = data["banner"]
@@ -510,7 +529,7 @@ class Team:
         self.thumbnail_url: str = data["thumbnail_url"]
         self.team_name: str = data["team_name"]
         self.team_display_name: str = data["team_display_name"]
-        self.id: int = data["id"]
+        self.id: str = data["id"]
 
     def __repr__(self) -> str:
         return f"<Team users={self.users} team_name={self.team_name} team_display_name={self.team_display_name} id={self.id} created_at={self.created_at}>"

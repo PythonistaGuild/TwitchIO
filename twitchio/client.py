@@ -121,7 +121,8 @@ class Client:
 
         _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
-    async def setup_hook(self) -> None: ...
+    async def setup_hook(self) -> None:
+        ...
 
     async def login(self, *, token: str | None = None) -> None:
         if not token:
@@ -263,7 +264,7 @@ class Client:
         data = await self._http.get_cheermotes(str(broadcaster_id) if broadcaster_id else None, token_for)
         return [CheerEmote(d) for d in data["data"]]
 
-    async def fetch_content_classification_labels(
+    async def fetch_classifications(
         self, locale: str = "en-US", *, token_for: str | None = None
     ) -> list[ContentClassificationLabel]:
         """|coro|
@@ -417,7 +418,7 @@ class Client:
             token_for=token_for,
         )
 
-        return Team(data)
+        return Team(data["data"][0])
 
     async def fetch_top_games(
         self,

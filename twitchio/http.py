@@ -47,7 +47,16 @@ if TYPE_CHECKING:
     from typing_extensions import Self, Unpack
 
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
-    from .types_.responses import RawResponse
+    from .types_.responses import (
+        ChannelInfoPayload,
+        ChatterColorPayload,
+        GamePayload,
+        GameResponse,
+        RawResponse,
+        SearchChannelResponse,
+        StreamResponse,
+        TeamPayload,
+    )
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -169,7 +178,15 @@ class Route:
 
 
 class HTTPAsyncIterator(Generic[T]):
-    __slots__ = ("_http", "_route", "_cursor", "_first", "_max_results", "_converter", "_buffer")
+    __slots__ = (
+        "_http",
+        "_route",
+        "_cursor",
+        "_first",
+        "_max_results",
+        "_converter",
+        "_buffer",
+    )
 
     def __init__(
         self,
@@ -279,7 +296,8 @@ class HTTPClient:
     def clear(self) -> None:
         if self._session and self._session.closed:
             logger.debug(
-                "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
+                "Clearing %s session. A new session will be created on the next request.",
+                self.__class__.__qualname__,
             )
             self._session = None
 
@@ -288,7 +306,11 @@ class HTTPClient:
             try:
                 await self._session.close()
             except Exception as e:
-                logger.debug("Ignoring exception caught while closing %s session: %s.", self.__class__.__qualname__, e)
+                logger.debug(
+                    "Ignoring exception caught while closing %s session: %s.",
+                    self.__class__.__qualname__,
+                    e,
+                )
 
             self.clear()
             logger.debug("%s session closed successfully.", self.__class__.__qualname__)
@@ -330,7 +352,11 @@ class HTTPClient:
         await self._init_session()
         assert self._session is not None
 
-        logger.debug('Attempting a request to asset "%r" with %s.', url, self.__class__.__qualname__)
+        logger.debug(
+            'Attempting a request to asset "%r" with %s.',
+            url,
+            self.__class__.__qualname__,
+        )
 
         async with self._session.get(url) as resp:
             if resp.status != 200:
@@ -350,12 +376,12 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
         return iterator
 
-    async def get_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> RawResponse:
+    async def get_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> ChatterColorPayload:
         params: dict[str, list[str | int]] = {"user_id": user_ids}
         route: Route = Route("GET", "chat/color", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> RawResponse:
+    async def get_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> ChannelInfoPayload:
         params = {"broadcaster_id": broadcaster_ids}
         route: Route = Route("GET", "channels", params=params, token_for=token_for)
         return await self.request_json(route)
@@ -423,7 +449,10 @@ class HTTPClient:
         token_for: str | None = None,
         type: Literal["all", "live"] = "all",
     ) -> HTTPAsyncIterator[Stream]:
-        params: dict[str, str | int | Sequence[str | int]] = {"type": type, "first": first}
+        params: dict[str, str | int | Sequence[str | int]] = {
+            "type": type,
+            "first": first,
+        }
 
         if user_ids is not None:
             params["user_id"] = user_ids
@@ -436,7 +465,7 @@ class HTTPClient:
 
         route: Route = Route("GET", "streams", params=params, token_for=token_for)
 
-        async def converter(data: RawResponse) -> Stream:
+        async def converter(data: StreamResponse) -> Stream:
             return Stream(data)
 
         iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
@@ -445,10 +474,13 @@ class HTTPClient:
     async def get_search_categories(
         self, query: str, first: int, token_for: str | None = None
     ) -> HTTPAsyncIterator[Game]:
-        params: dict[str, str | int | Sequence[str | int]] = {"query": query, "first": first}
+        params: dict[str, str | int | Sequence[str | int]] = {
+            "query": query,
+            "first": first,
+        }
         route: Route = Route("GET", "search/categories", params=params, token_for=token_for)
 
-        async def converter(data: RawResponse) -> Game:
+        async def converter(data: GameResponse) -> Game:
             return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
@@ -460,15 +492,18 @@ class HTTPClient:
         params: dict[str, str | int] = {"query": query, "live": live, "first": first}
         route: Route = Route("GET", "search/channels", params=params, token_for=token_for)
 
-        async def converter(data: RawResponse) -> SearchChannel:
+        async def converter(data: SearchChannelResponse) -> SearchChannel:
             return SearchChannel(data)
 
         iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(route, converter=converter)
         return iterator
 
     async def get_teams(
-        self, team_name: str | None = None, team_id: str | None = None, token_for: str | None = None
-    ) -> RawResponse:
+        self,
+        team_name: str | None = None,
+        team_id: str | None = None,
+        token_for: str | None = None,
+    ) -> TeamPayload:
         params: dict[str, str] = {}
 
         if team_name:
@@ -486,7 +521,7 @@ class HTTPClient:
         ids: list[str] | None = None,
         igdb_ids: list[str] | None = None,
         token_for: str | None = None,
-    ) -> RawResponse:
+    ) -> GamePayload:
         params: dict[str, list[str]] = {}
 
         if names is not None:
@@ -504,7 +539,7 @@ class HTTPClient:
         params: dict[str, int] = {"first": first}
         route: Route = Route("GET", "games/top", params=params, token_for=token_for)
 
-        async def converter(data: RawResponse) -> Game:
+        async def converter(data: GameResponse) -> Game:
             return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
