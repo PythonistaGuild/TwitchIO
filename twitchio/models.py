@@ -536,13 +536,6 @@ class Stream:
         Language of the channel.
     thumbnail_url: :class:`str`
         Thumbnail URL of the stream.
-    tag_ids: List[:class:`str`]
-        Tag IDs that apply to the stream.
-
-        .. warning::
-
-            This field will be deprecated by twitch in 2023.
-
     is_mature: :class:`bool`
         Indicates whether the stream is intended for mature audience.
     tags: List[:class:`str`]
@@ -561,7 +554,6 @@ class Stream:
         "started_at",
         "language",
         "thumbnail",
-        "tag_ids",
         "is_mature",
         "tags",
     )
@@ -579,7 +571,6 @@ class Stream:
         self.started_at = parse_timestamp(data["started_at"])
         self.language: str = data["language"]
         self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
-        self.tag_ids: list[str] = data["tag_ids"] or []
         self.is_mature: bool = data["is_mature"]
         self.tags: list[str] = data["tags"]
 
