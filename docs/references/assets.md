@@ -1,2 +1,0 @@
-# twitchio.Asset
-::: twitchio.Asset

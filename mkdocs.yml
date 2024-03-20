@@ -64,6 +64,7 @@ nav:
   - Home: index.md
   - Getting Started:
     - Installation: getting-started/installing.md
+    - Reading the Docs: getting-started/documentation.md
     - Migrating: getting-started/migrating.md
     - Quickstart: getting-started/quickstart.md
     - Authentication and Tokens: getting-started/authenticating.md
@@ -72,7 +73,8 @@ nav:
     - Placeholder: guides/placeholder.md
   - References:
     - Client: references/client.md
-    - Assets: references/assets.md
+    - Asset: references/asset.md
+    - Models: references/models.md
 
 markdown_extensions:
   - abbr
