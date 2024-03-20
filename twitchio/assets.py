@@ -127,7 +127,8 @@ class Asset:
         This is the name of the asset with the file extension if one can be determined.
         If the file extension has not been set, this method returns the same as [`.name`][twitchio.Asset.name].
         """
-        return self._name + self.ext if self.ext else self._name
+        name: str = self._name.split(".")[0]
+        return name + self.ext if self.ext else self._name
 
     @property
     def ext(self) -> str | None:
@@ -305,6 +306,11 @@ class Asset:
         -------
         int
             The number of bytes written to the file or file-like object.
+
+        Raises
+        ------
+        FileNotFoundError
+            Raised when `fp` is a directory or path to directory which can not be found or accessed.
         """
         data: io.BytesIO = await self.read()
         written: int = 0
