@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Literal
 
 from .assets import Asset
 from .user import PartialUser
-from .utils import parse_timestamp
+from .utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -49,6 +49,7 @@ if TYPE_CHECKING:
         StreamResponse,
         TeamResponse,
     )
+
 
 __all__ = (
     "ChatterColor",
@@ -77,14 +78,23 @@ class ChatterColor:
         The hex color code of the chatter's name.
     """
 
-    __slots__ = ("user", "color")
+    __slots__ = ("user", "_colour")
 
     def __init__(self, data: ChatterColorResponse) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"])
-        self.color: str = data["color"]
+        self._colour: Colour = Colour.from_hex(data["color"])
 
     def __repr__(self) -> str:
-        return f"<ChatterColor user={self.user} color={self.color}>"
+        return f"<ChatterColor user={self.user} color={self.colour}>"
+
+    @property
+    def colour(self) -> Colour:
+        return self._colour
+
+    color = colour
+
+    def __str__(self) -> str:
+        return self._colour.hex
 
 
 class ChannelInfo:
@@ -612,9 +622,9 @@ class Team:
         Team description.
     thumbnail_url: :class:`str`
         Image URL for the Team logo.
-    team_name: :class:`str`
+    name: :class:`str`
         Team name.
-    team_display_name: :class:`str`
+    display_name: :class:`str`
         Team display name.
     id: :class:`str`
         Team ID.
@@ -628,8 +638,8 @@ class Team:
         "updated_at",
         "info",
         "thumbnail",
-        "team_name",
-        "team_display_name",
+        "name",
+        "display_name",
         "id",
     )
 
@@ -641,9 +651,18 @@ class Team:
         self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
         self.info: str = data["info"]
         self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
-        self.team_name: str = data["team_name"]
-        self.team_display_name: str = data["team_display_name"]
+        self.name: str = data["team_name"]
+        self.display_name: str = data["team_display_name"]
         self.id: str = data["id"]
 
     def __repr__(self) -> str:
-        return f"<Team users={self.users} team_name={self.team_name} team_display_name={self.team_display_name} id={self.id} created_at={self.created_at}>"
+        return f"<Team users={self.users} team_name={self.name} team_display_name={self.display_name} id={self.id} created_at={self.created_at}>"
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Team):
+            return NotImplemented
+
+        return __value.id == self.id

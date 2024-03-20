@@ -1,13 +1,22 @@
+from __future__ import annotations
+
+import colorsys
 import json
 import logging
 import os
 import pathlib
+import struct
 import sys
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from backports.datetime_fromisoformat import MonkeyPatch  # type: ignore
 
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+    from .types_.colours import Colours
 
 MonkeyPatch.patch_fromisoformat()  # type: ignore
 
@@ -158,3 +167,95 @@ def setup_logging(
     handler.setFormatter(formatter)
     logger.setLevel(level)
     logger.addHandler(handler)  # type: ignore
+
+
+# Colour stuff...
+
+
+class Colour:
+    __slots__ = (
+        "_code",
+        "_hex",
+        "_hex_clean",
+        "_html",
+        "_rgb",
+        "_hls",
+        "_rgb_coords",
+    )
+
+    def __init__(self, data: Colours) -> None:
+        self._code: int = data["code"]
+        self._hex: str = data["hex"]
+        self._hex_clean: str = data["hex_clean"]
+        self._html: str = data["html"]
+        self._rgb: tuple[int, int, int] = data["rgb"]
+        self._hls: tuple[float, float, float] = data["hls"]
+        self._rgb_coords: tuple[float, ...] = data["rgb_coords"]
+
+    @property
+    def code(self) -> int:
+        return self._code
+
+    @property
+    def hex(self) -> str:
+        return self._hex
+
+    @property
+    def hex_clean(self) -> str:
+        return self._hex_clean
+
+    @property
+    def html(self) -> str:
+        return self._html
+
+    @property
+    def rgb(self) -> tuple[int, int, int]:
+        return self._rgb
+
+    @property
+    def hls(self) -> tuple[float, float, float]:
+        return self._hls
+
+    @property
+    def rgb_coords(self) -> tuple[float, ...]:
+        return self._rgb_coords
+
+    def __repr__(self) -> str:
+        return f"<Colour code={self._code} hex={self._hex} html={self._html}>"
+
+    def __str__(self) -> str:
+        return self._hex
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Colour):
+            return NotImplemented
+
+        return self._code == __value._code
+
+    @classmethod
+    def from_hex(cls, hex_: str, /) -> Self:
+        value: str = hex_.lstrip("#")
+
+        rgb: tuple[int, int, int] = struct.unpack("BBB", bytes.fromhex(value))
+        int_: int = int(value, 16)
+        html: str = f"#{value}"
+        hexa: str = hex(int_)
+        rgb_coords: tuple[float, ...] = tuple(c / 255 for c in rgb)
+
+        hue, light, sat = colorsys.rgb_to_hls(*rgb_coords)
+        hls: tuple[float, ...] = (round(hue * 360), round(light * 100), round(sat * 100))
+
+        payload: Colours = {
+            "code": int_,
+            "hex": hexa,
+            "hex_clean": value,
+            "html": html,
+            "rgb": rgb,
+            "hls": hls,
+            "rgb_coords": rgb_coords,
+        }
+
+        return cls(payload)
+
+
+Color = Colour
