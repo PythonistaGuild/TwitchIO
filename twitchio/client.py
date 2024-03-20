@@ -64,6 +64,17 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Client:
+    """Client.
+
+    Parameters
+    -----------
+    client_id: str
+        The client ID of the application you registered on the Twitch Developer Portal.
+    client_secret: str
+        The client secret of the application you registered on the Twitch Developer Portal.
+        This must be associated with the same `client_id`.
+    """
+
     def __init__(
         self,
         *,
@@ -121,8 +132,7 @@ class Client:
 
         _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
-    async def setup_hook(self) -> None:
-        ...
+    async def setup_hook(self) -> None: ...
 
     async def login(self, *, token: str | None = None) -> None:
         if not token:
@@ -239,7 +249,9 @@ class Client:
         List[:class:`twitchio.GlobalEmote`]
         """
         data = await self._http.get_global_emotes(token_for)
-        return [GlobalEmote(d) for d in data["data"]]
+        template: str = data["template"]
+
+        return [GlobalEmote(d, template=template, http=self._http) for d in data["data"]]
 
     async def fetch_cheermotes(
         self, broadcaster_id: int | str | None = None, token_for: str | None = None
@@ -418,7 +430,7 @@ class Client:
             token_for=token_for,
         )
 
-        return Team(data["data"][0])
+        return Team(data["data"][0], http=self._http)
 
     async def fetch_top_games(
         self,
@@ -483,6 +495,65 @@ class Client:
         )
 
         return [Game(d, http=self._http) for d in data["data"]]
+
+    async def fetch_game(
+        self,
+        *,
+        name: str | None = None,
+        id: str | None = None,
+        igdb_id: str | None = None,
+        token_for: str | None = None,
+    ) -> Game | None:
+        """Fetch a [`twitchio.Game`][twitchio.Game] object with the provided `name`, `id`, or `igdb_id`.
+
+        One of `name`, `id`, or `igdb_id` must be provided.
+        If more than one is provided or no parameters are provided, a `ValueError` will be raised.
+
+        If no game is found, `None` will be returned.
+
+        ??? tip
+            See: [`Client.fetch_games`][twitchio.Client.fetch_games] to fetch multiple games at once.
+
+            See: [`Client.fetch_top_games`][twitchio.Client.fetch_top_games] to fetch the top games currently being streamed.
+
+        Parameters
+        ----------
+        name: str | None
+            The name of the game to fetch.
+        id: str | None
+            The id of the game to fetch.
+        igdb_id: str | None
+            The igdb_id of the game to fetch.
+        token_for: str | None
+            An optional User OAuth token to use instead of the default app token.
+
+        Returns
+        -------
+        Game | None
+            The game object if found, otherwise `None`.
+
+        Raises
+        ------
+        ValueError
+            Only one of the `name`, `id`, or `igdb_id` parameters can be provided.
+        ValueError
+            One of the `name`, `id`, or `igdb_id` parameters must be provided.
+        """
+        provided: int = len([v for v in (name, id, igdb_id) if v])
+        if provided > 1:
+            raise ValueError("Only one of 'name', 'id', or 'igdb_id' can be provided.")
+        elif provided == 0:
+            raise ValueError("One of 'name', 'id', or 'igdb_id' must be provided.")
+
+        names: list[str] | None = [name] if name else None
+        id_: list[str] | None = [id] if id else None
+        igdb_ids: list[str] | None = [igdb_id] if igdb_id else None
+
+        data = await self._http.get_games(names=names, ids=id_, igdb_ids=igdb_ids, token_for=token_for)
+        if not data["data"]:
+            return None
+
+        return Game(data["data"][0], http=self._http)
 
     async def search_categories(
         self, query: str, *, token_for: str | None = None, first: int = 20

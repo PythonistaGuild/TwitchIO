@@ -32,4 +32,5 @@ from . import authentication as authentication, utils as utils, web as web
 from .assets import Asset as Asset
 from .client import Client as Client
 from .exceptions import *
+from .models import Game as Game
 from .payloads import *
