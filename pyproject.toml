@@ -105,3 +105,4 @@ useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false
 reportPrivateUsage = false
+pythonVersion = "3.10"
