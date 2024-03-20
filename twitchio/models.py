@@ -331,9 +331,8 @@ class Game:
     | `__eq__`    | `game == game2`, `game != game2`         | Checks if two games are equal.                     |
 
 
-    <p class="pythonista-docs-heading">Attributes</p>
     Attributes
-    -----------
+    ----------
     id: str
         The ID of the game provided by Twitch.
     name: str
