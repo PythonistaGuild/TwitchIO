@@ -49,6 +49,7 @@ plugins:
             signature_crossrefs: true
             docstring_section_style: "list"
             show_docstring_attributes: true
+            merge_init_into_class: true
             filters:
               - "!^_"
               - "^__"

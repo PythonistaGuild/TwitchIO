@@ -211,6 +211,13 @@
     display: block;
   }
 
+  .pythonista-class-header {
+    color: #4088e3;
+    font-weight: 400;
+    padding: 0 0.3em;
+    font-size: 1.1em;
+  }
+
   .inactiveLink {
     pointer-events: none;
     cursor: default;
