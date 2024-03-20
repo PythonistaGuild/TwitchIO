@@ -26,9 +26,12 @@ from __future__ import annotations
 
 import io
 import logging
+import pathlib
 from typing import TYPE_CHECKING, Any
 
 import yarl
+
+from .exceptions import HTTPException
 
 
 if TYPE_CHECKING:
@@ -38,6 +41,15 @@ if TYPE_CHECKING:
 
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+VALID_ASSET_EXTENSIONS: set[str] = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+}
 
 
 class Asset:
@@ -70,11 +82,20 @@ class Asset:
         dimensions: tuple[int, int] | None = None,
     ) -> None:
         self._http: HTTPClient = http
-        self._ext: str = yarl.URL(url).suffix
+
+        ext: str = yarl.URL(url).suffix
+        self._ext: str | None = ext if ext in VALID_ASSET_EXTENSIONS else None
+
         self._dimensions: tuple[int, int] | None = dimensions
         self._original_url: str = url
         self._url: str = url.format(width=dimensions[0], height=dimensions[1]) if dimensions else url
         self._name: str = name or yarl.URL(self._url).name
+
+    def __str__(self) -> str:
+        return self.url
+
+    def __repr__(self) -> str:
+        return f"Asset(name={self.name}, url={self.url})"
 
     @property
     def url(self) -> str:
@@ -100,9 +121,23 @@ class Asset:
         return self._name
 
     @property
-    def ext(self) -> str:
-        """A property that returns the file extension of the asset."""
-        return self._ext
+    def qualified_name(self) -> str:
+        """A property that returns the qualified name of the asset.
+
+        This is the name of the asset with the file extension if one can be determined.
+        If the file extension has not been set, this method returns the same as [`.name`][twitchio.Asset.name].
+        """
+        return self._name + self.ext if self.ext else self._name
+
+    @property
+    def ext(self) -> str | None:
+        """A property that returns the file extension of the asset.
+
+        Could be `None` if the asset does not have a valid file extension or it has not been determined yet.
+
+        See: [`.fetch_ext`][twitchio.Asset.fetch_ext] to try and force setting the file extension by content type.
+        """
+        return "." + self._ext.removeprefix(".") if self._ext else None
 
     @property
     def dimensions(self) -> tuple[int, int] | None:
@@ -111,12 +146,6 @@ class Asset:
         See: [`.set_dimensions`][twitchio.Asset.set_dimensions] for more information.
         """
         return self._dimensions
-
-    def __str__(self) -> str:
-        return self.url
-
-    def __repr__(self) -> str:
-        return f"Asset(name={self.name}, url={self.url})"
 
     def set_dimensions(self, width: int, height: int) -> None:
         """Set the dimensions of the asset for saving or reading.
@@ -183,8 +212,49 @@ class Asset:
 
         return self._original_url.format(width=width, height=height)
 
-    async def save(self, fp: str | os.PathLike[Any] | io.BufferedIOBase | None = None, seek_start: bool = True) -> int:
+    def _set_ext(self, headers: dict[str, str]) -> str | None:
+        content: str | None = headers.get("Content-Type")
+        if not content or not content.startswith("image/"):
+            return None
+
+        ext: str = content.split("/")[1]
+        self._ext = f".{ext}"
+
+        return self._ext
+
+    async def fetch_ext(self) -> str | None:
+        """Fetch and set the file extension of the asset by content type.
+
+        This method will try to fetch the file extension of the asset by making a HEAD request to the asset's URL.
+        If the content type is not recognized or the request fails, the file extension will remain unchanged.
+
+        For the majority of cases you should not need to use this method.
+
+        !!! warning
+            This method sets the file extension of the asset by content type.
+
+        Returns
+        -------
+        str | None
+            The file extension of the asset determined by the content type or `None` if it could not be determined.
+        """
+        try:
+            headers: dict[str, str] = await self._http._request_asset_head(self.url)
+        except HTTPException:
+            return None
+
+        return self._set_ext(headers)
+
+    async def save(
+        self,
+        fp: str | os.PathLike[Any] | io.BufferedIOBase | None = None,
+        seek_start: bool = True,
+        force_extension: bool = True,
+    ) -> int:
         """Save this asset to a file or file-like object.
+
+        If `fp` is `None`, the asset will be saved to the current working directory with the
+        asset's default qualified name.
 
         Examples
         --------
@@ -219,10 +289,17 @@ class Asset:
         ----------
         fp: Union[str, os.PathLike, io.BufferedIOBase, None]
             The file path or file-like object to save the asset to.
-            If `None`, the asset will be saved to the current working directory with the asset's default name.
+            If `None`, the asset will be saved to the current working directory with the asset's qualified name.
+            If `fp` is a directory, the asset will be saved to the directory with the asset's qualified name.
+
             Defaults to `None`.
         seek_start: bool
             Whether to seek to the start of the file after successfully writing data. Defaults to `True`.
+        force_extension: bool
+            Whether to force the file extension of the asset to match the content type. Defaults to `True`.
+
+            If no file extension was provided with `fp` setting `force_extension` to `True`
+            will force the file extension to match the content type provided by Twitch.
 
         Returns
         -------
@@ -240,13 +317,22 @@ class Asset:
 
             return written
 
-        with open(fp or self.name, "wb") as new:
+        if not fp:
+            fp = pathlib.Path.cwd() / self.qualified_name
+
+        elif pathlib.Path(fp).is_dir():
+            fp = pathlib.Path(fp) / (self.qualified_name if force_extension else self.name)
+
+        elif isinstance(fp, str) and force_extension:
+            fp = f"{fp}{self.ext if self.ext else ''}"
+
+        with open(fp, "wb") as new:
             written = new.write(data.read())
 
         return written
 
     async def read(self, *, seek_start: bool = True, chunk_size: int = 1024) -> io.BytesIO:
-        """Read from the asset and return a [io.BytesIO](https://docs.python.org/3/library/io.html#io.BytesIO) buffer.
+        """Read from the asset and return a [`io.BytesIO`](https://docs.python.org/3/library/io.html#io.BytesIO) buffer.
 
         You can use this method to save the asset to memory and use it later.
 
@@ -276,7 +362,7 @@ class Asset:
         """
         fp: io.BytesIO = io.BytesIO()
 
-        async for chunk in self._http._request_asset(self.url, chunk_size=chunk_size):
+        async for chunk in self._http._request_asset(self, chunk_size=chunk_size):
             fp.write(chunk)
 
         if seek_start:

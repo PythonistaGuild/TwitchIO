@@ -46,6 +46,7 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self, Unpack
 
+    from .assets import Asset
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         ChannelInfoPayload,
@@ -348,20 +349,32 @@ class HTTPClient:
 
         return data
 
-    async def _request_asset(self, url: str, *, chunk_size: int = 1024) -> AsyncIterator[bytes]:
+    async def _request_asset_head(self, url: str) -> dict[str, str]:
         await self._init_session()
         assert self._session is not None
 
-        logger.debug(
-            'Attempting a request to asset "%r" with %s.',
-            url,
-            self.__class__.__qualname__,
-        )
+        logger.debug('Attempting to request headers for asset "%s" with %s.', url, self.__class__.__qualname__)
 
-        async with self._session.get(url) as resp:
+        async with self._session.head(url) as resp:
             if resp.status != 200:
-                msg = f'Failed to get asset at "{url}" with status {resp.status}.'
+                msg = f'Failed to header for asset at "{url}" with status {resp.status}.'
                 raise HTTPException(msg, status=resp.status, extra=await resp.text())
+
+            return dict(resp.headers)
+
+    async def _request_asset(self, asset: Asset, *, chunk_size: int = 1024) -> AsyncIterator[bytes]:
+        await self._init_session()
+        assert self._session is not None
+
+        logger.debug('Attempting a request to asset "%r" with %s.', asset, self.__class__.__qualname__)
+
+        async with self._session.get(asset.url) as resp:
+            if resp.status != 200:
+                msg = f'Failed to get asset at "{asset.url}" with status {resp.status}.'
+                raise HTTPException(msg, status=resp.status, extra=await resp.text())
+
+            headers: dict[str, str] = dict(resp.headers)
+            asset._set_ext(headers)
 
             async for chunk in resp.content.iter_chunked(chunk_size):
                 yield chunk
@@ -466,7 +479,7 @@ class HTTPClient:
         route: Route = Route("GET", "streams", params=params, token_for=token_for)
 
         async def converter(data: StreamResponse) -> Stream:
-            return Stream(data)
+            return Stream(data, http=self)
 
         iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
         return iterator
@@ -493,7 +506,7 @@ class HTTPClient:
         route: Route = Route("GET", "search/channels", params=params, token_for=token_for)
 
         async def converter(data: SearchChannelResponse) -> SearchChannel:
-            return SearchChannel(data)
+            return SearchChannel(data, http=self)
 
         iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(route, converter=converter)
         return iterator
