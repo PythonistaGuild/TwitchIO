@@ -24,6 +24,8 @@ SOFTWARE.
 
 from typing import Any, Generic, TypeAlias, TypedDict, TypeVar
 
+from typing_extensions import TypedDict as TypedDictExt
+
 
 __all__ = (
     "RefreshTokenResponse",
@@ -61,7 +63,7 @@ __all__ = (
 T = TypeVar("T")
 
 
-class Payload(TypedDict, Generic[T]):
+class Payload(TypedDictExt, Generic[T]):
     data: list[T]
 
 
