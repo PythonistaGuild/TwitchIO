@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from .assets import Asset
 from .user import PartialUser
@@ -41,6 +41,7 @@ if TYPE_CHECKING:
         ChatterColorResponse,
         CheerEmoteResponse,
         CheerEmoteTierResponse,
+        GamePayload,
         GameResponse,
         GlobalEmoteResponse,
         RawResponse,
@@ -313,31 +314,54 @@ class ContentClassificationLabel:
 
 
 class Game:
-    """
-    Represents a Game on twitch
+    """Represents a Game on Twitch.
+
+    You can retrieve a game by its ID, name or IGDB ID using the [`Client.fetch_game`][twitchio.Client.fetch_game]
+    method or the various `.fetch_game()` methods of other models.
+
+    To fetch a list of games, see: [`Client.fetch_games`][twitchio.Client.fetch_games]
+
+    Supported Operations
+    --------------------
+
+    | Operation   | Usage(s)                                 | Description                                        |
+    |-----------  |------------------------------------------|----------------------------------------------------|
+    | `__str__`   | `str(game)`, `f"{game}"`                 | Returns the games name.                            |
+    | `__repr__`  | `repr(game)`, `f"{game!r}"`              | Returns the games official representation.         |
+    | `__eq__`    | `game == game2`, `game != game2`         | Checks if two games are equal.                     |
+
 
     Attributes
     -----------
-    id: :class:`str`
-        Game ID.
-    name: :class:`str`
-        Game name.
-    box_art: :class:`str`
-        Template URL for the game's box art.
-    igdb_id: Optional[:class:`str`]
-        The IGDB ID of the game. If this is not available to Twitch it will return None
+    id: str
+        The ID of the game provided by Twitch.
+    name: str
+        The name of the game.
+    box_art: Asset
+        The box art of the game as an [`Asset`][twitchio.Asset].
+    igdb_id: str | None
+        The IGDB ID of the game. If this is not available to Twitch it will be `None`.
     """
 
-    __slots__ = "id", "name", "box_art", "igdb_id"
+    __slots__ = ("id", "name", "box_art", "igdb_id")
 
     def __init__(self, data: GameResponse, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
-        self.igdb_id: str | None = data.get("igdb_id")
+        self.igdb_id: str | None = data.get("igdb_id", None)
         self.box_art: Asset = Asset(data["box_art_url"], http=http, dimensions=(1080, 1440))
+
+    def __str__(self) -> str:
+        return self.name
 
     def __repr__(self) -> str:
         return f"<Game id={self.id} name={self.name}>"
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, Game):
+            return NotImplemented
+
+        return __value.id == self.id
 
 
 class GlobalEmote:
@@ -360,41 +384,98 @@ class GlobalEmote:
         The background themes that the emote is available in.
     """
 
-    __slots__ = ("id", "name", "images", "format", "scale", "theme_mode", "template")
+    __slots__ = ("_http", "id", "name", "images", "format", "scale", "theme_mode", "template", "_data")
 
-    def __init__(self, data: GlobalEmoteResponse) -> None:
+    def __init__(self, data: GlobalEmoteResponse, *, template: str, http: HTTPClient) -> None:
+        self._data = data
+        self._http: HTTPClient = http
         self.id: str = data["id"]
         self.name: str = data["name"]
         self.images: dict[str, str] = data["images"]
         self.format: list[str] = data["format"]
         self.scale: list[str] = data["scale"]
         self.theme_mode: list[str] = data["theme_mode"]
+        self.template: str = template
 
     def __repr__(self) -> str:
         return f"<GlobalEmote id={self.id} name={self.name}"
 
+    def get_image(
+        self,
+        *,
+        theme: Literal["light", "dark"] = "light",
+        scale: str = "2.0",
+        format: Literal["default", "static", "animated"] = "default",
+    ) -> Asset:
+        """Creates an [`Asset`][twitchio.Asset] for the emote, which can be used to download/save the emote image.
+
+        Parameters
+        ----------
+        theme: Literal["light", "dark"]
+            The background theme of the emote. Defaults to "light".
+        scale: str
+            The scale (size) of the emote. Usually this will be one of:
+            - "1.0" (Small)
+            - "2.0" (Medium)
+            - "3.0" (Large)
+
+            Defaults to "2.0".
+        format: Literal["default", "static", "animated"]
+            The format of the image for the emote. E.g a static image (PNG) or animated (GIF).
+
+            Use "default" to get the default format for the emote, which will be animated if available, otherwise static.
+            Defaults to "default".
+
+        Examples
+        --------
+        ```py
+            emotes: list[twitchio.GlobalEmote] = await client.fetch_global_emotes()
+            emote: twitchio.GlobalEmote = emotes[0]
+
+            # Get and save the emote asset as an image
+            asset: twitchio.Asset = await emote.get_image()
+            await asset.save()
+        ```
+
+        Returns
+        -------
+        twitchio.Asset
+            The [`Asset`][twitchio.Asset] for the emote.
+            You can use the asset to [`.read`][twitchio.Asset.read] or [`.save`][twitchio.Asset.save] the emote image or
+            return the generated URL with [`.url`][twitchio.Asset.url].
+        """
+        template: str = self.template.format()
+        theme_: str = theme if theme in self.theme_mode else self.theme_mode[0]
+        scale_: str = scale if scale in self.scale else self.scale[0]
+        format_: str = format if format in self.format else "default"
+
+        url: str = template.format(id=self.id, theme_mode=theme_, scale=scale_, format=format_)
+        return Asset(url, name=self.name, http=self._http)
+
 
 class SearchChannel:
     __slots__ = (
+        "_http",
         "id",
         "game_id",
         "name",
         "display_name",
         "language",
         "title",
-        "thumbnail_url",
+        "thumbnail",
         "live",
         "started_at",
         "tag_ids",
     )
 
-    def __init__(self, data: SearchChannelResponse) -> None:
+    def __init__(self, data: SearchChannelResponse, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
         self.display_name: str = data["display_name"]
         self.name: str = data["broadcaster_login"]
         self.id: str = data["id"]
         self.game_id: str = data["game_id"]
         self.title: str = data["title"]
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
         self.language: str = data["broadcaster_language"]
         self.live: bool = data["is_live"]
         self.started_at = parse_timestamp(data["started_at"]) if self.live else None
@@ -402,6 +483,21 @@ class SearchChannel:
 
     def __repr__(self) -> str:
         return f"<SearchUser name={self.name} title={self.title} live={self.live}>"
+
+    async def fetch_game(self) -> Game:
+        """Fetches the [`Game`][twitchio.Game] associated with this channel.
+
+        !!! note
+            The [`Game`][twitchio.Game] returned is current from the time the [`SearchChannel`][twitchio.SearchChannel]
+            instance was created.
+
+        Returns
+        -------
+        twitchio.Game
+            The game associated with this [`SearchChannel`][twitchio.SearchChannel] instance.
+        """
+        payload: GamePayload = await self._http.get_games(ids=[self.game_id])
+        return Game(payload["data"][0], http=self._http)
 
 
 class Stream:
@@ -444,6 +540,7 @@ class Stream:
     """
 
     __slots__ = (
+        "_http",
         "id",
         "user",
         "game_id",
@@ -453,13 +550,15 @@ class Stream:
         "viewer_count",
         "started_at",
         "language",
-        "thumbnail_url",
+        "thumbnail",
         "tag_ids",
         "is_mature",
         "tags",
     )
 
-    def __init__(self, data: StreamResponse) -> None:
+    def __init__(self, data: StreamResponse, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
+
         self.id: str = data["id"]
         self.user = PartialUser(data["user_id"], data["user_name"])
         self.game_id: str = data["game_id"]
@@ -469,13 +568,28 @@ class Stream:
         self.viewer_count: int = data["viewer_count"]
         self.started_at = parse_timestamp(data["started_at"])
         self.language: str = data["language"]
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
         self.tag_ids: list[str] = data["tag_ids"] or []
         self.is_mature: bool = data["is_mature"]
         self.tags: list[str] = data["tags"]
 
     def __repr__(self) -> str:
         return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
+
+    async def fetch_game(self) -> Game:
+        """Fetches the [`Game`][twitchio.Game] associated with this stream.
+
+        !!! note
+            The [`Game`][twitchio.Game] returned is current from the time the [`Stream`][twitchio.Stream]
+            instance was created.
+
+        Returns
+        -------
+        twitchio.Game
+            The game associated with this [`Stream`][twitchio.Stream] instance.
+        """
+        payload: GamePayload = await self._http.get_games(ids=[self.game_id])
+        return Game(payload["data"][0], http=self._http)
 
 
 class Team:
@@ -508,25 +622,25 @@ class Team:
 
     __slots__ = (
         "users",
-        "background_image_url",
+        "background_image",
         "banner",
         "created_at",
         "updated_at",
         "info",
-        "thumbnail_url",
+        "thumbnail",
         "team_name",
         "team_display_name",
         "id",
     )
 
-    def __init__(self, data: TeamResponse) -> None:
+    def __init__(self, data: TeamResponse, *, http: HTTPClient) -> None:
         self.users: list[PartialUser] = [PartialUser(x["user_id"], x["user_login"]) for x in data["users"]]
-        self.background_image_url: str = data["background_image_url"]
+        self.background_image: Asset = Asset(data["background_image_url"], http=http)
         self.banner: str = data["banner"]
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
         self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
         self.info: str = data["info"]
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
         self.team_name: str = data["team_name"]
         self.team_display_name: str = data["team_display_name"]
         self.id: str = data["id"]
