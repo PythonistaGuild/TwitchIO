@@ -58,6 +58,9 @@ __all__ = (
     "TeamMemberResponse",
     "TeamResponse",
     "TeamPayload",
+    "VideoDeletePayload",
+    "VideoResponse",
+    "VideoPayload",
 )
 
 T = TypeVar("T")
@@ -111,6 +114,10 @@ OAuthResponses: TypeAlias = (
     | AuthorizationURLResponse
 )
 RawResponse: TypeAlias = dict[str, Any]
+
+
+class Pagination(TypedDict):
+    cursor: str | None
 
 
 class ChatterColorResponse(TypedDict):
@@ -245,6 +252,43 @@ class TeamResponse(TypedDict):
     id: str
 
 
+class MutedSegment(TypedDict):
+    duration: int
+    offset: int
+
+
+class VideoResponse(TypedDict):
+    id: str
+    stream_id: str | None
+    user_id: str
+    user_login: str
+    user_name: str
+    title: str
+    description: str
+    created_at: str
+    published_at: str
+    url: str
+    thumbnail_url: str
+    viewable: str
+    view_count: int
+    language: str
+    type: str
+    duration: str
+    muted_segments: list[MutedSegment] | None
+
+
+class StreamPayload(TypedDict):
+    data: list[StreamResponse]
+    pagination: Pagination
+
+
+class VideoPayload(TypedDict):
+    data: list[VideoResponse]
+    pagination: Pagination
+
+class VideoDeletePayload(TypedDict):
+    data: list[str]
+
 ChatterColorPayload = Payload[ChatterColorResponse]
 ChannelInfoPayload = Payload[ChannelInfoResponse]
 ClipPayload = Payload[ClipResponse]
@@ -253,5 +297,4 @@ ClassificationLabelsPayload = Payload[ClassificationLabelsResponse]
 GamePayload = Payload[GameResponse]
 GlobalEmotePayload = Payload[GlobalEmoteResponse]
 SearchChannelPayload = Payload[SearchChannelResponse]
-StreamPayload = Payload[StreamResponse]
 TeamPayload = Payload[TeamResponse]

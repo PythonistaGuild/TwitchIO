@@ -48,6 +48,7 @@ if TYPE_CHECKING:
         SearchChannelResponse,
         StreamResponse,
         TeamResponse,
+        VideoResponse,
     )
 
 
@@ -63,6 +64,7 @@ __all__ = (
     "SearchChannel",
     "Stream",
     "Team",
+    "Video",
 )
 
 
@@ -657,3 +659,88 @@ class Team:
             return NotImplemented
 
         return __value.id == self.id
+
+
+class Video:
+    """
+    Represents video information
+
+    Attributes
+    -----------
+    id: :class:`int`
+        The ID of the video.
+    user: :class:`~twitchio.PartialUser`
+        User who owns the video.
+    title: :class:`str`
+        Title of the video
+    description: :class:`str`
+        Description of the video.
+    created_at: :class:`datetime.datetime`
+        Date when the video was created.
+    published_at: :class:`datetime.datetime`
+       Date when the video was published.
+    url: :class:`str`
+        URL of the video.
+    thumbnail_url: :class:`str`
+        Template URL for the thumbnail of the video.
+    viewable: :class:`str`
+        Indicates whether the video is public or private.
+    view_count: :class:`int`
+        Number of times the video has been viewed.
+    language: :class:`str`
+        Language of the video.
+    type: :class:`str`
+        The type of video.
+    duration: :class:`str`
+        Length of the video.
+    """
+
+    __slots__ = (
+        "_http",
+        "id",
+        "user",
+        "title",
+        "description",
+        "created_at",
+        "published_at",
+        "url",
+        "thumbnail_url",
+        "viewable",
+        "view_count",
+        "language",
+        "type",
+        "duration",
+    )
+
+    def __init__(self, data: VideoResponse, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
+        self.id: str = data["id"]
+        self.user = PartialUser(data["user_id"], data["user_name"])
+        self.title: str = data["title"]
+        self.description: str = data["description"]
+        self.created_at = parse_timestamp(data["created_at"])
+        self.published_at = parse_timestamp(data["published_at"])
+        self.url: str = data["url"]
+        self.thumbnail_url: str = data["thumbnail_url"]
+        self.viewable: str = data["viewable"]
+        self.view_count: int = data["view_count"]
+        self.language: str = data["language"]
+        self.type: str = data["type"]
+        self.duration: str = data["duration"]
+
+    def __repr__(self) -> str:
+        return f"<Video id={self.id} title={self.title} url={self.url}>"
+
+    async def delete(self, token_for: str) -> None:
+        """|coro|
+
+        Deletes the video. For bulk deletion see :func:`Client.delete_videos`
+
+        Parameters
+        -----------
+        ids: list[str | int]
+            List of video IDs to delete
+        token_for: str
+            A user oauth token with the channel:manage:videos
+        """
+        await self._http.delete_videos(ids=[self.id], token_for=token_for)

@@ -36,7 +36,7 @@ import aiohttp
 
 from . import __version__
 from .exceptions import HTTPException
-from .models import Clip, Game, SearchChannel, Stream
+from .models import Clip, Game, SearchChannel, Stream, Video
 from .utils import _from_json  # type: ignore
 
 
@@ -57,6 +57,8 @@ if TYPE_CHECKING:
         SearchChannelResponse,
         StreamResponse,
         TeamPayload,
+        VideoDeletePayload,
+        VideoResponse,
     )
 
 
@@ -557,3 +559,39 @@ class HTTPClient:
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def get_videos(
+        self,
+        ids: list[str | int] | None = None,
+        user_id: str | int | None = None,
+        game_id: str | int | None = None,
+        language: str | None = None,
+        period: Literal["all", "day", "month", "week"] = "all",
+        sort: Literal["time", "trending", "views"] = "time",
+        type: Literal["all", "archive", "highlight", "upload"] = "all",
+        first: int = 20,
+        token_for: str | None = None,
+    ) -> HTTPAsyncIterator[Video]:
+        params: dict[str, int | str | list[str | int]] = {"first": first, "period": period, "sort": sort, "type": type}
+
+        if ids is not None:
+            params["id"] = ids
+        if user_id is not None:
+            params["user_id"] = user_id
+        if game_id is not None:
+            params["game_id"] = game_id
+        if language is not None:
+            params["language"] = language
+
+        route = Route("GET", "videos", params=params, token_for=token_for)
+
+        async def converter(data: VideoResponse) -> Video:
+            return Video(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def delete_videos(self, ids: list[str | int], token_for: str) -> VideoDeletePayload:
+        params = {"id": ids}
+        route: Route = Route("DELETE", "videos", params=params, token_for=token_for)
+        return await self.request_json(route)
