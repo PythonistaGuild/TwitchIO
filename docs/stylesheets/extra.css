@@ -11,7 +11,7 @@
   --md-typeset-color: #C9C9D1;
   --md-default-bg-color: #15151C;
   --md-footer-bg-color: #262633;
-  --pythonista-accent-color: #353557;
+  --pythonista-accent-color: #242839;
 
   --md-code-fg-color: #efefff;
   --md-code-bg-color: #23232e;
@@ -215,6 +215,11 @@
     pointer-events: none;
     cursor: default;
     color: var(--md-typeset-color);
+ }
+
+ .doc-symbol-class::after {
+  color: #4088e3;
+  content: "class";
  }
 
  .doc-label-property {
