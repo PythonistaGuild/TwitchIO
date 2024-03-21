@@ -107,6 +107,19 @@ class Client:
         self._blocker: asyncio.Event = asyncio.Event()
 
     async def event_error(self, payload: EventErrorPayload) -> None:
+        """Event called when an error occurs in an event or event listener.
+
+        This event can be overriden to handle event errors differently.
+        By default, this method logs the error and ignores it.
+
+        !!! warning
+            If an error occurs in this event, it will be ignored and logged. It will **NOT** re-trigger this event.
+
+        Parameters
+        ----------
+        payload: EventErrorPayload
+            A payload containing the Exception, the listener, and the original payload.
+        """
         logger.error('Ignoring Exception in listener "%s":\n', payload.listener.__qualname__, exc_info=payload.error)
 
     async def _dispatch(
@@ -134,9 +147,34 @@ class Client:
         _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
     async def setup_hook(self) -> None:
+        """Method called after [`.login`][twitchio.Client.login] has been called but before the client is started.
+
+        [`.start`][twitchio.Client.start] calls [`.login`][twitchio.Client.login] internally for you, so when using
+        [`.start`][twitchio.Client.start] this method will be called after the client has generated and validated an
+        app token. The client won't complete start up until this method has completed.
+
+        This method is intended to be overriden to provide an async environment for any setup required.
+
+        By default, this method does not implement any logic.
+        """
         ...
 
     async def login(self, *, token: str | None = None) -> None:
+        """Method to login the client and generate or store an app token.
+
+        This method is called automatically when using [`.start`][twitchio.Client.start].
+        You should not call this method if you are using [`.start`][twitchio.Client.start].
+
+        This method calls [`.setup_hook`][twitchio.Client.setup_hook].
+
+        !!! note
+            If no token is provided, the client will attempt to generate a new app token for you.
+
+        Parameters
+        ----------
+        token: str | None
+            An optional app token to use instead of generating one automatically.
+        """
         if not token:
             payload: ClientCredentialsPayload = await self._http.client_credentials_token()
             token = payload.access_token
@@ -151,6 +189,21 @@ class Client:
         await self.close()
 
     async def start(self, token: str | None = None, *, with_adapter: bool = True) -> None:
+        """Method to login the client and create a continuously running event loop.
+
+        You should not call [`.login`][twitchio.Client.login] if you are using this method as it is called internally
+        for you.
+
+        !!! note
+            This method blocks asynchronously until the client is closed.
+
+        Parameters
+        ----------
+        token: str | None
+            An optional app token to use instead of generating one automatically.
+        with_adapter: bool
+            Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+        """
         await self.login(token=token)
 
         if with_adapter:

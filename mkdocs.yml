@@ -74,9 +74,15 @@ nav:
     - Placeholder: guides/placeholder.md
   - References:
     - Client: references/client.md
+    - Payloads: references/payloads.md
     - Asset: references/asset.md
     - Models: references/models.md
     - Utils: references/utils.md
+  - Extensions:
+    - Commands:
+      - Bot: extensions/commands/placehold.md
+    - Routines:
+      - Routine: extensions/routines/placehold.md
 
 markdown_extensions:
   - abbr

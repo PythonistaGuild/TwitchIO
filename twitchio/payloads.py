@@ -30,6 +30,19 @@ __all__ = ("EventErrorPayload",)
 
 
 class EventErrorPayload:
+    """Payload received in the [`Client.event_error`][twitchio.Client.event_error] event when an error
+    occurs during an event listener.
+
+    Attributes
+    ----------
+    error: Exception
+        The error that occurred.
+    listener: Callable[..., Coroutine[Any, Any, None]]
+        The listener that raised the error.
+    original: Any
+        The original event payload that was passed to the listener that caused the error.
+    """
+
     __slots__ = ("error", "listener", "original")
 
     def __init__(self, *, error: Exception, listener: Callable[..., Coroutine[Any, Any, None]], original: Any) -> None:
