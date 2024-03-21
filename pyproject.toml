@@ -1,10 +1,6 @@
 [build-system]
-requires = ["setuptools", "wheel", "setuptools-git-versioning<2"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools-git-versioning]
-enabled = true
-starting_version = "3.0.dev0"
 
 [project]
 name = "twitchio"
@@ -31,7 +27,7 @@ classifiers = [
 "Homepage" = "https://github.com/PythonistaGuild/TwitchIO"
 
 [tool.setuptools]
-packages = ["twitchio"]
+packages = ["twitchio", "twitchio.authentication", "twitchio.web", "twitchio.types_"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }

@@ -22,16 +22,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0dev"
+from typing import Literal, TypedDict
 
-from . import authentication as authentication, utils as utils, web as web
-from .assets import Asset as Asset
-from .client import Client as Client
-from .exceptions import *
-from .models import Game as Game
-from .payloads import *
-from .utils import Color as Color, Colour as Colour
+
+EventSubHeaders = TypedDict(
+    "EventSubHeaders",
+    {
+        "Twitch-Eventsub-Message-Id": str,
+        "Twitch-Eventsub-Message-Retry": str,
+        "Twitch-Eventsub-Message-Type": Literal["notification", "webhook_callback_verification", "revocation"],
+        "Twitch-Eventsub-Message-Signature": str,
+        "Twitch-Eventsub-Message-Timestamp": str,
+        "Twitch-Eventsub-Subscription-Type": str,
+        "Twitch-Eventsub-Subscription-Version": str,
+    },
+    total=False,
+)
