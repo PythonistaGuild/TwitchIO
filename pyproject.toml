@@ -29,6 +29,9 @@ classifiers = [
 [tool.setuptools]
 packages = ["twitchio", "twitchio.authentication", "twitchio.web", "twitchio.types_"]
 
+[tool.setuptools.package-data]
+twitchio = ["py.typed"]
+
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
