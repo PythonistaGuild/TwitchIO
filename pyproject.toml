@@ -36,6 +36,7 @@ dependencies = { file = ["requirements.txt"] }
 docs = ["mkdocs-material", "mkdocstrings-python", "mkdocstrings"]
 starlette = ["starlette", "uvicorn"]
 dev = ["ruff", "pyright", "isort"]
+all = ["twitchio[docs, starlette, dev]"]
 
 [tool.ruff]
 line-length = 120
