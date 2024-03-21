@@ -286,8 +286,10 @@ class VideoPayload(TypedDict):
     data: list[VideoResponse]
     pagination: Pagination
 
+
 class VideoDeletePayload(TypedDict):
     data: list[str]
+
 
 ChatterColorPayload = Payload[ChatterColorResponse]
 ChannelInfoPayload = Payload[ChannelInfoResponse]

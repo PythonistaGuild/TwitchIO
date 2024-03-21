@@ -33,6 +33,7 @@ class Colours(TypedDict):
     rgb: tuple[int, int, int]
     hls: tuple[float, float, float]
     rgb_coords: tuple[float, ...]
+    hls_coords: tuple[float, ...]
 
 
 Colors = Colours

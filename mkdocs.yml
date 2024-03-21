@@ -76,6 +76,7 @@ nav:
     - Client: references/client.md
     - Asset: references/asset.md
     - Models: references/models.md
+    - Utils: references/utils.md
 
 markdown_extensions:
   - abbr

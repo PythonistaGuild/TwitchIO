@@ -34,3 +34,4 @@ from .client import Client as Client
 from .exceptions import *
 from .models import Game as Game
 from .payloads import *
+from .utils import Color as Color, Colour as Colour
