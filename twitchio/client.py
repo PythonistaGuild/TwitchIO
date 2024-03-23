@@ -34,6 +34,7 @@ from twitchio.http import HTTPAsyncIterator
 from .authentication import ManagedHTTPClient, Scopes
 from .models import (
     ChannelInfo,
+    ChatBadge,
     ChatterColor,
     CheerEmote,
     Clip,
@@ -247,6 +248,19 @@ class Client:
             raise ValueError("Listeners and Events must be coroutines.")
 
         self._listeners[name].add(listener)
+
+    async def fetch_global_chat_badges(self) -> list[ChatBadge]:
+        """|coro|
+
+        Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
+
+        Returns
+        --------
+        List[:class:`twitchio.ChatBadge`]
+        """
+
+        data = await self._http.get_global_chat_badges()
+        return [ChatBadge(x) for x in data["data"]]
 
     async def fetch_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> list[ChatterColor]:
         """|coro|

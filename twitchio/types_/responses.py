@@ -35,6 +35,8 @@ __all__ = (
     "UserTokenResponse",
     "RawResponse",
     "AuthorizationURLResponse",
+    "ChatBadgePayload",
+    "ChatBadgeSetResponse",
     "ChatterColorResponse",
     "ChatterColorPayload",
     "ChannelInfoResponse",
@@ -118,6 +120,22 @@ RawResponse: TypeAlias = dict[str, Any]
 
 class Pagination(TypedDict):
     cursor: str | None
+
+
+class ChatBadgeVersionResponse(TypedDict):
+    id: str
+    image_url_1x: str
+    image_url_2x: str
+    image_url_4x: str
+    title: str
+    description: str
+    click_action: str
+    click_url: str
+
+
+class ChatBadgeSetResponse(TypedDict):
+    set_id: str
+    versions: list[ChatBadgeVersionResponse]
 
 
 class ChatterColorResponse(TypedDict):
@@ -291,6 +309,7 @@ class VideoDeletePayload(TypedDict):
     data: list[str]
 
 
+ChatBadgePayload = Payload[ChatBadgeSetResponse]
 ChatterColorPayload = Payload[ChatterColorResponse]
 ChannelInfoPayload = Payload[ChannelInfoResponse]
 ClipPayload = Payload[ClipResponse]

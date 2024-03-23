@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         ChannelInfoPayload,
+        ChatBadgePayload,
         ChatterColorPayload,
         GamePayload,
         GameResponse,
@@ -390,6 +391,10 @@ class HTTPClient:
     ) -> HTTPAsyncIterator[T]:
         iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
         return iterator
+
+    async def get_global_chat_badges(self, token_for: str | None = None) -> ChatBadgePayload:
+        route: Route = Route("GET", "chat/badges/global", token_for=token_for)
+        return await self.request_json(route)
 
     async def get_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> ChatterColorPayload:
         params: dict[str, list[str | int]] = {"user_id": user_ids}
