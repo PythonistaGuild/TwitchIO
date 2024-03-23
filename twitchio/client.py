@@ -401,7 +401,7 @@ class Client:
 
         Returns
         --------
-        ~twitchio.HTTPAsyncIterator[~twitchio.Clip]
+        twitchio.HTTPAsyncIterator[twitchio.Clip]
         """
 
         provided: int = len([v for v in (broadcaster_id, game_id, clip_ids) if v])
@@ -458,7 +458,7 @@ class Client:
 
         Returns
         --------
-        ~twitchio.HTTPAsyncIterator[~twitchio.Stream]
+        twitchio.HTTPAsyncIterator[twitchio.Stream]
         """
 
         first = max(1, min(100, first))
@@ -490,7 +490,7 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            ~twitchio.Team
+            twitchio.Team
         """
 
         if team_name and team_id:
@@ -524,7 +524,7 @@ class Client:
 
         Returns
         --------
-        ~twitchio.HTTPAsyncIterator[~twitchio.Game]
+        twitchio.HTTPAsyncIterator[twitchio.Game]
         """
 
         first = max(1, min(100, first))
@@ -556,7 +556,7 @@ class Client:
 
         Returns
         --------
-        List`[~twitchio.Game]
+        List`[twitchio.Game]
         """
 
         data = await self._http.get_games(
@@ -645,7 +645,7 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            ~twitchio.HTTPAsyncIterator[~twitchio.Game]
+            twitchio.HTTPAsyncIterator[twitchio.Game]
         """
 
         first = max(1, min(100, first))
@@ -677,7 +677,7 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            ~twitchio.HTTPAsyncIterator[~twitchio.SearchChannel]
+            twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
         """
 
         first = max(1, min(100, first))
