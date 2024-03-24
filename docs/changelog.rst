@@ -6,6 +6,7 @@
     - Bug fixes
         - fix: Special-cased a restart when a specific known bad frame is received.
 
+
 2.9.0
 =======
 - TwitchIO
