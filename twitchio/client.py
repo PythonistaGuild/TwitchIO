@@ -30,7 +30,6 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Literal
 
 from twitchio.http import HTTPAsyncIterator
-from twitchio.models import ExtensionTransaction
 
 from .authentication import ManagedHTTPClient, Scopes
 from .models import (
@@ -40,6 +39,7 @@ from .models import (
     CheerEmote,
     Clip,
     ContentClassificationLabel,
+    ExtensionTransaction,
     Game,
     GlobalEmote,
     SearchChannel,
