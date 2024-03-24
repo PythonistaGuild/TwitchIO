@@ -56,6 +56,7 @@ if TYPE_CHECKING:
         GameResponse,
         RawResponse,
         SearchChannelResponse,
+        StartCommercialResponse,
         StreamResponse,
         TeamPayload,
         VideoDeletePayload,
@@ -599,4 +600,9 @@ class HTTPClient:
     async def delete_videos(self, ids: list[str | int], token_for: str) -> VideoDeletePayload:
         params = {"id": ids}
         route: Route = Route("DELETE", "videos", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
+        data = {"broadcaster_id": broadcaster_id, "length": length}
+        route: Route = Route("POST", "channels/commercial", data=data, token_for=token_for)
         return await self.request_json(route)

@@ -48,6 +48,7 @@ if TYPE_CHECKING:
         GlobalEmoteResponse,
         RawResponse,
         SearchChannelResponse,
+        StartCommercialResponse,
         StreamResponse,
         TeamResponse,
         VideoResponse,
@@ -372,6 +373,37 @@ class CheerEmote:
     def __repr__(self) -> str:
         return f"<CheerEmote prefix={self.prefix} type={self.type} order={self.order}>"
 
+
+class CommercialStart:
+    """Represents a Commercial starting.
+
+    This requires the scope ``channel:edit:commercial``
+
+    !!! note
+        Only partners and affiliates may run commercials and they must be streaming live at the time.
+
+    !!! note
+        Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
+
+
+    Attributes
+    ----------
+    length: int
+        The ID of the game provided by Twitch.
+    message: str
+        The name of the game.
+    retry_after: int
+        The box art of the game as an [`Asset`][twitchio.Asset].
+    """
+    __slots__ = ("length", "message", "retry_after")
+
+    def __init__(self, data: StartCommercialResponse) -> None:
+        self.length: int = int(data["length"])
+        self.message: str = data["message"]
+        self.retry_after: int = int(data["retry_after"])
+
+    def __repr__(self) -> str:
+        return f"<CommercialStart length={self.length} message={self.message}>"
 
 class ContentClassificationLabel:
     """

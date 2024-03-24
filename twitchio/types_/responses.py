@@ -55,6 +55,7 @@ __all__ = (
     "GlobalEmotePayload",
     "SearchChannelResponse",
     "SearchChannelPayload",
+    "StartCommercialResponse",
     "StreamResponse",
     "StreamPayload",
     "TeamMemberResponse",
@@ -230,6 +231,10 @@ class SearchChannelResponse(TypedDict):
     title: str
     started_at: str
 
+class StartCommercialResponse(TypedDict):
+    length: int
+    message: str
+    retry_after: int
 
 class StreamResponse(TypedDict):
     id: str
@@ -318,4 +323,5 @@ ClassificationLabelsPayload = Payload[ClassificationLabelsResponse]
 GamePayload = Payload[GameResponse]
 GlobalEmotePayload = Payload[GlobalEmoteResponse]
 SearchChannelPayload = Payload[SearchChannelResponse]
+StartCommercialPayload = Payload[StartCommercialResponse]
 TeamPayload = Payload[TeamResponse]
