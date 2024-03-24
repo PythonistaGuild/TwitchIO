@@ -9,6 +9,7 @@
     - Bug fixes
         - fix: `~twitchio.PartialUser.fetch_moderated_channels` used "user_" prefix, now uses "broadcaster_" instead
 
+
 2.9.1
 =======
 - ext.eventsub
