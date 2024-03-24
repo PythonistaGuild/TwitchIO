@@ -46,9 +46,12 @@ if TYPE_CHECKING:
         ChatterColorResponse,
         CheerEmoteResponse,
         CheerEmoteTierResponse,
+        CostResponse,
+        ExtensionTransactionResponse,
         GamePayload,
         GameResponse,
         GlobalEmoteResponse,
+        ProductDataResponse,
         RawResponse,
         SearchChannelResponse,
         SnoozeAdResponse,
@@ -138,7 +141,7 @@ class BitsLeaderboard:
         return f"<BitsLeaderboard started_at={self.started_at} ended_at={self.ended_at}>"
 
 
-class BitLeaderboardUser(PartialUser):
+class BitLeaderboardUser:
     __slots__ = ("user", "rank", "score")
 
     def __init__(self, data: BitsLeaderboardResponse) -> None:
@@ -497,6 +500,90 @@ class ContentClassificationLabel:
 
     def __repr__(self) -> str:
         return f"<ContentClassificationLabel id={self.id}>"
+
+
+class ExtensionTransaction:
+    """
+    Represents an Extension Transaction.
+
+    Attributes
+    -----------
+    id: str
+        An ID that identifies the transaction.
+    timestamp: datetime.datetime
+        The UTC date and time of the transaction.
+    broadcaster: twitchio.PartialUser
+        The broadcaster that owns the channel where the transaction occurred.
+    user: twitchio.PartialUser
+        The user that purchased the digital product.
+    product_type: str
+        The type of transaction. Currently only ``BITS_IN_EXTENSION``
+    product_data: twitchio.ExtensionProductData
+        Details about the digital product.
+    """
+
+    __slots__ = ("id", "timestamp", "broadcaster", "user", "product_type", "product_data")
+
+    def __init__(self, data: ExtensionTransactionResponse) -> None:
+        self.id: str = data["id"]
+        self.timestamp: datetime.datetime = parse_timestamp(data["timestamp"])
+        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
+        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.product_type: str = data["product_type"]
+        self.product_data: ExtensionProductData = ExtensionProductData(data["product_data"])
+
+
+class ExtensionProductData:
+    """
+    Represents Product Data of an Extension Transaction.
+
+    Attributes
+    -----------
+    domain: str
+        Set to twitch.ext. + <the extension's ID>.
+    sku: str
+        An ID that identifies the digital product.
+    cost: twitchio.ExtensionCost
+        Contains details about the digital product's cost.
+    in_development: bool
+        Whether the product is in development.
+    display_name: str
+        The name of the digital product.
+    expiration: str
+        This field is always empty since you may purchase only unexpired products.
+    broadcast: bool
+        Whether the data was broadcast to all instances of the extension.
+    """
+
+    __slots__ = ("domain", "cost", "sku", "in_development", "display_name", "expiration", "broadcast")
+
+    def __init__(self, data: ProductDataResponse) -> None:
+        self.domain: str = data["domain"]
+        self.sku: str = data["sku"]
+        self.cost: ExtensionCost = ExtensionCost(data["cost"])
+        self.in_development: bool = data["in_development"]
+        self.display_name: str = data["display_name"]
+        self.expiration: str = data["expiration"]
+        self.broadcast: bool = data["broadcast"]
+
+
+class ExtensionCost:
+    """
+    Represents Cost of an Extension Transaction.
+
+    Attributes
+    -----------
+    amount: int
+        The amount exchanged for the digital product.
+    type: str
+        The type of currency exchanged. Currently only ``bits``
+    """
+
+    __slots__ = ("amount", "type")
+
+    def __init__(self, data: CostResponse) -> None:
+        self.amount: int = int(data["amount"])
+        self.type: str = data["type"]
 
 
 class Game:

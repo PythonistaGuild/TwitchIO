@@ -30,6 +30,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Literal
 
 from twitchio.http import HTTPAsyncIterator
+from twitchio.models import ExtensionTransaction
 
 from .authentication import ManagedHTTPClient, Scopes
 from .models import (
@@ -308,20 +309,6 @@ class Client:
         data = await self._http.get_channels(broadcaster_ids, token_for)
         return [ChannelInfo(d) for d in data["data"]]
 
-    async def fetch_global_emotes(self, token_for: str | None = None) -> list[GlobalEmote]:
-        """|coro|
-
-        Fetches global emotes from the twitch API
-
-        Returns
-        --------
-        list[twitchio.GlobalEmote]
-        """
-        data = await self._http.get_global_emotes(token_for)
-        template: str = data["template"]
-
-        return [GlobalEmote(d, template=template, http=self._http) for d in data["data"]]
-
     async def fetch_cheermotes(
         self, broadcaster_id: int | str | None = None, token_for: str | None = None
     ) -> list[CheerEmote]:
@@ -422,6 +409,56 @@ class Client:
             is_featured=is_featured,
             token_for=token_for,
         )
+
+    async def fetch_extension_transactions(
+        self, extension_id: str, *, ids: list[str] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[ExtensionTransaction]:
+        """|coro|
+
+        Fetches global emotes from the twitch API
+
+        !!! note
+            The ID in the extension_id query parameter must match the provided client ID.
+
+        Parameters
+        -----------
+        extension_id: str
+            The ID of the extension whose list of transactions you want to get. You may specify a maximum of 100 IDs.
+        ids: list[str] | None
+            A transaction ID used to filter the list of transactions.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.ExtensionTransaction]
+        """
+
+        first = max(1, min(100, first))
+
+        if ids and len(ids) > 100:
+            raise ValueError("You can only provide a mximum of 100 IDs")
+
+        return await self._http.get_extension_transactions(
+            extension_id=extension_id,
+            ids=ids,
+            first=first,
+        )
+
+    async def fetch_global_emotes(self, token_for: str | None = None) -> list[GlobalEmote]:
+        """|coro|
+
+        Fetches global emotes from the twitch API
+
+        Returns
+        --------
+        list[twitchio.GlobalEmote]
+        """
+        data = await self._http.get_global_emotes(token_for)
+        template: str = data["template"]
+
+        return [GlobalEmote(d, template=template, http=self._http) for d in data["data"]]
 
     async def fetch_streams(
         self,
@@ -556,7 +593,7 @@ class Client:
 
         Returns
         --------
-        List`[twitchio.Game]
+        list[twitchio.Game]
         """
 
         data = await self._http.get_games(

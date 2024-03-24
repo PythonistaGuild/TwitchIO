@@ -51,10 +51,14 @@ __all__ = (
     "CCLResponse",
     "ClassificationLabelsResponse",
     "ClassificationLabelsPayload",
+    "CostResponse",
+    "ExtensionTransactionResponse",
+    "ExtensionTransactionPayload",
     "GameResponse",
     "GamePayload",
     "GlobalEmoteResponse",
     "GlobalEmotePayload",
+    "ProductDataResponse",
     "SearchChannelResponse",
     "SearchChannelPayload",
     "StartCommercialResponse",
@@ -226,6 +230,34 @@ class DateRange(TypedDict):
     ended_at: str
 
 
+class CostResponse(TypedDict):
+    amount: int
+    type: str
+
+
+class ProductDataResponse(TypedDict):
+    domain: str
+    sku: str
+    cost: CostResponse
+    in_development: bool
+    display_name: str
+    expiration: str
+    broadcast: bool
+
+
+class ExtensionTransactionResponse(TypedDict):
+    id: str
+    timestamp: str
+    broadcaster_id: str
+    broadcaster_login: str
+    broadcaster_name: str
+    user_id: str
+    user_login: str
+    user_name: str
+    product_type: str
+    product_data: ProductDataResponse
+
+
 class GameResponse(TypedDict):
     id: str
     name: str
@@ -337,6 +369,11 @@ class BitsLeaderboardPayload(TypedDict):
     data: list[BitsLeaderboardResponse]
     date_range: DateRange
     total: int
+
+
+class ExtensionTransactionPayload(TypedDict):
+    data: list[ExtensionTransactionResponse]
+    pagination: Pagination
 
 
 class GlobalEmotePayload(TypedDict):

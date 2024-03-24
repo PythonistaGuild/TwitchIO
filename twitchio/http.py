@@ -36,7 +36,7 @@ import aiohttp
 
 from . import __version__
 from .exceptions import HTTPException
-from .models import Clip, Game, SearchChannel, Stream, Video
+from .models import Clip, ExtensionTransaction, Game, SearchChannel, Stream, Video
 from .utils import _from_json  # type: ignore
 
 
@@ -56,6 +56,7 @@ if TYPE_CHECKING:
         ChatterColorPayload,
         CheerEmotePayload,
         ClassificationLabelsPayload,
+        ExtensionTransactionResponse,
         GamePayload,
         GameResponse,
         GlobalEmotePayload,
@@ -468,6 +469,20 @@ class HTTPClient:
             return Clip(data)
 
         iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_extension_transactions(
+        self, extension_id: str, ids: list[str] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[ExtensionTransaction]:
+        params: dict[str, str | int | list[str]] = {"extension_id": extension_id, "first": first}
+        if ids:
+            params["id"] = ids
+        route: Route = Route("GET", "extensions/transactions", params=params)
+
+        async def converter(data: ExtensionTransactionResponse) -> ExtensionTransaction:
+            return ExtensionTransaction(data)
+
+        iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(route, converter=converter)
         return iterator
 
     async def get_streams(
