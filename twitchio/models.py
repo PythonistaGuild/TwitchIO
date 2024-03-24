@@ -637,7 +637,7 @@ class Stream:
         self._http: HTTPClient = http
 
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_name"])
+        self.user = PartialUser(data["user_id"], data["user_login"])
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.type: str = data["type"]
@@ -788,7 +788,7 @@ class Video:
     def __init__(self, data: VideoResponse, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_name"])
+        self.user = PartialUser(data["user_id"], data["user_login"])
         self.title: str = data["title"]
         self.description: str = data["description"]
         self.created_at = parse_timestamp(data["created_at"])
