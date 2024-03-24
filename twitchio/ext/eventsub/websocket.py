@@ -212,7 +212,7 @@ class Websocket:
             except TypeError as e:
                 logger.warning(f"Received bad frame: {e.args[0]}")
 
-                if e.args[0] is None:  # websocket was closed, reconnect
+                if "257" in e.args[0]:  # websocket was closed, reconnect
                     logger.info("Known bad frame, restarting connection")
                     await self.connect()
                     return
