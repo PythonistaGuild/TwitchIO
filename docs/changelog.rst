@@ -7,7 +7,7 @@
         - :func:`twitchio.PartialUser.fetch_moderated_channels <PartialUser.fetch_moderated_channels>` returns "broadcaster_login" api field instead of "broadcaster_name"
 
     - Bug fixes
-        - fix: `~twitchio.PartialUser.fetch_moderated_channels` used "user_" prefix, now uses "broadcaster_" instead
+        - fix: :func:`twitchio.PartialUser.fetch_moderated_channels <PartialUser.fetch_moderated_channels` used "user_" prefix from payload, now uses "broadcaster_" instead
 
 
 2.9.1
