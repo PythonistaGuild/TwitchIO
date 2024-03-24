@@ -37,6 +37,8 @@ if TYPE_CHECKING:
     from .http import HTTPClient
     from .types_.responses import (
         AdScheduleResponse,
+        BitsLeaderboardPayload,
+        BitsLeaderboardResponse,
         CCLResponse,
         ChannelInfoResponse,
         ChatBadgeSetResponse,
@@ -109,26 +111,40 @@ class AdSchedule:
         self.preroll_free_time: int = int(data["preroll_free_time"])
 
 
-class SnoozeAd:
+class BitsLeaderboard:
     """
-    Represents ad schedule information.
+    Represents a Bits leaderboard.
 
     Attributes
-    -----------
-    snooze_count: int
-        The number of snoozes available for the broadcaster.
-    snooze_refresh_at: datetime.datetime
-        The UTC datetime when the broadcaster will gain an additional snooze.
-    next_ad_at: datetime.datetime | None
-        The UTC datetime of the broadcaster's next scheduled ad. None if channel has no ad scheduled.
+    ------------
+    started_at: datetime.datetime | None
+        The time the leaderboard started.
+    ended_at: datetime.datetime | None
+        The time the leaderboard ended.
+    leaders: list[BitLeaderboardUser]
+        The current leaders of the Leaderboard.
     """
 
-    __slots__ = ("snooze_count", "snooze_refresh_at", "next_ad_at")
+    __slots__ = ("leaders", "started_at", "ended_at")
 
-    def __init__(self, data: SnoozeAdResponse) -> None:
-        self.snooze_count: int = int(data["snooze_count"])
-        self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
-        self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
+    def __init__(self, data: BitsLeaderboardPayload) -> None:
+        self.started_at = (
+            parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
+        )
+        self.ended_at = parse_timestamp(data["date_range"]["ended_at"]) if data["date_range"]["ended_at"] else None
+        self.leaders = [BitLeaderboardUser(d) for d in data["data"]]
+
+    def __repr__(self) -> str:
+        return f"<BitsLeaderboard started_at={self.started_at} ended_at={self.ended_at}>"
+
+
+class BitLeaderboardUser(PartialUser):
+    __slots__ = ("user", "rank", "score")
+
+    def __init__(self, data: BitsLeaderboardResponse) -> None:
+        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.rank: int = int(data["rank"])
+        self.score: int = int(data["score"])
 
 
 class ChatterColor:
@@ -668,6 +684,28 @@ class SearchChannel:
         """
         payload: GamePayload = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)
+
+
+class SnoozeAd:
+    """
+    Represents ad schedule information.
+
+    Attributes
+    -----------
+    snooze_count: int
+        The number of snoozes available for the broadcaster.
+    snooze_refresh_at: datetime.datetime
+        The UTC datetime when the broadcaster will gain an additional snooze.
+    next_ad_at: datetime.datetime | None
+        The UTC datetime of the broadcaster's next scheduled ad. None if channel has no ad scheduled.
+    """
+
+    __slots__ = ("snooze_count", "snooze_refresh_at", "next_ad_at")
+
+    def __init__(self, data: SnoozeAdResponse) -> None:
+        self.snooze_count: int = int(data["snooze_count"])
+        self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
+        self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
 
 
 class Stream:

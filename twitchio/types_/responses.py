@@ -36,6 +36,7 @@ __all__ = (
     "RawResponse",
     "AuthorizationURLResponse",
     "AdSchedulePayload",
+    "BitsLeaderboardPayload",
     "ChatBadgePayload",
     "ChatBadgeSetResponse",
     "ChatterColorResponse",
@@ -126,12 +127,6 @@ class Pagination(TypedDict):
     cursor: str | None
 
 
-class SnoozeAdResponse(TypedDict):
-    snooze_count: int
-    snooze_refresh_at: str
-    next_ad_at: str
-
-
 class AdScheduleResponse(TypedDict):
     snooze_count: int
     snooze_refresh_at: str
@@ -139,6 +134,14 @@ class AdScheduleResponse(TypedDict):
     next_ad_at: str
     last_ad_at: str
     preroll_free_time: int
+
+
+class BitsLeaderboardResponse(TypedDict):
+    user_id: str
+    user_login: str
+    user_name: str
+    rank: int
+    score: int
 
 
 class ChatBadgeVersionResponse(TypedDict):
@@ -218,6 +221,11 @@ class ClassificationLabelsResponse(TypedDict):
     classification_labels: list[CCLResponse]
 
 
+class DateRange(TypedDict):
+    started_at: str
+    ended_at: str
+
+
 class GameResponse(TypedDict):
     id: str
     name: str
@@ -247,6 +255,12 @@ class SearchChannelResponse(TypedDict):
     thumbnail_url: str
     title: str
     started_at: str
+
+
+class SnoozeAdResponse(TypedDict):
+    snooze_count: int
+    snooze_refresh_at: str
+    next_ad_at: str
 
 
 class StartCommercialResponse(TypedDict):
@@ -317,6 +331,12 @@ class VideoResponse(TypedDict):
     type: str
     duration: str
     muted_segments: list[MutedSegment] | None
+
+
+class BitsLeaderboardPayload(TypedDict):
+    data: list[BitsLeaderboardResponse]
+    date_range: DateRange
+    total: int
 
 
 class GlobalEmotePayload(TypedDict):

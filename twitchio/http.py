@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         AdSchedulePayload,
+        BitsLeaderboardPayload,
         ChannelInfoPayload,
         ChatBadgePayload,
         ChatterColorPayload,
@@ -624,4 +625,27 @@ class HTTPClient:
     async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeAdPayload:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_bits_leaderboard(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        count: int = 10,
+        period: Literal["day", "week", "month", "year", "all"] = "all",
+        started_at: datetime.datetime | None = None,
+        user_id: str | int | None = None,
+    ) -> BitsLeaderboardPayload:
+        params: dict[str, str | int | datetime.datetime] = {
+            "broadcaster_id": broadcaster_id,
+            "count": count,
+            "period": period,
+        }
+
+        if started_at is not None:
+            params["started_at"] = started_at
+        if user_id:
+            params["user_id"] = user_id
+
+        route: Route = Route("GET", "bits/leaderboard", params=params, token_for=token_for)
         return await self.request_json(route)
