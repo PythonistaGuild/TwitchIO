@@ -664,3 +664,41 @@ class HTTPClient:
 
         route: Route = Route("GET", "bits/leaderboard", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    async def patch_channel_info(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        game_id: str | int | None = None,
+        language: str | None = None,
+        title: str | None = None,
+        delay: int | None = None,
+        tags: list[str] | None = None,
+        branded_content: bool | None = None,
+        classification_labels: list[dict[str, bool]] | None = None,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id}
+
+        data: dict[str, str | int | list[str] | list[dict[str, str | bool]]] = {
+            k: v
+            for k, v in {
+                "game_id": game_id,
+                "broadcaster_language": language,
+                "title": title,
+                "delay": delay,
+                "tags": tags,
+                "is_branded_content": branded_content,
+            }.items()
+            if v is not None
+        }
+
+        if classification_labels is not None:
+            converted_labels = [
+                {"id": label, "is_enabled": enabled}
+                for item in classification_labels
+                for label, enabled in item.items()
+            ]
+            data["content_classification_labels"] = converted_labels
+
+        route: Route = Route("PATCH", "channels", params=params, data=data, token_for=token_for)
+        return await self.request_json(route)
