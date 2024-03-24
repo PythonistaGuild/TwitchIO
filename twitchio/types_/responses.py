@@ -214,7 +214,6 @@ class GlobalEmoteResponse(TypedDict):
     format: list[str]
     scale: list[str]
     theme_mode: list[str]
-    template: str
 
 
 class SearchChannelResponse(TypedDict):
@@ -299,6 +298,9 @@ class VideoResponse(TypedDict):
     duration: str
     muted_segments: list[MutedSegment] | None
 
+class GlobalEmotePayload(TypedDict):
+    data: list[GlobalEmoteResponse]
+    template: str
 
 class StreamPayload(TypedDict):
     data: list[StreamResponse]
@@ -319,9 +321,8 @@ ChatterColorPayload = Payload[ChatterColorResponse]
 ChannelInfoPayload = Payload[ChannelInfoResponse]
 ClipPayload = Payload[ClipResponse]
 CheerEmotePayload = Payload[CheerEmoteResponse]
-ClassificationLabelsPayload = Payload[ClassificationLabelsResponse]
+ClassificationLabelsPayload = Payload[CCLResponse]
 GamePayload = Payload[GameResponse]
-GlobalEmotePayload = Payload[GlobalEmoteResponse]
 SearchChannelPayload = Payload[SearchChannelResponse]
 StartCommercialPayload = Payload[StartCommercialResponse]
 TeamPayload = Payload[TeamResponse]

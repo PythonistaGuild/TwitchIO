@@ -52,8 +52,11 @@ if TYPE_CHECKING:
         ChannelInfoPayload,
         ChatBadgePayload,
         ChatterColorPayload,
+        CheerEmotePayload,
+        ClassificationLabelsPayload,
         GamePayload,
         GameResponse,
+        GlobalEmotePayload,
         RawResponse,
         SearchChannelResponse,
         StartCommercialResponse,
@@ -407,22 +410,22 @@ class HTTPClient:
         route: Route = Route("GET", "channels", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_cheermotes(self, broadcaster_id: str | int | None, token_for: str | None = None) -> RawResponse:
+    async def get_cheermotes(self, broadcaster_id: str | int | None, token_for: str | None = None) -> CheerEmotePayload:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_channel_emotes(self, broadcaster_id: str | int, token_for: str | None = None) -> RawResponse:
+    async def get_channel_emotes(self, broadcaster_id: str | int, token_for: str | None = None) -> RawResponse: #TODO Payload
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "chat/emotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_content_classification_labels(self, locale: str, token_for: str | None = None) -> RawResponse:
+    async def get_content_classification_labels(self, locale: str, token_for: str | None = None) -> ClassificationLabelsPayload:
         params: dict[str, str] = {"locale": locale}
         route: Route = Route("GET", "content_classification_labels", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_global_emotes(self, token_for: str | None = None) -> RawResponse:
+    async def get_global_emotes(self, token_for: str | None = None) -> GlobalEmotePayload:
         route: Route = Route("GET", "chat/emotes/global", token_for=token_for)
         return await self.request_json(route)
 

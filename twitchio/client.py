@@ -333,7 +333,7 @@ class Client:
 
         Parameters
         -----------
-        broadcaster_id: Optional[str | int]
+        broadcaster_id: str | int
             The id of the broadcaster who has uploaded Cheermotes.
         token_for: str | None
             An optional User OAuth token to use instead of the default app token.
