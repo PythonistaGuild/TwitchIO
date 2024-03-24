@@ -49,6 +49,7 @@ if TYPE_CHECKING:
     from .assets import Asset
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
+        AdSchedulePayload,
         ChannelInfoPayload,
         ChatBadgePayload,
         ChatterColorPayload,
@@ -59,7 +60,8 @@ if TYPE_CHECKING:
         GlobalEmotePayload,
         RawResponse,
         SearchChannelResponse,
-        StartCommercialResponse,
+        SnoozeAdPayload,
+        StartCommercialPayload,
         StreamResponse,
         TeamPayload,
         VideoDeletePayload,
@@ -415,12 +417,16 @@ class HTTPClient:
         route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_channel_emotes(self, broadcaster_id: str | int, token_for: str | None = None) -> RawResponse: #TODO Payload
+    async def get_channel_emotes(
+        self, broadcaster_id: str | int, token_for: str | None = None
+    ) -> RawResponse:  # TODO Payload
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "chat/emotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_content_classification_labels(self, locale: str, token_for: str | None = None) -> ClassificationLabelsPayload:
+    async def get_content_classification_labels(
+        self, locale: str, token_for: str | None = None
+    ) -> ClassificationLabelsPayload:
         params: dict[str, str] = {"locale": locale}
         route: Route = Route("GET", "content_classification_labels", params=params, token_for=token_for)
         return await self.request_json(route)
@@ -605,7 +611,17 @@ class HTTPClient:
         route: Route = Route("DELETE", "videos", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
+    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialPayload:
         data = {"broadcaster_id": broadcaster_id, "length": length}
         route: Route = Route("POST", "channels/commercial", data=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdSchedulePayload:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "channels/ads", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeAdPayload:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
         return await self.request_json(route)

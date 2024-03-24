@@ -35,6 +35,7 @@ __all__ = (
     "UserTokenResponse",
     "RawResponse",
     "AuthorizationURLResponse",
+    "AdSchedulePayload",
     "ChatBadgePayload",
     "ChatBadgeSetResponse",
     "ChatterColorResponse",
@@ -56,8 +57,10 @@ __all__ = (
     "SearchChannelResponse",
     "SearchChannelPayload",
     "StartCommercialResponse",
+    "StartCommercialPayload",
     "StreamResponse",
     "StreamPayload",
+    "SnoozeAdPayload",
     "TeamMemberResponse",
     "TeamResponse",
     "TeamPayload",
@@ -121,6 +124,21 @@ RawResponse: TypeAlias = dict[str, Any]
 
 class Pagination(TypedDict):
     cursor: str | None
+
+
+class SnoozeAdResponse(TypedDict):
+    snooze_count: int
+    snooze_refresh_at: str
+    next_ad_at: str
+
+
+class AdScheduleResponse(TypedDict):
+    snooze_count: int
+    snooze_refresh_at: str
+    duration: int
+    next_ad_at: str
+    last_ad_at: str
+    preroll_free_time: int
 
 
 class ChatBadgeVersionResponse(TypedDict):
@@ -230,10 +248,12 @@ class SearchChannelResponse(TypedDict):
     title: str
     started_at: str
 
+
 class StartCommercialResponse(TypedDict):
     length: int
     message: str
     retry_after: int
+
 
 class StreamResponse(TypedDict):
     id: str
@@ -298,9 +318,11 @@ class VideoResponse(TypedDict):
     duration: str
     muted_segments: list[MutedSegment] | None
 
+
 class GlobalEmotePayload(TypedDict):
     data: list[GlobalEmoteResponse]
     template: str
+
 
 class StreamPayload(TypedDict):
     data: list[StreamResponse]
@@ -316,6 +338,7 @@ class VideoDeletePayload(TypedDict):
     data: list[str]
 
 
+AdSchedulePayload = Payload[AdScheduleResponse]
 ChatBadgePayload = Payload[ChatBadgeSetResponse]
 ChatterColorPayload = Payload[ChatterColorResponse]
 ChannelInfoPayload = Payload[ChannelInfoResponse]
@@ -325,4 +348,5 @@ ClassificationLabelsPayload = Payload[CCLResponse]
 GamePayload = Payload[GameResponse]
 SearchChannelPayload = Payload[SearchChannelResponse]
 StartCommercialPayload = Payload[StartCommercialResponse]
+SnoozeAdPayload = Payload[SnoozeAdResponse]
 TeamPayload = Payload[TeamResponse]

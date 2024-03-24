@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 
     from .http import HTTPClient
     from .types_.responses import (
+        AdScheduleResponse,
         CCLResponse,
         ChannelInfoResponse,
         ChatBadgeSetResponse,
@@ -48,6 +49,7 @@ if TYPE_CHECKING:
         GlobalEmoteResponse,
         RawResponse,
         SearchChannelResponse,
+        SnoozeAdResponse,
         StartCommercialResponse,
         StreamResponse,
         TeamResponse,
@@ -56,19 +58,77 @@ if TYPE_CHECKING:
 
 
 __all__ = (
+    "AdSchedule",
     "ChatterColor",
     "ChannelInfo",
+    "ChatBadge",
+    "ChatBadgeVersions",
     "CheerEmoteTier",
     "CheerEmote",
     "Clip",
+    "CommercialStart",
     "ContentClassificationLabel",
     "Game",
     "GlobalEmote",
     "SearchChannel",
     "Stream",
+    "SnoozeAd",
     "Team",
     "Video",
 )
+
+
+class AdSchedule:
+    """
+    Represents ad schedule information.
+
+    Attributes
+    -----------
+    snooze_count: int
+        The number of snoozes available for the broadcaster.
+    snooze_refresh_at: datetime.datetime
+        The UTC datetime when the broadcaster will gain an additional snooze.
+    duration: int
+        The length in seconds of the scheduled upcoming ad break.
+    next_ad_at: datetime.datetime | None
+        The UTC datetime of the broadcaster's next scheduled ad format. None if channel has no ad scheduled.
+    last_ad_at: datetime.datetime | None
+        The UTC datetime of the broadcaster's last ad-break. None if channel has not run an ad or is not live.
+    preroll_free_time: int
+        The amount of pre-roll free time remaining for the channel in seconds. Returns 0 if they are currently not pre-roll free.
+    """
+
+    __slots__ = ("snooze_count", "snooze_refresh_at", "duration", "next_ad_at", "last_ad_at", "preroll_free_time")
+
+    def __init__(self, data: AdScheduleResponse) -> None:
+        self.snooze_count: int = int(data["snooze_count"])
+        self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
+        self.duration: int = int(data["duration"])
+        self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
+        self.last_ad_at: datetime.datetime | None = parse_timestamp(data["last_ad_at"]) if data["last_ad_at"] else None
+        self.preroll_free_time: int = int(data["preroll_free_time"])
+
+
+class SnoozeAd:
+    """
+    Represents ad schedule information.
+
+    Attributes
+    -----------
+    snooze_count: int
+        The number of snoozes available for the broadcaster.
+    snooze_refresh_at: datetime.datetime
+        The UTC datetime when the broadcaster will gain an additional snooze.
+    next_ad_at: datetime.datetime | None
+        The UTC datetime of the broadcaster's next scheduled ad. None if channel has no ad scheduled.
+    """
+
+    __slots__ = ("snooze_count", "snooze_refresh_at", "next_ad_at")
+
+    def __init__(self, data: SnoozeAdResponse) -> None:
+        self.snooze_count: int = int(data["snooze_count"])
+        self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
+        self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
 
 
 class ChatterColor:
@@ -377,24 +437,16 @@ class CheerEmote:
 class CommercialStart:
     """Represents a Commercial starting.
 
-    This requires the scope ``channel:edit:commercial``
-
-    !!! note
-        Only partners and affiliates may run commercials and they must be streaming live at the time.
-
-    !!! note
-        Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
-
-
     Attributes
     ----------
     length: int
-        The ID of the game provided by Twitch.
+        The length of the commercial you requested. If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
     message: str
-        The name of the game.
+        A message that indicates whether Twitch was able to serve an ad.
     retry_after: int
-        The box art of the game as an [`Asset`][twitchio.Asset].
+        The number of seconds you must wait before running another commercial.
     """
+
     __slots__ = ("length", "message", "retry_after")
 
     def __init__(self, data: StartCommercialResponse) -> None:
@@ -404,6 +456,7 @@ class CommercialStart:
 
     def __repr__(self) -> str:
         return f"<CommercialStart length={self.length} message={self.message}>"
+
 
 class ContentClassificationLabel:
     """
