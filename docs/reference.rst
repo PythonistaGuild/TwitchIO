@@ -11,6 +11,13 @@ ActiveExtension
     :members:
     :inherited-members:
 
+AdSchedule
+------------
+.. attributetable:: AdSchedule
+
+.. autoclass:: AdSchedule
+    :members:
+
 AutomodCheckMessage
 ---------------------
 .. attributetable:: AutomodCheckMessage
@@ -212,6 +219,13 @@ CustomRewardRedemption
 .. autoclass:: CustomRewardRedemption
     :members:
     :inherited-members:
+
+Emote
+------
+.. attributetable:: Emote
+
+.. autoclass:: Emote
+    :members:
 
 Extension
 -----------

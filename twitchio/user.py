@@ -37,8 +37,10 @@ if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
     from .models import (
+        AdSchedule,
         BitsLeaderboard,
         Clip,
+        Emote,
         ExtensionBuilder,
         Tag,
         FollowEvent,
@@ -334,6 +336,48 @@ class PartialUser:
         data = await self._http.post_create_clip(token, self.id, has_delay)
         return data[0]
 
+    async def fetch_ad_schedule(self, token: str) -> AdSchedule:
+        """|coro|
+
+        Fetches the streamers's ad schedule.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The user's oauth token with the ``channel:read:ads`` scope.
+
+        Returns
+        --------
+        :class:`twitchio.AdSchedule`
+        """
+        from .models import AdSchedule
+
+        data = await self._http.get_ad_schedule(token, str(self.id))
+        return AdSchedule(data[0])
+
+    async def snooze_ad(self, token: str) -> List[AdSchedule]:
+        """|coro|
+
+        Snoozes an ad on the streamer's channel.
+
+        .. note::
+            The resulting :class:`~twitchio.AdSchedule` only has data for the :attr:`~twitchio.AdSchedule.snooze_count`,
+            :attr:`~twitchio.AdSchedule.snooze_refresh_at`, and :attr:`~twitchio.AdSchedule.next_ad_at` attributes.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The user's oauth token with the ``channel:manage:ads`` scope.
+
+        Returns
+        --------
+        :class:`twitchio.AdSchedule`
+        """
+        from .models import AdSchedule
+
+        data = await self._http.post_snooze_ad(token, str(self.id))
+        return AdSchedule(data[0])
+
     async def fetch_clips(
         self,
         started_at: Optional[datetime.datetime] = None,
@@ -402,6 +446,23 @@ class PartialUser:
         """
         data = await self._http.get_channel_bans(token, str(self.id), user_ids=userids)
         return [UserBan(self._http, d) for d in data]
+
+    async def fetch_moderated_channels(self, token: str) -> List[PartialUser]:
+        """|coro|
+
+        Fetches channels that this user moderates.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An oauth token for this user with the ``user:read:moderated_channels`` scope.
+
+        Returns
+        --------
+        List[:class:`twitchio.PartialUser`]
+        """
+        data = await self._http.get_moderated_channels(token, str(self.id))
+        return [PartialUser(self._http, d["broadcaster_id"], d["broadcaster_login"]) for d in data]
 
     async def fetch_moderators(self, token: str, userids: List[int] = None):
         """|coro|
@@ -579,6 +640,33 @@ class PartialUser:
         data = await self._http.get_channel_emotes(str(self.id))
         return [ChannelEmote(self._http, x) for x in data]
 
+    async def fetch_user_emotes(self, token: str, broadcaster: Optional[PartialUser] = None) -> List[Emote]:
+        """|coro|
+
+        Fetches emotes the user has access to. Optionally, you can filter by a broadcaster.
+
+        .. note::
+
+            As of writing, this endpoint seems extrememly unoptimized by twitch, and may (read: will) take a lot of API requests to load.
+            See https://github.com/twitchdev/issues/issues/921 .
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An OAuth token belonging to this user with the ``user:read:emotes`` scope.
+        broadcaster: Optional[:class:`~twitchio.PartialUser`]
+            A channel to filter the results with.
+            Filtering will return all emotes available to the user on that channel, including global emotes.
+
+        Returns
+        --------
+        List[:class:`~twitchio.Emote`]
+        """
+        from .models import Emote
+
+        data = await self._http.get_user_emotes(str(self.id), broadcaster and str(broadcaster.id), token)
+        return [Emote(d) for d in data]
+
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
 
@@ -605,6 +693,10 @@ class PartialUser:
         """|coro|
 
         Unfollows the user
+
+        .. warning::
+
+            This method is obsolete as Twitch removed the endpoint.
 
         Parameters
         -----------
