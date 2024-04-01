@@ -40,6 +40,7 @@ if TYPE_CHECKING:
         BitsLeaderboardPayload,
         BitsLeaderboardResponse,
         CCLResponse,
+        ChannelEditorsResponse,
         ChannelInfoResponse,
         ChatBadgeSetResponse,
         ChatBadgeVersionResponse,
@@ -64,10 +65,12 @@ if TYPE_CHECKING:
 
 __all__ = (
     "AdSchedule",
+    "BitsLeaderboard",
     "ChatterColor",
     "ChannelInfo",
     "ChatBadge",
     "ChatBadgeVersions",
+    "ChannelEditor",
     "CheerEmoteTier",
     "CheerEmote",
     "Clip",
@@ -179,6 +182,28 @@ class ChatterColor:
 
     def __str__(self) -> str:
         return self._colour.hex
+
+
+class ChannelEditor:
+    """
+    Represents an editor of a channel.
+
+    Attributes
+    -----------
+    user: twitchio.PartialUser
+        PartialUser who has editor permissions.
+    created_at: datetime.datetime
+        The datetime of when the user became one of the broadcaster's editors.
+    """
+
+    __slots__ = ("user", "created_at")
+
+    def __init__(self, data: ChannelEditorsResponse) -> None:
+        self.user = PartialUser(data["user_id"], data["user_name"])
+        self.created_at = parse_timestamp(data["created_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelEditor user={self.user} created_at={self.created_at}>"
 
 
 class ChannelInfo:

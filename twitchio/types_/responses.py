@@ -41,6 +41,8 @@ __all__ = (
     "ChatBadgeSetResponse",
     "ChatterColorResponse",
     "ChatterColorPayload",
+    "ChannelEditorsResponse",
+    "ChannelEditorsPayload",
     "ChannelInfoResponse",
     "ChannelInfoPayload",
     "CheerEmoteTierResponse",
@@ -169,6 +171,12 @@ class ChatterColorResponse(TypedDict):
     user_login: str
     user_name: str
     color: str
+
+
+class ChannelEditorsResponse(TypedDict):
+    user_id: str
+    user_name: str
+    created_at: str
 
 
 class ChannelInfoResponse(TypedDict):
@@ -398,6 +406,7 @@ class VideoDeletePayload(TypedDict):
 AdSchedulePayload = Payload[AdScheduleResponse]
 ChatBadgePayload = Payload[ChatBadgeSetResponse]
 ChatterColorPayload = Payload[ChatterColorResponse]
+ChannelEditorsPayload = Payload[ChannelEditorsResponse]
 ChannelInfoPayload = Payload[ChannelInfoResponse]
 ClipPayload = Payload[ClipResponse]
 CheerEmotePayload = Payload[CheerEmoteResponse]

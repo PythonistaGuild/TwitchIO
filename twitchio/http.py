@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from .types_.responses import (
         AdSchedulePayload,
         BitsLeaderboardPayload,
+        ChannelEditorsPayload,
         ChannelInfoPayload,
         ChatBadgePayload,
         ChatterColorPayload,
@@ -701,4 +702,9 @@ class HTTPClient:
             data["content_classification_labels"] = converted_labels
 
         route: Route = Route("PATCH", "channels", params=params, data=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsPayload:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "channels/editors", params=params, token_for=token_for)
         return await self.request_json(route)
