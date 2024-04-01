@@ -41,6 +41,8 @@ if TYPE_CHECKING:
         BitsLeaderboardResponse,
         CCLResponse,
         ChannelEditorsResponse,
+        ChannelFollowedResponse,
+        ChannelFollowerResponse,
         ChannelInfoResponse,
         ChatBadgeSetResponse,
         ChatBadgeVersionResponse,
@@ -71,6 +73,8 @@ __all__ = (
     "ChatBadge",
     "ChatBadgeVersions",
     "ChannelEditor",
+    "ChannelFollowedEvent",
+    "ChannelFollowerEvent",
     "CheerEmoteTier",
     "CheerEmote",
     "Clip",
@@ -204,6 +208,44 @@ class ChannelEditor:
 
     def __repr__(self) -> str:
         return f"<ChannelEditor user={self.user} created_at={self.created_at}>"
+
+
+class ChannelFollowedEvent:
+    """
+    Represents a ChannelFollowedEvent
+
+    Attributes
+    -----------
+    broadcaster: twitchio.PartialUser
+        PartialUser that identifies the channel that this user is following.
+    followed_at: datetime.datetime
+        The datetime of when the user followed the channel.
+    """
+
+    __slots__ = ("broadcaster", "followed_at")
+
+    def __init__(self, data: ChannelFollowedResponse) -> None:
+        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
+        self.followed_at = parse_timestamp(data["followed_at"])
+
+
+class ChannelFollowerEvent:
+    """
+    Represents a ChannelFollowerEvent
+
+    Attributes
+    -----------
+    broadcaster: twitchio.PartialUser
+        PartialUser that identifies a user that follows this channel.
+    followed_at: datetime.datetime
+        The datetime of when the user followed the channel.
+    """
+
+    __slots__ = ("user", "followed_at")
+
+    def __init__(self, data: ChannelFollowerResponse) -> None:
+        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.followed_at = parse_timestamp(data["followed_at"])
 
 
 class ChannelInfo:

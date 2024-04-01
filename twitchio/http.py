@@ -36,7 +36,16 @@ import aiohttp
 
 from . import __version__
 from .exceptions import HTTPException
-from .models import Clip, ExtensionTransaction, Game, SearchChannel, Stream, Video
+from .models import (
+    ChannelFollowedEvent,
+    ChannelFollowerEvent,
+    Clip,
+    ExtensionTransaction,
+    Game,
+    SearchChannel,
+    Stream,
+    Video,
+)
 from .utils import _from_json  # type: ignore
 
 
@@ -52,6 +61,8 @@ if TYPE_CHECKING:
         AdSchedulePayload,
         BitsLeaderboardPayload,
         ChannelEditorsPayload,
+        ChannelFollowedResponse,
+        ChannelFollowerResponse,
         ChannelInfoPayload,
         ChatBadgePayload,
         ChatterColorPayload,
@@ -708,3 +719,43 @@ class HTTPClient:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "channels/editors", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    async def get_followed_channels(
+        self,
+        user_id: str | int,
+        token_for: str,
+        broadcaster_id: str | int | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[ChannelFollowedEvent]:
+        params = {"first": first, "user_id": user_id}
+
+        if broadcaster_id is not None:
+            params["broadcaster_id"] = broadcaster_id
+
+        route = Route("GET", "channels/followed", params=params, token_for=token_for)
+
+        async def converter(data: ChannelFollowedResponse) -> ChannelFollowedEvent:
+            return ChannelFollowedEvent(data)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_channel_followers(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[ChannelFollowerEvent]:
+        params = {"first": first, "broadcaster_id": broadcaster_id}
+
+        if user_id is not None:
+            params["user_id"] = broadcaster_id
+
+        route = Route("GET", "channels/followers", params=params, token_for=token_for)
+
+        async def converter(data: ChannelFollowerResponse) -> ChannelFollowerEvent:
+            return ChannelFollowerEvent(data)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator

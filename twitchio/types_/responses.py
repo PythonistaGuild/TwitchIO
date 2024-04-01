@@ -43,6 +43,10 @@ __all__ = (
     "ChatterColorPayload",
     "ChannelEditorsResponse",
     "ChannelEditorsPayload",
+    "ChannelFollowedResponse",
+    "ChannelFollowedPayload",
+    "ChannelFollowerResponse",
+    "ChannelFollowerPayload",
     "ChannelInfoResponse",
     "ChannelInfoPayload",
     "CheerEmoteTierResponse",
@@ -177,6 +181,20 @@ class ChannelEditorsResponse(TypedDict):
     user_id: str
     user_name: str
     created_at: str
+
+
+class ChannelFollowedResponse(TypedDict):
+    broadcaster_id: str
+    broadcaster_login: str
+    broadcaster_name: str
+    followed_at: str
+
+
+class ChannelFollowerResponse(TypedDict):
+    user_id: str
+    user_login: str
+    user_name: str
+    followed_at: str
 
 
 class ChannelInfoResponse(TypedDict):
@@ -377,6 +395,16 @@ class BitsLeaderboardPayload(TypedDict):
     data: list[BitsLeaderboardResponse]
     date_range: DateRange
     total: int
+
+
+class ChannelFollowedPayload(TypedDict):
+    data: list[ChannelFollowedResponse]
+    pagination: Pagination
+
+
+class ChannelFollowerPayload(TypedDict):
+    data: list[ChannelFollowerResponse]
+    pagination: Pagination
 
 
 class ExtensionTransactionPayload(TypedDict):
