@@ -24,8 +24,11 @@ SOFTWARE.
 
 import asyncio
 import logging
+from typing import Any, cast
 
 import aiohttp
+
+from ..utils import _from_json  # type: ignore
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -35,16 +38,15 @@ WSS: str = "wss://eventsub.wss.twitch.tv/ws"
 
 
 class Websocket:
-    def __init__(self, *, keep_alive_timeout: float = 60, session: aiohttp.ClientSession | None = None) -> None:
+    def __init__(
+        self, *, keep_alive_timeout: float = 60, session: aiohttp.ClientSession | None = None, id: int
+    ) -> None:
         self._keep_alive_timeout: int = max(10, min(int(keep_alive_timeout), 600))
         self._session: aiohttp.ClientSession | None = session
-        self._reconnect: bool = True
+        self._id: int = id
 
         self._socket: aiohttp.ClientWebSocketResponse | None = None
-
         self._listen_task: asyncio.Task[None] | None = None
-
-        self._id: str | None = None
 
     @property
     def keep_alive_timeout(self) -> int:
@@ -53,6 +55,10 @@ class Websocket:
     @property
     def connected(self) -> bool:
         return bool(self._socket and not self._socket.closed)
+
+    @property
+    def id(self) -> int:
+        return self._id
 
     async def connect(self) -> None:
         url: str = f"{WSS}?keepalive_timeout_seconds={self._keep_alive_timeout}"
@@ -64,9 +70,7 @@ class Websocket:
         if not self._session:
             self._session = aiohttp.ClientSession()
 
-        async with self._session as session:
-            # TODO: Error handling...
-            self._socket = await session.ws_connect(url)
+        self._socket = await self._session.ws_connect(url)
 
         logger.debug("Successfully connected to conduit websocket... Preparing to assign to shard.")
         self._listen_task = asyncio.create_task(self._listen())
@@ -76,12 +80,28 @@ class Websocket:
 
         while True:
             try:
-                message = await self._socket.receive()
+                message: aiohttp.WSMessage = await self._socket.receive()
             except Exception:
                 # TODO: Proper error handling...
                 return await self.close()
 
-            print(message)
+            type_: aiohttp.WSMsgType = message.type
+            if type_ in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSE):
+                logger.info("Received close message on conduit websocket: %s", self._id)
+                return await self.close()
+
+            if type_ is not aiohttp.WSMsgType.TEXT:
+                logger.info("Received unknown message from conduit websocket: %s", self._id)
+                continue
+
+            try:
+                data: dict[str, Any] = cast(dict[str, Any], _from_json(message.data))
+            except Exception:
+                logger.warning("Unable to parse JSON in conduit websocket: %s", self._id)
+                continue
+
+            # TODO: Remove print...
+            print(data)
 
     async def close(self) -> None:
         if self._socket:
@@ -93,5 +113,11 @@ class Websocket:
         if self._session:
             try:
                 await self._session.close()
+            except Exception:
+                ...
+
+        if self._listen_task:
+            try:
+                self._listen_task.cancel()
             except Exception:
                 ...

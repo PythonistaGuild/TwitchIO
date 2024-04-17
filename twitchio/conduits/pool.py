@@ -32,6 +32,7 @@ from twitchio.types_.conduits import ShardData
 
 from ..utils import parse_timestamp
 from .enums import ShardStatus, TransportMethod
+from .websockets import Websocket
 
 
 if TYPE_CHECKING:
@@ -42,7 +43,6 @@ if TYPE_CHECKING:
     from ..client import Client
     from ..ext.commands import Bot
     from ..types_.conduits import ConduitData, ShardData, ShardTransport
-    from .websockets import Websocket
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -150,7 +150,7 @@ class ConduitPool:
 
         return conduits
 
-    async def fetch_conduits(self) -> dict[str, Conduit]:
+    async def fetch_conduits(self) -> MappingProxyType[str, Conduit]:
         data = await self._client._http.get_conduits()
         mapping: dict[str, Conduit] = {}
 
@@ -159,4 +159,16 @@ class ConduitPool:
             mapping[conduit.id] = conduit
 
         self._conduits = mapping
-        return mapping
+        return MappingProxyType(mapping)
+
+    async def test(self) -> None:
+        await self.fetch_conduits()
+
+        for id_, conduit in self._conduits.items():
+            shards: list[Shard] = await (await self._client._http.get_conduit_shards(id_))
+            start: int = len(shards)
+
+            for n in range(start, conduit._shard_count):
+                websocket: Websocket = Websocket(id=n)
+                await websocket.connect()
+                break
