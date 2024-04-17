@@ -112,6 +112,7 @@ class Client:
 
         # TODO: Temp logic for testing...
         self._blocker: asyncio.Event = asyncio.Event()
+        self._login_called: bool = False
 
     @property
     def pool(self) -> ConduitPool:
@@ -186,6 +187,11 @@ class Client:
         token: str | None
             An optional app token to use instead of generating one automatically.
         """
+        if self._login_called:
+            return
+
+        self._login_called = True
+
         if not token:
             payload: ClientCredentialsPayload = await self._http.client_credentials_token()
             token = payload.access_token
