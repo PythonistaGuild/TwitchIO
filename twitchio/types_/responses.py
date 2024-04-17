@@ -26,6 +26,8 @@ from typing import Any, Generic, TypeAlias, TypedDict, TypeVar
 
 from typing_extensions import TypedDict as TypedDictExt
 
+from .conduits import ConduitData, ShardData
+
 
 __all__ = (
     "RefreshTokenResponse",
@@ -289,6 +291,14 @@ class VideoPayload(TypedDict):
 
 class VideoDeletePayload(TypedDict):
     data: list[str]
+
+
+class ConduitPayload(TypedDict):
+    data: list[ConduitData]
+
+
+class ShardPayload(TypedDict):
+    data: list[ShardData]
 
 
 ChatterColorPayload = Payload[ChatterColorResponse]
