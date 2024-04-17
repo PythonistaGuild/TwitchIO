@@ -220,4 +220,4 @@ $RECYCLE.BIN/
 ### Casual test files
 testing.py
 testing/
-test.py
+test*.py
