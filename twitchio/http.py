@@ -35,6 +35,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias, Ty
 import aiohttp
 
 from . import __version__
+from .conduits import Shard
 from .exceptions import HTTPException
 from .models import Clip, Game, SearchChannel, Stream, Video
 from .utils import _from_json  # type: ignore
@@ -47,10 +48,12 @@ if TYPE_CHECKING:
     from typing_extensions import Self, Unpack
 
     from .assets import Asset
+    from .types_.conduits import ShardData
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         ChannelInfoPayload,
         ChatterColorPayload,
+        ConduitPayload,
         GamePayload,
         GameResponse,
         RawResponse,
@@ -595,3 +598,24 @@ class HTTPClient:
         params = {"id": ids}
         route: Route = Route("DELETE", "videos", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
+        params = {"shard_count": shard_count}
+        route: Route = Route("POST", "eventsub/conduits", params=params)
+        return await self.request_json(route)
+
+    async def get_conduits(self) -> ConduitPayload:
+        route = Route("GET", "eventsub/conduits")
+        return await self.request_json(route)
+
+    async def get_conduit_shards(self, conduit_id: str, /) -> HTTPAsyncIterator[Shard]:
+        params = {"conduit_id": conduit_id}
+
+        async def converter(data: ShardData) -> Shard:
+            print(data)
+            return Shard(data=data)
+
+        route: Route = Route("GET", "eventsub/conduits/shards", params=params)
+        iterator = self.request_paginated(route, converter=converter)
+
+        return iterator

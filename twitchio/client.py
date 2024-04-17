@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from twitchio.http import HTTPAsyncIterator
 
 from .authentication import ManagedHTTPClient, Scopes
+from .conduits import Conduit, ConduitPool
 from .models import (
     ChannelInfo,
     ChatterColor,
@@ -59,6 +60,7 @@ if TYPE_CHECKING:
     from .authentication import ClientCredentialsPayload
     from .http import HTTPAsyncIterator
     from .types_.options import ClientOptions
+    from .types_.responses import ConduitPayload
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -98,6 +100,9 @@ class Client:
         adapter: Any = options.get("adapter", None) or AiohttpAdapter
         self._adapter: Any = adapter(client=self)
 
+        # Conduits...
+        self._pool: ConduitPool = ConduitPool(client=self)
+
         # Event listeners...
         # Cog listeners should be partials with injected self...
         # When unloading/reloading cogs, the listeners should be removed and re-added to ensure upto date state...
@@ -105,6 +110,10 @@ class Client:
 
         # TODO: Temp logic for testing...
         self._blocker: asyncio.Event = asyncio.Event()
+
+    @property
+    def pool(self) -> ConduitPool:
+        return self._pool
 
     async def event_error(self, payload: EventErrorPayload) -> None:
         """Event called when an error occurs in an event or event listener.
@@ -769,6 +778,10 @@ class Client:
                 resp.extend(data["data"])
 
         return resp
+
+    async def _create_conduit(self, shard_count: int, /) -> list[Conduit]:
+        data: ConduitPayload = await self._http.create_conduit(shard_count)
+        return [Conduit(data=c, pool=self._pool) for c in data["data"]]
 
     def doc_test(self, thing: int = 1) -> int:
         """This is a test method to test and view certain elements of the mkdocs style documentation.
