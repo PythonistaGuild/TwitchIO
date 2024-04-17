@@ -37,6 +37,7 @@ from .websockets import Websocket
 
 if TYPE_CHECKING:
     import datetime
+    from collections.abc import Mapping
 
     from typing_extensions import Self
 
@@ -133,7 +134,7 @@ class ConduitPool:
         self._conduits: dict[str, Conduit] = {}
 
     @property
-    def conduits(self) -> MappingProxyType[str, Conduit]:
+    def conduits(self) -> Mapping[str, Conduit]:
         return MappingProxyType(self._conduits)  # thanks lilly
 
     async def create_conduit(self, shard_count: int, buffer: bool = False) -> list[Conduit]:
@@ -150,7 +151,7 @@ class ConduitPool:
 
         return conduits
 
-    async def fetch_conduits(self) -> MappingProxyType[str, Conduit]:
+    async def fetch_conduits(self) -> Mapping[str, Conduit]:
         data = await self._client._http.get_conduits()
         mapping: dict[str, Conduit] = {}
 
