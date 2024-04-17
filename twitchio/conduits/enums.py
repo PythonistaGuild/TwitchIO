@@ -53,3 +53,11 @@ class CloseCode(enum.Enum):
     NETWORK_TIMEOUT = 4005
     NETWORK_ERROR = 4006
     INVALID_RECONNECT = 4007
+
+
+class MessageType(enum.Enum):
+    SESSION_WELCOME = "session_welcome"
+    SESSION_KEEPALIVE = "session_keepalive"
+    NOTIFICATION = "notification"
+    SESSION_RECONNECT = "session_reconnect"
+    REVOCATION = "revocation"
