@@ -36,16 +36,29 @@ if TYPE_CHECKING:
 
     from .http import HTTPClient
     from .types_.responses import (
+        AdScheduleResponse,
+        BitsLeaderboardPayload,
+        BitsLeaderboardResponse,
         CCLResponse,
+        ChannelEditorsResponse,
+        ChannelFollowedResponse,
+        ChannelFollowerResponse,
         ChannelInfoResponse,
+        ChatBadgeSetResponse,
+        ChatBadgeVersionResponse,
         ChatterColorResponse,
         CheerEmoteResponse,
         CheerEmoteTierResponse,
+        CostResponse,
+        ExtensionTransactionResponse,
         GamePayload,
         GameResponse,
         GlobalEmoteResponse,
+        ProductDataResponse,
         RawResponse,
         SearchChannelResponse,
+        SnoozeAdResponse,
+        StartCommercialResponse,
         StreamResponse,
         TeamResponse,
         VideoResponse,
@@ -53,19 +66,95 @@ if TYPE_CHECKING:
 
 
 __all__ = (
+    "AdSchedule",
+    "BitsLeaderboard",
     "ChatterColor",
     "ChannelInfo",
+    "ChatBadge",
+    "ChatBadgeVersions",
+    "ChannelEditor",
+    "ChannelFollowedEvent",
+    "ChannelFollowerEvent",
     "CheerEmoteTier",
     "CheerEmote",
     "Clip",
+    "CommercialStart",
     "ContentClassificationLabel",
     "Game",
     "GlobalEmote",
     "SearchChannel",
     "Stream",
+    "SnoozeAd",
     "Team",
     "Video",
 )
+
+
+class AdSchedule:
+    """
+    Represents ad schedule information.
+
+    Attributes
+    -----------
+    snooze_count: int
+        The number of snoozes available for the broadcaster.
+    snooze_refresh_at: datetime.datetime
+        The UTC datetime when the broadcaster will gain an additional snooze.
+    duration: int
+        The length in seconds of the scheduled upcoming ad break.
+    next_ad_at: datetime.datetime | None
+        The UTC datetime of the broadcaster's next scheduled ad format. None if channel has no ad scheduled.
+    last_ad_at: datetime.datetime | None
+        The UTC datetime of the broadcaster's last ad-break. None if channel has not run an ad or is not live.
+    preroll_free_time: int
+        The amount of pre-roll free time remaining for the channel in seconds. Returns 0 if they are currently not pre-roll free.
+    """
+
+    __slots__ = ("snooze_count", "snooze_refresh_at", "duration", "next_ad_at", "last_ad_at", "preroll_free_time")
+
+    def __init__(self, data: AdScheduleResponse) -> None:
+        self.snooze_count: int = int(data["snooze_count"])
+        self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
+        self.duration: int = int(data["duration"])
+        self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
+        self.last_ad_at: datetime.datetime | None = parse_timestamp(data["last_ad_at"]) if data["last_ad_at"] else None
+        self.preroll_free_time: int = int(data["preroll_free_time"])
+
+
+class BitsLeaderboard:
+    """
+    Represents a Bits leaderboard.
+
+    Attributes
+    ------------
+    started_at: datetime.datetime | None
+        The time the leaderboard started.
+    ended_at: datetime.datetime | None
+        The time the leaderboard ended.
+    leaders: list[BitLeaderboardUser]
+        The current leaders of the Leaderboard.
+    """
+
+    __slots__ = ("leaders", "started_at", "ended_at")
+
+    def __init__(self, data: BitsLeaderboardPayload) -> None:
+        self.started_at = (
+            parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
+        )
+        self.ended_at = parse_timestamp(data["date_range"]["ended_at"]) if data["date_range"]["ended_at"] else None
+        self.leaders = [BitLeaderboardUser(d) for d in data["data"]]
+
+    def __repr__(self) -> str:
+        return f"<BitsLeaderboard started_at={self.started_at} ended_at={self.ended_at}>"
+
+
+class BitLeaderboardUser:
+    __slots__ = ("user", "rank", "score")
+
+    def __init__(self, data: BitsLeaderboardResponse) -> None:
+        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.rank: int = int(data["rank"])
+        self.score: int = int(data["score"])
 
 
 class ChatterColor:
@@ -74,9 +163,9 @@ class ChatterColor:
 
     Attributes
     -----------
-    user: :class:`~twitchio.PartialUser`
+    user: twitchio.PartialUser
         PartialUser of the chatter.
-    color: :class:`str`
+    color: str
         The hex color code of the chatter's name.
     """
 
@@ -99,30 +188,90 @@ class ChatterColor:
         return self._colour.hex
 
 
+class ChannelEditor:
+    """
+    Represents an editor of a channel.
+
+    Attributes
+    -----------
+    user: twitchio.PartialUser
+        PartialUser who has editor permissions.
+    created_at: datetime.datetime
+        The datetime of when the user became one of the broadcaster's editors.
+    """
+
+    __slots__ = ("user", "created_at")
+
+    def __init__(self, data: ChannelEditorsResponse) -> None:
+        self.user = PartialUser(data["user_id"], data["user_name"])
+        self.created_at = parse_timestamp(data["created_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelEditor user={self.user} created_at={self.created_at}>"
+
+
+class ChannelFollowedEvent:
+    """
+    Represents a ChannelFollowedEvent
+
+    Attributes
+    -----------
+    broadcaster: twitchio.PartialUser
+        PartialUser that identifies the channel that this user is following.
+    followed_at: datetime.datetime
+        The datetime of when the user followed the channel.
+    """
+
+    __slots__ = ("broadcaster", "followed_at")
+
+    def __init__(self, data: ChannelFollowedResponse) -> None:
+        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
+        self.followed_at = parse_timestamp(data["followed_at"])
+
+
+class ChannelFollowerEvent:
+    """
+    Represents a ChannelFollowerEvent
+
+    Attributes
+    -----------
+    broadcaster: twitchio.PartialUser
+        PartialUser that identifies a user that follows this channel.
+    followed_at: datetime.datetime
+        The datetime of when the user followed the channel.
+    """
+
+    __slots__ = ("user", "followed_at")
+
+    def __init__(self, data: ChannelFollowerResponse) -> None:
+        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.followed_at = parse_timestamp(data["followed_at"])
+
+
 class ChannelInfo:
     """
     Represents a channel's current information
 
     Attributes
     -----------
-    user: :class:`~twitchio.PartialUser`
+    user: twitchio.PartialUser
         The user whose channel information was requested.
-    game_id: :class:`int`
+    game_id: int
         Current game ID being played on the channel.
-    game_name: :class:`str`
+    game_name: str
         Name of the game being played on the channel.
-    title: :class:`str`
+    title: str
         Title of the stream.
-    language: :class:`str`
+    language: str
         Language of the channel.
-    delay: :class:`int`
+    delay: int
         Stream delay in seconds.
         This defaults to 0 if the broadcaster_id does not match the user access token.
-    tags: List[:class:`str`]
+    tags: list[str]
         The tags applied to the channel.
-    classification_labels: List[:class:`str`]
+    classification_labels: list[str]
         The CCLs applied to the channel.
-    is_branded_content: :class:`bool`
+    is_branded_content: bool
         Boolean flag indicating if the channel has branded content.
     """
 
@@ -159,31 +308,31 @@ class Clip:
 
     Attributes
     -----------
-    id: :class:`str`
+    id: str
         The ID of the clip.
-    url: :class:`str`
+    url: str
         The URL of the clip.
-    embed_url: :class:`str`
+    embed_url: str
         The URL to embed the clip with.
-    broadcaster: :class:`~twitchio.PartialUser`
+    broadcaster: twitchio.PartialUser
         The user whose channel the clip was created on.
-    creator: :class:`~twitchio.PartialUser`
+    creator: twitchio.PartialUser
         The user who created the clip.
-    video_id: :class:`str`
+    video_id: str
         The ID of the video the clip is sourced from.
-    game_id: :class:`str`
+    game_id: str
         The ID of the game that was being played when the clip was created.
-    language: :class:`str`
+    language: str
         The language, in an `ISO 639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ format, of the stream when the clip was created.
-    title: :class:`str`
+    title: str
         The title of the clip.
-    views: :class:`int`
+    views: int
         The amount of views this clip has.
-    created_at: :class:`datetime.datetime`
+    created_at: datetime.datetime
         When the clip was created.
-    thumbnail_url: :class:`str`
+    thumbnail_url: str
         The url of the clip thumbnail.
-    is_featured: :class:`bool`
+    is_featured: bool
         Indicates if the clip is featured or not.
     """
 
@@ -222,25 +371,96 @@ class Clip:
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
 
 
+class ChatBadge:
+    """
+    Represents chat badges.
+
+    Attributes
+    -----------
+    set_id: str
+        An ID that identifies this set of chat badges. For example, Bits or Subscriber.
+    versions: list[ChatBadgeVersions]
+        The list of chat badges in this set.
+    """
+
+    __slots__ = ("set_id", "versions")
+
+    def __init__(self, data: ChatBadgeSetResponse) -> None:
+        self.set_id: str = data["set_id"]
+        self.versions: list[ChatBadgeVersions] = [ChatBadgeVersions(version_data) for version_data in data["versions"]]
+
+    def __repr__(self) -> str:
+        return f"<ChatBadge set_id={self.set_id} versions={self.versions}>"
+
+
+class ChatBadgeVersions:
+    """
+    Represents the different versions of the chat badge.
+
+    Attributes
+    -----------
+    id: str
+        An ID that identifies this version of the badge. The ID can be any value.
+    image_url_1x: str
+        URL to the small version (18px x 18px) of the badge.
+    image_url_2x: str
+        URL to the medium version (36px x 36px) of the badge.
+    image_url_4x: str
+        URL to the large version (72px x 72px) of the badge.
+    title: str
+        The title of the badge.
+    description: str
+        The description of the badge.
+    click_action: str | None
+        The action to take when clicking on the badge. This can be None if no action is specified
+    click_url: str | None
+        The URL to navigate to when clicking on the badge. This can be None if no URL is specified.
+    """
+
+    __slots__ = (
+        "id",
+        "image_url_1x",
+        "image_url_2x",
+        "image_url_4x",
+        "title",
+        "description",
+        "click_url",
+        "click_action",
+    )
+
+    def __init__(self, data: ChatBadgeVersionResponse) -> None:
+        self.id: str = data["id"]
+        self.image_url_1x: str = data["image_url_1x"]
+        self.image_url_2x: str = data["image_url_2x"]
+        self.image_url_4x: str = data["image_url_4x"]
+        self.title: str = data["title"]
+        self.description: str = data["description"]
+        self.click_action: str | None = data.get("click_action")
+        self.click_url: str | None = data.get("click_url")
+
+    def __repr__(self) -> str:
+        return f"<ChatBadgeVersions id={self.id} title={self.title}>"
+
+
 class CheerEmoteTier:
     """
     Represents a Cheer Emote tier.
 
     Attributes
     -----------
-    min_bits: :class:`int`
+    min_bits: int
         The minimum bits for the tier
-    id: :class:`str`
+    id: str
         The ID of the tier
-    colour: :class:`str`
+    colour: str
         The colour of the tier
-    images: :class:`dict`
+    images: dict[str, dict[str, dict[str, str]]]
         contains two dicts, ``light`` and ``dark``. Each item will have an ``animated`` and ``static`` item,
         which will contain yet another dict, with sizes ``1``, ``1.5``, ``2``, ``3``, and ``4``.
         Ex. ``cheeremotetier.images["light"]["animated"]["1"]``
-    can_cheer: :class:`bool`
+    can_cheer: bool
         Indicates whether emote information is accessible to users.
-    show_in_bits_card: :class`bool`
+    show_in_bits_card: bool
         Indicates whether twitch hides the emote from the bits card.
     """
 
@@ -250,7 +470,7 @@ class CheerEmoteTier:
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
         self.color: str = data["color"]
-        self.images = data["images"]  # TODO types
+        self.images = data["images"]
         self.can_cheer: bool = data["can_cheer"]
         self.show_in_bits_card: bool = data["show_in_bits_card"]
 
@@ -264,17 +484,17 @@ class CheerEmote:
 
     Attributes
     -----------
-    prefix: :class:`str`
+    prefix: str
         The string used to Cheer that precedes the Bits amount.
-    tiers: :class:`~CheerEmoteTier`
+    tiers: CheerEmoteTier
         The tiers this Cheer Emote has
-    type: :class:`str`
+    type: str
         Shows whether the emote is ``global_first_party``, ``global_third_party``, ``channel_custom``, ``display_only``, or ``sponsored``.
-    order: :class:`str`
+    order: int
         Order of the emotes as shown in the bits card, in ascending order.
-    last_updated :class:`datetime.datetime`
+    last_updated datetime.datetime
         The date this cheermote was last updated.
-    charitable: :class:`bool`
+    charitable: bool
         Indicates whether this emote provides a charity contribution match during charity campaigns.
     """
 
@@ -300,17 +520,41 @@ class CheerEmote:
         return f"<CheerEmote prefix={self.prefix} type={self.type} order={self.order}>"
 
 
+class CommercialStart:
+    """Represents a Commercial starting.
+
+    Attributes
+    ----------
+    length: int
+        The length of the commercial you requested. If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
+    message: str
+        A message that indicates whether Twitch was able to serve an ad.
+    retry_after: int
+        The number of seconds you must wait before running another commercial.
+    """
+
+    __slots__ = ("length", "message", "retry_after")
+
+    def __init__(self, data: StartCommercialResponse) -> None:
+        self.length: int = int(data["length"])
+        self.message: str = data["message"]
+        self.retry_after: int = int(data["retry_after"])
+
+    def __repr__(self) -> str:
+        return f"<CommercialStart length={self.length} message={self.message}>"
+
+
 class ContentClassificationLabel:
     """
     Represents a Content Classification Label.
 
     Attributes
     -----------
-    id: :class:`str`
+    id: str
         Unique identifier for the CCL.
-    description: :class:`str`
+    description: str
         Localized description of the CCL.
-    name: :class:`str`
+    name: str
         Localized name of the CCL.
     """
 
@@ -323,6 +567,90 @@ class ContentClassificationLabel:
 
     def __repr__(self) -> str:
         return f"<ContentClassificationLabel id={self.id}>"
+
+
+class ExtensionTransaction:
+    """
+    Represents an Extension Transaction.
+
+    Attributes
+    -----------
+    id: str
+        An ID that identifies the transaction.
+    timestamp: datetime.datetime
+        The UTC date and time of the transaction.
+    broadcaster: twitchio.PartialUser
+        The broadcaster that owns the channel where the transaction occurred.
+    user: twitchio.PartialUser
+        The user that purchased the digital product.
+    product_type: str
+        The type of transaction. Currently only ``BITS_IN_EXTENSION``
+    product_data: twitchio.ExtensionProductData
+        Details about the digital product.
+    """
+
+    __slots__ = ("id", "timestamp", "broadcaster", "user", "product_type", "product_data")
+
+    def __init__(self, data: ExtensionTransactionResponse) -> None:
+        self.id: str = data["id"]
+        self.timestamp: datetime.datetime = parse_timestamp(data["timestamp"])
+        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
+        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.product_type: str = data["product_type"]
+        self.product_data: ExtensionProductData = ExtensionProductData(data["product_data"])
+
+
+class ExtensionProductData:
+    """
+    Represents Product Data of an Extension Transaction.
+
+    Attributes
+    -----------
+    domain: str
+        Set to twitch.ext. + <the extension's ID>.
+    sku: str
+        An ID that identifies the digital product.
+    cost: twitchio.ExtensionCost
+        Contains details about the digital product's cost.
+    in_development: bool
+        Whether the product is in development.
+    display_name: str
+        The name of the digital product.
+    expiration: str
+        This field is always empty since you may purchase only unexpired products.
+    broadcast: bool
+        Whether the data was broadcast to all instances of the extension.
+    """
+
+    __slots__ = ("domain", "cost", "sku", "in_development", "display_name", "expiration", "broadcast")
+
+    def __init__(self, data: ProductDataResponse) -> None:
+        self.domain: str = data["domain"]
+        self.sku: str = data["sku"]
+        self.cost: ExtensionCost = ExtensionCost(data["cost"])
+        self.in_development: bool = data["in_development"]
+        self.display_name: str = data["display_name"]
+        self.expiration: str = data["expiration"]
+        self.broadcast: bool = data["broadcast"]
+
+
+class ExtensionCost:
+    """
+    Represents Cost of an Extension Transaction.
+
+    Attributes
+    -----------
+    amount: int
+        The amount exchanged for the digital product.
+    type: str
+        The type of currency exchanged. Currently only ``bits``
+    """
+
+    __slots__ = ("amount", "type")
+
+    def __init__(self, data: CostResponse) -> None:
+        self.amount: int = int(data["amount"])
+        self.type: str = data["type"]
 
 
 class Game:
@@ -382,17 +710,17 @@ class GlobalEmote:
 
     Attributes
     -----------
-    id: :class:`str`
+    id: str
         The ID of the emote.
-    name: :class:`str`
+    name: str
         The name of the emote.
-    images: :class:`dict`
+    images: dict[str, str]
         Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
-    format: List[:class:`str`]
+    format: list[str]
         The formats that the emote is available in.
-    scale: List[:class:`str`]
+    scale: list[str]
         The sizes that the emote is available in.
-    theme_mode: List[:class:`str`]
+    theme_mode: list[str]
         The background themes that the emote is available in.
     """
 
@@ -512,35 +840,57 @@ class SearchChannel:
         return Game(payload["data"][0], http=self._http)
 
 
+class SnoozeAd:
+    """
+    Represents ad schedule information.
+
+    Attributes
+    -----------
+    snooze_count: int
+        The number of snoozes available for the broadcaster.
+    snooze_refresh_at: datetime.datetime
+        The UTC datetime when the broadcaster will gain an additional snooze.
+    next_ad_at: datetime.datetime | None
+        The UTC datetime of the broadcaster's next scheduled ad. None if channel has no ad scheduled.
+    """
+
+    __slots__ = ("snooze_count", "snooze_refresh_at", "next_ad_at")
+
+    def __init__(self, data: SnoozeAdResponse) -> None:
+        self.snooze_count: int = int(data["snooze_count"])
+        self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
+        self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
+
+
 class Stream:
     """
     Represents a Stream
 
     Attributes
     -----------
-    id: :class:`int`
+    id: str
         The current stream ID.
-    user: :class:`~twitchio.PartialUser`
+    user: twitchio.PartialUser
         The user who is streaming.
-    game_id: :class:`str`
+    game_id: str
         Current game ID being played on the channel.
-    game_name: :class:`str`
+    game_name: str
         Name of the game being played on the channel.
-    type: :class:`str`
+    type: str
         Whether the stream is "live" or not.
-    title: :class:`str`
+    title: str
         Title of the stream.
-    viewer_count: :class:`int`
+    viewer_count: int
         Current viewer count of the stream
-    started_at: :class:`datetime.datetime`
+    started_at: datetime.datetime
         UTC timestamp of when the stream started.
-    language: :class:`str`
+    language: str
         Language of the channel.
-    thumbnail_url: :class:`str`
+    thumbnail_url: str
         Thumbnail URL of the stream.
-    is_mature: :class:`bool`
+    is_mature: bool
         Indicates whether the stream is intended for mature audience.
-    tags: List[:class:`str`]
+    tags: list[str]
         The tags applied to the channel.
     """
 
@@ -564,7 +914,7 @@ class Stream:
         self._http: HTTPClient = http
 
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_name"])
+        self.user = PartialUser(data["user_id"], data["user_login"])
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.type: str = data["type"]
@@ -601,25 +951,25 @@ class Team:
 
     Attributes
     -----------
-    users: list[:class:`~twitchio.PartialUser`]
+    users: list[twitchio.PartialUser]
         List of users in the specified Team.
-    background_image_url: :class:`str`
+    background_image_url: str
         URL for the Team background image.
-    banner: :class:`str`
+    banner: str
         URL for the Team banner.
-    created_at: :class:`datetime.datetime`
+    created_at: datetime.datetime
         Date and time the Team was created.
-    updated_at: :class:`datetime.datetime`
+    updated_at: datetime.datetime
         Date and time the Team was last updated.
-    info: :class:`str`
+    info: str
         Team description.
-    thumbnail_url: :class:`str`
+    thumbnail_url: str
         Image URL for the Team logo.
-    name: :class:`str`
+    name: str
         Team name.
-    display_name: :class:`str`
+    display_name: str
         Team display name.
-    id: :class:`str`
+    id: str
         Team ID.
     """
 
@@ -667,31 +1017,31 @@ class Video:
 
     Attributes
     -----------
-    id: :class:`int`
+    id: int
         The ID of the video.
-    user: :class:`~twitchio.PartialUser`
+    user: twitchio.PartialUser
         User who owns the video.
-    title: :class:`str`
+    title: str
         Title of the video
-    description: :class:`str`
+    description: str
         Description of the video.
-    created_at: :class:`datetime.datetime`
+    created_at: datetime.datetime
         Date when the video was created.
-    published_at: :class:`datetime.datetime`
+    published_at: datetime.datetime
        Date when the video was published.
-    url: :class:`str`
+    url: str
         URL of the video.
-    thumbnail_url: :class:`str`
+    thumbnail_url: str
         Template URL for the thumbnail of the video.
-    viewable: :class:`str`
+    viewable: str
         Indicates whether the video is public or private.
-    view_count: :class:`int`
+    view_count: int
         Number of times the video has been viewed.
-    language: :class:`str`
+    language: str
         Language of the video.
-    type: :class:`str`
+    type: str
         The type of video.
-    duration: :class:`str`
+    duration: str
         Length of the video.
     """
 
@@ -715,7 +1065,7 @@ class Video:
     def __init__(self, data: VideoResponse, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_name"])
+        self.user = PartialUser(data["user_id"], data["user_login"])
         self.title: str = data["title"]
         self.description: str = data["description"]
         self.created_at = parse_timestamp(data["created_at"])

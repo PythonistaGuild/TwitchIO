@@ -35,10 +35,12 @@ from .authentication import ManagedHTTPClient, Scopes
 from .conduits import Conduit, ConduitPool
 from .models import (
     ChannelInfo,
+    ChatBadge,
     ChatterColor,
     CheerEmote,
     Clip,
     ContentClassificationLabel,
+    ExtensionTransaction,
     Game,
     GlobalEmote,
     SearchChannel,
@@ -257,6 +259,19 @@ class Client:
 
         self._listeners[name].add(listener)
 
+    async def fetch_global_chat_badges(self) -> list[ChatBadge]:
+        """|coro|
+
+        Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
+
+        Returns
+        --------
+        list[twitchio.ChatBadge]
+        """
+
+        data = await self._http.get_global_chat_badges()
+        return [ChatBadge(x) for x in data["data"]]
+
     async def fetch_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> list[ChatterColor]:
         """|coro|
 
@@ -267,13 +282,13 @@ class Client:
 
         Parameters
         -----------
-        user_ids: List[Union[:class:`int`, :class:`str]]
+        user_ids: list[str | int]
             List of user ids to fetch the colors for.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            list[:class:`twitchio.ChatterColor`]
+            list[twitchio.ChatterColor]
         """
         if len(user_ids) > 100:
             raise ValueError("Maximum of 100 user_ids")
@@ -288,34 +303,20 @@ class Client:
 
         Parameters
         -----------
-        broadcaster_ids: List[Union[:class:`int`, :class:`str]]
+        broadcaster_ids: list[str | int]
             A list of channel IDs to request from API.
             You may specify a maximum of 100 IDs.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            list[:class:`twitchio.ChannelInfo`]
+            list[twitchio.ChannelInfo]
         """
         if len(broadcaster_ids) > 100:
             raise ValueError("Maximum of 100 broadcaster_ids")
 
         data = await self._http.get_channels(broadcaster_ids, token_for)
         return [ChannelInfo(d) for d in data["data"]]
-
-    async def fetch_global_emotes(self, token_for: str | None = None) -> list[GlobalEmote]:
-        """|coro|
-
-        Fetches global emotes from the twitch API
-
-        Returns
-        --------
-        List[:class:`twitchio.GlobalEmote`]
-        """
-        data = await self._http.get_global_emotes(token_for)
-        template: str = data["template"]
-
-        return [GlobalEmote(d, template=template, http=self._http) for d in data["data"]]
 
     async def fetch_cheermotes(
         self, broadcaster_id: int | str | None = None, token_for: str | None = None
@@ -328,14 +329,14 @@ class Client:
 
         Parameters
         -----------
-        broadcaster_id: Optional[Union[:class:`int`, :class:`str]]
+        broadcaster_id: str | int
             The id of the broadcaster who has uploaded Cheermotes.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
 
         Returns
         --------
-        List[:class:`twitchio.CheerEmote`]
+        list[twitchio.CheerEmote]
         """
         data = await self._http.get_cheermotes(str(broadcaster_id) if broadcaster_id else None, token_for)
         return [CheerEmote(d) for d in data["data"]]
@@ -349,12 +350,12 @@ class Client:
 
         Parameters
         -----------
-        locale: :class:`str`
+        locale: str
             Locale for the Content Classification Labels.
 
         Returns
         --------
-        List[:class:`twitchio.ContentClassificationLabel`]
+        list[twitchio.ContentClassificationLabel]
         """
         data = await self._http.get_content_classification_labels(locale, token_for)
         return [ContentClassificationLabel(d) for d in data["data"]]
@@ -377,26 +378,26 @@ class Client:
 
         Parameters
         -----------
-        broadcaster_id: :class:`str`
+        broadcaster_id: str
             An ID of a broadcaster to fetch clips from.
-        game_id: Optional[List[Union[:class:`int`, :class:`str`]]]
+        game_id: Optional[list[str | int]]
             A game id to fetch clips from.
-        clip_ids: Optional[List[:class:`str`]]
+        clip_ids: list[str] | None
             A list of specific clip IDs to fetch.
             Maximum amount you can request is 100.
-        started_at: :class:`datetime.datetime`
+        started_at: datetime.datetime`
             The start date used to filter clips.
-        ended_at: :class:`datetime.datetime`
+        ended_at: datetime.datetime`
             The end date used to filter clips. If not specified, the time window is the start date plus one week.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
-        first: :class:`int`
+        first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
 
         Returns
         --------
-        :class:`~twitchio.HTTPAsyncIterator`[:class:`~twitchio.Clip`]
+        twitchio.HTTPAsyncIterator[twitchio.Clip]
         """
 
         provided: int = len([v for v in (broadcaster_id, game_id, clip_ids) if v])
@@ -418,6 +419,56 @@ class Client:
             token_for=token_for,
         )
 
+    async def fetch_extension_transactions(
+        self, extension_id: str, *, ids: list[str] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[ExtensionTransaction]:
+        """|coro|
+
+        Fetches global emotes from the twitch API
+
+        !!! note
+            The ID in the extension_id query parameter must match the provided client ID.
+
+        Parameters
+        -----------
+        extension_id: str
+            The ID of the extension whose list of transactions you want to get. You may specify a maximum of 100 IDs.
+        ids: list[str] | None
+            A transaction ID used to filter the list of transactions.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.ExtensionTransaction]
+        """
+
+        first = max(1, min(100, first))
+
+        if ids and len(ids) > 100:
+            raise ValueError("You can only provide a mximum of 100 IDs")
+
+        return await self._http.get_extension_transactions(
+            extension_id=extension_id,
+            ids=ids,
+            first=first,
+        )
+
+    async def fetch_global_emotes(self, token_for: str | None = None) -> list[GlobalEmote]:
+        """|coro|
+
+        Fetches global emotes from the twitch API
+
+        Returns
+        --------
+        list[twitchio.GlobalEmote]
+        """
+        data = await self._http.get_global_emotes(token_for)
+        template: str = data["template"]
+
+        return [GlobalEmote(d, template=template, http=self._http) for d in data["data"]]
+
     async def fetch_streams(
         self,
         *,
@@ -435,25 +486,25 @@ class Client:
 
         Parameters
         -----------
-        user_ids: Optional[List[Union[:class:`int`, :class:`str`]]]
+        user_ids: list[int | str] | None
             user ids of people whose streams to fetch
-        game_ids: Optional[List[Union[:class:`int`, :class:`str`]]]
+        game_ids: list[int | str] | None
             game ids of streams to fetch
-        user_logins: Optional[List[:class:`str`]]
+        user_logins: list[str] | None
             user login names of people whose streams to fetch
-        languages: Optional[List[:class:`str`]]
+        languages: list[str] | None
             language for the stream(s). ISO 639-1 or two letter code for supported stream language
         type: Literal["all", "live"]
             One of ``"all"`` or ``"live"``. Defaults to ``"all"``. Specifies what type of stream to fetch.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
-        first: :class:`int`
+        first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
 
         Returns
         --------
-        :class:`~twitchio.HTTPAsyncIterator`[:class:`~twitchio.Stream`]
+        twitchio.HTTPAsyncIterator[twitchio.Stream]
         """
 
         first = max(1, min(100, first))
@@ -477,15 +528,15 @@ class Client:
 
         Parameters
         -----------
-        team_name: :class:`str`
+        team_name: str
             The team name.
-        team_id: :class:`str`
+        team_id: str
             The team id.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            :class:`~twitchio.Team`
+            twitchio.Team
         """
 
         if team_name and team_id:
@@ -511,15 +562,15 @@ class Client:
 
         Parameters
         -----------
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
-        first: :class:`int`
+        first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
 
         Returns
         --------
-        :class:`~twitchio.HTTPAsyncIterator`[:class:`~twitchio.Game`]
+        twitchio.HTTPAsyncIterator[twitchio.Game]
         """
 
         first = max(1, min(100, first))
@@ -543,15 +594,15 @@ class Client:
 
         Parameters
         -----------
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
-        first: :class:`int`
+        first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
 
         Returns
         --------
-        :class:`List`[:class:`~twitchio.Game`]
+        list[twitchio.Game]
         """
 
         data = await self._http.get_games(
@@ -631,16 +682,16 @@ class Client:
 
         Parameters
         -----------
-        query: :class:`str`
+        query: str
             The query to search for.
-        first: :class:`int`
+        first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            :class:`~twitchio.HTTPAsyncIterator`[:class:`~twitchio.Game`]
+            twitchio.HTTPAsyncIterator[twitchio.Game]
         """
 
         first = max(1, min(100, first))
@@ -660,19 +711,19 @@ class Client:
 
         Parameters
         -----------
-        query: :class:`str`
+        query: str
             The query to search for.
-        live: :class:`bool`
+        live: bool
             Whether to return live channels only.
             Default is False.
-        first: :class:`int`
+        first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
-        token_for: Optional[:class:`str`]
+        token_for: str | None
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            :class:`~twitchio.HTTPAsyncIterator`[:class:`~twitchio.SearchChannel`]
+            twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
         """
 
         first = max(1, min(100, first))

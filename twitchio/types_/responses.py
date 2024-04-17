@@ -37,8 +37,18 @@ __all__ = (
     "UserTokenResponse",
     "RawResponse",
     "AuthorizationURLResponse",
+    "AdSchedulePayload",
+    "BitsLeaderboardPayload",
+    "ChatBadgePayload",
+    "ChatBadgeSetResponse",
     "ChatterColorResponse",
     "ChatterColorPayload",
+    "ChannelEditorsResponse",
+    "ChannelEditorsPayload",
+    "ChannelFollowedResponse",
+    "ChannelFollowedPayload",
+    "ChannelFollowerResponse",
+    "ChannelFollowerPayload",
     "ChannelInfoResponse",
     "ChannelInfoPayload",
     "CheerEmoteTierResponse",
@@ -49,14 +59,21 @@ __all__ = (
     "CCLResponse",
     "ClassificationLabelsResponse",
     "ClassificationLabelsPayload",
+    "CostResponse",
+    "ExtensionTransactionResponse",
+    "ExtensionTransactionPayload",
     "GameResponse",
     "GamePayload",
     "GlobalEmoteResponse",
     "GlobalEmotePayload",
+    "ProductDataResponse",
     "SearchChannelResponse",
     "SearchChannelPayload",
+    "StartCommercialResponse",
+    "StartCommercialPayload",
     "StreamResponse",
     "StreamPayload",
+    "SnoozeAdPayload",
     "TeamMemberResponse",
     "TeamResponse",
     "TeamPayload",
@@ -122,11 +139,64 @@ class Pagination(TypedDict):
     cursor: str | None
 
 
+class AdScheduleResponse(TypedDict):
+    snooze_count: int
+    snooze_refresh_at: str
+    duration: int
+    next_ad_at: str
+    last_ad_at: str
+    preroll_free_time: int
+
+
+class BitsLeaderboardResponse(TypedDict):
+    user_id: str
+    user_login: str
+    user_name: str
+    rank: int
+    score: int
+
+
+class ChatBadgeVersionResponse(TypedDict):
+    id: str
+    image_url_1x: str
+    image_url_2x: str
+    image_url_4x: str
+    title: str
+    description: str
+    click_action: str
+    click_url: str
+
+
+class ChatBadgeSetResponse(TypedDict):
+    set_id: str
+    versions: list[ChatBadgeVersionResponse]
+
+
 class ChatterColorResponse(TypedDict):
     user_id: str
     user_login: str
     user_name: str
     color: str
+
+
+class ChannelEditorsResponse(TypedDict):
+    user_id: str
+    user_name: str
+    created_at: str
+
+
+class ChannelFollowedResponse(TypedDict):
+    broadcaster_id: str
+    broadcaster_login: str
+    broadcaster_name: str
+    followed_at: str
+
+
+class ChannelFollowerResponse(TypedDict):
+    user_id: str
+    user_login: str
+    user_name: str
+    followed_at: str
 
 
 class ChannelInfoResponse(TypedDict):
@@ -183,6 +253,39 @@ class ClassificationLabelsResponse(TypedDict):
     classification_labels: list[CCLResponse]
 
 
+class DateRange(TypedDict):
+    started_at: str
+    ended_at: str
+
+
+class CostResponse(TypedDict):
+    amount: int
+    type: str
+
+
+class ProductDataResponse(TypedDict):
+    domain: str
+    sku: str
+    cost: CostResponse
+    in_development: bool
+    display_name: str
+    expiration: str
+    broadcast: bool
+
+
+class ExtensionTransactionResponse(TypedDict):
+    id: str
+    timestamp: str
+    broadcaster_id: str
+    broadcaster_login: str
+    broadcaster_name: str
+    user_id: str
+    user_login: str
+    user_name: str
+    product_type: str
+    product_data: ProductDataResponse
+
+
 class GameResponse(TypedDict):
     id: str
     name: str
@@ -197,7 +300,6 @@ class GlobalEmoteResponse(TypedDict):
     format: list[str]
     scale: list[str]
     theme_mode: list[str]
-    template: str
 
 
 class SearchChannelResponse(TypedDict):
@@ -213,6 +315,18 @@ class SearchChannelResponse(TypedDict):
     thumbnail_url: str
     title: str
     started_at: str
+
+
+class SnoozeAdResponse(TypedDict):
+    snooze_count: int
+    snooze_refresh_at: str
+    next_ad_at: str
+
+
+class StartCommercialResponse(TypedDict):
+    length: int
+    message: str
+    retry_after: int
 
 
 class StreamResponse(TypedDict):
@@ -279,6 +393,32 @@ class VideoResponse(TypedDict):
     muted_segments: list[MutedSegment] | None
 
 
+class BitsLeaderboardPayload(TypedDict):
+    data: list[BitsLeaderboardResponse]
+    date_range: DateRange
+    total: int
+
+
+class ChannelFollowedPayload(TypedDict):
+    data: list[ChannelFollowedResponse]
+    pagination: Pagination
+
+
+class ChannelFollowerPayload(TypedDict):
+    data: list[ChannelFollowerResponse]
+    pagination: Pagination
+
+
+class ExtensionTransactionPayload(TypedDict):
+    data: list[ExtensionTransactionResponse]
+    pagination: Pagination
+
+
+class GlobalEmotePayload(TypedDict):
+    data: list[GlobalEmoteResponse]
+    template: str
+
+
 class StreamPayload(TypedDict):
     data: list[StreamResponse]
     pagination: Pagination
@@ -301,12 +441,16 @@ class ShardPayload(TypedDict):
     data: list[ShardData]
 
 
+AdSchedulePayload = Payload[AdScheduleResponse]
+ChatBadgePayload = Payload[ChatBadgeSetResponse]
 ChatterColorPayload = Payload[ChatterColorResponse]
+ChannelEditorsPayload = Payload[ChannelEditorsResponse]
 ChannelInfoPayload = Payload[ChannelInfoResponse]
 ClipPayload = Payload[ClipResponse]
 CheerEmotePayload = Payload[CheerEmoteResponse]
-ClassificationLabelsPayload = Payload[ClassificationLabelsResponse]
+ClassificationLabelsPayload = Payload[CCLResponse]
 GamePayload = Payload[GameResponse]
-GlobalEmotePayload = Payload[GlobalEmoteResponse]
 SearchChannelPayload = Payload[SearchChannelResponse]
+StartCommercialPayload = Payload[StartCommercialResponse]
+SnoozeAdPayload = Payload[SnoozeAdResponse]
 TeamPayload = Payload[TeamResponse]

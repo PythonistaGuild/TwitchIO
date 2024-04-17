@@ -37,7 +37,16 @@ import aiohttp
 from . import __version__
 from .conduits import Shard
 from .exceptions import HTTPException
-from .models import Clip, Game, SearchChannel, Stream, Video
+from .models import (
+    ChannelFollowedEvent,
+    ChannelFollowerEvent,
+    Clip,
+    ExtensionTransaction,
+    Game,
+    SearchChannel,
+    Stream,
+    Video,
+)
 from .utils import _from_json  # type: ignore
 
 
@@ -51,13 +60,25 @@ if TYPE_CHECKING:
     from .types_.conduits import ShardData
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
+        AdSchedulePayload,
+        BitsLeaderboardPayload,
+        ChannelEditorsPayload,
+        ChannelFollowedResponse,
+        ChannelFollowerResponse,
         ChannelInfoPayload,
+        ChatBadgePayload,
         ChatterColorPayload,
+        CheerEmotePayload,
+        ClassificationLabelsPayload,
         ConduitPayload,
+        ExtensionTransactionResponse,
         GamePayload,
         GameResponse,
+        GlobalEmotePayload,
         RawResponse,
         SearchChannelResponse,
+        SnoozeAdPayload,
+        StartCommercialPayload,
         StreamResponse,
         TeamPayload,
         VideoDeletePayload,
@@ -394,6 +415,10 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
         return iterator
 
+    async def get_global_chat_badges(self, token_for: str | None = None) -> ChatBadgePayload:
+        route: Route = Route("GET", "chat/badges/global", token_for=token_for)
+        return await self.request_json(route)
+
     async def get_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> ChatterColorPayload:
         params: dict[str, list[str | int]] = {"user_id": user_ids}
         route: Route = Route("GET", "chat/color", params=params, token_for=token_for)
@@ -404,22 +429,26 @@ class HTTPClient:
         route: Route = Route("GET", "channels", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_cheermotes(self, broadcaster_id: str | int | None, token_for: str | None = None) -> RawResponse:
+    async def get_cheermotes(self, broadcaster_id: str | int | None, token_for: str | None = None) -> CheerEmotePayload:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_channel_emotes(self, broadcaster_id: str | int, token_for: str | None = None) -> RawResponse:
+    async def get_channel_emotes(
+        self, broadcaster_id: str | int, token_for: str | None = None
+    ) -> RawResponse:  # TODO Payload
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "chat/emotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_content_classification_labels(self, locale: str, token_for: str | None = None) -> RawResponse:
+    async def get_content_classification_labels(
+        self, locale: str, token_for: str | None = None
+    ) -> ClassificationLabelsPayload:
         params: dict[str, str] = {"locale": locale}
         route: Route = Route("GET", "content_classification_labels", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_global_emotes(self, token_for: str | None = None) -> RawResponse:
+    async def get_global_emotes(self, token_for: str | None = None) -> GlobalEmotePayload:
         route: Route = Route("GET", "chat/emotes/global", token_for=token_for)
         return await self.request_json(route)
 
@@ -455,6 +484,20 @@ class HTTPClient:
             return Clip(data)
 
         iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_extension_transactions(
+        self, extension_id: str, ids: list[str] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[ExtensionTransaction]:
+        params: dict[str, str | int | list[str]] = {"extension_id": extension_id, "first": first}
+        if ids:
+            params["id"] = ids
+        route: Route = Route("GET", "extensions/transactions", params=params)
+
+        async def converter(data: ExtensionTransactionResponse) -> ExtensionTransaction:
+            return ExtensionTransaction(data)
+
+        iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(route, converter=converter)
         return iterator
 
     async def get_streams(
@@ -612,10 +655,129 @@ class HTTPClient:
         params = {"conduit_id": conduit_id}
 
         async def converter(data: ShardData) -> Shard:
-            print(data)
             return Shard(data=data)
 
         route: Route = Route("GET", "eventsub/conduits/shards", params=params)
         iterator = self.request_paginated(route, converter=converter)
+        return iterator
 
+    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialPayload:
+        data = {"broadcaster_id": broadcaster_id, "length": length}
+        route: Route = Route("POST", "channels/commercial", data=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdSchedulePayload:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "channels/ads", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeAdPayload:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_bits_leaderboard(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        count: int = 10,
+        period: Literal["day", "week", "month", "year", "all"] = "all",
+        started_at: datetime.datetime | None = None,
+        user_id: str | int | None = None,
+    ) -> BitsLeaderboardPayload:
+        params: dict[str, str | int | datetime.datetime] = {
+            "broadcaster_id": broadcaster_id,
+            "count": count,
+            "period": period,
+        }
+
+        if started_at is not None:
+            params["started_at"] = started_at
+        if user_id:
+            params["user_id"] = user_id
+
+        route: Route = Route("GET", "bits/leaderboard", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def patch_channel_info(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        game_id: str | int | None = None,
+        language: str | None = None,
+        title: str | None = None,
+        delay: int | None = None,
+        tags: list[str] | None = None,
+        branded_content: bool | None = None,
+        classification_labels: list[dict[str, bool]] | None = None,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id}
+
+        data: dict[str, str | int | list[str] | list[dict[str, str | bool]]] = {
+            k: v
+            for k, v in {
+                "game_id": game_id,
+                "broadcaster_language": language,
+                "title": title,
+                "delay": delay,
+                "tags": tags,
+                "is_branded_content": branded_content,
+            }.items()
+            if v is not None
+        }
+
+        if classification_labels is not None:
+            converted_labels = [
+                {"id": label, "is_enabled": enabled}
+                for item in classification_labels
+                for label, enabled in item.items()
+            ]
+            data["content_classification_labels"] = converted_labels
+
+        route: Route = Route("PATCH", "channels", params=params, data=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsPayload:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "channels/editors", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_followed_channels(
+        self,
+        user_id: str | int,
+        token_for: str,
+        broadcaster_id: str | int | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[ChannelFollowedEvent]:
+        params = {"first": first, "user_id": user_id}
+
+        if broadcaster_id is not None:
+            params["broadcaster_id"] = broadcaster_id
+
+        route = Route("GET", "channels/followed", params=params, token_for=token_for)
+
+        async def converter(data: ChannelFollowedResponse) -> ChannelFollowedEvent:
+            return ChannelFollowedEvent(data)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def get_channel_followers(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[ChannelFollowerEvent]:
+        params = {"first": first, "broadcaster_id": broadcaster_id}
+
+        if user_id is not None:
+            params["user_id"] = broadcaster_id
+
+        route = Route("GET", "channels/followers", params=params, token_for=token_for)
+
+        async def converter(data: ChannelFollowerResponse) -> ChannelFollowerEvent:
+            return ChannelFollowerEvent(data)
+
+        iterator = self.request_paginated(route, converter=converter)
         return iterator
