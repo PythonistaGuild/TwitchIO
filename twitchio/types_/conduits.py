@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from typing_extensions import NotRequired
 
@@ -120,7 +120,7 @@ class NotificationSubscription(TypedDict):
 
 class NotificationPayload(TypedDict):
     subscription: NotificationSubscription
-    event: ...
+    event: dict[str, Any]
 
 
 class NotificationMessage(TypedDict):
@@ -181,4 +181,4 @@ class RevocationPayload(TypedDict):
 
 class RevocationMessage(TypedDict):
     metadata: RevocationMetaData
-    payload: ReconnectPayload
+    payload: RevocationPayload
