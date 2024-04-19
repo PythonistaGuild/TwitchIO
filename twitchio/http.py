@@ -71,6 +71,7 @@ if TYPE_CHECKING:
         CheerEmotePayload,
         ClassificationLabelsPayload,
         ConduitPayload,
+        CustomRewardPayload,
         ExtensionTransactionResponse,
         GamePayload,
         GameResponse,
@@ -781,3 +782,24 @@ class HTTPClient:
 
         iterator = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def post_create_custom_reward(self, broadcaster_id: str, token_for: str) -> CustomRewardPayload:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("POST", "channel_points/custom_rewards", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def delete_custom_reward(self, broadcaster_id: str, reward_id: str, token_for: str) -> None:
+        params = {"broadcaster_id": broadcaster_id, "id": reward_id}
+        route: Route = Route("DELETE", "channel_points/custom_rewards", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_custom_reward(
+        self, broadcaster_id: str, token_for: str, reward_id: str | None = None, manageable: bool = False
+    ) -> CustomRewardPayload:
+        params = {"broadcaster_id": broadcaster_id, "only_manageable_rewards": manageable}
+
+        if reward_id is not None:
+            params["id"] = reward_id
+
+        route: Route = Route("GET", "channel_points/custom_rewards", params=params, token_for=token_for)
+        return await self.request_json(route)

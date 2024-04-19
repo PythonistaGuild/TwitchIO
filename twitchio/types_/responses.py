@@ -60,6 +60,8 @@ __all__ = (
     "ClassificationLabelsResponse",
     "ClassificationLabelsPayload",
     "CostResponse",
+    "CustomRewardResponse",
+    "CustomRewardPayload",
     "ExtensionTransactionResponse",
     "ExtensionTransactionPayload",
     "GameResponse",
@@ -393,6 +395,50 @@ class VideoResponse(TypedDict):
     muted_segments: list[MutedSegment] | None
 
 
+class RewardImage(TypedDict):
+    url_1x: str
+    url_2x: str
+    url_4x: str
+
+
+class CooldownSetting(TypedDict):
+    is_enabled: bool
+    global_cooldown_seconds: int
+
+
+class PerStreamSetting(TypedDict):
+    is_enabled: bool
+    max_per_stream: int
+
+
+class PerUserPerStreamSetting(TypedDict):
+    is_enabled: bool
+    max_per_user_per_stream: int
+
+
+class CustomRewardResponse(TypedDict):
+    broadcaster_id: str
+    broadcaster_login: str
+    broadcaster_name: str
+    id: str
+    title: str
+    prompt: str
+    cost: int
+    image: RewardImage | None
+    default_image: RewardImage
+    background_color: str
+    is_enabled: bool
+    is_user_input_required: bool
+    max_per_stream_setting: PerStreamSetting
+    max_per_user_per_stream_setting: PerUserPerStreamSetting
+    global_cooldown_setting: CooldownSetting
+    is_paused: bool
+    is_in_stock: bool
+    should_redemptions_skip_request_queue: bool
+    redemptions_redeemed_current_stream: int
+    cooldown_expires_at: str | None
+
+
 class BitsLeaderboardPayload(TypedDict):
     data: list[BitsLeaderboardResponse]
     date_range: DateRange
@@ -449,6 +495,7 @@ ChannelInfoPayload = Payload[ChannelInfoResponse]
 ClipPayload = Payload[ClipResponse]
 CheerEmotePayload = Payload[CheerEmoteResponse]
 ClassificationLabelsPayload = Payload[CCLResponse]
+CustomRewardPayload = Payload[CustomRewardResponse]
 GamePayload = Payload[GameResponse]
 SearchChannelPayload = Payload[SearchChannelResponse]
 StartCommercialPayload = Payload[StartCommercialResponse]
