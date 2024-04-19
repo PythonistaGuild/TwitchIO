@@ -36,32 +36,35 @@ if TYPE_CHECKING:
 
     from .http import HTTPClient
     from .types_.responses import (
-        AdScheduleResponse,
-        BitsLeaderboardPayload,
+        AdScheduleResponseData,
         BitsLeaderboardResponse,
-        CCLResponse,
-        ChannelEditorsResponse,
-        ChannelFollowedResponse,
-        ChannelFollowerResponse,
-        ChannelInfoResponse,
-        ChatBadgeSetResponse,
-        ChatBadgeVersionResponse,
-        ChatterColorResponse,
-        CheerEmoteResponse,
-        CheerEmoteTierResponse,
-        CostResponse,
-        ExtensionTransactionResponse,
-        GamePayload,
-        GameResponse,
-        GlobalEmoteResponse,
-        ProductDataResponse,
+        BitsLeaderboardResponseData,
+        ChannelChatBadgesResponseData,
+        ChannelChatBadgesResponseVersions,
+        ChannelEditorsResponseData,
+        ChannelFollowersResponseData,
+        ChannelInformationResponseData,
+        CheermotesResponseData,
+        CheermotesResponseTiers,
+        ContentClassificationLabelData,
+        ExtensionTransactionsResponseCost,
+        ExtensionTransactionsResponseData,
+        ExtensionTransactionsResponseProductData,
+        FollowedChannelsResponseData,
+        GamesResponse,
+        GamesResponseData,
+        GlobalChatBadgesResponseData,
+        GlobalChatBadgesResponseVersions,
+        GlobalEmotesResponseData,
+        GlobalEmotesResponseImages,
         RawResponse,
-        SearchChannelResponse,
-        SnoozeAdResponse,
-        StartCommercialResponse,
-        StreamResponse,
-        TeamResponse,
-        VideoResponse,
+        SearchChannelsResponseData,
+        SnoozeNextAdResponseData,
+        StartCommercialResponseData,
+        StreamsResponseData,
+        TeamsResponseData,
+        UserChatColorResponseData,
+        VideosResponseData,
     )
 
 
@@ -112,7 +115,7 @@ class AdSchedule:
 
     __slots__ = ("snooze_count", "snooze_refresh_at", "duration", "next_ad_at", "last_ad_at", "preroll_free_time")
 
-    def __init__(self, data: AdScheduleResponse) -> None:
+    def __init__(self, data: AdScheduleResponseData) -> None:
         self.snooze_count: int = int(data["snooze_count"])
         self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
         self.duration: int = int(data["duration"])
@@ -137,7 +140,7 @@ class BitsLeaderboard:
 
     __slots__ = ("leaders", "started_at", "ended_at")
 
-    def __init__(self, data: BitsLeaderboardPayload) -> None:
+    def __init__(self, data: BitsLeaderboardResponse) -> None:
         self.started_at = (
             parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
         )
@@ -151,7 +154,7 @@ class BitsLeaderboard:
 class BitLeaderboardUser:
     __slots__ = ("user", "rank", "score")
 
-    def __init__(self, data: BitsLeaderboardResponse) -> None:
+    def __init__(self, data: BitsLeaderboardResponseData) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"])
         self.rank: int = int(data["rank"])
         self.score: int = int(data["score"])
@@ -171,7 +174,7 @@ class ChatterColor:
 
     __slots__ = ("user", "_colour")
 
-    def __init__(self, data: ChatterColorResponse) -> None:
+    def __init__(self, data: UserChatColorResponseData) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"])
         self._colour: Colour = Colour.from_hex(data["color"])
 
@@ -202,7 +205,7 @@ class ChannelEditor:
 
     __slots__ = ("user", "created_at")
 
-    def __init__(self, data: ChannelEditorsResponse) -> None:
+    def __init__(self, data: ChannelEditorsResponseData) -> None:
         self.user = PartialUser(data["user_id"], data["user_name"])
         self.created_at = parse_timestamp(data["created_at"])
 
@@ -224,7 +227,7 @@ class ChannelFollowedEvent:
 
     __slots__ = ("broadcaster", "followed_at")
 
-    def __init__(self, data: ChannelFollowedResponse) -> None:
+    def __init__(self, data: FollowedChannelsResponseData) -> None:
         self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
         self.followed_at = parse_timestamp(data["followed_at"])
 
@@ -243,7 +246,7 @@ class ChannelFollowerEvent:
 
     __slots__ = ("user", "followed_at")
 
-    def __init__(self, data: ChannelFollowerResponse) -> None:
+    def __init__(self, data: ChannelFollowersResponseData) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"])
         self.followed_at = parse_timestamp(data["followed_at"])
 
@@ -287,7 +290,7 @@ class ChannelInfo:
         "is_branded_content",
     )
 
-    def __init__(self, data: ChannelInfoResponse) -> None:
+    def __init__(self, data: ChannelInformationResponseData) -> None:
         self.user = PartialUser(data["broadcaster_id"], data["broadcaster_name"])
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
@@ -385,7 +388,7 @@ class ChatBadge:
 
     __slots__ = ("set_id", "versions")
 
-    def __init__(self, data: ChatBadgeSetResponse) -> None:
+    def __init__(self, data: GlobalChatBadgesResponseData | ChannelChatBadgesResponseData) -> None:
         self.set_id: str = data["set_id"]
         self.versions: list[ChatBadgeVersions] = [ChatBadgeVersions(version_data) for version_data in data["versions"]]
 
@@ -428,7 +431,7 @@ class ChatBadgeVersions:
         "click_action",
     )
 
-    def __init__(self, data: ChatBadgeVersionResponse) -> None:
+    def __init__(self, data: ChannelChatBadgesResponseVersions | GlobalChatBadgesResponseVersions) -> None:
         self.id: str = data["id"]
         self.image_url_1x: str = data["image_url_1x"]
         self.image_url_2x: str = data["image_url_2x"]
@@ -466,7 +469,7 @@ class CheerEmoteTier:
 
     __slots__ = "min_bits", "id", "color", "images", "can_cheer", "show_in_bits_card"
 
-    def __init__(self, data: CheerEmoteTierResponse) -> None:
+    def __init__(self, data: CheermotesResponseTiers) -> None:
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
         self.color: str = data["color"]
@@ -508,7 +511,7 @@ class CheerEmote:
         "charitable",
     )
 
-    def __init__(self, data: CheerEmoteResponse) -> None:
+    def __init__(self, data: CheermotesResponseData) -> None:
         self.prefix: str = data["prefix"]
         self.tiers = [CheerEmoteTier(d) for d in data["tiers"]]
         self.type: str = data["type"]
@@ -535,7 +538,7 @@ class CommercialStart:
 
     __slots__ = ("length", "message", "retry_after")
 
-    def __init__(self, data: StartCommercialResponse) -> None:
+    def __init__(self, data: StartCommercialResponseData) -> None:
         self.length: int = int(data["length"])
         self.message: str = data["message"]
         self.retry_after: int = int(data["retry_after"])
@@ -560,7 +563,7 @@ class ContentClassificationLabel:
 
     __slots__ = ("id", "description", "name")
 
-    def __init__(self, data: CCLResponse) -> None:
+    def __init__(self, data: ContentClassificationLabelData) -> None:
         self.id: str = data["id"]
         self.description: str = data["description"]
         self.name: str = data["name"]
@@ -591,7 +594,7 @@ class ExtensionTransaction:
 
     __slots__ = ("id", "timestamp", "broadcaster", "user", "product_type", "product_data")
 
-    def __init__(self, data: ExtensionTransactionResponse) -> None:
+    def __init__(self, data: ExtensionTransactionsResponseData) -> None:
         self.id: str = data["id"]
         self.timestamp: datetime.datetime = parse_timestamp(data["timestamp"])
         self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
@@ -624,12 +627,12 @@ class ExtensionProductData:
 
     __slots__ = ("domain", "cost", "sku", "in_development", "display_name", "expiration", "broadcast")
 
-    def __init__(self, data: ProductDataResponse) -> None:
+    def __init__(self, data: ExtensionTransactionsResponseProductData) -> None:
         self.domain: str = data["domain"]
         self.sku: str = data["sku"]
         self.cost: ExtensionCost = ExtensionCost(data["cost"])
-        self.in_development: bool = data["in_development"]
-        self.display_name: str = data["display_name"]
+        self.in_development: bool = data["inDevelopment"]
+        self.display_name: str = data["displayName"]
         self.expiration: str = data["expiration"]
         self.broadcast: bool = data["broadcast"]
 
@@ -648,7 +651,7 @@ class ExtensionCost:
 
     __slots__ = ("amount", "type")
 
-    def __init__(self, data: CostResponse) -> None:
+    def __init__(self, data: ExtensionTransactionsResponseCost) -> None:
         self.amount: int = int(data["amount"])
         self.type: str = data["type"]
 
@@ -685,7 +688,7 @@ class Game:
 
     __slots__ = ("id", "name", "box_art", "igdb_id")
 
-    def __init__(self, data: GameResponse, *, http: HTTPClient) -> None:
+    def __init__(self, data: GamesResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
         self.igdb_id: str | None = data.get("igdb_id", None)
@@ -726,12 +729,12 @@ class GlobalEmote:
 
     __slots__ = ("_http", "id", "name", "images", "format", "scale", "theme_mode", "template", "_data")
 
-    def __init__(self, data: GlobalEmoteResponse, *, template: str, http: HTTPClient) -> None:
+    def __init__(self, data: GlobalEmotesResponseData, *, template: str, http: HTTPClient) -> None:
         self._data = data
         self._http: HTTPClient = http
         self.id: str = data["id"]
         self.name: str = data["name"]
-        self.images: dict[str, str] = data["images"]
+        self.images: GlobalEmotesResponseImages = data["images"]
         self.format: list[str] = data["format"]
         self.scale: list[str] = data["scale"]
         self.theme_mode: list[str] = data["theme_mode"]
@@ -808,7 +811,7 @@ class SearchChannel:
         "tag_ids",
     )
 
-    def __init__(self, data: SearchChannelResponse, *, http: HTTPClient) -> None:
+    def __init__(self, data: SearchChannelsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.display_name: str = data["display_name"]
         self.name: str = data["broadcaster_login"]
@@ -836,7 +839,7 @@ class SearchChannel:
         twitchio.Game
             The game associated with this [`SearchChannel`][twitchio.SearchChannel] instance.
         """
-        payload: GamePayload = await self._http.get_games(ids=[self.game_id])
+        payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)
 
 
@@ -856,7 +859,7 @@ class SnoozeAd:
 
     __slots__ = ("snooze_count", "snooze_refresh_at", "next_ad_at")
 
-    def __init__(self, data: SnoozeAdResponse) -> None:
+    def __init__(self, data: SnoozeNextAdResponseData) -> None:
         self.snooze_count: int = int(data["snooze_count"])
         self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
         self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
@@ -910,7 +913,7 @@ class Stream:
         "tags",
     )
 
-    def __init__(self, data: StreamResponse, *, http: HTTPClient) -> None:
+    def __init__(self, data: StreamsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
 
         self.id: str = data["id"]
@@ -941,7 +944,7 @@ class Stream:
         twitchio.Game
             The game associated with this [`Stream`][twitchio.Stream] instance.
         """
-        payload: GamePayload = await self._http.get_games(ids=[self.game_id])
+        payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)
 
 
@@ -986,7 +989,7 @@ class Team:
         "id",
     )
 
-    def __init__(self, data: TeamResponse, *, http: HTTPClient) -> None:
+    def __init__(self, data: TeamsResponseData, *, http: HTTPClient) -> None:
         self.users: list[PartialUser] = [PartialUser(x["user_id"], x["user_login"]) for x in data["users"]]
         self.background_image: Asset = Asset(data["background_image_url"], http=http)
         self.banner: str = data["banner"]
@@ -1062,7 +1065,7 @@ class Video:
         "duration",
     )
 
-    def __init__(self, data: VideoResponse, *, http: HTTPClient) -> None:
+    def __init__(self, data: VideosResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.id: str = data["id"]
         self.user = PartialUser(data["user_id"], data["user_login"])

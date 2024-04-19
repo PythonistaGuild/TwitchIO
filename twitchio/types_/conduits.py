@@ -52,7 +52,7 @@ class WelcomeMetaData(TypedDict):
     message_timestamp: str
 
 
-class WelcomSession(TypedDict):
+class WelcomeSession(TypedDict):
     id: str
     status: Literal["connected"]
     keepalive_timeout_seconds: int
@@ -61,7 +61,7 @@ class WelcomSession(TypedDict):
 
 
 class WelcomePayload(TypedDict):
-    session: WelcomSession
+    session: WelcomeSession
 
 
 class WelcomeMessage(TypedDict):

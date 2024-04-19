@@ -60,30 +60,32 @@ if TYPE_CHECKING:
     from .types_.conduits import ShardData
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
-        AdSchedulePayload,
-        BitsLeaderboardPayload,
-        ChannelEditorsPayload,
-        ChannelFollowedResponse,
-        ChannelFollowerResponse,
-        ChannelInfoPayload,
-        ChatBadgePayload,
-        ChatterColorPayload,
-        CheerEmotePayload,
-        ClassificationLabelsPayload,
+        AdScheduleResponse,
+        BitsLeaderboardResponse,
+        ChannelEditorsResponse,
+        ChannelEmotesResponse,
+        ChannelFollowersResponseData,
+        ChannelInformationResponse,
+        CheermotesResponse,
         ConduitPayload,
-        CustomRewardPayload,
-        ExtensionTransactionResponse,
-        GamePayload,
-        GameResponse,
-        GlobalEmotePayload,
+        ContentClassificationLabelsResponse,
+        CustomRewardsResponse,
+        DeleteVideosResponse,
+        ExtensionTransactionsResponseData,
+        FollowedChannelsResponseData,
+        GamesResponse,
+        GamesResponseData,
+        GlobalChatBadgesResponse,
+        GlobalEmotesResponse,
         RawResponse,
-        SearchChannelResponse,
-        SnoozeAdPayload,
-        StartCommercialPayload,
-        StreamResponse,
-        TeamPayload,
-        VideoDeletePayload,
-        VideoResponse,
+        SearchChannelsResponseData,
+        SnoozeNextAdResponse,
+        StartCommercialResponse,
+        StreamsResponseData,
+        TeamsResponse,
+        TopGamesResponseData,
+        UserChatColorResponse,
+        VideosResponseData,
     )
 
 
@@ -416,40 +418,46 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
         return iterator
 
-    async def get_global_chat_badges(self, token_for: str | None = None) -> ChatBadgePayload:
+    async def get_global_chat_badges(self, token_for: str | None = None) -> GlobalChatBadgesResponse:
         route: Route = Route("GET", "chat/badges/global", token_for=token_for)
         return await self.request_json(route)
 
-    async def get_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> ChatterColorPayload:
+    async def get_chatters_color(
+        self, user_ids: list[str | int], token_for: str | None = None
+    ) -> UserChatColorResponse:
         params: dict[str, list[str | int]] = {"user_id": user_ids}
         route: Route = Route("GET", "chat/color", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> ChannelInfoPayload:
+    async def get_channels(
+        self, broadcaster_ids: list[str | int], token_for: str | None = None
+    ) -> ChannelInformationResponse:
         params = {"broadcaster_id": broadcaster_ids}
         route: Route = Route("GET", "channels", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_cheermotes(self, broadcaster_id: str | int | None, token_for: str | None = None) -> CheerEmotePayload:
+    async def get_cheermotes(
+        self, broadcaster_id: str | int | None, token_for: str | None = None
+    ) -> CheermotesResponse:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_channel_emotes(
         self, broadcaster_id: str | int, token_for: str | None = None
-    ) -> RawResponse:  # TODO Payload
+    ) -> ChannelEmotesResponse:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "chat/emotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_content_classification_labels(
         self, locale: str, token_for: str | None = None
-    ) -> ClassificationLabelsPayload:
+    ) -> ContentClassificationLabelsResponse:
         params: dict[str, str] = {"locale": locale}
         route: Route = Route("GET", "content_classification_labels", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_global_emotes(self, token_for: str | None = None) -> GlobalEmotePayload:
+    async def get_global_emotes(self, token_for: str | None = None) -> GlobalEmotesResponse:
         route: Route = Route("GET", "chat/emotes/global", token_for=token_for)
         return await self.request_json(route)
 
@@ -495,7 +503,7 @@ class HTTPClient:
             params["id"] = ids
         route: Route = Route("GET", "extensions/transactions", params=params)
 
-        async def converter(data: ExtensionTransactionResponse) -> ExtensionTransaction:
+        async def converter(data: ExtensionTransactionsResponseData) -> ExtensionTransaction:
             return ExtensionTransaction(data)
 
         iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(route, converter=converter)
@@ -527,7 +535,7 @@ class HTTPClient:
 
         route: Route = Route("GET", "streams", params=params, token_for=token_for)
 
-        async def converter(data: StreamResponse) -> Stream:
+        async def converter(data: StreamsResponseData) -> Stream:
             return Stream(data, http=self)
 
         iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
@@ -542,7 +550,7 @@ class HTTPClient:
         }
         route: Route = Route("GET", "search/categories", params=params, token_for=token_for)
 
-        async def converter(data: GameResponse) -> Game:
+        async def converter(data: GamesResponseData) -> Game:
             return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
@@ -554,7 +562,7 @@ class HTTPClient:
         params: dict[str, str | int] = {"query": query, "live": live, "first": first}
         route: Route = Route("GET", "search/channels", params=params, token_for=token_for)
 
-        async def converter(data: SearchChannelResponse) -> SearchChannel:
+        async def converter(data: SearchChannelsResponseData) -> SearchChannel:
             return SearchChannel(data, http=self)
 
         iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(route, converter=converter)
@@ -565,7 +573,7 @@ class HTTPClient:
         team_name: str | None = None,
         team_id: str | None = None,
         token_for: str | None = None,
-    ) -> TeamPayload:
+    ) -> TeamsResponse:
         params: dict[str, str] = {}
 
         if team_name:
@@ -583,7 +591,7 @@ class HTTPClient:
         ids: list[str] | None = None,
         igdb_ids: list[str] | None = None,
         token_for: str | None = None,
-    ) -> GamePayload:
+    ) -> GamesResponse:
         params: dict[str, list[str]] = {}
 
         if names is not None:
@@ -601,7 +609,7 @@ class HTTPClient:
         params: dict[str, int] = {"first": first}
         route: Route = Route("GET", "games/top", params=params, token_for=token_for)
 
-        async def converter(data: GameResponse) -> Game:
+        async def converter(data: TopGamesResponseData) -> Game:
             return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
@@ -632,13 +640,13 @@ class HTTPClient:
 
         route = Route("GET", "videos", params=params, token_for=token_for)
 
-        async def converter(data: VideoResponse) -> Video:
+        async def converter(data: VideosResponseData) -> Video:
             return Video(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter)
         return iterator
 
-    async def delete_videos(self, ids: list[str | int], token_for: str) -> VideoDeletePayload:
+    async def delete_videos(self, ids: list[str | int], token_for: str) -> DeleteVideosResponse:
         params = {"id": ids}
         route: Route = Route("DELETE", "videos", params=params, token_for=token_for)
         return await self.request_json(route)
@@ -662,17 +670,17 @@ class HTTPClient:
         iterator = self.request_paginated(route, converter=converter)
         return iterator
 
-    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialPayload:
+    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
         data = {"broadcaster_id": broadcaster_id, "length": length}
         route: Route = Route("POST", "channels/commercial", data=data, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdSchedulePayload:
+    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdScheduleResponse:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "channels/ads", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeAdPayload:
+    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeNextAdResponse:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
         return await self.request_json(route)
@@ -685,7 +693,7 @@ class HTTPClient:
         period: Literal["day", "week", "month", "year", "all"] = "all",
         started_at: datetime.datetime | None = None,
         user_id: str | int | None = None,
-    ) -> BitsLeaderboardPayload:
+    ) -> BitsLeaderboardResponse:
         params: dict[str, str | int | datetime.datetime] = {
             "broadcaster_id": broadcaster_id,
             "count": count,
@@ -738,7 +746,7 @@ class HTTPClient:
         route: Route = Route("PATCH", "channels", params=params, data=data, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsPayload:
+    async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsResponse:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "channels/editors", params=params, token_for=token_for)
         return await self.request_json(route)
@@ -757,7 +765,7 @@ class HTTPClient:
 
         route = Route("GET", "channels/followed", params=params, token_for=token_for)
 
-        async def converter(data: ChannelFollowedResponse) -> ChannelFollowedEvent:
+        async def converter(data: FollowedChannelsResponseData) -> ChannelFollowedEvent:
             return ChannelFollowedEvent(data)
 
         iterator = self.request_paginated(route, converter=converter)
@@ -777,13 +785,13 @@ class HTTPClient:
 
         route = Route("GET", "channels/followers", params=params, token_for=token_for)
 
-        async def converter(data: ChannelFollowerResponse) -> ChannelFollowerEvent:
+        async def converter(data: ChannelFollowersResponseData) -> ChannelFollowerEvent:
             return ChannelFollowerEvent(data)
 
         iterator = self.request_paginated(route, converter=converter)
         return iterator
 
-    async def post_create_custom_reward(self, broadcaster_id: str, token_for: str) -> CustomRewardPayload:
+    async def post_create_custom_reward(self, broadcaster_id: str, token_for: str) -> CustomRewardsResponse:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("POST", "channel_points/custom_rewards", params=params, token_for=token_for)
         return await self.request_json(route)
@@ -795,7 +803,7 @@ class HTTPClient:
 
     async def get_custom_reward(
         self, broadcaster_id: str, token_for: str, reward_id: str | None = None, manageable: bool = False
-    ) -> CustomRewardPayload:
+    ) -> CustomRewardsResponse:
         params = {"broadcaster_id": broadcaster_id, "only_manageable_rewards": manageable}
 
         if reward_id is not None:
