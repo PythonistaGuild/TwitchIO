@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..assets import Asset
+# from ..assets import Asset
 from ..user import PartialUser
 from ..utils import parse_timestamp
 
