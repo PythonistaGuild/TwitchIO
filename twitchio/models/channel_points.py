@@ -28,14 +28,14 @@ from typing import TYPE_CHECKING
 
 from ..assets import Asset
 from ..user import PartialUser
+from ..utils import parse_timestamp
 
 
 if TYPE_CHECKING:
     import datetime
 
     from ..http import HTTPClient
-    from ..types_.responses import CustomRewardResponse
-    from ..utils import Colour, parse_timestamp
+    from ..types_.responses import CustomRewardsResponseData
 
 __all__ = ("CustomReward",)
 
@@ -81,21 +81,24 @@ class CustomReward:
         "cooldown_until",
     )
 
-    def __init__(self, data: CustomRewardResponse, *, http: HTTPClient) -> None:
+    def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
         self.id: str = data["id"]
         self.title: str = data["title"]
         self.prompt: str = data["prompt"]
         self.cost: int = int(data["cost"])
-        self.image: Asset | None = Asset(data["image"], http=http) if data["image"] else None #TODO This is an object of multiple image urls
+        self.image: Asset | None = (
+            Asset(data["image"], http=http) if data["image"] else None
+        )  # TODO This is an object of multiple image urls
         self.default_image = data["default_image"]
         self.background_color = data["background_color"]
         self.enabled: bool = data["is_enabled"]
         self.input_required: bool = data["is_user_input_required"]
-        self.max_per_stream_setting: bool = data["is_user_input_required"]
+        self.max_per_stream: bool = data["is_user_input_required"]
         self.paused: bool = data["is_paused"]
         self.in_stock: bool = data["is_in_stock"]
         self.skip_queue: bool = data["should_redemptions_skip_request_queue"]
-        self.current_stream: int = data.get("redemptions_redeemed_current_stream", 0)
-        self.cooldown_until: datetime.datetime | None = parse_timestamp(data["cooldown_expires_at"]) if data["cooldown_expires_at"] else None
-        
+        self.current_stream: int | None = data.get("redemptions_redeemed_current_stream")
+        self.cooldown_until: datetime.datetime | None = (
+            parse_timestamp(data["cooldown_expires_at"]) if data["cooldown_expires_at"] else None
+        )
