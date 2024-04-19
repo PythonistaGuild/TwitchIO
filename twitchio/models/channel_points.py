@@ -87,9 +87,9 @@ class CustomReward:
         self.title: str = data["title"]
         self.prompt: str = data["prompt"]
         self.cost: int = int(data["cost"])
-        self.image: Asset | None = (
-            Asset(data["image"], http=http) if data["image"] else None
-        )  # TODO This is an object of multiple image urls
+ #       self.image: Asset | None = (
+  #          Asset(data["image"], http=http) if data["image"] else None
+   #     )  # TODO This is an object of multiple image urls
         self.default_image = data["default_image"]
         self.background_color = data["background_color"]
         self.enabled: bool = data["is_enabled"]
