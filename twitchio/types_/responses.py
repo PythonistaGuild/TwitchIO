@@ -680,12 +680,8 @@ class ContentClassificationLabelData(TypedDict):
     name: str
 
 
-class ContentClassificationLabelsResponseData(TypedDict):
-    content_classification_labels: list[ContentClassificationLabelData]
-
-
 class ContentClassificationLabelsResponse(TypedDict):
-    data: list[ContentClassificationLabelsResponseData]
+    data: list[ContentClassificationLabelData]
 
 
 class DropsEntitlementsResponseData(TypedDict):
