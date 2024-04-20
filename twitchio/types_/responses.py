@@ -360,7 +360,7 @@ class CustomRewardsResponseData(TypedDict):
     title: str
     prompt: str
     cost: int
-    image: CustomRewardsResponseImage
+    image: CustomRewardsResponseImage | None
     default_image: CustomRewardsResponseDefaultImage
     background_color: str
     is_enabled: bool

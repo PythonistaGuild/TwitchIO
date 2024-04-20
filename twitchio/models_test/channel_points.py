@@ -26,18 +26,33 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-# from ..assets import Asset
-from ..user import PartialUser
-from ..utils import parse_timestamp
+from ..assets import Asset
+from ..utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
     import datetime
 
     from ..http import HTTPClient
-    from ..types_.responses import CustomRewardsResponseData
+    from ..types_.responses import (
+        CustomRewardsResponseData,
+        CustomRewardsResponseDefaultImage,
+        CustomRewardsResponseImage,
+    )
 
-__all__ = ("CustomReward",)
+__all__ = ("CustomReward", "RewardStreamSetting", "RewardCooldown")
+
+
+class RewardCooldown:
+    def __init__(self, is_enabled: bool, cooldown_seconds: int) -> None:
+        self.is_enabled: bool = is_enabled
+        self.cooldown_seconds: int = cooldown_seconds
+
+
+class RewardStreamSetting:
+    def __init__(self, is_enabled: bool, max_value: int) -> None:
+        self.is_enabled: bool = is_enabled
+        self.max_value: int = max_value
 
 
 class CustomReward:
@@ -46,27 +61,49 @@ class CustomReward:
 
     Attributes
     -----------
-    snooze_count: int
-        The number of snoozes available for the broadcaster.
-    snooze_refresh_at: datetime.datetime
-        The UTC datetime when the broadcaster will gain an additional snooze.
-    duration: int
-        The length in seconds of the scheduled upcoming ad break.
-    next_ad_at: datetime.datetime | None
-        The UTC datetime of the broadcaster's next scheduled ad format. None if channel has no ad scheduled.
-    last_ad_at: datetime.datetime | None
-        The UTC datetime of the broadcaster's last ad-break. None if channel has not run an ad or is not live.
-    preroll_free_time: int
-        The amount of pre-roll free time remaining for the channel in seconds. Returns 0 if they are currently not pre-roll free.
+    id: str
+        The ID of the Custom Reward
+    title: str
+        ...
+    prompt: str
+        ...
+    cost: int
+        ...
+    default_image: ...
+        ...
+    background_color: Color
+        ...
+    enabled: bool
+        ...
+    input_required: bool
+        ...
+    paused: bool
+        ...
+    in_stock: bool
+        ...
+    image: dict[str, Asset] | None
+        ...
+    skip_queue: bool
+        ...
+    current_stream: int | None
+        ...
+    cooldown_until: datetime.datetime
+        ...
+    cooldown: RewardCooldown
+        ...
+    max_per_stream: RewardStreamSetting
+        ...
+    max_per_user_stream: RewardStreamSetting
+        ...
     """
 
     __slots__ = (
-        "broadcaster",
+        "_http",
         "id",
         "title",
         "prompt",
         "cost",
-        "image",
+        "_image",
         "default_image",
         "background_color",
         "enabled",
@@ -82,19 +119,16 @@ class CustomReward:
     )
 
     def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
+        self._http: HTTPClient = http
+        self._image: CustomRewardsResponseImage | None = data["image"]
         self.id: str = data["id"]
         self.title: str = data["title"]
         self.prompt: str = data["prompt"]
         self.cost: int = int(data["cost"])
- #       self.image: Asset | None = (
-  #          Asset(data["image"], http=http) if data["image"] else None
-   #     )  # TODO This is an object of multiple image urls
-        self.default_image = data["default_image"]
-        self.background_color = data["background_color"]
+        self.default_image: CustomRewardsResponseDefaultImage = data["default_image"]
+        self.background_color: Colour = Colour.from_hex(data["background_color"])
         self.enabled: bool = data["is_enabled"]
         self.input_required: bool = data["is_user_input_required"]
-        self.max_per_stream: bool = data["is_user_input_required"]
         self.paused: bool = data["is_paused"]
         self.in_stock: bool = data["is_in_stock"]
         self.skip_queue: bool = data["should_redemptions_skip_request_queue"]
@@ -102,3 +136,22 @@ class CustomReward:
         self.cooldown_until: datetime.datetime | None = (
             parse_timestamp(data["cooldown_expires_at"]) if data["cooldown_expires_at"] else None
         )
+        self.cooldown: RewardCooldown = RewardCooldown(
+            data["global_cooldown_setting"]["is_enabled"],
+            data["global_cooldown_setting"]["global_cooldown_seconds"]
+        )
+        self.max_per_stream: RewardStreamSetting = RewardStreamSetting(
+            data["max_per_stream_setting"]["is_enabled"],
+            data["max_per_stream_setting"]["max_per_stream"]
+        )
+        self.max_per_user_stream: RewardStreamSetting = RewardStreamSetting(
+            data["max_per_user_per_stream_setting"]["is_enabled"],
+            data["max_per_user_per_stream_setting"]["max_per_user_per_stream"],
+        )
+
+    @property
+    def image(self) -> dict[str, Asset] | None:
+        if self._image is not None:
+            return {k: Asset(str(v), http=self._http) for k, v in self._image.items()}
+        else:
+            return None
