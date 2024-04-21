@@ -148,6 +148,8 @@ class ManagedHTTPClient(OAuth):
             if scoped:
                 return scoped
 
+            return route.token_for
+
         return self._app_token or token
 
     async def request(self, route: Route) -> RawResponse | str:
