@@ -49,7 +49,7 @@ class PartialUser:
 
     __slots__ = "id", "name", "_http", "_cached_rewards"
 
-    def __init__(self, id: int | str, name: str | None = None, *, http: HTTPClient | None = None) -> None:
+    def __init__(self, id: int | str, name: str | None = None, *, http: HTTPClient) -> None:
         self._http = http
         self.id = str(id)
         self.name = name

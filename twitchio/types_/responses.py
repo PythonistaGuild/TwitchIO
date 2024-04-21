@@ -41,6 +41,7 @@ __all__ = (
     "StartCommercialResponseData",
     "AdScheduleResponse",
     "AdScheduleResponseData",
+    "ClipsResponseData",
     "SnoozeNextAdResponse",
     "ExtensionAnalyticsResponse",
     "GameAnalyticsResponse",
@@ -657,13 +658,10 @@ class ClipsResponseData(TypedDict):
     is_featured: bool
 
 
-class ClipsResponsePagination(TypedDict):
-    cursor: str
-
 
 class ClipsResponse(TypedDict):
     data: list[ClipsResponseData]
-    pagination: ClipsResponsePagination
+    pagination: Pagination
 
 
 class ConduitPayload(TypedDict):

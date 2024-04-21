@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         ChannelInformationResponseData,
         CheermotesResponseData,
         CheermotesResponseTiers,
+        ClipsResponseData,
         ContentClassificationLabelData,
         ExtensionTransactionsResponseCost,
         ExtensionTransactionsResponseData,
@@ -57,7 +58,6 @@ if TYPE_CHECKING:
         GlobalChatBadgesResponseVersions,
         GlobalEmotesResponseData,
         GlobalEmotesResponseImages,
-        RawResponse,
         SearchChannelsResponseData,
         SnoozeNextAdResponseData,
         StartCommercialResponseData,
@@ -140,12 +140,12 @@ class BitsLeaderboard:
 
     __slots__ = ("leaders", "started_at", "ended_at")
 
-    def __init__(self, data: BitsLeaderboardResponse) -> None:
+    def __init__(self, data: BitsLeaderboardResponse, *, http: HTTPClient) -> None:
         self.started_at = (
             parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
         )
         self.ended_at = parse_timestamp(data["date_range"]["ended_at"]) if data["date_range"]["ended_at"] else None
-        self.leaders = [BitLeaderboardUser(d) for d in data["data"]]
+        self.leaders = [BitLeaderboardUser(d, http=http) for d in data["data"]]
 
     def __repr__(self) -> str:
         return f"<BitsLeaderboard started_at={self.started_at} ended_at={self.ended_at}>"
@@ -154,8 +154,8 @@ class BitsLeaderboard:
 class BitLeaderboardUser:
     __slots__ = ("user", "rank", "score")
 
-    def __init__(self, data: BitsLeaderboardResponseData) -> None:
-        self.user = PartialUser(data["user_id"], data["user_login"])
+    def __init__(self, data: BitsLeaderboardResponseData, *, http: HTTPClient) -> None:
+        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.rank: int = int(data["rank"])
         self.score: int = int(data["score"])
 
@@ -174,8 +174,8 @@ class ChatterColor:
 
     __slots__ = ("user", "_colour")
 
-    def __init__(self, data: UserChatColorResponseData) -> None:
-        self.user = PartialUser(data["user_id"], data["user_login"])
+    def __init__(self, data: UserChatColorResponseData, *, http: HTTPClient) -> None:
+        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self._colour: Colour = Colour.from_hex(data["color"])
 
     def __repr__(self) -> str:
@@ -205,8 +205,8 @@ class ChannelEditor:
 
     __slots__ = ("user", "created_at")
 
-    def __init__(self, data: ChannelEditorsResponseData) -> None:
-        self.user = PartialUser(data["user_id"], data["user_name"])
+    def __init__(self, data: ChannelEditorsResponseData, *, http: HTTPClient) -> None:
+        self.user = PartialUser(data["user_id"], data["user_name"], http=http)
         self.created_at = parse_timestamp(data["created_at"])
 
     def __repr__(self) -> str:
@@ -227,8 +227,8 @@ class ChannelFollowedEvent:
 
     __slots__ = ("broadcaster", "followed_at")
 
-    def __init__(self, data: FollowedChannelsResponseData) -> None:
-        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
+    def __init__(self, data: FollowedChannelsResponseData, *, http: HTTPClient) -> None:
+        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
         self.followed_at = parse_timestamp(data["followed_at"])
 
 
@@ -246,8 +246,8 @@ class ChannelFollowerEvent:
 
     __slots__ = ("user", "followed_at")
 
-    def __init__(self, data: ChannelFollowersResponseData) -> None:
-        self.user = PartialUser(data["user_id"], data["user_login"])
+    def __init__(self, data: ChannelFollowersResponseData, *, http: HTTPClient) -> None:
+        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.followed_at = parse_timestamp(data["followed_at"])
 
 
@@ -290,8 +290,8 @@ class ChannelInfo:
         "is_branded_content",
     )
 
-    def __init__(self, data: ChannelInformationResponseData) -> None:
-        self.user = PartialUser(data["broadcaster_id"], data["broadcaster_name"])
+    def __init__(self, data: ChannelInformationResponseData, *, http: HTTPClient) -> None:
+        self.user = PartialUser(data["broadcaster_id"], data["broadcaster_name"], http=http)
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.title: str = data["title"]
@@ -355,12 +355,12 @@ class Clip:
         "is_featured",
     )
 
-    def __init__(self, data: RawResponse) -> None:
+    def __init__(self, data: ClipsResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.url: str = data["url"]
         self.embed_url: str = data["embed_url"]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_name"])
-        self.creator: PartialUser = PartialUser(data["creator_id"], data["creator_name"])
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_name"], http=http)
+        self.creator: PartialUser = PartialUser(data["creator_id"], data["creator_name"], http=http)
         self.video_id: str = data["video_id"]
         self.game_id: str = data["game_id"]
         self.language: str = data["language"]
@@ -594,11 +594,11 @@ class ExtensionTransaction:
 
     __slots__ = ("id", "timestamp", "broadcaster", "user", "product_type", "product_data")
 
-    def __init__(self, data: ExtensionTransactionsResponseData) -> None:
+    def __init__(self, data: ExtensionTransactionsResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.timestamp: datetime.datetime = parse_timestamp(data["timestamp"])
-        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"])
-        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.product_type: str = data["product_type"]
         self.product_data: ExtensionProductData = ExtensionProductData(data["product_data"])
 
@@ -917,7 +917,7 @@ class Stream:
         self._http: HTTPClient = http
 
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.type: str = data["type"]
@@ -990,7 +990,7 @@ class Team:
     )
 
     def __init__(self, data: TeamsResponseData, *, http: HTTPClient) -> None:
-        self.users: list[PartialUser] = [PartialUser(x["user_id"], x["user_login"]) for x in data["users"]]
+        self.users: list[PartialUser] = [PartialUser(x["user_id"], x["user_login"], http=http) for x in data["users"]]
         self.background_image: Asset = Asset(data["background_image_url"], http=http)
         self.banner: str = data["banner"]
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
@@ -1068,7 +1068,7 @@ class Video:
     def __init__(self, data: VideosResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_login"])
+        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.title: str = data["title"]
         self.description: str = data["description"]
         self.created_at = parse_timestamp(data["created_at"])

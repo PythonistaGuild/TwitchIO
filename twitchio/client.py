@@ -300,7 +300,7 @@ class Client:
             raise ValueError("Maximum of 100 user_ids")
 
         data = await self._http.get_chatters_color(user_ids, token_for)
-        return [ChatterColor(d) for d in data["data"] if data]
+        return [ChatterColor(d, http=self._http) for d in data["data"] if data]
 
     async def fetch_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> list[ChannelInfo]:
         """|coro|
@@ -322,7 +322,7 @@ class Client:
             raise ValueError("Maximum of 100 broadcaster_ids")
 
         data = await self._http.get_channels(broadcaster_ids, token_for)
-        return [ChannelInfo(d) for d in data["data"]]
+        return [ChannelInfo(d, http=self._http) for d in data["data"]]
 
     async def fetch_cheermotes(
         self, broadcaster_id: int | str | None = None, token_for: str | None = None
