@@ -67,6 +67,7 @@ if TYPE_CHECKING:
         ChannelFollowersResponseData,
         ChannelInformationResponse,
         CheermotesResponse,
+        ClipsResponseData,
         ConduitPayload,
         ContentClassificationLabelsResponse,
         CustomRewardsResponse,
@@ -489,8 +490,8 @@ class HTTPClient:
 
         route: Route = Route("GET", "streams", params=params, token_for=token_for)
 
-        async def converter(data: RawResponse) -> Clip:
-            return Clip(data)
+        async def converter(data: ClipsResponseData) -> Clip:
+            return Clip(data, http=self)
 
         iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter)
         return iterator
@@ -504,7 +505,7 @@ class HTTPClient:
         route: Route = Route("GET", "extensions/transactions", params=params)
 
         async def converter(data: ExtensionTransactionsResponseData) -> ExtensionTransaction:
-            return ExtensionTransaction(data)
+            return ExtensionTransaction(data, http=self)
 
         iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(route, converter=converter)
         return iterator
@@ -766,7 +767,7 @@ class HTTPClient:
         route = Route("GET", "channels/followed", params=params, token_for=token_for)
 
         async def converter(data: FollowedChannelsResponseData) -> ChannelFollowedEvent:
-            return ChannelFollowedEvent(data)
+            return ChannelFollowedEvent(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter)
         return iterator
@@ -786,7 +787,7 @@ class HTTPClient:
         route = Route("GET", "channels/followers", params=params, token_for=token_for)
 
         async def converter(data: ChannelFollowersResponseData) -> ChannelFollowerEvent:
-            return ChannelFollowerEvent(data)
+            return ChannelFollowerEvent(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter)
         return iterator
