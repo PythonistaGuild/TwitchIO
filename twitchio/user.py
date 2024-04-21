@@ -24,6 +24,13 @@ SOFTWARE.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from .models_test.channel_points import CustomReward
+
+
+if TYPE_CHECKING:
+    from .http import HTTPClient
 
 __all__ = ("PartialUser",)
 
@@ -42,9 +49,14 @@ class PartialUser:
 
     __slots__ = "id", "name", "_http", "_cached_rewards"
 
-    def __init__(self, id: int | str, name: str | None = None) -> None:
+    def __init__(self, id: int | str, name: str | None = None, *, http: HTTPClient | None = None) -> None:
+        self._http = http
         self.id = str(id)
         self.name = name
 
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
+
+    async def fetch_custom_reward(self, token: str) -> CustomReward:
+        data = await self._http.get_custom_reward(broadcaster_id=self.id, token_for=token)
+        return CustomReward(data["data"][0], http=self._http)

@@ -44,12 +44,35 @@ __all__ = ("CustomReward", "RewardStreamSetting", "RewardCooldown")
 
 
 class RewardCooldown:
+    """
+    Represents a custom reward's global cooldown settings
+
+    Attributes
+    -----------
+    is_enabled: bool
+        Whether a coooldown between redemptions is enabled or not. Default is False.
+    cooldown_seconds: int
+        The cooldown period in seconds. This only applies if ``is_enabled`` is True.
+        Min value is 1; however, the minimum value is 60 for it to be shown in the Twitch UX.
+    """
+
     def __init__(self, is_enabled: bool, cooldown_seconds: int) -> None:
         self.is_enabled: bool = is_enabled
         self.cooldown_seconds: int = cooldown_seconds
 
 
 class RewardStreamSetting:
+    """
+    Represents a custom reward's stream settings.
+
+    Attributes
+    -----------
+    is_enabled: bool
+        Whether the stream setting is enabled or not. Default is False.
+    max_value: int
+        The max number of redemptions allowed. Minimum value is 1.
+    """
+
     def __init__(self, is_enabled: bool, max_value: int) -> None:
         self.is_enabled: bool = is_enabled
         self.max_value: int = max_value
@@ -62,39 +85,39 @@ class CustomReward:
     Attributes
     -----------
     id: str
-        The ID of the Custom Reward
+        The ID that uniquely identifies this custom reward.
     title: str
-        ...
+        The title of the reward.
     prompt: str
-        ...
+        The prompt shown to the viewer when they redeem the reward if user input is required.
     cost: int
-        ...
+        The cost of the reward in Channel Points.
     default_image: ...
         ...
-    background_color: Color
-        ...
+    background_color: Colour
+        The background colour to use for the reward.
     enabled: bool
-        ...
+        A Boolean value that determines whether the reward is enabled. Is true if enabled; otherwise, false. Disabled rewards aren't shown to the user.
     input_required: bool
-        ...
+        A Boolean value that determines whether the user must enter information when redeeming the reward. Is true if the reward requires user input.
     paused: bool
-        ...
+        A Boolean value that determines whether the reward is currently paused. Is true if the reward is paused. Viewers can't redeem paused rewards.
     in_stock: bool
-        ...
+        A Boolean value that determines whether the reward is currently in stock. Is true if the reward is in stock. Viewers can't redeem out of stock rewards.
     image: dict[str, Asset] | None
         ...
     skip_queue: bool
-        ...
-    current_stream: int | None
-        ...
-    cooldown_until: datetime.datetime
-        ...
+        A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If false, status is set to UNFULFILLED and follows the normal request queue process. The default is false.
+    current_stream_redeems: int | None
+        The number of redemptions redeemed during the current live stream. The number counts against the ``max_per_stream.max_value`` limit. This is None if the broadcaster's stream isn't live or ``max_per_stream_setting`` isn't enabled.
+    cooldown_until: datetime.datetime | None
+        The datetime of when the cooldown period expires. Is null if the reward isn't in a cooldown state
     cooldown: RewardCooldown
-        ...
+        The cooldown settings of a reward. This represents whether reward has a cooldown enabled and the cooldown period in seconds.
     max_per_stream: RewardStreamSetting
-        ...
+        The settings of a reward over a live stream. This represents whether a reward has a max number of redemptions per stream and if the setting is enabled or not.
     max_per_user_stream: RewardStreamSetting
-        ...
+        The settings of a reward over a live stream per user. This represents whether a reward has a max number of redemptions per user per stream and if the setting is enabled or not.
     """
 
     __slots__ = (
@@ -114,7 +137,7 @@ class CustomReward:
         "paused",
         "in_stock",
         "skip_queue",
-        "current_stream",
+        "current_stream_redeems",
         "cooldown_until",
     )
 
@@ -132,17 +155,15 @@ class CustomReward:
         self.paused: bool = data["is_paused"]
         self.in_stock: bool = data["is_in_stock"]
         self.skip_queue: bool = data["should_redemptions_skip_request_queue"]
-        self.current_stream: int | None = data.get("redemptions_redeemed_current_stream")
+        self.current_stream_redeems: int | None = data.get("redemptions_redeemed_current_stream")
         self.cooldown_until: datetime.datetime | None = (
             parse_timestamp(data["cooldown_expires_at"]) if data["cooldown_expires_at"] else None
         )
         self.cooldown: RewardCooldown = RewardCooldown(
-            data["global_cooldown_setting"]["is_enabled"],
-            data["global_cooldown_setting"]["global_cooldown_seconds"]
+            data["global_cooldown_setting"]["is_enabled"], data["global_cooldown_setting"]["global_cooldown_seconds"]
         )
         self.max_per_stream: RewardStreamSetting = RewardStreamSetting(
-            data["max_per_stream_setting"]["is_enabled"],
-            data["max_per_stream_setting"]["max_per_stream"]
+            data["max_per_stream_setting"]["is_enabled"], data["max_per_stream_setting"]["max_per_stream"]
         )
         self.max_per_user_stream: RewardStreamSetting = RewardStreamSetting(
             data["max_per_user_per_stream_setting"]["is_enabled"],
