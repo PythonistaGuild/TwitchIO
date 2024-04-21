@@ -658,7 +658,6 @@ class ClipsResponseData(TypedDict):
     is_featured: bool
 
 
-
 class ClipsResponse(TypedDict):
     data: list[ClipsResponseData]
     pagination: Pagination

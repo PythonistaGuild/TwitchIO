@@ -57,6 +57,6 @@ class PartialUser:
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
 
-    async def fetch_custom_reward(self, token: str) -> CustomReward:
-        data = await self._http.get_custom_reward(broadcaster_id=self.id, token_for=token)
+    async def fetch_custom_reward(self, token_for: str) -> CustomReward:
+        data = await self._http.get_custom_reward(broadcaster_id=self.id, token_for=token_for)
         return CustomReward(data["data"][0], http=self._http)
