@@ -86,8 +86,8 @@ class StarletteAdapter(Starlette):
                     e,
                 )
 
-        self._runner_task = None
-        await self.client.close()
+            self._runner_task = None
+            await self.client.close()
 
         logger.info("Successfully shutdown TwitchIO <%s>.", self.__class__.__qualname__)
 
@@ -95,7 +95,13 @@ class StarletteAdapter(Starlette):
         self._host = host or self._host
         self._port = port or self._port
 
-        config: uvicorn.Config = uvicorn.Config(app=self, host=self._host, port=self._port, log_level="critical")
+        config: uvicorn.Config = uvicorn.Config(
+            app=self,
+            host=self._host,
+            port=self._port,
+            log_level="critical",
+            workers=0,
+        )
         server: uvicorn.Server = uvicorn.Server(config)
 
         self._runner_task = asyncio.create_task(
