@@ -41,9 +41,9 @@ class PartialUser:
 
     Attributes
     -----------
-    id: :class:`str`
+    id: str
         The user's ID.
-    name: Optional[:class:`str`]
+    name: str | None
         The user's name. In most cases, this is provided. There are however, rare cases where it is not.
     """
 
