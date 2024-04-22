@@ -36,7 +36,6 @@ if TYPE_CHECKING:
     from ..http import HTTPClient
     from ..types_.responses import (
         CustomRewardsResponseData,
-        CustomRewardsResponseDefaultImage,
         CustomRewardsResponseImage,
     )
 
@@ -98,8 +97,8 @@ class CustomReward:
         The prompt shown to the viewer when they redeem the reward if user input is required.
     cost: int
         The cost of the reward in Channel Points.
-    default_image: ...
-        ...
+    default_image: dict[str, Asset]
+        A dictionary of default images for the reward. The keys are as follows: url_1x, url_2x and url_4x.
     background_color: Colour
         The background colour to use for the reward.
     enabled: bool
@@ -111,7 +110,8 @@ class CustomReward:
     in_stock: bool
         A Boolean value that determines whether the reward is currently in stock. Is true if the reward is in stock. Viewers can't redeem out of stock rewards.
     image: dict[str, Asset] | None
-        ...
+        A dictionary of custom images for the reward. This will return None if the broadcaster did not upload any images.
+        The keys, if available, are as follows: url_1x, url_2x and url_4x.
     skip_queue: bool
         A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If false, status is set to UNFULFILLED and follows the normal request queue process. The default is false.
     current_stream_redeems: int | None
