@@ -285,8 +285,6 @@ class ManagedHTTPClient(OAuth):
                 data = json.load(fp)
         except FileNotFoundError:
             pass
-        else:
-            logger.info('Successfully loaded tokens from: "%s".', name)
 
         for key, value in data.items():
             try:
