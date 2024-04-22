@@ -69,6 +69,13 @@ class ManagedHTTPClient(OAuth):
             scopes=scopes,
             session=session,
         )
+        self.__isolated: OAuth = OAuth(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uri=redirect_uri,
+            scopes=scopes,
+            session=session,
+        )
 
         self._tokens: TokenMapping = {}
         self._app_token: str | None = None
@@ -78,13 +85,13 @@ class ManagedHTTPClient(OAuth):
         logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
 
         try:
-            resp: RefreshTokenPayload = await super().refresh_token(refresh)
+            resp: RefreshTokenPayload = await self.__isolated.refresh_token(refresh)
         except HTTPException as e:
             msg: str = f'Token was invalid and cannot be refreshed. Please re-authenticate user with token: "{token}"'
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="refresh", original=e)
 
         try:
-            valid_resp: ValidateTokenPayload = await super().validate_token(resp["access_token"])
+            valid_resp: ValidateTokenPayload = await self.__isolated.validate_token(resp["access_token"])
         except HTTPException as e:
             msg: str = f'Refreshed token was invalid. Please re-authenticate user with token: "{token}"'
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="token", original=e)
@@ -107,7 +114,7 @@ class ManagedHTTPClient(OAuth):
 
     async def add_token(self, token: str, refresh: str) -> ValidateTokenPayload:
         try:
-            resp: ValidateTokenPayload = await super().validate_token(token)
+            resp: ValidateTokenPayload = await self.__isolated.validate_token(token)
         except HTTPException as e:
             if e.status != 401:
                 msg: str = "Token was invalid. Please check the token or re-authenticate user with a new token."
@@ -176,7 +183,7 @@ class ManagedHTTPClient(OAuth):
                 return await self.request(route)
 
             logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', old["user_id"])
-            refresh: RefreshTokenPayload = await self.refresh_token(old["refresh"])
+            refresh: RefreshTokenPayload = await self.__isolated.refresh_token(old["refresh"])
             logger.debug('Token for "%s" was successfully refreshed.', old["user_id"])
 
             self._tokens[old["user_id"]] = {
@@ -214,7 +221,7 @@ class ManagedHTTPClient(OAuth):
                     continue
 
                 try:
-                    await super().validate_token(data["token"])
+                    await self.__isolated.validate_token(data["token"])
                     logger.debug('Token for "%s" was successfully re-validated.', data["user_id"])
                 except HTTPException as e:
                     if e.status >= 500:
@@ -228,7 +235,7 @@ class ManagedHTTPClient(OAuth):
                     logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', data["user_id"])
 
                     try:
-                        refresh: RefreshTokenPayload = await self.refresh_token(data["refresh"])
+                        refresh: RefreshTokenPayload = await self.__isolated.refresh_token(data["refresh"])
                     except HTTPException as e:
                         self._tokens.pop(data["user_id"], None)
                         logger.warning('Token for "%s" was invalid and could not be refreshed.', data["user_id"])
@@ -265,6 +272,7 @@ class ManagedHTTPClient(OAuth):
             self._validate_task = None
 
         await super().close()
+        await self.__isolated.close()
 
     async def dump(self, name: str | None = None) -> None:
         name = name or ".tio.tokens.json"
