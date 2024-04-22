@@ -1,13 +1,19 @@
 :orphan:
 
+2.9.3
+=======
+- ext.commands
+    - Bug fixes
+        - Fixed return type of :func:`~twitchio.ext.commands.Context.get_user` to PartialChatter / Chatter from PartialUser / User.
+
 2.9.2
 =======
 - TwitchIO
     - Changes:
-        - :func:`PartialUser.fetch_moderated_channels <twitchio.PartialUser.fetch_moderated_channels>` returns "broadcaster_login" api field instead of "broadcaster_name"
+        - :func:`~twitchio.PartialUser.fetch_moderated_channels` returns "broadcaster_login" api field instead of "broadcaster_name"
 
     - Bug fixes
-        - fix: :func:`PartialUser.fetch_moderated_channels <twitchio.PartialUser.fetch_moderated_channels>` used "user_" prefix from payload, now uses "broadcaster_" instead
+        - fix: :func:`~twitchio.PartialUser.fetch_moderated_channels` used ``user_`` prefix from payload, now uses ``broadcaster_`` instead
 
 
 2.9.1
