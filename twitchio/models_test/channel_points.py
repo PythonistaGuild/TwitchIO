@@ -154,7 +154,9 @@ class CustomReward:
         self.title: str = data["title"]
         self.prompt: str = data["prompt"]
         self.cost: int = int(data["cost"])
-        self.default_image: dict[str, Asset] =  {k: Asset(str(v), http=self._http) for k, v in data["default_image"].items()}
+        self.default_image: dict[str, Asset] = {
+            k: Asset(str(v), http=self._http) for k, v in data["default_image"].items()
+        }
         self.background_color: Colour = Colour.from_hex(data["background_color"])
         self.enabled: bool = data["is_enabled"]
         self.input_required: bool = data["is_user_input_required"]
