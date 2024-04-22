@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     import aiohttp
     from typing_extensions import Self, Unpack
 
-    from .authentication import ClientCredentialsPayload
+    from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .http import HTTPAsyncIterator
     from .types_.options import ClientOptions
     from .types_.responses import ConduitPayload
@@ -113,6 +113,8 @@ class Client:
         # TODO: Temp logic for testing...
         self._blocker: asyncio.Event = asyncio.Event()
         self._login_called: bool = False
+        self._dump_tokens: bool = True
+        self._has_closed: bool = False
 
     @property
     def pool(self) -> ConduitPool:
@@ -194,7 +196,12 @@ class Client:
 
         if not token:
             payload: ClientCredentialsPayload = await self._http.client_credentials_token()
+            validated: ValidateTokenPayload = await self._http.validate_token(payload.access_token)
             token = payload.access_token
+
+            logger.info("Generated App Token for Client: %s", validated.client_id)
+
+        await self.load_tokens()
 
         self._http._app_token = token
         await self.setup_hook()
@@ -205,7 +212,7 @@ class Client:
     async def __aexit__(self, *_: Any) -> None:
         await self.close()
 
-    async def start(self, token: str | None = None, *, with_adapter: bool = True) -> None:
+    async def start(self, token: str | None = None, *, with_adapter: bool = True, dump_tokens: bool = True) -> None:
         """Method to login the client and create a continuously running event loop.
 
         You should not call [`.login`][twitchio.Client.login] if you are using this method as it is called internally
@@ -220,7 +227,15 @@ class Client:
             An optional app token to use instead of generating one automatically.
         with_adapter: bool
             Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+        dump_tokens: bool
+            Whether to call the [`.dump_tokens`][twitchio.Client.dump_tokens] method when the Client shuts down.
+            Defaults to `True`.
         """
+        if self._has_closed:
+            raise RuntimeError("Can not start an already closed Client.")
+
+        self._dump_tokens = dump_tokens
+
         await self.login(token=token)
 
         if with_adapter:
@@ -237,6 +252,14 @@ class Client:
             await self.close()
 
     async def close(self) -> None:
+        if self._has_closed:
+            return
+
+        self._has_closed = True
+
+        if self._dump_tokens:
+            await self.dump_tokens()
+
         await self._http.close()
 
         if self._adapter._runner_task is not None:
@@ -250,6 +273,24 @@ class Client:
 
     async def add_token(self, token: str, refresh: str) -> None:
         await self._http.add_token(token, refresh)
+
+    async def load_tokens(self, path: str | None = None, /) -> None:
+        await self._http.load_tokens(name=path)
+
+    async def dump_tokens(self, path: str | None = None, /) -> None:
+        """Method which dumps all the added OAuth tokens currently managed by this Client.
+
+        !!! info
+            By default this method dumps to a JSON file named `".tio.tokens.json"`.
+
+        You can override this method to implement your own custom logic, such as saving tokens to a database.
+
+        Parameters
+        ----------
+        path: str | None
+            The path of the file to save to. Defaults to `.tio.tokens.json`.
+        """
+        await self._http.dump(path)
 
     def add_listener(self, listener: Callable[..., Coroutine[Any, Any, None]], *, event: str | None = None) -> None:
         name: str = event or listener.__name__
