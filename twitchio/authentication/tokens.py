@@ -26,7 +26,7 @@ import asyncio
 import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import aiohttp
 
@@ -99,7 +99,7 @@ class ManagedHTTPClient(OAuth):
             "user_id": valid_resp.user_id,
             "token": resp.access_token,
             "refresh": resp.refresh_token,
-            "last_validated": datetime.datetime.now(),
+            "last_validated": datetime.datetime.now().isoformat(),
         }
 
         logger.info('Token successfully added to TokenManager after refresh: "%s"', valid_resp.user_id)
@@ -125,7 +125,7 @@ class ManagedHTTPClient(OAuth):
             "user_id": resp.user_id,
             "token": token,
             "refresh": refresh,
-            "last_validated": datetime.datetime.now(),
+            "last_validated": datetime.datetime.now().isoformat(),
         }
 
         logger.info('Token successfully added to TokenManager: "%s"', resp.user_id)
@@ -139,18 +139,16 @@ class ManagedHTTPClient(OAuth):
         if token == self._app_token:
             return token
 
-        for data in self._tokens.values():
-            if data["token"] == token:
-                return data
-
         if route.token_for and not token:
             scoped: TokenMappingData | None = self._tokens.get(route.token_for, None)
             if scoped:
                 return scoped
 
-            return route.token_for
+        for data in self._tokens.values():
+            if data["token"] == token:
+                return data
 
-        return self._app_token or token
+        return token or self._app_token
 
     async def request(self, route: Route) -> RawResponse | str:
         if not self._session:
@@ -185,7 +183,7 @@ class ManagedHTTPClient(OAuth):
                 "user_id": old["user_id"],
                 "token": refresh.access_token,
                 "refresh": refresh.refresh_token,
-                "last_validated": datetime.datetime.now(),
+                "last_validated": datetime.datetime.now().isoformat(),
             }
 
             route.update_headers({"Authorization": f"Bearer {refresh.access_token}"})
@@ -211,7 +209,8 @@ class ManagedHTTPClient(OAuth):
 
         while self._session and not self._session.closed:
             for data in self._tokens.copy().values():
-                if data["last_validated"] + datetime.timedelta(minutes=60) > datetime.datetime.now():
+                last_validated: datetime.datetime = datetime.datetime.fromisoformat(data["last_validated"])
+                if last_validated + datetime.timedelta(minutes=60) > datetime.datetime.now():
                     continue
 
                 try:
@@ -241,7 +240,7 @@ class ManagedHTTPClient(OAuth):
                         "user_id": data["user_id"],
                         "token": refresh.access_token,
                         "refresh": refresh.refresh_token,
-                        "last_validated": datetime.datetime.now(),
+                        "last_validated": datetime.datetime.now().isoformat(),
                     }
 
                     continue
@@ -270,7 +269,19 @@ class ManagedHTTPClient(OAuth):
     async def dump(self, name: str | None = None) -> None:
         name = name or ".tio.tokens.json"
 
-        with open(name, "w") as fp:
-            json.dump(list(self._tokens.values()), fp)
+        with open(name, "w+", encoding="UTF-8") as fp:
+            json.dump(self._tokens, fp)
 
-        logger.info("Tokens from %s have been saved to %s.", self.__class__.__qualname__, name)
+        logger.info('Tokens from %s have been saved to: "%s".', self.__class__.__qualname__, name)
+
+    async def load_tokens(self, name: str | None = None) -> None:
+        name = name or ".tio.tokens.json"
+
+        try:
+            with open(name, "r+", encoding="UTF-8") as fp:
+                data: dict[str, Any] = json.load(fp)
+                self._tokens = data
+        except FileNotFoundError:
+            pass
+        else:
+            logger.info('Successfully loaded tokens from: "%s".', name)

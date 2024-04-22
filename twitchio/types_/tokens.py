@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import datetime
 from typing import TypeAlias, TypedDict
 
 
@@ -33,7 +32,7 @@ class TokenMappingData(TypedDict):
     user_id: str
     token: str
     refresh: str
-    last_validated: datetime.datetime
+    last_validated: str
 
 
 TokenMapping: TypeAlias = dict[str, TokenMappingData]
