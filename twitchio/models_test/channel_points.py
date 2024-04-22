@@ -60,6 +60,9 @@ class RewardCooldown:
         self.is_enabled: bool = is_enabled
         self.cooldown_seconds: int = cooldown_seconds
 
+    def __repr__(self) -> str:
+        return f"<RewardCooldown is_enabled={self.is_enabled} cooldown_seconds={self.cooldown_seconds}>"
+
 
 class RewardStreamSetting:
     """
@@ -76,6 +79,9 @@ class RewardStreamSetting:
     def __init__(self, is_enabled: bool, max_value: int) -> None:
         self.is_enabled: bool = is_enabled
         self.max_value: int = max_value
+
+    def __repr__(self) -> str:
+        return f"<RewardStreamSetting is_enabled={self.is_enabled} max_value={self.max_value}>"
 
 
 class CustomReward:
@@ -169,6 +175,12 @@ class CustomReward:
             data["max_per_user_per_stream_setting"]["is_enabled"],
             data["max_per_user_per_stream_setting"]["max_per_user_per_stream"],
         )
+
+    def __repr__(self) -> str:
+        return f"<CustomReward id={self.id} title={self.title} cost={self.cost}>"
+
+    def __str__(self) -> str:
+        return self.title
 
     @property
     def image(self) -> dict[str, Asset] | None:

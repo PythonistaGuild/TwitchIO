@@ -123,6 +123,9 @@ class AdSchedule:
         self.last_ad_at: datetime.datetime | None = parse_timestamp(data["last_ad_at"]) if data["last_ad_at"] else None
         self.preroll_free_time: int = int(data["preroll_free_time"])
 
+    def __repr__(self) -> str:
+        return f"<AddSchedule snooze_count={self.snooze_count} duration={self.duration} next_ad_at={self.next_ad_at}>"
+
 
 class BitsLeaderboard:
     """
@@ -158,6 +161,9 @@ class BitLeaderboardUser:
         self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.rank: int = int(data["rank"])
         self.score: int = int(data["score"])
+
+    def __repr__(self) -> str:
+        return f"<BitLeaderboardUser user={self.user} rank={self.rank} score={self.score}>"
 
 
 class ChatterColor:
@@ -231,6 +237,9 @@ class ChannelFollowedEvent:
         self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
         self.followed_at = parse_timestamp(data["followed_at"])
 
+    def __repr__(self) -> str:
+        return f"<ChannelFollowedEvent broadcaster={self.broadcaster} follwed_at={self.followed_at}>"
+
 
 class ChannelFollowerEvent:
     """
@@ -238,7 +247,7 @@ class ChannelFollowerEvent:
 
     Attributes
     -----------
-    broadcaster: twitchio.PartialUser
+    user: twitchio.PartialUser
         PartialUser that identifies a user that follows this channel.
     followed_at: datetime.datetime
         The datetime of when the user followed the channel.
@@ -249,6 +258,9 @@ class ChannelFollowerEvent:
     def __init__(self, data: ChannelFollowersResponseData, *, http: HTTPClient) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.followed_at = parse_timestamp(data["followed_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelFollowerEvent user={self.user} follwed_at={self.followed_at}>"
 
 
 class ChannelInfo:
@@ -372,6 +384,9 @@ class Clip:
 
     def __repr__(self) -> str:
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
+
+    def __str__(self) -> str:
+        return self.id
 
 
 class ChatBadge:
@@ -602,6 +617,9 @@ class ExtensionTransaction:
         self.product_type: str = data["product_type"]
         self.product_data: ExtensionProductData = ExtensionProductData(data["product_data"])
 
+    def __repr__(self) -> str:
+        return f"<ExtensionTransaction id={self.id} timestamp={self.timestamp} product_type={self.product_type}>"
+
 
 class ExtensionProductData:
     """
@@ -636,6 +654,12 @@ class ExtensionProductData:
         self.expiration: str = data["expiration"]
         self.broadcast: bool = data["broadcast"]
 
+    def __repr__(self) -> str:
+        return f"<ExtensionProductData domain={self.domain} display_name={self.display_name} sku={self.sku}>"
+
+    def __str__(self) -> str:
+        return self.display_name
+
 
 class ExtensionCost:
     """
@@ -654,6 +678,12 @@ class ExtensionCost:
     def __init__(self, data: ExtensionTransactionsResponseCost) -> None:
         self.amount: int = int(data["amount"])
         self.type: str = data["type"]
+
+    def __repr__(self) -> str:
+        return f"<ExtensionCost amount={self.amount} type={self.type}>"
+
+    def __str__(self) -> str:
+        return str(self.amount)
 
 
 class Game:
@@ -863,6 +893,9 @@ class SnoozeAd:
         self.snooze_count: int = int(data["snooze_count"])
         self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
         self.next_ad_at: datetime.datetime | None = parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
+
+    def __repr__(self) -> str:
+        return f"<SnoozeAd snooze_count={self.snooze_count} snooze_refresh_at={self.snooze_refresh_at} next_ad_at={self.next_ad_at}>"
 
 
 class Stream:
