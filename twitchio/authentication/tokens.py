@@ -78,13 +78,13 @@ class ManagedHTTPClient(OAuth):
         logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
 
         try:
-            resp: RefreshTokenPayload = await self.refresh_token(refresh)
+            resp: RefreshTokenPayload = await super().refresh_token(refresh)
         except HTTPException as e:
             msg: str = f'Token was invalid and cannot be refreshed. Please re-authenticate user with token: "{token}"'
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="refresh", original=e)
 
         try:
-            valid_resp: ValidateTokenPayload = await self.validate_token(resp["access_token"])
+            valid_resp: ValidateTokenPayload = await super().validate_token(resp["access_token"])
         except HTTPException as e:
             msg: str = f'Refreshed token was invalid. Please re-authenticate user with token: "{token}"'
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="token", original=e)
@@ -107,7 +107,7 @@ class ManagedHTTPClient(OAuth):
 
     async def add_token(self, token: str, refresh: str) -> ValidateTokenPayload:
         try:
-            resp: ValidateTokenPayload = await self.validate_token(token)
+            resp: ValidateTokenPayload = await super().validate_token(token)
         except HTTPException as e:
             if e.status != 401:
                 msg: str = "Token was invalid. Please check the token or re-authenticate user with a new token."
@@ -128,7 +128,7 @@ class ManagedHTTPClient(OAuth):
             "last_validated": datetime.datetime.now().isoformat(),
         }
 
-        logger.info('Token successfully added to TokenManager: "%s"', resp.user_id)
+        logger.debug('Token successfully added to TokenManager: "%s"', resp.user_id)
         return resp
 
     def _find_token(self, route: Route) -> TokenMappingData | None | str:
@@ -214,7 +214,7 @@ class ManagedHTTPClient(OAuth):
                     continue
 
                 try:
-                    await self.validate_token(data["token"])
+                    await super().validate_token(data["token"])
                     logger.debug('Token for "%s" was successfully re-validated.', data["user_id"])
                 except HTTPException as e:
                     if e.status >= 500:
@@ -276,12 +276,26 @@ class ManagedHTTPClient(OAuth):
 
     async def load_tokens(self, name: str | None = None) -> None:
         name = name or ".tio.tokens.json"
+        data: dict[str, Any] = {}
+        failed: list[str] = []
+        loaded: int = 0
 
         try:
             with open(name, "r+", encoding="UTF-8") as fp:
-                data: dict[str, Any] = json.load(fp)
-                self._tokens = data
+                data = json.load(fp)
         except FileNotFoundError:
             pass
         else:
             logger.info('Successfully loaded tokens from: "%s".', name)
+
+        for key, value in data.items():
+            try:
+                await self.add_token(token=value["token"], refresh=value["refresh"])
+                loaded += 1
+            except InvalidTokenException:
+                failed.append(key)
+
+        logger.info("Loaded %s tokens into the Token Manager.", loaded)
+        if failed:
+            msg: str = f"The following users tokens failed to load: {', '.join(failed)}"
+            logger.warning(msg)
