@@ -27,6 +27,16 @@ try:
 except ImportError:
     _from_json = json.loads
 
+
+try:
+    from asyncio.timeouts import _timeout  # type: ignore
+except ImportError:
+    from async_timeout import timeout as _timeout  # type: ignore
+
+
+a_timeout = _timeout  # type: ignore
+
+
 __all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter", "parse_timestamp")
 
 
