@@ -57,6 +57,37 @@ class PartialUser:
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
 
-    async def fetch_custom_rewards(self, token_for: str) -> list[CustomReward]:
+    async def fetch_custom_rewards(self, *, token_for: str) -> list[CustomReward]:
         data = await self._http.get_custom_reward(broadcaster_id=self.id, token_for=token_for)
         return [CustomReward(d, http=self._http) for d in data["data"]]
+
+    async def create_custom_reward(
+        self,
+        *,
+        token_for: str,
+        title: str,
+        cost: int,
+        prompt: str | None = None,
+        enabled: bool = True,
+        background_color: str | None = None,  # TODO Maybe change to or union Colour object
+        user_input_required: bool = False,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        redemptions_skip_queue: bool = False,
+    ) -> CustomReward:
+        data = await self._http.post_custom_reward(
+            broadcaster_id=self.id,
+            token_for=token_for,
+            title=title,
+            cost=cost,
+            prompt=prompt,
+            enabled=enabled,
+            background_color=background_color,
+            user_input_required=user_input_required,
+            max_per_stream=max_per_stream,
+            max_per_user=max_per_user,
+            global_cooldown=global_cooldown,
+            redemptions_skip_queue=redemptions_skip_queue,
+        )
+        return CustomReward(data["data"][0], http=self._http)

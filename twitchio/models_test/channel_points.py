@@ -128,7 +128,7 @@ class CustomReward:
 
     __slots__ = (
         "_http",
-        "id",
+        "_broadcaster_id" "id",
         "title",
         "prompt",
         "cost",
@@ -149,6 +149,7 @@ class CustomReward:
 
     def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
+        self._broadcaster_id: str = data["broadcaster_id"]
         self._image: CustomRewardsResponseImage | None = data["image"]
         self.id: str = data["id"]
         self.title: str = data["title"]
@@ -190,3 +191,8 @@ class CustomReward:
             return {k: Asset(str(v), http=self._http) for k, v in self._image.items()}
         else:
             return None
+
+    async def delete(self, token_for: str) -> None:
+        await self._http.delete_custom_reward(
+            broadcaster_id=self._broadcaster_id, reward_id=self.id, token_for=token_for
+        )

@@ -792,9 +792,44 @@ class HTTPClient:
         iterator = self.request_paginated(route, converter=converter)
         return iterator
 
-    async def post_create_custom_reward(self, broadcaster_id: str, token_for: str) -> CustomRewardsResponse:
+    async def post_custom_reward(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str,
+        title: str,
+        cost: int,
+        prompt: str | None = None,
+        enabled: bool = True,
+        background_color: str | None = None,  # TODO Maybe change to or union Colour object
+        user_input_required: bool = False,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        redemptions_skip_queue: bool = False,
+    ) -> CustomRewardsResponse:
         params = {"broadcaster_id": broadcaster_id}
-        route: Route = Route("POST", "channel_points/custom_rewards", params=params, token_for=token_for)
+        data = {
+            "title": title,
+            "cost": cost,
+            "prompt": prompt,
+            "is_enabled": enabled,
+            "is_user_input_required": user_input_required,
+            "should_redemptions_skip_request_queue": redemptions_skip_queue,
+        }
+        if background_color:
+            data["background_color"] = background_color
+        if max_per_stream:
+            data["max_per_stream"] = max_per_stream
+            data["is_max_per_stream_enabled"] = True
+        if max_per_user:
+            data["max_per_user_per_stream"] = max_per_user
+            data["is_max_per_user_per_stream_enabled"] = True
+        if global_cooldown:
+            data["global_cooldown_seconds"] = global_cooldown
+            data["is_global_cooldown_enabled"] = True
+
+        route: Route = Route("POST", "channel_points/custom_rewards", params=params, data=data, token_for=token_for)
         return await self.request_json(route)
 
     async def delete_custom_reward(self, broadcaster_id: str, reward_id: str, token_for: str) -> None:
