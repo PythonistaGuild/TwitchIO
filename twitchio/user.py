@@ -113,7 +113,26 @@ class PartialUser:
         Returns
         --------
         twitchio.CustomReward
+
+        Raises
+        ------
+        ValueError
+            title must be a maximum of 45 characters.
+        ValueError
+            Minimum value must be at least 1.
         """
+
+        if len(title) > 45:
+            raise ValueError("title must be a maximum of 45 characters.")
+        if cost < 1:
+            raise ValueError("cost must be at least 1.")
+        if max_per_stream is not None and max_per_stream < 1:
+            raise ValueError("max_per_stream must be at least 1.")
+        if max_per_user is not None and max_per_user < 1:
+            raise ValueError("max_per_user must be at least 1.")
+        if global_cooldown is not None and global_cooldown < 1:
+            raise ValueError("global_cooldown must be at least 1.")
+
         data = await self._http.post_custom_reward(
             broadcaster_id=self.id,
             token_for=token_for,
