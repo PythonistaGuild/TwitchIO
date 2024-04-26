@@ -47,7 +47,7 @@ from .models import (
     Stream,
     Video,
 )
-from .utils import _from_json  # type: ignore
+from .utils import Colour, _from_json  # type: ignore
 
 
 if TYPE_CHECKING:
@@ -801,8 +801,7 @@ class HTTPClient:
         cost: int,
         prompt: str | None = None,
         enabled: bool = True,
-        background_color: str | None = None,  # TODO Maybe change to or union Colour object
-        user_input_required: bool = False,
+        background_color: str | Colour | None = None,
         max_per_stream: int | None = None,
         max_per_user: int | None = None,
         global_cooldown: int | None = None,
@@ -812,12 +811,15 @@ class HTTPClient:
         data = {
             "title": title,
             "cost": cost,
-            "prompt": prompt,
             "is_enabled": enabled,
-            "is_user_input_required": user_input_required,
             "should_redemptions_skip_request_queue": redemptions_skip_queue,
         }
+        if prompt is not None:
+            data["prompt"] = prompt
+            data["user_input_required"] = True
         if background_color:
+            if isinstance(background_color, Colour):
+                background_color = str(background_color)
             data["background_color"] = background_color
         if max_per_stream:
             data["max_per_stream"] = max_per_stream

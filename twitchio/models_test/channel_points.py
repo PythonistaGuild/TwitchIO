@@ -128,7 +128,8 @@ class CustomReward:
 
     __slots__ = (
         "_http",
-        "_broadcaster_id" "id",
+        "_broadcaster_id",
+        "id",
         "title",
         "prompt",
         "cost",
@@ -192,7 +193,38 @@ class CustomReward:
         else:
             return None
 
-    async def delete(self, token_for: str) -> None:
+    async def delete(self, *, token_for: str) -> None:
+        """
+        Delete the custom reward.
+
+        !!! info
+            The app used to create the reward is the only app that may delete it.
+            If the reward's redemption status is UNFULFILLED at the time the reward is deleted, its redemption status is marked as FULFILLED.
+
+        !!! note
+            Requires a user access token that includes the channel:manage:redemptions scope.
+
+        Attributes
+        -----------
+        token_for: str
+            The user's token that has permission delete the reward.
+        """
         await self._http.delete_custom_reward(
             broadcaster_id=self._broadcaster_id, reward_id=self.id, token_for=token_for
         )
+
+    async def edit(
+        self,
+        *,
+        token_for: str,
+        title: str | None = None,
+        cost: int | None = None,
+        prompt: str | None = None,
+        enabled: bool | None = None,
+        background_color: str | Colour | None = None,
+        user_input_required: bool | None = None,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        redemptions_skip_queue: bool | None = None,
+    ) -> CustomReward: ...
