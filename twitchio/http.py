@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self, Unpack
 
     from .assets import Asset
+    from .models_test.channel_points import CustomReward
     from .types_.conduits import ShardData
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
@@ -71,6 +72,7 @@ if TYPE_CHECKING:
         ClipsResponseData,
         ConduitPayload,
         ContentClassificationLabelsResponse,
+        CustomRewardRedemptionResponse,
         CustomRewardRedemptionResponseData,
         CustomRewardsResponse,
         DeleteVideosResponse,
@@ -90,7 +92,6 @@ if TYPE_CHECKING:
         UserChatColorResponse,
         VideosResponseData,
     )
-    from .models_test.channel_points import CustomReward
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -953,3 +954,20 @@ class HTTPClient:
 
         iterator = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def patch_custom_reward_redemption(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str,
+        reward_id: str,
+        id: str,
+        status: Literal["CANCELED", "FULFILLED"],
+    ) -> CustomRewardRedemptionResponse:
+        params = {"broadcaster_id": broadcaster_id, "reward_id": reward_id, "id": id}
+        data = {"status": status}
+
+        route: Route = Route(
+            "PATCH", "channel_points/custom_rewards/redemptions", params=params, json=data, token_for=token_for
+        )
+        return await self.request_json(route)
