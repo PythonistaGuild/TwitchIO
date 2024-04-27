@@ -464,6 +464,7 @@ class HTTPClient:
 
     async def get_clips(
         self,
+        *,
         first: int,
         broadcaster_id: str | None = None,
         game_id: str | None = None,
@@ -497,7 +498,7 @@ class HTTPClient:
         return iterator
 
     async def get_extension_transactions(
-        self, extension_id: str, ids: list[str] | None = None, first: int = 20
+        self, *, extension_id: str, ids: list[str] | None = None, first: int = 20
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
         params: dict[str, str | int | list[str]] = {"extension_id": extension_id, "first": first}
         if ids:
@@ -512,6 +513,7 @@ class HTTPClient:
 
     async def get_streams(
         self,
+        *,
         first: int,
         user_ids: list[int | str] | None = None,
         game_ids: list[int | str] | None = None,
@@ -571,6 +573,7 @@ class HTTPClient:
 
     async def get_teams(
         self,
+        *,
         team_name: str | None = None,
         team_id: str | None = None,
         token_for: str | None = None,
@@ -588,6 +591,7 @@ class HTTPClient:
 
     async def get_games(
         self,
+        *,
         names: list[str] | None = None,
         ids: list[str] | None = None,
         igdb_ids: list[str] | None = None,
@@ -618,6 +622,7 @@ class HTTPClient:
 
     async def get_videos(
         self,
+        *,
         ids: list[str | int] | None = None,
         user_id: str | int | None = None,
         game_id: str | int | None = None,
@@ -688,6 +693,7 @@ class HTTPClient:
 
     async def get_bits_leaderboard(
         self,
+        *,
         broadcaster_id: str | int,
         token_for: str,
         count: int = 10,
@@ -711,6 +717,7 @@ class HTTPClient:
 
     async def patch_channel_info(
         self,
+        *,
         broadcaster_id: str | int,
         token_for: str,
         game_id: str | int | None = None,
@@ -754,6 +761,7 @@ class HTTPClient:
 
     async def get_followed_channels(
         self,
+        *,
         user_id: str | int,
         token_for: str,
         broadcaster_id: str | int | None = None,
@@ -774,6 +782,7 @@ class HTTPClient:
 
     async def get_channel_followers(
         self,
+        *,
         broadcaster_id: str | int,
         token_for: str,
         user_id: str | int | None = None,
@@ -841,7 +850,7 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_custom_reward(
-        self, broadcaster_id: str, token_for: str, reward_ids: list[str] | None = None, manageable: bool = False
+        self, *, broadcaster_id: str, token_for: str, reward_ids: list[str] | None = None, manageable: bool = False
     ) -> CustomRewardsResponse:
         params: dict[str, str | bool | list[str]] = {
             "broadcaster_id": broadcaster_id,
@@ -856,6 +865,7 @@ class HTTPClient:
 
     async def patch_custom_reward(
         self,
+        *,
         broadcaster_id: str,
         token_for: str,
         reward_id: str,
