@@ -267,7 +267,26 @@ class CustomReward:
         skip_queue: bool | None
             A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed.
             If False, status is set to UNFULFILLED and follows the normal request queue process.
+
+        Returns
+        --------
+        twitchio.CustomReward
+
+        Raises
+        ------
+        ValueError
+            title must be a maximum of 45 characters.
+        ValueError
+            prompt must be a maximum of 200 characters.
         """
+
+        if title is not None and len(title) > 45:
+            raise ValueError("title must be a maximum of 45 characters.")
+        if cost is not None and cost < 1:
+            raise ValueError("cost must be at least 1.")
+        if prompt is not None and len(prompt) > 200:
+            raise ValueError("prompt must be a maximum of 200 characters.")
+
         data = await self._http.patch_custom_reward(
             broadcaster_id=self._broadcaster_id,
             token_for=token_for,

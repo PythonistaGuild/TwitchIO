@@ -122,6 +122,8 @@ class PartialUser:
         ValueError
             title must be a maximum of 45 characters.
         ValueError
+            prompt must be a maximum of 200 characters.
+        ValueError
             Minimum value must be at least 1.
         """
 
@@ -129,6 +131,8 @@ class PartialUser:
             raise ValueError("title must be a maximum of 45 characters.")
         if cost < 1:
             raise ValueError("cost must be at least 1.")
+        if prompt is not None and len(prompt) > 200:
+            raise ValueError("prompt must be a maximum of 200 characters.")
         if max_per_stream is not None and max_per_stream < 1:
             raise ValueError("max_per_stream must be at least 1.")
         if max_per_user is not None and max_per_user < 1:
