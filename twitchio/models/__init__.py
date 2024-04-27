@@ -22,16 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0dev"
-
-from . import authentication as authentication, utils as utils, web as web
-from .assets import Asset as Asset
-from .client import Client as Client
-from .exceptions import *
-from .models import *
-from .payloads import *
-from .utils import Color as Color, Colour as Colour
+from .ads import AdSchedule as AdSchedule, CommercialStart as CommercialStart, SnoozeAd as SnoozeAd
+from .bits import (
+    BitsLeaderboard as BitsLeaderboard,
+    CheerEmote as CheerEmote,
+    ExtensionTransaction as ExtensionTransaction,
+)
+from .ccls import ContentClassificationLabel as ContentClassificationLabel
+from .channel_points import CustomReward as CustomReward, CustomRewardRedemption as CustomRewardRedemption
+from .channels import (
+    ChannelEditor as ChannelEditor,
+    ChannelFollowedEvent as ChannelFollowedEvent,
+    ChannelFollowerEvent as ChannelFollowerEvent,
+    ChannelInfo as ChannelInfo,
+)
+from .charity import CharityCampaign as CharityCampaign, CharityDonation as CharityDonation
+from .chat import ChatBadge as ChatBadge, ChatterColor as ChatterColor, GlobalEmote as GlobalEmote
+from .clips import Clip as Clip
+from .games import Game as Game
+from .search import SearchChannel as SearchChannel
+from .streams import Stream as Stream
+from .teams import Team as Team
+from .videos import Video as Video

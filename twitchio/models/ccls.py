@@ -22,16 +22,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0dev"
+from __future__ import annotations
 
-from . import authentication as authentication, utils as utils, web as web
-from .assets import Asset as Asset
-from .client import Client as Client
-from .exceptions import *
-from .models import *
-from .payloads import *
-from .utils import Color as Color, Colour as Colour
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from twitchio.types_.responses import ContentClassificationLabelData
+
+
+__all__ = ("ContentClassificationLabel",)
+
+
+class ContentClassificationLabel:
+    """
+    Represents a Content Classification Label.
+
+    Attributes
+    -----------
+    id: str
+        Unique identifier for the CCL.
+    description: str
+        Localized description of the CCL.
+    name: str
+        Localized name of the CCL.
+    """
+
+    __slots__ = ("id", "description", "name")
+
+    def __init__(self, data: ContentClassificationLabelData) -> None:
+        self.id: str = data["id"]
+        self.description: str = data["description"]
+        self.name: str = data["name"]
+
+    def __repr__(self) -> str:
+        return f"<ContentClassificationLabel id={self.id}>"

@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .http import HTTPAsyncIterator, HTTPClient
-    from .models_test.channel_points import CustomReward
-    from .models_test.charity import CharityCampaign, CharityDonation
+    from .models.channel_points import CustomReward
+    from .models.charity import CharityCampaign, CharityDonation
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -61,7 +61,7 @@ class PartialUser:
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
     ) -> list[CustomReward]:
-        from .models_test.channel_points import CustomReward
+        from .models.channel_points import CustomReward
 
         data = await self._http.get_custom_reward(
             broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for
@@ -142,7 +142,7 @@ class PartialUser:
         if global_cooldown is not None and global_cooldown < 1:
             raise ValueError("global_cooldown must be at least 1.")
 
-        from .models_test.channel_points import CustomReward
+        from .models.channel_points import CustomReward
 
         data = await self._http.post_custom_reward(
             broadcaster_id=self.id,
@@ -175,7 +175,7 @@ class PartialUser:
         -------
         CharityCampaign
         """
-        from .models_test.charity import CharityCampaign
+        from .models.charity import CharityCampaign
 
         data = await self._http.get_charity_campaign(broadcaster_id=self.id, token_for=token_for)
         return CharityCampaign(data["data"][0], http=self._http)

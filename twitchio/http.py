@@ -37,18 +37,15 @@ import aiohttp
 from . import __version__
 from .conduits import Shard
 from .exceptions import HTTPException
-from .models import (
-    ChannelFollowedEvent,
-    ChannelFollowerEvent,
-    Clip,
-    ExtensionTransaction,
-    Game,
-    SearchChannel,
-    Stream,
-    Video,
-)
-from .models_test.channel_points import CustomRewardRedemption
-from .models_test.charity import CharityDonation
+from .models.bits import ExtensionTransaction
+from .models.channel_points import CustomRewardRedemption
+from .models.channels import ChannelFollowedEvent, ChannelFollowerEvent
+from .models.charity import CharityDonation
+from .models.clips import Clip
+from .models.games import Game
+from .models.search import SearchChannel
+from .models.streams import Stream
+from .models.videos import Video
 from .utils import Colour, _from_json  # type: ignore
 
 
@@ -59,7 +56,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self, Unpack
 
     from .assets import Asset
-    from .models_test.channel_points import CustomReward
+    from .models.channel_points import CustomReward
     from .types_.conduits import ShardData
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (

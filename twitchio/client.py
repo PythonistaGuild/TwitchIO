@@ -33,21 +33,12 @@ from twitchio.http import HTTPAsyncIterator
 
 from .authentication import ManagedHTTPClient, Scopes
 from .conduits import Conduit, ConduitPool
-from .models import (
-    ChannelInfo,
-    ChatBadge,
-    ChatterColor,
-    CheerEmote,
-    Clip,
-    ContentClassificationLabel,
-    ExtensionTransaction,
-    Game,
-    GlobalEmote,
-    SearchChannel,
-    Stream,
-    Team,
-    Video,
-)
+from .models.bits import CheerEmote, ExtensionTransaction
+from .models.ccls import ContentClassificationLabel
+from .models.channels import ChannelInfo
+from .models.chat import ChatBadge, ChatterColor, GlobalEmote
+from .models.games import Game
+from .models.teams import Team
 from .payloads import EventErrorPayload
 from .web import AiohttpAdapter
 
@@ -61,6 +52,10 @@ if TYPE_CHECKING:
 
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .http import HTTPAsyncIterator
+    from .models.clips import Clip
+    from .models.search import SearchChannel
+    from .models.streams import Stream
+    from .models.videos import Video
     from .types_.options import ClientOptions
     from .types_.responses import ConduitPayload
 
