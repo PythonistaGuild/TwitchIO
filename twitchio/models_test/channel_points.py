@@ -214,7 +214,7 @@ class CustomReward:
         !!! note
             Requires a user access token that includes the channel:manage:redemptions scope.
 
-        Attributes
+        Parameters
         -----------
         token_for: str
             The user's token that has permission delete the reward.
@@ -247,7 +247,7 @@ class CustomReward:
         !!! note
             Requires a user access token that includes the channel:manage:redemptions scope.
 
-        Attributes
+        Parameters
         -----------
         token_for: str
             The user's token that has permission manage the reward.
@@ -288,6 +288,8 @@ class CustomReward:
             title must be a maximum of 45 characters.
         ValueError
             prompt must be a maximum of 200 characters.
+        ValueError
+            Minimum value must be at least 1.
         """
 
         if title is not None and len(title) > 45:
@@ -324,6 +326,44 @@ class CustomReward:
         sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
         first: int = 20,
     ) -> HTTPAsyncIterator[CustomRewardRedemption]:
+        """
+        Fetch redemptions from the CustomReward.
+
+        !!! info
+            Canceled and fulfilled redemptions are returned for only a few days after they're canceled or fulfilled.
+
+        !!! note
+            Requires a user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            The ID that uniquely identifies this redemption.
+        status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
+            The state of the redemption. This can be one of the following: "CANCELED", "FULFILLED", "UNFULFILLED"
+        ids: list[str] | None
+            A list of IDs to filter the redemptions by. You may specify up to 50.
+        sort: Literal["OLDEST", "NEWEST"]
+            The order to sort the redemptions by. The default is OLDEST.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 50.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.CustomRewardRedemption]
+
+        Raises
+        ------
+        ValueError
+            You may only specify up to 50 redemption ids.
+        """
+
+        first = max(1, min(50, first))
+
+        if ids is not None and len(ids) > 50:
+            raise ValueError("You may only specify up to 50 redemption ids.")
+
         return await self._http.get_custom_reward_redemptions(
             broadcaster_id=self.broadcaster.id,
             token_for=token_for,
@@ -337,6 +377,23 @@ class CustomReward:
 
 
 class CustomRewardRedemption:
+    """
+    Represents a custom reward redemption.
+
+    Attributes
+    -----------
+    id: str
+        The ID that uniquely identifies this redemption.
+    status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
+        The state of the redemption. This can be one of the following: "CANCELED", "FULFILLED", "UNFULFILLED"
+    redeemed_at: datetime.datetime
+        The prompt shown to the viewer when they redeem the reward if user input is required.
+    reward: CustomReward | str
+        This is the reward that the redemption is from. In the case that the CustomReward is missing, it will return the CustomReward ID only.
+    user: PartialUser | str
+        The user that made the redemption. In the case that the PartialUser object is missing, it will return the user's id.
+    """
+
     __slots__ = ("id", "_user_id", "_user_login", "_http", "status", "redeemed_at", "reward")
 
     def __init__(
