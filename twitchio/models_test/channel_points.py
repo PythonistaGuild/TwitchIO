@@ -26,18 +26,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from ..assets import Asset
-from ..user import PartialUser
-from ..utils import Colour, parse_timestamp
+from twitchio.assets import Asset
+from twitchio.user import PartialUser
+from twitchio.utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
     import datetime
 
-    from twitchio.http import HTTPAsyncIterator
-
-    from ..http import HTTPClient
-    from ..types_.responses import (
+    from twitchio.http import HTTPAsyncIterator, HTTPClient
+    from twitchio.types_.responses import (
         CustomRewardRedemptionResponseData,
         CustomRewardsResponseData,
         CustomRewardsResponseImage,

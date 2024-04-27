@@ -48,6 +48,7 @@ from .models import (
     Video,
 )
 from .models_test.channel_points import CustomRewardRedemption
+from .models_test.charity import CharityDonation
 from .utils import Colour, _from_json  # type: ignore
 
 
@@ -68,6 +69,8 @@ if TYPE_CHECKING:
         ChannelEmotesResponse,
         ChannelFollowersResponseData,
         ChannelInformationResponse,
+        CharityCampaignDonationsResponseData,
+        CharityCampaignResponse,
         CheermotesResponse,
         ClipsResponseData,
         ConduitPayload,
@@ -971,3 +974,20 @@ class HTTPClient:
             "PATCH", "channel_points/custom_rewards/redemptions", params=params, json=data, token_for=token_for
         )
         return await self.request_json(route)
+
+    async def get_charity_campaign(self, *, broadcaster_id: str, token_for: str) -> CharityCampaignResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "charity/campaigns", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_charity_donations(
+        self, *, broadcaster_id: str, token_for: str, first: int = 20
+    ) -> HTTPAsyncIterator[CharityDonation]:
+        params = {"broadcaster_id": broadcaster_id, "first": first}
+        route: Route = Route("GET", "charity/campaigns/donations", params=params, token_for=token_for)
+
+        async def converter(data: CharityCampaignDonationsResponseData) -> CharityDonation:
+            return CharityDonation(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator

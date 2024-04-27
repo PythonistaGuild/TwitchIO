@@ -28,8 +28,9 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from .http import HTTPClient
+    from .http import HTTPAsyncIterator, HTTPClient
     from .models_test.channel_points import CustomReward
+    from .models_test.charity import CharityCampaign, CharityDonation
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -157,3 +158,57 @@ class PartialUser:
             skip_queue=redemptions_skip_queue,
         )
         return CustomReward(data["data"][0], http=self._http)
+
+    async def fetch_charity_campaign(self, *, token_for: str) -> CharityCampaign:
+        """
+        Fetch the active charity campaign of a broadcaster.
+
+        !!! note
+            Requires a user access token that includes the ``channel:read:charity`` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            A user access token that includes the ``channel:read:charity`` scope.
+
+        Returns
+        -------
+        CharityCampaign
+        """
+        from .models_test.charity import CharityCampaign
+
+        data = await self._http.get_charity_campaign(broadcaster_id=self.id, token_for=token_for)
+        return CharityCampaign(data["data"][0], http=self._http)
+
+    async def fetch_charity_donations(
+        self,
+        *,
+        token_for: str,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[CharityDonation]:
+        """
+        Fetches information about all broadcasts on Twitch.
+
+        !!! note
+            Requires a user access token that includes the ``channel:read:charity`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            A user access token that includes the ``channel:read:charity`` scope.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.CharityDonation]
+        """
+
+        first = max(1, min(100, first))
+
+        return await self._http.get_charity_donations(
+            broadcaster_id=self.id,
+            first=first,
+            token_for=token_for,
+        )
