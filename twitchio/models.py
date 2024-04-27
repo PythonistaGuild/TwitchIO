@@ -687,7 +687,8 @@ class ExtensionCost:
 
 
 class Game:
-    """Represents a Game on Twitch.
+    """
+    Represents a Game on Twitch.
 
     You can retrieve a game by its ID, name or IGDB ID using the [`Client.fetch_game`][twitchio.Client.fetch_game]
     method or the various `.fetch_game()` methods of other models.
@@ -780,7 +781,8 @@ class GlobalEmote:
         scale: str = "2.0",
         format: Literal["default", "static", "animated"] = "default",
     ) -> Asset:
-        """Creates an [`Asset`][twitchio.Asset] for the emote, which can be used to download/save the emote image.
+        """
+        Creates an [`Asset`][twitchio.Asset] for the emote, which can be used to download/save the emote image.
 
         Parameters
         ----------
@@ -858,7 +860,8 @@ class SearchChannel:
         return f"<SearchUser name={self.name} title={self.title} live={self.live}>"
 
     async def fetch_game(self) -> Game:
-        """Fetches the [`Game`][twitchio.Game] associated with this channel.
+        """
+        Fetches the [`Game`][twitchio.Game] associated with this channel.
 
         !!! note
             The [`Game`][twitchio.Game] returned is current from the time the [`SearchChannel`][twitchio.SearchChannel]
@@ -1118,8 +1121,7 @@ class Video:
         return f"<Video id={self.id} title={self.title} url={self.url}>"
 
     async def delete(self, token_for: str) -> None:
-        """|coro|
-
+        """
         Deletes the video. For bulk deletion see :func:`Client.delete_videos`
 
         Parameters

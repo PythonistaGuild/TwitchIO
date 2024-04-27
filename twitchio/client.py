@@ -121,7 +121,8 @@ class Client:
         return self._pool
 
     async def event_error(self, payload: EventErrorPayload) -> None:
-        """Event called when an error occurs in an event or event listener.
+        """
+        Event called when an error occurs in an event or event listener.
 
         This event can be overriden to handle event errors differently.
         By default, this method logs the error and ignores it.
@@ -161,7 +162,8 @@ class Client:
         _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
     async def setup_hook(self) -> None:
-        """Method called after [`.login`][twitchio.Client.login] has been called but before the client is started.
+        """
+        Method called after [`.login`][twitchio.Client.login] has been called but before the client is started.
 
         [`.start`][twitchio.Client.start] calls [`.login`][twitchio.Client.login] internally for you, so when using
         [`.start`][twitchio.Client.start] this method will be called after the client has generated and validated an
@@ -174,7 +176,8 @@ class Client:
         ...
 
     async def login(self, *, token: str | None = None) -> None:
-        """Method to login the client and generate or store an app token.
+        """
+        Method to login the client and generate or store an app token.
 
         This method is called automatically when using [`.start`][twitchio.Client.start].
         You should not call this method if you are using [`.start`][twitchio.Client.start].
@@ -213,7 +216,8 @@ class Client:
         await self.close()
 
     async def start(self, token: str | None = None, *, with_adapter: bool = True, dump_tokens: bool = True) -> None:
-        """Method to login the client and create a continuously running event loop.
+        """
+        Method to login the client and create a continuously running event loop.
 
         You should not call [`.login`][twitchio.Client.login] if you are using this method as it is called internally
         for you.
@@ -278,7 +282,8 @@ class Client:
         await self._http.load_tokens(name=path)
 
     async def dump_tokens(self, path: str | None = None, /) -> None:
-        """Method which dumps all the added OAuth tokens currently managed by this Client.
+        """
+        Method which dumps all the added OAuth tokens currently managed by this Client.
 
         !!! info
             By default this method dumps to a JSON file named `".tio.tokens.json"`.
@@ -307,8 +312,7 @@ class Client:
         self._listeners[name].add(listener)
 
     async def fetch_global_chat_badges(self) -> list[ChatBadge]:
-        """|coro|
-
+        """
         Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
 
         Returns
@@ -320,8 +324,7 @@ class Client:
         return [ChatBadge(x) for x in data["data"]]
 
     async def fetch_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> list[ChatterColor]:
-        """|coro|
-
+        """
         Fetches the color of a chatter.
 
         .. versionchanged:: 3.0
@@ -344,8 +347,7 @@ class Client:
         return [ChatterColor(d, http=self._http) for d in data["data"] if data]
 
     async def fetch_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> list[ChannelInfo]:
-        """|coro|
-
+        """
         Retrieve channel information from the API.
 
         Parameters
@@ -368,8 +370,7 @@ class Client:
     async def fetch_cheermotes(
         self, broadcaster_id: int | str | None = None, token_for: str | None = None
     ) -> list[CheerEmote]:
-        """|coro|
-
+        """
         Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room. Cheermotes are animated emotes that viewers can assign Bits to.
         If a broadcaster_id is not specified then only global cheermotes will be returned.
         If the broadcaster uploaded Cheermotes, the type attribute will be set to channel_custom.
@@ -391,8 +392,7 @@ class Client:
     async def fetch_classifications(
         self, locale: str = "en-US", *, token_for: str | None = None
     ) -> list[ContentClassificationLabel]:
-        """|coro|
-
+        """
         Fetches information about Twitch content classification labels.
 
         Parameters
@@ -419,8 +419,7 @@ class Client:
         token_for: str | None = None,
         first: int = 20,
     ) -> HTTPAsyncIterator[Clip]:
-        """|coro|
-
+        """
         Fetches clips by clip id or game id.
 
         Parameters
@@ -469,8 +468,7 @@ class Client:
     async def fetch_extension_transactions(
         self, extension_id: str, *, ids: list[str] | None = None, first: int = 20
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
-        """|coro|
-
+        """
         Fetches global emotes from the twitch API
 
         !!! note
@@ -503,8 +501,7 @@ class Client:
         )
 
     async def fetch_global_emotes(self, token_for: str | None = None) -> list[GlobalEmote]:
-        """|coro|
-
+        """
         Fetches global emotes from the twitch API
 
         Returns
@@ -527,8 +524,7 @@ class Client:
         token_for: str | None = None,
         first: int = 20,
     ) -> HTTPAsyncIterator[Stream]:
-        """|coro|
-
+        """
         Fetches live streams from the helix API
 
         Parameters
@@ -569,8 +565,7 @@ class Client:
     async def fetch_team(
         self, *, team_name: str | None = None, team_id: str | None = None, token_for: str | None = None
     ) -> Team:
-        """|coro|
-
+        """
         Fetches information about a specific Twitch team. You must provide one of either ``team_name`` or ``team_id``.
 
         Parameters
@@ -603,8 +598,7 @@ class Client:
         token_for: str | None = None,
         first: int = 20,
     ) -> HTTPAsyncIterator[Game]:
-        """|coro|
-
+        """
         Fetches information about all broadcasts on Twitch.
 
         Parameters
@@ -635,8 +629,7 @@ class Client:
         igdb_ids: list[str] | None = None,
         token_for: str | None = None,
     ) -> list[Game]:
-        """|coro|
-
+        """
         Fetches information about all broadcasts on Twitch.
 
         Parameters
@@ -669,7 +662,8 @@ class Client:
         igdb_id: str | None = None,
         token_for: str | None = None,
     ) -> Game | None:
-        """Fetch a [`twitchio.Game`][twitchio.Game] object with the provided `name`, `id`, or `igdb_id`.
+        """
+        Fetch a [`twitchio.Game`][twitchio.Game] object with the provided `name`, `id`, or `igdb_id`.
 
         One of `name`, `id`, or `igdb_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
@@ -723,8 +717,7 @@ class Client:
     async def search_categories(
         self, query: str, *, token_for: str | None = None, first: int = 20
     ) -> HTTPAsyncIterator[Game]:
-        """|coro|
-
+        """
         Searches Twitch categories.
 
         Parameters
@@ -752,8 +745,7 @@ class Client:
     async def search_channels(
         self, query: str, *, live: bool = False, token_for: str | None = None, first: int = 20
     ) -> HTTPAsyncIterator[SearchChannel]:
-        """|coro|
-
+        """
         Searches Twitch categories.
 
         Parameters
@@ -795,7 +787,8 @@ class Client:
         first: int = 20,
         token_for: str | None = None,
     ) -> HTTPAsyncIterator[Video]:
-        """Fetch a list of [`twitchio.Video`][twitchio.Video] objects with the provided `ids`, `user_id` or `game_id`.
+        """
+        Fetch a list of [`twitchio.Video`][twitchio.Video] objects with the provided `ids`, `user_id` or `game_id`.
 
         One of `ids`, `user_id` or `game_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
@@ -850,7 +843,8 @@ class Client:
         )
 
     async def delete_videos(self, ids: list[str | int], token_for: str) -> list[str]:
-        """Deletes one or more videos. You may delete past broadcasts, highlights, or uploads.
+        """
+        Deletes one or more videos. You may delete past broadcasts, highlights, or uploads.
 
         This requires a user token with the scope ``channel:manage:videos``.
         The limit is to delete 5 ids at a time, so if more than 5 ids are provided we will attempt to delete them in chunks.
@@ -882,7 +876,8 @@ class Client:
         return [Conduit(data=c, pool=self._pool) for c in data["data"]]
 
     def doc_test(self, thing: int = 1) -> int:
-        """This is a test method to test and view certain elements of the mkdocs style documentation.
+        """
+        This is a test method to test and view certain elements of the mkdocs style documentation.
 
         For more information see: [`Material Docs`](https://squidfunk.github.io/mkdocs-material/reference/)
 

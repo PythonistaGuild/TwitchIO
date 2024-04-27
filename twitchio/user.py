@@ -76,8 +76,7 @@ class PartialUser:
         global_cooldown: int | None = None,
         redemptions_skip_queue: bool = False,
     ) -> CustomReward:
-        """|coro|
-
+        """
         Creates a Custom Reward in the broadcaster's channel.
 
         !!! info
