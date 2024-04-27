@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ..assets import Asset
 from ..utils import Colour, parse_timestamp
@@ -33,13 +33,17 @@ from ..utils import Colour, parse_timestamp
 if TYPE_CHECKING:
     import datetime
 
+    from twitchio.http import HTTPAsyncIterator
+
     from ..http import HTTPClient
     from ..types_.responses import (
+        CustomRewardRedemptionResponseData,
         CustomRewardsResponseData,
         CustomRewardsResponseImage,
     )
+    from ..user import PartialUser
 
-__all__ = ("CustomReward", "RewardStreamSetting", "RewardCooldown")
+__all__ = ("CustomReward", "RewardStreamSetting", "RewardCooldown", "CustomRewardRedemption")
 
 
 class RewardCooldown:
@@ -54,6 +58,8 @@ class RewardCooldown:
         The cooldown period in seconds. This only applies if ``is_enabled`` is True.
         Min value is 1; however, the minimum value is 60 for it to be shown in the Twitch UX.
     """
+
+    __slots__ = ("is_enabled", "cooldown_seconds")
 
     def __init__(self, is_enabled: bool, cooldown_seconds: int) -> None:
         self.is_enabled: bool = is_enabled
@@ -75,6 +81,8 @@ class RewardStreamSetting:
         The max number of redemptions allowed. Minimum value is 1.
     """
 
+    __slots__ = ("is_enabled", "max_value")
+
     def __init__(self, is_enabled: bool, max_value: int) -> None:
         self.is_enabled: bool = is_enabled
         self.max_value: int = max_value
@@ -89,6 +97,8 @@ class CustomReward:
 
     Attributes
     -----------
+    broadcaster: PartialUser
+        The broadcaster that owns the CustomReward.
     id: str
         The ID that uniquely identifies this custom reward.
     title: str
@@ -128,7 +138,7 @@ class CustomReward:
 
     __slots__ = (
         "_http",
-        "_broadcaster_id",
+        "broadcaster",
         "id",
         "title",
         "prompt",
@@ -148,9 +158,9 @@ class CustomReward:
         "cooldown_until",
     )
 
-    def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
+    def __init__(self, data: CustomRewardsResponseData, *, broadcaster: PartialUser, http: HTTPClient) -> None:
         self._http: HTTPClient = http
-        self._broadcaster_id: str = data["broadcaster_id"]
+        self.broadcaster: PartialUser = broadcaster
         self._image: CustomRewardsResponseImage | None = data["image"]
         self.id: str = data["id"]
         self.title: str = data["title"]
@@ -210,7 +220,7 @@ class CustomReward:
             The user's token that has permission delete the reward.
         """
         await self._http.delete_custom_reward(
-            broadcaster_id=self._broadcaster_id, reward_id=self.id, token_for=token_for
+            broadcaster_id=self.broadcaster.id, reward_id=self.id, token_for=token_for
         )
 
     async def update(
@@ -288,7 +298,7 @@ class CustomReward:
             raise ValueError("prompt must be a maximum of 200 characters.")
 
         data = await self._http.patch_custom_reward(
-            broadcaster_id=self._broadcaster_id,
+            broadcaster_id=self.broadcaster.id,
             token_for=token_for,
             reward_id=self.id,
             title=title,
@@ -303,4 +313,53 @@ class CustomReward:
             skip_queue=skip_queue,
         )
 
-        return CustomReward(data=data["data"][0], http=self._http)
+        return CustomReward(data=data["data"][0], broadcaster=self.broadcaster, http=self._http)
+
+    async def fetch_redemptions(
+        self,
+        *,
+        token_for: str,
+        status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"],
+        ids: list[str] | None = None,
+        sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
+        first: int = 20,
+    ) -> HTTPAsyncIterator[CustomRewardRedemption]:
+        return await self._http.get_custom_reward_redemptions(
+            broadcaster_id=self.broadcaster.id,
+            token_for=token_for,
+            reward_id=self.id,
+            ids=ids,
+            status=status,
+            sort=sort,
+            first=first,
+            parent_reward=self,
+        )
+
+
+class CustomRewardRedemption:
+    __slots__ = ("id", "_user_id", "_user_login", "_http", "status", "redeemed_at", "reward")
+
+    def __init__(
+        self,
+        data: CustomRewardRedemptionResponseData,
+        parent_reward: CustomReward | None = None,
+        http: HTTPClient | None = None,
+    ) -> None:
+        self.id = data["id"]
+        self.status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"] = data["status"]
+        self.redeemed_at: datetime.datetime = parse_timestamp(data["redeemed_at"])
+        self.reward: CustomReward | str = parent_reward or data["reward"]["id"]
+        self._user_id = data["user_id"]
+        self._user_login = data["user_login"]
+        self._http: HTTPClient | None = http
+
+    def __repr__(self) -> str:
+        return f"<CustomRewardRedemption id={self.id} status={self.status} redeemed_at={self.redeemed_at}>"
+
+    @property
+    def user(self) -> PartialUser | str:
+        from ..user import PartialUser
+
+        if self._http is not None:
+            return PartialUser(self._user_id, self._user_login, http=self._http)
+        return self._user_id

@@ -47,6 +47,7 @@ from .models import (
     Stream,
     Video,
 )
+from .models_test.channel_points import CustomRewardRedemption
 from .utils import Colour, _from_json  # type: ignore
 
 
@@ -70,6 +71,7 @@ if TYPE_CHECKING:
         ClipsResponseData,
         ConduitPayload,
         ContentClassificationLabelsResponse,
+        CustomRewardRedemptionResponseData,
         CustomRewardsResponse,
         DeleteVideosResponse,
         ExtensionTransactionsResponseData,
@@ -88,6 +90,7 @@ if TYPE_CHECKING:
         UserChatColorResponse,
         VideosResponseData,
     )
+    from .models_test.channel_points import CustomReward
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -826,7 +829,7 @@ class HTTPClient:
 
         if prompt is not None:
             data["prompt"] = prompt
-            data["user_input_required"] = True
+            data["is_user_input_required"] = True
         if background_color:
             if isinstance(background_color, Colour):
                 background_color = str(background_color)
@@ -901,7 +904,7 @@ class HTTPClient:
                 background_color = str(background_color)
             data["background_color"] = background_color
         if user_input_required is not None:
-            data["user_input_required"] = user_input_required
+            data["is_user_input_required"] = user_input_required
         if skip_queue is not None:
             data["should_redemptions_skip_request_queue"] = skip_queue
         if max_per_stream is not None:
@@ -916,3 +919,37 @@ class HTTPClient:
 
         route: Route = Route("PATCH", "channel_points/custom_rewards", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
+
+    async def get_custom_reward_redemptions(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str,
+        reward_id: str,
+        status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"] | None = None,
+        ids: list[str] | None = None,
+        sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
+        first: int = 20,
+        parent_reward: CustomReward | None = None,
+    ) -> HTTPAsyncIterator[CustomRewardRedemption]:
+        params: dict[str, str | int | list[str]] = {
+            "broadcaster_id": broadcaster_id,
+            "reward_id": reward_id,
+            "sort": sort,
+            "First": first,
+        }
+        if ids is None and status is None:
+            raise ValueError("You must provide at least a status if not providing any ids.")
+
+        if ids is not None:
+            params["id"] = ids
+        if status is not None:
+            params["status"] = status
+
+        route: Route = Route("GET", "channel_points/custom_rewards/redemptions", params=params, token_for=token_for)
+
+        async def converter(data: CustomRewardRedemptionResponseData) -> CustomRewardRedemption:
+            return CustomRewardRedemption(data, parent_reward=parent_reward, http=self)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator

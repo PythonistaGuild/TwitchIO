@@ -396,7 +396,7 @@ class CustomRewardRedemptionResponseData(TypedDict):
     user_id: str
     user_name: str
     user_input: str
-    status: str
+    status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
     redeemed_at: str
     reward: CustomRewardRedemptionResponseReward
 

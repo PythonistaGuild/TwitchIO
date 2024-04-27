@@ -64,7 +64,7 @@ class PartialUser:
         data = await self._http.get_custom_reward(
             broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for
         )
-        return [CustomReward(d, http=self._http) for d in data["data"]]
+        return [CustomReward(d, broadcaster=self, http=self._http) for d in data["data"]]
 
     async def create_custom_reward(
         self,
@@ -153,4 +153,4 @@ class PartialUser:
             global_cooldown=global_cooldown,
             skip_queue=redemptions_skip_queue,
         )
-        return CustomReward(data["data"][0], http=self._http)
+        return CustomReward(data["data"][0], broadcaster=self, http=self._http)
