@@ -673,7 +673,7 @@ class HTTPClient:
 
     async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
         data = {"broadcaster_id": broadcaster_id, "length": length}
-        route: Route = Route("POST", "channels/commercial", data=data, token_for=token_for)
+        route: Route = Route("POST", "channels/commercial", json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdScheduleResponse:
@@ -744,7 +744,7 @@ class HTTPClient:
             ]
             data["content_classification_labels"] = converted_labels
 
-        route: Route = Route("PATCH", "channels", params=params, data=data, token_for=token_for)
+        route: Route = Route("PATCH", "channels", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsResponse:
@@ -814,6 +814,7 @@ class HTTPClient:
             "is_enabled": enabled,
             "should_redemptions_skip_request_queue": redemptions_skip_queue,
         }
+
         if prompt is not None:
             data["prompt"] = prompt
             data["user_input_required"] = True
@@ -831,7 +832,7 @@ class HTTPClient:
             data["global_cooldown_seconds"] = global_cooldown
             data["is_global_cooldown_enabled"] = True
 
-        route: Route = Route("POST", "channel_points/custom_rewards", params=params, data=data, token_for=token_for)
+        route: Route = Route("POST", "channel_points/custom_rewards", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def delete_custom_reward(self, broadcaster_id: str, reward_id: str, token_for: str) -> None:
