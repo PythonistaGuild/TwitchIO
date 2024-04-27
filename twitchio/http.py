@@ -805,14 +805,14 @@ class HTTPClient:
         max_per_stream: int | None = None,
         max_per_user: int | None = None,
         global_cooldown: int | None = None,
-        redemptions_skip_queue: bool = False,
+        skip_queue: bool = False,
     ) -> CustomRewardsResponse:
         params = {"broadcaster_id": broadcaster_id}
         data = {
             "title": title,
             "cost": cost,
             "is_enabled": enabled,
-            "should_redemptions_skip_request_queue": redemptions_skip_queue,
+            "should_redemptions_skip_request_queue": skip_queue,
         }
 
         if prompt is not None:
@@ -843,10 +843,66 @@ class HTTPClient:
     async def get_custom_reward(
         self, broadcaster_id: str, token_for: str, reward_ids: list[str] | None = None, manageable: bool = False
     ) -> CustomRewardsResponse:
-        params: dict[str, str | bool | list[str]] = {"broadcaster_id": broadcaster_id, "only_manageable_rewards": manageable}
+        params: dict[str, str | bool | list[str]] = {
+            "broadcaster_id": broadcaster_id,
+            "only_manageable_rewards": manageable,
+        }
 
         if reward_ids is not None:
             params["id"] = reward_ids
 
         route: Route = Route("GET", "channel_points/custom_rewards", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def patch_custom_reward(
+        self,
+        broadcaster_id: str,
+        token_for: str,
+        reward_id: str,
+        title: str | None = None,
+        cost: int | None = None,
+        prompt: str | None = None,
+        enabled: bool | None = None,
+        background_color: str | Colour | None = None,
+        user_input_required: bool | None = None,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        skip_queue: bool | None = None,
+    ) -> CustomRewardsResponse:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "id": reward_id,
+        }
+
+        data: dict[str, str | int | bool] = {}
+
+        if title is not None:
+            data["title"] = title
+        if cost is not None:
+            data["cost"] = cost
+        if prompt is not None:
+            data["prompt"] = prompt
+            data["user_input_required"] = True
+        if enabled is not None:
+            data["is_enabled"] = enabled
+        if background_color:
+            if isinstance(background_color, Colour):
+                background_color = str(background_color)
+            data["background_color"] = background_color
+        if user_input_required is not None:
+            data["user_input_required"] = user_input_required
+        if skip_queue is not None:
+            data["should_redemptions_skip_request_queue"] = skip_queue
+        if max_per_stream is not None:
+            data["max_per_stream"] = max_per_stream
+            data["is_max_per_stream_enabled"] = max_per_stream != 0
+        if max_per_user is not None:
+            data["max_per_user_per_stream"] = max_per_user
+            data["is_max_per_user_per_stream_enabled"] = max_per_user != 0
+        if global_cooldown is not None:
+            data["global_cooldown_seconds"] = global_cooldown
+            data["is_global_cooldown_enabled"] = global_cooldown != 0
+
+        route: Route = Route("PATCH", "channel_points/custom_rewards", params=params, json=data, token_for=token_for)
         return await self.request_json(route)

@@ -102,18 +102,18 @@ class CustomReward:
     background_color: Colour
         The background colour to use for the reward.
     enabled: bool
-        A Boolean value that determines whether the reward is enabled. Is true if enabled; otherwise, false. Disabled rewards aren't shown to the user.
+        A Boolean value that determines whether the reward is enabled. Is True if enabled; otherwise, False. Disabled rewards aren't shown to the user.
     input_required: bool
-        A Boolean value that determines whether the user must enter information when redeeming the reward. Is true if the reward requires user input.
+        A Boolean value that determines whether the user must enter information when redeeming the reward. Is True if the reward requires user input.
     paused: bool
-        A Boolean value that determines whether the reward is currently paused. Is true if the reward is paused. Viewers can't redeem paused rewards.
+        A Boolean value that determines whether the reward is currently paused. Is True if the reward is paused. Viewers can't redeem paused rewards.
     in_stock: bool
-        A Boolean value that determines whether the reward is currently in stock. Is true if the reward is in stock. Viewers can't redeem out of stock rewards.
+        A Boolean value that determines whether the reward is currently in stock. Is True if the reward is in stock. Viewers can't redeem out of stock rewards.
     image: dict[str, Asset] | None
         A dictionary of custom images for the reward. This will return None if the broadcaster did not upload any images.
         The keys, if available, are as follows: url_1x, url_2x and url_4x.
     skip_queue: bool
-        A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If false, status is set to UNFULFILLED and follows the normal request queue process. The default is false.
+        A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If False, status is set to UNFULFILLED and follows the normal request queue process. The default is False.
     current_stream_redeems: int | None
         The number of redemptions redeemed during the current live stream. The number counts against the ``max_per_stream.max_value`` limit. This is None if the broadcaster's stream isn't live or ``max_per_stream_setting`` isn't enabled.
     cooldown_until: datetime.datetime | None
@@ -213,7 +213,7 @@ class CustomReward:
             broadcaster_id=self._broadcaster_id, reward_id=self.id, token_for=token_for
         )
 
-    async def edit(
+    async def update(
         self,
         *,
         token_for: str,
@@ -222,9 +222,66 @@ class CustomReward:
         prompt: str | None = None,
         enabled: bool | None = None,
         background_color: str | Colour | None = None,
-        user_input_required: bool | None = None,
+        input_required: bool | None = None,
         max_per_stream: int | None = None,
         max_per_user: int | None = None,
         global_cooldown: int | None = None,
-        redemptions_skip_queue: bool | None = None,
-    ) -> CustomReward: ...
+        skip_queue: bool | None = None,
+    ) -> CustomReward:
+        """
+        Update the custom reward.
+
+        !!! info
+            The app used to create the reward is the only app that may update the reward.
+
+        !!! note
+            Requires a user access token that includes the channel:manage:redemptions scope.
+
+        Attributes
+        -----------
+        token_for: str
+            The user's token that has permission manage the reward.
+        title: str | None
+            The user's token that has permission manage the reward.
+        cost: int | None
+            The cost of the reward, in channel points. The minimum is 1 point.
+        prompt: str | None
+            The prompt shown to the viewer when they redeem the reward.
+            ``input_required``` needs to be set to ``True`` for this to work,
+        enabled: bool | None
+             Boolean value that indicates whether the reward is enabled. Set to True to enable the reward. Viewers see only enabled rewards.
+        background_color: str | Colour | None
+            The background color to use for the reward. Specify the color using Hex format (for example, #00E5CB).
+            You can also pass a twitchio.Colour object.
+        input_required: bool | None
+            A Boolean value that determines whether users must enter information to redeem the reward.
+        max_per_stream: int | None
+            The maximum number of redemptions allowed per live stream.
+            Setting this to 0 disables the maximum number of redemptions per stream.
+        max_per_user: int | None
+            The maximum number of redemptions allowed per user per live stream.
+            Setting this to 0 disables the maximum number of redemptions per user per stream.
+        global_cooldown: int | None
+            The cooldown period, in seconds. The minimum value is 1; however, for it to be shown in the Twitch UX, the minimum value is 60.
+            Setting this to 0 disables the global cooldown period.
+        skip_queue: bool | None
+            A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed.
+            If False, status is set to UNFULFILLED and follows the normal request queue process.
+        """
+        data = await self._http.patch_custom_reward(
+            broadcaster_id=self._broadcaster_id,
+            token_for=token_for,
+            reward_id=self.id,
+            title=title,
+            cost=cost,
+            prompt=prompt,
+            enabled=enabled,
+            background_color=background_color,
+            user_input_required=input_required,
+            max_per_stream=max_per_stream,
+            max_per_user=max_per_user,
+            global_cooldown=global_cooldown,
+            skip_queue=skip_queue,
+        )
+
+        return CustomReward(data=data["data"][0], http=self._http)

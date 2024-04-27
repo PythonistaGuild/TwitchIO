@@ -58,8 +58,12 @@ class PartialUser:
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
 
-    async def fetch_custom_rewards(self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False) -> list[CustomReward]:
-        data = await self._http.get_custom_reward(broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for)
+    async def fetch_custom_rewards(
+        self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
+    ) -> list[CustomReward]:
+        data = await self._http.get_custom_reward(
+            broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for
+        )
         return [CustomReward(d, http=self._http) for d in data["data"]]
 
     async def create_custom_reward(
@@ -143,6 +147,6 @@ class PartialUser:
             max_per_stream=max_per_stream,
             max_per_user=max_per_user,
             global_cooldown=global_cooldown,
-            redemptions_skip_queue=redemptions_skip_queue,
+            skip_queue=redemptions_skip_queue,
         )
         return CustomReward(data["data"][0], http=self._http)
