@@ -841,12 +841,12 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_custom_reward(
-        self, broadcaster_id: str, token_for: str, reward_id: str | None = None, manageable: bool = False
+        self, broadcaster_id: str, token_for: str, reward_ids: list[str] | None = None, manageable: bool = False
     ) -> CustomRewardsResponse:
-        params = {"broadcaster_id": broadcaster_id, "only_manageable_rewards": manageable}
+        params: dict[str, str | bool | list[str]] = {"broadcaster_id": broadcaster_id, "only_manageable_rewards": manageable}
 
-        if reward_id is not None:
-            params["id"] = reward_id
+        if reward_ids is not None:
+            params["id"] = reward_ids
 
         route: Route = Route("GET", "channel_points/custom_rewards", params=params, token_for=token_for)
         return await self.request_json(route)
