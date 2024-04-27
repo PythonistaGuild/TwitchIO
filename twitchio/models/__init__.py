@@ -22,25 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .ads import AdSchedule as AdSchedule, CommercialStart as CommercialStart, SnoozeAd as SnoozeAd
-from .bits import (
-    BitsLeaderboard as BitsLeaderboard,
-    CheerEmote as CheerEmote,
-    ExtensionTransaction as ExtensionTransaction,
-)
-from .ccls import ContentClassificationLabel as ContentClassificationLabel
-from .channel_points import CustomReward as CustomReward, CustomRewardRedemption as CustomRewardRedemption
-from .channels import (
-    ChannelEditor as ChannelEditor,
-    ChannelFollowedEvent as ChannelFollowedEvent,
-    ChannelFollowerEvent as ChannelFollowerEvent,
-    ChannelInfo as ChannelInfo,
-)
-from .charity import CharityCampaign as CharityCampaign, CharityDonation as CharityDonation
-from .chat import ChatBadge as ChatBadge, ChatterColor as ChatterColor, GlobalEmote as GlobalEmote
-from .clips import Clip as Clip
-from .games import Game as Game
-from .search import SearchChannel as SearchChannel
-from .streams import Stream as Stream
-from .teams import Team as Team
-from .videos import Video as Video
+from .ads import *
+from .bits import *
+from .ccls import *
+from .channel_points import *
+from .channels import *
+from .charity import *
+from .chat import *
+from .clips import *
+from .games import *
+from .search import *
+from .streams import *
+from .teams import *
+from .videos import *
