@@ -26,11 +26,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .models_test.channel_points import CustomReward
-
 
 if TYPE_CHECKING:
     from .http import HTTPClient
+    from .models_test.channel_points import CustomReward
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -61,10 +60,12 @@ class PartialUser:
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
     ) -> list[CustomReward]:
+        from .models_test.channel_points import CustomReward
+
         data = await self._http.get_custom_reward(
             broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for
         )
-        return [CustomReward(d, broadcaster=self, http=self._http) for d in data["data"]]
+        return [CustomReward(d, http=self._http) for d in data["data"]]
 
     async def create_custom_reward(
         self,
@@ -140,6 +141,8 @@ class PartialUser:
         if global_cooldown is not None and global_cooldown < 1:
             raise ValueError("global_cooldown must be at least 1.")
 
+        from .models_test.channel_points import CustomReward
+
         data = await self._http.post_custom_reward(
             broadcaster_id=self.id,
             token_for=token_for,
@@ -153,4 +156,4 @@ class PartialUser:
             global_cooldown=global_cooldown,
             skip_queue=redemptions_skip_queue,
         )
-        return CustomReward(data["data"][0], broadcaster=self, http=self._http)
+        return CustomReward(data["data"][0], http=self._http)

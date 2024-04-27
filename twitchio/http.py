@@ -926,11 +926,11 @@ class HTTPClient:
         broadcaster_id: str,
         token_for: str,
         reward_id: str,
+        parent_reward: CustomReward,
         status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"] | None = None,
         ids: list[str] | None = None,
         sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
         first: int = 20,
-        parent_reward: CustomReward | None = None,
     ) -> HTTPAsyncIterator[CustomRewardRedemption]:
         params: dict[str, str | int | list[str]] = {
             "broadcaster_id": broadcaster_id,

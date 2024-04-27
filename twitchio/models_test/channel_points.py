@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from ..assets import Asset
+from ..user import PartialUser
 from ..utils import Colour, parse_timestamp
 
 
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
         CustomRewardsResponseData,
         CustomRewardsResponseImage,
     )
-    from ..user import PartialUser
+
 
 __all__ = ("CustomReward", "RewardStreamSetting", "RewardCooldown", "CustomRewardRedemption")
 
@@ -158,9 +159,9 @@ class CustomReward:
         "cooldown_until",
     )
 
-    def __init__(self, data: CustomRewardsResponseData, *, broadcaster: PartialUser, http: HTTPClient) -> None:
+    def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
-        self.broadcaster: PartialUser = broadcaster
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=self._http)
         self._image: CustomRewardsResponseImage | None = data["image"]
         self.id: str = data["id"]
         self.title: str = data["title"]
@@ -315,7 +316,7 @@ class CustomReward:
             skip_queue=skip_queue,
         )
 
-        return CustomReward(data=data["data"][0], broadcaster=self.broadcaster, http=self._http)
+        return CustomReward(data=data["data"][0], http=self._http)
 
     async def fetch_redemptions(
         self,
@@ -388,35 +389,26 @@ class CustomRewardRedemption:
         The state of the redemption. This can be one of the following: "CANCELED", "FULFILLED", "UNFULFILLED"
     redeemed_at: datetime.datetime
         The prompt shown to the viewer when they redeem the reward if user input is required.
-    reward: CustomReward | str
-        This is the reward that the redemption is from. In the case that the CustomReward is missing, it will return the CustomReward ID only.
-    user: PartialUser | str
-        The user that made the redemption. In the case that the PartialUser object is missing, it will return the user's id.
+    reward: CustomReward
+        This is the reward that the redemption is from.
+    user: PartialUser
+        The user that made the redemption.
     """
 
-    __slots__ = ("id", "_user_id", "_user_login", "_http", "status", "redeemed_at", "reward")
+    __slots__ = ("id", "user", "_http", "status", "redeemed_at", "reward")
 
     def __init__(
         self,
         data: CustomRewardRedemptionResponseData,
-        parent_reward: CustomReward | None = None,
-        http: HTTPClient | None = None,
+        parent_reward: CustomReward,
+        http: HTTPClient,
     ) -> None:
         self.id = data["id"]
         self.status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"] = data["status"]
         self.redeemed_at: datetime.datetime = parse_timestamp(data["redeemed_at"])
-        self.reward: CustomReward | str = parent_reward or data["reward"]["id"]
-        self._user_id = data["user_id"]
-        self._user_login = data["user_login"]
+        self.reward: CustomReward = parent_reward
         self._http: HTTPClient | None = http
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=self._http)
 
     def __repr__(self) -> str:
         return f"<CustomRewardRedemption id={self.id} status={self.status} redeemed_at={self.redeemed_at}>"
-
-    @property
-    def user(self) -> PartialUser | str:
-        from ..user import PartialUser
-
-        if self._http is not None:
-            return PartialUser(self._user_id, self._user_login, http=self._http)
-        return self._user_id
