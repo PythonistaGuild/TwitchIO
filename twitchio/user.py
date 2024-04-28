@@ -34,8 +34,9 @@ if TYPE_CHECKING:
 
     from .http import HTTPAsyncIterator, HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
-    from .models.bits import BitsLeaderboard
+    from .models.bits import BitsLeaderboard, CheerEmote
     from .models.channel_points import CustomReward
+    from .models.channels import ChannelInfo
     from .models.charity import CharityCampaign, CharityDonation
     from .utils import Colour
 
@@ -348,6 +349,27 @@ class PartialUser:
             user_id=user_id,
         )
         return BitsLeaderboard(data, http=self._http)
+
+    async def fetch_cheermotes(self) -> CheerEmote:
+        # TODO
+        ...
+
+    async def fetch_channel_info(self, *, token_for: str | None = None) -> ChannelInfo:
+        """
+        Retrieve channel information for this user.
+
+        Parameters
+        -----------
+        token_for: str | None
+            An optional User OAuth token to use instead of the default app token.
+        Returns
+        --------
+            twitchio.ChannelInfo
+        """
+        from .models.channels import ChannelInfo
+
+        data = await self._http.get_channel_info(broadcaster_ids=[self.id], token_for=token_for)
+        return ChannelInfo(data["data"][0], http=self._http)
 
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
