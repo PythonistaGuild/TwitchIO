@@ -234,7 +234,10 @@ class PartialUser:
         -----------
         token_for: str
             A user access token that includes the ``analytics:read:extensions`` scope.
-        extension_id: str
+        game_id: str
+            The game's client ID. If specified, the response contains a report for the specified game.
+            If not specified, the response includes a report for each of the authenticated user's games.
+               extension_id: str
             The game's client ID. If specified, the response contains a report for the specified game.
             If not specified, the response includes a report for each of the authenticated user's games.
         type: Literal["overview_v2"]
@@ -371,16 +374,6 @@ class PartialUser:
         data = await self._http.get_channel_info(broadcaster_ids=[self.id], token_for=token_for)
         return ChannelInfo(data["data"][0], http=self._http)
 
-    async def fetch_custom_rewards(
-        self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
-    ) -> list[CustomReward]:
-        from .models.channel_points import CustomReward
-
-        data = await self._http.get_custom_reward(
-            broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for
-        )
-        return [CustomReward(d, http=self._http) for d in data["data"]]
-
     async def create_custom_reward(
         self,
         *,
@@ -471,6 +464,16 @@ class PartialUser:
             skip_queue=redemptions_skip_queue,
         )
         return CustomReward(data["data"][0], http=self._http)
+
+    async def fetch_custom_rewards(
+        self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
+    ) -> list[CustomReward]:
+        from .models.channel_points import CustomReward
+
+        data = await self._http.get_custom_reward(
+            broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for
+        )
+        return [CustomReward(d, http=self._http) for d in data["data"]]
 
     async def fetch_charity_campaign(self, *, token_for: str) -> CharityCampaign:
         """
