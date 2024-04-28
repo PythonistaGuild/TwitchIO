@@ -26,14 +26,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from twitchio.models.ads import CommercialStart
+from .models.ads import AdSchedule, CommercialStart
 
 
 if TYPE_CHECKING:
     import datetime
 
     from .http import HTTPAsyncIterator, HTTPClient
-    from .models.ads import CommercialStart
     from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.channel_points import CustomReward
     from .models.charity import CharityCampaign, CharityDonation
@@ -81,16 +80,41 @@ class PartialUser:
         ----------
         length : int
             The length of the commercial to run, in seconds. Max length is 180.
+            If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
         token_for : str
             User OAuth token to use that includes the ``channel:edit:commercial`` scope.
 
         Returns
         -------
-        CommercialStart
-            _description_
+        twitchio.CommercialStart
         """
         data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=token_for)
         return CommercialStart(data["data"][0])
+
+    async def fetch_ad_schedule(self, token_for: str) -> AdSchedule:
+        """
+        Fetch ad schedule related information, including snooze, when the last ad was run, when the next ad is scheduled, and if the channel is currently in pre-roll free time.
+
+        !!! info
+            A new ad cannot be run until 8 minutes after running a previous ad.
+
+        !!! info
+            The user id in the user access token must match the id of this PartialUser object.
+
+        !! note
+            Requires a user access token that includes the ``channel:read:ads`` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            User OAuth token to use that includes the ``channel:edit:commercial`` scope.
+
+        Returns
+        -------
+        twitchio.AdSchedule
+        """
+        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
+        return AdSchedule(data["data"][0])
 
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
