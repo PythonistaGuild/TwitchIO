@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 
     from .http import HTTPAsyncIterator, HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
+    from .models.bits import BitsLeaderboard
     from .models.channel_points import CustomReward
     from .models.charity import CharityCampaign, CharityDonation
     from .utils import Colour
@@ -63,7 +64,7 @@ class PartialUser:
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
 
-    async def start_commercial(self, length: int, token_for: str) -> CommercialStart:
+    async def start_commercial(self, *, length: int, token_for: str) -> CommercialStart:
         """
         Starts a commercial on the specified channel.
 
@@ -138,6 +139,215 @@ class PartialUser:
         """
         data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
         return SnoozeAd(data["data"][0])
+
+    async def fetch_extension_analytics(
+        self,
+        *,
+        token_for: str,
+        first: int = 20,
+        extension_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
+    ) -> HTTPAsyncIterator[ExtensionAnalytics]:
+        """
+        Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
+
+        !!! info
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
+            If you omit both of these then the report includes all available data from January 31, 2018.
+
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            If not, the API ignores your end date and uses an end date that is today minus one to two days.
+
+
+        !!! note
+            Requires a user access token that includes the ``analytics:read:extensions`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            A user access token that includes the ``analytics:read:extensions`` scope.
+        extension_id: str
+            The extension's client ID. If specified, the response contains a report for the specified extension.
+            If not specified, the response includes a report for each extension that the authenticated user owns.
+        type: Literal["overview_v2"]
+            The type of analytics report to get. This is set to ``overview_v2`` by default.
+        started_at: datetime.date
+            The date to start the report from. If you specify a start date, you must specify an end date.
+        ended_at: datetime.date
+            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.ExtensionAnalytics]
+
+        Raises
+        ------
+        ValueError
+            Both started_at and ended_at must be provided together.
+        """
+
+        first = max(1, min(100, first))
+
+        if bool(started_at) != bool(ended_at):
+            raise ValueError("Both started_at and ended_at must be provided together.")
+
+        return await self._http.get_extension_analytics(
+            first=first,
+            token_for=token_for,
+            extension_id=extension_id,
+            type=type,
+            started_at=started_at,
+            ended_at=ended_at,
+        )
+
+    async def fetch_game_analytics(
+        self,
+        *,
+        token_for: str,
+        first: int = 20,
+        game_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
+    ) -> HTTPAsyncIterator[GameAnalytics]:
+        """
+        Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
+
+        !!! info
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
+            If you omit both of these then the report includes all available data from January 31, 2018.
+
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            If not, the API ignores your end date and uses an end date that is today minus one to two days.
+
+
+        !!! note
+            Requires a user access token that includes the ``analytics:read:extensions`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            A user access token that includes the ``analytics:read:extensions`` scope.
+        extension_id: str
+            The game's client ID. If specified, the response contains a report for the specified game.
+            If not specified, the response includes a report for each of the authenticated user's games.
+        type: Literal["overview_v2"]
+            The type of analytics report to get. This is set to ``overview_v2`` by default.
+        started_at: datetime.date
+            The date to start the report from. If you specify a start date, you must specify an end date.
+        ended_at: datetime.date
+            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.GameAnalytics]
+
+        Raises
+        ------
+        ValueError
+            Both started_at and ended_at must be provided together.
+        """
+
+        first = max(1, min(100, first))
+
+        if bool(started_at) != bool(ended_at):
+            raise ValueError("Both started_at and ended_at must be provided together")
+
+        return await self._http.get_game_analytics(
+            first=first,
+            token_for=token_for,
+            game_id=game_id,
+            type=type,
+            started_at=started_at,
+            ended_at=ended_at,
+        )
+
+    async def fetch_bits_leaderboard(
+        self,
+        token_for: str,
+        count: int = 10,
+        period: Literal["all", "day", "week", "month", "year"] = "all",
+        started_at: datetime.datetime | None = None,
+        user_id: str | int | None = None,
+    ) -> BitsLeaderboard:
+        """
+        Fetches the Bits leaderboard for this user.
+
+        !!! info
+            ``started_at`` is converted to PST before being used, so if you set the start time to 2022-01-01T00:00:00.0Z and period to month,
+            the actual reporting period is December 2021, not January 2022.
+            If you want the reporting period to be January 2022, you must set the start time to 2022-01-01T08:00:00.0Z or 2022-01-01T00:00:00.0-08:00.
+
+        !!! info
+            When providing ``started_at``, you must also change the ``period`` parameter to any value other than "all".
+            Conversely, if ``period`` is set to anything other than "all", ``started_at`` must also be provided.
+
+
+        !!! note
+            Requires a user access token that includes the ``bits:read`` scope.
+
+        | Period          | Description |
+        | -----------      | -------------- |
+        | day   | A day spans from 00:00:00 on the day specified in started_at and runs through 00:00:00 of the next day.            |
+        | week   | A week spans from 00:00:00 on the Monday of the week specified in started_at and runs through 00:00:00 of the next Monday.           |
+        | month    | A month spans from 00:00:00 on the first day of the month specified in started_at and runs through 00:00:00 of the first day of the next month.            |
+        | year    | A year spans from 00:00:00 on the first day of the year specified in started_at and runs through 00:00:00 of the first day of the next year.            |
+        | all   | Default. The lifetime of the broadcaster's channel.            |
+
+
+        Parameters
+        ----------
+        count : int
+            The number of results to return. The minimum count is 1 and the maximum is 100. The default is 10.
+        period : Literal["all", "day", "week", "month", "year"]
+            The time period over which data is aggregated (uses the PST time zone).
+        started_at : datetime.datetime | None
+            The start date, used for determining the aggregation period. Specify this parameter only if you specify the period query parameter.
+            The start date is ignored if period is all.
+        user_id : str | int | None
+            An ID that identifies a user that cheered bits in the channel.
+            If count is greater than 1, the response may include users ranked above and below the specified user.
+            To get the leaderboard's top leaders, don't specify a user ID.
+        token_for : str
+            User OAuth token to use that includes the ``bits:read`` scope.
+
+        Returns
+        -------
+        twitchio.BitsLeaderboard
+
+        Raises
+        ------
+        ValueError
+            Count must be between 10 and 100.
+        ValueError
+            The 'period' parameter must be set to anything other than 'all' if 'started_at' is provided, and vice versa.
+        """
+        if count > 100 or count < 1:
+            raise ValueError("Count must be between 10 and 100.")
+
+        if (period != "all" and started_at is None) or (period == "all" and started_at is not None):
+            raise ValueError(
+                "The 'period' parameter must be set to anything other than 'all' if 'started_at' is provided, and vice versa."
+            )
+        from .models.bits import BitsLeaderboard
+
+        data = await self._http.get_bits_leaderboard(
+            broadcaster_id=self.id,
+            token_for=token_for,
+            count=count,
+            period=period,
+            started_at=started_at,
+            user_id=user_id,
+        )
+        return BitsLeaderboard(data, http=self._http)
 
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
@@ -292,134 +502,4 @@ class PartialUser:
             broadcaster_id=self.id,
             first=first,
             token_for=token_for,
-        )
-
-    async def fetch_extension_analytics(
-        self,
-        *,
-        token_for: str,
-        first: int = 20,
-        extension_id: str | None = None,
-        type: Literal["overview_v2"] = "overview_v2",
-        started_at: datetime.date | None = None,
-        ended_at: datetime.date | None = None,
-    ) -> HTTPAsyncIterator[ExtensionAnalytics]:
-        """
-        Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
-
-        !!! info
-            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
-            If you omit both of these then the report includes all available data from January 31, 2018.
-
-            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
-            If not, the API ignores your end date and uses an end date that is today minus one to two days.
-
-
-        !!! note
-            Requires a user access token that includes the ``analytics:read:extensions`` scope.
-
-        Parameters
-        -----------
-        token_for: str
-            A user access token that includes the ``analytics:read:extensions`` scope.
-        extension_id: str
-            The extension's client ID. If specified, the response contains a report for the specified extension.
-            If not specified, the response includes a report for each extension that the authenticated user owns.
-        type: Literal["overview_v2"]
-            The type of analytics report to get. This is set to ``overview_v2`` by default.
-        started_at: datetime.date
-            The date to start the report from. If you specify a start date, you must specify an end date.
-        ended_at: datetime.date
-            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
-
-        Returns
-        --------
-        twitchio.HTTPAsyncIterator[twitchio.ExtensionAnalytics]
-
-        Raises
-        ------
-        ValueError
-            Both started_at and ended_at must be provided together.
-        """
-
-        first = max(1, min(100, first))
-
-        if bool(started_at) != bool(ended_at):
-            raise ValueError("Both started_at and ended_at must be provided together.")
-
-        return await self._http.get_extension_analytics(
-            first=first,
-            token_for=token_for,
-            extension_id=extension_id,
-            type=type,
-            started_at=started_at,
-            ended_at=ended_at,
-        )
-
-    async def fetch_game_analytics(
-        self,
-        *,
-        token_for: str,
-        first: int = 20,
-        game_id: str | None = None,
-        type: Literal["overview_v2"] = "overview_v2",
-        started_at: datetime.date | None = None,
-        ended_at: datetime.date | None = None,
-    ) -> HTTPAsyncIterator[GameAnalytics]:
-        """
-        Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
-
-        !!! info
-            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
-            If you omit both of these then the report includes all available data from January 31, 2018.
-
-            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
-            If not, the API ignores your end date and uses an end date that is today minus one to two days.
-
-
-        !!! note
-            Requires a user access token that includes the ``analytics:read:extensions`` scope.
-
-        Parameters
-        -----------
-        token_for: str
-            A user access token that includes the ``analytics:read:extensions`` scope.
-        extension_id: str
-            The game's client ID. If specified, the response contains a report for the specified game.
-            If not specified, the response includes a report for each of the authenticated user's games.
-        type: Literal["overview_v2"]
-            The type of analytics report to get. This is set to ``overview_v2`` by default.
-        started_at: datetime.date
-            The date to start the report from. If you specify a start date, you must specify an end date.
-        ended_at: datetime.date
-            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
-
-        Returns
-        --------
-        twitchio.HTTPAsyncIterator[twitchio.GameAnalytics]
-
-        Raises
-        ------
-        ValueError
-            Both started_at and ended_at must be provided together.
-        """
-
-        first = max(1, min(100, first))
-
-        if bool(started_at) != bool(ended_at):
-            raise ValueError("Both started_at and ended_at must be provided together")
-
-        return await self._http.get_game_analytics(
-            first=first,
-            token_for=token_for,
-            game_id=game_id,
-            type=type,
-            started_at=started_at,
-            ended_at=ended_at,
         )
