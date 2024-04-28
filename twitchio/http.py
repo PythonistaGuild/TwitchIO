@@ -465,7 +465,7 @@ class HTTPClient:
             params["started_at"] = date_to_datetime_with_z(started_at)
             params["ended_at"] = date_to_datetime_with_z(ended_at)
 
-        route: Route = Route("GET", "channel_points/custom_rewards/redemptions", params=params, token_for=token_for)
+        route: Route = Route("GET", "analytics/extensions", params=params, token_for=token_for)
 
         async def converter(data: ExtensionAnalyticsResponseData) -> ExtensionAnalytics:
             return ExtensionAnalytics(data)
@@ -495,7 +495,7 @@ class HTTPClient:
             params["started_at"] = date_to_datetime_with_z(started_at)
             params["ended_at"] = date_to_datetime_with_z(ended_at)
 
-        route: Route = Route("GET", "channel_points/custom_rewards/redemptions", params=params, token_for=token_for)
+        route: Route = Route("GET", "analytics/games", params=params, token_for=token_for)
 
         async def converter(data: GameAnalyticsResponseData) -> GameAnalytics:
             return GameAnalytics(data)

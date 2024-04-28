@@ -24,11 +24,12 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import datetime
 from typing import TYPE_CHECKING, Literal
 
 
 if TYPE_CHECKING:
+    import datetime
+
     from .http import HTTPAsyncIterator, HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.channel_points import CustomReward
@@ -228,6 +229,14 @@ class PartialUser:
         """
         Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
 
+        !!! info
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
+            If you omit both of these then the report includes all available data from January 31, 2018.
+
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            If not, the API ignores your end date and uses an end date that is today minus one to two days.
+
+
         !!! note
             Requires a user access token that includes the ``analytics:read:extensions`` scope.
 
@@ -235,19 +244,33 @@ class PartialUser:
         -----------
         token_for: str
             A user access token that includes the ``analytics:read:extensions`` scope.
+        extension_id: str
+            The extension's client ID. If specified, the response contains a report for the specified extension.
+            If not specified, the response includes a report for each extension that the authenticated user owns.
+        type: Literal["overview_v2"]
+            The type of analytics report to get. This is set to ``overview_v2`` by default.
+        started_at: datetime.date
+            The date to start the report from. If you specify a start date, you must specify an end date.
+        ended_at: datetime.date
+            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.CharityDonation]
+        twitchio.HTTPAsyncIterator[twitchio.ExtensionAnalytics]
+
+        Raises
+        ------
+        ValueError
+            Both started_at and ended_at must be provided together.
         """
 
         first = max(1, min(100, first))
 
         if bool(started_at) != bool(ended_at):
-            raise ValueError("Both started_at and ended_at must be provided together")
+            raise ValueError("Both started_at and ended_at must be provided together.")
 
         return await self._http.get_extension_analytics(
             first=first,
@@ -269,7 +292,15 @@ class PartialUser:
         ended_at: datetime.date | None = None,
     ) -> HTTPAsyncIterator[GameAnalytics]:
         """
-        Fetches a game report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
+        Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
+
+        !!! info
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
+            If you omit both of these then the report includes all available data from January 31, 2018.
+
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            If not, the API ignores your end date and uses an end date that is today minus one to two days.
+
 
         !!! note
             Requires a user access token that includes the ``analytics:read:extensions`` scope.
@@ -278,13 +309,27 @@ class PartialUser:
         -----------
         token_for: str
             A user access token that includes the ``analytics:read:extensions`` scope.
+        extension_id: str
+            The game's client ID. If specified, the response contains a report for the specified game.
+            If not specified, the response includes a report for each of the authenticated user's games.
+        type: Literal["overview_v2"]
+            The type of analytics report to get. This is set to ``overview_v2`` by default.
+        started_at: datetime.date
+            The date to start the report from. If you specify a start date, you must specify an end date.
+        ended_at: datetime.date
+            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.CharityDonation]
+        twitchio.HTTPAsyncIterator[twitchio.GameAnalytics]
+
+        Raises
+        ------
+        ValueError
+            Both started_at and ended_at must be provided together.
         """
 
         first = max(1, min(100, first))
