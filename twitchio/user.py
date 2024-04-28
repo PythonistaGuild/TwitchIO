@@ -237,9 +237,6 @@ class PartialUser:
         game_id: str
             The game's client ID. If specified, the response contains a report for the specified game.
             If not specified, the response includes a report for each of the authenticated user's games.
-               extension_id: str
-            The game's client ID. If specified, the response contains a report for the specified game.
-            If not specified, the response includes a report for each of the authenticated user's games.
         type: Literal["overview_v2"]
             The type of analytics report to get. This is set to ``overview_v2`` by default.
         started_at: datetime.date
@@ -373,6 +370,71 @@ class PartialUser:
 
         data = await self._http.get_channel_info(broadcaster_ids=[self.id], token_for=token_for)
         return ChannelInfo(data["data"][0], http=self._http)
+
+    async def modify_channel(
+        self,
+        *,
+        token_for: str,
+        game_id: str | None = None,
+        language: str | None = None,
+        title: str | None = None,
+        delay: int | None = None,
+        tags: list[str] | None = None,
+        classification_labels: list[
+            dict[Literal["DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]
+        ]
+        | None = None,
+        branded: bool | None = None,
+    ) -> None:
+        """
+        Updates this user's channel properties.
+
+        !! info
+            A channel may specify a maximum of 10 tags. Each tag is limited to a maximum of 25 characters and may not be an empty string or contain spaces or special characters.
+            Tags are case insensitive.
+            For readability, consider using camelCasing or PascalCasing.
+
+        !!! note
+            Requires a user access token that includes the ``channel:manage:broadcast`` scope.
+
+
+        Parameters
+        -----------
+        game_id: str | None
+            The ID of the game that the user plays. The game is not updated if the ID isn't a game ID that Twitch recognizes. To unset this field, use '0' or '' (an empty string).
+        language: str | None
+            The user's preferred language. Set the value to an ISO 639-1 two-letter language code (for example, en for English).
+            Set to “other” if the user's preferred language is not a Twitch supported language.
+            The language isn't updated if the language code isn't a Twitch supported language.
+        title: str | None
+            The title of the user's stream. You may not set this field to an empty string.
+        delay: int | None
+            The number of seconds you want your broadcast buffered before streaming it live.
+            The delay helps ensure fairness during competitive play.
+            Only users with Partner status may set this field. The maximum delay is 900 seconds (15 minutes).
+        tags: list[str] | None
+            A list of channel-defined tags to apply to the channel. To remove all tags from the channel, set tags to an empty array. Tags help identify the content that the channel streams.
+            You may set a maximum of 10 tags, each limited to 25 characters. They can not be empty strings, contain spaces or special characters
+            See here for more [information](https://help.twitch.tv/s/article/guide-to-tags)
+        classification_labels: list[dict[Literal["DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]] | None
+            List of labels that should be set as the Channel's CCLs.
+        branded: bool | None
+            Boolean flag indicating if the channel has branded content.
+        token_for: str
+            User OAuth token to use that includes the ``channel:manage:broadcast`` scope.
+        """
+
+        return await self._http.patch_channel_info(
+            broadcaster_id=self.id,
+            token_for=token_for,
+            game_id=game_id,
+            language=language,
+            title=title,
+            delay=delay,
+            tags=tags,
+            classification_labels=classification_labels,
+            branded_content=branded,
+        )
 
     async def create_custom_reward(
         self,
