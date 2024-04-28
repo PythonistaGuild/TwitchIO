@@ -24,11 +24,13 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import datetime
+from typing import TYPE_CHECKING, Literal
 
 
 if TYPE_CHECKING:
     from .http import HTTPAsyncIterator, HTTPClient
+    from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.channel_points import CustomReward
     from .models.charity import CharityCampaign, CharityDonation
     from .utils import Colour
@@ -211,4 +213,90 @@ class PartialUser:
             broadcaster_id=self.id,
             first=first,
             token_for=token_for,
+        )
+
+    async def fetch_extension_analytics(
+        self,
+        *,
+        token_for: str,
+        first: int = 20,
+        extension_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
+    ) -> HTTPAsyncIterator[ExtensionAnalytics]:
+        """
+        Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
+
+        !!! note
+            Requires a user access token that includes the ``analytics:read:extensions`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            A user access token that includes the ``analytics:read:extensions`` scope.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.CharityDonation]
+        """
+
+        first = max(1, min(100, first))
+
+        if bool(started_at) != bool(ended_at):
+            raise ValueError("Both started_at and ended_at must be provided together")
+
+        return await self._http.get_extension_analytics(
+            first=first,
+            token_for=token_for,
+            extension_id=extension_id,
+            type=type,
+            started_at=started_at,
+            ended_at=ended_at,
+        )
+
+    async def fetch_game_analytics(
+        self,
+        *,
+        token_for: str,
+        first: int = 20,
+        game_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
+    ) -> HTTPAsyncIterator[GameAnalytics]:
+        """
+        Fetches a game report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
+
+        !!! note
+            Requires a user access token that includes the ``analytics:read:extensions`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            A user access token that includes the ``analytics:read:extensions`` scope.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.CharityDonation]
+        """
+
+        first = max(1, min(100, first))
+
+        if bool(started_at) != bool(ended_at):
+            raise ValueError("Both started_at and ended_at must be provided together")
+
+        return await self._http.get_game_analytics(
+            first=first,
+            token_for=token_for,
+            game_id=game_id,
+            type=type,
+            started_at=started_at,
+            ended_at=ended_at,
         )

@@ -73,7 +73,7 @@ class ExtensionAnalytics(AnalyticsBase):
     Attributes
     ----------
     id: str
-        An ID that identifies the extension.
+        An ID that identifies the extension that the report was generated for.
     url: str
         The URL to download the report.
     type: str
@@ -94,7 +94,7 @@ class GameAnalytics(AnalyticsBase):
     Attributes
     ----------
     id: str
-        An ID that identifies the game.
+        An ID that identifies the game that the report was generated for.
     url: str
         The URL to download the report.
     type: str

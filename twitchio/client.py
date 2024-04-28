@@ -359,7 +359,7 @@ class Client:
         if len(broadcaster_ids) > 100:
             raise ValueError("Maximum of 100 broadcaster_ids")
 
-        data = await self._http.get_channels(broadcaster_ids, token_for)
+        data = await self._http.get_channel_info(broadcaster_ids, token_for)
         return [ChannelInfo(d, http=self._http) for d in data["data"]]
 
     async def fetch_cheermotes(
