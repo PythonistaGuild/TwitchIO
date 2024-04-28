@@ -26,11 +26,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from twitchio.models.ads import CommercialStart
+
 
 if TYPE_CHECKING:
     import datetime
 
     from .http import HTTPAsyncIterator, HTTPClient
+    from .models.ads import CommercialStart
     from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.channel_points import CustomReward
     from .models.charity import CharityCampaign, CharityDonation
@@ -60,6 +63,34 @@ class PartialUser:
 
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
+
+    async def start_commercial(self, length: int, token_for: str) -> CommercialStart:
+        """
+        Starts a commercial on the specified channel.
+
+        !!! info
+            Only partners and affiliates may run commercials and they must be streaming live at the time.
+
+        !!! info
+            Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
+
+        !! note
+            Requires a user access token that includes the ``channel:edit:commercial`` scope.
+
+        Parameters
+        ----------
+        length : int
+            The length of the commercial to run, in seconds. Max length is 180.
+        token_for : str
+            User OAuth token to use that includes the ``channel:edit:commercial`` scope.
+
+        Returns
+        -------
+        CommercialStart
+            _description_
+        """
+        data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=token_for)
+        return CommercialStart(data["data"][0])
 
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
