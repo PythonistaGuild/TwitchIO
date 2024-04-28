@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 from .ads import *
+from .analytics import *
 from .bits import *
 from .ccls import *
 from .channel_points import *

@@ -631,9 +631,6 @@ class Client:
         -----------
         token_for: str | None
             An optional User OAuth token to use instead of the default app token.
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
 
         Returns
         --------

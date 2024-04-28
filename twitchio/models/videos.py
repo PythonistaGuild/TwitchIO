@@ -55,7 +55,7 @@ class Video:
     created_at: datetime.datetime
         Date when the video was created.
     published_at: datetime.datetime
-       Date when the video was published.
+        Date when the video was published.
     url: str
         URL of the video.
     thumbnail_url: str
@@ -114,8 +114,6 @@ class Video:
 
         Parameters
         -----------
-        ids: list[str | int]
-            List of video IDs to delete
         token_for: str
             A user oauth token with the channel:manage:videos
         """
