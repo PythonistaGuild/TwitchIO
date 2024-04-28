@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from .models.ads import AdSchedule, CommercialStart
+from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 
 
 if TYPE_CHECKING:
@@ -115,6 +115,29 @@ class PartialUser:
         """
         data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
         return AdSchedule(data["data"][0])
+
+    async def snooze_next_ad(self, token_for: str) -> SnoozeAd:
+        """
+        If available, pushes back the timestamp of the upcoming automatic mid-roll ad by 5 minutes.
+        This endpoint duplicates the snooze functionality in the creator dashboard's Ads Manager.
+
+        !!! info
+            The user id in the user access token must match the id of this PartialUser object.
+
+        !! note
+            Requires a user access token that includes the ``channel:manage:ads`` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            User OAuth token to use that includes the ``channel:manage:ads`` scope.
+
+        Returns
+        -------
+        twitchio.SnoozeAd
+        """
+        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
+        return SnoozeAd(data["data"][0])
 
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
