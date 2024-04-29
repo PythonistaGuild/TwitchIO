@@ -31,18 +31,22 @@ from twitchio.utils import parse_timestamp
 
 
 if TYPE_CHECKING:
-    from twitchio.http import HTTPClient
+    from twitchio.http import HTTPAsyncIterator, HTTPClient
     from twitchio.types_.responses import (
         ChannelEditorsResponseData,
+        ChannelFollowersResponse,
         ChannelFollowersResponseData,
         ChannelInformationResponseData,
+        FollowedChannelsResponse,
         FollowedChannelsResponseData,
     )
 
 
 __all__ = (
     "ChannelEditor",
-    "ChannelFollowedEvent",
+    "ChannelFollowers",
+    "FollowedChannels",
+    "FollowedChannelsEvent",
     "ChannelFollowerEvent",
     "ChannelInfo",
 )
@@ -70,14 +74,15 @@ class ChannelEditor:
         return f"<ChannelEditor user={self.user} created_at={self.created_at}>"
 
 
-class ChannelFollowedEvent:
+class FollowedChannelsEvent:
     """
-    Represents a ChannelFollowedEvent
+    Represents a followed channel event.
 
     Attributes
     -----------
     broadcaster: twitchio.PartialUser
         PartialUser that identifies the channel that this user is following.
+        If no results are found it returns an empty list.
     followed_at: datetime.datetime
         The datetime of when the user followed the channel.
     """
@@ -89,7 +94,30 @@ class ChannelFollowedEvent:
         self.followed_at = parse_timestamp(data["followed_at"])
 
     def __repr__(self) -> str:
-        return f"<ChannelFollowedEvent broadcaster={self.broadcaster} follwed_at={self.followed_at}>"
+        return f"<ChannelFollowedEvent broadcaster={self.broadcaster} followed_at={self.followed_at}>"
+
+
+class FollowedChannels:
+    """
+    Represents channels followed.
+
+    Attributes
+    -----------
+    followed: HTTPAsyncIterator[FollowedChannelsEvent]
+        HTTPAsyncIterator of PartialUsers that identifies channel's this user follows.
+        If no results are found it returns an empty list.
+    total: int
+        The total number of users that follow this broadcaster.
+    """
+
+    __slots__ = ("followed", "total")
+
+    def __init__(self, data: FollowedChannelsResponse, iterator: HTTPAsyncIterator[FollowedChannelsEvent]) -> None:
+        self.followed: HTTPAsyncIterator[FollowedChannelsEvent] = iterator
+        self.total: int = int(data["total"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelsFollowed total={self.total}>"
 
 
 class ChannelFollowerEvent:
@@ -111,7 +139,29 @@ class ChannelFollowerEvent:
         self.followed_at = parse_timestamp(data["followed_at"])
 
     def __repr__(self) -> str:
-        return f"<ChannelFollowerEvent user={self.user} follwed_at={self.followed_at}>"
+        return f"<ChannelFollowerEvent user={self.user} followed_at={self.followed_at}>"
+
+
+class ChannelFollowers:
+    """
+    Represents channel followers
+
+    Attributes
+    -----------
+    followers: HTTPAsyncIterator[ChannelFollowerEvent]
+        PartialUser that identifies a user that follows this channel.
+    total: int
+        The total number of users that follow this broadcaster.
+    """
+
+    __slots__ = ("followers", "total")
+
+    def __init__(self, data: ChannelFollowersResponse, iterator: HTTPAsyncIterator[ChannelFollowerEvent]) -> None:
+        self.followers: HTTPAsyncIterator[ChannelFollowerEvent] = iterator
+        self.total: int = int(data["total"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelFollowers total={self.total}>"
 
 
 class ChannelInfo:

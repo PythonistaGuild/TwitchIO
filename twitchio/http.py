@@ -41,7 +41,7 @@ from .exceptions import HTTPException
 from .models.analytics import ExtensionAnalytics, GameAnalytics
 from .models.bits import ExtensionTransaction
 from .models.channel_points import CustomRewardRedemption
-from .models.channels import ChannelFollowedEvent, ChannelFollowerEvent
+from .models.channels import ChannelFollowerEvent, ChannelFollowers, FollowedChannels, FollowedChannelsEvent
 from .models.charity import CharityDonation
 from .models.clips import Clip
 from .models.games import Game
@@ -618,7 +618,7 @@ class HTTPClient:
         token_for: str,
         broadcaster_id: str | int | None = None,
         first: int = 20,
-    ) -> HTTPAsyncIterator[ChannelFollowedEvent]:
+    ) -> FollowedChannels:
         params = {"first": first, "user_id": user_id}
 
         if broadcaster_id is not None:
@@ -626,11 +626,14 @@ class HTTPClient:
 
         route = Route("GET", "channels/followed", params=params, token_for=token_for)
 
-        async def converter(data: FollowedChannelsResponseData) -> ChannelFollowedEvent:
-            return ChannelFollowedEvent(data, http=self)
+        async def converter(data: FollowedChannelsResponseData) -> FollowedChannelsEvent:
+            return FollowedChannelsEvent(data, http=self)
+
+        from .models.channels import FollowedChannels
 
         iterator = self.request_paginated(route, converter=converter)
-        return iterator
+        data = await self.request_json(route)
+        return FollowedChannels(data, iterator)
 
     async def get_channel_followers(
         self,
@@ -639,7 +642,7 @@ class HTTPClient:
         token_for: str,
         user_id: str | int | None = None,
         first: int = 20,
-    ) -> HTTPAsyncIterator[ChannelFollowerEvent]:
+    ) -> ChannelFollowers:
         params = {"first": first, "broadcaster_id": broadcaster_id}
 
         if user_id is not None:
@@ -651,7 +654,8 @@ class HTTPClient:
             return ChannelFollowerEvent(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter)
-        return iterator
+        data = await self.request_json(route)
+        return ChannelFollowers(data, iterator)
 
     ### Channel Points ###
 

@@ -32,11 +32,13 @@ from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 if TYPE_CHECKING:
     import datetime
 
-    from .http import HTTPAsyncIterator, HTTPClient
+    from twitchio.http import HTTPAsyncIterator
+
+    from .http import HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.bits import BitsLeaderboard, CheerEmote
     from .models.channel_points import CustomReward
-    from .models.channels import ChannelEditor, ChannelInfo
+    from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
     from .utils import Colour
 
@@ -456,6 +458,61 @@ class PartialUser:
 
         data = await self._http.get_channel_editors(broadcaster_id=self.id, token_for=token_for)
         return [ChannelEditor(d, http=self._http) for d in data["data"]]
+
+    async def fetch_followed_channels(
+        self, token_for: str, broadcaster_id: str | int | None = None
+    ) -> FollowedChannels | None:
+        """
+        Fetches a list of the user's editors for their channel.
+
+        !!! note
+            Requires a user access token that includes the ``user:read:follows`` scope.
+
+        Parameters
+        -----------
+        broadcaster_id: str | int | None
+            Broadcaster ID to check whether the user follows this broadcaster.
+        token_for: str
+            User OAuth token to use that includes the ``user:read:follows`` scope.
+
+        Returns
+        -------
+        ChannelsFollowed
+        """
+
+        return await self._http.get_followed_channels(
+            user_id=self.id,
+            token_for=token_for,
+            broadcaster_id=broadcaster_id,
+        )
+
+    async def fetch_channels_followers(self, token_for: str, user_id: str | int | None = None) -> ChannelFollowers:
+        """
+        Fetches a list of the user's editors for their channel.
+
+        !!! info
+            The User ID in the token must match that of the broadcaster or a moderator.
+
+        !!! note
+            Requires a user access token that includes the ``moderator:read:followers`` scope.
+
+        Parameters
+        -----------
+        user_id: str | int | None
+            Check whether this broadcaster followers the given user.
+        token_for: str
+            User OAuth token to use that includes the ``moderator:read:followers`` scope.
+
+        Returns
+        -------
+        ChannelFollowers
+        """
+
+        return await self._http.get_channel_followers(
+            broadcaster_id=self.id,
+            token_for=token_for,
+            user_id=user_id,
+        )
 
     async def create_custom_reward(
         self,
