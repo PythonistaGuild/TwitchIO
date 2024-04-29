@@ -833,7 +833,7 @@ class HTTPClient:
         self, *, broadcaster_id: str, token_for: str, first: int = 20
     ) -> HTTPAsyncIterator[CharityDonation]:
         params = {"broadcaster_id": broadcaster_id, "first": first}
-        route: Route = Route("GET", "charity/campaigns/donations", params=params, token_for=token_for)
+        route: Route = Route("GET", "charity/donations", params=params, token_for=token_for)
 
         async def converter(data: CharityCampaignDonationsResponseData) -> CharityDonation:
             return CharityDonation(data, http=self)
@@ -894,7 +894,7 @@ class HTTPClient:
         if is_featured is not None:
             params["is_featured"] = is_featured
 
-        route: Route = Route("GET", "streams", params=params, token_for=token_for)
+        route: Route = Route("GET", "clips", params=params, token_for=token_for)
 
         async def converter(data: ClipsResponseData) -> Clip:
             return Clip(data, http=self)
