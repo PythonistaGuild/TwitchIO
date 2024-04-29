@@ -157,7 +157,7 @@ class ManagedHTTPClient(OAuth):
 
         return token or self._app_token
 
-    async def request(self, route: Route) -> RawResponse | str:
+    async def request(self, route: Route) -> RawResponse | str | None:
         if not self._session:
             await self._init_session()
 
@@ -167,7 +167,7 @@ class ManagedHTTPClient(OAuth):
             route.update_headers({"Authorization": f"Bearer {token}"})
 
         try:
-            data: RawResponse | str = await super().request(route)
+            data: RawResponse | str | None = await super().request(route)
         except HTTPException as e:
             if not old or e.status != 401:
                 raise e

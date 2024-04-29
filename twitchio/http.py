@@ -353,7 +353,7 @@ class HTTPClient:
             self.clear()
             logger.debug("%s session closed successfully.", self.__class__.__qualname__)
 
-    async def request(self, route: Route) -> RawResponse | str:
+    async def request(self, route: Route) -> RawResponse | str | None:
         await self._init_session()
         assert self._session is not None
 
@@ -374,6 +374,9 @@ class HTTPClient:
                     status=resp.status,
                     extra=data,
                 )
+
+            if resp.status == 204:
+                return None
 
         return data
 
