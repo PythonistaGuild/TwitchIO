@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.bits import BitsLeaderboard, CheerEmote
     from .models.channel_points import CustomReward
-    from .models.channels import ChannelInfo
+    from .models.channels import ChannelEditor, ChannelInfo
     from .models.charity import CharityCampaign, CharityDonation
     from .utils import Colour
 
@@ -435,6 +435,27 @@ class PartialUser:
             classification_labels=classification_labels,
             branded_content=branded,
         )
+
+    async def fetch_channel_editors(self, token_for: str) -> list[ChannelEditor]:
+        """
+        Fetches a list of the user's editors for their channel.
+
+        !!! note
+            Requires a user access token that includes the ``channel:manage:broadcast`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            User OAuth token to use that includes the ``channel:manage:broadcast`` scope.
+
+        Returns
+        -------
+        list[ChannelEditor]
+        """
+        from .models.channels import ChannelEditor
+
+        data = await self._http.get_channel_editors(broadcaster_id=self.id, token_for=token_for)
+        return [ChannelEditor(d, http=self._http) for d in data["data"]]
 
     async def create_custom_reward(
         self,
