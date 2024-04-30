@@ -313,6 +313,7 @@ class Client:
         Returns
         --------
         list[twitchio.ChatBadge]
+            A list of ChatBadge objects
         """
 
         data = await self._http.get_global_chat_badges()
@@ -333,7 +334,8 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            list[twitchio.ChatterColor]
+        list[twitchio.ChatterColor]
+            A list of ChatterColor objects for the requested users.
         """
         if len(user_ids) > 100:
             raise ValueError("Maximum of 100 user_ids")
@@ -354,7 +356,8 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            list[twitchio.ChannelInfo]
+        list[twitchio.ChannelInfo]
+            A list of ChannelInfo objects.
         """
         if len(broadcaster_ids) > 100:
             raise ValueError("Maximum of 100 broadcaster_ids")
@@ -380,6 +383,7 @@ class Client:
         Returns
         --------
         list[twitchio.CheerEmote]
+            A list of CheerEmotes objects.
         """
         data = await self._http.get_cheermotes(str(broadcaster_id) if broadcaster_id else None, token_for)
         return [CheerEmote(d) for d in data["data"]]
@@ -398,6 +402,7 @@ class Client:
         Returns
         --------
         list[twitchio.ContentClassificationLabel]
+            A list of Content Classification Labels objects.
         """
         data = await self._http.get_content_classification_labels(locale, token_for)
         return [ContentClassificationLabel(d) for d in data["data"]]
@@ -502,6 +507,7 @@ class Client:
         Returns
         --------
         list[twitchio.GlobalEmote]
+            A list of GlobalEmotes objects.
         """
         data = await self._http.get_global_emotes(token_for)
         template: str = data["template"]
@@ -573,7 +579,8 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            twitchio.Team
+        twitchio.Team
+            A Team object.
         """
 
         if team_name and team_id:
@@ -635,6 +642,7 @@ class Client:
         Returns
         --------
         list[twitchio.Game]
+            A list of Game objects
         """
 
         data = await self._http.get_games(
@@ -681,7 +689,7 @@ class Client:
         Returns
         -------
         Game | None
-            The game object if found, otherwise `None`.
+            The Game object if found, otherwise `None`.
 
         Raises
         ------
@@ -723,7 +731,7 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            twitchio.HTTPAsyncIterator[twitchio.Game]
+        twitchio.HTTPAsyncIterator[twitchio.Game]
         """
 
         first = max(1, min(100, first))
@@ -754,7 +762,7 @@ class Client:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
+        twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
         """
 
         first = max(1, min(100, first))

@@ -79,7 +79,7 @@ class PartialUser:
             Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
 
         !! note
-            Requires a user access token that includes the ``channel:edit:commercial`` scope.
+            Requires user access token that includes the ``channel:edit:commercial`` scope.
 
         Parameters
         ----------
@@ -92,6 +92,7 @@ class PartialUser:
         Returns
         -------
         twitchio.CommercialStart
+            A CommercialStart object.
         """
         data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=token_for)
         return CommercialStart(data["data"][0])
@@ -107,7 +108,7 @@ class PartialUser:
             The user id in the user access token must match the id of this PartialUser object.
 
         !! note
-            Requires a user access token that includes the ``channel:read:ads`` scope.
+            Requires user access token that includes the ``channel:read:ads`` scope.
 
         Parameters
         ----------
@@ -117,6 +118,7 @@ class PartialUser:
         Returns
         -------
         twitchio.AdSchedule
+            An AdSchedule object.
         """
         data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
         return AdSchedule(data["data"][0])
@@ -130,7 +132,7 @@ class PartialUser:
             The user id in the user access token must match the id of this PartialUser object.
 
         !! note
-            Requires a user access token that includes the ``channel:manage:ads`` scope.
+            Requires user access token that includes the ``channel:manage:ads`` scope.
 
         Parameters
         ----------
@@ -140,6 +142,7 @@ class PartialUser:
         Returns
         -------
         twitchio.SnoozeAd
+            A SnoozeAd object.
         """
         data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
         return SnoozeAd(data["data"][0])
@@ -166,7 +169,7 @@ class PartialUser:
 
 
         !!! note
-            Requires a user access token that includes the ``analytics:read:extensions`` scope.
+            Requires user access token that includes the ``analytics:read:extensions`` scope.
 
         Parameters
         -----------
@@ -231,7 +234,7 @@ class PartialUser:
 
 
         !!! note
-            Requires a user access token that includes the ``analytics:read:extensions`` scope.
+            Requires user access token that includes the ``analytics:read:extensions`` scope.
 
         Parameters
         -----------
@@ -296,7 +299,7 @@ class PartialUser:
 
 
         !!! note
-            Requires a user access token that includes the ``bits:read`` scope.
+            Requires user access token that includes the ``bits:read`` scope.
 
         | Period          | Description |
         | -----------      | -------------- |
@@ -326,6 +329,7 @@ class PartialUser:
         Returns
         -------
         twitchio.BitsLeaderboard
+            BitsLeaderboard object for a user's channel.
 
         Raises
         ------
@@ -367,7 +371,8 @@ class PartialUser:
             An optional User OAuth token to use instead of the default app token.
         Returns
         --------
-            twitchio.ChannelInfo
+        twitchio.ChannelInfo
+            ChannelInfo object representing the channel information.
         """
         from .models.channels import ChannelInfo
 
@@ -398,7 +403,7 @@ class PartialUser:
             For readability, consider using camelCasing or PascalCasing.
 
         !!! note
-            Requires a user access token that includes the ``channel:manage:broadcast`` scope.
+            Requires user access token that includes the ``channel:manage:broadcast`` scope.
 
 
         Parameters
@@ -444,7 +449,7 @@ class PartialUser:
         Fetches a list of the user's editors for their channel.
 
         !!! note
-            Requires a user access token that includes the ``channel:manage:broadcast`` scope.
+            Requires user access token that includes the ``channel:manage:broadcast`` scope.
 
         Parameters
         -----------
@@ -454,6 +459,7 @@ class PartialUser:
         Returns
         -------
         list[ChannelEditor]
+            A list of ChannelEditor objects.
         """
         from .models.channels import ChannelEditor
 
@@ -464,21 +470,22 @@ class PartialUser:
         self, token_for: str, broadcaster_id: str | int | None = None
     ) -> FollowedChannels | None:
         """
-        Fetches a list of the user's editors for their channel.
+        Fetches information of who and when this user followed other channels.
 
         !!! note
-            Requires a user access token that includes the ``user:read:follows`` scope.
+            Requires user access token that includes the ``user:read:follows`` scope.
 
         Parameters
         -----------
         broadcaster_id: str | int | None
-            Broadcaster ID to check whether the user follows this broadcaster.
+            Use this parameter to see whether the user follows this broadcaster.
         token_for: str
             User OAuth token to use that includes the ``user:read:follows`` scope.
 
         Returns
         -------
         ChannelsFollowed
+            ChannelsFollowed object.
         """
 
         return await self._http.get_followed_channels(
@@ -489,24 +496,25 @@ class PartialUser:
 
     async def fetch_channels_followers(self, token_for: str, user_id: str | int | None = None) -> ChannelFollowers:
         """
-        Fetches a list of the user's editors for their channel.
+        Fetches information of who and when users followed this channel.
 
         !!! info
             The User ID in the token must match that of the broadcaster or a moderator.
 
         !!! note
-            Requires a user access token that includes the ``moderator:read:followers`` scope.
+            Requires user access token that includes the ``moderator:read:followers`` scope.
 
         Parameters
         -----------
         user_id: str | int | None
-            Check whether this broadcaster followers the given user.
+            Use this parameter to see whether the user follows this broadcaster.
         token_for: str
             User OAuth token to use that includes the ``moderator:read:followers`` scope.
 
         Returns
         -------
         ChannelFollowers
+            A ChannelFollowers object.
         """
 
         return await self._http.get_channel_followers(
@@ -536,7 +544,7 @@ class PartialUser:
             The maximum number of custom rewards per channel is 50, which includes both enabled and disabled rewards.
 
         !!! note
-            Requires a user access token that includes the channel:manage:redemptions scope.
+            Requires user access token that includes the channel:manage:redemptions scope.
 
         Parameters
         -----------
@@ -565,6 +573,7 @@ class PartialUser:
         Returns
         --------
         twitchio.CustomReward
+            Information regarding the custom reward.
 
         Raises
         ------
@@ -609,6 +618,27 @@ class PartialUser:
     async def fetch_custom_rewards(
         self, *, token_for: str, ids: list[str] | None = None, manageable: bool = False
     ) -> list[CustomReward]:
+        """
+        Fetches list of custom rewards that the specified broadcaster created.
+
+        !!! note
+            Requires user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            A user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+        ids : list[str] | None
+            A list of IDs to filter the rewards by. You may request a maximum of 50.
+        manageable : bool, optional
+            A Boolean value that determines whether the response contains only the custom rewards that the app (Client ID) may manage.
+            Default is False.
+
+        Returns
+        -------
+        list[CustomReward]
+            _description_
+        """
         from .models.channel_points import CustomReward
 
         data = await self._http.get_custom_reward(
@@ -621,7 +651,7 @@ class PartialUser:
         Fetch the active charity campaign of a broadcaster.
 
         !!! note
-            Requires a user access token that includes the ``channel:read:charity`` scope.
+            Requires user access token that includes the ``channel:read:charity`` scope.
 
         Parameters
         ----------
@@ -631,6 +661,7 @@ class PartialUser:
         Returns
         -------
         CharityCampaign
+            A CharityCampaign object.
         """
         from .models.charity import CharityCampaign
 
@@ -647,7 +678,7 @@ class PartialUser:
         Fetches information about all broadcasts on Twitch.
 
         !!! note
-            Requires a user access token that includes the ``channel:read:charity`` scope.
+            Requires user access token that includes the ``channel:read:charity`` scope.
 
         Parameters
         -----------
@@ -675,7 +706,7 @@ class PartialUser:
         Fetches users that are connected to the broadcaster's chat session.
 
         !!! note
-            Requires a user access token that includes the ``moderator:read:chatters`` scope.
+            Requires user access token that includes the ``moderator:read:chatters`` scope.
 
         Parameters
         ----------
@@ -691,6 +722,7 @@ class PartialUser:
         Returns
         -------
         Chatters
+            A Chatters object containing the information of a broadcaster's connected chatters.
         """
         first = max(1, min(1000, first))
 
