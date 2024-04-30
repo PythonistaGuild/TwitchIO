@@ -32,10 +32,11 @@ from twitchio.utils import Colour
 
 
 if TYPE_CHECKING:
-    from twitchio.http import HTTPClient
+    from twitchio.http import HTTPAsyncIterator, HTTPClient
     from twitchio.types_.responses import (
         ChannelChatBadgesResponseData,
         ChannelChatBadgesResponseVersions,
+        ChattersResponse,
         GlobalChatBadgesResponseData,
         GlobalChatBadgesResponseVersions,
         GlobalEmotesResponseData,
@@ -44,7 +45,27 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("ChatterColor", "ChatBadge", "ChatBadgeVersions", "GlobalEmote")
+__all__ = ("Chatters", "ChatterColor", "ChatBadge", "ChatBadgeVersions", "GlobalEmote")
+
+
+class Chatters:
+    """
+    Represents a channel's chatters.
+
+    Returns
+    -------
+    users: HTTPAsyncIterator[PartialUser]
+        The PartialUser object of the chatter.
+    total: int
+        The the total number of users that are connected to the chat room. This may vary as your iterate through pages.
+    """
+
+    def __init__(self, iterator: HTTPAsyncIterator[PartialUser], data: ChattersResponse) -> None:
+        self.users: HTTPAsyncIterator[PartialUser] = iterator
+        self.total: int = data["total"]
+
+    def __repr__(self) -> str:
+        return f"<Chatters total={self.total}>"
 
 
 class ChatterColor:

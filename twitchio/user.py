@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPAsyncIterator
+    from twitchio.models.chat import Chatters
 
     from .http import HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
@@ -667,4 +668,32 @@ class PartialUser:
             broadcaster_id=self.id,
             first=first,
             token_for=token_for,
+        )
+
+    async def fetch_chatters(self, *, moderator_id: str | int, token_for: str, first: int = 100) -> Chatters:
+        """
+        Fetches users that are connected to the broadcaster's chat session.
+
+        !!! note
+            Requires a user access token that includes the ``moderator:read:chatters`` scope.
+
+        Parameters
+        ----------
+        moderator_id : str | int
+            The ID of the broadcaster or one of the broadcaster's moderators.
+            This ID must match the user ID in the user access token.
+        token_for : str
+            A user access token that includes the ``moderator:read:chatters`` scope.
+        first : int | None
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 1,000. The default is 100.
+
+        Returns
+        -------
+        Chatters
+        """
+        first = max(1, min(1000, first))
+
+        return await self._http.get_chatters(
+            token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator_id
         )

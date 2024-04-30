@@ -43,11 +43,13 @@ from .models.bits import ExtensionTransaction
 from .models.channel_points import CustomRewardRedemption
 from .models.channels import ChannelFollowerEvent, ChannelFollowers, FollowedChannels, FollowedChannelsEvent
 from .models.charity import CharityDonation
+from .models.chat import Chatters
 from .models.clips import Clip
 from .models.games import Game
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
+from .user import PartialUser
 from .utils import Colour, _from_json  # type: ignore
 
 
@@ -69,6 +71,7 @@ if TYPE_CHECKING:
         ChannelInformationResponse,
         CharityCampaignDonationsResponseData,
         CharityCampaignResponse,
+        ChattersResponseData,
         CheermotesResponse,
         ClipsResponseData,
         ConduitPayload,
@@ -846,6 +849,19 @@ class HTTPClient:
         return iterator
 
     ### Chat ###
+
+    async def get_chatters(
+        self, token_for: str, broadcaster_id: str | int, moderator_id: str | int, first: int = 100
+    ) -> Chatters:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "first": first}
+        route: Route = Route("GET", "chat/chatters", params=params, token_for=token_for)
+
+        async def converter(data: ChattersResponseData) -> PartialUser:
+            return PartialUser(data["user_id"], data["user_login"], http=self)
+
+        iterator = self.request_paginated(route, converter=converter)
+        data = await self.request_json(route)
+        return Chatters(iterator, data)
 
     async def get_global_chat_badges(self, token_for: str | None = None) -> GlobalChatBadgesResponse:
         route: Route = Route("GET", "chat/badges/global", token_for=token_for)
