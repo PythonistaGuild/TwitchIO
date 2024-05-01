@@ -24,8 +24,9 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
+from twitchio.assets import Asset
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
@@ -48,8 +49,8 @@ if TYPE_CHECKING:
 __all__ = (
     "BitsLeaderboard",
     "BitLeaderboardUser",
-    "CheerEmote",
-    "CheerEmoteTier",
+    "Cheermote",
+    "CheermoteTier",
     "ExtensionTransaction",
     "ExtensionProductData",
     "ExtensionCost",
@@ -95,9 +96,9 @@ class BitLeaderboardUser:
         return f"<BitLeaderboardUser user={self.user} rank={self.rank} score={self.score}>"
 
 
-class CheerEmoteTier:
+class CheermoteTier:
     """
-    Represents a Cheer Emote tier.
+    Represents a Cheermote tier.
 
     Attributes
     -----------
@@ -110,16 +111,17 @@ class CheerEmoteTier:
     images: dict[str, dict[str, dict[str, str]]]
         contains two dicts, ``light`` and ``dark``. Each item will have an ``animated`` and ``static`` item,
         which will contain yet another dict, with sizes ``1``, ``1.5``, ``2``, ``3``, and ``4``.
-        Ex. ``cheeremotetier.images["light"]["animated"]["1"]``
+        Ex. ``cheermotetier.images["light"]["animated"]["1"]``
     can_cheer: bool
         Indicates whether emote information is accessible to users.
     show_in_bits_card: bool
         Indicates whether twitch hides the emote from the bits card.
     """
 
-    __slots__ = "min_bits", "id", "color", "images", "can_cheer", "show_in_bits_card"
+    __slots__ = ("min_bits", "id", "color", "images", "can_cheer", "show_in_bits_card", "_http")
 
-    def __init__(self, data: CheermotesResponseTiers) -> None:
+    def __init__(self, data: CheermotesResponseTiers, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
         self.color: str = data["color"]
@@ -128,23 +130,85 @@ class CheerEmoteTier:
         self.show_in_bits_card: bool = data["show_in_bits_card"]
 
     def __repr__(self) -> str:
-        return f"<CheerEmoteTier id={self.id} min_bits={self.min_bits}>"
+        return f"<CheermoteTier id={self.id} min_bits={self.min_bits}>"
+
+    def get_image(
+        self,
+        *,
+        theme: Literal["light", "dark"] = "light",
+        scale: Literal["1", "1.5", "2", "3", "4"] = "2",
+        format: Literal["default", "static", "animated"] = "default",
+    ) -> Asset | None:
+        """
+        Creates an [`Asset`][twitchio.Asset] for the cheermote, which can be used to download/save the cheermote image.
+
+        Parameters
+        ----------
+        theme: Literal["light", "dark"]
+            The background theme of the cheermote. Defaults to "light".
+        scale: str
+            The scale (size) of the cheermote. Usually this will be one of: "1", "1.5", "2", "3", "4"
+            Defaults to "2".
+        format: Literal["default", "static", "animated"]
+            The format of the image for the cheermote. E.g a static image (PNG) or animated (GIF).
+
+            Use "default" to get the default format for the emote, which will be animated if available, otherwise static.
+            Defaults to "default".
+
+        Examples
+        --------
+        ```py
+            cheermotes: list[twitchio.Cheermote] = await client.fetch_cheermotes()
+            cheermote: twitchio.Cheermote = cheermotes[0]
+
+            # Get and save the emote asset as an image
+            asset: twitchio.Asset = await cheeremote.tiers[0].get_image()
+            await asset.save()
+        ```
+
+        Returns
+        -------
+        twitchio.Asset | None
+            The [`Asset`][twitchio.Asset] for the cheermote.
+            You can use the asset to [`.read`][twitchio.Asset.read] or [`.save`][twitchio.Asset.save] the cheermote image or
+            return the generated URL with [`.url`][twitchio.Asset.url].
+        """
+        theme_images = self.images.get(theme, self.images.get("light", {}))
+        format_images = theme_images.get("animated" if format in ("animated", "default") else "static", {})
+        image_url = format_images.get(scale)
+
+        if image_url is None:
+            for format_type in ("animated", "static"):
+                if theme_images.get(format_type):
+                    image_url = next(iter(theme_images[format_type].values()), None)
+                    if image_url:
+                        break
+
+        return None if image_url is None else Asset(image_url, http=self._http)
 
 
-class CheerEmote:
+class Cheermote:
     """
-    Represents a Cheer Emote
+    Represents a Cheermote
+
+        | Type          | Description |
+        | -----------      | -------------- |
+        | global_first_party    | A Twitch-defined Cheermote that is shown in the Bits card.            |
+        | global_third_party    | A Twitch-defined Cheermote that is not shown in the Bits card.          |
+        | channel_custom     | A broadcaster-defined Cheermote.            |
+        | display_only     | Do not use; for internal use only.           |
+        | sponsored   | A sponsor-defined Cheermote. When used, the sponsor adds additional Bits to the amount that the user cheered. For example, if the user cheered Terminator100, the broadcaster might receive 110 Bits, which includes the sponsor's 10 Bits contribution.        |
 
     Attributes
     -----------
     prefix: str
         The string used to Cheer that precedes the Bits amount.
-    tiers: CheerEmoteTier
-        The tiers this Cheer Emote has
+    tiers: CheermoteTier
+        The tiers this Cheermote has
     type: str
         Shows whether the emote is ``global_first_party``, ``global_third_party``, ``channel_custom``, ``display_only``, or ``sponsored``.
     order: int
-        Order of the emotes as shown in the bits card, in ascending order.
+        Order of the cheermotes as shown in the bits card, in ascending order.
     last_updated datetime.datetime
         The date this cheermote was last updated.
     charitable: bool
@@ -161,16 +225,16 @@ class CheerEmote:
         "charitable",
     )
 
-    def __init__(self, data: CheermotesResponseData) -> None:
+    def __init__(self, data: CheermotesResponseData, *, http: HTTPClient) -> None:
         self.prefix: str = data["prefix"]
-        self.tiers = [CheerEmoteTier(d) for d in data["tiers"]]
+        self.tiers = [CheermoteTier(d, http=http) for d in data["tiers"]]
         self.type: str = data["type"]
         self.order: int = int(data["order"])
         self.last_updated = parse_timestamp(data["last_updated"])
         self.charitable: bool = data["is_charitable"]
 
     def __repr__(self) -> str:
-        return f"<CheerEmote prefix={self.prefix} type={self.type} order={self.order}>"
+        return f"<Cheermote prefix={self.prefix} type={self.type} order={self.order}>"
 
 
 class ExtensionTransaction:

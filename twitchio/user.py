@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
     from .http import HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
-    from .models.bits import BitsLeaderboard, CheerEmote
+    from .models.bits import BitsLeaderboard
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
@@ -356,10 +356,6 @@ class PartialUser:
             user_id=user_id,
         )
         return BitsLeaderboard(data, http=self._http)
-
-    async def fetch_cheermotes(self) -> CheerEmote:
-        # TODO
-        ...
 
     async def fetch_channel_info(self, *, token_for: str | None = None) -> ChannelInfo:
         """

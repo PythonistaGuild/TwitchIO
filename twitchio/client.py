@@ -33,7 +33,7 @@ from twitchio.http import HTTPAsyncIterator
 
 from .authentication import ManagedHTTPClient, Scopes
 from .conduits import Conduit, ConduitPool
-from .models.bits import CheerEmote, ExtensionTransaction
+from .models.bits import Cheermote, ExtensionTransaction
 from .models.ccls import ContentClassificationLabel
 from .models.channels import ChannelInfo
 from .models.chat import ChatBadge, ChatterColor, GlobalEmote
@@ -367,7 +367,7 @@ class Client:
 
     async def fetch_cheermotes(
         self, broadcaster_id: int | str | None = None, token_for: str | None = None
-    ) -> list[CheerEmote]:
+    ) -> list[Cheermote]:
         """
         Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room. Cheermotes are animated emotes that viewers can assign Bits to.
         If a broadcaster_id is not specified then only global cheermotes will be returned.
@@ -375,18 +375,18 @@ class Client:
 
         Parameters
         -----------
-        broadcaster_id: str | int
-            The id of the broadcaster who has uploaded Cheermotes.
+        broadcaster_id: str | int | None
+            The ID of the broadcaster whose custom Cheermotes you want to get. If not provided then you will fetch global Cheermotes.
         token_for: str | None
             An optional User OAuth token to use instead of the default app token.
 
         Returns
         --------
-        list[twitchio.CheerEmote]
-            A list of CheerEmotes objects.
+        list[twitchio.Cheermote]
+            A list of Cheermote objects.
         """
         data = await self._http.get_cheermotes(str(broadcaster_id) if broadcaster_id else None, token_for)
-        return [CheerEmote(d) for d in data["data"]]
+        return [Cheermote(d, http=self._http) for d in data["data"]]
 
     async def fetch_classifications(
         self, locale: str = "en-US", *, token_for: str | None = None

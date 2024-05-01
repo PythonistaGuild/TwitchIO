@@ -538,9 +538,9 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_cheermotes(
-        self, broadcaster_id: str | int | None, token_for: str | None = None
+        self, broadcaster_id: str | int | None = None, token_for: str | None = None
     ) -> CheermotesResponse:
-        params = {"broadcaster_id": broadcaster_id}
+        params = {"broadcaster_id": broadcaster_id} if broadcaster_id is not None else {}
         route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
