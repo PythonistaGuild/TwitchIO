@@ -725,3 +725,7 @@ class PartialUser:
         return await self._http.get_chatters(
             token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator_id
         )
+
+
+    async def fetch_channel_emotes(self):
+        ... #TODO
