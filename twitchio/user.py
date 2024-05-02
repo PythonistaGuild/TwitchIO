@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
-    from .models.chat import ChatBadge
+    from .models.chat import ChatBadge, ChatSettings
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -747,3 +747,39 @@ class PartialUser:
 
         data = await self._http.get_channel_chat_badges(broadcaster_id=self.id, token_for=token_for)
         return [ChatBadge(d, http=self._http) for d in data["data"]]
+
+    async def fetch_chat_settings(
+        self, *, moderator_id: str | int | None = None, token_for: str | None = None
+    ) -> ChatSettings:
+        """
+        Fetches the broadcaster's chat settings.
+
+        !!! note
+            If you wish to view ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will need to provide a moderator_id, which can be
+            either the broadcaster's or a moderators'. The token must include the ``moderator:read:chat_settings`` scope.
+            the toke
+
+        Parameters
+        ----------
+        moderator_id : str | int | None
+            The ID of the broadcaster or one of the broadcaster's moderators.
+            This field is required only if you want to include the ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` settings in the response.
+            If you specify this field, this ID must match the user ID in the user access token.
+
+        token_for : str | None
+            If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will provide a token for the user in ``moderator_id``.
+            The required scope is ``moderator:read:chat_settings``.
+            Otherwise it is an optional User OAuth token to use instead of the default app token.
+
+        Returns
+        -------
+        ChatSettings
+            ChatSettings object of the broadcaster's chat settings.
+        """
+        from .models.chat import ChatSettings
+
+        data = await self._http.get_channel_chat_settings(
+            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
+        )
+        print(data)
+        return ChatSettings(data["data"][0], http=self._http)

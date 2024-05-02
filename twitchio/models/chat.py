@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     from twitchio.types_.responses import (
         ChannelChatBadgesResponseData,
         ChannelChatBadgesResponseVersions,
+        ChatSettingsResponseData,
         ChattersResponse,
         EmoteSetsResponseData,
         GlobalChatBadgesResponseData,
@@ -47,7 +48,7 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("Chatters", "ChatterColor", "ChatBadge", "ChatBadgeVersions", "EmoteSet", "GlobalEmote")
+__all__ = ("Chatters", "ChatterColor", "ChatBadge", "ChatSettings", "ChatBadgeVersions", "EmoteSet", "GlobalEmote")
 
 
 class Chatters:
@@ -346,3 +347,77 @@ class EmoteSet(GlobalEmote):
 
     def __repr__(self) -> str:
         return f"<EmoteSet set_id={self.set_id} owner_id={self.owner_id}>"
+
+
+class ChatSettings:
+    """
+    Represents the settings of a broadcaster's chat settings.
+
+    Parameters
+    ----------
+    broadcaster: PartialUser
+        The PartialUser object of the broadcaster, this will only contain the ID.
+    moderator: PartialUser
+        The PartialUser object of the moderator, this will only contain the ID.
+    slow_mode: bool
+        A Boolean value that determines whether the broadcaster limits how often users in the chat room are allowed to send messages.
+    slow_mode_wait_time: int | None
+        The amount of time, in seconds, that users must wait between sending messages.
+        Is None if slow_mode is False.
+    follower_mode: bool
+        A Boolean value that determines whether the broadcaster restricts the chat room to followers only.
+        Is True if the broadcaster restricts the chat room to followers only; otherwise, False.
+    follower_mode_duration: int | None
+        The length of time, in minutes, that users must follow the broadcaster before being able to participate in the chat room.
+        Is None if follower_mode is False.
+    subscriber_mode: bool
+        A Boolean value that determines whether only users that subscribe to the broadcaster's channel may talk in the chat room.
+    emote_mode: bool
+        A Boolean value that determines whether chat messages must contain only emotes. Is True if chat messages may contain only emotes; otherwise, False.
+    unique_chat_mode: bool
+        A Boolean value that determines whether the broadcaster requires users to post only unique messages in the chat room.
+        Is True if the broadcaster requires unique messages only; otherwise, False.
+    non_moderator_chat_delay: bool
+        A Boolean value that determines whether the broadcaster adds a short delay before chat messages appear in the chat room.
+        This gives chat moderators and bots a chance to remove them before viewers can see the message.
+        See the non_moderator_chat_delay_duration field for the length of the delay. Is True if the broadcaster applies a delay; otherwise, False.
+        The response includes this field only if the request specifies a user access token that includes the ``moderator:read:chat_settings`` scope and the user in the moderator_id query parameter is one of the broadcaster's moderators.
+    non_moderator_chat_delay_duration: int | None
+        The amount of time, in seconds, that messages are delayed before appearing in chat. Is None if non_moderator_chat_delay is False.
+        The response includes this field only if the request specifies a user access token that includes the ``moderator:read:chat_settings scope`` and the user in the moderator_id query parameter is one of the broadcaster's moderators.
+
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "slow_mode",
+        "slow_mode_wait_time",
+        "follower_mode",
+        "follower_mode_duration",
+        "subscriber_mode",
+        "emote_mode",
+        "unique_chat_mode",
+        "non_moderator_chat_delay",
+        "non_moderator_chat_delay_duration",
+    )
+
+    def __init__(self, data: ChatSettingsResponseData, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
+        self.slow_mode: int = data["slow_mode"]
+        self.slow_mode_wait_time: int | None = data.get("slow_mode_wait_time")
+        self.follower_mode: bool = data["follower_mode"]
+        self.follower_mode_duration: int | None = data.get("follower_mode_duration")
+        self.subscriber_mode: bool = data["subscriber_mode"]
+        self.emote_mode: bool = data["emote_mode"]
+        self.unique_chat_mode: bool = data["unique_chat_mode"]
+        self.non_moderator_chat_delay: bool | None = data.get("non_moderator_chat_delay")
+        self.non_moderator_chat_delay_duration: int | None = data.get("non_moderator_chat_delay_duration")
+
+        try:
+            self.moderator: PartialUser | None = PartialUser(data["moderator_id"], None, http=http)
+        except KeyError:
+            self.moderator = None
+
+    def __repr__(self) -> str:
+        return f"<ChatSettings broadcaster={self.broadcaster} slow_mode={self.slow_mode} follower_mode={self.follower_mode}>"

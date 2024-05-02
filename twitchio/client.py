@@ -336,7 +336,16 @@ class Client:
         -------
         list[EmoteSet]
             A list of EmoteSet objects.
+
+        Raises
+        ------
+        ValueError
+            You can only specify a maximum of 25 emote set IDs.
         """
+
+        if len(emote_set_ids) > 25:
+            raise ValueError("You can only specify a maximum of 25 emote set IDs.")
+
         data = await self._http.get_emote_sets(emote_set_ids=emote_set_ids, token_for=token_for)
         template: str = data["template"]
 
