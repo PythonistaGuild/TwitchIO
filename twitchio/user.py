@@ -27,7 +27,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
-from .models.chat import ChatBadge
 
 
 if TYPE_CHECKING:
@@ -42,6 +41,7 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
+    from .models.chat import ChatBadge
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -441,7 +441,7 @@ class PartialUser:
             branded_content=branded,
         )
 
-    async def fetch_channel_editors(self, token_for: str) -> list[ChannelEditor]:
+    async def fetch_editors(self, token_for: str) -> list[ChannelEditor]:
         """
         Fetches a list of the user's editors for their channel.
 
@@ -491,7 +491,7 @@ class PartialUser:
             broadcaster_id=broadcaster_id,
         )
 
-    async def fetch_channels_followers(self, token_for: str, user_id: str | int | None = None) -> ChannelFollowers:
+    async def fetch_followers(self, token_for: str, user_id: str | int | None = None) -> ChannelFollowers:
         """
         Fetches information of who and when users followed this channel.
 
@@ -727,7 +727,6 @@ class PartialUser:
             token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator_id
         )
 
-
     async def fetch_chat_badges(self, token_for: str | None = None) -> list[ChatBadge]:
         """
         Fetches the broadcaster's list of custom chat badges.
@@ -744,5 +743,7 @@ class PartialUser:
         list[twitchio.ChatBadge]
             A list of ChatBadge objects belonging to the user.
         """
+        from .models.chat import ChatBadge
+
         data = await self._http.get_channel_chat_badges(broadcaster_id=self.id, token_for=token_for)
         return [ChatBadge(d, http=self._http) for d in data["data"]]

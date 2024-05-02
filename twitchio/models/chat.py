@@ -37,6 +37,7 @@ if TYPE_CHECKING:
         ChannelChatBadgesResponseData,
         ChannelChatBadgesResponseVersions,
         ChattersResponse,
+        EmoteSetsResponseData,
         GlobalChatBadgesResponseData,
         GlobalChatBadgesResponseVersions,
         GlobalEmotesResponseData,
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("Chatters", "ChatterColor", "ChatBadge", "ChatBadgeVersions", "GlobalEmote")
+__all__ = ("Chatters", "ChatterColor", "ChatBadge", "ChatBadgeVersions", "EmoteSet", "GlobalEmote")
 
 
 class Chatters:
@@ -307,3 +308,41 @@ class GlobalEmote:
 
         url: str = template.format(id=self.id, theme_mode=theme_, scale=scale_, format=format_)
         return Asset(url, name=self.name, http=self._http)
+
+
+class EmoteSet(GlobalEmote):
+    """
+    Represents an emote set.
+
+    Parameters
+    ----------
+    set_id: str
+        An ID that identifies the emote set that the emote belongs to.
+    type: str
+        The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
+    owner_id: str
+        The ID of the broadcaster who owns the emote.
+    id: str
+        The ID of the emote.
+    name: str
+        The name of the emote.
+    images: dict[str, str]
+        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
+    format: list[str]
+        The formats that the emote is available in.
+    scale: list[str]
+        The sizes that the emote is available in.
+    theme_mode: list[str]
+        The background themes that the emote is available in.
+    """
+
+    __slots__ = ("type", "set_id", "owner_id")
+
+    def __init__(self, data: EmoteSetsResponseData, *, template: str, http: HTTPClient) -> None:
+        super().__init__(data, template=template, http=http)
+        self.set_id: str = data["emote_set_id"]
+        self.type: str = data["emote_type"]
+        self.owner_id: str = data["owner_id"]
+
+    def __repr__(self) -> str:
+        return f"<EmoteSet set_id={self.set_id} owner_id={self.owner_id}>"

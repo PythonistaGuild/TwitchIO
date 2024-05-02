@@ -36,7 +36,7 @@ from .conduits import Conduit, ConduitPool
 from .models.bits import Cheermote, ExtensionTransaction
 from .models.ccls import ContentClassificationLabel
 from .models.channels import ChannelInfo
-from .models.chat import ChatBadge, ChatterColor, GlobalEmote
+from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
 from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload
@@ -321,7 +321,30 @@ class Client:
         data = await self._http.get_global_chat_badges()
         return [ChatBadge(x, http=self._http) for x in data["data"]]
 
-    async def fetch_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> list[ChatterColor]:
+    async def fetch_emote_sets(self, emote_set_ids: list[str], *, token_for: str | None = None) -> list[EmoteSet]:
+        """
+        Fetches emotes for one or more specified emote sets.
+
+        Parameters
+        ----------
+        emote_set_ids: list[str]
+            List of IDs that identifies the emote set to get. You may specify a maximum of 25 IDs.
+        token_for : str | None, optional
+            An optional User OAuth token to use instead of the default app token.
+
+        Returns
+        -------
+        list[EmoteSet]
+            A list of EmoteSet objects.
+        """
+        data = await self._http.get_emote_sets(emote_set_ids=emote_set_ids, token_for=token_for)
+        template: str = data["template"]
+
+        return [EmoteSet(d, template=template, http=self._http) for d in data["data"]]
+
+    async def fetch_chatters_color(
+        self, user_ids: list[str | int], *, token_for: str | None = None
+    ) -> list[ChatterColor]:
         """
         Fetches the color of a chatter.
 
@@ -345,7 +368,9 @@ class Client:
         data = await self._http.get_chatters_color(user_ids, token_for)
         return [ChatterColor(d, http=self._http) for d in data["data"] if data]
 
-    async def fetch_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> list[ChannelInfo]:
+    async def fetch_channels(
+        self, broadcaster_ids: list[str | int], *, token_for: str | None = None
+    ) -> list[ChannelInfo]:
         """
         Retrieve channel information from the API.
 
@@ -368,7 +393,7 @@ class Client:
         return [ChannelInfo(d, http=self._http) for d in data["data"]]
 
     async def fetch_cheermotes(
-        self, broadcaster_id: int | str | None = None, token_for: str | None = None
+        self, *, broadcaster_id: int | str | None = None, token_for: str | None = None
     ) -> list[Cheermote]:
         """
         Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room. Cheermotes are animated emotes that viewers can assign Bits to.
@@ -502,9 +527,11 @@ class Client:
             first=first,
         )
 
-    async def fetch_global_emotes(self, token_for: str | None = None) -> list[GlobalEmote]:
+    async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
         """
         Fetches global emotes from the twitch API
+
+        If you wish to fetch a specific broadcaster's chat badges use [`fetch_emotes`][twitchio.user.fetch_emotes]
 
         Returns
         --------
@@ -844,7 +871,7 @@ class Client:
             token_for=token_for,
         )
 
-    async def delete_videos(self, ids: list[str | int], token_for: str) -> list[str]:
+    async def delete_videos(self, *, ids: list[str | int], token_for: str) -> list[str]:
         """
         Deletes one or more videos. You may delete past broadcasts, highlights, or uploads.
 
