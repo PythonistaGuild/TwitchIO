@@ -42,6 +42,7 @@ if TYPE_CHECKING:
         GlobalEmotesResponseData,
         GlobalEmotesResponseImages,
         UserChatColorResponseData,
+        UserEmotesResponseData,
     )
 
 
@@ -111,11 +112,14 @@ class ChatBadge:
         The list of chat badges in this set.
     """
 
-    __slots__ = ("set_id", "versions")
+    __slots__ = ("set_id", "versions", "_http")
 
-    def __init__(self, data: GlobalChatBadgesResponseData | ChannelChatBadgesResponseData) -> None:
+    def __init__(self, data: GlobalChatBadgesResponseData | ChannelChatBadgesResponseData, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
         self.set_id: str = data["set_id"]
-        self.versions: list[ChatBadgeVersions] = [ChatBadgeVersions(version_data) for version_data in data["versions"]]
+        self.versions: list[ChatBadgeVersions] = [
+            ChatBadgeVersions(version_data, self._http) for version_data in data["versions"]
+        ]
 
     def __repr__(self) -> str:
         return f"<ChatBadge set_id={self.set_id} versions={self.versions}>"
@@ -154,9 +158,13 @@ class ChatBadgeVersions:
         "description",
         "click_url",
         "click_action",
+        "_http",
     )
 
-    def __init__(self, data: ChannelChatBadgesResponseVersions | GlobalChatBadgesResponseVersions) -> None:
+    def __init__(
+        self, data: ChannelChatBadgesResponseVersions | GlobalChatBadgesResponseVersions, http: HTTPClient
+    ) -> None:
+        self._http: HTTPClient = http
         self.id: str = data["id"]
         self.image_url_1x: str = data["image_url_1x"]
         self.image_url_2x: str = data["image_url_2x"]
@@ -168,6 +176,47 @@ class ChatBadgeVersions:
 
     def __repr__(self) -> str:
         return f"<ChatBadgeVersions id={self.id} title={self.title}>"
+
+    def get_image(self, scale: Literal["1x", "2x", "4x"] = "2x") -> Asset:
+        """
+        Retrieves an Asset object for the chat badge image at the specified scale.
+
+        Parameters
+        ----------
+        scale: str
+            The scale (size) of the emote. Usually this will be one of:
+            - "1x" (Small)
+            - "2x" (Medium)
+            - "4x" (Large)
+
+            Defaults is "2x".
+
+        Example
+        --------
+        ```py
+            chat_badges: list[twitchio.ChatBadge] = await client.fetch_global_chat_badges()
+            chat_badge: twitchio.ChatBadge = chat_badges[0]
+
+            # Get and save the chat badge asset as an image
+            asset: twitchio.Asset = await emote.get_image()
+            await asset.save()
+        ```
+
+        Returns
+        -------
+        twitchio.Asset
+            The [`Asset`][twitchio.Asset] for the chat badge.
+            You can use the asset to [`.read`][twitchio.Asset.read] or [`.save`][twitchio.Asset.save] the chat badge image or
+            return the generated URL with [`.url`][twitchio.Asset.url].
+        """
+        if scale == "1x":
+            return Asset(self.image_url_1x, http=self._http, dimensions=(18, 18))
+        elif scale == "2x":
+            return Asset(self.image_url_2x, http=self._http, dimensions=(36, 36))
+        elif scale == "4x":
+            return Asset(self.image_url_4x, http=self._http, dimensions=(72, 72))
+        else:
+            raise ValueError(f"Invalid scale '{scale}'. Allowed values are '1x', '2x', '4x'.")
 
 
 class GlobalEmote:

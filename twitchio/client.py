@@ -306,9 +306,11 @@ class Client:
 
         self._listeners[name].add(listener)
 
-    async def fetch_global_chat_badges(self) -> list[ChatBadge]:
+    async def fetch_chat_badges(self) -> list[ChatBadge]:
         """
-        Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
+        Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
+
+        If you wish to fetch a specific broadcaster's chat badges use [`fetch_chat_badges`][twitchio.user.fetch_chat_badges]
 
         Returns
         --------
@@ -317,7 +319,7 @@ class Client:
         """
 
         data = await self._http.get_global_chat_badges()
-        return [ChatBadge(x) for x in data["data"]]
+        return [ChatBadge(x, http=self._http) for x in data["data"]]
 
     async def fetch_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> list[ChatterColor]:
         """

@@ -65,12 +65,14 @@ if TYPE_CHECKING:
     from .types_.responses import (
         AdScheduleResponse,
         BitsLeaderboardResponse,
+        ChannelChatBadgesResponse,
         ChannelEditorsResponse,
         ChannelEmotesResponse,
         ChannelFollowersResponseData,
         ChannelInformationResponse,
         CharityCampaignDonationsResponseData,
         CharityCampaignResponse,
+        ChatSettingsResponse,
         ChattersResponseData,
         CheermotesResponse,
         ClipsResponseData,
@@ -80,6 +82,7 @@ if TYPE_CHECKING:
         CustomRewardRedemptionResponseData,
         CustomRewardsResponse,
         DeleteVideosResponse,
+        EmoteSetsResponse,
         ExtensionAnalyticsResponseData,
         ExtensionTransactionsResponseData,
         FollowedChannelsResponseData,
@@ -96,6 +99,7 @@ if TYPE_CHECKING:
         TeamsResponse,
         TopGamesResponseData,
         UserChatColorResponse,
+        UserEmotesResponseData,
         VideosResponseData,
     )
 
@@ -831,13 +835,13 @@ class HTTPClient:
 
     ### Charity ###
 
-    async def get_charity_campaign(self, *, broadcaster_id: str, token_for: str) -> CharityCampaignResponse:
+    async def get_charity_campaign(self, broadcaster_id: str, token_for: str) -> CharityCampaignResponse:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "charity/campaigns", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_charity_donations(
-        self, *, broadcaster_id: str, token_for: str, first: int = 20
+        self, broadcaster_id: str, token_for: str, first: int = 20
     ) -> HTTPAsyncIterator[CharityDonation]:
         params = {"broadcaster_id": broadcaster_id, "first": first}
         route: Route = Route("GET", "charity/donations", params=params, token_for=token_for)
@@ -883,6 +887,36 @@ class HTTPClient:
 
     async def get_global_emotes(self, token_for: str | None = None) -> GlobalEmotesResponse:
         route: Route = Route("GET", "chat/emotes/global", token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_emote_sets(self, emote_set_ids: list[str], token_for: str | None = None) -> EmoteSetsResponse:
+        params = {"emote_set_id": emote_set_ids}
+        route: Route = Route("GET", "chat/emotes/sets", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_channel_chat_badges(
+        self, broadcaster_id: str, token_for: str | None = None
+    ) -> ChannelChatBadgesResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "chat/badges", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_channel_chat_settings(
+        self, broadcaster_id: str, moderator_id: str | int | None = None, token_for: str | None = None
+    ) -> ChatSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        if moderator_id is not None:
+            params["moderator_id"] = str(moderator_id)
+        route: Route = Route("GET", "chat/settings", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_user_emotes(
+        self, user_id: str, token_for: str, broadcaster_id: str | int | None = None
+    ):  # -> HTTPAsyncIterator[...]:
+        params = {"user_id": user_id}
+        if broadcaster_id is not None:
+            params["broadcaster_id"] = str(broadcaster_id)
+        route: Route = Route("GET", "chat/emotes/user", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Clips ###

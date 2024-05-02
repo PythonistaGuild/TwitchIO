@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
+from .models.chat import ChatBadge
 
 
 if TYPE_CHECKING:
@@ -727,5 +728,21 @@ class PartialUser:
         )
 
 
-    async def fetch_channel_emotes(self):
-        ... #TODO
+    async def fetch_chat_badges(self, token_for: str | None = None) -> list[ChatBadge]:
+        """
+        Fetches the broadcaster's list of custom chat badges.
+
+        If you wish to fetch globally available chat badges use If you wish to fetch a specific broadcaster's chat badges use [`client.fetch_chat_badges`][twitchio.client.fetch_chat_badges]
+
+        Parameters
+        ----------
+        token_for : str | None,
+            An optional User OAuth token to use instead of the default app token.
+
+        Returns
+        --------
+        list[twitchio.ChatBadge]
+            A list of ChatBadge objects belonging to the user.
+        """
+        data = await self._http.get_channel_chat_badges(broadcaster_id=self.id, token_for=token_for)
+        return [ChatBadge(d, http=self._http) for d in data["data"]]
