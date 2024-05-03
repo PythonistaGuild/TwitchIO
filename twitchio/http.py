@@ -928,6 +928,39 @@ class HTTPClient:
         iterator = self.request_paginated(route, converter=converter)
         return iterator
 
+    async def patch_chat_settings(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        emote_mode: bool | None = None,
+        follower_mode: bool | None = None,
+        follower_mode_duration: int | None = None,
+        slow_mode: bool | None = None,
+        slow_mode_wait_time: int | None = None,
+        subscriber_mode: bool | None = None,
+        unique_chat_mode: bool | None = None,
+        non_moderator_chat_delay: bool | None = None,
+        non_moderator_chat_delay_duration: Literal[2, 4, 6] | None = None,
+    ) -> ChatSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+
+        _data = {
+            "emote_mode": emote_mode,
+            "follower_mode": follower_mode,
+            "follower_mode_duration": follower_mode_duration,
+            "slow_mode": slow_mode,
+            "slow_mode_wait_time": slow_mode_wait_time,
+            "subscriber_mode": subscriber_mode,
+            "unique_chat_mode": unique_chat_mode,
+            "non_moderator_chat_delay": non_moderator_chat_delay,
+            "non_moderator_chat_delay_duration": non_moderator_chat_delay_duration,
+        }
+        data = {k: v for k, v in _data.items() if v is not None}
+
+        route: Route = Route("PATCH", "chat/settings", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
     ### Clips ###
 
     async def get_clips(

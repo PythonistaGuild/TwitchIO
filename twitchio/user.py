@@ -80,7 +80,7 @@ class PartialUser:
             Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
 
         !! note
-            Requires user access token that includes the ``channel:edit:commercial`` scope.
+            Requires user access token that includes the `channel:edit:commercial` scope.
 
         Parameters
         ----------
@@ -88,7 +88,7 @@ class PartialUser:
             The length of the commercial to run, in seconds. Max length is 180.
             If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
         token_for : str
-            User token to use that includes the ``channel:edit:commercial`` scope.
+            User token to use that includes the `channel:edit:commercial` scope.
 
         Returns
         -------
@@ -109,12 +109,12 @@ class PartialUser:
             The user id in the user access token must match the id of this PartialUser object.
 
         !! note
-            Requires user access token that includes the ``channel:read:ads`` scope.
+            Requires user access token that includes the `channel:read:ads` scope.
 
         Parameters
         ----------
         token_for : str
-            User token to use that includes the ``channel:edit:commercial`` scope.
+            User token to use that includes the `channel:edit:commercial` scope.
 
         Returns
         -------
@@ -133,12 +133,12 @@ class PartialUser:
             The user id in the user access token must match the id of this PartialUser object.
 
         !! note
-            Requires user access token that includes the ``channel:manage:ads`` scope.
+            Requires user access token that includes the `channel:manage:ads` scope.
 
         Parameters
         ----------
         token_for : str
-            User token to use that includes the ``channel:manage:ads`` scope.
+            User token to use that includes the `channel:manage:ads` scope.
 
         Returns
         -------
@@ -162,7 +162,7 @@ class PartialUser:
         Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
 
         !!! info
-            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
+            Both `started_at` and `ended_at` must be provided when requesting a date range.
             If you omit both of these then the report includes all available data from January 31, 2018.
 
             Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
@@ -170,17 +170,17 @@ class PartialUser:
 
 
         ??? note
-            Requires user access token that includes the ``analytics:read:extensions`` scope.
+            Requires user access token that includes the `analytics:read:extensions` scope.
 
         Parameters
         -----------
         token_for: str
-            A user access token that includes the ``analytics:read:extensions`` scope.
+            A user access token that includes the `analytics:read:extensions` scope.
         extension_id: str
             The extension's client ID. If specified, the response contains a report for the specified extension.
             If not specified, the response includes a report for each extension that the authenticated user owns.
         type: Literal["overview_v2"]
-            The type of analytics report to get. This is set to ``overview_v2`` by default.
+            The type of analytics report to get. This is set to `overview_v2` by default.
         started_at: datetime.date
             The date to start the report from. If you specify a start date, you must specify an end date.
         ended_at: datetime.date
@@ -227,7 +227,7 @@ class PartialUser:
         Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
 
         !!! info
-            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
+            Both `started_at` and `ended_at` must be provided when requesting a date range.
             If you omit both of these then the report includes all available data from January 31, 2018.
 
             Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
@@ -235,17 +235,17 @@ class PartialUser:
 
 
         ??? note
-            Requires user access token that includes the ``analytics:read:extensions`` scope.
+            Requires user access token that includes the `analytics:read:extensions` scope.
 
         Parameters
         -----------
         token_for: str
-            A user access token that includes the ``analytics:read:extensions`` scope.
+            A user access token that includes the `analytics:read:extensions` scope.
         game_id: str
             The game's client ID. If specified, the response contains a report for the specified game.
             If not specified, the response includes a report for each of the authenticated user's games.
         type: Literal["overview_v2"]
-            The type of analytics report to get. This is set to ``overview_v2`` by default.
+            The type of analytics report to get. This is set to `overview_v2` by default.
         started_at: datetime.date
             The date to start the report from. If you specify a start date, you must specify an end date.
         ended_at: datetime.date
@@ -290,17 +290,17 @@ class PartialUser:
         Fetches the Bits leaderboard for this user.
 
         !!! info
-            ``started_at`` is converted to PST before being used, so if you set the start time to 2022-01-01T00:00:00.0Z and period to month,
+            `started_at` is converted to PST before being used, so if you set the start time to 2022-01-01T00:00:00.0Z and period to month,
             the actual reporting period is December 2021, not January 2022.
             If you want the reporting period to be January 2022, you must set the start time to 2022-01-01T08:00:00.0Z or 2022-01-01T00:00:00.0-08:00.
 
         !!! info
-            When providing ``started_at``, you must also change the ``period`` parameter to any value other than "all".
-            Conversely, if ``period`` is set to anything other than "all", ``started_at`` must also be provided.
+            When providing `started_at`, you must also change the `period` parameter to any value other than "all".
+            Conversely, if `period` is set to anything other than "all", `started_at` must also be provided.
 
 
         ??? note
-            Requires user access token that includes the ``bits:read`` scope.
+            Requires user access token that includes the `bits:read` scope.
 
         | Period          | Description |
         | -----------      | -------------- |
@@ -325,7 +325,7 @@ class PartialUser:
             If count is greater than 1, the response may include users ranked above and below the specified user.
             To get the leaderboard's top leaders, don't specify a user ID.
         token_for : str
-            User token to use that includes the ``bits:read`` scope.
+            User token to use that includes the `bits:read` scope.
 
         Returns
         -------
@@ -400,7 +400,7 @@ class PartialUser:
             For readability, consider using camelCasing or PascalCasing.
 
         ??? note
-            Requires user access token that includes the ``channel:manage:broadcast`` scope.
+            Requires user access token that includes the `channel:manage:broadcast` scope.
 
 
         Parameters
@@ -426,7 +426,7 @@ class PartialUser:
         branded: bool | None
             Boolean flag indicating if the channel has branded content.
         token_for: str
-            User token to use that includes the ``channel:manage:broadcast`` scope.
+            User token to use that includes the `channel:manage:broadcast` scope.
         """
 
         return await self._http.patch_channel_info(
@@ -446,12 +446,12 @@ class PartialUser:
         Fetches a list of the user's editors for their channel.
 
         ??? note
-            Requires user access token that includes the ``channel:manage:broadcast`` scope.
+            Requires user access token that includes the `channel:manage:broadcast` scope.
 
         Parameters
         -----------
         token_for: str
-            User token to use that includes the ``channel:manage:broadcast`` scope.
+            User token to use that includes the `channel:manage:broadcast` scope.
 
         Returns
         -------
@@ -470,14 +470,14 @@ class PartialUser:
         Fetches information of who and when this user followed other channels.
 
         ??? note
-            Requires user access token that includes the ``user:read:follows`` scope.
+            Requires user access token that includes the `user:read:follows` scope.
 
         Parameters
         -----------
         broadcaster_id: str | int | None
             Use this parameter to see whether the user follows this broadcaster.
         token_for: str
-            User token to use that includes the ``user:read:follows`` scope.
+            User token to use that includes the `user:read:follows` scope.
 
         Returns
         -------
@@ -499,14 +499,14 @@ class PartialUser:
             The user ID in the token must match that of the broadcaster or a moderator.
 
         ??? note
-            Requires user access token that includes the ``moderator:read:followers`` scope.
+            Requires user access token that includes the `moderator:read:followers` scope.
 
         Parameters
         -----------
         user_id: str | int | None
             Use this parameter to see whether the user follows this broadcaster.
         token_for: str
-            User token to use that includes the ``moderator:read:followers`` scope.
+            User token to use that includes the `moderator:read:followers` scope.
 
         Returns
         -------
@@ -565,7 +565,7 @@ class PartialUser:
         redemptions_skip_queue: bool
             A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If False, status is set to UNFULFILLED and follows the normal request queue process. The default is False.
         token_for: str
-            User token to use that includes the ``channel:manage:redemptions`` scope.
+            User token to use that includes the `channel:manage:redemptions` scope.
 
         Returns
         --------
@@ -619,15 +619,15 @@ class PartialUser:
         Fetches list of custom rewards that the specified broadcaster created.
 
         ??? note
-            Requires user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+            Requires user access token that includes the `channel:read:redemptions` or `channel:manage:redemptions` scope.
 
         Parameters
         ----------
         token_for : str
-            A user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+            A user access token that includes the `channel:read:redemptions` or `channel:manage:redemptions` scope.
         ids : list[str] | None
             A list of IDs to filter the rewards by. You may request a maximum of 50.
-        manageable : bool, optional
+        manageable : bool | None
             A Boolean value that determines whether the response contains only the custom rewards that the app (Client ID) may manage.
             Default is False.
 
@@ -648,12 +648,12 @@ class PartialUser:
         Fetch the active charity campaign of a broadcaster.
 
         ??? note
-            Requires user access token that includes the ``channel:read:charity`` scope.
+            Requires user access token that includes the `channel:read:charity` scope.
 
         Parameters
         ----------
         token_for : str
-            A user access token that includes the ``channel:read:charity`` scope.
+            A user access token that includes the `channel:read:charity` scope.
 
         Returns
         -------
@@ -675,12 +675,12 @@ class PartialUser:
         Fetches information about all broadcasts on Twitch.
 
         ??? note
-            Requires user access token that includes the ``channel:read:charity`` scope.
+            Requires user access token that includes the `channel:read:charity` scope.
 
         Parameters
         -----------
         token_for: str
-            A user access token that includes the ``channel:read:charity`` scope.
+            A user access token that includes the `channel:read:charity` scope.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -703,7 +703,7 @@ class PartialUser:
         Fetches users that are connected to the broadcaster's chat session.
 
         ??? note
-            Requires user access token that includes the ``moderator:read:chatters`` scope.
+            Requires user access token that includes the `moderator:read:chatters` scope.
 
         Parameters
         ----------
@@ -711,7 +711,7 @@ class PartialUser:
             The ID of the broadcaster or one of the broadcaster's moderators.
             This ID must match the user ID in the user access token.
         token_for : str
-            A user access token that includes the ``moderator:read:chatters`` scope.
+            A user access token that includes the `moderator:read:chatters` scope.
         first : int | None
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 1,000. The default is 100.
@@ -757,12 +757,12 @@ class PartialUser:
         Broadcasters create these custom emotes for users who subscribe to or follow the channel or cheer Bits in the channel's chat window.
 
         ??? note
-            Requires user access token that includes the ``user:read:emotes`` scope.
+            Requires user access token that includes the `user:read:emotes` scope.
 
         Parameters
         ----------
         token_for : str
-            Requires a user access token that includes the ``user:read:emotes`` scope.
+            Requires a user access token that includes the `user:read:emotes` scope.
         broadcaster_id : str | None
             The User ID of a broadcaster you wish to get follower emotes of. Using this query parameter will guarantee inclusion of the broadcaster's follower emotes in the response body.
 
@@ -801,20 +801,20 @@ class PartialUser:
         Fetches the broadcaster's chat settings.
 
         !!! note
-            If you wish to view ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will need to provide a moderator_id, which can be
-            either the broadcaster's or a moderators'. The token must include the ``moderator:read:chat_settings`` scope.
+            If you wish to view `non_moderator_chat_delay` and `non_moderator_chat_delay_duration` then you will need to provide a moderator_id, which can be
+            either the broadcaster's or a moderators'. The token must include the `moderator:read:chat_settings` scope.
             the toke
 
         Parameters
         ----------
         moderator_id : str | int | None
             The ID of the broadcaster or one of the broadcaster's moderators.
-            This field is required only if you want to include the ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` settings in the response.
+            This field is required only if you want to include the `non_moderator_chat_delay` and `non_moderator_chat_delay_duration` settings in the response.
             If you specify this field, this ID must match the user ID in the user access token.
 
         token_for : str | None
-            If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will provide a token for the user in ``moderator_id``.
-            The required scope is ``moderator:read:chat_settings``.
+            If you need the response to contain `non_moderator_chat_delay` and `non_moderator_chat_delay_duration` then you will provide a token for the user in `moderator_id`.
+            The required scope is `moderator:read:chat_settings`.
             Otherwise it is an optional user token to use instead of the default app token.
 
         Returns
@@ -827,4 +827,102 @@ class PartialUser:
         data = await self._http.get_channel_chat_settings(
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
         )
+        return ChatSettings(data["data"][0], http=self._http)
+
+    async def update_chat_settings(
+        self,
+        moderator_id: str | int,
+        token_for: str,
+        emote_mode: bool | None = None,
+        follower_mode: bool | None = None,
+        follower_mode_duration: int | None = None,
+        slow_mode: bool | None = None,
+        slow_mode_wait_time: int | None = None,
+        subscriber_mode: bool | None = None,
+        unique_chat_mode: bool | None = None,
+        non_moderator_chat_delay: bool | None = None,
+        non_moderator_chat_delay_duration: Literal[2, 4, 6] | None = None,
+    ) -> ChatSettings:
+        """
+
+        ??? info
+            To set the `slow_mode_wait_time` or `follower_mode_duration` field to its default value, set the corresponding `slow_mode` or `follower_mode` field to True (and don't include the `slow_mode_wait_time` or `follower_mode_duration` field).
+
+            To set the `slow_mode_wait_time`, `follower_mode_duration`, or `non_moderator_chat_delay_duration` field's value, you must set the corresponding `slow_mode`, `follower_mode`, or `non_moderator_chat_delay` field to True.
+
+            To remove the `slow_mode_wait_time`, `follower_mode_duration`, or `non_moderator_chat_delay_duration` field's value, set the corresponding `slow_mode`, `follower_mode`, or `non_moderator_chat_delay` field to False (and don't include the slow_mode_wait_time, follower_mode_duration, or non_moderator_chat_delay_duration field).
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:chat_settings` scope.
+
+        Parameters
+        ----------
+        moderator_id : str | int
+            The ID of a user that has permission to moderate the broadcaster's chat room, or the broadcaster's ID if they're making the update.
+            This ID must match the user ID in the user access token.
+        token_for : str
+            User access token that includes the `moderator:manage:chat_settings` scope.
+        emote_mode : bool | None
+            A Boolean value that determines whether chat messages must contain only emotes.
+        follower_mode : bool | None
+            A Boolean value that determines whether the broadcaster restricts the chat room to followers only.
+        follower_mode_duration : int | None
+            The length of time, in minutes, that users must follow the broadcaster before being able to participate in the chat room.
+            Set only if follower_mode is True. Possible values are: 0 (no restriction) through 129600 (3 months).
+        slow_mode : bool | None
+            A Boolean value that determines whether the broadcaster limits how often users in the chat room are allowed to send messages.
+            Set to True if the broadcaster applies a wait period between messages; otherwise, False.
+        slow_mode_wait_time : int | None
+            The amount of time, in seconds, that users must wait between sending messages. Set only if slow_mode is True.
+            Possible values are: 3 (3 second delay) through 120 (2 minute delay). The default is 30 seconds.
+        subscriber_mode : bool | None
+            A Boolean value that determines whether only users that subscribe to the broadcaster's channel may talk in the chat room.
+            Set to True if the broadcaster restricts the chat room to subscribers only; otherwise, False.
+        unique_chat_mode : bool | None
+            A Boolean value that determines whether the broadcaster requires users to post only unique messages in the chat room.
+            Set to True if the broadcaster allows only unique messages; otherwise, False.
+        non_moderator_chat_delay : bool | None
+            A Boolean value that determines whether the broadcaster adds a short delay before chat messages appear in the chat room.
+            This gives chat moderators and bots a chance to remove them before viewers can see the message.
+            Set to True if the broadcaster applies a delay; otherwise, False.
+        non_moderator_chat_delay_duration : Literal[2, 4, 6] | None
+            The amount of time, in seconds, that messages are delayed before appearing in chat.
+            Set only if non_moderator_chat_delay is True.
+            Possible values in seconds: 2 (recommended), 4 and 6.
+
+        Returns
+        -------
+        ChatSettings
+            The newly applied chat settings.
+
+        Raises
+        ------
+        ValueError
+            follower_mode_duration must be below 129600
+        ValueError
+            slow_mode_wait_time must be between 3 and 120
+
+        """
+        if follower_mode_duration is not None and follower_mode_duration > 129600:
+            raise ValueError("follower_mode_duration must be below 129600")
+        if slow_mode_wait_time is not None and (slow_mode_wait_time < 3 or slow_mode_wait_time > 120):
+            raise ValueError("slow_mode_wait_time must be between 3 and 120")
+
+        from .models.chat import ChatSettings
+
+        data = await self._http.patch_chat_settings(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            emote_mode=emote_mode,
+            follower_mode=follower_mode,
+            follower_mode_duration=follower_mode_duration,
+            slow_mode=slow_mode,
+            slow_mode_wait_time=slow_mode_wait_time,
+            subscriber_mode=subscriber_mode,
+            unique_chat_mode=unique_chat_mode,
+            non_moderator_chat_delay=non_moderator_chat_delay,
+            non_moderator_chat_delay_duration=non_moderator_chat_delay_duration,
+        )
+
         return ChatSettings(data["data"][0], http=self._http)

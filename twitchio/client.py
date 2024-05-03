@@ -362,7 +362,7 @@ class Client:
         Fetches the color of a chatter.
 
         .. versionchanged:: 3.0
-            Removed the ``token`` parameter. Added the ``token_for`` parameter.
+            Removed the `token` parameter. Added the `token_for` parameter.
 
         Parameters
         -----------
@@ -581,7 +581,7 @@ class Client:
         languages: list[str] | None
             language for the stream(s). ISO 639-1 or two letter code for supported stream language
         type: Literal["all", "live"]
-            One of ``"all"`` or ``"live"``. Defaults to ``"all"``. Specifies what type of stream to fetch.
+            One of `"all"` or `"live"`. Defaults to `"all"`. Specifies what type of stream to fetch.
         token_for: str | None
             An optional user token to use instead of the default app token.
         first: int
@@ -609,7 +609,7 @@ class Client:
         self, *, team_name: str | None = None, team_id: str | None = None, token_for: str | None = None
     ) -> Team:
         """
-        Fetches information about a specific Twitch team. You must provide one of either ``team_name`` or ``team_id``.
+        Fetches information about a specific Twitch team. You must provide one of either `team_name` or `team_id`.
 
         Parameters
         -----------
@@ -888,7 +888,7 @@ class Client:
         """
         Deletes one or more videos. You may delete past broadcasts, highlights, or uploads.
 
-        This requires a user token with the scope ``channel:manage:videos``.
+        This requires a user token with the scope `channel:manage:videos`.
         The limit is to delete 5 ids at a time, so if more than 5 ids are provided we will attempt to delete them in chunks.
         If any of the videos fail to delete in the request then none will be deleted in that chunk.
 
@@ -897,7 +897,7 @@ class Client:
         ids: list[str | int] | None
             A list of video IDs to fetch.
         token_for: str
-            User token with the scope ``channel:manage:videos``.
+            User token with the scope `channel:manage:videos`.
 
         Returns
         -------
@@ -979,28 +979,28 @@ class Client:
 
         **Code Blocks:**
 
-        ```python
+        ``python
         # This is a python code block
         print("Hello World!")
-        ```
+        ``
 
 
         **Content Blocks:**
 
         === "Some Code"
 
-            ```python
+            ``python
             # This is a python code block
             print("Hello World!")
-            ```
+            ``
 
         === "Some Other Code"
 
-            ```python
+            ``python
             import twitchio
 
             client = twitchio.Client()
-            ```
+            ``
 
         === "Wow!"
 
