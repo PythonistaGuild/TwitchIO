@@ -221,41 +221,17 @@ class ChatBadgeVersions:
             raise ValueError(f"Invalid scale '{scale}'. Allowed values are '1x', '2x', '4x'.")
 
 
-class GlobalEmote:
-    """
-    Represents a Global Emote
+class Emote:
+    __slots__ = ("_http", "id", "name", "format", "scale", "theme_mode", "template")
 
-    Attributes
-    -----------
-    id: str
-        The ID of the emote.
-    name: str
-        The name of the emote.
-    images: dict[str, str]
-        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
-    format: list[str]
-        The formats that the emote is available in.
-    scale: list[str]
-        The sizes that the emote is available in.
-    theme_mode: list[str]
-        The background themes that the emote is available in.
-    """
-
-    __slots__ = ("_http", "id", "name", "images", "format", "scale", "theme_mode", "template", "_data")
-
-    def __init__(self, data: GlobalEmotesResponseData, *, template: str, http: HTTPClient) -> None:
-        self._data = data
-        self._http: HTTPClient = http
-        self.id: str = data["id"]
-        self.name: str = data["name"]
-        self.images: GlobalEmotesResponseImages = data["images"]
-        self.format: list[str] = data["format"]
-        self.scale: list[str] = data["scale"]
-        self.theme_mode: list[str] = data["theme_mode"]
-        self.template: str = template
-
-    def __repr__(self) -> str:
-        return f"<GlobalEmote id={self.id} name={self.name}"
+    def __init__(self, data: GlobalEmotesResponseData | EmoteSetsResponseData, template: str, http: HTTPClient) -> None:
+        self._http = http
+        self.id = data["id"]
+        self.name = data["name"]
+        self.format = data["format"]
+        self.scale = data["scale"]
+        self.theme_mode = data["theme_mode"]
+        self.template = template
 
     def get_image(
         self,
@@ -311,7 +287,37 @@ class GlobalEmote:
         return Asset(url, name=self.name, http=self._http)
 
 
-class EmoteSet(GlobalEmote):
+class GlobalEmote(Emote):
+    """
+    Represents a Global Emote
+
+    Attributes
+    -----------
+    id: str
+        The ID of the emote.
+    name: str
+        The name of the emote.
+    images: dict[str, str]
+        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
+    format: list[str]
+        The formats that the emote is available in.
+    scale: list[str]
+        The sizes that the emote is available in.
+    theme_mode: list[str]
+        The background themes that the emote is available in.
+    """
+
+    __slots__ = "images"
+
+    def __init__(self, data: GlobalEmotesResponseData, *, template: str, http: HTTPClient) -> None:
+        super().__init__(data, template=template, http=http)
+        self.images: GlobalEmotesResponseImages = data["images"]
+
+    def __repr__(self) -> str:
+        return f"<GlobalEmote id={self.id} name={self.name}"
+
+
+class EmoteSet(Emote):
     """
     Represents an emote set.
 
@@ -337,10 +343,11 @@ class EmoteSet(GlobalEmote):
         The background themes that the emote is available in.
     """
 
-    __slots__ = ("type", "set_id", "owner_id")
+    __slots__ = ("type", "images", "set_id", "owner_id")
 
     def __init__(self, data: EmoteSetsResponseData, *, template: str, http: HTTPClient) -> None:
         super().__init__(data, template=template, http=http)
+        self.images: GlobalEmotesResponseImages = data["images"]
         self.set_id: str = data["emote_set_id"]
         self.type: str = data["emote_type"]
         self.owner_id: str = data["owner_id"]

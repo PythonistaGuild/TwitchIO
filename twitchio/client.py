@@ -325,6 +325,10 @@ class Client:
         """
         Fetches emotes for one or more specified emote sets.
 
+        ??? tip
+            An emote set groups emotes that have a similar context.
+            For example, Twitch places all the subscriber emotes that a broadcaster uploads for their channel in the same emote set.
+
         Parameters
         ----------
         emote_set_ids: list[str]
@@ -540,7 +544,7 @@ class Client:
         """
         Fetches global emotes from the twitch API
 
-        If you wish to fetch a specific broadcaster's chat badges use [`fetch_emotes`][twitchio.user.fetch_emotes]
+        If you wish to fetch a specific broadcaster's chat badges use [`fetch_channel_emotes`][twitchio.user.fetch_channel_emotes]
 
         Returns
         --------
