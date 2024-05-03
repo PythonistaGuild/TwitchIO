@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
-    from .models.chat import ChannelEmote, ChatBadge, ChatSettings
+    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, UserEmote
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -88,7 +88,7 @@ class PartialUser:
             The length of the commercial to run, in seconds. Max length is 180.
             If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
         token_for : str
-            User OAuth token to use that includes the ``channel:edit:commercial`` scope.
+            User token to use that includes the ``channel:edit:commercial`` scope.
 
         Returns
         -------
@@ -114,7 +114,7 @@ class PartialUser:
         Parameters
         ----------
         token_for : str
-            User OAuth token to use that includes the ``channel:edit:commercial`` scope.
+            User token to use that includes the ``channel:edit:commercial`` scope.
 
         Returns
         -------
@@ -138,7 +138,7 @@ class PartialUser:
         Parameters
         ----------
         token_for : str
-            User OAuth token to use that includes the ``channel:manage:ads`` scope.
+            User token to use that includes the ``channel:manage:ads`` scope.
 
         Returns
         -------
@@ -169,7 +169,7 @@ class PartialUser:
             If not, the API ignores your end date and uses an end date that is today minus one to two days.
 
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``analytics:read:extensions`` scope.
 
         Parameters
@@ -234,7 +234,7 @@ class PartialUser:
             If not, the API ignores your end date and uses an end date that is today minus one to two days.
 
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``analytics:read:extensions`` scope.
 
         Parameters
@@ -299,7 +299,7 @@ class PartialUser:
             Conversely, if ``period`` is set to anything other than "all", ``started_at`` must also be provided.
 
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``bits:read`` scope.
 
         | Period          | Description |
@@ -325,7 +325,7 @@ class PartialUser:
             If count is greater than 1, the response may include users ranked above and below the specified user.
             To get the leaderboard's top leaders, don't specify a user ID.
         token_for : str
-            User OAuth token to use that includes the ``bits:read`` scope.
+            User token to use that includes the ``bits:read`` scope.
 
         Returns
         -------
@@ -365,7 +365,7 @@ class PartialUser:
         Parameters
         -----------
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
         twitchio.ChannelInfo
@@ -394,12 +394,12 @@ class PartialUser:
         """
         Updates this user's channel properties.
 
-        !! info
+        !!! info
             A channel may specify a maximum of 10 tags. Each tag is limited to a maximum of 25 characters and may not be an empty string or contain spaces or special characters.
             Tags are case insensitive.
             For readability, consider using camelCasing or PascalCasing.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``channel:manage:broadcast`` scope.
 
 
@@ -426,7 +426,7 @@ class PartialUser:
         branded: bool | None
             Boolean flag indicating if the channel has branded content.
         token_for: str
-            User OAuth token to use that includes the ``channel:manage:broadcast`` scope.
+            User token to use that includes the ``channel:manage:broadcast`` scope.
         """
 
         return await self._http.patch_channel_info(
@@ -445,17 +445,17 @@ class PartialUser:
         """
         Fetches a list of the user's editors for their channel.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``channel:manage:broadcast`` scope.
 
         Parameters
         -----------
         token_for: str
-            User OAuth token to use that includes the ``channel:manage:broadcast`` scope.
+            User token to use that includes the ``channel:manage:broadcast`` scope.
 
         Returns
         -------
-        list[ChannelEditor]
+        list[twitchio.ChannelEditor]
             A list of ChannelEditor objects.
         """
         from .models.channels import ChannelEditor
@@ -469,7 +469,7 @@ class PartialUser:
         """
         Fetches information of who and when this user followed other channels.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``user:read:follows`` scope.
 
         Parameters
@@ -477,11 +477,11 @@ class PartialUser:
         broadcaster_id: str | int | None
             Use this parameter to see whether the user follows this broadcaster.
         token_for: str
-            User OAuth token to use that includes the ``user:read:follows`` scope.
+            User token to use that includes the ``user:read:follows`` scope.
 
         Returns
         -------
-        ChannelsFollowed
+        twitchio.ChannelsFollowed
             ChannelsFollowed object.
         """
 
@@ -496,9 +496,9 @@ class PartialUser:
         Fetches information of who and when users followed this channel.
 
         !!! info
-            The User ID in the token must match that of the broadcaster or a moderator.
+            The user ID in the token must match that of the broadcaster or a moderator.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``moderator:read:followers`` scope.
 
         Parameters
@@ -506,11 +506,11 @@ class PartialUser:
         user_id: str | int | None
             Use this parameter to see whether the user follows this broadcaster.
         token_for: str
-            User OAuth token to use that includes the ``moderator:read:followers`` scope.
+            User token to use that includes the ``moderator:read:followers`` scope.
 
         Returns
         -------
-        ChannelFollowers
+        twitchio.ChannelFollowers
             A ChannelFollowers object.
         """
 
@@ -540,7 +540,7 @@ class PartialUser:
         !!! info
             The maximum number of custom rewards per channel is 50, which includes both enabled and disabled rewards.
 
-        !!! note
+        ??? note
             Requires user access token that includes the channel:manage:redemptions scope.
 
         Parameters
@@ -565,7 +565,7 @@ class PartialUser:
         redemptions_skip_queue: bool
             A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If False, status is set to UNFULFILLED and follows the normal request queue process. The default is False.
         token_for: str
-            User OAuth token to use that includes the ``channel:manage:redemptions`` scope.
+            User token to use that includes the ``channel:manage:redemptions`` scope.
 
         Returns
         --------
@@ -618,7 +618,7 @@ class PartialUser:
         """
         Fetches list of custom rewards that the specified broadcaster created.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
         Parameters
@@ -633,7 +633,7 @@ class PartialUser:
 
         Returns
         -------
-        list[CustomReward]
+        list[twitchio.CustomReward]
             _description_
         """
         from .models.channel_points import CustomReward
@@ -647,7 +647,7 @@ class PartialUser:
         """
         Fetch the active charity campaign of a broadcaster.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``channel:read:charity`` scope.
 
         Parameters
@@ -657,7 +657,7 @@ class PartialUser:
 
         Returns
         -------
-        CharityCampaign
+        twitchio.CharityCampaign
             A CharityCampaign object.
         """
         from .models.charity import CharityCampaign
@@ -674,7 +674,7 @@ class PartialUser:
         """
         Fetches information about all broadcasts on Twitch.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``channel:read:charity`` scope.
 
         Parameters
@@ -702,7 +702,7 @@ class PartialUser:
         """
         Fetches users that are connected to the broadcaster's chat session.
 
-        !!! note
+        ??? note
             Requires user access token that includes the ``moderator:read:chatters`` scope.
 
         Parameters
@@ -718,7 +718,7 @@ class PartialUser:
 
         Returns
         -------
-        Chatters
+        twitchio.Chatters
             A Chatters object containing the information of a broadcaster's connected chatters.
         """
         first = max(1, min(1000, first))
@@ -735,11 +735,11 @@ class PartialUser:
         Parameters
         ----------
         token_for : str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         -------
-        list[ChannelEmote]
+        list[twitchio.ChannelEmote]
             A list of ChannelEmote objects
         """
 
@@ -748,6 +748,30 @@ class PartialUser:
         data = await self._http.get_channel_emotes(broadcaster_id=self.id, token_for=token_for)
         template = data["template"]
         return [ChannelEmote(d, template=template, http=self._http) for d in data["data"]]
+
+    async def fetch_user_emotes(
+        self, *, token_for: str, broadcaster_id: str | int | None = None
+    ) -> HTTPAsyncIterator[UserEmote]:
+        """
+        Fetches the broadcaster's list of custom emotes.
+        Broadcasters create these custom emotes for users who subscribe to or follow the channel or cheer Bits in the channel's chat window.
+
+        ??? note
+            Requires user access token that includes the ``user:read:emotes`` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            Requires a user access token that includes the ``user:read:emotes`` scope.
+        broadcaster_id : str | None
+            The User ID of a broadcaster you wish to get follower emotes of. Using this query parameter will guarantee inclusion of the broadcaster's follower emotes in the response body.
+
+        Returns
+        -------
+        HTTPAsyncIterator[twitchio.UserEmote]
+        """
+
+        return await self._http.get_user_emotes(user_id=self.id, token_for=token_for, broadcaster_id=broadcaster_id)
 
     async def fetch_chat_badges(self, token_for: str | None = None) -> list[ChatBadge]:
         """
@@ -758,7 +782,7 @@ class PartialUser:
         Parameters
         ----------
         token_for : str | None,
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         --------
@@ -791,11 +815,11 @@ class PartialUser:
         token_for : str | None
             If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will provide a token for the user in ``moderator_id``.
             The required scope is ``moderator:read:chat_settings``.
-            Otherwise it is an optional User OAuth token to use instead of the default app token.
+            Otherwise it is an optional user token to use instead of the default app token.
 
         Returns
         -------
-        ChatSettings
+        twitchio.ChatSettings
             ChatSettings object of the broadcaster's chat settings.
         """
         from .models.chat import ChatSettings
@@ -803,5 +827,4 @@ class PartialUser:
         data = await self._http.get_channel_chat_settings(
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
         )
-        print(data)
         return ChatSettings(data["data"][0], http=self._http)

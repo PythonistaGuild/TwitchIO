@@ -250,7 +250,12 @@ class Emote:
 
     __slots__ = ("_http", "id", "name", "format", "scale", "theme_mode", "template")
 
-    def __init__(self, data: GlobalEmotesResponseData | EmoteSetsResponseData, template: str, http: HTTPClient) -> None:
+    def __init__(
+        self,
+        data: GlobalEmotesResponseData | EmoteSetsResponseData | UserEmotesResponseData,
+        template: str,
+        http: HTTPClient,
+    ) -> None:
         self._http = http
         self.id = data["id"]
         self.name = data["name"]
@@ -421,6 +426,58 @@ class ChannelEmote(Emote):
 
     def __repr__(self) -> str:
         return f"<ChannelEmote id={self.id} name={self.name} set_id={self.set_id}>"
+
+
+class UserEmote(Emote):
+    """
+    Represents an emote set.
+
+    | Type          | Description |
+    | -----------   | -------------- |
+    | none   | No emote type was assigned to this emote.  |
+    | bitstier    | A Bits tier emote.   |
+    | follower     |  A follower emote.   |
+    | subscriptions     | A subscriber emote.   |
+    | channelpoints    | An emote granted by using channel points.    |
+    | rewards    | An emote granted to the user through a special event.  |
+    | hypetrain     | An emote granted for participation in a Hype Train. |
+    | prime      |  An emote granted for linking an Amazon Prime account.  |
+    | turbo      | An emote granted for having Twitch Turbo.   |
+    | smilies     | Emoticons supported by Twitch.    |
+    | globals    | An emote accessible by everyone.  |
+    | owl2019     | Emotes related to Overwatch League 2019. |
+    | twofactor      |  Emotes granted by enabling two-factor authentication on an account.   |
+    | limitedtime      | Emotes that were granted for only a limited time.   |
+
+    Parameters
+    ----------
+    id: str
+        The ID of the emote.
+    name: str
+        The name of the emote.
+    type: str
+        The type of emote. Please see docs for full list of possible values.
+    set_id: str
+        An ID that identifies the emote set that the emote belongs to.
+    owner_id: str
+        The ID of the broadcaster who owns the emote.
+    format: list[str]
+        The formats that the emote is available in.
+    scale: list[str]
+        The sizes that the emote is available in.
+    theme_mode: list[str]
+        The background themes that the emote is available in.
+    """
+
+    __slots__ = ("type", "images", "set_id", "owner_id", "tier")
+
+    def __init__(self, data: UserEmotesResponseData, *, template: str, http: HTTPClient) -> None:
+        super().__init__(data, template=template, http=http)
+        self.set_id: str = data["emote_set_id"]
+        self.type: str = data["emote_type"]
+
+    def __repr__(self) -> str:
+        return f"<UserEmote id={self.id} name={self.name} set_id={self.set_id}>"
 
 
 class ChatSettings:

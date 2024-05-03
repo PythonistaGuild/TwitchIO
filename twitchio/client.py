@@ -334,7 +334,7 @@ class Client:
         emote_set_ids: list[str]
             List of IDs that identifies the emote set to get. You may specify a maximum of 25 IDs.
         token_for : str | None, optional
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         -------
@@ -369,7 +369,7 @@ class Client:
         user_ids: list[str | int]
             List of user ids to fetch the colors for.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
         list[twitchio.ChatterColor]
@@ -393,7 +393,7 @@ class Client:
             A list of channel IDs to request from API.
             You may specify a maximum of 100 IDs.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
         list[twitchio.ChannelInfo]
@@ -418,7 +418,7 @@ class Client:
         broadcaster_id: str | int | None
             The ID of the broadcaster whose custom Cheermotes you want to get. If not provided then you will fetch global Cheermotes.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         --------
@@ -476,7 +476,7 @@ class Client:
         ended_at: datetime.datetime`
             The end date used to filter clips. If not specified, the time window is the start date plus one week.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -583,7 +583,7 @@ class Client:
         type: Literal["all", "live"]
             One of ``"all"`` or ``"live"``. Defaults to ``"all"``. Specifies what type of stream to fetch.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -618,7 +618,7 @@ class Client:
         team_id: str
             The team id.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
         twitchio.Team
@@ -648,7 +648,7 @@ class Client:
         Parameters
         -----------
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -679,7 +679,7 @@ class Client:
         Parameters
         -----------
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         --------
@@ -726,7 +726,7 @@ class Client:
         igdb_id: str | None
             The igdb_id of the game to fetch.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         -------
@@ -770,7 +770,7 @@ class Client:
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
         twitchio.HTTPAsyncIterator[twitchio.Game]
@@ -801,7 +801,7 @@ class Client:
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
         twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
@@ -850,7 +850,7 @@ class Client:
         type: Literal["all", "archive", "highlight", "upload"]
         first: int
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         -------
@@ -897,7 +897,7 @@ class Client:
         ids: list[str | int] | None
             A list of video IDs to fetch.
         token_for: str
-            A User OAuth token with the scope ``channel:manage:videos``.
+            User token with the scope ``channel:manage:videos``.
 
         Returns
         -------

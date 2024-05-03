@@ -43,7 +43,7 @@ from .models.bits import ExtensionTransaction
 from .models.channel_points import CustomRewardRedemption
 from .models.channels import ChannelFollowerEvent, ChannelFollowers, FollowedChannels, FollowedChannelsEvent
 from .models.charity import CharityDonation
-from .models.chat import Chatters
+from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
 from .models.search import SearchChannel
@@ -912,12 +912,21 @@ class HTTPClient:
 
     async def get_user_emotes(
         self, user_id: str, token_for: str, broadcaster_id: str | int | None = None
-    ):  # -> HTTPAsyncIterator[...]:
+    ) -> HTTPAsyncIterator[UserEmote]:
         params = {"user_id": user_id}
         if broadcaster_id is not None:
             params["broadcaster_id"] = str(broadcaster_id)
+
         route: Route = Route("GET", "chat/emotes/user", params=params, token_for=token_for)
-        return await self.request_json(route)
+
+        data = await self.request_json(route)
+        template: str = data["template"]
+
+        async def converter(data: UserEmotesResponseData) -> UserEmote:
+            return UserEmote(data, template=template, http=self)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Clips ###
 
