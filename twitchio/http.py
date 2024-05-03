@@ -961,6 +961,34 @@ class HTTPClient:
         route: Route = Route("PATCH", "chat/settings", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
+    async def post_chat_announcement(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        message: str,
+        color: Literal["blue", "green", "orange", "purple", "primary"] = "primary",
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"color": color, "message": message}
+        route: Route = Route("POST", "chat/announcements", json=data, params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def post_chat_shoutout(
+        self,
+        broadcaster_id: str | int,
+        to_broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+    ) -> None:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "moderator_id": moderator_id,
+            "to_broadcaster_id": to_broadcaster_id,
+        }
+        route: Route = Route("POST", "chat/shoutouts", params=params, token_for=token_for)
+        return await self.request_json(route)
+
     ### Clips ###
 
     async def get_clips(

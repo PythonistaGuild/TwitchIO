@@ -979,28 +979,28 @@ class Client:
 
         **Code Blocks:**
 
-        ``python
+        ```python
         # This is a python code block
         print("Hello World!")
-        ``
+        ```
 
 
         **Content Blocks:**
 
         === "Some Code"
 
-            ``python
+            ```python
             # This is a python code block
             print("Hello World!")
-            ``
+            ```
 
         === "Some Other Code"
 
-            ``python
+            ```python
             import twitchio
 
             client = twitchio.Client()
-            ``
+            ```
 
         === "Wow!"
 

@@ -76,10 +76,9 @@ class PartialUser:
         !!! info
             Only partners and affiliates may run commercials and they must be streaming live at the time.
 
-        !!! info
             Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
 
-        !! note
+        ??? note
             Requires user access token that includes the `channel:edit:commercial` scope.
 
         Parameters
@@ -105,16 +104,15 @@ class PartialUser:
         !!! info
             A new ad cannot be run until 8 minutes after running a previous ad.
 
-        !!! info
             The user id in the user access token must match the id of this PartialUser object.
 
-        !! note
+        ??? note
             Requires user access token that includes the `channel:read:ads` scope.
 
         Parameters
         ----------
         token_for : str
-            User token to use that includes the `channel:edit:commercial` scope.
+            User token to use that includes the `channel:read:ads` scope.
 
         Returns
         -------
@@ -132,7 +130,7 @@ class PartialUser:
         !!! info
             The user id in the user access token must match the id of this PartialUser object.
 
-        !! note
+        ??? note
             Requires user access token that includes the `channel:manage:ads` scope.
 
         Parameters
@@ -162,10 +160,10 @@ class PartialUser:
         Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
 
         !!! info
-            Both `started_at` and `ended_at` must be provided when requesting a date range.
+            - Both `started_at` and `ended_at` must be provided when requesting a date range.
             If you omit both of these then the report includes all available data from January 31, 2018.
 
-            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            - Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
             If not, the API ignores your end date and uses an end date that is today minus one to two days.
 
 
@@ -227,10 +225,10 @@ class PartialUser:
         Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
 
         !!! info
-            Both `started_at` and `ended_at` must be provided when requesting a date range.
+            - Both `started_at` and `ended_at` must be provided when requesting a date range.
             If you omit both of these then the report includes all available data from January 31, 2018.
 
-            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            - Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
             If not, the API ignores your end date and uses an end date that is today minus one to two days.
 
 
@@ -290,12 +288,11 @@ class PartialUser:
         Fetches the Bits leaderboard for this user.
 
         !!! info
-            `started_at` is converted to PST before being used, so if you set the start time to 2022-01-01T00:00:00.0Z and period to month,
+            - `started_at` is converted to PST before being used, so if you set the start time to 2022-01-01T00:00:00.0Z and period to month,
             the actual reporting period is December 2021, not January 2022.
             If you want the reporting period to be January 2022, you must set the start time to 2022-01-01T08:00:00.0Z or 2022-01-01T00:00:00.0-08:00.
 
-        !!! info
-            When providing `started_at`, you must also change the `period` parameter to any value other than "all".
+            - When providing `started_at`, you must also change the `period` parameter to any value other than "all".
             Conversely, if `period` is set to anything other than "all", `started_at` must also be provided.
 
 
@@ -845,12 +842,12 @@ class PartialUser:
     ) -> ChatSettings:
         """
 
-        ??? info
-            To set the `slow_mode_wait_time` or `follower_mode_duration` field to its default value, set the corresponding `slow_mode` or `follower_mode` field to True (and don't include the `slow_mode_wait_time` or `follower_mode_duration` field).
+        !!! info
+            - To set the `slow_mode_wait_time` or `follower_mode_duration` field to its default value, set the corresponding `slow_mode` or `follower_mode` field to True (and don't include the `slow_mode_wait_time` or `follower_mode_duration` field).
 
-            To set the `slow_mode_wait_time`, `follower_mode_duration`, or `non_moderator_chat_delay_duration` field's value, you must set the corresponding `slow_mode`, `follower_mode`, or `non_moderator_chat_delay` field to True.
+            - To set the `slow_mode_wait_time`, `follower_mode_duration`, or `non_moderator_chat_delay_duration` field's value, you must set the corresponding `slow_mode`, `follower_mode`, or `non_moderator_chat_delay` field to True.
 
-            To remove the `slow_mode_wait_time`, `follower_mode_duration`, or `non_moderator_chat_delay_duration` field's value, set the corresponding `slow_mode`, `follower_mode`, or `non_moderator_chat_delay` field to False (and don't include the slow_mode_wait_time, follower_mode_duration, or non_moderator_chat_delay_duration field).
+            - To remove the `slow_mode_wait_time`, `follower_mode_duration`, or `non_moderator_chat_delay_duration` field's value, set the corresponding `slow_mode`, `follower_mode`, or `non_moderator_chat_delay` field to False (and don't include the slow_mode_wait_time, follower_mode_duration, or non_moderator_chat_delay_duration field).
 
         ??? note
             Requires a user access token that includes the `moderator:manage:chat_settings` scope.
@@ -926,3 +923,63 @@ class PartialUser:
         )
 
         return ChatSettings(data["data"][0], http=self._http)
+
+    async def send_announcement(
+        self,
+        *,
+        moderator_id: str | int,
+        token_for: str,
+        message: str,
+        color: Literal["blue", "green", "orange", "purple", "primary"] = "primary",
+    ) -> None:
+        """
+        Sends an announcement to the broadcaster's chat room.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:announcements` scope.
+
+        Parameters
+        ----------
+        moderator_id : str | int
+            The ID of a user who has permission to moderate the broadcaster's chat room, or the broadcaster''s ID if they're sending the announcement.
+            This ID must match the user ID in the user access token.
+        token_for : str
+            User access token that includes the `moderator:manage:announcements` scope.
+        message : str
+            The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters; announcements longer than 500 characters are truncated.
+        color : Literal["blue", "green", "orange", "purple", "primary"]
+            The color used to highlight the announcement. Possible case-sensitive values are: "blue", "green", "orange", "purple", "primary".
+            Default is "primary".
+        """
+        return await self._http.post_chat_announcement(
+            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, message=message, color=color
+        )
+
+    async def send_shoutout(
+        self,
+        *,
+        to_broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+    ) -> None:
+        """
+        Sends a Shoutout to the specified broadcaster.
+
+        !!! info
+            `Rate Limits:` The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:shoutouts` scope.
+
+        Parameters
+        ----------
+        to_broadcaster_id : str | int
+            The ID of the broadcaster that's receiving the Shoutout.
+        moderator_id : str | int
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+        token_for : str
+            User access token that includes the `moderator:manage:shoutouts` scope.
+        """
+        return await self._http.post_chat_shoutout(
+            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, to_broadcaster_id=to_broadcaster_id
+        )
