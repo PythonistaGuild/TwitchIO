@@ -891,7 +891,7 @@ class HTTPClient:
 
     async def get_emote_sets(self, emote_set_ids: list[str], token_for: str | None = None) -> EmoteSetsResponse:
         params = {"emote_set_id": emote_set_ids}
-        route: Route = Route("GET", "chat/emotes/sets", params=params, token_for=token_for)
+        route: Route = Route("GET", "chat/emotes/set", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_channel_chat_badges(
