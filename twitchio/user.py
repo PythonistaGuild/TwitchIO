@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
-    from .models.chat import ChatBadge, ChatSettings
+    from .models.chat import ChannelEmote, ChatBadge, ChatSettings
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -726,6 +726,28 @@ class PartialUser:
         return await self._http.get_chatters(
             token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator_id
         )
+
+    async def fetch_channel_emotes(self, token_for: str | None = None) -> list[ChannelEmote]:
+        """
+        Fetches the broadcaster's list of custom emotes.
+        Broadcasters create these custom emotes for users who subscribe to or follow the channel or cheer Bits in the channel's chat window.
+
+        Parameters
+        ----------
+        token_for : str | None
+            An optional User OAuth token to use instead of the default app token.
+
+        Returns
+        -------
+        list[ChannelEmote]
+            A list of ChannelEmote objects
+        """
+
+        from twitchio.models.chat import ChannelEmote
+
+        data = await self._http.get_channel_emotes(broadcaster_id=self.id, token_for=token_for)
+        template = data["template"]
+        return [ChannelEmote(d, template=template, http=self._http) for d in data["data"]]
 
     async def fetch_chat_badges(self, token_for: str | None = None) -> list[ChatBadge]:
         """

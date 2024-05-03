@@ -36,6 +36,8 @@ if TYPE_CHECKING:
     from twitchio.types_.responses import (
         ChannelChatBadgesResponseData,
         ChannelChatBadgesResponseVersions,
+        ChannelEmotesResponseData,
+        ChannelEmotesResponseImages,
         ChatSettingsResponseData,
         ChattersResponse,
         EmoteSetsResponseData,
@@ -48,7 +50,16 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("Chatters", "ChatterColor", "ChatBadge", "ChatSettings", "ChatBadgeVersions", "EmoteSet", "GlobalEmote")
+__all__ = (
+    "ChannelEmote",
+    "Chatters",
+    "ChatterColor",
+    "ChatBadge",
+    "ChatSettings",
+    "ChatBadgeVersions",
+    "EmoteSet",
+    "GlobalEmote",
+)
 
 
 class Chatters:
@@ -222,6 +233,21 @@ class ChatBadgeVersions:
 
 
 class Emote:
+    """
+    Represents the basics of an Emote.
+
+    id: str
+        The ID of the emote.
+    name: str
+        The name of the emote.
+    format: list[str]
+        The formats that the emote is available in.
+    scale: list[str]
+        The sizes that the emote is available in.
+    theme_mode: list[str]
+        The background themes that the emote is available in.
+    """
+
     __slots__ = ("_http", "id", "name", "format", "scale", "theme_mode", "template")
 
     def __init__(self, data: GlobalEmotesResponseData | EmoteSetsResponseData, template: str, http: HTTPClient) -> None:
@@ -323,18 +349,18 @@ class EmoteSet(Emote):
 
     Parameters
     ----------
-    set_id: str
-        An ID that identifies the emote set that the emote belongs to.
-    type: str
-        The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
-    owner_id: str
-        The ID of the broadcaster who owns the emote.
     id: str
         The ID of the emote.
     name: str
         The name of the emote.
     images: dict[str, str]
         Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
+    set_id: str
+        An ID that identifies the emote set that the emote belongs to.
+    type: str
+        The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
+    owner_id: str
+        The ID of the broadcaster who owns the emote.
     format: list[str]
         The formats that the emote is available in.
     scale: list[str]
@@ -354,6 +380,47 @@ class EmoteSet(Emote):
 
     def __repr__(self) -> str:
         return f"<EmoteSet set_id={self.set_id} owner_id={self.owner_id}>"
+
+
+class ChannelEmote(Emote):
+    """
+    Represents an emote set.
+
+    Parameters
+    ----------
+    id: str
+        The ID of the emote.
+    name: str
+        The name of the emote.
+    images: dict[str, str]
+        Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
+    tier: str
+        This field contains the tier information only if type is set to ``subscriptions``, otherwise, it's an empty string.
+    set_id: str
+        An ID that identifies the emote set that the emote belongs to.
+    type: str
+        The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
+    owner_id: str
+        The ID of the broadcaster who owns the emote.
+    format: list[str]
+        The formats that the emote is available in.
+    scale: list[str]
+        The sizes that the emote is available in.
+    theme_mode: list[str]
+        The background themes that the emote is available in.
+    """
+
+    __slots__ = ("type", "images", "set_id", "owner_id", "tier")
+
+    def __init__(self, data: ChannelEmotesResponseData, *, template: str, http: HTTPClient) -> None:
+        super().__init__(data, template=template, http=http)
+        self.images: ChannelEmotesResponseImages = data["images"]
+        self.tier: str = data["tier"]
+        self.set_id: str = data["emote_set_id"]
+        self.type: str = data["emote_type"]
+
+    def __repr__(self) -> str:
+        return f"<ChannelEmote id={self.id} name={self.name} set_id={self.set_id}>"
 
 
 class ChatSettings:
