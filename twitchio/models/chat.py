@@ -45,6 +45,7 @@ if TYPE_CHECKING:
         GlobalChatBadgesResponseVersions,
         GlobalEmotesResponseData,
         GlobalEmotesResponseImages,
+        SendChatMessageResponseData,
         UserChatColorResponseData,
         UserEmotesResponseData,
     )
@@ -59,6 +60,8 @@ __all__ = (
     "ChatBadgeVersions",
     "EmoteSet",
     "GlobalEmote",
+    "UserEmote",
+    "SentMessage",
 )
 
 
@@ -552,3 +555,17 @@ class ChatSettings:
 
     def __repr__(self) -> str:
         return f"<ChatSettings broadcaster={self.broadcaster} slow_mode={self.slow_mode} follower_mode={self.follower_mode}>"
+
+
+class SentMessage:
+    __slots__ = ("id", "sent", "dropped_code", "dropped_message")
+
+    def __init__(self, data: SendChatMessageResponseData) -> None:
+        self.id: str = data["message_id"]
+        self.sent: bool = data["is_sent"]
+        drop_reason = data.get("drop_reason")
+        self.dropped_code: str | None = drop_reason.get("code") if drop_reason is not None else None
+        self.dropped_message: str | None = drop_reason.get("message") if drop_reason is not None else None
+
+    def __repr__(self) -> str:
+        return f"<SentMessage id={self.id} sent={self.sent}>"

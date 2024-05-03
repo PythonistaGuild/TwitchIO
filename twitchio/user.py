@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 
 
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
-    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, UserEmote
+    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, SentMessage, UserEmote
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -983,3 +984,63 @@ class PartialUser:
         return await self._http.post_chat_shoutout(
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, to_broadcaster_id=to_broadcaster_id
         )
+
+    async def send_message(
+        self, sender_id: str | int, message: str, token_for: str, reply_to_message_id: str | None = None
+    ) -> SentMessage:
+        """
+        Send a message to the broadcaster's chat room.
+
+        !!! note
+            - Requires an app access token or user access token that includes the `user:write:chat` scope.
+            User access token is generally recommended.
+
+            - If app access token used, then additionally requires `user:bot scope` from chatting user, and either `channel:bot scope` from broadcaster or moderator status.
+
+        ??? tip
+            Chat messages can also include emoticons. To include emoticons, use the name of the emote.
+
+            The names are case sensitive. Don't include colons around the name e.g., `:bleedPurple:`
+
+            If Twitch recognizes the name, Twitch converts the name to the emote before writing the chat message to the chat room.
+
+        Parameters
+        ----------
+        sender_id : str | int
+            The ID of the user sending the message. This ID must match the user ID in the user access token.
+        message : str
+            The message to send. The message is limited to a maximum of 500 characters.
+            Chat messages can also include emoticons. To include emoticons, use the name of the emote.
+            The names are case sensitive. Don't include colons around the name e.g., `:bleedPurple:`.
+            If Twitch recognizes the name, Twitch converts the name to the emote before writing the chat message to the chat room
+        token_for : str
+            User access token that includes the `user:write:chat` scope.
+            You can use an app access token which additionally requires `user:bot scope` from chatting user, and either `channel:bot scope` from broadcaster or moderator status.
+        reply_to_message_id : str | None
+            The ID of the chat message being replied to.
+
+        Returns
+        -------
+        SentMessage
+            An object containing the response from Twitch regarding the sent message.
+
+        Raises
+        ------
+        ValueError
+            The message is limited to a maximum of 500 characters.
+        """
+        _message = " ".join(message.split())
+        if len(_message) > 500:
+            raise ValueError("The message is limited to a maximum of 500 characters.")
+
+        from twitchio.models import SentMessage
+
+        data = await self._http.post_chat_message(
+            broadcaster_id=self.id,
+            sender_id=sender_id,
+            message=message,
+            reply_to_message_id=reply_to_message_id,
+            token_for=token_for,
+        )
+
+        return SentMessage(data["data"][0])

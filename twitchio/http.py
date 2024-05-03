@@ -93,6 +93,7 @@ if TYPE_CHECKING:
         GlobalEmotesResponse,
         RawResponse,
         SearchChannelsResponseData,
+        SendChatMessageResponse,
         SnoozeNextAdResponse,
         StartCommercialResponse,
         StreamsResponseData,
@@ -987,6 +988,21 @@ class HTTPClient:
             "to_broadcaster_id": to_broadcaster_id,
         }
         route: Route = Route("POST", "chat/shoutouts", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def post_chat_message(
+        self,
+        broadcaster_id: str,
+        sender_id: str | int,
+        message: str,
+        token_for: str,
+        reply_to_message_id: str | None = None,
+    ) -> SendChatMessageResponse:
+        data = {"broadcaster_id": broadcaster_id, "sender_id": sender_id, "message": message}
+        if reply_to_message_id is not None:
+            data["reply_parent_message_id"] = reply_to_message_id
+
+        route: Route = Route("POST", "chat/messages", json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Clips ###

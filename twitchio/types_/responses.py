@@ -615,7 +615,7 @@ class SendChatMessageResponseDropReason(TypedDict):
 class SendChatMessageResponseData(TypedDict):
     message_id: str
     is_sent: bool
-    drop_reason: SendChatMessageResponseDropReason
+    drop_reason: SendChatMessageResponseDropReason | None
 
 
 class SendChatMessageResponse(TypedDict):
