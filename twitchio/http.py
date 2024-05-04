@@ -872,7 +872,7 @@ class HTTPClient:
         route: Route = Route("GET", "chat/badges/global", token_for=token_for)
         return await self.request_json(route)
 
-    async def get_chatters_color(
+    async def get_user_chat_color(
         self, user_ids: list[str | int], token_for: str | None = None
     ) -> UserChatColorResponse:
         params: dict[str, list[str | int]] = {"user_id": user_ids}

@@ -378,7 +378,7 @@ class Client:
         if len(user_ids) > 100:
             raise ValueError("Maximum of 100 user_ids")
 
-        data = await self._http.get_chatters_color(user_ids, token_for)
+        data = await self._http.get_user_chat_color(user_ids, token_for)
         return [ChatterColor(d, http=self._http) for d in data["data"] if data]
 
     async def fetch_channels(
