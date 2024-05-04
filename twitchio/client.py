@@ -333,7 +333,7 @@ class Client:
         ----------
         emote_set_ids: list[str]
             List of IDs that identifies the emote set to get. You may specify a maximum of 25 IDs.
-        token_for : str | None, optional
+        token_for: str | None, optional
             An optional user token to use instead of the default app token.
 
         Returns
