@@ -36,10 +36,11 @@ if TYPE_CHECKING:
     from twitchio.http import HTTPClient
     from twitchio.types_.responses import (
         ClipsResponseData,
+        CreateClipResponseData,
     )
 
 
-__all__ = ("Clip",)
+__all__ = ("Clip", "CreatedClip")
 
 
 class Clip:
@@ -112,3 +113,11 @@ class Clip:
 
     def __str__(self) -> str:
         return self.id
+
+
+class CreatedClip:
+    __slots__ = ("edit_url", "id")
+
+    def __init__(self, data: CreateClipResponseData) -> None:
+        self.id = data["id"]
+        self.edit_url = data["edit_url"]

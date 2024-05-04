@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
+from .models.clips import CreatedClip
 
 
 if TYPE_CHECKING:
@@ -83,10 +84,10 @@ class PartialUser:
 
         Parameters
         ----------
-        length : int
+        length: int
             The length of the commercial to run, in seconds. Max length is 180.
             If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
-        token_for : str
+        token_for: str
             User token to use that includes the `channel:edit:commercial` scope.
 
         Returns
@@ -111,7 +112,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             User token to use that includes the `channel:read:ads` scope.
 
         Returns
@@ -135,7 +136,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             User token to use that includes the `channel:manage:ads` scope.
 
         Returns
@@ -310,18 +311,18 @@ class PartialUser:
 
         Parameters
         ----------
-        count : int
+        count: int
             The number of results to return. The minimum count is 1 and the maximum is 100. The default is 10.
-        period : Literal["all", "day", "week", "month", "year"]
+        period: Literal["all", "day", "week", "month", "year"]
             The time period over which data is aggregated (uses the PST time zone).
-        started_at : datetime.datetime | None
+        started_at: datetime.datetime | None
             The start date, used for determining the aggregation period. Specify this parameter only if you specify the period query parameter.
             The start date is ignored if period is all.
-        user_id : str | int | None
+        user_id: str | int | None
             An ID that identifies a user that cheered bits in the channel.
             If count is greater than 1, the response may include users ranked above and below the specified user.
             To get the leaderboard's top leaders, don't specify a user ID.
-        token_for : str
+        token_for: str
             User token to use that includes the `bits:read` scope.
 
         Returns
@@ -620,11 +621,11 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             A user access token that includes the `channel:read:redemptions` or `channel:manage:redemptions` scope.
-        ids : list[str] | None
+        ids: list[str] | None
             A list of IDs to filter the rewards by. You may request a maximum of 50.
-        manageable : bool | None
+        manageable: bool | None
             A Boolean value that determines whether the response contains only the custom rewards that the app (Client ID) may manage.
             Default is False.
 
@@ -649,7 +650,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             A user access token that includes the `channel:read:charity` scope.
 
         Returns
@@ -704,12 +705,12 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id : str | int
+        moderator_id: str | int
             The ID of the broadcaster or one of the broadcaster's moderators.
             This ID must match the user ID in the user access token.
-        token_for : str
+        token_for: str
             A user access token that includes the `moderator:read:chatters` scope.
-        first : int | None
+        first: int | None
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 1,000. The default is 100.
 
@@ -731,7 +732,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str | None
+        token_for: str | None
             An optional user token to use instead of the default app token.
 
         Returns
@@ -758,9 +759,9 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             Requires a user access token that includes the `user:read:emotes` scope.
-        broadcaster_id : str | None
+        broadcaster_id: str | None
             The User ID of a broadcaster you wish to get follower emotes of. Using this query parameter will guarantee inclusion of the broadcaster's follower emotes in the response body.
 
         Returns
@@ -778,7 +779,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str | None,
+        token_for: str | None,
             An optional user token to use instead of the default app token.
 
         Returns
@@ -804,12 +805,12 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id : str | int | None
+        moderator_id: str | int | None
             The ID of the broadcaster or one of the broadcaster's moderators.
             This field is required only if you want to include the `non_moderator_chat_delay` and `non_moderator_chat_delay_duration` settings in the response.
             If you specify this field, this ID must match the user ID in the user access token.
 
-        token_for : str | None
+        token_for: str | None
             If you need the response to contain `non_moderator_chat_delay` and `non_moderator_chat_delay_duration` then you will provide a token for the user in `moderator_id`.
             The required scope is `moderator:read:chat_settings`.
             Otherwise it is an optional user token to use instead of the default app token.
@@ -854,35 +855,35 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id : str | int
+        moderator_id: str | int
             The ID of a user that has permission to moderate the broadcaster's chat room, or the broadcaster's ID if they're making the update.
             This ID must match the user ID in the user access token.
-        token_for : str
+        token_for: str
             User access token that includes the `moderator:manage:chat_settings` scope.
-        emote_mode : bool | None
+        emote_mode: bool | None
             A Boolean value that determines whether chat messages must contain only emotes.
-        follower_mode : bool | None
+        follower_mode: bool | None
             A Boolean value that determines whether the broadcaster restricts the chat room to followers only.
-        follower_mode_duration : int | None
+        follower_mode_duration: int | None
             The length of time, in minutes, that users must follow the broadcaster before being able to participate in the chat room.
             Set only if follower_mode is True. Possible values are: 0 (no restriction) through 129600 (3 months).
-        slow_mode : bool | None
+        slow_mode: bool | None
             A Boolean value that determines whether the broadcaster limits how often users in the chat room are allowed to send messages.
             Set to True if the broadcaster applies a wait period between messages; otherwise, False.
-        slow_mode_wait_time : int | None
+        slow_mode_wait_time: int | None
             The amount of time, in seconds, that users must wait between sending messages. Set only if slow_mode is True.
             Possible values are: 3 (3 second delay) through 120 (2 minute delay). The default is 30 seconds.
-        subscriber_mode : bool | None
+        subscriber_mode: bool | None
             A Boolean value that determines whether only users that subscribe to the broadcaster's channel may talk in the chat room.
             Set to True if the broadcaster restricts the chat room to subscribers only; otherwise, False.
-        unique_chat_mode : bool | None
+        unique_chat_mode: bool | None
             A Boolean value that determines whether the broadcaster requires users to post only unique messages in the chat room.
             Set to True if the broadcaster allows only unique messages; otherwise, False.
-        non_moderator_chat_delay : bool | None
+        non_moderator_chat_delay: bool | None
             A Boolean value that determines whether the broadcaster adds a short delay before chat messages appear in the chat room.
             This gives chat moderators and bots a chance to remove them before viewers can see the message.
             Set to True if the broadcaster applies a delay; otherwise, False.
-        non_moderator_chat_delay_duration : Literal[2, 4, 6] | None
+        non_moderator_chat_delay_duration: Literal[2, 4, 6] | None
             The amount of time, in seconds, that messages are delayed before appearing in chat.
             Set only if non_moderator_chat_delay is True.
             Possible values in seconds: 2 (recommended), 4 and 6.
@@ -940,14 +941,14 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id : str | int
+        moderator_id: str | int
             The ID of a user who has permission to moderate the broadcaster's chat room, or the broadcaster''s ID if they're sending the announcement.
             This ID must match the user ID in the user access token.
-        token_for : str
+        token_for: str
             User access token that includes the `moderator:manage:announcements` scope.
-        message : str
+        message: str
             The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters; announcements longer than 500 characters are truncated.
-        color : Literal["blue", "green", "orange", "purple", "primary"]
+        color: Literal["blue", "green", "orange", "purple", "primary"]
             The color used to highlight the announcement. Possible case-sensitive values are: "blue", "green", "orange", "purple", "primary".
             Default is "primary".
         """
@@ -973,11 +974,11 @@ class PartialUser:
 
         Parameters
         ----------
-        to_broadcaster_id : str | int
+        to_broadcaster_id: str | int
             The ID of the broadcaster that's receiving the Shoutout.
-        moderator_id : str | int
+        moderator_id: str | int
             The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
-        token_for : str
+        token_for: str
             User access token that includes the `moderator:manage:shoutouts` scope.
         """
         return await self._http.post_chat_shoutout(
@@ -1006,17 +1007,17 @@ class PartialUser:
 
         Parameters
         ----------
-        sender_id : str | int
+        sender_id: str | int
             The ID of the user sending the message. This ID must match the user ID in the user access token.
-        message : str
+        message: str
             The message to send. The message is limited to a maximum of 500 characters.
             Chat messages can also include emoticons. To include emoticons, use the name of the emote.
             The names are case sensitive. Don't include colons around the name e.g., `:bleedPurple:`.
             If Twitch recognizes the name, Twitch converts the name to the emote before writing the chat message to the chat room
-        token_for : str
+        token_for: str
             User access token that includes the `user:write:chat` scope.
             You can use an app access token which additionally requires `user:bot scope` from chatting user, and either `channel:bot scope` from broadcaster or moderator status.
-        reply_to_message_id : str | None
+        reply_to_message_id: str | None
             The ID of the chat message being replied to.
 
         Returns
@@ -1072,10 +1073,48 @@ class PartialUser:
 
         Parameters
         ----------
-        color : str
+        color: str
             The color to use, to see the list of colors available please refer to the docs.
             If the user is a Turbo or Prime member then you may specify a Hex color code e.g. `#9146FF`
-        token_for : str
+        token_for: str
             User access token that includes the `user:manage:chat_color` scope.
         """
         return await self._http.put_user_chat_color(user_id=self.id, color=color, token_for=token_for)
+
+    async def create_clip(self, *, token_for: str, has_delay: bool = False) -> CreatedClip:
+        """
+        Creates a clip from the broadcaster's stream.
+
+        !!! info
+            This API captures up to 90 seconds of the broadcaster's stream. The 90 seconds spans the point in the stream from when you called the API.
+            For example, if you call the API at the 4:00 minute mark, the API captures from approximately the 3:35 mark to approximately the 4:05 minute mark.
+            Twitch tries its best to capture 90 seconds of the stream, but the actual length may be less.
+            This may occur if you begin capturing the clip near the beginning or end of the stream.
+
+            By default, Twitch publishes up to the last 30 seconds of the 90 seconds window and provides a default title for the clip.
+            To specify the title and the portion of the 90 seconds window that's used for the clip, use the URL in the CreatedClip's `edit_url` attribute.
+            You can specify a clip that's from 5 seconds to 60 seconds in length. The URL is valid for up to 24 hours or until the clip is published, whichever comes first.
+
+            Creating a clip is an asynchronous process that can take a short amount of time to complete.
+            To determine whether the clip was successfully created, call `fetch_clips` using the clip ID that this request returned.
+            If `fetch_clips` returns the clip, the clip was successfully created. If after 15 seconds `fetch_clips` hasn't returned the clip, assume it failed.
+
+        ??? note
+            Requires a user access token that includes the `clips:edit` scope.
+
+        Parameters
+        ----------
+        has_delay: bool
+            A Boolean value that determines whether the API captures the clip at the moment the viewer requests it or after a delay.
+            If False (default), Twitch captures the clip at the moment the viewer requests it (this is the same clip experience as the Twitch UX).
+            If True, Twitch adds a delay before capturing the clip (this basically shifts the capture window to the right slightly).
+        token_for: str
+            User access token that includes the `clips:edit` scope.
+
+        Returns
+        -------
+        CreatedClip
+            The CreatedClip object.
+        """
+        data = await self._http.post_create_clip(broadcaster_id=self.id, token_for=token_for, has_delay=has_delay)
+        return CreatedClip(data["data"][0])

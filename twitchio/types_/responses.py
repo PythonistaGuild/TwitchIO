@@ -633,9 +633,13 @@ class UserChatColorResponse(TypedDict):
     data: list[UserChatColorResponseData]
 
 
-class CreateClipResponse(TypedDict):
+class CreateClipResponseData(TypedDict):
     edit_url: str
     id: str
+
+
+class CreateClipResponse(TypedDict):
+    data: list[CreateClipResponseData]
 
 
 class ClipsResponseData(TypedDict):

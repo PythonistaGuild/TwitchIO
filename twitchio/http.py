@@ -78,6 +78,7 @@ if TYPE_CHECKING:
         ClipsResponseData,
         ConduitPayload,
         ContentClassificationLabelsResponse,
+        CreateClipResponse,
         CustomRewardRedemptionResponse,
         CustomRewardRedemptionResponseData,
         CustomRewardsResponse,
@@ -1047,6 +1048,13 @@ class HTTPClient:
 
         iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def post_create_clip(
+        self, *, broadcaster_id: str | int, token_for: str, has_delay: bool = False
+    ) -> CreateClipResponse:
+        params = {"broadcaster_id": broadcaster_id, "has_delay": has_delay}
+        route: Route = Route("POST", "clips", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Conduits ###
 
