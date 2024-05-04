@@ -27,7 +27,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
-from .models.clips import CreatedClip
 
 
 if TYPE_CHECKING:
@@ -43,6 +42,7 @@ if TYPE_CHECKING:
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
     from .models.chat import ChannelEmote, ChatBadge, ChatSettings, SentMessage, UserEmote
+    from .models.clips import Clip, CreatedClip
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -1116,5 +1116,51 @@ class PartialUser:
         CreatedClip
             The CreatedClip object.
         """
+        from .models.clips import CreatedClip
+
         data = await self._http.post_create_clip(broadcaster_id=self.id, token_for=token_for, has_delay=has_delay)
         return CreatedClip(data["data"][0])
+
+    async def fetch_clips(
+        self,
+        *,
+        started_at: datetime.datetime | None = None,
+        ended_at: datetime.datetime | None = None,
+        featured: bool | None = None,
+        token_for: str | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[Clip]:
+        """
+        Fetches clips from the broadcaster's streams.
+
+        Parameters
+        -----------
+        started_at: datetime.datetime
+            The start date used to filter clips.
+        ended_at: datetime.datetime
+            The end date used to filter clips. If not specified, the time window is the start date plus one week.
+        featured: bool | None = None
+            If True, returns only clips that are featured.
+            If False, returns only clips that aren't featured.
+            All clips are returned if this parameter is not provided.
+        token_for: str | None
+            An optional user token to use instead of the default app token.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[twitchio.Clip]
+        """
+
+        first = max(1, min(100, first))
+
+        return await self._http.get_clips(
+            broadcaster_id=self.id,
+            first=first,
+            started_at=started_at,
+            ended_at=ended_at,
+            is_featured=featured,
+            token_for=token_for,
+        )

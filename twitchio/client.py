@@ -450,12 +450,11 @@ class Client:
     async def fetch_clips(
         self,
         *,
-        broadcaster_id: str | None = None,
         game_id: str | None = None,
         clip_ids: list[str] | None = None,
         started_at: datetime.datetime | None = None,
         ended_at: datetime.datetime | None = None,
-        is_featured: bool | None = None,
+        featured: bool | None = None,
         token_for: str | None = None,
         first: int = 20,
     ) -> HTTPAsyncIterator[Clip]:
@@ -464,17 +463,19 @@ class Client:
 
         Parameters
         -----------
-        broadcaster_id: str
-            An ID of a broadcaster to fetch clips from.
-        game_id: Optional[list[str | int]]
+        game_id: list[str | int] | None
             A game id to fetch clips from.
         clip_ids: list[str] | None
             A list of specific clip IDs to fetch.
             Maximum amount you can request is 100.
-        started_at: datetime.datetime`
+        started_at: datetime.datetime
             The start date used to filter clips.
-        ended_at: datetime.datetime`
+        ended_at: datetime.datetime
             The end date used to filter clips. If not specified, the time window is the start date plus one week.
+        featured: bool | None = None
+            If True, returns only clips that are featured.
+            If False, returns only clips that aren't featured.
+            All clips are returned if this parameter is not provided.
         token_for: str | None
             An optional user token to use instead of the default app token.
         first: int
@@ -484,24 +485,30 @@ class Client:
         Returns
         --------
         twitchio.HTTPAsyncIterator[twitchio.Clip]
+
+        Raises
+        ------
+        ValueError
+            Only one of `game_id` or `clip_ids` can be provided.
+        ValueError
+            One of `game_id` or `clip_ids` must be provided.
         """
 
-        provided: int = len([v for v in (broadcaster_id, game_id, clip_ids) if v])
+        provided: int = len([v for v in (game_id, clip_ids) if v])
         if provided > 1:
-            raise ValueError("Only one of 'name', 'id', or 'igdb_id' can be provided.")
+            raise ValueError("Only one of 'game_id' or 'clip_ids' can be provided.")
         elif provided == 0:
-            raise ValueError("One of 'name', 'id', or 'igdb_id' must be provided.")
+            raise ValueError("One of 'game_id' or 'clip_ids' must be provided.")
 
         first = max(1, min(100, first))
 
         return await self._http.get_clips(
-            broadcaster_id=broadcaster_id,
             game_id=game_id,
             clip_ids=clip_ids,
             first=first,
             started_at=started_at,
             ended_at=ended_at,
-            is_featured=is_featured,
+            is_featured=featured,
             token_for=token_for,
         )
 
