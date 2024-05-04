@@ -984,6 +984,7 @@ class PartialUser:
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, to_broadcaster_id=to_broadcaster_id
         )
 
+    # TODO App Token usage
     async def send_message(
         self, sender_id: str | int, message: str, token_for: str, reply_to_message_id: str | None = None
     ) -> SentMessage:
@@ -1043,3 +1044,38 @@ class PartialUser:
         )
 
         return SentMessage(data["data"][0])
+
+    async def update_chatter_color(self, *, color: str, token_for: str) -> None:
+        """
+        Updates the color used for the user's name in chat.
+
+        ??? info
+            Available colors:
+            - blue
+            - blue_violet
+            - cadet_blue
+            - chocolate
+            - coral
+            - dodger_blue
+            - firebrick
+            - golden_rod
+            - green
+            - hot_pink
+            - orange_red
+            - red
+            - sea_green
+            - spring_green
+            - yellow_green
+
+        ??? note
+            Requires a user access token that includes the `user:manage:chat_color` scope.
+
+        Parameters
+        ----------
+        color : str
+            The color to use, to see the list of colors available please refer to the docs.
+            If the user is a Turbo or Prime member then you may specify a Hex color code e.g. `#9146FF`
+        token_for : str
+            User access token that includes the `user:manage:chat_color` scope.
+        """
+        return await self._http.put_user_chat_color(user_id=self.id, color=color, token_for=token_for)

@@ -1005,6 +1005,12 @@ class HTTPClient:
         route: Route = Route("POST", "chat/messages", json=data, token_for=token_for)
         return await self.request_json(route)
 
+    async def put_user_chat_color(self, user_id: str | int, color: str, token_for: str) -> None:
+        params = {"user_id": user_id, "color": color}
+        route: Route = Route("PUT", "chat/color", params=params, token_for=token_for)
+        print(route.params)
+        return await self.request_json(route)
+
     ### Clips ###
 
     async def get_clips(
