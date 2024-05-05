@@ -26,6 +26,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from twitchio.models.goals import Goal
+
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 
 
@@ -43,6 +45,7 @@ if TYPE_CHECKING:
     from .models.charity import CharityCampaign, CharityDonation
     from .models.chat import ChannelEmote, ChatBadge, ChatSettings, SentMessage, UserEmote
     from .models.clips import Clip, CreatedClip
+    from .models.goals import Goal
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -300,13 +303,13 @@ class PartialUser:
         ??? note
             Requires user access token that includes the `bits:read` scope.
 
-        | Period          | Description |
-        | -----------      | -------------- |
-        | day   | A day spans from 00:00:00 on the day specified in started_at and runs through 00:00:00 of the next day.            |
-        | week   | A week spans from 00:00:00 on the Monday of the week specified in started_at and runs through 00:00:00 of the next Monday.           |
-        | month    | A month spans from 00:00:00 on the first day of the month specified in started_at and runs through 00:00:00 of the first day of the next month.            |
+        | Period  | Description |
+        | ------- | -------------- |
+        | day     | A day spans from 00:00:00 on the day specified in started_at and runs through 00:00:00 of the next day.            |
+        | week    | A week spans from 00:00:00 on the Monday of the week specified in started_at and runs through 00:00:00 of the next Monday.           |
+        | month   | A month spans from 00:00:00 on the first day of the month specified in started_at and runs through 00:00:00 of the first day of the next month.            |
         | year    | A year spans from 00:00:00 on the first day of the year specified in started_at and runs through 00:00:00 of the first day of the next year.            |
-        | all   | Default. The lifetime of the broadcaster's channel.            |
+        | all     | Default. The lifetime of the broadcaster's channel.            |
 
 
         Parameters
@@ -1164,3 +1167,25 @@ class PartialUser:
             is_featured=featured,
             token_for=token_for,
         )
+
+    async def fetch_goals(self, token_for: str) -> list[Goal]:
+        """
+        Fetches a list of the creator's goals.
+
+        ??? note
+            Requires a user access token that includes the `channel:read:goals` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            User access token that includes the `channel:read:goals` scope.
+
+        Returns
+        -------
+        list[Goal]
+            List of Goal objects.
+        """
+        from .models.goals import Goal
+
+        data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=token_for)
+        return [Goal(d, http=self._http) for d in data["data"]]

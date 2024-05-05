@@ -966,7 +966,7 @@ class CreatorGoalsResponseData(TypedDict):
     broadcaster_id: str
     broadcaster_name: str
     broadcaster_login: str
-    type: str
+    type: Literal["follower", "subscription", "subscription_count", "new_subscription", "new_subscription_count"]
     description: str
     current_amount: int
     target_amount: int

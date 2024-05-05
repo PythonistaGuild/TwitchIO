@@ -239,6 +239,8 @@ class Emote:
     """
     Represents the basics of an Emote.
 
+    Attributes
+    ----------
     id: str
         The ID of the emote.
     name: str
@@ -355,7 +357,7 @@ class EmoteSet(Emote):
     """
     Represents an emote set.
 
-    Parameters
+    Attributes
     ----------
     id: str
         The ID of the emote.
@@ -394,7 +396,7 @@ class ChannelEmote(Emote):
     """
     Represents an emote set.
 
-    Parameters
+    Attributes
     ----------
     id: str
         The ID of the emote.
@@ -435,24 +437,24 @@ class UserEmote(Emote):
     """
     Represents an emote set.
 
-    | Type          | Description |
-    | -----------   | -------------- |
-    | none   | No emote type was assigned to this emote.  |
-    | bitstier    | A Bits tier emote.   |
-    | follower     |  A follower emote.   |
+    | Type              | Description |
+    | ----------------  | -------------- |
+    | none              | No emote type was assigned to this emote.  |
+    | bitstier          | A Bits tier emote.   |
+    | follower          |  A follower emote.   |
     | subscriptions     | A subscriber emote.   |
-    | channelpoints    | An emote granted by using channel points.    |
-    | rewards    | An emote granted to the user through a special event.  |
-    | hypetrain     | An emote granted for participation in a Hype Train. |
-    | prime      |  An emote granted for linking an Amazon Prime account.  |
-    | turbo      | An emote granted for having Twitch Turbo.   |
-    | smilies     | Emoticons supported by Twitch.    |
-    | globals    | An emote accessible by everyone.  |
-    | owl2019     | Emotes related to Overwatch League 2019. |
-    | twofactor      |  Emotes granted by enabling two-factor authentication on an account.   |
-    | limitedtime      | Emotes that were granted for only a limited time.   |
+    | channelpoints     | An emote granted by using channel points.    |
+    | rewards           | An emote granted to the user through a special event.  |
+    | hypetrain         | An emote granted for participation in a Hype Train. |
+    | prime             |  An emote granted for linking an Amazon Prime account.  |
+    | turbo             | An emote granted for having Twitch Turbo.   |
+    | smilies           | Emoticons supported by Twitch.    |
+    | globals           | An emote accessible by everyone.  |
+    | owl2019           | Emotes related to Overwatch League 2019. |
+    | twofactor         |  Emotes granted by enabling two-factor authentication on an account.   |
+    | limitedtime       | Emotes that were granted for only a limited time.   |
 
-    Parameters
+    Attributes
     ----------
     id: str
         The ID of the emote.
@@ -487,7 +489,7 @@ class ChatSettings:
     """
     Represents the settings of a broadcaster's chat settings.
 
-    Parameters
+    Attributes
     ----------
     broadcaster: PartialUser
         The PartialUser object of the broadcaster, this will only contain the ID.

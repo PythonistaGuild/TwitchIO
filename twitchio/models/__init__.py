@@ -32,6 +32,7 @@ from .charity import *
 from .chat import *
 from .clips import *
 from .games import *
+from .goals import *
 from .search import *
 from .streams import *
 from .teams import *

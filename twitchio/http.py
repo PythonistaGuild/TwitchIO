@@ -82,6 +82,7 @@ if TYPE_CHECKING:
         CustomRewardRedemptionResponse,
         CustomRewardRedemptionResponseData,
         CustomRewardsResponse,
+        CreatorGoalsResponse,
         DeleteVideosResponse,
         EmoteSetsResponse,
         ExtensionAnalyticsResponseData,
@@ -1123,6 +1124,13 @@ class HTTPClient:
 
         route: Route = Route("GET", "games", params=params, token_for=token_for)
 
+        return await self.request_json(route)
+
+    ### Goals ###
+
+    async def get_creator_goals(self, broadcaster_id: str | int, token_for: str) -> CreatorGoalsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "goals", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Guest Start ###
