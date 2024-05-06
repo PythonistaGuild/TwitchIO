@@ -1315,3 +1315,41 @@ class PartialUser:
             broadcaster_id=self.id, messages=messages, token_for=token_for
         )
         return [AutoModStatus(d) for d in data["data"]]
+
+    async def approve_automod_messages(self, *, msg_id: str, token_for: str) -> None:
+        """
+        Allow the message that AutoMod flagged for review.
+        The PartialUser / User object to perform this task is the moderator.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:automod` scope.
+
+        Parameters
+        ----------
+        msg_id: str
+            The ID of the message to allow.
+        token_for : str
+            User access token that includes the `moderator:manage:automod` scope.
+        """
+        return await self._http.post_manage_automod_messages(
+            user_id=self.id, msg_id=msg_id, action="ALLOW", token_for=token_for
+        )
+
+    async def deny_automod_messages(self, *, msg_id: str, token_for: str) -> None:
+        """
+        Deny the message that AutoMod flagged for review.
+        The PartialUser / User object to perform this task is the moderator.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:automod` scope.
+
+        Parameters
+        ----------
+        msg_id: str
+            The ID of the message to deny.
+        token_for : str
+            User access token that includes the `moderator:manage:automod` scope.
+        """
+        return await self._http.post_manage_automod_messages(
+            user_id=self.id, msg_id=msg_id, action="DENY", token_for=token_for
+        )

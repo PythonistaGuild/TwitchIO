@@ -1167,6 +1167,13 @@ class HTTPClient:
         route: Route = Route("POST", "moderation/enforcements/status", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
+    async def post_manage_automod_messages(
+        self, user_id: str | int, msg_id: str, action: Literal["ALLOW", "DENY"], token_for: str
+    ) -> None:
+        data = {"user_id": user_id, "msg_id": msg_id, "action": action}
+        route: Route = Route("POST", "moderation/automod/message", json=data, token_for=token_for)
+        return await self.request_json(route)
+
     ### Polls ###
 
     ### Predictions ###
