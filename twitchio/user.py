@@ -33,20 +33,17 @@ from .models.raids import Raid
 if TYPE_CHECKING:
     import datetime
 
-    from twitchio.http import HTTPAsyncIterator
-    from twitchio.models.chat import Chatters
-
-    from .http import HTTPClient
+    from .http import HTTPAsyncIterator, HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.bits import BitsLeaderboard
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
-    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, SentMessage, UserEmote
+    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, Chatters, SentMessage, UserEmote
     from .models.clips import Clip, CreatedClip
     from .models.goals import Goal
     from .models.hype_train import HypeTrainEvent
-    from .models.moderation import AutomodCheckMessage, AutomodSettings, AutoModStatus, BannedUser
+    from .models.moderation import AutomodCheckMessage, AutomodSettings, AutoModStatus, Ban, BannedUser, Timeout
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -1356,7 +1353,7 @@ class PartialUser:
             user_id=self.id, msg_id=msg_id, action="DENY", token_for=token_for
         )
 
-    async def fetch_automod_settings(self, moderator_id: str | int, token_for: str) -> AutomodSettings:
+    async def fetch_automod_settings(self, *, moderator_id: str | int, token_for: str) -> AutomodSettings:
         """
         Fetches the broadcaster's AutoMod settings. The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
 
@@ -1384,7 +1381,7 @@ class PartialUser:
         return AutomodSettings(data["data"][0], http=self._http)
 
     async def update_automod_settings(
-        self, moderator_id: str | int, settings: AutomodSettings, token_for: str
+        self, *, moderator_id: str | int, settings: AutomodSettings, token_for: str
     ) -> AutomodSettings:
         """
         Updates the broadcaster's AutoMod settings. The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
@@ -1469,3 +1466,125 @@ class PartialUser:
             raise ValueError("You may only specify a maximum of 100 users.")
 
         return await self._http.get_banned_users(broadcaster_id=self.id, user_ids=user_ids, token_for=token_for)
+
+    async def ban_user(
+        self,
+        *,
+        moderator_id: str | int,
+        user_id: str | int,
+        token_for: str,
+        reason: str | None = None,
+    ) -> Ban:
+        """
+        Ban a user from the broadcaster's channel.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:banned_users` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        user_id: str | int
+            The ID of the user to ban or put in a timeout.
+        token_for: str
+            User access token that includes the `moderator:manage:banned_users` scope.
+        reason: str | None
+            The reason the you're banning the user or putting them in a timeout.
+            The text is user defined and is limited to a maximum of 500 characters.
+
+        Returns
+        -------
+        Ban
+            Ban object.
+        """
+        from .models import Ban
+
+        data = await self._http.post_ban_user(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            user_id=user_id,
+            token_for=token_for,
+            reason=reason,
+        )
+        return Ban(data["data"][0], http=self._http)
+
+    async def timeout_user(
+        self,
+        *,
+        moderator_id: str | int,
+        user_id: str | int,
+        token_for: str,
+        duration: int,
+        reason: str | None = None,
+    ) -> Timeout:
+        """
+        Ban a user from the broadcaster's channel.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:banned_users` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        user_id: str | int
+            The ID of the user to ban or put in a timeout.
+        token_for: str
+            User access token that includes the `moderator:manage:banned_users` scope.
+        duration: int
+            The minimum timeout is 1 second and the maximum is 1,209,600 seconds (2 weeks).
+            To end a user's timeout early, set this field to 1, or use the [`unban_user`][twitchio.user.PartialUser.unban_user] endpoint.
+        reason: str | None
+            The reason the you're banning the user or putting them in a timeout.
+            The text is user defined and is limited to a maximum of 500 characters.
+
+        Returns
+        -------
+        Timeout
+            Timeout object.
+        """
+        from .models import Timeout
+
+        data = await self._http.post_ban_user(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            user_id=user_id,
+            token_for=token_for,
+            duration=duration,
+            reason=reason,
+        )
+        return Timeout(data["data"][0], http=self._http)
+
+    async def unban_user(
+        self,
+        *,
+        moderator_id: str | int,
+        user_id: str | int,
+        token_for: str,
+    ) -> None:
+        """
+        Unban a user from the broadcaster's channel.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:banned_users` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        user_id: str | int
+            The ID of the user to ban or put in a timeout.
+        token_for: str
+            User access token that includes the `moderator:manage:banned_users` scope.
+        """
+
+        return await self._http.delete_unban_user(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            user_id=user_id,
+            token_for=token_for,
+        )

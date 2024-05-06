@@ -37,10 +37,11 @@ if TYPE_CHECKING:
     from twitchio.types_.responses import (
         AutomodSettingsResponseData,
         BannedUsersResponseData,
+        BanUserResponseData,
         CheckAutomodStatusResponseData,
     )
 
-__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage", "BannedUser")
+__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage", "Ban", "BannedUser", "Timeout")
 
 
 class AutoModStatus:
@@ -93,7 +94,7 @@ class AutomodCheckMessage:
 
 class AutomodSettings:
     """
-    Represents the AutoMod Settings of a broadcaster's chat room.
+    Represents the AutoModSettings of a broadcaster's chat room.
 
     Attributes
     -----------
@@ -188,7 +189,7 @@ class AutomodSettings:
 
 class BannedUser:
     """
-    Represents a banned user.
+    Represents a BannedUser.
 
     Attributes
     ----------
@@ -197,7 +198,7 @@ class BannedUser:
     moderator: PartialUser
         The moderator who banned or put the user in timeout.
     expires_at: datetime.datetime | None
-        Datetime of when the user was banned or put in timeout. This is None if permanently banned.
+        Datetime of when the timeout will end. This is None if permanently banned.
     created_at: datetime.datetime
         Datetime of when the user was banned.
     reason: str
@@ -215,3 +216,62 @@ class BannedUser:
 
     def __repr__(self) -> str:
         return f"<BannedUser user={self.user} created_at={self.created_at} expires_at={self.expires_at}>"
+
+
+class Ban:
+    """
+    Represents a Ban.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose chat room the user was banned from chatting in.
+    user: PartialUser
+        The user banned or timed out.
+    moderator: PartialUser
+        The moderator who banned or put the user in timeout.
+    created_at: datetime.datetime
+        Datetime of when the user was banned.
+    """
+
+    __slots__ = ("broadcaster", "user", "end_time", "created_at", "moderator")
+
+    def __init__(self, data: BanUserResponseData, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], None, http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], None, http=http)
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+
+    def __repr__(self) -> str:
+        return f"<BanEvent user={self.user} created_at={self.created_at} end_time={self.end_time}>"
+
+
+class Timeout:
+    """
+    Represents a Timeout.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose chat room the user was timed out from chatting in.
+    user: PartialUser
+        The user timed out.
+    moderator: PartialUser
+        The moderator who put the user in timeout.
+    end_time: datetime.datetime
+        Datetime of when the timeout will end.
+    created_at: datetime.datetime
+        Datetime of when the user was timed out.
+    """
+
+    __slots__ = ("broadcaster", "user", "end_time", "created_at", "moderator")
+
+    def __init__(self, data: BanUserResponseData, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], None, http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], None, http=http)
+        self.end_time: datetime.datetime | None = parse_timestamp(data["end_time"]) if data["end_time"] else None
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+
+    def __repr__(self) -> str:
+        return f"<BanEvent user={self.user} created_at={self.created_at} end_time={self.end_time}>"

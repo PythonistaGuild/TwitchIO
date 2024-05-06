@@ -29,10 +29,9 @@ import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Literal
 
-from twitchio.http import HTTPAsyncIterator
-
 from .authentication import ManagedHTTPClient, Scopes
 from .conduits import Conduit, ConduitPool
+from .http import HTTPAsyncIterator
 from .models.bits import Cheermote, ExtensionTransaction
 from .models.ccls import ContentClassificationLabel
 from .models.channels import ChannelInfo

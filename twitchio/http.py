@@ -69,6 +69,7 @@ if TYPE_CHECKING:
         AdScheduleResponse,
         AutomodSettingsResponse,
         BannedUsersResponseData,
+        BanUserResponse,
         BitsLeaderboardResponse,
         ChannelChatBadgesResponse,
         ChannelEditorsResponse,
@@ -1206,6 +1207,35 @@ class HTTPClient:
 
         iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def post_ban_user(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        user_id: str | int,
+        duration: int | None = None,
+        reason: str | None = None,
+    ) -> BanUserResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"user_id": user_id}
+        if duration is not None:
+            data["duration"] = duration
+        if reason is not None:
+            data["reason"] = reason
+        route: Route = Route("POST", "moderation/bans", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def delete_unban_user(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        user_id: str | int,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "user_id": user_id}
+        route: Route = Route("DELETE", "moderation/bans", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Polls ###
 
