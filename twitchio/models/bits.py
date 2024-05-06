@@ -191,13 +191,13 @@ class Cheermote:
     """
     Represents a Cheermote
 
-        | Type               | Description |
-        | -----------        | -------------- |
-        | global_first_party | A Twitch-defined Cheermote that is shown in the Bits card.            |
-        | global_third_party | A Twitch-defined Cheermote that is not shown in the Bits card.          |
-        | channel_custom     | A broadcaster-defined Cheermote.            |
-        | display_only       | Do not use; for internal use only.           |
-        | sponsored          | A sponsor-defined Cheermote. When used, the sponsor adds additional Bits to the amount that the user cheered. For example, if the user cheered Terminator100, the broadcaster might receive 110 Bits, which includes the sponsor's 10 Bits contribution.        |
+    | Type               | Description |
+    | -----------        | -------------- |
+    | global_first_party | A Twitch-defined Cheermote that is shown in the Bits card.            |
+    | global_third_party | A Twitch-defined Cheermote that is not shown in the Bits card.          |
+    | channel_custom     | A broadcaster-defined Cheermote.            |
+    | display_only       | Do not use; for internal use only.           |
+    | sponsored          | A sponsor-defined Cheermote. When used, the sponsor adds additional Bits to the amount that the user cheered. For example, if the user cheered Terminator100, the broadcaster might receive 110 Bits, which includes the sponsor's 10 Bits contribution.        |
 
     Attributes
     -----------

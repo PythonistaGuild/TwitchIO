@@ -45,7 +45,7 @@ class Raid:
     -----------
     created_at: datetime.datetime
         Datetime of when the raid started.
-    is_mature: bool
+    mature: bool
         Indicates whether the stream being raided is marked as mature.
     """
 

@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
+from .models.moderation import AutomodCheckMessage, AutoModStatus
 from .models.raids import Raid
 
 
@@ -404,6 +405,15 @@ class PartialUser:
         ??? note
             Requires user access token that includes the `channel:manage:broadcast` scope.
 
+        Examples
+        --------
+        ```py
+            import twitchio
+            users: list[ChannelInfo] = await client.fetch_channels([21734222])
+            msg_checks: list[AutomodCheckMessage]  = [AutomodCheckMessage(id="1234", text="Some Text"), AutomodCheckMessage(id="12345", text="Some More Text")]
+            checks: list[AutoModStatus] = await users[0].check_automod_status(messages=msg_checks, token_for="21734222")
+            print(checks)
+        ```
 
         Parameters
         -----------
@@ -970,8 +980,7 @@ class PartialUser:
         """
         Sends a Shoutout to the specified broadcaster.
 
-        !!! info
-            `Rate Limits:` The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
+        `Rate Limits:` The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
 
         ??? note
             Requires a user access token that includes the `moderator:manage:shoutouts` scope.
@@ -1267,3 +1276,42 @@ class PartialUser:
         data = await self._http.get_channel_teams(broadcaster_id=self.id, token_for=token_for)
 
         return [ChannelTeam(d, http=self._http) for d in data["data"]]
+
+    async def check_automod_status(self, *, messages: list[AutomodCheckMessage], token_for: str) -> list[AutoModStatus]:
+        """
+        Checks whether AutoMod would flag the specified message for review.
+
+        `Rate Limits:` Rates are limited per channel based on the account type rather than per access token.
+
+        | Account type | Limit per minute | Limit per hour |
+        |--------------|------------------|----------------|
+        | Normal       | 5                | 50             |
+        | Affiliate    | 10               | 100            |
+        | Partner      | 30               | 300            |
+
+        ??? info
+            AutoMod is a moderation tool that holds inappropriate or harassing chat messages for moderators to review.
+            Moderators approve or deny the messages that AutoMod flags; only approved messages are released to chat.
+            AutoMod detects misspellings and evasive language automatically.
+
+            For information about AutoMod, see [How to Use AutoMod](https://help.twitch.tv/s/article/how-to-use-automod?language=en_US).
+
+        ??? note
+            Requires a user access token that includes the `moderation:read` scope.
+
+        Parameters
+        ----------
+        messages: list[dict[str, str]]]
+
+        token_for : str
+            User access token that includes the `moderation:read` scope.
+
+        Returns
+        -------
+        list[AutoModStatus]
+            List of AutoModStatus objects.
+        """
+        data = await self._http.post_check_automod_status(
+            broadcaster_id=self.id, messages=messages, token_for=token_for
+        )
+        return [AutoModStatus(d) for d in data["data"]]

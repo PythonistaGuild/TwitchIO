@@ -47,6 +47,7 @@ from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
+from .models.moderation import AutomodCheckMessage
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -76,6 +77,7 @@ if TYPE_CHECKING:
         CharityCampaignResponse,
         ChatSettingsResponse,
         ChattersResponseData,
+        CheckAutomodStatusResponse,
         CheermotesResponse,
         ClipsResponseData,
         ConduitPayload,
@@ -1155,6 +1157,15 @@ class HTTPClient:
         return iterator
 
     ### Moderation ###
+
+    async def post_check_automod_status(
+        self, broadcaster_id: str | int, messages: list[AutomodCheckMessage], token_for: str
+    ) -> CheckAutomodStatusResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        msg = [x._to_dict() for x in messages]
+        data = {"data": msg}
+        route: Route = Route("POST", "moderation/enforcements/status", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
 
     ### Polls ###
 
