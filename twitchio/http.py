@@ -47,7 +47,6 @@ from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
-from .models.moderation import AutomodCheckMessage, AutomodSettings
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -62,6 +61,7 @@ if TYPE_CHECKING:
 
     from .assets import Asset
     from .models.channel_points import CustomReward
+    from .models.moderation import AutomodCheckMessage, AutomodSettings
     from .types_.conduits import ShardData
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
