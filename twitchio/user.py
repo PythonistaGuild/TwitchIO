@@ -46,7 +46,7 @@ if TYPE_CHECKING:
     from .models.clips import Clip, CreatedClip
     from .models.goals import Goal
     from .models.hype_train import HypeTrainEvent
-    from .models.moderation import AutomodCheckMessage, AutomodSettings, AutoModStatus
+    from .models.moderation import AutomodCheckMessage, AutomodSettings, AutoModStatus, BannedUser
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -1430,3 +1430,42 @@ class PartialUser:
             broadcaster_id=self.id, moderator_id=moderator_id, settings=settings, token_for=token_for
         )
         return AutomodSettings(data["data"][0], http=self._http)
+
+    async def fetch_banned_user(
+        self, *, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[BannedUser]:
+        """
+        Fetch all users that the broadcaster has banned or put in a timeout.
+
+        ??? note
+            Requires a user access token that includes the `moderation:read` or `moderator:manage:banned_users` scope.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `moderation:read` or `moderator:manage:banned_users` scope.
+        user_ids: list[str  |  int] | None
+            A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each user you want to get.
+            You may specify a maximum of 100 IDs.
+
+            The returned list includes only those users that were banned or put in a timeout.
+            The list is returned in the same order that you specified the IDs.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[BannedUser]
+            HTTPAsyncIterator of BannedUser objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 100 users.
+        """
+        first = max(1, min(100, first))
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only specify a maximum of 100 users.")
+
+        return await self._http.get_banned_users(broadcaster_id=self.id, user_ids=user_ids, token_for=token_for)

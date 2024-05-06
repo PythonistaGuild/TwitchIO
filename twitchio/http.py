@@ -47,6 +47,7 @@ from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
+from .models.moderation import BannedUser
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -67,6 +68,7 @@ if TYPE_CHECKING:
     from .types_.responses import (
         AdScheduleResponse,
         AutomodSettingsResponse,
+        BannedUsersResponseData,
         BitsLeaderboardResponse,
         ChannelChatBadgesResponse,
         ChannelEditorsResponse,
@@ -1189,6 +1191,21 @@ class HTTPClient:
         data = settings.to_dict()
         route: Route = Route("PUT", "moderation/automod/settings", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
+
+    async def get_banned_users(
+        self, broadcaster_id: str | int, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[BannedUser]:
+        params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
+        if user_ids is not None:
+            params["user_id"] = user_ids
+
+        route: Route = Route("GET", "moderation/banned", params=params, token_for=token_for)
+
+        async def converter(data: BannedUsersResponseData) -> BannedUser:
+            return BannedUser(data, http=self)
+
+        iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Polls ###
 

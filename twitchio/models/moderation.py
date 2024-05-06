@@ -27,13 +27,20 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from twitchio.user import PartialUser
+from twitchio.utils import parse_timestamp
 
 
 if TYPE_CHECKING:
-    from twitchio.http import HTTPClient
-    from twitchio.types_.responses import AutomodSettingsResponseData, CheckAutomodStatusResponseData
+    import datetime
 
-__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage")
+    from twitchio.http import HTTPClient
+    from twitchio.types_.responses import (
+        AutomodSettingsResponseData,
+        BannedUsersResponseData,
+        CheckAutomodStatusResponseData,
+    )
+
+__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage", "BannedUser")
 
 
 class AutoModStatus:
@@ -177,3 +184,34 @@ class AutomodSettings:
                 result[attribute] = attr_value
 
         return result
+
+
+class BannedUser:
+    """
+    Represents a banned user.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user banned or timed out.
+    moderator: PartialUser
+        The moderator who banned or put the user in timeout.
+    expires_at: datetime.datetime | None
+        Datetime of when the user was banned or put in timeout. This is None if permanently banned.
+    created_at: datetime.datetime
+        Datetime of when the user was banned.
+    reason: str
+        The reason the user was banned or put in a timeout if the moderator provided one.
+    """
+
+    __slots__ = ("user", "expires_at", "created_at", "moderator", "reason")
+
+    def __init__(self, data: BannedUsersResponseData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], data["moderator_login"], http=http)
+        self.expires_at: datetime.datetime | None = parse_timestamp(data["expires_at"]) if data["expires_at"] else None
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.reason: str = data["reason"]
+
+    def __repr__(self) -> str:
+        return f"<BannedUser user={self.user} created_at={self.created_at} expires_at={self.expires_at}>"
