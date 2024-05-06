@@ -47,7 +47,7 @@ from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
-from .models.moderation import AutomodCheckMessage
+from .models.moderation import AutomodCheckMessage, AutomodSettings
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -1183,10 +1183,11 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def put_automod_settings(
-        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str
+        self, broadcaster_id: str | int, moderator_id: str | int, settings: AutomodSettings, token_for: str
     ) -> AutomodSettingsResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
-        route: Route = Route("PUT", "moderation/automod/settings", params=params, token_for=token_for)
+        data = settings.to_dict()
+        route: Route = Route("PUT", "moderation/automod/settings", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Polls ###

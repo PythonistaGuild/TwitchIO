@@ -1064,7 +1064,7 @@ class PartialUser:
         Updates the color used for the user's name in chat.
 
         ??? info
-            Available colors:
+            # Available Colors
             - blue
             - blue_violet
             - cadet_blue
@@ -1187,7 +1187,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             User access token that includes the `channel:read:goals` scope.
 
         Returns
@@ -1206,9 +1206,9 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             User access token that includes the channel:read:hype_train scope.
-        first : int
+        first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 1.
 
@@ -1239,9 +1239,9 @@ class PartialUser:
 
         Parameters
         ----------
-        to_broadcaster_id : str | int
+        to_broadcaster_id: str | int
             The ID of the broadcaster to raid.
-        token_for : str
+        token_for: str
             User access token that includes the `channel:manage:raids` scope.
 
         Returns
@@ -1264,7 +1264,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str | None, optional
+        token_for: str | None, optional
             An optional user token to use instead of the default app token.
         Returns
         -------
@@ -1303,7 +1303,7 @@ class PartialUser:
         ----------
         messages: list[dict[str, str]]]
 
-        token_for : str
+        token_for: str
             User access token that includes the `moderation:read` scope.
 
         Returns
@@ -1330,7 +1330,7 @@ class PartialUser:
         ----------
         msg_id: str
             The ID of the message to allow.
-        token_for : str
+        token_for: str
             User access token that includes the `moderator:manage:automod` scope.
         """
         return await self._http.post_manage_automod_messages(
@@ -1349,7 +1349,7 @@ class PartialUser:
         ----------
         msg_id: str
             The ID of the message to deny.
-        token_for : str
+        token_for: str
             User access token that includes the `moderator:manage:automod` scope.
         """
         return await self._http.post_manage_automod_messages(
@@ -1365,20 +1365,68 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id : str | int
+        moderator_id: str | int
             The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
-        token_for : str
+        token_for: str
             User access token that includes the `moderator:read:automod_settings` scope.
 
         Returns
         -------
         AutomodSettings
-            _description_
+            AutomodSettings object.
         """
         from .models import AutomodSettings
 
         data = await self._http.get_automod_settings(
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
+        )
+        return AutomodSettings(data["data"][0], http=self._http)
+
+    async def update_automod_settings(
+        self, moderator_id: str | int, settings: AutomodSettings, token_for: str
+    ) -> AutomodSettings:
+        """
+        Updates the broadcaster's AutoMod settings. The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
+
+        !!! info
+            Perform a fetch with [`fetch_automod_settings`][twitchio.user.PartialUser.fetch_automod_settings] to obtain the [`AutomodSettings`][twitchio.models.moderation.AutomodSettings] object to modify and pass to this method.
+
+            You may set either overall_level or the individual settings like aggression, but not both.
+
+            Setting overall_level applies default values to the individual settings. However, setting overall_level to 4 does not necessarily mean that it applies 4 to all the individual settings.
+            Instead, it applies a set of recommended defaults to the rest of the settings. For example, if you set overall_level to 2, Twitch provides some filtering on discrimination and sexual content, but more filtering on hostility (see the first example response).
+
+            If overall_level is currently set and you update swearing to 3, overall_level will be set to null and all settings other than swearing will be set to 0.
+            The same is true if individual settings are set and you update overall_level to 3 — all the individual settings are updated to reflect the default level.
+
+            Note that if you set all the individual settings to values that match what overall_level would have set them to, Twitch changes AutoMod to use the default AutoMod level instead of using the individual settings.
+
+            Valid values for all levels are from 0 (no filtering) through 4 (most aggressive filtering).
+            These levels affect how aggressively AutoMod holds back messages for moderators to review before they appear in chat or are denied (not shown).
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:automod_settings` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        settings: AutomodSettings
+            AutomodSettings object containing the new settings for the broadcaster's channel.
+            You can fetch this using [`fetch_automod_settings`][twitchio.user.PartialUser.fetch_automod_settings]
+        token_for: str
+            User access token that includes the `moderator:manage:automod_settings` scope.
+
+        Returns
+        -------
+        AutomodSettings
+            AutomodSettings object.
+        """
+        from .models import AutomodSettings
+
+        data = await self._http.put_automod_settings(
+            broadcaster_id=self.id, moderator_id=moderator_id, settings=settings, token_for=token_for
         )
         return AutomodSettings(data["data"][0], http=self._http)

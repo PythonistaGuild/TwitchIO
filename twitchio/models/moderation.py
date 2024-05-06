@@ -144,3 +144,36 @@ class AutomodSettings:
 
     def __repr__(self) -> str:
         return f"<AutomodSettings broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"
+
+    def to_dict(self, use_ids: bool = False) -> dict[str, str | int | None]:
+        """
+        Returns the AutomodSettings as a dictionary. This is the equivalent of the raw payload returned by Twitch.
+
+        Parameters
+        ----------
+        use_ids : bool
+            Whether to include the broadcaster and moderator IDs in the dictionary.
+
+        Returns
+        -------
+        dict[str, str | int | None]
+            Dictionary data type of AutomodSettings
+        """
+        result: dict[str, str | int | None] = {}
+        user_related = {"broadcaster", "moderator"}
+
+        if use_ids:
+            for user_attr in user_related:
+                user = getattr(self, user_attr, None)
+                result[f"{user_attr}_id"] = getattr(user, "id", None) if user else None
+
+        for attribute in self.__slots__:
+            if attribute in user_related and not use_ids:
+                continue
+            attr_value = getattr(self, attribute, None)
+            if attr_value is not None and hasattr(attr_value, "to_dict"):
+                result[attribute] = attr_value.to_dict()
+            elif attribute not in user_related:
+                result[attribute] = attr_value
+
+        return result
