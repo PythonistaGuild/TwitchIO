@@ -1161,11 +1161,16 @@ class HTTPClient:
 
     ### Raids ###
 
-    async def start_raid(
+    async def post_raid(
         self, from_broadcaster_id: str | int, to_broadcaster_id: str | int, token_for: str
     ) -> StartARaidResponse:
         params = {"from_broadcaster_id": from_broadcaster_id, "to_broadcaster_id": to_broadcaster_id}
         route: Route = Route("POST", "raids", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def delete_raid(self, broadcaster_id: str | int, token_for: str) -> None:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("DELETE", "raids", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Schedule ###

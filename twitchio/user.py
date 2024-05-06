@@ -1246,3 +1246,6 @@ class PartialUser:
         )
 
         return Raid(data["data"][0])
+
+    async def cancel_raid(self, *, token_for: str) -> None:
+        return await self._http.delete_raid(broadcaster_id=self.id, token_for=token_for)
