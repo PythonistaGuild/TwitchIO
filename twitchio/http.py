@@ -46,6 +46,7 @@ from .models.charity import CharityDonation
 from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
+from .models.hype_train import HypeTrainEvent
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -79,10 +80,10 @@ if TYPE_CHECKING:
         ConduitPayload,
         ContentClassificationLabelsResponse,
         CreateClipResponse,
+        CreatorGoalsResponse,
         CustomRewardRedemptionResponse,
         CustomRewardRedemptionResponseData,
         CustomRewardsResponse,
-        CreatorGoalsResponse,
         DeleteVideosResponse,
         EmoteSetsResponse,
         ExtensionAnalyticsResponseData,
@@ -93,6 +94,7 @@ if TYPE_CHECKING:
         GamesResponseData,
         GlobalChatBadgesResponse,
         GlobalEmotesResponse,
+        HypeTrainEventsResponseData,
         RawResponse,
         SearchChannelsResponseData,
         SendChatMessageResponse,
@@ -1136,6 +1138,19 @@ class HTTPClient:
     ### Guest Start ###
 
     ### Hype Train ###
+
+    async def get_hype_train_events(
+        self, broadcaster_id: str | int, token_for: str, first: int = 1
+    ) -> HTTPAsyncIterator[HypeTrainEvent]:
+        params = {"broadcaster_id": broadcaster_id, "first": first}
+
+        route: Route = Route("GET", "hypetrain/events", params=params, token_for=token_for)
+
+        async def converter(data: HypeTrainEventsResponseData) -> HypeTrainEvent:
+            return HypeTrainEvent(data, http=self)
+
+        iterator: HTTPAsyncIterator[HypeTrainEvent] = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Moderation ###
 

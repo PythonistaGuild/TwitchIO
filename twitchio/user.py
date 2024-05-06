@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from .models.chat import ChannelEmote, ChatBadge, ChatSettings, SentMessage, UserEmote
     from .models.clips import Clip, CreatedClip
     from .models.goals import Goal
+    from .models.hype_train import HypeTrainEvent
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -1189,3 +1190,24 @@ class PartialUser:
 
         data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=token_for)
         return [Goal(d, http=self._http) for d in data["data"]]
+
+    async def fetch_hype_train_events(self, token_for: str, first: int = 1) -> HTTPAsyncIterator[HypeTrainEvent]:
+        """
+        Fetches information about the broadcaster's current or most recent Hype Train event.
+
+        Parameters
+        ----------
+        token_for : str
+            User access token that includes the channel:read:hype_train scope.
+        first : int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 1.
+
+        Returns
+        -------
+        HTTPAsyncIterator[HypeTrainEvent]
+            HTTPAsyncIterator of HypeTrainEvent objects.
+        """
+        first = max(1, min(100, first))
+
+        return await self._http.get_hype_train_events(broadcaster_id=self.id, first=first, token_for=token_for)
