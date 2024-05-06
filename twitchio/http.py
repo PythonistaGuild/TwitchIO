@@ -71,6 +71,7 @@ if TYPE_CHECKING:
         ChannelEmotesResponse,
         ChannelFollowersResponseData,
         ChannelInformationResponse,
+        ChannelTeamsResponse,
         CharityCampaignDonationsResponseData,
         CharityCampaignResponse,
         ChatSettingsResponse,
@@ -1260,6 +1261,18 @@ class HTTPClient:
             params = {"id": team_id}
 
         route: Route = Route("GET", "teams", params=params, token_for=token_for)
+
+        return await self.request_json(route)
+
+    async def get_channel_teams(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str | None = None,
+    ) -> ChannelTeamsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "teams/channel", params=params, token_for=token_for)
 
         return await self.request_json(route)
 

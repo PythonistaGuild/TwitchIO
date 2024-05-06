@@ -26,8 +26,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from twitchio.models.goals import Goal
-
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
 
@@ -48,6 +46,7 @@ if TYPE_CHECKING:
     from .models.clips import Clip, CreatedClip
     from .models.goals import Goal
     from .models.hype_train import HypeTrainEvent
+    from .models.teams import ChannelTeam
     from .utils import Colour
 
 __all__ = ("PartialUser",)
@@ -1249,3 +1248,22 @@ class PartialUser:
 
     async def cancel_raid(self, *, token_for: str) -> None:
         return await self._http.delete_raid(broadcaster_id=self.id, token_for=token_for)
+
+    async def fetch_channel_teams(self, *, token_for: str | None = None) -> list[ChannelTeam]:
+        """
+        Fetches the list of Twitch teams that the broadcaster is a member of.
+
+        Parameters
+        ----------
+        token_for : str | None, optional
+            An optional user token to use instead of the default app token.
+        Returns
+        -------
+        list[ChannelTeam]
+            List of ChannelTeam objects.
+        """
+        from .models.teams import ChannelTeam
+
+        data = await self._http.get_channel_teams(broadcaster_id=self.id, token_for=token_for)
+
+        return [ChannelTeam(d, http=self._http) for d in data["data"]]

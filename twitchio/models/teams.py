@@ -35,10 +35,10 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPClient
-    from twitchio.types_.responses import TeamsResponseData
+    from twitchio.types_.responses import ChannelTeamsResponseData, TeamsResponseData
 
 
-__all__ = ("Team",)
+__all__ = ("ChannelTeam", "Team")
 
 
 class Team:
@@ -49,9 +49,9 @@ class Team:
     -----------
     users: list[twitchio.PartialUser]
         List of users in the specified Team.
-    background_image_url: str
+    background_image: Asset | None
         URL for the Team background image.
-    banner: str
+    banner: Asset | None
         URL for the Team banner.
     created_at: datetime.datetime
         Date and time the Team was created.
@@ -59,7 +59,7 @@ class Team:
         Date and time the Team was last updated.
     info: str
         Team description.
-    thumbnail_url: str
+    thumbnail: Asset | None
         Image URL for the Team logo.
     name: str
         Team name.
@@ -87,17 +87,17 @@ class Team:
         self.background_image: Asset | None = (
             Asset(data["background_image_url"], http=http) if data["background_image_url"] else None
         )
-        self.banner: str = data["banner"]
+        self.banner: Asset | None = Asset(data["banner"], http=http) if data["banner"] else None
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
         self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
         self.info: str = data["info"]
-        self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
+        self.thumbnail: Asset | None = Asset(data["thumbnail_url"], http=http) if data["thumbnail_url"] else None
         self.name: str = data["team_name"]
         self.display_name: str = data["team_display_name"]
         self.id: str = data["id"]
 
     def __repr__(self) -> str:
-        return f"<Team users={self.users} team_name={self.name} team_display_name={self.display_name} id={self.id} created_at={self.created_at}>"
+        return f"<Team users={self.users} name={self.name} display_name={self.display_name} id={self.id} created_at={self.created_at}>"
 
     def __str__(self) -> str:
         return self.name
@@ -107,3 +107,62 @@ class Team:
             return NotImplemented
 
         return __value.id == self.id
+
+
+class ChannelTeam:
+    """
+    Represents the Twitch Teams of which the specified channel/broadcaster is a member
+
+    Attributes
+    -----------
+    broadcaster: twitchio.PartialUser
+        The broadcaster.
+    background_image: Asset | None
+        Asset for the team background image.
+    banner: Asset | None
+        Asset for the team banner.
+    created_at: datetime.datetime
+        Date and time the Team was created.
+    updated_at: datetime.datetime`
+        Date and time the Team was last updated.
+    info: str
+        Team description.
+    thumbnail_url: Asset | None
+        Asset for the team logo.
+    name: str
+        Team name.
+    display_name: str
+        Team display name.
+    id: str
+        Team ID.
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "background_image",
+        "banner",
+        "created_at",
+        "updated_at",
+        "info",
+        "thumbnail",
+        "name",
+        "display_name",
+        "id",
+    )
+
+    def __init__(self, data: ChannelTeamsResponseData, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.background_image: Asset | None = (
+            Asset(data["background_image_url"], http=http) if data["background_image_url"] else None
+        )
+        self.banner: Asset | None = Asset(data["banner"], http=http) if data["banner"] else None
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
+        self.info: str = data["info"]
+        self.thumbnail: Asset | None = Asset(data["thumbnail_url"], http=http) if data["thumbnail_url"] else None
+        self.name: str = data["team_name"]
+        self.display_name: str = data["team_display_name"]
+        self.id: str = data["id"]
+
+    def __repr__(self) -> str:
+        return f"<ChannelTeam user={self.broadcaster} name={self.name} display_name={self.display_name} id={self.id} created_at={self.created_at}>"
