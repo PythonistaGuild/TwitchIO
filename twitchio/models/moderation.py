@@ -26,15 +26,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from twitchio.utils import parse_timestamp
+from twitchio.user import PartialUser
 
 
 if TYPE_CHECKING:
-    import datetime
+    from twitchio.http import HTTPClient
+    from twitchio.types_.responses import AutomodSettingsResponseData, CheckAutomodStatusResponseData
 
-    from twitchio.types_.responses import CheckAutomodStatusResponseData
-
-__all__ = ("AutoModStatus", "AutomodCheckMessage")
+__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage")
 
 
 class AutoModStatus:
@@ -83,3 +82,65 @@ class AutomodCheckMessage:
 
     def __repr__(self) -> str:
         return f"<AutomodCheckMessage id={self.id} text={self.text}>"
+
+
+class AutomodSettings:
+    """
+    Represents the AutoMod Settings of a broadcaster's chat room.
+
+    Attributes
+    -----------
+    broadcaster: PartialUser
+        The PartialUser instance representing the broadcaster.
+    moderator: PartialUser
+        The PartialUser instance representing the moderator.
+    overall_level: int | None
+        The overall moderation level, which could be None if the broadcaster has set one or more of the individual settings.
+    disability: int
+        The Automod level for discrimination against disability.
+    aggression: int
+        The Automod level for hostility involving aggression.
+    sexuality_sex_or_gender : int
+        The AutoMod level for discrimination based on sexuality, sex, or gender.
+    misogyny: int
+        The Automod level for discrimination against women.
+    bullying: int
+        The Automod level for hostility involving name calling or insults.
+    swearing: int
+        The Automod level for profanity.
+    race_ethnicity_or_religion: int
+        The Automod level for racial discrimination.
+    sex_based_terms: int
+        The Automod level for sexual content.
+
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "overall_level",
+        "disability",
+        "aggression",
+        "sexuality_sex_or_gender",
+        "misogyny",
+        "bullying",
+        "swearing",
+        "race_ethnicity_or_religion",
+        "sex_based_terms",
+    )
+
+    def __init__(self, data: AutomodSettingsResponseData, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], None, http=http)
+        self.overall_level: int | None = int(data["overall_level"]) if data["overall_level"] else None
+        self.disability: int = data["disability"]
+        self.aggression: int = data["aggression"]
+        self.sexuality_sex_or_gender: int = data["sexuality_sex_or_gender"]
+        self.misogyny: int = data["misogyny"]
+        self.bullying: int = data["bullying"]
+        self.swearing: int = data["swearing"]
+        self.race_ethnicity_or_religion: int = data["race_ethnicity_or_religion"]
+        self.sex_based_terms: int = data["sex_based_terms"]
+
+    def __repr__(self) -> str:
+        return f"<AutomodSettings broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"

@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         AdScheduleResponse,
+        AutomodSettingsResponse,
         BitsLeaderboardResponse,
         ChannelChatBadgesResponse,
         ChannelEditorsResponse,
@@ -1172,6 +1173,20 @@ class HTTPClient:
     ) -> None:
         data = {"user_id": user_id, "msg_id": msg_id, "action": action}
         route: Route = Route("POST", "moderation/automod/message", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_automod_settings(
+        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str
+    ) -> AutomodSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        route: Route = Route("GET", "moderation/automod/settings", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def put_automod_settings(
+        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str
+    ) -> AutomodSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        route: Route = Route("PUT", "moderation/automod/settings", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Polls ###

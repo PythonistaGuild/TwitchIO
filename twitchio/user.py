@@ -27,7 +27,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
-from .models.moderation import AutomodCheckMessage, AutoModStatus
 from .models.raids import Raid
 
 
@@ -47,6 +46,7 @@ if TYPE_CHECKING:
     from .models.clips import Clip, CreatedClip
     from .models.goals import Goal
     from .models.hype_train import HypeTrainEvent
+    from .models.moderation import AutomodCheckMessage, AutomodSettings, AutoModStatus
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -1311,6 +1311,8 @@ class PartialUser:
         list[AutoModStatus]
             List of AutoModStatus objects.
         """
+        from .models.moderation import AutoModStatus
+
         data = await self._http.post_check_automod_status(
             broadcaster_id=self.id, messages=messages, token_for=token_for
         )
@@ -1353,3 +1355,30 @@ class PartialUser:
         return await self._http.post_manage_automod_messages(
             user_id=self.id, msg_id=msg_id, action="DENY", token_for=token_for
         )
+
+    async def fetch_automod_settings(self, moderator_id: str | int, token_for: str) -> AutomodSettings:
+        """
+        Fetches the broadcaster's AutoMod settings. The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
+
+        ??? note
+            Requires a user access token that includes the `moderator:read:automod_settings` scope.
+
+        Parameters
+        ----------
+        moderator_id : str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        token_for : str
+            User access token that includes the `moderator:read:automod_settings` scope.
+
+        Returns
+        -------
+        AutomodSettings
+            _description_
+        """
+        from .models import AutomodSettings
+
+        data = await self._http.get_automod_settings(
+            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
+        )
+        return AutomodSettings(data["data"][0], http=self._http)
