@@ -99,6 +99,7 @@ if TYPE_CHECKING:
         SearchChannelsResponseData,
         SendChatMessageResponse,
         SnoozeNextAdResponse,
+        StartARaidResponse,
         StartCommercialResponse,
         StreamsResponseData,
         TeamsResponse,
@@ -1159,6 +1160,13 @@ class HTTPClient:
     ### Predictions ###
 
     ### Raids ###
+
+    async def start_raid(
+        self, from_broadcaster_id: str | int, to_broadcaster_id: str | int, token_for: str
+    ) -> StartARaidResponse:
+        params = {"from_broadcaster_id": from_broadcaster_id, "to_broadcaster_id": to_broadcaster_id}
+        route: Route = Route("POST", "raids", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Schedule ###
 

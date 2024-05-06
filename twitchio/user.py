@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Literal
 from twitchio.models.goals import Goal
 
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
+from .models.raids import Raid
 
 
 if TYPE_CHECKING:
@@ -991,7 +992,7 @@ class PartialUser:
 
     # TODO App Token usage
     async def send_message(
-        self, sender_id: str | int, message: str, token_for: str, reply_to_message_id: str | None = None
+        self, *, sender_id: str | int, message: str, token_for: str, reply_to_message_id: str | None = None
     ) -> SentMessage:
         """
         Send a message to the broadcaster's chat room.
@@ -1169,7 +1170,7 @@ class PartialUser:
             token_for=token_for,
         )
 
-    async def fetch_goals(self, token_for: str) -> list[Goal]:
+    async def fetch_goals(self, *, token_for: str) -> list[Goal]:
         """
         Fetches a list of the creator's goals.
 
@@ -1191,7 +1192,7 @@ class PartialUser:
         data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=token_for)
         return [Goal(d, http=self._http) for d in data["data"]]
 
-    async def fetch_hype_train_events(self, token_for: str, first: int = 1) -> HTTPAsyncIterator[HypeTrainEvent]:
+    async def fetch_hype_train_events(self, *, token_for: str, first: int = 1) -> HTTPAsyncIterator[HypeTrainEvent]:
         """
         Fetches information about the broadcaster's current or most recent Hype Train event.
 
@@ -1211,3 +1212,37 @@ class PartialUser:
         first = max(1, min(100, first))
 
         return await self._http.get_hype_train_events(broadcaster_id=self.id, first=first, token_for=token_for)
+
+    async def start_raid(self, *, to_broadcaster_id: str | int, token_for: str) -> Raid:
+        """
+        Starts a raid to another channel.
+
+        `Rate Limit:` The limit is 10 requests within a 10-minute window.
+
+        ??? info
+            When you call the API from a chat bot or extension, the Twitch UX pops up a window at the top of the chat room that identifies the number of viewers in the raid. The raid occurs when the broadcaster clicks Raid Now or after the 90-second countdown expires.
+
+            To determine whether the raid successfully occurred, you must subscribe to the Channel Raid event.
+
+            To cancel a pending raid, use the Cancel a raid endpoint.
+
+        ??? note
+            Requires a user access token that includes the `channel:manage:raids` scope.
+
+        Parameters
+        ----------
+        to_broadcaster_id : str | int
+            The ID of the broadcaster to raid.
+        token_for : str
+            User access token that includes the `channel:manage:raids` scope.
+
+        Returns
+        -------
+        Raid
+            Raid object.
+        """
+        data = await self._http.post_raid(
+            from_broadcaster_id=self.id, to_broadcaster_id=to_broadcaster_id, token_for=token_for
+        )
+
+        return Raid(data["data"][0])
