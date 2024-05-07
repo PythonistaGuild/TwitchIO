@@ -1299,12 +1299,19 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[BlockedTerm] = self.request_paginated(route, converter=converter)
         return iterator
 
-    async def post_blocked_terms(
+    async def post_blocked_term(
         self, broadcaster_id: str | int, moderator_id: str | int, token_for: str, text: str
     ) -> AddBlockedTermResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = {"text": text}
         route: Route = Route("POST", "moderation/blocked_terms", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def delete_blocked_term(
+        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str, id: str
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "id": id}
+        route: Route = Route("DELETE", "moderation/blocked_terms", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Polls ###

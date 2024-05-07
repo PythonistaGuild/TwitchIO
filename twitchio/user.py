@@ -1735,7 +1735,8 @@ class PartialUser:
         text: str,
     ) -> BlockedTerm:
         """
-        Resolves an unban request by approving or denying it.
+        Adds a word or phrase to the broadcaster's list of blocked terms.
+        These are the terms that the broadcaster doesn't want used in their chat room.
 
         ??? info
             Terms may include a wildcard character `(*)`. The wildcard character must appear at the beginning or end of a word or set of characters. For example, `*foo` or `foo*`.
@@ -1775,10 +1776,40 @@ class PartialUser:
 
         from .models.moderation import BlockedTerm
 
-        data = await self._http.post_blocked_terms(
+        data = await self._http.post_blocked_term(
             broadcaster_id=self.id,
             moderator_id=moderator_id,
             token_for=token_for,
             text=text,
         )
         return BlockedTerm(data["data"][0], http=self._http)
+
+    async def remove_blocked_term(
+        self,
+        *,
+        moderator_id: str | int,
+        token_for: str,
+        id: str,
+    ) -> None:
+        """
+        Removes the word or phrase from the broadcaster's list of blocked terms.
+
+        ??? note
+           Requires a user access token that includes the `moderator:manage:blocked_terms` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+        token_for: str
+            User access token that includes the `moderator:manage:blocked_terms` scope.
+        id: str
+            The ID of the blocked term to remove from the broadcaste's list of blocked terms.
+        """
+
+        return await self._http.delete_blocked_term(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            id=id,
+        )
