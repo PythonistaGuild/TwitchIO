@@ -1813,3 +1813,46 @@ class PartialUser:
             token_for=token_for,
             id=id,
         )
+
+    async def delete_chat_messages(
+        self, *, moderator_id: str | int, token_for: str, message_id: str | None = None
+    ) -> None:
+        """
+        Removes a single chat message or all chat messages from the broadcaster's chat room.
+
+        !!! info
+            Restrictions:
+
+            - The message must have been created within the last 6 hours.
+            - The message must not belong to the broadcaster.
+            - The message must not belong to another moderator.
+
+            If not specified, the request removes all messages in the broadcaster's chat room.
+
+        ??? note
+           Requires a user access token that includes the `moderator:manage:chat_messages` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room. This ID must match the user ID in the user access token.
+        token_for: str
+            User access token that includes the `moderator:manage:chat_messages` scope.
+        message_id: str
+            The ID of the message to remove.
+
+            Restrictions:
+
+            - The message must have been created within the last 6 hours.
+            - The message must not belong to the broadcaster.
+            - The message must not belong to another moderator.
+
+            If not specified, the request removes all messages in the broadcaster's chat room.
+        """
+
+        return await self._http.delete_chat_message(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            message_id=message_id,
+        )

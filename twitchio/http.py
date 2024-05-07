@@ -1314,6 +1314,15 @@ class HTTPClient:
         route: Route = Route("DELETE", "moderation/blocked_terms", params=params, token_for=token_for)
         return await self.request_json(route)
 
+    async def delete_chat_message(
+        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str, message_id: str | None = None
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        if message_id is not None:
+            params["message_id"] = message_id
+        route: Route = Route("DELETE", "moderation/chat", params=params, token_for=token_for)
+        return await self.request_json(route)
+
     ### Polls ###
 
     ### Predictions ###
