@@ -49,6 +49,7 @@ if TYPE_CHECKING:
         AutoModStatus,
         Ban,
         BannedUser,
+        BlockedTerm,
         Timeout,
         UnbanRequest,
     )
@@ -1622,7 +1623,7 @@ class PartialUser:
             Filter by a status. Possible values are: `pending`, `approved`, `denied`, `acknowledged`, `canceled`
         user_id: str | int | None
             An ID used to filter what unban requests are returned.
-        first: int, optional
+        first: int
             The maximum number of items to return per page in response. Default 20.
 
         Returns
@@ -1694,3 +1695,34 @@ class PartialUser:
             resolution_text=resolution_text,
         )
         return UnbanRequest(data["data"][0], http=self._http)
+
+    async def fetch_blocked_terms(
+        self, moderator_id: str | int, token_for: str, first: int = 20
+    ) -> HTTPAsyncIterator[BlockedTerm]:
+        """
+        Fetches the broadcaster's list of non-private, blocked words or phrases.
+        These are the terms that the broadcaster or moderator added manually or that were denied by AutoMod.
+
+        ??? note
+            Requires a user access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
+
+        Parameters
+        ----------
+        moderator_id : str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        token_for : str
+            User access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
+        first : int, optional
+           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[BlockedTerm]
+            HTTPAsyncIterator of BlockedTerm objects.
+        """
+        first = max(1, min(100, first))
+
+        return await self._http.get_blocked_terms(
+            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, first=first
+        )

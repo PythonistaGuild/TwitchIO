@@ -47,7 +47,7 @@ from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
-from .models.moderation import BannedUser, UnbanRequest
+from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -71,6 +71,7 @@ if TYPE_CHECKING:
         BannedUsersResponseData,
         BanUserResponse,
         BitsLeaderboardResponse,
+        BlockedTermsResponseData,
         ChannelChatBadgesResponse,
         ChannelEditorsResponse,
         ChannelEmotesResponse,
@@ -1279,6 +1280,23 @@ class HTTPClient:
             params["resolution_text"] = resolution_text
         route: Route = Route("PATCH", "moderation/unban_requests", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    async def get_blocked_terms(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[BlockedTerm]:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "first": first}
+
+        route: Route = Route("GET", "moderation/blocked_terms", params=params, token_for=token_for)
+
+        async def converter(data: BlockedTermsResponseData) -> BlockedTerm:
+            return BlockedTerm(data, http=self)
+
+        iterator: HTTPAsyncIterator[BlockedTerm] = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Polls ###
 

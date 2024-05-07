@@ -38,12 +38,13 @@ if TYPE_CHECKING:
         AutomodSettingsResponseData,
         BannedUsersResponseData,
         BanUserResponseData,
+        BlockedTermsResponseData,
         CheckAutomodStatusResponseData,
         ResolveUnbanRequestsResponseData,
         UnbanRequestsResponseData,
     )
 
-__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage", "Ban", "BannedUser", "Timeout")
+__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage", "Ban", "BannedUser", "BlockedTerm", "Timeout")
 
 
 class AutoModStatus:
@@ -334,3 +335,38 @@ class UnbanRequest:
         return (
             f"<UnbanRequest id={self.id} broadcaster={self.broadcaster} user={self.user} created_at={self.created_at}>"
         )
+
+
+class BlockedTerm:
+    """
+    Represents a blocked term.
+
+    Attributes
+    ----------
+    id: str
+        An ID that identifies this blocked term.
+    broadcaster: PartialUser
+        The broadcaster that owns the list of blocked terms.
+    moderator: PartialUser
+        The moderator that blocked the word or phrase from being used in the broadcaster's chat room.
+    text: str
+        The blocked word or phrase.
+    created_at: datetime.datetime
+        Datetime that the term was blocked.
+    updated_at: datetime.datetime
+        Datetime that the term was updated. When the term is added, this timestamp is the same as `created_at`. The timestamp changes as `AutoMod` continues to deny the term.
+    expires_at: datetime.datetime | None
+        Datetime that the blocked term is set to expire. After the block expires, users may use the term in the broadcaster's chat room.
+        Is None if the term was added manually or was permanently blocked by AutoMod.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "id", "text", "created_at", "updated_at", "expires_at")
+
+    def __init__(self, data: BlockedTermsResponseData, http: HTTPClient) -> None:
+        self.id: str = data["id"]
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], None, http=http)
+        self.text: str = data["text"]
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
+        self.expires_at: datetime.datetime | None = parse_timestamp(data["expires_at"]) if data["expires_at"] else None
