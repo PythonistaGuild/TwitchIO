@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     from .types_.conduits import ShardData
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
+        AddBlockedTermResponse,
         AdScheduleResponse,
         AutomodSettingsResponse,
         BannedUsersResponseData,
@@ -1297,6 +1298,14 @@ class HTTPClient:
 
         iterator: HTTPAsyncIterator[BlockedTerm] = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def post_blocked_terms(
+        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str, text: str
+    ) -> AddBlockedTermResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"text": text}
+        route: Route = Route("POST", "moderation/blocked_terms", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
 
     ### Polls ###
 

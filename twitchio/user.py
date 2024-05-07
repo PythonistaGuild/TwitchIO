@@ -1726,3 +1726,59 @@ class PartialUser:
         return await self._http.get_blocked_terms(
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, first=first
         )
+
+    async def add_blocked_term(
+        self,
+        *,
+        moderator_id: str | int,
+        token_for: str,
+        text: str,
+    ) -> BlockedTerm:
+        """
+        Resolves an unban request by approving or denying it.
+
+        ??? info
+            Terms may include a wildcard character `(*)`. The wildcard character must appear at the beginning or end of a word or set of characters. For example, `*foo` or `foo*`.
+
+            If the blocked term already exists, the response contains the existing blocked term.
+
+
+        ??? note
+           Requires a user access token that includes the `moderator:manage:blocked_terms` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+        token_for: str
+            User access token that includes the `moderator:manage:blocked_terms` scope.
+        text: str
+            The word or phrase to block from being used in the broadcaster's chat room. The term must contain a minimum of 2 characters and may contain up to a maximum of 500 characters.
+
+            Terms may include a wildcard character `(*)`. The wildcard character must appear at the beginning or end of a word or set of characters. For example, `*foo` or `foo*`.
+
+            If the blocked term already exists, the response contains the existing blocked term.
+
+        Returns
+        -------
+        BlockedTerm
+            BlockedTerm object.
+
+        Raises
+        ------
+        ValueError
+            Text must be more than 2 characters but less than 500 characters.
+        """
+
+        if len(text) > 500 or len(text) < 2:
+            raise ValueError("Text must be more than 2 characters but less than 500 characters.")
+
+        from .models.moderation import BlockedTerm
+
+        data = await self._http.post_blocked_terms(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            text=text,
+        )
+        return BlockedTerm(data["data"][0], http=self._http)
