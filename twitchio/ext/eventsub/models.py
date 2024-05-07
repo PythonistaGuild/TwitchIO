@@ -1619,6 +1619,74 @@ class ChannelCharityDonationData(EventData):
         self.donation_decimal_places: int = data["amount"]["decimal_places"]
 
 
+class ChannelUnbanRequestCreate(EventData):
+    """
+    Represents an unban request created by a user.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the ban request.
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the user was banned.
+    user: :class:`PartialUser`
+        The user that was banned.
+    text: :class:`str`
+        The unban request text the user submitted.
+    created_at: :class:`datetime.datetime`
+        When the user submitted the request.
+    """
+
+    __slots__ = (
+        "id",
+        "broadcaster",
+        "user",
+        "text",
+        "created_at"
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.id: str = data["id"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.text: str = data["text"]
+        self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
+
+class ChannelUnbanRequestResolve(EventData):
+    """
+    Represents an unban request that has been resolved by a moderator.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the ban request.
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the user was banned.
+    user: :class:`PartialUser`
+        The user that was banned.
+    moderator: :class:`PartialUser`
+        The moderator that handled this unban request.
+    resolution_text: :class:`str`
+        The reasoning provided by the moderator.
+    status: :class:`str`
+        The resolution. either `accepted` or `denied`.
+    """
+
+    __slots__ = (
+        "id",
+        "broadcaster",
+        "user",
+        "text",
+        "created_at"
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.id: str = data["id"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.text: str = data["text"]
+        self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
+
 _DataType = Union[
     ChannelBanData,
     ChannelUnbanData,
@@ -1652,6 +1720,8 @@ _DataType = Union[
     ChannelShoutoutCreateData,
     ChannelShoutoutReceiveData,
     ChannelCharityDonationData,
+    ChannelUnbanRequestCreate,
+    ChannelUnbanRequestResolve
 ]
 
 
@@ -1721,6 +1791,9 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
     stream_start = "stream.online", 1, StreamOnlineData
     stream_end = "stream.offline", 1, StreamOfflineData
+
+    unban_request_create = "channel.unban_request.create", 1, ChannelUnbanRequestCreate
+    unban_request_resolve = "channel.unban_request.resolve", 1, ChannelUnbanRequestResolve
 
     user_authorization_grant = "user.authorization.grant", 1, UserAuthorizationGrantedData
     user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
