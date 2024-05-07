@@ -575,7 +575,7 @@ class Context(Messageable):
         """Alias to chatters."""
         return self.chatters
 
-    def get_user(self, name: str) -> Optional[Union[PartialUser, User]]:
+    def get_user(self, name: str) -> Optional[Union[PartialChatter, Chatter]]:
         """Retrieve a user from the channels user cache.
 
         Parameters
@@ -585,8 +585,8 @@ class Context(Messageable):
 
         Returns
         --------
-        Union[:class:`twitchio.user.User`, :class:`twitchio.user.PartialUser`]
-            Could be a :class:`twitchio.user.PartialUser` depending on how the user joined the channel.
+        Union[:class:`twitchio.Chatter`, :class:`twitchio.PartialChatter`]
+            Could be a :class:`twitchio.PartialChatter` depending on how the user joined the channel.
             Returns None if no user was found.
         """
         name = name.lower()

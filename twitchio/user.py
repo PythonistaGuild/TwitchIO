@@ -462,7 +462,7 @@ class PartialUser:
         List[:class:`twitchio.PartialUser`]
         """
         data = await self._http.get_moderated_channels(token, str(self.id))
-        return [PartialUser(self._http, d["user_id"], d["user_name"]) for d in data]
+        return [PartialUser(self._http, d["broadcaster_id"], d["broadcaster_login"]) for d in data]
 
     async def fetch_moderators(self, token: str, userids: List[int] = None):
         """|coro|
