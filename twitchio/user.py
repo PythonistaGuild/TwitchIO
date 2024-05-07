@@ -43,7 +43,15 @@ if TYPE_CHECKING:
     from .models.clips import Clip, CreatedClip
     from .models.goals import Goal
     from .models.hype_train import HypeTrainEvent
-    from .models.moderation import AutomodCheckMessage, AutomodSettings, AutoModStatus, Ban, BannedUser, Timeout
+    from .models.moderation import (
+        AutomodCheckMessage,
+        AutomodSettings,
+        AutoModStatus,
+        Ban,
+        BannedUser,
+        Timeout,
+        UnbanRequest,
+    )
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -1588,3 +1596,101 @@ class PartialUser:
             user_id=user_id,
             token_for=token_for,
         )
+
+    async def fetch_unban_requests(
+        self,
+        *,
+        moderator_id: str | int,
+        token_for: str,
+        status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
+        user_id: str | int | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[UnbanRequest]:
+        """
+        Fetches the unban requests of a broadcaster's channel.
+
+        ??? note
+            Requires a user access token that includes the `moderator:read:unban_requests` or `moderator:manage:unban_requests` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+        token_for: str
+            User access token that includes the `moderator:read:unban_requests` or `moderator:manage:unban_requests` scope.
+        status: Literal["pending", "approved", "denied", "acknowledged", "canceled"]
+            Filter by a status. Possible values are: `pending`, `approved`, `denied`, `acknowledged`, `canceled`
+        user_id: str | int | None
+            An ID used to filter what unban requests are returned.
+        first: int, optional
+            The maximum number of items to return per page in response. Default 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[UnbanRequest]
+            HTTPAsyncIterator of UnbanRequest objects.
+        """
+        first = max(1, min(100, first))
+
+        return await self._http.get_unban_requests(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            status=status,
+            user_id=user_id,
+            first=first,
+        )
+
+    async def resolve_unban_requests(
+        self,
+        *,
+        moderator_id: str | int,
+        token_for: str,
+        status: Literal["approved", "denied"],
+        unban_request_id: str,
+        resolution_text: str | None = None,
+    ) -> UnbanRequest:
+        """
+        Resolves an unban request by approving or denying it.
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:unban_requests` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+        token_for: str
+            User access token that includes the `moderator:manage:unban_requests` scope.
+        status: Literal["approved", "denied"]
+            Resolution status. This is either `approved` or `denied`.
+        unban_request_id: str
+            The ID of the unban request.
+        resolution_text: str | None
+            Message supplied by the unban request resolver. The message is limited to a maximum of 500 characters.
+
+        Returns
+        -------
+        UnbanRequest
+            UnbanRequest object.
+
+        Raises
+        ------
+        ValueError
+            Resolution text must be less than 500 characters.
+        """
+
+        if resolution_text is not None and len(resolution_text) > 500:
+            raise ValueError("Resolution text must be less than 500 characters.")
+
+        from .models.moderation import UnbanRequest
+
+        data = await self._http.patch_unban_requests(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            unban_request_id=unban_request_id,
+            status=status,
+            resolution_text=resolution_text,
+        )
+        return UnbanRequest(data["data"][0], http=self._http)

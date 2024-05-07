@@ -47,7 +47,7 @@ from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
-from .models.moderation import BannedUser
+from .models.moderation import BannedUser, UnbanRequest
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -103,6 +103,7 @@ if TYPE_CHECKING:
         GlobalEmotesResponse,
         HypeTrainEventsResponseData,
         RawResponse,
+        ResolveUnbanRequestsResponse,
         SearchChannelsResponseData,
         SendChatMessageResponse,
         SnoozeNextAdResponse,
@@ -111,6 +112,7 @@ if TYPE_CHECKING:
         StreamsResponseData,
         TeamsResponse,
         TopGamesResponseData,
+        UnbanRequestsResponseData,
         UserChatColorResponse,
         UserEmotesResponseData,
         VideosResponseData,
@@ -1235,6 +1237,47 @@ class HTTPClient:
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "user_id": user_id}
         route: Route = Route("DELETE", "moderation/bans", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_unban_requests(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
+        user_id: str | int | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[UnbanRequest]:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "status": status, "first": first}
+        if user_id is not None:
+            params["user_id"] = user_id
+
+        route: Route = Route("GET", "moderation/unban_requests", params=params, token_for=token_for)
+
+        async def converter(data: UnbanRequestsResponseData) -> UnbanRequest:
+            return UnbanRequest(data, http=self)
+
+        iterator: HTTPAsyncIterator[UnbanRequest] = self.request_paginated(route, converter=converter)
+        return iterator
+
+    async def patch_unban_requests(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        status: Literal["approved", "denied"],
+        unban_request_id: str,
+        resolution_text: str | None = None,
+    ) -> ResolveUnbanRequestsResponse:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "moderator_id": moderator_id,
+            "status": status,
+            "unban_request_id": unban_request_id,
+        }
+        if resolution_text is not None:
+            params["resolution_text"] = resolution_text
+        route: Route = Route("PATCH", "moderation/unban_requests", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Polls ###

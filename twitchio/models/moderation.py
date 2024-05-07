@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
@@ -39,6 +39,8 @@ if TYPE_CHECKING:
         BannedUsersResponseData,
         BanUserResponseData,
         CheckAutomodStatusResponseData,
+        ResolveUnbanRequestsResponseData,
+        UnbanRequestsResponseData,
     )
 
 __all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage", "Ban", "BannedUser", "Timeout")
@@ -275,3 +277,60 @@ class Timeout:
 
     def __repr__(self) -> str:
         return f"<BanEvent user={self.user} created_at={self.created_at} end_time={self.end_time}>"
+
+
+class UnbanRequest:
+    """
+    Represents an unban request.
+
+    Attributes
+    ----------
+    id: str
+        Unban request ID.
+    broadcaster: PartialUser
+        The broadcaster whose channel is receiving the unban request.
+    moderator: PartialUser
+        The moderator who approved/denied the request.
+    user: PartialUser
+        The requestor who is asking for an unban.
+    text: str
+        Text of the request from requesting user.
+    status: Literal["pending", "approved", "denied", "acknowledged", "canceled"]
+        Status of the request. One of: `pending`, `approved`, `denied`, `acknowledged`, `canceled`
+    created_at: datetime.datetime
+        Datetime of when the unban request was created.
+    resolved_at: datetime.datetime | None
+        Datetime of when moderator/broadcaster approved or denied the request.
+    resolution_text: str | None
+        Text input by the resolver (moderator) of the unban request.
+    """
+
+    __slots__ = (
+        "id",
+        "broadcaster",
+        "moderator",
+        "user",
+        "text",
+        "status",
+        "created_at",
+        "resolved_at",
+        "resolution_text",
+    )
+
+    def __init__(self, data: UnbanRequestsResponseData | ResolveUnbanRequestsResponseData, *, http: HTTPClient) -> None:
+        self.id: str = data["id"]
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], data["moderator_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.text: str = data["text"]
+        self.status: Literal["pending", "approved", "denied", "acknowledged", "canceled"] = data["status"]
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.resolved_at: datetime.datetime | None = (
+            parse_timestamp(data["resolved_at"]) if data["resolved_at"] else None
+        )
+        self.resolution_text: str | None = data["resolution_text"] or None
+
+    def __repr__(self) -> str:
+        return (
+            f"<UnbanRequest id={self.id} broadcaster={self.broadcaster} user={self.user} created_at={self.created_at}>"
+        )
