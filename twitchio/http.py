@@ -1381,6 +1381,26 @@ class HTTPClient:
         route: Route = Route("DELETE", "moderation/moderators", params=params, token_for=token_for)
         await self.request_json(route)
 
+    async def get_vips(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[PartialUser]:
+        params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
+
+        if user_ids is not None:
+            params["user_id"] = user_ids
+
+        route: Route = Route("GET", "channels/vips", params=params, token_for=token_for)
+
+        async def converter(data: ModeratorsResponseData) -> PartialUser:
+            return PartialUser(data["user_id"], data["user_login"], http=self)
+
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(route, converter=converter)
+        return iterator
+
     ### Polls ###
 
     ### Predictions ###

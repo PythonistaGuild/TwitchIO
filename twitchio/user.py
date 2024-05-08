@@ -1835,7 +1835,8 @@ class PartialUser:
         Parameters
         ----------
         moderator_id: str | int
-            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room. This ID must match the user ID in the user access token.
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
         token_for: str
             User access token that includes the `moderator:manage:chat_messages` scope.
         message_id: str
@@ -1863,11 +1864,13 @@ class PartialUser:
 
         ??? note
            Requires a user access token that includes the `user:read:moderated_channels` scope.
+           The user ID in the access token must match the broadcaster's ID.
 
         Parameters
         ----------
         token_for: str
             User access token that includes the `user:read:moderated_channels` scope.
+            The user ID in the access token must match the broadcaster's ID.
         first : int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
@@ -1886,17 +1889,19 @@ class PartialUser:
         Fetches users allowed to moderate the broadcaster's chat room.
 
         ??? note
-           Requires a user access token that includes the `moderation:read ` scope.
+           Requires a user access token that includes the `moderation:read` scope.
            If your app also adds and removes moderators, you can use the `channel:manage:moderators` scope instead.
+           The user ID in the access token must match the broadcaster's ID.
 
         Parameters
         ----------
         user_ids: list[str | int] | None
             A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each moderator you want to get.
-            The returned list includes only the users from the list who are moderators in the broadcaster's channel.
+            The returned list includes only the users from the list who are moderators in the broadcaster's channel. You may specify a maximum of 100 IDs.
         token_for: str
             User access token that includes the `moderation:read` scope.
             If your app also adds and removes moderators, you can use the `channel:manage:moderators scope` instead.
+            The user ID in the access token must match the broadcaster's ID.
         first : int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
@@ -1904,8 +1909,18 @@ class PartialUser:
         -------
         HTTPAsyncIterator[PartialUser]
             HTTPAsyncIterator of PartialUser objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 100 user IDs.
+
         """
         first = max(1, min(100, first))
+
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only specify a maximum of 100 user IDs.")
+
         return await self._http.get_moderators(
             broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for
         )
@@ -1925,6 +1940,7 @@ class PartialUser:
             The ID of the user to add as a moderator in the broadcaster's chat room.
         token_for: str
             User access token that includes the ``channel:manage:moderators` scope.
+            The user ID in the access token must match the broadcaster's ID.
         """
 
         return await self._http.post_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
@@ -1937,6 +1953,7 @@ class PartialUser:
 
         ??? note
            Requires a user access token that includes the `channel:manage:moderators` scope.
+           The user ID in the access token must match the broadcaster's ID.
 
         Parameters
         ----------
@@ -1944,6 +1961,47 @@ class PartialUser:
             The ID of the user to remove as a moderator in the broadcaster's chat room.
         token_for: str
             User access token that includes the ``channel:manage:moderators` scope.
+            The user ID in the access token must match the broadcaster's ID.
         """
 
         return await self._http.delete_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
+
+    async def fetch_vips(
+        self, *, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[PartialUser]:
+        """
+        Fetches the broadcaster's VIPs.
+
+        ??? note
+           Requires a user access token that includes the `channel:read:vips` scope.
+           If your app also adds and removes moderators, you can use the `channel:manage:vips` scope instead.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        user_ids: list[str | int] | None
+            Filters the list for specific VIPs. You may specify a maximum of 100 IDs.
+        token_for: str
+            User access token that includes the `channel:read:vips` scope.
+            If your app also adds and removes moderators, you can use the `channel:manage:vips` scope instead.
+            The user ID in the access token must match the broadcaster's ID.
+        first : int
+           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 100 user IDs.
+
+        """
+        first = max(1, min(100, first))
+
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only specify a maximum of 100 user IDs.")
+
+        return await self._http.get_vips(broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for)
