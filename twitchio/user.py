@@ -1856,3 +1856,17 @@ class PartialUser:
             token_for=token_for,
             message_id=message_id,
         )
+
+    async def fetch_moderated_channels(self, *, token_for: str, first: int = 20) -> HTTPAsyncIterator[PartialUser]:
+        """
+        Fetches channels that the specified user has moderator privileges in.
+
+        ??? note
+           Requires a user access token that includes the `user:read:moderated_channels` scope.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `user:read:moderated_channels` scope.
+        """
+        return await self._http.get_moderated_channels(user_id=self.id, first=first, token_for=token_for)

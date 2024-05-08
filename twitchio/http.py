@@ -104,6 +104,7 @@ if TYPE_CHECKING:
         GlobalChatBadgesResponse,
         GlobalEmotesResponse,
         HypeTrainEventsResponseData,
+        ModeratedChannelsResponseData,
         RawResponse,
         ResolveUnbanRequestsResponse,
         SearchChannelsResponseData,
@@ -1322,6 +1323,22 @@ class HTTPClient:
             params["message_id"] = message_id
         route: Route = Route("DELETE", "moderation/chat", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    async def get_moderated_channels(
+        self,
+        user_id: str | int,
+        token_for: str,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[PartialUser]:
+        params = {"user_id": user_id, "first": first}
+
+        route: Route = Route("GET", "moderation/channels", params=params, token_for=token_for)
+
+        async def converter(data: ModeratedChannelsResponseData) -> PartialUser:
+            return PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=self)
+
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Polls ###
 
