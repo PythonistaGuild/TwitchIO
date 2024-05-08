@@ -1270,7 +1270,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | None, optional
+        token_for: str | None
             An optional user token to use instead of the default app token.
         Returns
         -------
@@ -1713,7 +1713,7 @@ class PartialUser:
             This ID must match the user ID in the user access token.
         token_for : str
             User access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
-        first : int, optional
+        first : int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
@@ -1868,5 +1868,34 @@ class PartialUser:
         ----------
         token_for: str
             User access token that includes the `user:read:moderated_channels` scope.
+        first : int
+           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         """
+        first = max(1, min(100, first))
         return await self._http.get_moderated_channels(user_id=self.id, first=first, token_for=token_for)
+
+    async def fetch_moderators(
+        self, *, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[PartialUser]:
+        """
+        Fetches users allowed to moderate the broadcaster's chat room.
+
+        ??? note
+           Requires a user access token that includes the `moderation:read ` scope.
+           If your app also adds and removes moderators, you can use the `channel:manage:moderators` scope instead.
+
+        Parameters
+        ----------
+        user_ids: list[str | int] | None
+            A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each moderator you want to get.
+            The returned list includes only the users from the list who are moderators in the broadcaster's channel.
+        token_for: str
+            User access token that includes the `moderation:read` scope.
+            If your app also adds and removes moderators, you can use the `channel:manage:moderators scope` instead.
+        first : int
+           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        """
+        first = max(1, min(100, first))
+        return await self._http.get_moderators(
+            broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for
+        )
