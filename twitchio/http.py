@@ -1361,6 +1361,16 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(route, converter=converter)
         return iterator
 
+    async def post_channel_moderator(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+        route: Route = Route("POST", "moderation/moderators", params=params, token_for=token_for)
+        await self.request_json(route)
+
     ### Polls ###
 
     ### Predictions ###

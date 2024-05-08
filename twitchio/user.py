@@ -1870,6 +1870,11 @@ class PartialUser:
             User access token that includes the `user:read:moderated_channels` scope.
         first : int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
         """
         first = max(1, min(100, first))
         return await self._http.get_moderated_channels(user_id=self.id, first=first, token_for=token_for)
@@ -1894,8 +1899,30 @@ class PartialUser:
             If your app also adds and removes moderators, you can use the `channel:manage:moderators scope` instead.
         first : int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
         """
         first = max(1, min(100, first))
         return await self._http.get_moderators(
             broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for
         )
+
+    async def add_moderator(self, *, token_for: str, user_id: str | int) -> None:
+        """
+        Adds a moderator to the broadcaster's chat room.
+
+        ??? note
+           Requires a user access token that includes the `channel:manage:moderators` scope.
+
+        Parameters
+        ----------
+        user_id: str | int
+            The ID of the user to add as a moderator in the broadcaster's chat room.
+        token_for: str
+            User access token that includes the ``channel:manage:moderators` scope.
+        """
+
+        return await self._http.post_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
