@@ -1401,6 +1401,16 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(route, converter=converter)
         return iterator
 
+    async def delete_vip(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+        route: Route = Route("DELETE", "channels/vips", params=params, token_for=token_for)
+        await self.request_json(route)
+
     ### Polls ###
 
     ### Predictions ###

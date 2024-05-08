@@ -1939,7 +1939,7 @@ class PartialUser:
         user_id: str | int
             The ID of the user to add as a moderator in the broadcaster's chat room.
         token_for: str
-            User access token that includes the ``channel:manage:moderators` scope.
+            User access token that includes the `channel:manage:moderators` scope.
             The user ID in the access token must match the broadcaster's ID.
         """
 
@@ -1960,7 +1960,7 @@ class PartialUser:
         user_id: str | int
             The ID of the user to remove as a moderator in the broadcaster's chat room.
         token_for: str
-            User access token that includes the ``channel:manage:moderators` scope.
+            User access token that includes the `channel:manage:moderators` scope.
             The user ID in the access token must match the broadcaster's ID.
         """
 
@@ -2005,3 +2005,24 @@ class PartialUser:
             raise ValueError("You may only specify a maximum of 100 user IDs.")
 
         return await self._http.get_vips(broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for)
+
+    async def remove_vip(self, *, token_for: str, user_id: str | int) -> None:
+        """
+        Removes a VIP to the broadcaster's chat room.
+
+        `Rate Limits`: The broadcaster may remove a maximum of 10 VIPs within a 10-second window.
+
+        ??? note
+           Requires a user access token that includes the `channel:manage:vips` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        user_id: str | int
+            The ID of the user to remove as a VIP in the broadcaster's chat room.
+        token_for: str
+            User access token that includes the `channel:manage:vips` scope.
+            The user ID in the access token must match the broadcaster's ID.
+        """
+
+        return await self._http.delete_vip(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
