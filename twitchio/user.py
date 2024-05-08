@@ -1914,6 +1914,8 @@ class PartialUser:
         """
         Adds a moderator to the broadcaster's chat room.
 
+        `Rate Limits`: The broadcaster may add a maximum of 10 moderators within a 10-second window.
+
         ??? note
            Requires a user access token that includes the `channel:manage:moderators` scope.
 
@@ -1926,3 +1928,22 @@ class PartialUser:
         """
 
         return await self._http.post_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
+
+    async def remove_moderator(self, *, token_for: str, user_id: str | int) -> None:
+        """
+        Removes a moderator to the broadcaster's chat room.
+
+        `Rate Limits`: The broadcaster may remove a maximum of 10 moderators within a 10-second window.
+
+        ??? note
+           Requires a user access token that includes the `channel:manage:moderators` scope.
+
+        Parameters
+        ----------
+        user_id: str | int
+            The ID of the user to remove as a moderator in the broadcaster's chat room.
+        token_for: str
+            User access token that includes the ``channel:manage:moderators` scope.
+        """
+
+        return await self._http.delete_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
