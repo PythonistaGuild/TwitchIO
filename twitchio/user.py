@@ -2049,6 +2049,37 @@ class PartialUser:
 
         return await self._http.delete_vip(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
 
+    async def update_shield_mode_status(
+        self, *, moderator_id: str | int, active: bool, token_for: str
+    ) -> ShieldModeStatus:
+        """
+        Activates or deactivates  the broadcaster's Shield Mode.
+
+        ??? note
+           Requires a user access token that includes the `moderator:manage:shield_mode` scope.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the broadcaster or a user that is one of the broadcaster's moderators.
+            This ID must match the user ID in the access token.
+        active: bool
+            A Boolean value that determines whether to activate Shield Mode.
+            Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
+        token_for: str
+            User access token that includes the `moderator:manage:shield_mode` scope.
+        """
+
+        from .models.moderation import ShieldModeStatus
+
+        data = await self._http.put_shield_mode_status(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            active=active,
+        )
+        return ShieldModeStatus(data["data"][0], http=self._http)
+
     async def fetch_shield_mode_status(self, *, moderator_id: str | int, token_for: str) -> ShieldModeStatus:
         """
         Fetches the broadcaster's Shield Mode activation status.

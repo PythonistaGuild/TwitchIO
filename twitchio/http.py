@@ -1422,6 +1422,18 @@ class HTTPClient:
         route: Route = Route("DELETE", "channels/vips", params=params, token_for=token_for)
         return await self.request_json(route)
 
+    async def put_shield_mode_status(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        active: bool,
+    ) -> ShieldModeStatusResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"is_active": active}
+        route: Route = Route("PUT", "moderation/shield_mode", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
     async def get_shield_mode_status(
         self, broadcaster_id: str | int, moderator_id: str | int, token_for: str
     ) -> ShieldModeStatusResponse:
