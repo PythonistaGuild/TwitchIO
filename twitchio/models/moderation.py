@@ -41,10 +41,20 @@ if TYPE_CHECKING:
         BlockedTermsResponseData,
         CheckAutomodStatusResponseData,
         ResolveUnbanRequestsResponseData,
+        ShieldModeStatusResponseData,
         UnbanRequestsResponseData,
     )
 
-__all__ = ("AutomodSettings", "AutoModStatus", "AutomodCheckMessage", "Ban", "BannedUser", "BlockedTerm", "Timeout")
+__all__ = (
+    "AutomodSettings",
+    "AutoModStatus",
+    "AutomodCheckMessage",
+    "Ban",
+    "BannedUser",
+    "BlockedTerm",
+    "ShieldModeStatus",
+    "Timeout",
+)
 
 
 class AutoModStatus:
@@ -370,3 +380,15 @@ class BlockedTerm:
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
         self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
         self.expires_at: datetime.datetime | None = parse_timestamp(data["expires_at"]) if data["expires_at"] else None
+
+
+class ShieldModeStatus:
+    __slots__ = ("active", "moderator", "last_activated_at")
+
+    def __init__(self, data: ShieldModeStatusResponseData, *, http: HTTPClient) -> None:
+        self.active: bool = bool(data["is_active"])
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], data["moderator_login"], http=http)
+        self.last_activated_at: datetime.datetime = parse_timestamp(data["last_activated_at"])
+
+    def __repr__(self) -> str:
+        return f"<ShieldModeStatus active={self.active} moderator={self.moderator} last_activated_at={self.last_activated_at}>"

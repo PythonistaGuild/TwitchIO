@@ -110,6 +110,7 @@ if TYPE_CHECKING:
         ResolveUnbanRequestsResponse,
         SearchChannelsResponseData,
         SendChatMessageResponse,
+        ShieldModeStatusResponse,
         SnoozeNextAdResponse,
         StartARaidResponse,
         StartCommercialResponse,
@@ -1369,7 +1370,7 @@ class HTTPClient:
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
         route: Route = Route("POST", "moderation/moderators", params=params, token_for=token_for)
-        await self.request_json(route)
+        return await self.request_json(route)
 
     async def delete_channel_moderator(
         self,
@@ -1379,7 +1380,7 @@ class HTTPClient:
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
         route: Route = Route("DELETE", "moderation/moderators", params=params, token_for=token_for)
-        await self.request_json(route)
+        return await self.request_json(route)
 
     async def get_vips(
         self,
@@ -1409,7 +1410,7 @@ class HTTPClient:
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
         route: Route = Route("POST", "channels/vips", params=params, token_for=token_for)
-        await self.request_json(route)
+        return await self.request_json(route)
 
     async def delete_vip(
         self,
@@ -1419,7 +1420,14 @@ class HTTPClient:
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
         route: Route = Route("DELETE", "channels/vips", params=params, token_for=token_for)
-        await self.request_json(route)
+        return await self.request_json(route)
+
+    async def get_shield_mode_status(
+        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str
+    ) -> ShieldModeStatusResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        route: Route = Route("GET", "moderation/shield_mode", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Polls ###
 
