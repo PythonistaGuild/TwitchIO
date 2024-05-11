@@ -107,6 +107,7 @@ if TYPE_CHECKING:
         HypeTrainEventsResponseData,
         ModeratedChannelsResponseData,
         ModeratorsResponseData,
+        PollsResponse,
         PollsResponseData,
         RawResponse,
         ResolveUnbanRequestsResponse,
@@ -1464,6 +1465,29 @@ class HTTPClient:
 
         iterator: HTTPAsyncIterator[Poll] = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def post_poll(
+        self,
+        broadcaster_id: str | int,
+        title: str,
+        choices: list[str],
+        duration: int,
+        token_for: str,
+        channel_points_voting_enabled: bool = False,
+        channel_points_per_vote: int | None = None,
+    ) -> PollsResponse:
+        _choices = [{"title": t} for t in choices]
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "choices": _choices,
+            "duration": duration,
+            "channel_points_voting_enabled": channel_points_voting_enabled,
+        }
+        if channel_points_per_vote is not None:
+            data["channel_points_per_vote"] = channel_points_per_vote
+        route: Route = Route("POST", "polls", json=data, token_for=token_for)
+        return await self.request_json(route)
 
     ### Predictions ###
 

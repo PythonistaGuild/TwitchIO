@@ -1710,12 +1710,12 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id : str | int
+        moderator_id: str | int
             The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
-        token_for : str
+        token_for: str
             User access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
-        first : int
+        first: int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
@@ -1873,7 +1873,7 @@ class PartialUser:
         token_for: str
             User access token that includes the `user:read:moderated_channels` scope.
             The user ID in the access token must match the broadcaster's ID.
-        first : int
+        first: int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
@@ -1904,7 +1904,7 @@ class PartialUser:
             User access token that includes the `moderation:read` scope.
             If your app also adds and removes moderators, you can use the `channel:manage:moderators scope` instead.
             The user ID in the access token must match the broadcaster's ID.
-        first : int
+        first: int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
@@ -1987,7 +1987,7 @@ class PartialUser:
             User access token that includes the `channel:read:vips` scope.
             If your app also adds and removes moderators, you can use the `channel:manage:vips` scope instead.
             The user ID in the access token must match the broadcaster's ID.
-        first : int
+        first: int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
@@ -2122,7 +2122,7 @@ class PartialUser:
         token_for: str
             User access token that includes the `channel:read:polls` or `channel:manage:polls` scope.
             The user ID in the access token must match the broadcaster's ID.
-        first : int
+        first: int
            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 20 items per page. The default is 20.
 
         Returns
@@ -2142,3 +2142,81 @@ class PartialUser:
             raise ValueError("You may only specify a maximum of 20 IDs.")
 
         return await self._http.get_polls(broadcaster_id=self.id, ids=ids, first=first, token_for=token_for)
+
+    async def create_poll(
+        self,
+        *,
+        title: str,
+        choices: list[str],
+        duration: int,
+        token_for: str,
+        channel_points_voting_enabled: bool = False,
+        channel_points_per_vote: int | None = None,
+    ) -> Poll:
+        """
+        Creates a poll that viewers in the broadcaster's channel can vote on.
+
+        The poll begins as soon as it's created. You may run only one poll at a time.
+
+        ??? note
+            Requires a user access token that includes the `channel:manage:polls` scope.
+
+        Parameters
+        ----------
+        title: str
+            The question that viewers will vote on.
+            The question may contain a maximum of 60 characters.
+        choices: list[str]
+            A list of choice titles that viewers may choose from.
+            The list must contain a minimum of 2 choices and up to a maximum of 5 choices.
+            The title itself can only have a maximum of 25 characters.
+        duration: int
+            The length of time (in seconds) that the poll will run for.
+            The minimum is 15 seconds and the maximum is 1800 seconds (30 minutes).
+        token_for: str
+            User access token that includes the `channel:manage:polls` scope.
+        channel_points_voting_enabled: bool
+            A Boolean value that indicates whether viewers may cast additional votes using Channel Points.
+            If True, the viewer may cast more than one vote but each additional vote costs the number of Channel Points specified in `channel_points_per_vote`. The default is False
+        channel_points_per_vote: int | None
+            The number of points that the viewer must spend to cast one additional vote. The minimum is 1 and the maximum is 1000000.
+            Only use this if `channel_points_voting_enabled` is True; otherwise it is ignored.
+
+        Returns
+        -------
+        Poll
+            A Poll object.
+
+        Raises
+        ------
+        ValueError
+            You must provide a minimum of 2 choices or a maximum of 5.
+        ValueError
+            Choice title may contain a maximum of 25 characters.
+        ValueError
+            Duration must be between 15 and 1800.
+        ValueError
+            Channel points per vote must be between 1 and 1000000.
+        """
+        data = await self._http.post_poll(
+            broadcaster_id=self.id,
+            title=title,
+            choices=choices,
+            duration=duration,
+            token_for=token_for,
+            channel_points_voting_enabled=channel_points_voting_enabled,
+            channel_points_per_vote=channel_points_per_vote,
+        )
+
+        if len(choices) < 2 or len(choices) > 5:
+            raise ValueError("You must provide a minimum of 2 choices or a maximum of 5.")
+        if any(len(title) > 25 for title in choices):
+            raise ValueError("Choice title may contain a maximum of 25 characters.")
+        if duration < 15 or duration > 1800:
+            raise ValueError("Duration must be between 15 and 1800.")
+        if channel_points_per_vote is not None and (channel_points_per_vote < 1 or channel_points_per_vote > 1000000):
+            raise ValueError("Channel points per vote must be between 1 and 1000000.")
+
+        from .models.polls import Poll
+
+        return Poll(data["data"][0], http=self._http)
