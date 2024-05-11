@@ -1716,7 +1716,7 @@ class PartialUser:
         token_for: str
             User access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
         first: int
-           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
         -------
@@ -1874,7 +1874,7 @@ class PartialUser:
             User access token that includes the `user:read:moderated_channels` scope.
             The user ID in the access token must match the broadcaster's ID.
         first: int
-           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
         -------
@@ -1905,7 +1905,7 @@ class PartialUser:
             If your app also adds and removes moderators, you can use the `channel:manage:moderators scope` instead.
             The user ID in the access token must match the broadcaster's ID.
         first: int
-           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
         -------
@@ -1988,7 +1988,7 @@ class PartialUser:
             If your app also adds and removes moderators, you can use the `channel:manage:vips` scope instead.
             The user ID in the access token must match the broadcaster's ID.
         first: int
-           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
 
         Returns
         -------
@@ -2123,7 +2123,7 @@ class PartialUser:
             User access token that includes the `channel:read:polls` or `channel:manage:polls` scope.
             The user ID in the access token must match the broadcaster's ID.
         first: int
-           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 20 items per page. The default is 20.
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 20 items per page. The default is 20.
 
         Returns
         -------
@@ -2219,4 +2219,30 @@ class PartialUser:
 
         from .models.polls import Poll
 
+        return Poll(data["data"][0], http=self._http)
+
+    async def end_poll(self, *, id: str, token_for: str, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
+        """
+        End an active poll.
+
+        ??? tip
+            You can also call this method directly on a Poll object with [`end_poll`][twitchio.models.polls.Poll.end_poll]
+
+        Parameters
+        ----------
+        id: str
+            The ID of the poll to end.
+        status  Literal["ARCHIVED", "TERMINATED"]
+            The status to set the poll to. Possible case-sensitive values are: "ARCHIVED" and "TERMINATED".
+        token_for: str
+            User access token that includes the `channel:manage:polls` scope.
+
+        Returns
+        -------
+        Poll
+            A Poll object.
+        """
+        from .models.polls import Poll
+
+        data = await self._http.patch_poll(broadcaster_id=self.id, id=id, status=status, token_for=token_for)
         return Poll(data["data"][0], http=self._http)

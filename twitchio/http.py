@@ -1489,6 +1489,17 @@ class HTTPClient:
         route: Route = Route("POST", "polls", json=data, token_for=token_for)
         return await self.request_json(route)
 
+    async def patch_poll(
+        self, broadcaster_id: str | int, id: str, status: Literal["ARCHIVED", "TERMINATED"], token_for: str
+    ) -> PollsResponse:
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "id": id,
+            "status": status,
+        }
+        route: Route = Route("PATCH", "polls", json=data, token_for=token_for)
+        return await self.request_json(route)
+
     ### Predictions ###
 
     ### Raids ###

@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from twitchio.http import HTTPClient
     from twitchio.types_.responses import PollsResponseChoices, PollsResponseData
 
-__all__ = ("Poll",)
+__all__ = ("Poll", "PollChoice")
 
 
 class Poll:
@@ -68,6 +68,7 @@ class Poll:
     """
 
     __slots__ = (
+        "_http",
         "id",
         "broadcaster",
         "title",
@@ -81,6 +82,7 @@ class Poll:
     )
 
     def __init__(self, data: PollsResponseData, *, http: HTTPClient) -> None:
+        self._http = http
         self.id: str = data["id"]
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
         self.title: str = data["title"]
@@ -95,6 +97,27 @@ class Poll:
 
     def __repr__(self) -> str:
         return f"<Poll id={self.id} title={self.title} status={self.status} started_at={self.started_at}>"
+
+    async def end_poll(self, *, status: Literal["ARCHIVED", "TERMINATED"], token_for: str) -> Poll:
+        """
+        End an active poll.
+
+        Parameters
+        ----------
+        status  Literal["ARCHIVED", "TERMINATED"]
+            The status to set the poll to. Possible case-sensitive values are: "ARCHIVED" and "TERMINATED".
+        token_for: str
+            User access token that includes the `channel:manage:polls` scope.
+
+        Returns
+        -------
+        Poll
+            A Poll object.
+        """
+        data = await self._http.patch_poll(
+            broadcaster_id=self.broadcaster.id, id=self.id, status=status, token_for=token_for
+        )
+        return Poll(data["data"][0], http=self._http)
 
 
 class PollChoice:
