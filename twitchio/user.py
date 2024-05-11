@@ -55,6 +55,7 @@ if TYPE_CHECKING:
         UnbanRequest,
     )
     from .models.polls import Poll
+    from .models.predictions import Prediction
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -2112,13 +2113,12 @@ class PartialUser:
 
         ??? note
            Requires a user access token that includes the `channel:read:polls` or `channel:manage:polls` scope.
-           If your app also adds and removes moderators, you can use the `channel:manage:vips` scope instead.
            The user ID in the access token must match the broadcaster's ID.
 
         Parameters
         ----------
         ids: list[str] | None
-            Filters the list for specific VIPs. You may specify a maximum of 100 IDs.
+            A list of IDs that identify the polls to return. You may specify a maximum of 20 IDs.
         token_for: str
             User access token that includes the `channel:read:polls` or `channel:manage:polls` scope.
             The user ID in the access token must match the broadcaster's ID.
@@ -2128,7 +2128,7 @@ class PartialUser:
         Returns
         -------
         HTTPAsyncIterator[Poll]
-            HTTPAsyncIterator of PartialUser objects.
+            HTTPAsyncIterator of Poll objects.
 
         Raises
         ------
@@ -2246,3 +2246,41 @@ class PartialUser:
 
         data = await self._http.patch_poll(broadcaster_id=self.id, id=id, status=status, token_for=token_for)
         return Poll(data["data"][0], http=self._http)
+
+    async def fetch_predictions(
+        self, *, token_for: str, ids: list[str] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[Prediction]:
+        """
+        Fetches predictions that the broadcaster created.
+
+        ??? note
+           Requires a user access token that includes the `channel:read:predictions` or `channel:manage:predictions` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            A list of IDs that identify the predictions to return. You may specify a maximum of 20 IDs.
+        token_for: str
+            User access token that includes the `channel:read:predictions` or `channel:manage:predictions` scope.
+            The user ID in the access token must match the broadcaster's ID.
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 25 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Prediction]
+            HTTPAsyncIterator of Prediction objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 25 IDs.
+
+        """
+        first = max(1, min(25, first))
+
+        if ids is not None and len(ids) > 20:
+            raise ValueError("You may only specify a maximum of 25 IDs.")
+
+        return await self._http.get_predictions(broadcaster_id=self.id, ids=ids, first=first, token_for=token_for)

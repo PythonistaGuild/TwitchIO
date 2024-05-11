@@ -49,6 +49,7 @@ from .models.games import Game
 from .models.hype_train import HypeTrainEvent
 from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
 from .models.polls import Poll
+from .models.predictions import Prediction
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -109,6 +110,7 @@ if TYPE_CHECKING:
         ModeratorsResponseData,
         PollsResponse,
         PollsResponseData,
+        PredictionsResponseData,
         RawResponse,
         ResolveUnbanRequestsResponse,
         SearchChannelsResponseData,
@@ -1501,6 +1503,22 @@ class HTTPClient:
         return await self.request_json(route)
 
     ### Predictions ###
+
+    async def get_predictions(
+        self, broadcaster_id: str | int, token_for: str, ids: list[str] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[Prediction]:
+        params: dict[str, str | int | list[str]] = {"broadcaster_id": broadcaster_id, "first": first}
+
+        if ids is not None:
+            params["id"] = ids
+
+        route: Route = Route("GET", "predictions", params=params, token_for=token_for)
+
+        async def converter(data: PredictionsResponseData) -> Prediction:
+            return Prediction(data, http=self)
+
+        iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Raids ###
 

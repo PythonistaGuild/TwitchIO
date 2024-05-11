@@ -1279,7 +1279,7 @@ class PredictionsResponseData(TypedDict):
     broadcaster_login: str
     title: str
     winning_outcome_id: str | None
-    outcomes: list[PredictionsResponseOutcomes] | None
+    outcomes: list[PredictionsResponseOutcomes]
     prediction_window: int
     status: Literal["ACTIVE", "CANCELED", "LOCKED", "RESOLVED"]
     created_at: str
