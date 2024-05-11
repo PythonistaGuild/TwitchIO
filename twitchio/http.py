@@ -48,6 +48,7 @@ from .models.clips import Clip
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
 from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
+from .models.polls import Poll
 from .models.search import SearchChannel
 from .models.streams import Stream
 from .models.videos import Video
@@ -106,6 +107,7 @@ if TYPE_CHECKING:
         HypeTrainEventsResponseData,
         ModeratedChannelsResponseData,
         ModeratorsResponseData,
+        PollsResponseData,
         RawResponse,
         ResolveUnbanRequestsResponse,
         SearchChannelsResponseData,
@@ -1442,6 +1444,26 @@ class HTTPClient:
         return await self.request_json(route)
 
     ### Polls ###
+
+    async def get_polls(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[Poll]:
+        params: dict[str, str | int | list[str]] = {"broadcaster_id": broadcaster_id, "first": first}
+
+        if ids is not None:
+            params["id"] = ids
+
+        route: Route = Route("GET", "polls", params=params, token_for=token_for)
+
+        async def converter(data: PollsResponseData) -> Poll:
+            return Poll(data, http=self)
+
+        iterator: HTTPAsyncIterator[Poll] = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Predictions ###
 

@@ -36,6 +36,7 @@ from .goals import *
 from .guest_star import *
 from .hype_train import *
 from .moderation import *
+from .polls import *
 from .raids import *
 from .search import *
 from .streams import *

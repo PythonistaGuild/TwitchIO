@@ -54,6 +54,7 @@ if TYPE_CHECKING:
         Timeout,
         UnbanRequest,
     )
+    from .models.polls import Poll
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -2102,3 +2103,42 @@ class PartialUser:
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
         )
         return ShieldModeStatus(data["data"][0], http=self._http)
+
+    async def fetch_polls(
+        self, *, token_for: str, ids: list[str] | None = None, first: int = 20
+    ) -> HTTPAsyncIterator[Poll]:
+        """
+        Fetches polls that the broadcaster created.
+
+        ??? note
+           Requires a user access token that includes the `channel:read:polls` or `channel:manage:polls` scope.
+           If your app also adds and removes moderators, you can use the `channel:manage:vips` scope instead.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            Filters the list for specific VIPs. You may specify a maximum of 100 IDs.
+        token_for: str
+            User access token that includes the `channel:read:polls` or `channel:manage:polls` scope.
+            The user ID in the access token must match the broadcaster's ID.
+        first : int
+           The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 20 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Poll]
+            HTTPAsyncIterator of PartialUser objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 20 IDs.
+
+        """
+        first = max(1, min(20, first))
+
+        if ids is not None and len(ids) > 20:
+            raise ValueError("You may only specify a maximum of 20 IDs.")
+
+        return await self._http.get_polls(broadcaster_id=self.id, ids=ids, first=first, token_for=token_for)
