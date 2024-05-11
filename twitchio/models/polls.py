@@ -43,6 +43,16 @@ class Poll:
     """
     Represents a Poll
 
+
+    | Status      | Description |
+    | ----------- | ----------- |
+    | ACTIVE      | The poll is running.   |
+    | COMPLETED   | The poll ended on schedule.    |
+    | TERMINATED  | The poll was terminated before its scheduled end.    |
+    | ARCHIVED    | The poll has been archived and is no longer visible on the channel.   |
+    | MODERATED   | The poll was deleted.   |
+    | INVALID     | Something went wrong while determining the state.   |
+
     Attributes
     ----------
     id: str

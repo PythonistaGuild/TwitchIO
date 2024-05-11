@@ -2111,6 +2111,9 @@ class PartialUser:
         """
         Fetches polls that the broadcaster created.
 
+        !!! info
+            Polls are available for 90 days after they're created.
+
         ??? note
            Requires a user access token that includes the `channel:read:polls` or `channel:manage:polls` scope.
            The user ID in the access token must match the broadcaster's ID.
@@ -2227,7 +2230,13 @@ class PartialUser:
 
     async def end_poll(self, *, id: str, token_for: str, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
         """
-        End an active poll.
+        End an active poll. You have the option to end it or end it and archive it.
+
+        !!! info
+            Status must be set to one of the below.
+
+            - TERMINATED — Ends the poll before the poll is scheduled to end. The poll remains publicly visible.
+            - ARCHIVED — Ends the poll before the poll is scheduled to end, and then archives it so it's no longer publicly visible.
 
         ??? tip
             You can also call this method directly on a Poll object with [`end_poll`][twitchio.models.polls.Poll.end_poll]
@@ -2256,6 +2265,9 @@ class PartialUser:
     ) -> HTTPAsyncIterator[Prediction]:
         """
         Fetches predictions that the broadcaster created.
+
+        !!! info
+            If the number of outcomes is two, the color is BLUE for the first outcome and PINK for the second outcome. If there are more than two outcomes, the color is BLUE for all outcomes.
 
         ??? note
            Requires a user access token that includes the `channel:read:predictions` or `channel:manage:predictions` scope.
@@ -2300,7 +2312,7 @@ class PartialUser:
         """
         Creates a prediction that viewers in the broadcaster's channel can vote on.
 
-        The prediction begins as soon as it's created. You may run only one poll at a time.
+        The prediction begins as soon as it's created. You may run only one prediction at a time.
 
         ??? note
             Requires a user access token that includes the `channel:manage:predictions` scope.
@@ -2365,6 +2377,19 @@ class PartialUser:
     ) -> Prediction:
         """
         End an active prediction.
+
+        !!! info
+            The status to set the prediction to. Possible case-sensitive values are:
+
+            - RESOLVED — The winning outcome is determined and the Channel Points are distributed to the viewers who predicted the correct outcome.
+            - CANCELED — The broadcaster is canceling the prediction and sending refunds to the participants.
+            - LOCKED — The broadcaster is locking the prediction, which means viewers may no longer make predictions.
+
+            The broadcaster can update an active prediction to LOCKED, RESOLVED, or CANCELED; and update a locked prediction to RESOLVED or CANCELED.
+
+            The broadcaster has up to 24 hours after the prediction window closes to resolve the prediction. If not, Twitch sets the status to CANCELED and returns the points.
+
+            A winning_outcome_id must be provided when setting to RESOLVED>
 
         ??? tip
             You can also call this method directly on a Prediction object with [`end_poll`][twitchio.models.predictions.Prediction.end_prediction]

@@ -47,6 +47,14 @@ class Prediction:
     """
     Represents a Prediction
 
+    | Status      | Description |
+    | ----------- | ----------- |
+    | ACTIVE      | The Prediction is running and viewers can make predictions.   |
+    | CANCELED    | The broadcaster canceled the Prediction and refunded the Channel Points to the participants.  |
+    | LOCKED      | The broadcaster locked the Prediction, which means viewers can no longer make predictions.    |
+    | RESOLVED    | The winning outcome was determined and the Channel Points were distributed to the viewers who predicted the correct outcome.   |
+
+
     Attributes
     ----------
     id: str
