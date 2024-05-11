@@ -2416,3 +2416,24 @@ class PartialUser:
             broadcaster_id=self.id, id=id, status=status, token_for=token_for, winning_outcome_id=winning_outcome_id
         )
         return Prediction(data["data"][0], http=self._http)
+
+    async def fetch_stream_key(self, *, token_for: str) -> str:
+        """
+        Fetches the channel's stream key.
+
+        ??? note
+            Requires a user access token that includes the `channel:read:stream_key` scope
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `channel:read:stream_key` scope.
+            The user ID must match the user ID in the access token.
+
+        Returns
+        -------
+        str
+           The channel's stream key.
+        """
+        data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=token_for)
+        return data["data"][0]["stream_key"]

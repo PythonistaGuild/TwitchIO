@@ -120,6 +120,7 @@ if TYPE_CHECKING:
         SnoozeNextAdResponse,
         StartARaidResponse,
         StartCommercialResponse,
+        StreamKeyResponse,
         StreamsResponseData,
         TeamsResponse,
         TopGamesResponseData,
@@ -1636,6 +1637,11 @@ class HTTPClient:
 
         iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def get_stream_key(self, broadcaster_id: str | int, token_for: str) -> StreamKeyResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("GET", "streams/key", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Subscriptions ###
 
