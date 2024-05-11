@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     )
     from .models.polls import Poll
     from .models.predictions import Prediction
+    from .models.streams import Stream
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -2437,3 +2438,25 @@ class PartialUser:
         """
         data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=token_for)
         return data["data"][0]["stream_key"]
+
+    async def fetch_followed_streams(self, *, token_for: str, first: int = 100) -> HTTPAsyncIterator[Stream]:
+        """
+        Fetches the broadcasters that the user follows and that are streaming live.
+
+        ??? note
+            Requires a user access token that includes the `user:read:follows` scope
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `user:read:follows` scope.
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 100.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Stream]
+            HTTPAsyncIterator of Stream objects.
+        """
+        first = max(1, min(100, first))
+        return await self._http.get_followed_streams(user_id=self.id, token_for=token_for, first=first)

@@ -40,7 +40,7 @@ if TYPE_CHECKING:
         PredictionsResponseTopPredictors,
     )
 
-__all__ = ("Prediction",)
+__all__ = ("Prediction", "PredictionOutcome", "Predictor")
 
 
 class Prediction:

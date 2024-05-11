@@ -1608,7 +1608,7 @@ class HTTPClient:
     async def get_streams(
         self,
         *,
-        first: int,
+        first: int = 20,
         user_ids: list[int | str] | None = None,
         game_ids: list[int | str] | None = None,
         user_logins: list[int | str] | None = None,
@@ -1642,6 +1642,26 @@ class HTTPClient:
         params = {"broadcaster_id": broadcaster_id}
         route: Route = Route("GET", "streams/key", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    async def get_followed_streams(
+        self,
+        *,
+        user_id: str | int,
+        token_for: str,
+        first: int = 100,
+    ) -> HTTPAsyncIterator[Stream]:
+        params = {
+            "user_id": user_id,
+            "first": first,
+        }
+
+        route: Route = Route("GET", "streams/followed", params=params, token_for=token_for)
+
+        async def converter(data: StreamsResponseData) -> Stream:
+            return Stream(data, http=self)
+
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
+        return iterator
 
     ### Subscriptions ###
 
