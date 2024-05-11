@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.search import SearchChannel
-    from .models.streams import Stream
+    from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
     from .types_.options import ClientOptions
     from .types_.responses import ConduitPayload
@@ -918,6 +918,38 @@ class Client:
                 resp.extend(data["data"])
 
         return resp
+
+    async def fetch_stream_markers(
+        self, *, video_id: str, token_for: str, first: int = 20
+    ) -> HTTPAsyncIterator[VideoMarkers]:
+        """
+        Fetches markers from the user's most recent stream or from the specified VOD/video.
+        A marker is an arbitrary point in a live stream that the broadcaster or editor marked, so they can return to that spot later to create video highlights
+
+        !!! info
+            To fetch by user please use [`fetch_stream_markers`][twitchio.user.PartialUser.fetch_stream_markers]
+
+        ??? note
+            Requires a user access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+
+        Parameters
+        ----------
+        video_id: str
+            A video on demand (VOD)/video ID. The request returns the markers from this VOD/video.
+            The user in the access token must own the video or the user must be one of the broadcaster's editors.
+        token_for: str
+            User access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[VideoMarkers]
+            HTTPAsyncIterator of VideoMarkers objects.
+        """
+        first = max(1, min(100, first))
+        return await self._http.get_stream_markers(video_id=video_id, token_for=token_for, first=first)
 
     async def _create_conduit(self, shard_count: int, /) -> list[Conduit]:
         data: ConduitPayload = await self._http.create_conduit(shard_count)

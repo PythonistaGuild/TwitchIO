@@ -51,7 +51,7 @@ from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
 from .models.polls import Poll
 from .models.predictions import Prediction
 from .models.search import SearchChannel
-from .models.streams import Stream
+from .models.streams import Stream, VideoMarkers
 from .models.videos import Video
 from .user import PartialUser
 from .utils import Colour, _from_json  # type: ignore
@@ -91,6 +91,7 @@ if TYPE_CHECKING:
         ConduitPayload,
         ContentClassificationLabelsResponse,
         CreateClipResponse,
+        CreateStreamMarkerResponse,
         CreatorGoalsResponse,
         CustomRewardRedemptionResponse,
         CustomRewardRedemptionResponseData,
@@ -121,6 +122,7 @@ if TYPE_CHECKING:
         StartARaidResponse,
         StartCommercialResponse,
         StreamKeyResponse,
+        StreamMarkersResponseData,
         StreamsResponseData,
         TeamsResponse,
         TopGamesResponseData,
@@ -1663,6 +1665,37 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
         return iterator
 
+    async def post_stream_marker(
+        self, user_id: str | int, token_for: str, description: str | None = None
+    ) -> CreateStreamMarkerResponse:
+        data = {"user_id": user_id}
+        if description is not None:
+            data["description"] = description
+        route: Route = Route("POST", "streams/markers", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_stream_markers(
+        self,
+        *,
+        user_id: str | int | None = None,
+        video_id: str | None = None,
+        token_for: str,
+        first: int = 20,
+    ) -> HTTPAsyncIterator[VideoMarkers]:
+        params: dict[str, str | int] = {"first": first}
+        if user_id is not None:
+            params["user_id"] = user_id
+        if video_id is not None:
+            params["video_id"] = video_id
+
+        route: Route = Route("GET", "streams/markers", params=params, token_for=token_for)
+
+        async def converter(data: StreamMarkersResponseData) -> VideoMarkers:
+            return VideoMarkers(data, http=self)
+
+        iterator: HTTPAsyncIterator[VideoMarkers] = self.request_paginated(route, converter=converter)
+        return iterator
+
     ### Subscriptions ###
 
     ### Tags ###
@@ -1684,7 +1717,6 @@ class HTTPClient:
             params = {"id": team_id}
 
         route: Route = Route("GET", "teams", params=params, token_for=token_for)
-
         return await self.request_json(route)
 
     async def get_channel_teams(
@@ -1694,9 +1726,7 @@ class HTTPClient:
         token_for: str | None = None,
     ) -> ChannelTeamsResponse:
         params = {"broadcaster_id": broadcaster_id}
-
         route: Route = Route("GET", "teams/channel", params=params, token_for=token_for)
-
         return await self.request_json(route)
 
     ### Users ###

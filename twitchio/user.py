@@ -56,7 +56,7 @@ if TYPE_CHECKING:
     )
     from .models.polls import Poll
     from .models.predictions import Prediction
-    from .models.streams import Stream
+    from .models.streams import Stream, StreamMarker, VideoMarkers
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -2460,3 +2460,72 @@ class PartialUser:
         """
         first = max(1, min(100, first))
         return await self._http.get_followed_streams(user_id=self.id, token_for=token_for, first=first)
+
+    async def create_stream_marker(self, *, token_for: str, description: str | None = None) -> StreamMarker:
+        """
+        Adds a marker to a live stream.
+        A marker is an arbitrary point in a live stream that the broadcaster or editor wants to mark, so they can return to that spot later to create video highlights.
+
+        !!! info
+            You may not add markers:
+
+            - If the stream is not live
+            - If the stream has not enabled video on demand (VOD)
+            - If the stream is a premiere (a live, first-viewing event that combines uploaded videos with live chat)
+            - If the stream is a rerun of a past broadcast, including past premieres.
+
+        ??? note
+            Requires a user access token that includes the `channel:manage:broadcast` scope.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `channel:manage:broadcast` scope.
+        description: str | None
+            A short description of the marker to help the user remember why they marked the location.
+            The maximum length of the description is 140 characters.
+
+        Returns
+        -------
+        StreamMarker
+            Represents a StreamMarker
+
+        Raises
+        ------
+        ValueError
+            The maximum length of the description is 140 characters.
+        """
+        if description is not None and len(description) > 140:
+            raise ValueError("The maximum length of the description is 140 characters.")
+
+        from .models.streams import StreamMarker
+
+        data = await self._http.post_stream_marker(user_id=self.id, token_for=token_for, description=description)
+        return StreamMarker(data["data"][0])
+
+    async def fetch_stream_markers(self, *, token_for: str, first: int = 20) -> HTTPAsyncIterator[VideoMarkers]:
+        """
+        Fetches markers from the user's most recent stream or from the specified VOD/video.
+        A marker is an arbitrary point in a live stream that the broadcaster or editor marked, so they can return to that spot later to create video highlights
+
+        !!! info
+            To fetch by video ID please use [`fetch_stream_markers`][twitchio.client.fetch_stream_markers]
+
+        ??? note
+            Requires a user access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+
+        Returns
+        -------
+        HTTPAsyncIterator[VideoMarkers]
+            HTTPAsyncIterator of VideoMarkers objects.
+        """
+        first = max(1, min(100, first))
+        return await self._http.get_stream_markers(user_id=self.id, token_for=token_for, first=first)

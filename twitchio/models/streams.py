@@ -34,11 +34,19 @@ from .games import Game
 
 
 if TYPE_CHECKING:
+    import datetime
+
     from twitchio.http import HTTPClient
-    from twitchio.types_.responses import GamesResponse, StreamsResponseData
+    from twitchio.types_.responses import (
+        CreateStreamMarkerResponseData,
+        GamesResponse,
+        StreamMarkersResponseData,
+        StreamMarkersResponseMarkers,
+        StreamsResponseData,
+    )
 
 
-__all__ = ("Stream",)
+__all__ = ("Stream", "StreamMarker", "VideoMarkers")
 
 
 class Stream:
@@ -122,3 +130,57 @@ class Stream:
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)
+
+
+class StreamMarker:
+    """
+    Represents a stream marker.
+
+    Attributes
+    ----------
+    id: str
+        An ID that identifies the single market you added.
+    created_at: datetime.datetime
+        Datetime of when the user created the stream marker.
+    position: int
+        The relative offset (in seconds) of the marker from the beginning of the stream.
+    url: str | None
+        A URL that opens the video in Twitch Highlighter. This is None on creation but populated when fetched.
+    """
+
+    __slots__ = ("id", "created_at", "description", "position", "url")
+
+    def __init__(self, data: CreateStreamMarkerResponseData | StreamMarkersResponseMarkers) -> None:
+        self.id: str = data["id"]
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.description: str = data["description"]
+        self.position: int = int(data["position_seconds"])
+        self.url: str | None = data.get("url")
+
+    def __repr__(self) -> str:
+        return f"<StreamMarker id={self.id} created_at={self.created_at} position={self.position}>"
+
+
+class VideoMarkers:
+    """
+    Represents stream markers for the latest stream.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user that created the stream marker.
+    video_id: str
+        An ID that identifies this video.
+    markers: list[StreamMarker]
+        The list of markers in this video. The list in ascending order by when the marker was created.
+    """
+
+    __slots__ = ("user", "video_id", "markers")
+
+    def __init__(self, data: StreamMarkersResponseData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.video_id: str = data["videos"][0]["video_id"]
+        self.markers: list[StreamMarker] = [StreamMarker(d) for d in data["videos"][0]["markers"]]
+
+    def __repr__(self) -> str:
+        return f"<VideoMarkers user={self.user} video_id={self.video_id}>"
