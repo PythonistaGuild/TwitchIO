@@ -2190,6 +2190,8 @@ class PartialUser:
         Raises
         ------
         ValueError
+            The question may contain a maximum of 60 characters.
+        ValueError
             You must provide a minimum of 2 choices or a maximum of 5.
         ValueError
             Choice title may contain a maximum of 25 characters.
@@ -2208,6 +2210,8 @@ class PartialUser:
             channel_points_per_vote=channel_points_per_vote,
         )
 
+        if len(title) > 60:
+            raise ValueError("The question may contain a maximum of 60 characters.")
         if len(choices) < 2 or len(choices) > 5:
             raise ValueError("You must provide a minimum of 2 choices or a maximum of 5.")
         if any(len(title) > 25 for title in choices):
@@ -2285,6 +2289,72 @@ class PartialUser:
 
         return await self._http.get_predictions(broadcaster_id=self.id, ids=ids, first=first, token_for=token_for)
 
+    async def create_prediction(
+        self,
+        *,
+        title: str,
+        outcomes: list[str],
+        prediction_window: int,
+        token_for: str,
+    ) -> Prediction:
+        """
+        Creates a prediction that viewers in the broadcaster's channel can vote on.
+
+        The prediction begins as soon as it's created. You may run only one poll at a time.
+
+        ??? note
+            Requires a user access token that includes the `channel:manage:predictions` scope.
+
+        Parameters
+        ----------
+        title: str
+            The question that viewers will vote on.
+            The question may contain a maximum of 45 characters.
+        outcomes: list[str]
+            A list of outcomes titles that viewers may choose from.
+            The list must contain a minimum of 2 outcomes and up to a maximum of 10 outcomes.
+            The title itself can only have a maximum of 25 characters.
+        prediction_window: int
+            The length of time (in seconds) that the prediction will run for.
+            The minimum is 30 seconds and the maximum is 1800 seconds (30 minutes).
+        token_for: str
+            User access token that includes the `channel:manage:predictions` scope.
+
+        Returns
+        -------
+        Prediction
+            A Prediction object.
+
+        Raises
+        ------
+        ValueError
+            The question may contain a maximum of 45 characters.
+        ValueError
+            You must provide a minimum of 2 choices or a maximum of 5.
+        ValueError
+            Choice title may contain a maximum of 25 characters.
+        ValueError
+            Duration must be between 15 and 1800.
+        """
+        data = await self._http.post_prediction(
+            broadcaster_id=self.id,
+            title=title,
+            outcomes=outcomes,
+            prediction_window=prediction_window,
+            token_for=token_for,
+        )
+
+        if len(outcomes) < 2 or len(outcomes) > 10:
+            raise ValueError("You must provide a minimum of 2 choices or a maximum of 10.")
+        if any(len(title) > 25 for title in outcomes):
+            raise ValueError("Choice title may contain a maximum of 25 characters.")
+        if prediction_window < 15 or prediction_window > 1800:
+            raise ValueError("Duration must be between 15 and 1800.")
+
+        from .models.predictions import Prediction
+
+        return Prediction(data["data"][0], http=self._http)
+
     async def end_prediction(
         self,
         *,
@@ -2305,13 +2375,15 @@ class PartialUser:
             The ID of the prediction to end.
         status  Literal["RESOLVED", "CANCELED", "LOCKED"]
             The status to set the prediction to. Possible case-sensitive values are: `RESOLVED` , `CANCELED` and `LOCKED`.
+        winning_outcome_id: str
+            The ID of the winning outcome. You must set this parameter if you set status to `RESOLVED`.
         token_for: str
             User access token that includes the `channel:manage:prediction` scope.
 
         Returns
         -------
-        Poll
-            A Poll object.
+        Prediction
+            A Prediction object.
         """
         from .models.predictions import Prediction
 

@@ -1521,6 +1521,24 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(route, converter=converter)
         return iterator
 
+    async def post_prediction(
+        self,
+        broadcaster_id: str | int,
+        title: str,
+        outcomes: list[str],
+        prediction_window: int,
+        token_for: str,
+    ) -> PredictionsResponse:
+        _outcomes = [{"title": t} for t in outcomes]
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "outcomes": _outcomes,
+            "prediction_window": prediction_window,
+        }
+        route: Route = Route("POST", "predictions", json=data, token_for=token_for)
+        return await self.request_json(route)
+
     async def patch_prediction(
         self,
         broadcaster_id: str | int,
