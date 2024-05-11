@@ -110,6 +110,7 @@ if TYPE_CHECKING:
         ModeratorsResponseData,
         PollsResponse,
         PollsResponseData,
+        PredictionsResponse,
         PredictionsResponseData,
         RawResponse,
         ResolveUnbanRequestsResponse,
@@ -1519,6 +1520,24 @@ class HTTPClient:
 
         iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(route, converter=converter)
         return iterator
+
+    async def patch_prediction(
+        self,
+        broadcaster_id: str | int,
+        id: str,
+        status: Literal["RESOLVED", "CANCELED", "LOCKED"],
+        token_for: str,
+        winning_outcome_id: str | None = None,
+    ) -> PredictionsResponse:
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "id": id,
+            "status": status,
+        }
+        if winning_outcome_id is not None:
+            data["winning_outcome_id"] = winning_outcome_id
+        route: Route = Route("PATCH", "predictions", json=data, token_for=token_for)
+        return await self.request_json(route)
 
     ### Raids ###
 

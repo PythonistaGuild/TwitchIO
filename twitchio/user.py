@@ -2284,3 +2284,38 @@ class PartialUser:
             raise ValueError("You may only specify a maximum of 25 IDs.")
 
         return await self._http.get_predictions(broadcaster_id=self.id, ids=ids, first=first, token_for=token_for)
+
+    async def end_prediction(
+        self,
+        *,
+        id: str,
+        token_for: str,
+        status: Literal["RESOLVED", "CANCELED", "LOCKED"],
+        winning_outcome_id: str | None = None,
+    ) -> Prediction:
+        """
+        End an active prediction.
+
+        ??? tip
+            You can also call this method directly on a Prediction object with [`end_poll`][twitchio.models.predictions.Prediction.end_prediction]
+
+        Parameters
+        ----------
+        id: str
+            The ID of the prediction to end.
+        status  Literal["RESOLVED", "CANCELED", "LOCKED"]
+            The status to set the prediction to. Possible case-sensitive values are: `RESOLVED` , `CANCELED` and `LOCKED`.
+        token_for: str
+            User access token that includes the `channel:manage:prediction` scope.
+
+        Returns
+        -------
+        Poll
+            A Poll object.
+        """
+        from .models.predictions import Prediction
+
+        data = await self._http.patch_prediction(
+            broadcaster_id=self.id, id=id, status=status, token_for=token_for, winning_outcome_id=winning_outcome_id
+        )
+        return Prediction(data["data"][0], http=self._http)

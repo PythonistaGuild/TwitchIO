@@ -57,7 +57,7 @@ class Prediction:
         The question that the prediction asks.
     winning_outcome_id: str | None
         The ID of the winning outcome. Is None unless status is RESOLVED.
-    outcomes: list[PollChoice]
+    outcomes: list[PredictionOutcome]
         The list of possible outcomes for the prediction.
     prediction_window: int
         The length of time (in seconds) that the prediction will run for.
@@ -101,10 +101,41 @@ class Prediction:
     def __repr__(self) -> str:
         return f"<Prediction id={self.id} title={self.title} status={self.status} created_at={self.created_at}>"
 
+    async def end_prediction(
+        self,
+        *,
+        status: Literal["RESOLVED", "CANCELED", "LOCKED"],
+        token_for: str,
+        winning_outcome_id: str | None = None,
+    ) -> Prediction:
+        """
+        End an active prediction.
+
+        Parameters
+        ----------
+        status  Literal["RESOLVED", "CANCELED", "LOCKED"]
+            The status to set the prediction to. Possible case-sensitive values are: `RESOLVED`, `CANCELED`, `LOCKED`
+        token_for: str
+            User access token that includes the `channel:manage:predictions` scope.
+
+        Returns
+        -------
+        Prediction
+            A Prediction object.
+        """
+        data = await self._http.patch_prediction(
+            broadcaster_id=self.broadcaster.id,
+            id=self.id,
+            status=status,
+            token_for=token_for,
+            winning_outcome_id=winning_outcome_id,
+        )
+        return Prediction(data["data"][0], http=self._http)
+
 
 class PredictionOutcome:
     """
-    Represents a poll choice.
+    Represents a prediction outcome.
 
     Attributes
     ----------
@@ -130,7 +161,6 @@ class PredictionOutcome:
         self.users: int = int(data["users"])
         self.channel_points: int = int(data["channel_points"])
         self.color: str = data["color"]
-        # _top_predictors = data.get("top_predictors")
         self.top_predictors: list[Predictor] | None = (
             [Predictor(d, http=http) for d in data["top_predictors"]] if data["top_predictors"] else None
         )
