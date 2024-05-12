@@ -1757,7 +1757,7 @@ class HTTPClient:
         self, broadcaster_id: str | int, user_id: str | int, token_for: str
     ) -> CheckUserSubscriptionResponse:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
-        route: Route = Route("POST", "subscriptions/user", params=params, token_for=token_for)
+        route: Route = Route("GET", "subscriptions/user", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_broadcaster_subscriptions(
@@ -1859,5 +1859,5 @@ class HTTPClient:
     async def post_whisper(self, from_user_id: str | int, to_user_id: str | int, token_for: str, message: str) -> None:
         params = {"from_user_id": from_user_id, "to_user_id": to_user_id}
         data = {"message": message}
-        route: Route = Route("DELETE", "videos", params=params, json=data, token_for=token_for)
+        route: Route = Route("POST", "whispers", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
