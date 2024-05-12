@@ -791,10 +791,24 @@ class Client:
         )
 
     async def search_channels(
-        self, query: str, *, live: bool = False, token_for: str | None = None, first: int = 20
+        self,
+        query: str,
+        *,
+        live: bool = False,
+        token_for: str | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[SearchChannel]:
         """
-        Searches Twitch categories.
+        Searches Twitch channels that match the specified query and have streamed content within the past 6 months.
+
+        !!! info
+            If `live` is set to False (default) then the query will look to match broadcaster login names.
+            If `live` is set to True then the query will match on the broadcaster login names and category names.
+
+            To match, the beginning of the broadcaster's name or category must match the query string.
+            The comparison is case insensitive. If the query string is angel_of_death, it matches all names that begin with angel_of_death.
+            However, if the query string is a phrase like angel of death, it matches to names starting with angelofdeath or names starting with angel_of_death.
 
         Parameters
         -----------
@@ -806,6 +820,8 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | None
             An optional user token to use instead of the default app token.
         Returns
@@ -819,6 +835,7 @@ class Client:
             query=query,
             first=first,
             live=live,
+            max_results=max_results,
             token_for=token_for,
         )
 

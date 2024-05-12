@@ -27,12 +27,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from twitchio.assets import Asset
+from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
 from .games import Game
 
 
 if TYPE_CHECKING:
+    import datetime
+
     from twitchio.http import HTTPClient
     from twitchio.types_.responses import GamesResponse, SearchChannelsResponseData
 
@@ -41,35 +44,60 @@ __all__ = ("SearchChannel",)
 
 
 class SearchChannel:
+    """
+    Represents a channel via a search.
+
+    Attributes
+    -----------
+    broadcaster: PartialUser
+        The broadcaster / channel.
+    title: str
+        The stream's title. Is an empty string if the broadcaster didn't set it.
+    game_id: str
+        The ID of the game that the broadcaster is playing or last played.
+    game_name: str
+        The name of the game that the broadcaster is playing or last played.
+    live: bool
+        A Boolean value that determines whether the broadcaster is streaming live. Is True if the broadcaster is streaming live; otherwise, False.
+    tags: list[str]
+        The tags applied to the channel.
+    thumbnail: Asset
+        An Asset for the thumbnail of the broadcaster's profile image.
+    language: str
+        The ISO 639-1 two-letter language code of the language used by the broadcaster. For example, en for English. If the broadcaster uses a language not in the list of [supported stream languages](https://help.twitch.tv/s/article/languages-on-twitch#streamlang), the value is other.
+    started_at: datetime.datetime | None
+        Datetime of when the broadcaster started streaming. Is None if the broadcaster is not streaming live.
+
+    """
+
     __slots__ = (
         "_http",
-        "id",
+        "broadcaster",
         "game_id",
         "name",
-        "display_name",
         "language",
         "title",
         "thumbnail",
         "live",
         "started_at",
-        "tag_ids",
+        "tags",
     )
 
     def __init__(self, data: SearchChannelsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
-        self.display_name: str = data["display_name"]
-        self.name: str = data["broadcaster_login"]
-        self.id: str = data["id"]
+        self.broadcaster: PartialUser = PartialUser(data["id"], data["broadcaster_login"], http=http)
         self.game_id: str = data["game_id"]
         self.title: str = data["title"]
         self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
         self.language: str = data["broadcaster_language"]
         self.live: bool = data["is_live"]
-        self.started_at = parse_timestamp(data["started_at"]) if self.live else None
-        self.tag_ids: list[str] = data["tag_ids"]
+        self.started_at: datetime.datetime | None = parse_timestamp(data["started_at"]) if self.live else None
+        self.tags: list[str] = data["tags"]
 
     def __repr__(self) -> str:
-        return f"<SearchUser name={self.name} title={self.title} live={self.live}>"
+        return (
+            f"<SearchChannel broadcaster={self.broadcaster} title={self.title} live={self.live} game_id={self.game_id}>"
+        )
 
     async def fetch_game(self) -> Game:
         """

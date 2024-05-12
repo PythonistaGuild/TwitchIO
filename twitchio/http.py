@@ -1580,7 +1580,7 @@ class HTTPClient:
     ### Search ###
 
     async def get_search_categories(
-        self, query: str, first: int, token_for: str | None = None
+        self, *, query: str, first: int, token_for: str | None = None
     ) -> HTTPAsyncIterator[Game]:
         params: dict[str, str | int | Sequence[str | int]] = {
             "query": query,
@@ -1595,15 +1595,23 @@ class HTTPClient:
         return iterator
 
     async def get_search_channels(
-        self, query: str, first: int, live: bool = False, token_for: str | None = None
+        self,
+        *,
+        query: str,
+        first: int,
+        live: bool = False,
+        token_for: str | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[SearchChannel]:
-        params: dict[str, str | int] = {"query": query, "live": live, "first": first}
+        params: dict[str, str | int] = {"query": query, "live_only": live, "first": first}
         route: Route = Route("GET", "search/channels", params=params, token_for=token_for)
 
         async def converter(data: SearchChannelsResponseData) -> SearchChannel:
             return SearchChannel(data, http=self)
 
-        iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     ### Streams ###
