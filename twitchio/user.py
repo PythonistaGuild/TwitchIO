@@ -2661,12 +2661,15 @@ class PartialUser:
         """
         Fetches all subscriptions for the broadcaster.
 
+        ??? note
+            Requires a user access token that includes the `channel:read:subscriptions` scope
+
         Parameters
         ----------
         user_ids: list[str | int] | None
             Filters the list to include only the specified subscribers. You may specify a maximum of 100 subscribers.
         token_for: str
-            User access token that includes the channel:read:subscriptions scope
+            User access token that includes the `channel:read:subscriptions` scope
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
@@ -2689,4 +2692,53 @@ class PartialUser:
 
         return await self._http.get_broadcaster_subscriptions(
             token_for=token_for, broadcaster_id=self.id, user_ids=user_ids, first=first, max_results=max_results
+        )
+
+    async def send_whisper(self, *, to_user_id: str | int, token_for: str, message: str) -> None:
+        """
+        Send a whisper to a user.
+
+        `Rate Limits`: You may whisper to a maximum of 40 unique recipients per day. Within the per day limit, you may whisper a maximum of 3 whispers per second and a maximum of 100 whispers per minute.
+
+        !!! info
+            The user sending the whisper must have a verified phone number (see the [Phone Number setting in your Security and Privacy](https://www.twitch.tv/settings/security) settings).
+
+            The API may silently drop whispers that it suspects of violating Twitch policies. (The API does not indicate that it dropped the whisper).
+
+            The message must not be empty.
+
+            The maximum message lengths are:
+
+            - 500 characters if the user you're sending the message to hasn't whispered you before.
+            - 10,000 characters if the user you're sending the message to has whispered you before.
+
+            Messages that exceed the maximum length are truncated.
+
+        ??? note
+            Requires a user access token that includes the `user:manage:whispers` scope.
+
+        Parameters
+        ----------
+        to_user_id : str | int
+            The ID of the user to receive the whisper.
+        token_for : str
+            User access token that includes the `user:manage:whispers` scope.
+        message : str
+            The whisper message to send. The message must not be empty.
+
+            The maximum message lengths are:
+
+            - 500 characters if the user you're sending the message to hasn't whispered you before.
+            - 10,000 characters if the user you're sending the message to has whispered you before.
+
+            Messages that exceed the maximum length are truncated.
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
+
+        return await self._http.post_whisper(
+            from_user_id=self.id, to_user_id=to_user_id, token_for=token_for, message=message
         )

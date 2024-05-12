@@ -1855,3 +1855,9 @@ class HTTPClient:
         return await self.request_json(route)
 
     ### Whispers ###
+
+    async def post_whisper(self, from_user_id: str | int, to_user_id: str | int, token_for: str, message: str) -> None:
+        params = {"from_user_id": from_user_id, "to_user_id": to_user_id}
+        data = {"message": message}
+        route: Route = Route("DELETE", "videos", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
