@@ -58,7 +58,7 @@ if TYPE_CHECKING:
     from .models.polls import Poll
     from .models.predictions import Prediction
     from .models.streams import Stream, StreamMarker, VideoMarkers
-    from .models.subscriptions import UserSubscription
+    from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -2621,9 +2621,9 @@ class PartialUser:
 
         Parameters
         ----------
-        broadcaster_id : str | int
+        broadcaster_id: str | int
             The ID of a partner or affiliate broadcaster.
-        token_for : str
+        token_for: str
             User access token that includes the `user:read:subscriptions` scope.
             The user id in the user access token must match the id of this PartialUser object.
 
@@ -2649,3 +2649,44 @@ class PartialUser:
                 raise e
 
         return UserSubscription(data["data"][0], http=self._http)
+
+    async def fetch_broadcaster_subscriptions(
+        self,
+        *,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> BroadcasterSubscriptions:
+        """
+        Fetches all subscriptions for the broadcaster.
+
+        Parameters
+        ----------
+        user_ids: list[str | int] | None
+            Filters the list to include only the specified subscribers. You may specify a maximum of 100 subscribers.
+        token_for: str
+            User access token that includes the channel:read:subscriptions scope
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        BroadcasterSubscriptions
+
+        Raises
+        ------
+        ValueError
+            You may only provide a maximum of 100 user IDs.
+        """
+        first = max(1, min(100, first))
+
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only provide a maximum of 100 user IDs.")
+
+        return await self._http.get_broadcaster_subscriptions(
+            token_for=token_for, broadcaster_id=self.id, user_ids=user_ids, first=first, max_results=max_results
+        )

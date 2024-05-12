@@ -52,6 +52,7 @@ from .models.polls import Poll
 from .models.predictions import Prediction
 from .models.search import SearchChannel
 from .models.streams import Stream, VideoMarkers
+from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
 from .models.videos import Video
 from .user import PartialUser
 from .utils import Colour, _from_json  # type: ignore
@@ -75,6 +76,7 @@ if TYPE_CHECKING:
         BanUserResponse,
         BitsLeaderboardResponse,
         BlockedTermsResponseData,
+        BroadcasterSubscriptionsResponseData,
         ChannelChatBadgesResponse,
         ChannelEditorsResponse,
         ChannelEmotesResponse,
@@ -1757,6 +1759,27 @@ class HTTPClient:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
         route: Route = Route("POST", "subscriptions/user", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    async def get_broadcaster_subscriptions(
+        self,
+        token_for: str,
+        broadcaster_id: str | int,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> BroadcasterSubscriptions:
+        params: dict[str, list[str | int] | str | int] = {"broadcaster_id": broadcaster_id, "first": first}
+        if user_ids is not None:
+            params["user_id"] = user_ids
+
+        route: Route = Route("GET", "subscriptions", params=params, token_for=token_for)
+
+        async def converter(data: BroadcasterSubscriptionsResponseData) -> BroadcasterSubscription:
+            return BroadcasterSubscription(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        data = await self.request_json(route)
+        return BroadcasterSubscriptions(data, iterator)
 
     ### Tags ###
 
