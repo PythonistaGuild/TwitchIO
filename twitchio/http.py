@@ -86,6 +86,7 @@ if TYPE_CHECKING:
         ChatSettingsResponse,
         ChattersResponseData,
         CheckAutomodStatusResponse,
+        CheckUserSubscriptionResponse,
         CheermotesResponse,
         ClipsResponseData,
         ConduitPayload,
@@ -1697,6 +1698,13 @@ class HTTPClient:
         return iterator
 
     ### Subscriptions ###
+
+    async def get_user_subscription(
+        self, broadcaster_id: str | int, user_id: str | int, token_for: str
+    ) -> CheckUserSubscriptionResponse:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+        route: Route = Route("POST", "subscriptions/user", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Tags ###
 

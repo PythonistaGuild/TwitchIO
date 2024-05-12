@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from .exceptions import HTTPException
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
 
@@ -57,6 +58,7 @@ if TYPE_CHECKING:
     from .models.polls import Poll
     from .models.predictions import Prediction
     from .models.streams import Stream, StreamMarker, VideoMarkers
+    from .models.subscriptions import UserSubscription
     from .models.teams import ChannelTeam
     from .utils import Colour
 
@@ -2529,3 +2531,41 @@ class PartialUser:
         """
         first = max(1, min(100, first))
         return await self._http.get_stream_markers(user_id=self.id, token_for=token_for, first=first)
+
+    async def fetch_subscription(self, *, broadcaster_id: str | int, token_for: str) -> UserSubscription | None:
+        """
+        Checks whether the user subscribes to the broadcaster's channel.
+
+        ??? note
+            Requires a user access token that includes the `user:read:subscriptions` scope.
+
+        Parameters
+        ----------
+        broadcaster_id : str | int
+            The ID of a partner or affiliate broadcaster.
+        token_for : str
+            User access token that includes the `user:read:subscriptions` scope.
+            The user id in the user access token must match the id of this PartialUser object.
+
+        Returns
+        -------
+        UserSubscription | None
+            Returns UserSubscription if subscription exists; otherwise None.
+
+        Raises
+        ------
+        HTTPException
+        """
+        from .models.subscriptions import UserSubscription
+
+        try:
+            data = await self._http.get_user_subscription(
+                user_id=self.id, broadcaster_id=broadcaster_id, token_for=token_for
+            )
+        except HTTPException as e:
+            if e.status == 404:
+                return None
+            else:
+                raise e
+
+        return UserSubscription(data["data"][0], http=self._http)

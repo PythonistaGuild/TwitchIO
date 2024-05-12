@@ -41,5 +41,6 @@ from .predictions import *
 from .raids import *
 from .search import *
 from .streams import *
+from .subscriptions import *
 from .teams import *
 from .videos import *

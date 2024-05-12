@@ -1478,9 +1478,9 @@ class CheckUserSubscriptionResponseData(TypedDict):
     broadcaster_id: str
     broadcaster_login: str
     broadcaster_name: str
-    gifter_id: str
-    gifter_login: str
-    gifter_name: str
+    gifter_id: str | None
+    gifter_login: str | None
+    gifter_name: str | None
     is_gift: bool
     tier: Literal["1000", "2000", "3000"]
 
