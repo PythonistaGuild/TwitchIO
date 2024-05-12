@@ -456,6 +456,7 @@ class Client:
         featured: bool | None = None,
         token_for: str | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
         """
         Fetches clips by clip id or game id.
@@ -480,6 +481,9 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
 
         Returns
         --------
@@ -508,11 +512,12 @@ class Client:
             started_at=started_at,
             ended_at=ended_at,
             is_featured=featured,
+            max_results=max_results,
             token_for=token_for,
         )
 
     async def fetch_extension_transactions(
-        self, extension_id: str, *, ids: list[str] | None = None, first: int = 20
+        self, extension_id: str, *, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
         """
         Fetches global emotes from the twitch API
@@ -529,6 +534,8 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -541,9 +548,7 @@ class Client:
             raise ValueError("You can only provide a mximum of 100 IDs")
 
         return await self._http.get_extension_transactions(
-            extension_id=extension_id,
-            ids=ids,
-            first=first,
+            extension_id=extension_id, ids=ids, first=first, max_results=max_results
         )
 
     async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
@@ -572,6 +577,7 @@ class Client:
         type: Literal["all", "live"] = "all",
         token_for: str | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
         """
         Fetches live streams from the helix API
@@ -593,6 +599,8 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -609,6 +617,7 @@ class Client:
             languages=languages,
             type=type,
             token_for=token_for,
+            max_results=max_results,
         )
 
     async def fetch_team(
@@ -643,10 +652,7 @@ class Client:
         return Team(data["data"][0], http=self._http)
 
     async def fetch_top_games(
-        self,
-        *,
-        token_for: str | None = None,
-        first: int = 20,
+        self, *, token_for: str | None = None, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[Game]:
         """
         Fetches information about all broadcasts on Twitch.
@@ -658,6 +664,8 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -666,10 +674,7 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_top_games(
-            first=first,
-            token_for=token_for,
-        )
+        return await self._http.get_top_games(first=first, token_for=token_for, max_results=max_results)
 
     async def fetch_games(
         self,
@@ -763,7 +768,12 @@ class Client:
         return Game(data["data"][0], http=self._http)
 
     async def search_categories(
-        self, query: str, *, token_for: str | None = None, first: int = 20
+        self,
+        query: str,
+        *,
+        token_for: str | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
         """
         Searches Twitch categories.
@@ -775,6 +785,8 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | None
             An optional user token to use instead of the default app token.
         Returns
@@ -787,6 +799,7 @@ class Client:
         return await self._http.get_search_categories(
             query=query,
             first=first,
+            max_results=max_results,
             token_for=token_for,
         )
 
@@ -850,6 +863,7 @@ class Client:
         sort: Literal["time", "trending", "views"] = "time",
         type: Literal["all", "archive", "highlight", "upload"] = "all",
         first: int = 20,
+        max_results: int | None = None,
         token_for: str | None = None,
     ) -> HTTPAsyncIterator[Video]:
         """
@@ -872,6 +886,10 @@ class Client:
         sort: Literal["time", "trending", "views"]
         type: Literal["all", "archive", "highlight", "upload"]
         first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | None
             An optional user token to use instead of the default app token.
 
@@ -904,6 +922,7 @@ class Client:
             sort=sort,
             type=type,
             first=first,
+            max_results=max_results,
             token_for=token_for,
         )
 
@@ -937,7 +956,7 @@ class Client:
         return resp
 
     async def fetch_stream_markers(
-        self, *, video_id: str, token_for: str, first: int = 20
+        self, *, video_id: str, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[VideoMarkers]:
         """
         Fetches markers from the user's most recent stream or from the specified VOD/video.
@@ -959,6 +978,8 @@ class Client:
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -966,7 +987,9 @@ class Client:
             HTTPAsyncIterator of VideoMarkers objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_stream_markers(video_id=video_id, token_for=token_for, first=first)
+        return await self._http.get_stream_markers(
+            video_id=video_id, token_for=token_for, first=first, max_results=max_results
+        )
 
     async def _create_conduit(self, shard_count: int, /) -> list[Conduit]:
         data: ConduitPayload = await self._http.create_conduit(shard_count)

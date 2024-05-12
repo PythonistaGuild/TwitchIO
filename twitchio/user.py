@@ -173,6 +173,7 @@ class PartialUser:
         type: Literal["overview_v2"] = "overview_v2",
         started_at: datetime.date | None = None,
         ended_at: datetime.date | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[ExtensionAnalytics]:
         """
         Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
@@ -204,6 +205,8 @@ class PartialUser:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -227,6 +230,7 @@ class PartialUser:
             type=type,
             started_at=started_at,
             ended_at=ended_at,
+            max_results=max_results,
         )
 
     async def fetch_game_analytics(
@@ -238,6 +242,7 @@ class PartialUser:
         type: Literal["overview_v2"] = "overview_v2",
         started_at: datetime.date | None = None,
         ended_at: datetime.date | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[GameAnalytics]:
         """
         Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
@@ -269,6 +274,8 @@ class PartialUser:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -292,6 +299,7 @@ class PartialUser:
             type=type,
             started_at=started_at,
             ended_at=ended_at,
+            max_results=max_results,
         )
 
     async def fetch_bits_leaderboard(
@@ -690,10 +698,7 @@ class PartialUser:
         return CharityCampaign(data["data"][0], http=self._http)
 
     async def fetch_charity_donations(
-        self,
-        *,
-        token_for: str,
-        first: int = 20,
+        self, *, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[CharityDonation]:
         """
         Fetches information about all broadcasts on Twitch.
@@ -708,6 +713,8 @@ class PartialUser:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -717,12 +724,12 @@ class PartialUser:
         first = max(1, min(100, first))
 
         return await self._http.get_charity_donations(
-            broadcaster_id=self.id,
-            first=first,
-            token_for=token_for,
+            broadcaster_id=self.id, first=first, token_for=token_for, max_results=max_results
         )
 
-    async def fetch_chatters(self, *, moderator_id: str | int, token_for: str, first: int = 100) -> Chatters:
+    async def fetch_chatters(
+        self, *, moderator_id: str | int, token_for: str, first: int = 100, max_results: int | None = None
+    ) -> Chatters:
         """
         Fetches users that are connected to the broadcaster's chat session.
 
@@ -739,6 +746,8 @@ class PartialUser:
         first: int | None
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 1,000. The default is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -748,7 +757,7 @@ class PartialUser:
         first = max(1, min(1000, first))
 
         return await self._http.get_chatters(
-            token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator_id
+            token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator_id, max_results=max_results
         )
 
     async def fetch_channel_emotes(self, token_for: str | None = None) -> list[ChannelEmote]:
@@ -774,7 +783,7 @@ class PartialUser:
         return [ChannelEmote(d, template=template, http=self._http) for d in data["data"]]
 
     async def fetch_user_emotes(
-        self, *, token_for: str, broadcaster_id: str | int | None = None
+        self, *, token_for: str, broadcaster_id: str | int | None = None, max_results: int | None = None
     ) -> HTTPAsyncIterator[UserEmote]:
         """
         Fetches the broadcaster's list of custom emotes.
@@ -789,13 +798,17 @@ class PartialUser:
             Requires a user access token that includes the `user:read:emotes` scope.
         broadcaster_id: str | None
             The User ID of a broadcaster you wish to get follower emotes of. Using this query parameter will guarantee inclusion of the broadcaster's follower emotes in the response body.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
         HTTPAsyncIterator[twitchio.UserEmote]
         """
 
-        return await self._http.get_user_emotes(user_id=self.id, token_for=token_for, broadcaster_id=broadcaster_id)
+        return await self._http.get_user_emotes(
+            user_id=self.id, token_for=token_for, broadcaster_id=broadcaster_id, max_results=max_results
+        )
 
     async def fetch_chat_badges(self, token_for: str | None = None) -> list[ChatBadge]:
         """
@@ -1154,6 +1167,7 @@ class PartialUser:
         featured: bool | None = None,
         token_for: str | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
         """
         Fetches clips from the broadcaster's streams.
@@ -1173,6 +1187,8 @@ class PartialUser:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -1188,6 +1204,7 @@ class PartialUser:
             ended_at=ended_at,
             is_featured=featured,
             token_for=token_for,
+            max_results=max_results,
         )
 
     async def fetch_goals(self, *, token_for: str) -> list[Goal]:
@@ -1212,7 +1229,9 @@ class PartialUser:
         data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=token_for)
         return [Goal(d, http=self._http) for d in data["data"]]
 
-    async def fetch_hype_train_events(self, *, token_for: str, first: int = 1) -> HTTPAsyncIterator[HypeTrainEvent]:
+    async def fetch_hype_train_events(
+        self, *, token_for: str, first: int = 1, max_results: int | None = None
+    ) -> HTTPAsyncIterator[HypeTrainEvent]:
         """
         Fetches information about the broadcaster's current or most recent Hype Train event.
 
@@ -1223,6 +1242,8 @@ class PartialUser:
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 1.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -1231,7 +1252,9 @@ class PartialUser:
         """
         first = max(1, min(100, first))
 
-        return await self._http.get_hype_train_events(broadcaster_id=self.id, first=first, token_for=token_for)
+        return await self._http.get_hype_train_events(
+            broadcaster_id=self.id, first=first, token_for=token_for, max_results=max_results
+        )
 
     async def start_raid(self, *, to_broadcaster_id: str | int, token_for: str) -> Raid:
         """
@@ -1444,7 +1467,12 @@ class PartialUser:
         return AutomodSettings(data["data"][0], http=self._http)
 
     async def fetch_banned_user(
-        self, *, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+        self,
+        *,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[BannedUser]:
         """
         Fetch all users that the broadcaster has banned or put in a timeout.
@@ -1465,6 +1493,8 @@ class PartialUser:
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -1480,7 +1510,9 @@ class PartialUser:
         if user_ids is not None and len(user_ids) > 100:
             raise ValueError("You may only specify a maximum of 100 users.")
 
-        return await self._http.get_banned_users(broadcaster_id=self.id, user_ids=user_ids, token_for=token_for)
+        return await self._http.get_banned_users(
+            broadcaster_id=self.id, user_ids=user_ids, token_for=token_for, max_results=max_results
+        )
 
     async def ban_user(
         self,
@@ -1612,6 +1644,7 @@ class PartialUser:
         status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
         user_id: str | int | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[UnbanRequest]:
         """
         Fetches the unban requests of a broadcaster's channel.
@@ -1631,6 +1664,8 @@ class PartialUser:
             An ID used to filter what unban requests are returned.
         first: int
             The maximum number of items to return per page in response. Default 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -1646,6 +1681,7 @@ class PartialUser:
             status=status,
             user_id=user_id,
             first=first,
+            max_results=max_results,
         )
 
     async def resolve_unban_requests(
@@ -1703,7 +1739,7 @@ class PartialUser:
         return UnbanRequest(data["data"][0], http=self._http)
 
     async def fetch_blocked_terms(
-        self, moderator_id: str | int, token_for: str, first: int = 20
+        self, moderator_id: str | int, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[BlockedTerm]:
         """
         Fetches the broadcaster's list of non-private, blocked words or phrases.
@@ -1721,6 +1757,8 @@ class PartialUser:
             User access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -1730,7 +1768,7 @@ class PartialUser:
         first = max(1, min(100, first))
 
         return await self._http.get_blocked_terms(
-            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, first=first
+            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, first=first, max_results=max_results
         )
 
     async def add_blocked_term(
@@ -1864,7 +1902,9 @@ class PartialUser:
             message_id=message_id,
         )
 
-    async def fetch_moderated_channels(self, *, token_for: str, first: int = 20) -> HTTPAsyncIterator[PartialUser]:
+    async def fetch_moderated_channels(
+        self, *, token_for: str, first: int = 20, max_results: int | None = None
+    ) -> HTTPAsyncIterator[PartialUser]:
         """
         Fetches channels that the specified user has moderator privileges in.
 
@@ -1879,6 +1919,8 @@ class PartialUser:
             The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -1886,10 +1928,17 @@ class PartialUser:
             HTTPAsyncIterator of PartialUser objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_moderated_channels(user_id=self.id, first=first, token_for=token_for)
+        return await self._http.get_moderated_channels(
+            user_id=self.id, first=first, token_for=token_for, max_results=max_results
+        )
 
     async def fetch_moderators(
-        self, *, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+        self,
+        *,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
         """
         Fetches users allowed to moderate the broadcaster's chat room.
@@ -1910,6 +1959,8 @@ class PartialUser:
             The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -1928,7 +1979,7 @@ class PartialUser:
             raise ValueError("You may only specify a maximum of 100 user IDs.")
 
         return await self._http.get_moderators(
-            broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for
+            broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for, max_results=max_results
         )
 
     async def add_moderator(self, *, token_for: str, user_id: str | int) -> None:
@@ -1973,7 +2024,12 @@ class PartialUser:
         return await self._http.delete_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
 
     async def fetch_vips(
-        self, *, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+        self,
+        *,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
         """
         Fetches the broadcaster's VIPs.
@@ -1993,6 +2049,8 @@ class PartialUser:
             The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -2010,7 +2068,9 @@ class PartialUser:
         if user_ids is not None and len(user_ids) > 100:
             raise ValueError("You may only specify a maximum of 100 user IDs.")
 
-        return await self._http.get_vips(broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for)
+        return await self._http.get_vips(
+            broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for, max_results=max_results
+        )
 
     async def add_vip(self, *, token_for: str, user_id: str | int) -> None:
         """
@@ -2109,7 +2169,7 @@ class PartialUser:
         return ShieldModeStatus(data["data"][0], http=self._http)
 
     async def fetch_polls(
-        self, *, token_for: str, ids: list[str] | None = None, first: int = 20
+        self, *, token_for: str, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[Poll]:
         """
         Fetches polls that the broadcaster created.
@@ -2130,6 +2190,8 @@ class PartialUser:
             The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 20 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -2147,7 +2209,9 @@ class PartialUser:
         if ids is not None and len(ids) > 20:
             raise ValueError("You may only specify a maximum of 20 IDs.")
 
-        return await self._http.get_polls(broadcaster_id=self.id, ids=ids, first=first, token_for=token_for)
+        return await self._http.get_polls(
+            broadcaster_id=self.id, ids=ids, first=first, token_for=token_for, max_results=max_results
+        )
 
     async def create_poll(
         self,
@@ -2264,7 +2328,7 @@ class PartialUser:
         return Poll(data["data"][0], http=self._http)
 
     async def fetch_predictions(
-        self, *, token_for: str, ids: list[str] | None = None, first: int = 20
+        self, *, token_for: str, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[Prediction]:
         """
         Fetches predictions that the broadcaster created.
@@ -2285,6 +2349,8 @@ class PartialUser:
             The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 25 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -2302,7 +2368,9 @@ class PartialUser:
         if ids is not None and len(ids) > 20:
             raise ValueError("You may only specify a maximum of 25 IDs.")
 
-        return await self._http.get_predictions(broadcaster_id=self.id, ids=ids, first=first, token_for=token_for)
+        return await self._http.get_predictions(
+            broadcaster_id=self.id, ids=ids, first=first, token_for=token_for, max_results=max_results
+        )
 
     async def create_prediction(
         self,
@@ -2441,7 +2509,9 @@ class PartialUser:
         data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=token_for)
         return data["data"][0]["stream_key"]
 
-    async def fetch_followed_streams(self, *, token_for: str, first: int = 100) -> HTTPAsyncIterator[Stream]:
+    async def fetch_followed_streams(
+        self, *, token_for: str, first: int = 100, max_results: int | None = None
+    ) -> HTTPAsyncIterator[Stream]:
         """
         Fetches the broadcasters that the user follows and that are streaming live.
 
@@ -2454,6 +2524,8 @@ class PartialUser:
             User access token that includes the `user:read:follows` scope.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -2461,7 +2533,9 @@ class PartialUser:
             HTTPAsyncIterator of Stream objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_followed_streams(user_id=self.id, token_for=token_for, first=first)
+        return await self._http.get_followed_streams(
+            user_id=self.id, token_for=token_for, first=first, max_results=max_results
+        )
 
     async def create_stream_marker(self, *, token_for: str, description: str | None = None) -> StreamMarker:
         """
@@ -2505,7 +2579,9 @@ class PartialUser:
         data = await self._http.post_stream_marker(user_id=self.id, token_for=token_for, description=description)
         return StreamMarker(data["data"][0])
 
-    async def fetch_stream_markers(self, *, token_for: str, first: int = 20) -> HTTPAsyncIterator[VideoMarkers]:
+    async def fetch_stream_markers(
+        self, *, token_for: str, first: int = 20, max_results: int | None = None
+    ) -> HTTPAsyncIterator[VideoMarkers]:
         """
         Fetches markers from the user's most recent stream or from the specified VOD/video.
         A marker is an arbitrary point in a live stream that the broadcaster or editor marked, so they can return to that spot later to create video highlights
@@ -2523,6 +2599,8 @@ class PartialUser:
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         -------
@@ -2530,7 +2608,9 @@ class PartialUser:
             HTTPAsyncIterator of VideoMarkers objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_stream_markers(user_id=self.id, token_for=token_for, first=first)
+        return await self._http.get_stream_markers(
+            user_id=self.id, token_for=token_for, first=first, max_results=max_results
+        )
 
     async def fetch_subscription(self, *, broadcaster_id: str | int, token_for: str) -> UserSubscription | None:
         """

@@ -494,6 +494,7 @@ class HTTPClient:
         started_at: datetime.date | None = None,
         ended_at: datetime.date | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[ExtensionAnalytics]:
         params = {"type": type, "First": first}
 
@@ -512,7 +513,7 @@ class HTTPClient:
         async def converter(data: ExtensionAnalyticsResponseData) -> ExtensionAnalytics:
             return ExtensionAnalytics(data)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def get_game_analytics(
@@ -524,6 +525,7 @@ class HTTPClient:
         started_at: datetime.date | None = None,
         ended_at: datetime.date | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[GameAnalytics]:
         params = {"type": type, "First": first}
 
@@ -542,7 +544,7 @@ class HTTPClient:
         async def converter(data: GameAnalyticsResponseData) -> GameAnalytics:
             return GameAnalytics(data)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     ### Bits ###
@@ -579,7 +581,7 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_extension_transactions(
-        self, *, extension_id: str, ids: list[str] | None = None, first: int = 20
+        self, *, extension_id: str, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
         params: dict[str, str | int | list[str]] = {"extension_id": extension_id, "first": first}
         if ids:
@@ -589,7 +591,9 @@ class HTTPClient:
         async def converter(data: ExtensionTransactionsResponseData) -> ExtensionTransaction:
             return ExtensionTransaction(data, http=self)
 
-        iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     ### Channels ###
@@ -871,7 +875,7 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_charity_donations(
-        self, broadcaster_id: str, token_for: str, first: int = 20
+        self, broadcaster_id: str, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[CharityDonation]:
         params = {"broadcaster_id": broadcaster_id, "first": first}
         route: Route = Route("GET", "charity/donations", params=params, token_for=token_for)
@@ -879,13 +883,18 @@ class HTTPClient:
         async def converter(data: CharityCampaignDonationsResponseData) -> CharityDonation:
             return CharityDonation(data, http=self)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     ### Chat ###
 
     async def get_chatters(
-        self, token_for: str, broadcaster_id: str | int, moderator_id: str | int, first: int = 100
+        self,
+        token_for: str,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        first: int = 100,
+        max_results: int | None = None,
     ) -> Chatters:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "first": first}
         route: Route = Route("GET", "chat/chatters", params=params, token_for=token_for)
@@ -893,7 +902,7 @@ class HTTPClient:
         async def converter(data: ChattersResponseData) -> PartialUser:
             return PartialUser(data["user_id"], data["user_login"], http=self)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         data = await self.request_json(route)
         return Chatters(iterator, data)
 
@@ -941,7 +950,7 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_user_emotes(
-        self, user_id: str, token_for: str, broadcaster_id: str | int | None = None
+        self, user_id: str, token_for: str, broadcaster_id: str | int | None = None, max_results: int | None = None
     ) -> HTTPAsyncIterator[UserEmote]:
         params = {"user_id": user_id}
         if broadcaster_id is not None:
@@ -955,7 +964,7 @@ class HTTPClient:
         async def converter(data: UserEmotesResponseData) -> UserEmote:
             return UserEmote(data, template=template, http=self)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def patch_chat_settings(
@@ -1053,6 +1062,7 @@ class HTTPClient:
         ended_at: datetime.datetime | None = None,
         is_featured: bool | None = None,
         token_for: str | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
         params: dict[str, str | int | list[str]] = {"first": first}
         if broadcaster_id:
@@ -1074,7 +1084,7 @@ class HTTPClient:
         async def converter(data: ClipsResponseData) -> Clip:
             return Clip(data, http=self)
 
-        iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def post_create_clip(
@@ -1122,14 +1132,16 @@ class HTTPClient:
 
     ### Games ###
 
-    async def get_top_games(self, first: int, token_for: str | None = None) -> HTTPAsyncIterator[Game]:
+    async def get_top_games(
+        self, first: int, token_for: str | None = None, max_results: int | None = None
+    ) -> HTTPAsyncIterator[Game]:
         params: dict[str, int] = {"first": first}
         route: Route = Route("GET", "games/top", params=params, token_for=token_for)
 
         async def converter(data: TopGamesResponseData) -> Game:
             return Game(data, http=self)
 
-        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def get_games(
@@ -1165,7 +1177,7 @@ class HTTPClient:
     ### Hype Train ###
 
     async def get_hype_train_events(
-        self, broadcaster_id: str | int, token_for: str, first: int = 1
+        self, broadcaster_id: str | int, token_for: str, first: int = 1, max_results: int | None = None
     ) -> HTTPAsyncIterator[HypeTrainEvent]:
         params = {"broadcaster_id": broadcaster_id, "first": first}
 
@@ -1174,7 +1186,9 @@ class HTTPClient:
         async def converter(data: HypeTrainEventsResponseData) -> HypeTrainEvent:
             return HypeTrainEvent(data, http=self)
 
-        iterator: HTTPAsyncIterator[HypeTrainEvent] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[HypeTrainEvent] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     ### Moderation ###
@@ -1211,7 +1225,12 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_banned_users(
-        self, broadcaster_id: str | int, token_for: str, user_ids: list[str | int] | None = None, first: int = 20
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[BannedUser]:
         params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
         if user_ids is not None:
@@ -1222,7 +1241,9 @@ class HTTPClient:
         async def converter(data: BannedUsersResponseData) -> BannedUser:
             return BannedUser(data, http=self)
 
-        iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def post_ban_user(
@@ -1262,6 +1283,7 @@ class HTTPClient:
         status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
         user_id: str | int | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[UnbanRequest]:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "status": status, "first": first}
         if user_id is not None:
@@ -1272,7 +1294,9 @@ class HTTPClient:
         async def converter(data: UnbanRequestsResponseData) -> UnbanRequest:
             return UnbanRequest(data, http=self)
 
-        iterator: HTTPAsyncIterator[UnbanRequest] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[UnbanRequest] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def patch_unban_requests(
@@ -1301,6 +1325,7 @@ class HTTPClient:
         moderator_id: str | int,
         token_for: str,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[BlockedTerm]:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "first": first}
 
@@ -1309,7 +1334,9 @@ class HTTPClient:
         async def converter(data: BlockedTermsResponseData) -> BlockedTerm:
             return BlockedTerm(data, http=self)
 
-        iterator: HTTPAsyncIterator[BlockedTerm] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[BlockedTerm] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def post_blocked_term(
@@ -1337,10 +1364,7 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_moderated_channels(
-        self,
-        user_id: str | int,
-        token_for: str,
-        first: int = 20,
+        self, user_id: str | int, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[PartialUser]:
         params = {"user_id": user_id, "first": first}
 
@@ -1349,7 +1373,9 @@ class HTTPClient:
         async def converter(data: ModeratedChannelsResponseData) -> PartialUser:
             return PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=self)
 
-        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def get_moderators(
@@ -1358,6 +1384,7 @@ class HTTPClient:
         token_for: str,
         user_ids: list[str | int] | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
         params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
 
@@ -1369,7 +1396,9 @@ class HTTPClient:
         async def converter(data: ModeratorsResponseData) -> PartialUser:
             return PartialUser(data["user_id"], data["user_login"], http=self)
 
-        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def post_channel_moderator(
@@ -1398,6 +1427,7 @@ class HTTPClient:
         token_for: str,
         user_ids: list[str | int] | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
         params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
 
@@ -1409,7 +1439,9 @@ class HTTPClient:
         async def converter(data: ModeratorsResponseData) -> PartialUser:
             return PartialUser(data["user_id"], data["user_login"], http=self)
 
-        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def add_vip(
@@ -1459,6 +1491,7 @@ class HTTPClient:
         token_for: str,
         ids: list[str] | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Poll]:
         params: dict[str, str | int | list[str]] = {"broadcaster_id": broadcaster_id, "first": first}
 
@@ -1470,7 +1503,7 @@ class HTTPClient:
         async def converter(data: PollsResponseData) -> Poll:
             return Poll(data, http=self)
 
-        iterator: HTTPAsyncIterator[Poll] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[Poll] = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def post_poll(
@@ -1510,7 +1543,12 @@ class HTTPClient:
     ### Predictions ###
 
     async def get_predictions(
-        self, broadcaster_id: str | int, token_for: str, ids: list[str] | None = None, first: int = 20
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Prediction]:
         params: dict[str, str | int | list[str]] = {"broadcaster_id": broadcaster_id, "first": first}
 
@@ -1522,7 +1560,9 @@ class HTTPClient:
         async def converter(data: PredictionsResponseData) -> Prediction:
             return Prediction(data, http=self)
 
-        iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def post_prediction(
@@ -1580,7 +1620,7 @@ class HTTPClient:
     ### Search ###
 
     async def get_search_categories(
-        self, *, query: str, first: int, token_for: str | None = None
+        self, *, query: str, first: int, token_for: str | None = None, max_results: int | None = None
     ) -> HTTPAsyncIterator[Game]:
         params: dict[str, str | int | Sequence[str | int]] = {
             "query": query,
@@ -1591,7 +1631,7 @@ class HTTPClient:
         async def converter(data: GamesResponseData) -> Game:
             return Game(data, http=self)
 
-        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def get_search_channels(
@@ -1626,6 +1666,7 @@ class HTTPClient:
         languages: list[str] | None = None,
         token_for: str | None = None,
         type: Literal["all", "live"] = "all",
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
         params: dict[str, str | int | Sequence[str | int]] = {
             "type": type,
@@ -1646,7 +1687,9 @@ class HTTPClient:
         async def converter(data: StreamsResponseData) -> Stream:
             return Stream(data, http=self)
 
-        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def get_stream_key(self, broadcaster_id: str | int, token_for: str) -> StreamKeyResponse:
@@ -1655,11 +1698,7 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_followed_streams(
-        self,
-        *,
-        user_id: str | int,
-        token_for: str,
-        first: int = 100,
+        self, *, user_id: str | int, token_for: str, first: int = 100, max_results: int | None = None
     ) -> HTTPAsyncIterator[Stream]:
         params = {
             "user_id": user_id,
@@ -1671,7 +1710,9 @@ class HTTPClient:
         async def converter(data: StreamsResponseData) -> Stream:
             return Stream(data, http=self)
 
-        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     async def post_stream_marker(
@@ -1690,6 +1731,7 @@ class HTTPClient:
         video_id: str | None = None,
         token_for: str,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[VideoMarkers]:
         params: dict[str, str | int] = {"first": first}
         if user_id is not None:
@@ -1702,7 +1744,9 @@ class HTTPClient:
         async def converter(data: StreamMarkersResponseData) -> VideoMarkers:
             return VideoMarkers(data, http=self)
 
-        iterator: HTTPAsyncIterator[VideoMarkers] = self.request_paginated(route, converter=converter)
+        iterator: HTTPAsyncIterator[VideoMarkers] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
         return iterator
 
     ### Subscriptions ###
@@ -1760,6 +1804,7 @@ class HTTPClient:
         sort: Literal["time", "trending", "views"] = "time",
         type: Literal["all", "archive", "highlight", "upload"] = "all",
         first: int = 20,
+        max_results: int | None = None,
         token_for: str | None = None,
     ) -> HTTPAsyncIterator[Video]:
         params: dict[str, int | str | list[str | int]] = {"first": first, "period": period, "sort": sort, "type": type}
@@ -1778,7 +1823,7 @@ class HTTPClient:
         async def converter(data: VideosResponseData) -> Video:
             return Video(data, http=self)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def delete_videos(self, ids: list[str | int], token_for: str) -> DeleteVideosResponse:
