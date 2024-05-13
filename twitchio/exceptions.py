@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 
-__all__ = ("TwitchioException", "HTTPException")
+__all__ = ("TwitchioException", "HTTPException", "WebsocketTimeoutException")
 
 
 if TYPE_CHECKING:
@@ -80,3 +80,7 @@ class InvalidTokenException(HTTPException):
         self.invalid_type = type_
 
         super().__init__(msg, route=original.route, status=original.status, extra=original.extra)
+
+
+class WebsocketTimeoutException(TwitchioException):
+    """Exception raised when a conduit websocket has timed-out waiting for a "session_welcome" message."""
