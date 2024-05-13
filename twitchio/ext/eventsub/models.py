@@ -1726,7 +1726,16 @@ class AutomodMessageHoldData(EventData):
             }
     """
 
-    __slots__ = ("message_id", "message_content", "broadcaster", "user", "level", "category", "message_fragments", "created_at")
+    __slots__ = (
+        "message_id",
+        "message_content",
+        "broadcaster",
+        "user",
+        "level",
+        "category",
+        "message_fragments",
+        "created_at",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.message_id: str = data["message_id"]
@@ -1791,8 +1800,19 @@ class AutomodMessageUpdateData(EventData):
                 ]
             }
     """
-    
-    __slots__ = ("message_id", "message_content", "broadcaster", "user", "moderator", "level", "category", "message_fragments", "created_at", "status")
+
+    __slots__ = (
+        "message_id",
+        "message_content",
+        "broadcaster",
+        "user",
+        "moderator",
+        "level",
+        "category",
+        "message_fragments",
+        "created_at",
+        "status",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.message_id: str = data["message_id"]
@@ -1836,8 +1856,20 @@ class AutomodSettingsUpdateData(EventData):
     sexual_terms: :class:`int` | ``None``
         The aggression towards sexual terms/references.
     """
-    
-    __slots__ = ("broadcaster", "moderator", "overall", "disability", "aggression", "sex", "misogyny", "bullying", "swearing", "race_religion", "sexual_terms")
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "overall",
+        "disability",
+        "aggression",
+        "sex",
+        "misogyny",
+        "bullying",
+        "swearing",
+        "race_religion",
+        "sexual_terms",
+    )
 
     def __init__(self, client: EventSubClient, data: dict):
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
@@ -1923,7 +1955,7 @@ _DataType = Union[
     AutomodMessageHoldData,
     AutomodMessageUpdateData,
     AutomodSettingsUpdateData,
-    AutomodTermsUpdateData
+    AutomodTermsUpdateData,
 ]
 
 

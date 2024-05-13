@@ -534,21 +534,21 @@ class EventSubWSClient:
         await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.automod_message_hold, broadcaster, moderator, token
         )
-    
+
     async def subscribe_automod_message_update(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
         await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.automod_message_update, broadcaster, moderator, token
         )
-    
+
     async def subscribe_automod_settings_update(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
         await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.automod_settings_update, broadcaster, moderator, token
         )
-    
+
     async def subscribe_automod_terms_update(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
