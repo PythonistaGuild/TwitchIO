@@ -14,6 +14,8 @@ from backports.datetime_fromisoformat import MonkeyPatch  # type: ignore
 
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from typing_extensions import Self
 
     from .types_.colours import Colours
@@ -407,3 +409,8 @@ class Colour:
 
 
 Color = Colour
+
+
+def chunk_list(sequence: list[Any], n: int) -> Generator[Any, Any, Any]:
+    for i in range(0, len(sequence), n):
+        yield sequence[i : i + n]
