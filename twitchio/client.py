@@ -29,25 +29,15 @@ import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Literal
 
-from twitchio.http import HTTPAsyncIterator
-
 from .authentication import ManagedHTTPClient, Scopes
 from .conduits import Conduit, ConduitPool
-from .models import (
-    ChannelInfo,
-    ChatBadge,
-    ChatterColor,
-    CheerEmote,
-    Clip,
-    ContentClassificationLabel,
-    ExtensionTransaction,
-    Game,
-    GlobalEmote,
-    SearchChannel,
-    Stream,
-    Team,
-    Video,
-)
+from .http import HTTPAsyncIterator
+from .models.bits import Cheermote, ExtensionTransaction
+from .models.ccls import ContentClassificationLabel
+from .models.channels import ChannelInfo
+from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
+from .models.games import Game
+from .models.teams import Team
 from .payloads import EventErrorPayload
 from .web import AiohttpAdapter
 
@@ -61,6 +51,10 @@ if TYPE_CHECKING:
 
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .http import HTTPAsyncIterator
+    from .models.clips import Clip
+    from .models.search import SearchChannel
+    from .models.streams import Stream, VideoMarkers
+    from .models.videos import Video
     from .types_.options import ClientOptions
     from .types_.responses import ConduitPayload
 
@@ -121,7 +115,8 @@ class Client:
         return self._pool
 
     async def event_error(self, payload: EventErrorPayload) -> None:
-        """Event called when an error occurs in an event or event listener.
+        """
+        Event called when an error occurs in an event or event listener.
 
         This event can be overriden to handle event errors differently.
         By default, this method logs the error and ignores it.
@@ -161,7 +156,8 @@ class Client:
         _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
     async def setup_hook(self) -> None:
-        """Method called after [`.login`][twitchio.Client.login] has been called but before the client is started.
+        """
+        Method called after [`.login`][twitchio.Client.login] has been called but before the client is started.
 
         [`.start`][twitchio.Client.start] calls [`.login`][twitchio.Client.login] internally for you, so when using
         [`.start`][twitchio.Client.start] this method will be called after the client has generated and validated an
@@ -174,7 +170,8 @@ class Client:
         ...
 
     async def login(self, *, token: str | None = None) -> None:
-        """Method to login the client and generate or store an app token.
+        """
+        Method to login the client and generate or store an app token.
 
         This method is called automatically when using [`.start`][twitchio.Client.start].
         You should not call this method if you are using [`.start`][twitchio.Client.start].
@@ -213,7 +210,8 @@ class Client:
         await self.close()
 
     async def start(self, token: str | None = None, *, with_adapter: bool = True, dump_tokens: bool = True) -> None:
-        """Method to login the client and create a continuously running event loop.
+        """
+        Method to login the client and create a continuously running event loop.
 
         You should not call [`.login`][twitchio.Client.login] if you are using this method as it is called internally
         for you.
@@ -278,7 +276,8 @@ class Client:
         await self._http.load_tokens(name=path)
 
     async def dump_tokens(self, path: str | None = None, /) -> None:
-        """Method which dumps all the added OAuth tokens currently managed by this Client.
+        """
+        Method which dumps all the added OAuth tokens currently managed by this Client.
 
         !!! info
             By default this method dumps to a JSON file named `".tio.tokens.json"`.
@@ -306,46 +305,85 @@ class Client:
 
         self._listeners[name].add(listener)
 
-    async def fetch_global_chat_badges(self) -> list[ChatBadge]:
-        """|coro|
+    async def fetch_chat_badges(self) -> list[ChatBadge]:
+        """
+        Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
 
-        Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
+        If you wish to fetch a specific broadcaster's chat badges use [`fetch_chat_badges`][twitchio.user.fetch_chat_badges]
 
         Returns
         --------
         list[twitchio.ChatBadge]
+            A list of ChatBadge objects
         """
 
         data = await self._http.get_global_chat_badges()
-        return [ChatBadge(x) for x in data["data"]]
+        return [ChatBadge(x, http=self._http) for x in data["data"]]
 
-    async def fetch_chatters_color(self, user_ids: list[str | int], token_for: str | None = None) -> list[ChatterColor]:
-        """|coro|
+    async def fetch_emote_sets(self, emote_set_ids: list[str], *, token_for: str | None = None) -> list[EmoteSet]:
+        """
+        Fetches emotes for one or more specified emote sets.
 
+        ??? tip
+            An emote set groups emotes that have a similar context.
+            For example, Twitch places all the subscriber emotes that a broadcaster uploads for their channel in the same emote set.
+
+        Parameters
+        ----------
+        emote_set_ids: list[str]
+            List of IDs that identifies the emote set to get. You may specify a maximum of 25 IDs.
+        token_for: str | None, optional
+            An optional user token to use instead of the default app token.
+
+        Returns
+        -------
+        list[EmoteSet]
+            A list of EmoteSet objects.
+
+        Raises
+        ------
+        ValueError
+            You can only specify a maximum of 25 emote set IDs.
+        """
+
+        if len(emote_set_ids) > 25:
+            raise ValueError("You can only specify a maximum of 25 emote set IDs.")
+
+        data = await self._http.get_emote_sets(emote_set_ids=emote_set_ids, token_for=token_for)
+        template: str = data["template"]
+
+        return [EmoteSet(d, template=template, http=self._http) for d in data["data"]]
+
+    async def fetch_chatters_color(
+        self, user_ids: list[str | int], *, token_for: str | None = None
+    ) -> list[ChatterColor]:
+        """
         Fetches the color of a chatter.
 
         .. versionchanged:: 3.0
-            Removed the ``token`` parameter. Added the ``token_for`` parameter.
+            Removed the `token` parameter. Added the `token_for` parameter.
 
         Parameters
         -----------
         user_ids: list[str | int]
             List of user ids to fetch the colors for.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
-            list[twitchio.ChatterColor]
+        list[twitchio.ChatterColor]
+            A list of ChatterColor objects for the requested users.
         """
         if len(user_ids) > 100:
             raise ValueError("Maximum of 100 user_ids")
 
-        data = await self._http.get_chatters_color(user_ids, token_for)
+        data = await self._http.get_user_chat_color(user_ids, token_for)
         return [ChatterColor(d, http=self._http) for d in data["data"] if data]
 
-    async def fetch_channels(self, broadcaster_ids: list[str | int], token_for: str | None = None) -> list[ChannelInfo]:
-        """|coro|
-
+    async def fetch_channels(
+        self, broadcaster_ids: list[str | int], *, token_for: str | None = None
+    ) -> list[ChannelInfo]:
+        """
         Retrieve channel information from the API.
 
         Parameters
@@ -354,45 +392,45 @@ class Client:
             A list of channel IDs to request from API.
             You may specify a maximum of 100 IDs.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
-            list[twitchio.ChannelInfo]
+        list[twitchio.ChannelInfo]
+            A list of ChannelInfo objects.
         """
         if len(broadcaster_ids) > 100:
             raise ValueError("Maximum of 100 broadcaster_ids")
 
-        data = await self._http.get_channels(broadcaster_ids, token_for)
+        data = await self._http.get_channel_info(broadcaster_ids, token_for)
         return [ChannelInfo(d, http=self._http) for d in data["data"]]
 
     async def fetch_cheermotes(
-        self, broadcaster_id: int | str | None = None, token_for: str | None = None
-    ) -> list[CheerEmote]:
-        """|coro|
-
+        self, *, broadcaster_id: int | str | None = None, token_for: str | None = None
+    ) -> list[Cheermote]:
+        """
         Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room. Cheermotes are animated emotes that viewers can assign Bits to.
         If a broadcaster_id is not specified then only global cheermotes will be returned.
         If the broadcaster uploaded Cheermotes, the type attribute will be set to channel_custom.
 
         Parameters
         -----------
-        broadcaster_id: str | int
-            The id of the broadcaster who has uploaded Cheermotes.
+        broadcaster_id: str | int | None
+            The ID of the broadcaster whose custom Cheermotes you want to get. If not provided then you will fetch global Cheermotes.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         --------
-        list[twitchio.CheerEmote]
+        list[twitchio.Cheermote]
+            A list of Cheermote objects.
         """
         data = await self._http.get_cheermotes(str(broadcaster_id) if broadcaster_id else None, token_for)
-        return [CheerEmote(d) for d in data["data"]]
+        return [Cheermote(d, http=self._http) for d in data["data"]]
 
     async def fetch_classifications(
         self, locale: str = "en-US", *, token_for: str | None = None
     ) -> list[ContentClassificationLabel]:
-        """|coro|
-
+        """
         Fetches information about Twitch content classification labels.
 
         Parameters
@@ -403,6 +441,7 @@ class Client:
         Returns
         --------
         list[twitchio.ContentClassificationLabel]
+            A list of Content Classification Labels objects.
         """
         data = await self._http.get_content_classification_labels(locale, token_for)
         return [ContentClassificationLabel(d) for d in data["data"]]
@@ -410,67 +449,77 @@ class Client:
     async def fetch_clips(
         self,
         *,
-        broadcaster_id: str | None = None,
         game_id: str | None = None,
         clip_ids: list[str] | None = None,
         started_at: datetime.datetime | None = None,
         ended_at: datetime.datetime | None = None,
-        is_featured: bool | None = None,
+        featured: bool | None = None,
         token_for: str | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
-        """|coro|
-
+        """
         Fetches clips by clip id or game id.
 
         Parameters
         -----------
-        broadcaster_id: str
-            An ID of a broadcaster to fetch clips from.
-        game_id: Optional[list[str | int]]
+        game_id: list[str | int] | None
             A game id to fetch clips from.
         clip_ids: list[str] | None
             A list of specific clip IDs to fetch.
             Maximum amount you can request is 100.
-        started_at: datetime.datetime`
+        started_at: datetime.datetime
             The start date used to filter clips.
-        ended_at: datetime.datetime`
+        ended_at: datetime.datetime
             The end date used to filter clips. If not specified, the time window is the start date plus one week.
+        featured: bool | None = None
+            If True, returns only clips that are featured.
+            If False, returns only clips that aren't featured.
+            All clips are returned if this parameter is not provided.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
 
         Returns
         --------
         twitchio.HTTPAsyncIterator[twitchio.Clip]
+
+        Raises
+        ------
+        ValueError
+            Only one of `game_id` or `clip_ids` can be provided.
+        ValueError
+            One of `game_id` or `clip_ids` must be provided.
         """
 
-        provided: int = len([v for v in (broadcaster_id, game_id, clip_ids) if v])
+        provided: int = len([v for v in (game_id, clip_ids) if v])
         if provided > 1:
-            raise ValueError("Only one of 'name', 'id', or 'igdb_id' can be provided.")
+            raise ValueError("Only one of 'game_id' or 'clip_ids' can be provided.")
         elif provided == 0:
-            raise ValueError("One of 'name', 'id', or 'igdb_id' must be provided.")
+            raise ValueError("One of 'game_id' or 'clip_ids' must be provided.")
 
         first = max(1, min(100, first))
 
         return await self._http.get_clips(
-            broadcaster_id=broadcaster_id,
             game_id=game_id,
             clip_ids=clip_ids,
             first=first,
             started_at=started_at,
             ended_at=ended_at,
-            is_featured=is_featured,
+            is_featured=featured,
+            max_results=max_results,
             token_for=token_for,
         )
 
     async def fetch_extension_transactions(
-        self, extension_id: str, *, ids: list[str] | None = None, first: int = 20
+        self, extension_id: str, *, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
-        """|coro|
-
+        """
         Fetches global emotes from the twitch API
 
         !!! note
@@ -485,6 +534,8 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -497,19 +548,19 @@ class Client:
             raise ValueError("You can only provide a mximum of 100 IDs")
 
         return await self._http.get_extension_transactions(
-            extension_id=extension_id,
-            ids=ids,
-            first=first,
+            extension_id=extension_id, ids=ids, first=first, max_results=max_results
         )
 
-    async def fetch_global_emotes(self, token_for: str | None = None) -> list[GlobalEmote]:
-        """|coro|
-
+    async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
+        """
         Fetches global emotes from the twitch API
+
+        If you wish to fetch a specific broadcaster's chat badges use [`fetch_channel_emotes`][twitchio.user.fetch_channel_emotes]
 
         Returns
         --------
         list[twitchio.GlobalEmote]
+            A list of GlobalEmotes objects.
         """
         data = await self._http.get_global_emotes(token_for)
         template: str = data["template"]
@@ -526,9 +577,9 @@ class Client:
         type: Literal["all", "live"] = "all",
         token_for: str | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
-        """|coro|
-
+        """
         Fetches live streams from the helix API
 
         Parameters
@@ -542,12 +593,14 @@ class Client:
         languages: list[str] | None
             language for the stream(s). ISO 639-1 or two letter code for supported stream language
         type: Literal["all", "live"]
-            One of ``"all"`` or ``"live"``. Defaults to ``"all"``. Specifies what type of stream to fetch.
+            One of `"all"` or `"live"`. Defaults to `"all"`. Specifies what type of stream to fetch.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -564,14 +617,14 @@ class Client:
             languages=languages,
             type=type,
             token_for=token_for,
+            max_results=max_results,
         )
 
     async def fetch_team(
         self, *, team_name: str | None = None, team_id: str | None = None, token_for: str | None = None
     ) -> Team:
-        """|coro|
-
-        Fetches information about a specific Twitch team. You must provide one of either ``team_name`` or ``team_id``.
+        """
+        Fetches information about a specific Twitch team. You must provide one of either `team_name` or `team_id`.
 
         Parameters
         -----------
@@ -580,10 +633,11 @@ class Client:
         team_id: str
             The team id.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
-            twitchio.Team
+        twitchio.Team
+            A Team object.
         """
 
         if team_name and team_id:
@@ -598,22 +652,20 @@ class Client:
         return Team(data["data"][0], http=self._http)
 
     async def fetch_top_games(
-        self,
-        *,
-        token_for: str | None = None,
-        first: int = 20,
+        self, *, token_for: str | None = None, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[Game]:
-        """|coro|
-
+        """
         Fetches information about all broadcasts on Twitch.
 
         Parameters
         -----------
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
         --------
@@ -622,10 +674,7 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_top_games(
-            first=first,
-            token_for=token_for,
-        )
+        return await self._http.get_top_games(first=first, token_for=token_for, max_results=max_results)
 
     async def fetch_games(
         self,
@@ -635,21 +684,18 @@ class Client:
         igdb_ids: list[str] | None = None,
         token_for: str | None = None,
     ) -> list[Game]:
-        """|coro|
-
+        """
         Fetches information about all broadcasts on Twitch.
 
         Parameters
         -----------
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
+            An optional user token to use instead of the default app token.
 
         Returns
         --------
         list[twitchio.Game]
+            A list of Game objects
         """
 
         data = await self._http.get_games(
@@ -669,7 +715,8 @@ class Client:
         igdb_id: str | None = None,
         token_for: str | None = None,
     ) -> Game | None:
-        """Fetch a [`twitchio.Game`][twitchio.Game] object with the provided `name`, `id`, or `igdb_id`.
+        """
+        Fetch a [`twitchio.Game`][twitchio.Game] object with the provided `name`, `id`, or `igdb_id`.
 
         One of `name`, `id`, or `igdb_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
@@ -690,12 +737,12 @@ class Client:
         igdb_id: str | None
             The igdb_id of the game to fetch.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         -------
         Game | None
-            The game object if found, otherwise `None`.
+            The Game object if found, otherwise `None`.
 
         Raises
         ------
@@ -721,10 +768,14 @@ class Client:
         return Game(data["data"][0], http=self._http)
 
     async def search_categories(
-        self, query: str, *, token_for: str | None = None, first: int = 20
+        self,
+        query: str,
+        *,
+        token_for: str | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
-        """|coro|
-
+        """
         Searches Twitch categories.
 
         Parameters
@@ -734,11 +785,13 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
-            twitchio.HTTPAsyncIterator[twitchio.Game]
+        twitchio.HTTPAsyncIterator[twitchio.Game]
         """
 
         first = max(1, min(100, first))
@@ -746,15 +799,29 @@ class Client:
         return await self._http.get_search_categories(
             query=query,
             first=first,
+            max_results=max_results,
             token_for=token_for,
         )
 
     async def search_channels(
-        self, query: str, *, live: bool = False, token_for: str | None = None, first: int = 20
+        self,
+        query: str,
+        *,
+        live: bool = False,
+        token_for: str | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[SearchChannel]:
-        """|coro|
+        """
+        Searches Twitch channels that match the specified query and have streamed content within the past 6 months.
 
-        Searches Twitch categories.
+        !!! info
+            If `live` is set to False (default) then the query will look to match broadcaster login names.
+            If `live` is set to True then the query will match on the broadcaster login names and category names.
+
+            To match, the beginning of the broadcaster's name or category must match the query string.
+            The comparison is case insensitive. If the query string is angel_of_death, it matches all names that begin with angel_of_death.
+            However, if the query string is a phrase like angel of death, it matches to names starting with angelofdeath or names starting with angel_of_death.
 
         Parameters
         -----------
@@ -766,11 +833,13 @@ class Client:
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
         Returns
         --------
-            twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
+        twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
         """
 
         first = max(1, min(100, first))
@@ -779,6 +848,7 @@ class Client:
             query=query,
             first=first,
             live=live,
+            max_results=max_results,
             token_for=token_for,
         )
 
@@ -793,9 +863,11 @@ class Client:
         sort: Literal["time", "trending", "views"] = "time",
         type: Literal["all", "archive", "highlight", "upload"] = "all",
         first: int = 20,
+        max_results: int | None = None,
         token_for: str | None = None,
     ) -> HTTPAsyncIterator[Video]:
-        """Fetch a list of [`twitchio.Video`][twitchio.Video] objects with the provided `ids`, `user_id` or `game_id`.
+        """
+        Fetch a list of [`twitchio.Video`][twitchio.Video] objects with the provided `ids`, `user_id` or `game_id`.
 
         One of `ids`, `user_id` or `game_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
@@ -814,8 +886,12 @@ class Client:
         sort: Literal["time", "trending", "views"]
         type: Literal["all", "archive", "highlight", "upload"]
         first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | None
-            An optional User OAuth token to use instead of the default app token.
+            An optional user token to use instead of the default app token.
 
         Returns
         -------
@@ -846,13 +922,15 @@ class Client:
             sort=sort,
             type=type,
             first=first,
+            max_results=max_results,
             token_for=token_for,
         )
 
-    async def delete_videos(self, ids: list[str | int], token_for: str) -> list[str]:
-        """Deletes one or more videos. You may delete past broadcasts, highlights, or uploads.
+    async def delete_videos(self, *, ids: list[str | int], token_for: str) -> list[str]:
+        """
+        Deletes one or more videos. You may delete past broadcasts, highlights, or uploads.
 
-        This requires a user token with the scope ``channel:manage:videos``.
+        This requires a user token with the scope `channel:manage:videos`.
         The limit is to delete 5 ids at a time, so if more than 5 ids are provided we will attempt to delete them in chunks.
         If any of the videos fail to delete in the request then none will be deleted in that chunk.
 
@@ -861,7 +939,7 @@ class Client:
         ids: list[str | int] | None
             A list of video IDs to fetch.
         token_for: str
-            A User OAuth token with the scope ``channel:manage:videos``.
+            User token with the scope `channel:manage:videos`.
 
         Returns
         -------
@@ -877,12 +955,49 @@ class Client:
 
         return resp
 
+    async def fetch_stream_markers(
+        self, *, video_id: str, token_for: str, first: int = 20, max_results: int | None = None
+    ) -> HTTPAsyncIterator[VideoMarkers]:
+        """
+        Fetches markers from the user's most recent stream or from the specified VOD/video.
+        A marker is an arbitrary point in a live stream that the broadcaster or editor marked, so they can return to that spot later to create video highlights
+
+        !!! info
+            To fetch by user please use [`fetch_stream_markers`][twitchio.user.PartialUser.fetch_stream_markers]
+
+        ??? note
+            Requires a user access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+
+        Parameters
+        ----------
+        video_id: str
+            A video on demand (VOD)/video ID. The request returns the markers from this VOD/video.
+            The user in the access token must own the video or the user must be one of the broadcaster's editors.
+        token_for: str
+            User access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[VideoMarkers]
+            HTTPAsyncIterator of VideoMarkers objects.
+        """
+        first = max(1, min(100, first))
+        return await self._http.get_stream_markers(
+            video_id=video_id, token_for=token_for, first=first, max_results=max_results
+        )
+
     async def _create_conduit(self, shard_count: int, /) -> list[Conduit]:
         data: ConduitPayload = await self._http.create_conduit(shard_count)
         return [Conduit(data=c, pool=self._pool) for c in data["data"]]
 
     def doc_test(self, thing: int = 1) -> int:
-        """This is a test method to test and view certain elements of the mkdocs style documentation.
+        """
+        This is a test method to test and view certain elements of the mkdocs style documentation.
 
         For more information see: [`Material Docs`](https://squidfunk.github.io/mkdocs-material/reference/)
 

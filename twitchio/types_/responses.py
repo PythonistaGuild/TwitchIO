@@ -396,7 +396,7 @@ class CustomRewardRedemptionResponseData(TypedDict):
     user_id: str
     user_name: str
     user_input: str
-    status: str
+    status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
     redeemed_at: str
     reward: CustomRewardRedemptionResponseReward
 
@@ -615,7 +615,7 @@ class SendChatMessageResponseDropReason(TypedDict):
 class SendChatMessageResponseData(TypedDict):
     message_id: str
     is_sent: bool
-    drop_reason: SendChatMessageResponseDropReason
+    drop_reason: SendChatMessageResponseDropReason | None
 
 
 class SendChatMessageResponse(TypedDict):
@@ -633,9 +633,13 @@ class UserChatColorResponse(TypedDict):
     data: list[UserChatColorResponseData]
 
 
-class CreateClipResponse(TypedDict):
+class CreateClipResponseData(TypedDict):
     edit_url: str
     id: str
+
+
+class CreateClipResponse(TypedDict):
+    data: list[CreateClipResponseData]
 
 
 class ClipsResponseData(TypedDict):
@@ -962,7 +966,7 @@ class CreatorGoalsResponseData(TypedDict):
     broadcaster_id: str
     broadcaster_name: str
     broadcaster_login: str
-    type: str
+    type: Literal["follower", "subscription", "subscription_count", "new_subscription", "new_subscription_count"]
     description: str
     current_amount: int
     target_amount: int
@@ -1275,7 +1279,7 @@ class PredictionsResponseData(TypedDict):
     broadcaster_login: str
     title: str
     winning_outcome_id: str | None
-    outcomes: list[PredictionsResponseOutcomes] | None
+    outcomes: list[PredictionsResponseOutcomes]
     prediction_window: int
     status: Literal["ACTIVE", "CANCELED", "LOCKED", "RESOLVED"]
     created_at: str
@@ -1474,9 +1478,9 @@ class CheckUserSubscriptionResponseData(TypedDict):
     broadcaster_id: str
     broadcaster_login: str
     broadcaster_name: str
-    gifter_id: str
-    gifter_login: str
-    gifter_name: str
+    gifter_id: str | None
+    gifter_login: str | None
+    gifter_name: str | None
     is_gift: bool
     tier: Literal["1000", "2000", "3000"]
 

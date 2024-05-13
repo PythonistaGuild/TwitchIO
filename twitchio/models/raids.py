@@ -22,16 +22,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0dev"
+from __future__ import annotations
 
-from . import authentication as authentication, utils as utils, web as web
-from .assets import Asset as Asset
-from .client import Client as Client
-from .exceptions import *
-from .models import *
-from .payloads import *
-from .utils import Color as Color, Colour as Colour
+from typing import TYPE_CHECKING
+
+from twitchio.utils import parse_timestamp
+
+
+if TYPE_CHECKING:
+    import datetime
+
+    from twitchio.types_.responses import StartARaidResponseData
+
+__all__ = ("Raid",)
+
+
+class Raid:
+    """
+    Represents a raid for a broadcaster / channel
+
+    Attributes
+    -----------
+    created_at: datetime.datetime
+        Datetime of when the raid started.
+    mature: bool
+        Indicates whether the stream being raided is marked as mature.
+    """
+
+    __slots__ = ("created_at", "mature")
+
+    def __init__(self, data: StartARaidResponseData) -> None:
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.mature: bool = data["is_mature"]
+
+    def __repr__(self) -> str:
+        return f"<Raid created_at={self.created_at} mature={self.mature}>"

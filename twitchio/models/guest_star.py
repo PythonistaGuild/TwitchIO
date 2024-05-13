@@ -22,16 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0dev"
+from __future__ import annotations
 
-from . import authentication as authentication, utils as utils, web as web
-from .assets import Asset as Asset
-from .client import Client as Client
-from .exceptions import *
-from .models import *
-from .payloads import *
-from .utils import Color as Color, Colour as Colour
+# This is still in BETA and is currently subject to being rebranded.
