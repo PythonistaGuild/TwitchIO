@@ -1637,13 +1637,7 @@ class ChannelUnbanRequestCreate(EventData):
         When the user submitted the request.
     """
 
-    __slots__ = (
-        "id",
-        "broadcaster",
-        "user",
-        "text",
-        "created_at"
-    )
+    __slots__ = ("id", "broadcaster", "user", "text", "created_at")
 
     def __init__(self, client: EventSubClient, data: dict):
         self.id: str = data["id"]
@@ -1651,6 +1645,7 @@ class ChannelUnbanRequestCreate(EventData):
         self.user: PartialUser = _transform_user(client, data, "user")
         self.text: str = data["text"]
         self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
+
 
 class ChannelUnbanRequestResolve(EventData):
     """
@@ -1672,13 +1667,7 @@ class ChannelUnbanRequestResolve(EventData):
         The resolution. either `accepted` or `denied`.
     """
 
-    __slots__ = (
-        "id",
-        "broadcaster",
-        "user",
-        "text",
-        "created_at"
-    )
+    __slots__ = ("id", "broadcaster", "user", "text", "created_at")
 
     def __init__(self, client: EventSubClient, data: dict):
         self.id: str = data["id"]
@@ -1686,6 +1675,7 @@ class ChannelUnbanRequestResolve(EventData):
         self.user: PartialUser = _transform_user(client, data, "user")
         self.text: str = data["text"]
         self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
+
 
 _DataType = Union[
     ChannelBanData,
@@ -1721,7 +1711,7 @@ _DataType = Union[
     ChannelShoutoutReceiveData,
     ChannelCharityDonationData,
     ChannelUnbanRequestCreate,
-    ChannelUnbanRequestResolve
+    ChannelUnbanRequestResolve,
 ]
 
 
