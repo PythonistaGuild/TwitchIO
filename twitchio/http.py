@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from typing_extensions import Self, Unpack
 
     from .assets import Asset
-    from .types_.conduits import ShardData
+    from .types_.conduits import ShardData, ShardUpdateRequest
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         AdScheduleResponse,
@@ -671,9 +671,18 @@ class HTTPClient:
         iterator = self.request_paginated(route, converter=converter)
         return iterator
 
+    async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest], session_id: str | None = None,) -> ...:
+        # TODO: Type for return...
+
+        params = {"conduit_id": conduit_id}
+        body = {"shards": shards}
+
+        route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
+        return await self.request_json(route)
+
     async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
         data = {"broadcaster_id": broadcaster_id, "length": length}
-        route: Route = Route("POST", "channels/commercial", data=data, token_for=token_for)
+        route: Route = Route("POST", "channels/commercial", json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdScheduleResponse:
@@ -744,7 +753,7 @@ class HTTPClient:
             ]
             data["content_classification_labels"] = converted_labels
 
-        route: Route = Route("PATCH", "channels", params=params, data=data, token_for=token_for)
+        route: Route = Route("PATCH", "channels", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsResponse:
