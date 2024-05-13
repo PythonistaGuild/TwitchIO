@@ -25,6 +25,15 @@ SOFTWARE.
 import enum
 
 
+__all__ = (
+    "TransportMethod",
+    "ShardStatus",
+    "CloseCode",
+    "MessageType",
+    "SubscriptionTypes",
+)
+
+
 class TransportMethod(enum.Enum):
     WEBHOOK = "webhook"
     WEBSOCKET = "websocket"

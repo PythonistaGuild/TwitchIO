@@ -40,6 +40,21 @@ class SubscriptionPayload:
     type: ClassVar[Any]
     version: ClassVar[Any]
 
+    __slots__ = (
+        "broadcaster_user_id",
+        "moderator_user_id",
+        "user_id",
+        "campaign_id",
+        "category_id",
+        "organization_id",
+        "client_id",
+        "conduit_id",
+        "reward_id",
+        "from_broadcaster_user_id",
+        "to_broadcaster_user_id",
+        "broadcaster_id",
+    )
+
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str | None = condition.get("broadcaster_user_id", None)
         self.moderator_user_id: str | None = condition.get("moderator_user_id", None)
