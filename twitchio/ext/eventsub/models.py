@@ -1619,7 +1619,7 @@ class ChannelCharityDonationData(EventData):
         self.donation_decimal_places: int = data["amount"]["decimal_places"]
 
 
-class ChannelUnbanRequestCreate(EventData):
+class ChannelUnbanRequestCreateData(EventData):
     """
     Represents an unban request created by a user.
 
@@ -1647,7 +1647,7 @@ class ChannelUnbanRequestCreate(EventData):
         self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
 
 
-class ChannelUnbanRequestResolve(EventData):
+class ChannelUnbanRequestResolveData(EventData):
     """
     Represents an unban request that has been resolved by a moderator.
 
@@ -1710,8 +1710,8 @@ _DataType = Union[
     ChannelShoutoutCreateData,
     ChannelShoutoutReceiveData,
     ChannelCharityDonationData,
-    ChannelUnbanRequestCreate,
-    ChannelUnbanRequestResolve,
+    ChannelUnbanRequestCreateData,
+    ChannelUnbanRequestResolveData,
 ]
 
 
@@ -1782,8 +1782,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     stream_start = "stream.online", 1, StreamOnlineData
     stream_end = "stream.offline", 1, StreamOfflineData
 
-    unban_request_create = "channel.unban_request.create", 1, ChannelUnbanRequestCreate
-    unban_request_resolve = "channel.unban_request.resolve", 1, ChannelUnbanRequestResolve
+    unban_request_create = "channel.unban_request.create", 1, ChannelUnbanRequestCreateData
+    unban_request_resolve = "channel.unban_request.resolve", 1, ChannelUnbanRequestResolveData
 
     user_authorization_grant = "user.authorization.grant", 1, UserAuthorizationGrantedData
     user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
