@@ -338,7 +338,7 @@ class CustomReward:
 
         return CustomReward(data=data["data"][0], http=self._http)
 
-    async def fetch_redemptions(
+    def fetch_redemptions(
         self,
         *,
         token_for: str,
@@ -385,7 +385,7 @@ class CustomReward:
         if ids is not None and len(ids) > 50:
             raise ValueError("You may only specify up to 50 redemption ids.")
 
-        return await self._http.get_custom_reward_redemptions(
+        return self._http.get_custom_reward_redemptions(
             broadcaster_id=self.broadcaster.id,
             token_for=token_for,
             reward_id=self.id,

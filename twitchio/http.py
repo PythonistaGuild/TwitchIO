@@ -64,9 +64,9 @@ if TYPE_CHECKING:
     from typing_extensions import Self, Unpack
 
     from .assets import Asset
-    from .types_.conduits import ShardData, ShardUpdateRequest
     from .models.channel_points import CustomReward
     from .models.moderation import AutomodCheckMessage, AutomodSettings
+    from .types_.conduits import ShardData, ShardUpdateRequest
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         AddBlockedTermResponse,
@@ -140,7 +140,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 T = TypeVar("T")
-PaginatedConverter: TypeAlias = Callable[[Any], Awaitable[T]] | None
+PaginatedConverter: TypeAlias = Callable[..., Awaitable[T]] | None
 
 
 async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
@@ -285,7 +285,7 @@ class HTTPAsyncIterator(Generic[T]):
         self._converter = converter or self._base_converter
         self._buffer: deque[T] = deque()
 
-    async def _base_converter(self, data: Any) -> T:
+    async def _base_converter(self, data: Any, *, raw: Any = {}) -> T:
         return data
 
     async def _call_next(self) -> None:
@@ -307,23 +307,21 @@ class HTTPAsyncIterator(Generic[T]):
 
         for value in inner:
             if self._max_results is None:
-                self._buffer.append(await self._do_conversion(value))
+                self._buffer.append(await self._do_conversion(value, raw=data))
                 continue
 
             self._max_results -= 1  # If this is causing issues, it's just pylance bugged/desynced...
             if self._max_results < 0:
                 return
 
-            self._buffer.append(await self._do_conversion(value))
+            self._buffer.append(await self._do_conversion(value, raw=data))
 
-    async def _do_conversion(self, data: RawResponse) -> T:
-        return await self._converter(data)
+    async def _do_conversion(self, data: RawResponse, *, raw: RawResponse) -> T:
+        return await self._converter(data, raw=raw)
 
     async def _flatten(self) -> list[T]:
-        if not self._buffer:
-            await self._call_next()
-
-        return list(self._buffer)
+        items: list[T] = [item async for item in self]
+        return items
 
     def __await__(self) -> Generator[Any, None, list[T]]:
         return self._flatten().__await__()
@@ -470,33 +468,27 @@ class HTTPClient:
 
     ### Ads ###
 
-    async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest], session_id: str | None = None,) -> ...:
-        # TODO: Type for return...
-
-        params = {"conduit_id": conduit_id}
-        body = {"shards": shards}
-
-        route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
-        return await self.request_json(route)
-
     async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
         data = {"broadcaster_id": broadcaster_id, "length": length}
+
         route: Route = Route("POST", "channels/commercial", json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdScheduleResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "channels/ads", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeNextAdResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Analytics ###
 
-    async def get_extension_analytics(
+    def get_extension_analytics(
         self,
         *,
         token_for: str,
@@ -521,13 +513,13 @@ class HTTPClient:
 
         route: Route = Route("GET", "analytics/extensions", params=params, token_for=token_for)
 
-        async def converter(data: ExtensionAnalyticsResponseData) -> ExtensionAnalytics:
+        async def converter(data: ExtensionAnalyticsResponseData, *, raw: Any) -> ExtensionAnalytics:
             return ExtensionAnalytics(data)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
-    async def get_game_analytics(
+    def get_game_analytics(
         self,
         *,
         token_for: str,
@@ -552,7 +544,7 @@ class HTTPClient:
 
         route: Route = Route("GET", "analytics/games", params=params, token_for=token_for)
 
-        async def converter(data: GameAnalyticsResponseData) -> GameAnalytics:
+        async def converter(data: GameAnalyticsResponseData, *, raw: Any) -> GameAnalytics:
             return GameAnalytics(data)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
@@ -585,34 +577,47 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_cheermotes(
-        self, broadcaster_id: str | int | None = None, token_for: str | None = None
+        self,
+        broadcaster_id: str | int | None = None,
+        token_for: str | None = None,
     ) -> CheermotesResponse:
         params = {"broadcaster_id": broadcaster_id} if broadcaster_id is not None else {}
+
         route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_extension_transactions(
-        self, *, extension_id: str, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
+    def get_extension_transactions(
+        self,
+        *,
+        extension_id: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
         params: dict[str, str | int | list[str]] = {"extension_id": extension_id, "first": first}
         if ids:
             params["id"] = ids
+
         route: Route = Route("GET", "extensions/transactions", params=params)
 
-        async def converter(data: ExtensionTransactionsResponseData) -> ExtensionTransaction:
+        async def converter(data: ExtensionTransactionsResponseData, *, raw: Any) -> ExtensionTransaction:
             return ExtensionTransaction(data, http=self)
 
         iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     ### Channels ###
 
     async def get_channel_info(
-        self, broadcaster_ids: list[str | int], token_for: str | None = None
+        self,
+        broadcaster_ids: list[str | int],
+        token_for: str | None = None,
     ) -> ChannelInformationResponse:
         params = {"broadcaster_id": broadcaster_ids}
+
         route: Route = Route("GET", "channels", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -631,7 +636,7 @@ class HTTPClient:
             dict[Literal["DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]
         ]
         | None = None,
-    ) -> None:
+    ) -> None:  # TODO: Returns None?
         params = {"broadcaster_id": broadcaster_id}
 
         data: dict[str, str | int | list[str] | list[dict[str, str | bool]]] = {
@@ -660,6 +665,7 @@ class HTTPClient:
 
     async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "channels/editors", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -678,13 +684,12 @@ class HTTPClient:
 
         route = Route("GET", "channels/followed", params=params, token_for=token_for)
 
-        async def converter(data: FollowedChannelsResponseData) -> FollowedChannelsEvent:
+        async def converter(data: FollowedChannelsResponseData, *, raw: Any) -> FollowedChannelsEvent:
             return FollowedChannelsEvent(data, http=self)
-
-        from .models.channels import FollowedChannels
 
         iterator = self.request_paginated(route, converter=converter)
         data = await self.request_json(route)
+
         return FollowedChannels(data, iterator)
 
     async def get_channel_followers(
@@ -707,6 +712,7 @@ class HTTPClient:
 
         iterator = self.request_paginated(route, converter=converter)
         data = await self.request_json(route)
+
         return ChannelFollowers(data, iterator)
 
     ### Channel Points ###
@@ -737,16 +743,20 @@ class HTTPClient:
         if prompt is not None:
             data["prompt"] = prompt
             data["is_user_input_required"] = True
+
         if background_color:
             if isinstance(background_color, Colour):
                 background_color = str(background_color)
             data["background_color"] = background_color
+
         if max_per_stream:
             data["max_per_stream"] = max_per_stream
             data["is_max_per_stream_enabled"] = True
+
         if max_per_user:
             data["max_per_user_per_stream"] = max_per_user
             data["is_max_per_user_per_stream_enabled"] = True
+
         if global_cooldown:
             data["global_cooldown_seconds"] = global_cooldown
             data["is_global_cooldown_enabled"] = True
@@ -756,11 +766,17 @@ class HTTPClient:
 
     async def delete_custom_reward(self, broadcaster_id: str, reward_id: str, token_for: str) -> None:
         params = {"broadcaster_id": broadcaster_id, "id": reward_id}
+
         route: Route = Route("DELETE", "channel_points/custom_rewards", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_custom_reward(
-        self, *, broadcaster_id: str, token_for: str, reward_ids: list[str] | None = None, manageable: bool = False
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str,
+        reward_ids: list[str] | None = None,
+        manageable: bool = False,
     ) -> CustomRewardsResponse:
         params: dict[str, str | bool | list[str]] = {
             "broadcaster_id": broadcaster_id,
@@ -799,27 +815,36 @@ class HTTPClient:
 
         if title is not None:
             data["title"] = title
+
         if cost is not None:
             data["cost"] = cost
+
         if prompt is not None:
             data["prompt"] = prompt
             data["user_input_required"] = True
+
         if enabled is not None:
             data["is_enabled"] = enabled
+
         if background_color:
             if isinstance(background_color, Colour):
                 background_color = str(background_color)
             data["background_color"] = background_color
+
         if user_input_required is not None:
             data["is_user_input_required"] = user_input_required
+
         if skip_queue is not None:
             data["should_redemptions_skip_request_queue"] = skip_queue
+
         if max_per_stream is not None:
             data["max_per_stream"] = max_per_stream
             data["is_max_per_stream_enabled"] = max_per_stream != 0
+
         if max_per_user is not None:
             data["max_per_user_per_stream"] = max_per_user
             data["is_max_per_user_per_stream_enabled"] = max_per_user != 0
+
         if global_cooldown is not None:
             data["global_cooldown_seconds"] = global_cooldown
             data["is_global_cooldown_enabled"] = global_cooldown != 0
@@ -827,7 +852,7 @@ class HTTPClient:
         route: Route = Route("PATCH", "channel_points/custom_rewards", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_custom_reward_redemptions(
+    def get_custom_reward_redemptions(
         self,
         *,
         broadcaster_id: str,
@@ -855,7 +880,7 @@ class HTTPClient:
 
         route: Route = Route("GET", "channel_points/custom_rewards/redemptions", params=params, token_for=token_for)
 
-        async def converter(data: CustomRewardRedemptionResponseData) -> CustomRewardRedemption:
+        async def converter(data: CustomRewardRedemptionResponseData, *, raw: Any) -> CustomRewardRedemption:
             return CustomRewardRedemption(data, parent_reward=parent_reward, http=self)
 
         iterator = self.request_paginated(route, converter=converter)
@@ -874,24 +899,34 @@ class HTTPClient:
         data = {"status": status}
 
         route: Route = Route(
-            "PATCH", "channel_points/custom_rewards/redemptions", params=params, json=data, token_for=token_for
+            "PATCH",
+            "channel_points/custom_rewards/redemptions",
+            params=params,
+            json=data,
+            token_for=token_for,
         )
+
         return await self.request_json(route)
 
     ### Charity ###
 
     async def get_charity_campaign(self, broadcaster_id: str, token_for: str) -> CharityCampaignResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "charity/campaigns", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_charity_donations(
-        self, broadcaster_id: str, token_for: str, first: int = 20, max_results: int | None = None
+    def get_charity_donations(
+        self,
+        broadcaster_id: str,
+        token_for: str,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[CharityDonation]:
         params = {"broadcaster_id": broadcaster_id, "first": first}
         route: Route = Route("GET", "charity/donations", params=params, token_for=token_for)
 
-        async def converter(data: CharityCampaignDonationsResponseData) -> CharityDonation:
+        async def converter(data: CharityCampaignDonationsResponseData, *, raw: Any) -> CharityDonation:
             return CharityDonation(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
@@ -915,6 +950,7 @@ class HTTPClient:
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         data = await self.request_json(route)
+
         return Chatters(iterator, data)
 
     async def get_global_chat_badges(self, token_for: str | None = None) -> GlobalChatBadgesResponse:
@@ -922,16 +958,22 @@ class HTTPClient:
         return await self.request_json(route)
 
     async def get_user_chat_color(
-        self, user_ids: list[str | int], token_for: str | None = None
+        self,
+        user_ids: list[str | int],
+        token_for: str | None = None,
     ) -> UserChatColorResponse:
         params: dict[str, list[str | int]] = {"user_id": user_ids}
+
         route: Route = Route("GET", "chat/color", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_channel_emotes(
-        self, broadcaster_id: str | int, token_for: str | None = None
+        self,
+        broadcaster_id: str | int,
+        token_for: str | None = None,
     ) -> ChannelEmotesResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "chat/emotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -941,27 +983,39 @@ class HTTPClient:
 
     async def get_emote_sets(self, emote_set_ids: list[str], token_for: str | None = None) -> EmoteSetsResponse:
         params = {"emote_set_id": emote_set_ids}
+
         route: Route = Route("GET", "chat/emotes/set", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_channel_chat_badges(
-        self, broadcaster_id: str, token_for: str | None = None
+        self,
+        broadcaster_id: str,
+        token_for: str | None = None,
     ) -> ChannelChatBadgesResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "chat/badges", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def get_channel_chat_settings(
-        self, broadcaster_id: str, moderator_id: str | int | None = None, token_for: str | None = None
+        self,
+        broadcaster_id: str,
+        moderator_id: str | int | None = None,
+        token_for: str | None = None,
     ) -> ChatSettingsResponse:
         params = {"broadcaster_id": broadcaster_id}
         if moderator_id is not None:
             params["moderator_id"] = str(moderator_id)
+
         route: Route = Route("GET", "chat/settings", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_user_emotes(
-        self, user_id: str, token_for: str, broadcaster_id: str | int | None = None, max_results: int | None = None
+    def get_user_emotes(
+        self,
+        user_id: str,
+        token_for: str,
+        broadcaster_id: str | int | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[UserEmote]:
         params = {"user_id": user_id}
         if broadcaster_id is not None:
@@ -969,11 +1023,8 @@ class HTTPClient:
 
         route: Route = Route("GET", "chat/emotes/user", params=params, token_for=token_for)
 
-        data = await self.request_json(route)
-        template: str = data["template"]
-
-        async def converter(data: UserEmotesResponseData) -> UserEmote:
-            return UserEmote(data, template=template, http=self)
+        async def converter(data: UserEmotesResponseData, *, raw: Any) -> UserEmote:
+            return UserEmote(data, template=raw["template"], http=self)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
@@ -1021,6 +1072,7 @@ class HTTPClient:
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = {"color": color, "message": message}
+
         route: Route = Route("POST", "chat/announcements", json=data, params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1036,6 +1088,7 @@ class HTTPClient:
             "moderator_id": moderator_id,
             "to_broadcaster_id": to_broadcaster_id,
         }
+
         route: Route = Route("POST", "chat/shoutouts", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1056,13 +1109,13 @@ class HTTPClient:
 
     async def put_user_chat_color(self, user_id: str | int, color: str, token_for: str) -> None:
         params = {"user_id": user_id, "color": color}
+
         route: Route = Route("PUT", "chat/color", params=params, token_for=token_for)
-        print(route.params)
         return await self.request_json(route)
 
     ### Clips ###
 
-    async def get_clips(
+    def get_clips(
         self,
         *,
         first: int,
@@ -1076,6 +1129,7 @@ class HTTPClient:
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
         params: dict[str, str | int | list[str]] = {"first": first}
+
         if broadcaster_id:
             params["broadcaster_id"] = broadcaster_id
         elif game_id:
@@ -1092,23 +1146,38 @@ class HTTPClient:
 
         route: Route = Route("GET", "clips", params=params, token_for=token_for)
 
-        async def converter(data: ClipsResponseData) -> Clip:
+        async def converter(data: ClipsResponseData, *, raw: Any) -> Clip:
             return Clip(data, http=self)
 
         iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
     async def post_create_clip(
-        self, *, broadcaster_id: str | int, token_for: str, has_delay: bool = False
+        self,
+        *,
+        broadcaster_id: str | int,
+        token_for: str,
+        has_delay: bool = False,
     ) -> CreateClipResponse:
         params = {"broadcaster_id": broadcaster_id, "has_delay": has_delay}
+
         route: Route = Route("POST", "clips", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Conduits ###
 
+    async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
+        # TODO: Type for return...
+
+        params = {"conduit_id": conduit_id}
+        body = {"shards": shards}
+
+        route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
+        return await self.request_json(route)
+
     async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
         params = {"shard_count": shard_count}
+
         route: Route = Route("POST", "eventsub/conduits", params=params)
         return await self.request_json(route)
 
@@ -1116,22 +1185,34 @@ class HTTPClient:
         route = Route("GET", "eventsub/conduits")
         return await self.request_json(route)
 
-    async def get_conduit_shards(self, conduit_id: str, /) -> HTTPAsyncIterator[Shard]:
+    def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[Shard]:
         params = {"conduit_id": conduit_id}
+        if status:
+            params["status"] = status
 
-        async def converter(data: ShardData) -> Shard:
+        async def converter(data: ShardData, *, raw: Any) -> Shard:
             return Shard(data=data)
 
         route: Route = Route("GET", "eventsub/conduits/shards", params=params)
         iterator = self.request_paginated(route, converter=converter)
+
         return iterator
+
+    async def update_conduits(self, id: str, /, shard_count: int) -> ConduitPayload:
+        params = {"id": id, "shard_count": shard_count}
+
+        route: Route = Route("PATCH", "eventsub/conduits", params=params)
+        return await self.request_json(route)
 
     ### CCLs ###
 
     async def get_content_classification_labels(
-        self, locale: str, token_for: str | None = None
+        self,
+        locale: str,
+        token_for: str | None = None,
     ) -> ContentClassificationLabelsResponse:
         params: dict[str, str] = {"locale": locale}
+
         route: Route = Route("GET", "content_classification_labels", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1143,13 +1224,17 @@ class HTTPClient:
 
     ### Games ###
 
-    async def get_top_games(
-        self, first: int, token_for: str | None = None, max_results: int | None = None
+    def get_top_games(
+        self,
+        first: int,
+        token_for: str | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
         params: dict[str, int] = {"first": first}
+
         route: Route = Route("GET", "games/top", params=params, token_for=token_for)
 
-        async def converter(data: TopGamesResponseData) -> Game:
+        async def converter(data: TopGamesResponseData, *, raw: Any) -> Game:
             return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter, max_results=max_results)
@@ -1173,13 +1258,13 @@ class HTTPClient:
             params["igdb_id"] = igdb_ids
 
         route: Route = Route("GET", "games", params=params, token_for=token_for)
-
         return await self.request_json(route)
 
     ### Goals ###
 
     async def get_creator_goals(self, broadcaster_id: str | int, token_for: str) -> CreatorGoalsResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "goals", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1187,55 +1272,78 @@ class HTTPClient:
 
     ### Hype Train ###
 
-    async def get_hype_train_events(
-        self, broadcaster_id: str | int, token_for: str, first: int = 1, max_results: int | None = None
+    def get_hype_train_events(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        first: int = 1,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[HypeTrainEvent]:
         params = {"broadcaster_id": broadcaster_id, "first": first}
 
         route: Route = Route("GET", "hypetrain/events", params=params, token_for=token_for)
 
-        async def converter(data: HypeTrainEventsResponseData) -> HypeTrainEvent:
+        async def converter(data: HypeTrainEventsResponseData, *, raw: Any) -> HypeTrainEvent:
             return HypeTrainEvent(data, http=self)
 
         iterator: HTTPAsyncIterator[HypeTrainEvent] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     ### Moderation ###
 
     async def post_check_automod_status(
-        self, broadcaster_id: str | int, messages: list[AutomodCheckMessage], token_for: str
+        self,
+        broadcaster_id: str | int,
+        messages: list[AutomodCheckMessage],
+        token_for: str,
     ) -> CheckAutomodStatusResponse:
         params = {"broadcaster_id": broadcaster_id}
         msg = [x._to_dict() for x in messages]
         data = {"data": msg}
+
         route: Route = Route("POST", "moderation/enforcements/status", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def post_manage_automod_messages(
-        self, user_id: str | int, msg_id: str, action: Literal["ALLOW", "DENY"], token_for: str
+        self,
+        user_id: str | int,
+        msg_id: str,
+        action: Literal["ALLOW", "DENY"],
+        token_for: str,
     ) -> None:
         data = {"user_id": user_id, "msg_id": msg_id, "action": action}
+
         route: Route = Route("POST", "moderation/automod/message", json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def get_automod_settings(
-        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
     ) -> AutomodSettingsResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+
         route: Route = Route("GET", "moderation/automod/settings", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def put_automod_settings(
-        self, broadcaster_id: str | int, moderator_id: str | int, settings: AutomodSettings, token_for: str
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        settings: AutomodSettings,
+        token_for: str,
     ) -> AutomodSettingsResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = settings.to_dict()
+
         route: Route = Route("PUT", "moderation/automod/settings", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_banned_users(
+    def get_banned_users(
         self,
         broadcaster_id: str | int,
         token_for: str,
@@ -1249,12 +1357,13 @@ class HTTPClient:
 
         route: Route = Route("GET", "moderation/banned", params=params, token_for=token_for)
 
-        async def converter(data: BannedUsersResponseData) -> BannedUser:
+        async def converter(data: BannedUsersResponseData, *, raw: Any) -> BannedUser:
             return BannedUser(data, http=self)
 
         iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def post_ban_user(
@@ -1268,10 +1377,12 @@ class HTTPClient:
     ) -> BanUserResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = {"user_id": user_id}
+
         if duration is not None:
             data["duration"] = duration
         if reason is not None:
             data["reason"] = reason
+
         route: Route = Route("POST", "moderation/bans", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
@@ -1283,10 +1394,11 @@ class HTTPClient:
         user_id: str | int,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "user_id": user_id}
+
         route: Route = Route("DELETE", "moderation/bans", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_unban_requests(
+    def get_unban_requests(
         self,
         broadcaster_id: str | int,
         moderator_id: str | int,
@@ -1302,12 +1414,13 @@ class HTTPClient:
 
         route: Route = Route("GET", "moderation/unban_requests", params=params, token_for=token_for)
 
-        async def converter(data: UnbanRequestsResponseData) -> UnbanRequest:
+        async def converter(data: UnbanRequestsResponseData, *, raw: Any) -> UnbanRequest:
             return UnbanRequest(data, http=self)
 
         iterator: HTTPAsyncIterator[UnbanRequest] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def patch_unban_requests(
@@ -1327,10 +1440,11 @@ class HTTPClient:
         }
         if resolution_text is not None:
             params["resolution_text"] = resolution_text
+
         route: Route = Route("PATCH", "moderation/unban_requests", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_blocked_terms(
+    def get_blocked_terms(
         self,
         broadcaster_id: str | int,
         moderator_id: str | int,
@@ -1342,54 +1456,75 @@ class HTTPClient:
 
         route: Route = Route("GET", "moderation/blocked_terms", params=params, token_for=token_for)
 
-        async def converter(data: BlockedTermsResponseData) -> BlockedTerm:
+        async def converter(data: BlockedTermsResponseData, *, raw: Any) -> BlockedTerm:
             return BlockedTerm(data, http=self)
 
         iterator: HTTPAsyncIterator[BlockedTerm] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def post_blocked_term(
-        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str, text: str
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        text: str,
     ) -> AddBlockedTermResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = {"text": text}
+
         route: Route = Route("POST", "moderation/blocked_terms", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def delete_blocked_term(
-        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str, id: str
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        id: str,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "id": id}
+
         route: Route = Route("DELETE", "moderation/blocked_terms", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def delete_chat_message(
-        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str, message_id: str | None = None
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
+        message_id: str | None = None,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         if message_id is not None:
             params["message_id"] = message_id
+
         route: Route = Route("DELETE", "moderation/chat", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_moderated_channels(
-        self, user_id: str | int, token_for: str, first: int = 20, max_results: int | None = None
+    def get_moderated_channels(
+        self,
+        user_id: str | int,
+        token_for: str,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
         params = {"user_id": user_id, "first": first}
 
         route: Route = Route("GET", "moderation/channels", params=params, token_for=token_for)
 
-        async def converter(data: ModeratedChannelsResponseData) -> PartialUser:
+        async def converter(data: ModeratedChannelsResponseData, *, raw: Any) -> PartialUser:
             return PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=self)
 
         iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
-    async def get_moderators(
+    def get_moderators(
         self,
         broadcaster_id: str | int,
         token_for: str,
@@ -1404,12 +1539,13 @@ class HTTPClient:
 
         route: Route = Route("GET", "moderation/moderators", params=params, token_for=token_for)
 
-        async def converter(data: ModeratorsResponseData) -> PartialUser:
+        async def converter(data: ModeratorsResponseData, *, raw: Any) -> PartialUser:
             return PartialUser(data["user_id"], data["user_login"], http=self)
 
         iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def post_channel_moderator(
@@ -1419,6 +1555,7 @@ class HTTPClient:
         user_id: str | int,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
         route: Route = Route("POST", "moderation/moderators", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1429,10 +1566,11 @@ class HTTPClient:
         user_id: str | int,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
         route: Route = Route("DELETE", "moderation/moderators", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_vips(
+    def get_vips(
         self,
         broadcaster_id: str | int,
         token_for: str,
@@ -1447,12 +1585,13 @@ class HTTPClient:
 
         route: Route = Route("GET", "channels/vips", params=params, token_for=token_for)
 
-        async def converter(data: ModeratorsResponseData) -> PartialUser:
+        async def converter(data: ModeratorsResponseData, *, raw: Any) -> PartialUser:
             return PartialUser(data["user_id"], data["user_login"], http=self)
 
         iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def add_vip(
@@ -1462,6 +1601,7 @@ class HTTPClient:
         user_id: str | int,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
         route: Route = Route("POST", "channels/vips", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1472,6 +1612,7 @@ class HTTPClient:
         user_id: str | int,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
         route: Route = Route("DELETE", "channels/vips", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1484,19 +1625,24 @@ class HTTPClient:
     ) -> ShieldModeStatusResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = {"is_active": active}
+
         route: Route = Route("PUT", "moderation/shield_mode", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def get_shield_mode_status(
-        self, broadcaster_id: str | int, moderator_id: str | int, token_for: str
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int,
+        token_for: str,
     ) -> ShieldModeStatusResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+
         route: Route = Route("GET", "moderation/shield_mode", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Polls ###
 
-    async def get_polls(
+    def get_polls(
         self,
         broadcaster_id: str | int,
         token_for: str,
@@ -1511,7 +1657,7 @@ class HTTPClient:
 
         route: Route = Route("GET", "polls", params=params, token_for=token_for)
 
-        async def converter(data: PollsResponseData) -> Poll:
+        async def converter(data: PollsResponseData, *, raw: Any) -> Poll:
             return Poll(data, http=self)
 
         iterator: HTTPAsyncIterator[Poll] = self.request_paginated(route, converter=converter, max_results=max_results)
@@ -1535,25 +1681,32 @@ class HTTPClient:
             "duration": duration,
             "channel_points_voting_enabled": channel_points_voting_enabled,
         }
+
         if channel_points_per_vote is not None:
             data["channel_points_per_vote"] = channel_points_per_vote
+
         route: Route = Route("POST", "polls", json=data, token_for=token_for)
         return await self.request_json(route)
 
     async def patch_poll(
-        self, broadcaster_id: str | int, id: str, status: Literal["ARCHIVED", "TERMINATED"], token_for: str
+        self,
+        broadcaster_id: str | int,
+        id: str,
+        status: Literal["ARCHIVED", "TERMINATED"],
+        token_for: str,
     ) -> PollsResponse:
         data = {
             "broadcaster_id": broadcaster_id,
             "id": id,
             "status": status,
         }
+
         route: Route = Route("PATCH", "polls", json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Predictions ###
 
-    async def get_predictions(
+    def get_predictions(
         self,
         broadcaster_id: str | int,
         token_for: str,
@@ -1568,12 +1721,13 @@ class HTTPClient:
 
         route: Route = Route("GET", "predictions", params=params, token_for=token_for)
 
-        async def converter(data: PredictionsResponseData) -> Prediction:
+        async def converter(data: PredictionsResponseData, *, raw: Any) -> Prediction:
             return Prediction(data, http=self)
 
         iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def post_prediction(
@@ -1585,12 +1739,14 @@ class HTTPClient:
         token_for: str,
     ) -> PredictionsResponse:
         _outcomes = [{"title": t} for t in outcomes]
+
         data = {
             "broadcaster_id": broadcaster_id,
             "title": title,
             "outcomes": _outcomes,
             "prediction_window": prediction_window,
         }
+
         route: Route = Route("POST", "predictions", json=data, token_for=token_for)
         return await self.request_json(route)
 
@@ -1607,22 +1763,29 @@ class HTTPClient:
             "id": id,
             "status": status,
         }
+
         if winning_outcome_id is not None:
             data["winning_outcome_id"] = winning_outcome_id
+
         route: Route = Route("PATCH", "predictions", json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Raids ###
 
     async def post_raid(
-        self, from_broadcaster_id: str | int, to_broadcaster_id: str | int, token_for: str
+        self,
+        from_broadcaster_id: str | int,
+        to_broadcaster_id: str | int,
+        token_for: str,
     ) -> StartARaidResponse:
         params = {"from_broadcaster_id": from_broadcaster_id, "to_broadcaster_id": to_broadcaster_id}
         route: Route = Route("POST", "raids", params=params, token_for=token_for)
+
         return await self.request_json(route)
 
     async def delete_raid(self, broadcaster_id: str | int, token_for: str) -> None:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("DELETE", "raids", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1630,8 +1793,13 @@ class HTTPClient:
 
     ### Search ###
 
-    async def get_search_categories(
-        self, *, query: str, first: int, token_for: str | None = None, max_results: int | None = None
+    def get_search_categories(
+        self,
+        *,
+        query: str,
+        first: int,
+        token_for: str | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
         params: dict[str, str | int | Sequence[str | int]] = {
             "query": query,
@@ -1639,13 +1807,13 @@ class HTTPClient:
         }
         route: Route = Route("GET", "search/categories", params=params, token_for=token_for)
 
-        async def converter(data: GamesResponseData) -> Game:
+        async def converter(data: GamesResponseData, *, raw: Any) -> Game:
             return Game(data, http=self)
 
         iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
-    async def get_search_channels(
+    def get_search_channels(
         self,
         *,
         query: str,
@@ -1657,17 +1825,18 @@ class HTTPClient:
         params: dict[str, str | int] = {"query": query, "live_only": live, "first": first}
         route: Route = Route("GET", "search/channels", params=params, token_for=token_for)
 
-        async def converter(data: SearchChannelsResponseData) -> SearchChannel:
+        async def converter(data: SearchChannelsResponseData, *, raw: Any) -> SearchChannel:
             return SearchChannel(data, http=self)
 
         iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     ### Streams ###
 
-    async def get_streams(
+    def get_streams(
         self,
         *,
         first: int = 20,
@@ -1695,21 +1864,28 @@ class HTTPClient:
 
         route: Route = Route("GET", "streams", params=params, token_for=token_for)
 
-        async def converter(data: StreamsResponseData) -> Stream:
+        async def converter(data: StreamsResponseData, *, raw: Any) -> Stream:
             return Stream(data, http=self)
 
         iterator: HTTPAsyncIterator[Stream] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def get_stream_key(self, broadcaster_id: str | int, token_for: str) -> StreamKeyResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "streams/key", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_followed_streams(
-        self, *, user_id: str | int, token_for: str, first: int = 100, max_results: int | None = None
+    def get_followed_streams(
+        self,
+        *,
+        user_id: str | int,
+        token_for: str,
+        first: int = 100,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
         params = {
             "user_id": user_id,
@@ -1718,24 +1894,29 @@ class HTTPClient:
 
         route: Route = Route("GET", "streams/followed", params=params, token_for=token_for)
 
-        async def converter(data: StreamsResponseData) -> Stream:
+        async def converter(data: StreamsResponseData, *, raw: Any) -> Stream:
             return Stream(data, http=self)
 
         iterator: HTTPAsyncIterator[Stream] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     async def post_stream_marker(
-        self, user_id: str | int, token_for: str, description: str | None = None
+        self,
+        user_id: str | int,
+        token_for: str,
+        description: str | None = None,
     ) -> CreateStreamMarkerResponse:
         data = {"user_id": user_id}
         if description is not None:
             data["description"] = description
+
         route: Route = Route("POST", "streams/markers", json=data, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_stream_markers(
+    def get_stream_markers(
         self,
         *,
         user_id: str | int | None = None,
@@ -1745,6 +1926,7 @@ class HTTPClient:
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[VideoMarkers]:
         params: dict[str, str | int] = {"first": first}
+
         if user_id is not None:
             params["user_id"] = user_id
         if video_id is not None:
@@ -1752,20 +1934,25 @@ class HTTPClient:
 
         route: Route = Route("GET", "streams/markers", params=params, token_for=token_for)
 
-        async def converter(data: StreamMarkersResponseData) -> VideoMarkers:
+        async def converter(data: StreamMarkersResponseData, *, raw: Any) -> VideoMarkers:
             return VideoMarkers(data, http=self)
 
         iterator: HTTPAsyncIterator[VideoMarkers] = self.request_paginated(
             route, converter=converter, max_results=max_results
         )
+
         return iterator
 
     ### Subscriptions ###
 
     async def get_user_subscription(
-        self, broadcaster_id: str | int, user_id: str | int, token_for: str
+        self,
+        broadcaster_id: str | int,
+        user_id: str | int,
+        token_for: str,
     ) -> CheckUserSubscriptionResponse:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
         route: Route = Route("GET", "subscriptions/user", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1788,6 +1975,7 @@ class HTTPClient:
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         data = await self.request_json(route)
+
         return BroadcasterSubscriptions(data, iterator)
 
     ### Tags ###
@@ -1818,6 +2006,7 @@ class HTTPClient:
         token_for: str | None = None,
     ) -> ChannelTeamsResponse:
         params = {"broadcaster_id": broadcaster_id}
+
         route: Route = Route("GET", "teams/channel", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1825,7 +2014,7 @@ class HTTPClient:
 
     ### Videos ###
 
-    async def get_videos(
+    def get_videos(
         self,
         *,
         ids: list[str | int] | None = None,
@@ -1852,7 +2041,7 @@ class HTTPClient:
 
         route = Route("GET", "videos", params=params, token_for=token_for)
 
-        async def converter(data: VideosResponseData) -> Video:
+        async def converter(data: VideosResponseData, *, raw: Any) -> Video:
             return Video(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
@@ -1860,6 +2049,7 @@ class HTTPClient:
 
     async def delete_videos(self, ids: list[str | int], token_for: str) -> DeleteVideosResponse:
         params = {"id": ids}
+
         route: Route = Route("DELETE", "videos", params=params, token_for=token_for)
         return await self.request_json(route)
 
@@ -1868,5 +2058,6 @@ class HTTPClient:
     async def post_whisper(self, from_user_id: str | int, to_user_id: str | int, token_for: str, message: str) -> None:
         params = {"from_user_id": from_user_id, "to_user_id": to_user_id}
         data = {"message": message}
+
         route: Route = Route("POST", "whispers", params=params, json=data, token_for=token_for)
         return await self.request_json(route)

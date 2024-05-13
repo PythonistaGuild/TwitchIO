@@ -355,7 +355,10 @@ class Client:
         return [EmoteSet(d, template=template, http=self._http) for d in data["data"]]
 
     async def fetch_chatters_color(
-        self, user_ids: list[str | int], *, token_for: str | None = None
+        self,
+        user_ids: list[str | int],
+        *,
+        token_for: str | None = None,
     ) -> list[ChatterColor]:
         """
         Fetches the color of a chatter.
@@ -381,7 +384,10 @@ class Client:
         return [ChatterColor(d, http=self._http) for d in data["data"] if data]
 
     async def fetch_channels(
-        self, broadcaster_ids: list[str | int], *, token_for: str | None = None
+        self,
+        broadcaster_ids: list[str | int],
+        *,
+        token_for: str | None = None,
     ) -> list[ChannelInfo]:
         """
         Retrieve channel information from the API.
@@ -405,7 +411,10 @@ class Client:
         return [ChannelInfo(d, http=self._http) for d in data["data"]]
 
     async def fetch_cheermotes(
-        self, *, broadcaster_id: int | str | None = None, token_for: str | None = None
+        self,
+        *,
+        broadcaster_id: int | str | None = None,
+        token_for: str | None = None,
     ) -> list[Cheermote]:
         """
         Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room. Cheermotes are animated emotes that viewers can assign Bits to.
@@ -446,7 +455,7 @@ class Client:
         data = await self._http.get_content_classification_labels(locale, token_for)
         return [ContentClassificationLabel(d) for d in data["data"]]
 
-    async def fetch_clips(
+    def fetch_clips(
         self,
         *,
         game_id: str | None = None,
@@ -505,7 +514,7 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_clips(
+        return self._http.get_clips(
             game_id=game_id,
             clip_ids=clip_ids,
             first=first,
@@ -516,8 +525,13 @@ class Client:
             token_for=token_for,
         )
 
-    async def fetch_extension_transactions(
-        self, extension_id: str, *, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
+    def fetch_extension_transactions(
+        self,
+        extension_id: str,
+        *,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
         """
         Fetches global emotes from the twitch API
@@ -547,8 +561,11 @@ class Client:
         if ids and len(ids) > 100:
             raise ValueError("You can only provide a mximum of 100 IDs")
 
-        return await self._http.get_extension_transactions(
-            extension_id=extension_id, ids=ids, first=first, max_results=max_results
+        return self._http.get_extension_transactions(
+            extension_id=extension_id,
+            ids=ids,
+            first=first,
+            max_results=max_results,
         )
 
     async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
@@ -567,7 +584,7 @@ class Client:
 
         return [GlobalEmote(d, template=template, http=self._http) for d in data["data"]]
 
-    async def fetch_streams(
+    def fetch_streams(
         self,
         *,
         user_ids: list[int | str] | None = None,
@@ -609,7 +626,7 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_streams(
+        return self._http.get_streams(
             first=first,
             game_ids=game_ids,
             user_ids=user_ids,
@@ -621,7 +638,11 @@ class Client:
         )
 
     async def fetch_team(
-        self, *, team_name: str | None = None, team_id: str | None = None, token_for: str | None = None
+        self,
+        *,
+        team_name: str | None = None,
+        team_id: str | None = None,
+        token_for: str | None = None,
     ) -> Team:
         """
         Fetches information about a specific Twitch team. You must provide one of either `team_name` or `team_id`.
@@ -651,8 +672,12 @@ class Client:
 
         return Team(data["data"][0], http=self._http)
 
-    async def fetch_top_games(
-        self, *, token_for: str | None = None, first: int = 20, max_results: int | None = None
+    def fetch_top_games(
+        self,
+        *,
+        token_for: str | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
         """
         Fetches information about all broadcasts on Twitch.
@@ -674,7 +699,7 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_top_games(first=first, token_for=token_for, max_results=max_results)
+        return self._http.get_top_games(first=first, token_for=token_for, max_results=max_results)
 
     async def fetch_games(
         self,
@@ -767,7 +792,7 @@ class Client:
 
         return Game(data["data"][0], http=self._http)
 
-    async def search_categories(
+    def search_categories(
         self,
         query: str,
         *,
@@ -796,14 +821,14 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_search_categories(
+        return self._http.get_search_categories(
             query=query,
             first=first,
             max_results=max_results,
             token_for=token_for,
         )
 
-    async def search_channels(
+    def search_channels(
         self,
         query: str,
         *,
@@ -844,7 +869,7 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_search_channels(
+        return self._http.get_search_channels(
             query=query,
             first=first,
             live=live,
@@ -852,7 +877,7 @@ class Client:
             token_for=token_for,
         )
 
-    async def fetch_videos(
+    def fetch_videos(
         self,
         *,
         ids: list[str | int] | None = None,
@@ -913,7 +938,7 @@ class Client:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_videos(
+        return self._http.get_videos(
             ids=ids,
             user_id=user_id,
             game_id=game_id,
@@ -955,8 +980,13 @@ class Client:
 
         return resp
 
-    async def fetch_stream_markers(
-        self, *, video_id: str, token_for: str, first: int = 20, max_results: int | None = None
+    def fetch_stream_markers(
+        self,
+        *,
+        video_id: str,
+        token_for: str,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[VideoMarkers]:
         """
         Fetches markers from the user's most recent stream or from the specified VOD/video.
@@ -987,8 +1017,11 @@ class Client:
             HTTPAsyncIterator of VideoMarkers objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_stream_markers(
-            video_id=video_id, token_for=token_for, first=first, max_results=max_results
+        return self._http.get_stream_markers(
+            video_id=video_id,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
         )
 
     async def _create_conduit(self, shard_count: int, /) -> list[Conduit]:

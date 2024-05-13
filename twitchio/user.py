@@ -164,7 +164,7 @@ class PartialUser:
         data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
         return SnoozeAd(data["data"][0])
 
-    async def fetch_extension_analytics(
+    def fetch_extension_analytics(
         self,
         *,
         token_for: str,
@@ -223,7 +223,7 @@ class PartialUser:
         if bool(started_at) != bool(ended_at):
             raise ValueError("Both started_at and ended_at must be provided together.")
 
-        return await self._http.get_extension_analytics(
+        return self._http.get_extension_analytics(
             first=first,
             token_for=token_for,
             extension_id=extension_id,
@@ -233,7 +233,7 @@ class PartialUser:
             max_results=max_results,
         )
 
-    async def fetch_game_analytics(
+    def fetch_game_analytics(
         self,
         *,
         token_for: str,
@@ -292,7 +292,7 @@ class PartialUser:
         if bool(started_at) != bool(ended_at):
             raise ValueError("Both started_at and ended_at must be provided together")
 
-        return await self._http.get_game_analytics(
+        return self._http.get_game_analytics(
             first=first,
             token_for=token_for,
             game_id=game_id,
@@ -697,8 +697,12 @@ class PartialUser:
         data = await self._http.get_charity_campaign(broadcaster_id=self.id, token_for=token_for)
         return CharityCampaign(data["data"][0], http=self._http)
 
-    async def fetch_charity_donations(
-        self, *, token_for: str, first: int = 20, max_results: int | None = None
+    def fetch_charity_donations(
+        self,
+        *,
+        token_for: str,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[CharityDonation]:
         """
         Fetches information about all broadcasts on Twitch.
@@ -723,8 +727,11 @@ class PartialUser:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_charity_donations(
-            broadcaster_id=self.id, first=first, token_for=token_for, max_results=max_results
+        return self._http.get_charity_donations(
+            broadcaster_id=self.id,
+            first=first,
+            token_for=token_for,
+            max_results=max_results,
         )
 
     async def fetch_chatters(
@@ -782,8 +789,12 @@ class PartialUser:
         template = data["template"]
         return [ChannelEmote(d, template=template, http=self._http) for d in data["data"]]
 
-    async def fetch_user_emotes(
-        self, *, token_for: str, broadcaster_id: str | int | None = None, max_results: int | None = None
+    def fetch_user_emotes(
+        self,
+        *,
+        token_for: str,
+        broadcaster_id: str | int | None = None,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[UserEmote]:
         """
         Fetches the broadcaster's list of custom emotes.
@@ -806,8 +817,11 @@ class PartialUser:
         HTTPAsyncIterator[twitchio.UserEmote]
         """
 
-        return await self._http.get_user_emotes(
-            user_id=self.id, token_for=token_for, broadcaster_id=broadcaster_id, max_results=max_results
+        return self._http.get_user_emotes(
+            user_id=self.id,
+            token_for=token_for,
+            broadcaster_id=broadcaster_id,
+            max_results=max_results,
         )
 
     async def fetch_chat_badges(self, token_for: str | None = None) -> list[ChatBadge]:
@@ -1159,7 +1173,7 @@ class PartialUser:
         data = await self._http.post_create_clip(broadcaster_id=self.id, token_for=token_for, has_delay=has_delay)
         return CreatedClip(data["data"][0])
 
-    async def fetch_clips(
+    def fetch_clips(
         self,
         *,
         started_at: datetime.datetime | None = None,
@@ -1197,7 +1211,7 @@ class PartialUser:
 
         first = max(1, min(100, first))
 
-        return await self._http.get_clips(
+        return self._http.get_clips(
             broadcaster_id=self.id,
             first=first,
             started_at=started_at,
@@ -1229,8 +1243,12 @@ class PartialUser:
         data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=token_for)
         return [Goal(d, http=self._http) for d in data["data"]]
 
-    async def fetch_hype_train_events(
-        self, *, token_for: str, first: int = 1, max_results: int | None = None
+    def fetch_hype_train_events(
+        self,
+        *,
+        token_for: str,
+        first: int = 1,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[HypeTrainEvent]:
         """
         Fetches information about the broadcaster's current or most recent Hype Train event.
@@ -1252,8 +1270,11 @@ class PartialUser:
         """
         first = max(1, min(100, first))
 
-        return await self._http.get_hype_train_events(
-            broadcaster_id=self.id, first=first, token_for=token_for, max_results=max_results
+        return self._http.get_hype_train_events(
+            broadcaster_id=self.id,
+            first=first,
+            token_for=token_for,
+            max_results=max_results,
         )
 
     async def start_raid(self, *, to_broadcaster_id: str | int, token_for: str) -> Raid:
@@ -1466,7 +1487,7 @@ class PartialUser:
         )
         return AutomodSettings(data["data"][0], http=self._http)
 
-    async def fetch_banned_user(
+    def fetch_banned_user(
         self,
         *,
         token_for: str,
@@ -1510,8 +1531,11 @@ class PartialUser:
         if user_ids is not None and len(user_ids) > 100:
             raise ValueError("You may only specify a maximum of 100 users.")
 
-        return await self._http.get_banned_users(
-            broadcaster_id=self.id, user_ids=user_ids, token_for=token_for, max_results=max_results
+        return self._http.get_banned_users(
+            broadcaster_id=self.id,
+            user_ids=user_ids,
+            token_for=token_for,
+            max_results=max_results,
         )
 
     async def ban_user(
@@ -1636,7 +1660,7 @@ class PartialUser:
             token_for=token_for,
         )
 
-    async def fetch_unban_requests(
+    def fetch_unban_requests(
         self,
         *,
         moderator_id: str | int,
@@ -1674,7 +1698,7 @@ class PartialUser:
         """
         first = max(1, min(100, first))
 
-        return await self._http.get_unban_requests(
+        return self._http.get_unban_requests(
             broadcaster_id=self.id,
             moderator_id=moderator_id,
             token_for=token_for,
@@ -1738,7 +1762,7 @@ class PartialUser:
         )
         return UnbanRequest(data["data"][0], http=self._http)
 
-    async def fetch_blocked_terms(
+    def fetch_blocked_terms(
         self, moderator_id: str | int, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[BlockedTerm]:
         """
@@ -1767,8 +1791,12 @@ class PartialUser:
         """
         first = max(1, min(100, first))
 
-        return await self._http.get_blocked_terms(
-            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, first=first, max_results=max_results
+        return self._http.get_blocked_terms(
+            broadcaster_id=self.id,
+            moderator_id=moderator_id,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
         )
 
     async def add_blocked_term(
@@ -1902,7 +1930,7 @@ class PartialUser:
             message_id=message_id,
         )
 
-    async def fetch_moderated_channels(
+    def fetch_moderated_channels(
         self, *, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[PartialUser]:
         """
@@ -1928,11 +1956,14 @@ class PartialUser:
             HTTPAsyncIterator of PartialUser objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_moderated_channels(
-            user_id=self.id, first=first, token_for=token_for, max_results=max_results
+        return self._http.get_moderated_channels(
+            user_id=self.id,
+            first=first,
+            token_for=token_for,
+            max_results=max_results,
         )
 
-    async def fetch_moderators(
+    def fetch_moderators(
         self,
         *,
         token_for: str,
@@ -1978,8 +2009,12 @@ class PartialUser:
         if user_ids is not None and len(user_ids) > 100:
             raise ValueError("You may only specify a maximum of 100 user IDs.")
 
-        return await self._http.get_moderators(
-            broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for, max_results=max_results
+        return self._http.get_moderators(
+            broadcaster_id=self.id,
+            user_ids=user_ids,
+            first=first,
+            token_for=token_for,
+            max_results=max_results,
         )
 
     async def add_moderator(self, *, token_for: str, user_id: str | int) -> None:
@@ -2023,7 +2058,7 @@ class PartialUser:
 
         return await self._http.delete_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
 
-    async def fetch_vips(
+    def fetch_vips(
         self,
         *,
         token_for: str,
@@ -2068,8 +2103,12 @@ class PartialUser:
         if user_ids is not None and len(user_ids) > 100:
             raise ValueError("You may only specify a maximum of 100 user IDs.")
 
-        return await self._http.get_vips(
-            broadcaster_id=self.id, user_ids=user_ids, first=first, token_for=token_for, max_results=max_results
+        return self._http.get_vips(
+            broadcaster_id=self.id,
+            user_ids=user_ids,
+            first=first,
+            token_for=token_for,
+            max_results=max_results,
         )
 
     async def add_vip(self, *, token_for: str, user_id: str | int) -> None:
@@ -2168,8 +2207,13 @@ class PartialUser:
         )
         return ShieldModeStatus(data["data"][0], http=self._http)
 
-    async def fetch_polls(
-        self, *, token_for: str, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
+    def fetch_polls(
+        self,
+        *,
+        token_for: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Poll]:
         """
         Fetches polls that the broadcaster created.
@@ -2209,8 +2253,12 @@ class PartialUser:
         if ids is not None and len(ids) > 20:
             raise ValueError("You may only specify a maximum of 20 IDs.")
 
-        return await self._http.get_polls(
-            broadcaster_id=self.id, ids=ids, first=first, token_for=token_for, max_results=max_results
+        return self._http.get_polls(
+            broadcaster_id=self.id,
+            ids=ids,
+            first=first,
+            token_for=token_for,
+            max_results=max_results,
         )
 
     async def create_poll(
@@ -2327,8 +2375,13 @@ class PartialUser:
         data = await self._http.patch_poll(broadcaster_id=self.id, id=id, status=status, token_for=token_for)
         return Poll(data["data"][0], http=self._http)
 
-    async def fetch_predictions(
-        self, *, token_for: str, ids: list[str] | None = None, first: int = 20, max_results: int | None = None
+    def fetch_predictions(
+        self,
+        *,
+        token_for: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Prediction]:
         """
         Fetches predictions that the broadcaster created.
@@ -2368,8 +2421,12 @@ class PartialUser:
         if ids is not None and len(ids) > 20:
             raise ValueError("You may only specify a maximum of 25 IDs.")
 
-        return await self._http.get_predictions(
-            broadcaster_id=self.id, ids=ids, first=first, token_for=token_for, max_results=max_results
+        return self._http.get_predictions(
+            broadcaster_id=self.id,
+            ids=ids,
+            first=first,
+            token_for=token_for,
+            max_results=max_results,
         )
 
     async def create_prediction(
@@ -2509,8 +2566,12 @@ class PartialUser:
         data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=token_for)
         return data["data"][0]["stream_key"]
 
-    async def fetch_followed_streams(
-        self, *, token_for: str, first: int = 100, max_results: int | None = None
+    def fetch_followed_streams(
+        self,
+        *,
+        token_for: str,
+        first: int = 100,
+        max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
         """
         Fetches the broadcasters that the user follows and that are streaming live.
@@ -2533,8 +2594,11 @@ class PartialUser:
             HTTPAsyncIterator of Stream objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_followed_streams(
-            user_id=self.id, token_for=token_for, first=first, max_results=max_results
+        return self._http.get_followed_streams(
+            user_id=self.id,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
         )
 
     async def create_stream_marker(self, *, token_for: str, description: str | None = None) -> StreamMarker:
@@ -2579,7 +2643,7 @@ class PartialUser:
         data = await self._http.post_stream_marker(user_id=self.id, token_for=token_for, description=description)
         return StreamMarker(data["data"][0])
 
-    async def fetch_stream_markers(
+    def fetch_stream_markers(
         self, *, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[VideoMarkers]:
         """
@@ -2608,8 +2672,11 @@ class PartialUser:
             HTTPAsyncIterator of VideoMarkers objects.
         """
         first = max(1, min(100, first))
-        return await self._http.get_stream_markers(
-            user_id=self.id, token_for=token_for, first=first, max_results=max_results
+        return self._http.get_stream_markers(
+            user_id=self.id,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
         )
 
     async def fetch_subscription(self, *, broadcaster_id: str | int, token_for: str) -> UserSubscription | None:
