@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypeAlias, TypedDict
 
-from typing_extensions import NotRequired
+from typing_extensions import Never, NotRequired
 
 
 class ShardTransport(TypedDict):
@@ -41,6 +41,18 @@ class ShardData(TypedDict):
     transport: ShardTransport
 
 
+class ShardUpdateTransport(TypedDict):
+    method: Literal["webhook", "websocket"]
+    callback: NotRequired[str]
+    secret: NotRequired[str]
+    session_id: NotRequired[str]
+
+
+class ShardUpdateRequest(TypedDict):
+    id: str
+    transport: ShardUpdateTransport
+
+
 class ConduitData(TypedDict):
     id: str
     shard_count: int
@@ -50,6 +62,34 @@ class WelcomeMetaData(TypedDict):
     message_id: str
     message_type: Literal["session_welcome"]
     message_timestamp: str
+
+
+class KeepAliveMetaData(TypedDict):
+    message_id: str
+    message_type: Literal["session_keepalive"]
+    message_timestamp: str
+
+
+class NotificationMetaData(TypedDict):
+    message_id: str
+    message_type: Literal["notification"]
+    message_timestamp: str
+    subscription_type: str
+    subscription_version: str
+
+
+class ReconnectMetadata(TypedDict):
+    message_id: str
+    message_type: Literal["session_reconnect"]
+    message_timestamp: str
+
+
+class RevocationMetaData(TypedDict):
+    message_id: str
+    message_type: Literal["revocation"]
+    message_timestamp: str
+    subscription_type: str
+    subscription_version: str
 
 
 class WelcomeSession(TypedDict):
@@ -69,22 +109,9 @@ class WelcomeMessage(TypedDict):
     payload: WelcomePayload
 
 
-class KeepAliveMetaData(TypedDict):
-    message_id: str
-    message_type: Literal["session_keepalive"]
-    message_timestamp: str
-
-
 class KeepAliveMessage(TypedDict):
     metadata: KeepAliveMetaData
-
-
-class NotificationMetaData(TypedDict):
-    message_id: str
-    message_type: Literal["notification"]
-    message_timestamp: str
-    subscription_type: str
-    subscription_version: str
+    payload: dict[Never, Never]
 
 
 class Condition(TypedDict, total=False):
@@ -128,12 +155,6 @@ class NotificationMessage(TypedDict):
     payload: NotificationPayload
 
 
-class ReconnectMetadata(TypedDict):
-    message_id: str
-    message_str: Literal["session_reconnect"]
-    message_timestamp: str
-
-
 class ReconnectSession(TypedDict):
     id: str
     status: Literal["reconnecting"]
@@ -149,14 +170,6 @@ class ReconnectPayload(TypedDict):
 class ReconnectMessage(TypedDict):
     metadata: ReconnectMetadata
     payload: ReconnectPayload
-
-
-class RevocationMetaData(TypedDict):
-    message_id: str
-    message_type: Literal["revocation"]
-    message_timestamp: str
-    subscription_type: str
-    subscription_version: str
 
 
 class RevocationTransport(TypedDict):
@@ -182,3 +195,14 @@ class RevocationPayload(TypedDict):
 class RevocationMessage(TypedDict):
     metadata: RevocationMetaData
     payload: RevocationPayload
+
+
+WebsocketMessages: TypeAlias = (
+    WelcomeMessage | ReconnectMessage | RevocationMessage | NotificationMessage | KeepAliveMessage
+)
+MetaData: TypeAlias = (
+    WelcomeMetaData | ReconnectMetadata | RevocationMetaData | NotificationMetaData | KeepAliveMetaData
+)
+MessageTypes: TypeAlias = Literal[
+    "session_welcome", "session_reconnect", "session_keepalive", "notification", "revocation"
+]
