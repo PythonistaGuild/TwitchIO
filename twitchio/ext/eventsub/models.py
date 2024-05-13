@@ -4,7 +4,7 @@ import hmac
 import hashlib
 import logging
 from enum import Enum
-from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Tuple, List, overload
+from typing import Any, Dict, TYPE_CHECKING, Optional, Type, Union, Tuple, List, overload
 from typing_extensions import Literal
 
 from aiohttp import web
@@ -1677,6 +1677,214 @@ class ChannelUnbanRequestResolveData(EventData):
         self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
 
 
+class AutomodMessageHoldData(EventData):
+    """
+    Represents a message being held by automod for manual review.
+
+    Attributes
+    ------------
+    message_id: :class:`str`
+        The ID of the message.
+    message_content: :class:`str`
+        The contents of the message
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the message was held.
+    user: :class:`PartialUser`
+        The user that sent the message.
+    level: :class:`int`
+        The level of alarm raised for this message.
+    category: :class:`str`
+        The category of alarm that was raised for this message.
+    created_at: :class:`datetime.datetime`
+        When this message was held.
+    message_fragments: :class:`dict`
+        The fragments of this message. This includes things such as emotes and cheermotes. An example from twitch is provided:
+
+        .. code:: json
+
+            {
+                "emotes": [
+                    {
+                        "text": "badtextemote1",
+                        "id": "emote-123",
+                        "set-id": "set-emote-1"
+                    },
+                    {
+                        "text": "badtextemote2",
+                        "id": "emote-234",
+                        "set-id": "set-emote-2"
+                    }
+                ],
+                "cheermotes": [
+                    {
+                        "text": "badtextcheermote1",
+                        "amount": 1000,
+                        "prefix": "prefix",
+                        "tier": 1
+                    }
+                ]
+            }
+    """
+
+    __slots__ = ("message_id", "message_content", "broadcaster", "user", "level", "category", "message_fragments", "created_at")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.message_id: str = data["message_id"]
+        self.message_content: str = data["message"]
+        self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.level: int = data["level"]
+        self.category: str = data["category"]
+        self.created_at: datetime.datetime = _parse_datetime(data["held_at"])
+
+
+class AutomodMessageUpdateData(EventData):
+    """
+    Represents a message that was updated by a moderator in the automod queue.
+
+    Attributes
+    ------------
+    message_id: :class:`str`
+        The ID of the message.
+    message_content: :class:`str`
+        The contents of the message
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the message was held.
+    user: :class:`PartialUser`
+        The user that sent the message.
+    moderator: :class:`PartialUser`
+        The moderator that updated the message status.
+    status: :class:`str`
+        The new status of the message. Typically one of ``approved`` or ``denied``.
+    level: :class:`int`
+        The level of alarm raised for this message.
+    category: :class:`str`
+        The category of alarm that was raised for this message.
+    created_at: :class:`datetime.datetime`
+        When this message was held.
+    message_fragments: :class:`dict`
+        The fragments of this message. This includes things such as emotes and cheermotes. An example from twitch is provided:
+
+        .. code:: json
+
+            {
+                "emotes": [
+                    {
+                        "text": "badtextemote1",
+                        "id": "emote-123",
+                        "set-id": "set-emote-1"
+                    },
+                    {
+                        "text": "badtextemote2",
+                        "id": "emote-234",
+                        "set-id": "set-emote-2"
+                    }
+                ],
+                "cheermotes": [
+                    {
+                        "text": "badtextcheermote1",
+                        "amount": 1000,
+                        "prefix": "prefix",
+                        "tier": 1
+                    }
+                ]
+            }
+    """
+    
+    __slots__ = ("message_id", "message_content", "broadcaster", "user", "moderator", "level", "category", "message_fragments", "created_at", "status")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.message_id: str = data["message_id"]
+        self.message_content: str = data["message"]
+        self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.level: int = data["level"]
+        self.category: str = data["category"]
+        self.created_at: datetime.datetime = _parse_datetime(data["held_at"])
+        self.status: str = data["status"]
+
+
+class AutomodSettingsUpdateData(EventData):
+    """
+    Represents a channels automod settings being updated.
+
+    Attributes
+    ------------
+    broadcaster: :class:`PartialUser`
+        The broadcaster for which the settings were updated.
+    moderator: :class:`PartialUser`
+        The moderator that updated the settings.
+    overall :class:`int` | ``None``
+        The overall level of automod aggressiveness.
+    disability: :class:`int` | ``None``
+        The aggression towards disability.
+    aggression: :class:`int` | ``None``
+        The aggression towards aggressive users.
+    sex: :class:`int` | ``None``
+        The aggression towards sexuality/gender.
+    misogyny: :class:`int` | ``None``
+        The aggression towards misogyny.
+    bullying: :class:`int` | ``None``
+        The aggression towards bullying.
+    swearing: :class:`int` | ``None``
+        The aggression towards cursing/language.
+    race_religion: :class:`int` | ``None``
+        The aggression towards race, ethnicity, and religion.
+    sexual_terms: :class:`int` | ``None``
+        The aggression towards sexual terms/references.
+    """
+    
+    __slots__ = ("broadcaster", "moderator", "overall", "disability", "aggression", "sex", "misogyny", "bullying", "swearing", "race_religion", "sexual_terms")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.overall: Optional[int] = data["overall"]
+        self.disability: Optional[int] = data["disability"]
+        self.aggression: Optional[int] = data["aggression"]
+        self.sex: Optional[int] = data["sex"]
+        self.misogyny: Optional[int] = data["misogyny"]
+        self.bullying: Optional[int] = data["bullying"]
+        self.swearing: Optional[int] = data["swearing"]
+        self.race_religion: Optional[int] = data["race_ethnicity_or_religion"]
+        self.sexual_terms: Optional[int] = data["sex_based_terms"]
+
+
+class AutomodTermsUpdateData(EventData):
+    """
+    Represents a channels automod terms being updated.
+
+    .. note::
+
+        Private terms are not sent.
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The broadcaster for which the terms were updated.
+    moderator: :class:`PartialUser`
+        The moderator who updated the terms.
+    action: :class:`str`
+        The action type.
+    from_automod: :class:`bool`
+        Whether the action was taken by automod.
+    terms: List[:class:`str`]
+        The terms that were applied.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "action", "from_automod", "terms")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.action: str = data["action"]
+        self.from_automod: bool = data["from_automod"]
+        self.terms: List[str] = data["terms"]
+
+
 _DataType = Union[
     ChannelBanData,
     ChannelUnbanData,
@@ -1712,6 +1920,10 @@ _DataType = Union[
     ChannelCharityDonationData,
     ChannelUnbanRequestCreateData,
     ChannelUnbanRequestResolveData,
+    AutomodMessageHoldData,
+    AutomodMessageUpdateData,
+    AutomodSettingsUpdateData,
+    AutomodTermsUpdateData
 ]
 
 
@@ -1725,6 +1937,11 @@ class _SubTypesMeta(type):
 class _SubscriptionTypes(metaclass=_SubTypesMeta):
     _type_map: Dict[str, Type[_DataType]]
     _name_map: Dict[str, str]
+
+    automod_message_hold = "automod.message.hold", 1, AutomodMessageHoldData
+    automod_message_update = "automod.message.update", 1, AutomodMessageUpdateData
+    automod_settings_update = "automod.settings.update", 1, AutomodSettingsUpdateData
+    automod_terms_update = "automod.terms.update", 1, AutomodTermsUpdateData
 
     follow = "channel.follow", 1, ChannelFollowData
     followV2 = "channel.follow", 2, ChannelFollowData
