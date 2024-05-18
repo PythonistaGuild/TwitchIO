@@ -2874,16 +2874,16 @@ class User(PartialUser):
     type: Literal["admin", "global_mod", "staff", ""]
         The type of the user. Possible values are:
 
-        - admin: Twitch administrator
+        - admin : Twitch administrator
         - global_mod
-        - staff: Twitch staff
-        - "": Normal user
+        - staff : Twitch staff
+        - empty string : Normal user
     broadcaster_type: Literal["affiliate", "partner", ""]
         The broadcaster type of the user. Possible values are:
 
         - affiliate
         - partner
-        - "": Normal user
+        - empty string : Normal user
     description: str
         Description of the user.
     profile_image: Asset
