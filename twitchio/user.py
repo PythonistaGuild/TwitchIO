@@ -2814,6 +2814,18 @@ class PartialUser:
             from_user_id=self.id, to_user_id=to_user_id, token_for=token_for, message=message
         )
 
+    async def user(self) -> User:
+        """
+        Fetch the full User information for the PartialUser.
+
+        Returns
+        -------
+        User
+            User object.
+        """
+        data = await self._http.get_users(ids=[self.id])
+        return User(data["data"][0], http=self._http)
+
 
 class User(PartialUser):
     """
@@ -2848,7 +2860,7 @@ class User(PartialUser):
         Offline image as an asset.
     email: str | None
         The user's verified email address. The object includes this field only if the user access token includes the `user:read:email` scope.
-    created_at: datetime
+    created_at: datetime.datetime
         When the user was created.
     """
 
