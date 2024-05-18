@@ -1006,8 +1006,14 @@ class PartialUser:
         message: str
             The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters; announcements longer than 500 characters are truncated.
         color: Literal["blue", "green", "orange", "purple", "primary"]
-            The color used to highlight the announcement. Possible case-sensitive values are: "blue", "green", "orange", "purple", "primary".
-            Default is "primary".
+            The color used to highlight the announcement. Possible case-sensitive values are (default is "primary"):
+
+            - blue
+            - green
+            - orange
+            - purple
+            - primary
+
         """
         return await self._http.post_chat_announcement(
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, message=message, color=color
@@ -1687,7 +1693,14 @@ class PartialUser:
         token_for: str
             User access token that includes the `moderator:read:unban_requests` or `moderator:manage:unban_requests` scope.
         status: Literal["pending", "approved", "denied", "acknowledged", "canceled"]
-            Filter by a status. Possible values are: `pending`, `approved`, `denied`, `acknowledged`, `canceled`
+            Filter by a status. Possible values are:
+
+            - pending
+            - approved
+            - denied
+            - acknowledged
+            - canceled
+
         user_id: str | int | None
             An ID used to filter what unban requests are returned.
         first: int
@@ -2365,7 +2378,7 @@ class PartialUser:
         id: str
             The ID of the poll to end.
         status  Literal["ARCHIVED", "TERMINATED"]
-            The status to set the poll to. Possible case-sensitive values are: "ARCHIVED" and "TERMINATED".
+            The status to set the poll to. Possible case-sensitive values are: `ARCHIVED` and `TERMINATED`.
         token_for: str
             User access token that includes the `channel:manage:polls` scope.
 
@@ -2945,6 +2958,7 @@ class User(PartialUser):
         - affiliate
         - partner
         - empty string : Normal user
+
     description: str
         Description of the user.
     profile_image: Asset
