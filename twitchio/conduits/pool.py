@@ -28,10 +28,10 @@ import logging
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from twitchio.eventsub.enums import ShardStatus, TransportMethod
 from twitchio.types_.conduits import ShardData
 
 from ..utils import parse_timestamp
-from .enums import ShardStatus, TransportMethod
 from .websockets import Websocket
 
 
