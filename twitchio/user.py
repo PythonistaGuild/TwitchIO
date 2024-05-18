@@ -2565,7 +2565,7 @@ class PartialUser:
         Returns
         -------
         str
-           The channel's stream key.
+            The channel's stream key.
         """
         data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=token_for)
         return data["data"][0]["stream_key"]
