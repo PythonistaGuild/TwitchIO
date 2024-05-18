@@ -2859,7 +2859,7 @@ class PartialUser:
         return User(data["data"][0], http=self._http)
 
     def fetch_block_list(
-        self, token_for: str, first: int = 20, max_results: int | None = None
+        self, *, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[PartialUser]:
         """
         Fetches  list of users that the broadcaster has blocked.
@@ -2883,6 +2883,41 @@ class PartialUser:
             HTTPAsyncIterator of PartialUser objects.
         """
         return self._http.get_user_block_list(broadcaster_id=self.id, token_for=token_for, first=first)
+
+    async def block_user(
+        self,
+        *,
+        user_id: str | int,
+        token_for: str,
+        source: Literal["chat", "whisper"] | None = None,
+        reason: Literal["harassment", "spam", "other"] | None = None,
+    ) -> None:
+        """
+        Blocks the specified user in `user_id`  from interacting with or having contact with the broadcaster. The user ID in the OAuth token identifies the broadcaster who is blocking the user.
+
+        Parameters
+        ----------
+        user_id: str | int
+            The ID of the user to block.
+        token_for: str
+            User access token that includes the `user:manage:blocked_users` scope.
+        source: Literal["chat", "whisper"] | None
+            The location where the harassment took place that is causing the brodcaster to block the user. Possible values are:
+
+            - chat
+            - whisper
+        reason: Literal["harassment", "spam", "other"] | None
+            The reason that the broadcaster is blocking the user. Possible values are:
+
+            - harassment
+            - spam
+            - other
+
+        Returns
+        -------
+        None
+        """
+        return await self._http.put_block_user(user_id=user_id, source=source, reason=reason, token_for=token_for)
 
 
 class User(PartialUser):

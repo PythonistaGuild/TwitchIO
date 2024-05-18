@@ -2045,6 +2045,21 @@ class HTTPClient:
 
         return iterator
 
+    async def put_block_user(
+        self,
+        user_id: str | int,
+        token_for: str,
+        source: Literal["chat", "whisper"] | None = None,
+        reason: Literal["harassment", "spam", "other"] | None = None,
+    ) -> None:
+        params = {"target_user_id": user_id}
+        if source is not None:
+            params["source_context"] = source
+        if reason is not None:
+            params["reason"] = reason
+        route: Route = Route("PUT", "users/blocks", params=params, token_for=token_for)
+        return await self.request_json(route)
+
     ### Videos ###
 
     def get_videos(
