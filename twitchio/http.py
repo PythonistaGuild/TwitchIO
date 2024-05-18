@@ -2060,6 +2060,15 @@ class HTTPClient:
         route: Route = Route("PUT", "users/blocks", params=params, token_for=token_for)
         return await self.request_json(route)
 
+    async def delete_block_user(
+        self,
+        user_id: str | int,
+        token_for: str,
+    ) -> None:
+        params = {"target_user_id": user_id}
+        route: Route = Route("DELETE", "users/blocks", params=params, token_for=token_for)
+        return await self.request_json(route)
+
     ### Videos ###
 
     def get_videos(

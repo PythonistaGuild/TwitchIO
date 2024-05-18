@@ -2919,6 +2919,7 @@ class PartialUser:
 
             - chat
             - whisper
+
         reason: Literal["harassment", "spam", "other"] | None
             The reason that the broadcaster is blocking the user. Possible values are:
 
@@ -2931,6 +2932,28 @@ class PartialUser:
         None
         """
         return await self._http.put_block_user(user_id=user_id, source=source, reason=reason, token_for=token_for)
+
+    async def unlock_user(
+        self,
+        *,
+        user_id: str | int,
+        token_for: str,
+    ) -> None:
+        """
+        Removes the user from the broadcaster's list of blocked users.
+
+        Parameters
+        ----------
+        user_id: str | int
+            The ID of the user to unblock.
+        token_for: str
+            User access token that includes the `user:manage:blocked_users` scope.
+
+        Returns
+        -------
+        None
+        """
+        return await self._http.put_block_user(user_id=user_id, token_for=token_for)
 
 
 class User(PartialUser):
