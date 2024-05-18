@@ -38,6 +38,7 @@ from .models.channels import ChannelInfo
 from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
 from .models.games import Game
 from .models.teams import Team
+from .user import User
 from .payloads import EventErrorPayload
 from .web import AiohttpAdapter
 
@@ -791,6 +792,46 @@ class Client:
             return None
 
         return Game(data["data"][0], http=self._http)
+
+    async def fetch_users(
+        self, *, ids: list[str | int] | None = None, logins: list[str] | None = None, token_for: str | None = None
+    ) -> list[User]:
+        """
+        Fetch information about one or more users.
+
+        !!! info
+            You may look up users using their user ID, login name, or both but the sum total of the number of users you may look up is 100.
+            For example, you may specify 50 IDs and 50 names or 100 IDs or names, but you cannot specify 100 IDs and 100 names.
+
+            If you don't specify IDs or login names but provide a user token, the request returns information about the user in the access token.
+
+            To include the user's verified email address in the response, you must use a user access token that includes the `user:read:email` scope.
+
+        Parameters
+        ----------
+        ids: list[str | int] | None
+            The ids of the users to fetch information about.
+        logins: list[str] | None
+            The login names of the users to fetch information about.
+        token_for: str | None
+            Optional token, with `user:read:email` scope, to request the user's verified email address.
+
+        Returns
+        -------
+        list[User]
+            List of User objects.
+
+        Raises
+        ------
+        ValueError
+            The combined number of 'ids' and 'logins' must not exceed 100 elements.
+        """
+
+        if (len(ids or []) + len(logins or [])) > 100:
+            raise ValueError("The combined number of 'ids' and 'logins' must not exceed 100 elements.")
+
+        data = await self._http.get_users(ids=ids, logins=logins, token_for=token_for)
+        return [User(d, http=self._http) for d in data["data"]]
 
     def search_categories(
         self,

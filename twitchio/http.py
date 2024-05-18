@@ -132,6 +132,7 @@ if TYPE_CHECKING:
         UnbanRequestsResponseData,
         UserChatColorResponse,
         UserEmotesResponseData,
+        UsersResponse,
         VideosResponseData,
     )
 
@@ -2011,6 +2012,13 @@ class HTTPClient:
         return await self.request_json(route)
 
     ### Users ###
+
+    async def get_users(
+        self, ids: list[str | int] | None = None, logins: list[str] | None = None, token_for: str | None = None
+    ) -> UsersResponse:
+        params = {"id": ids, "login": logins}
+        route: Route = Route("GET", "users", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Videos ###
 
