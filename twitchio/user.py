@@ -2858,6 +2858,32 @@ class PartialUser:
         data = await self._http.put_user(token_for=token_for, description=description)
         return User(data["data"][0], http=self._http)
 
+    def fetch_block_list(
+        self, token_for: str, first: int = 20, max_results: int | None = None
+    ) -> HTTPAsyncIterator[PartialUser]:
+        """
+        Fetches  list of users that the broadcaster has blocked.
+
+        ??? note
+            Requires a user access token that includes the `user:read:blocked_users` scope.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `user:read:blocked_users` scope.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
+        """
+        return self._http.get_user_block_list(broadcaster_id=self.id, token_for=token_for, first=first)
+
 
 class User(PartialUser):
     """

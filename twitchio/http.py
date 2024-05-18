@@ -131,6 +131,7 @@ if TYPE_CHECKING:
         TopGamesResponseData,
         UnbanRequestsResponseData,
         UpdateUserResponse,
+        UserBlockListResponseData,
         UserChatColorResponse,
         UserEmotesResponseData,
         UsersResponse,
@@ -2027,6 +2028,22 @@ class HTTPClient:
         params = {"description": description} if description is not None else {"description": ""}
         route: Route = Route("PUT", "users", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    def get_user_block_list(
+        self, broadcaster_id: str | int, token_for: str, first: int = 20, max_results: int | None = None
+    ) -> HTTPAsyncIterator[PartialUser]:
+        params = {"broadcaster_id": broadcaster_id, "first": first}
+
+        route: Route = Route("GET", "users/blocks", params=params, token_for=token_for)
+
+        async def converter(data: UserBlockListResponseData, *, raw: Any) -> PartialUser:
+            return PartialUser(data["user_id"], data["user_login"], http=self)
+
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+
+        return iterator
 
     ### Videos ###
 
