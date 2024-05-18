@@ -2963,6 +2963,22 @@ class PartialUser:
         return await self._http.put_block_user(user_id=user_id, token_for=token_for)
 
     async def fetch_active_extensions(self, token_for: str | None = None) -> ActiveExtensions:
+        """
+        Fetches a user's active extensions.
+
+        !!! info
+            To include extensions that you have under development, you must specify a user access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
+
+        Parameters
+        ----------
+        token_for: str | None
+            Optional user access token. To include extensions that you have under development, you must specify a user access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
+
+        Returns
+        -------
+        ActiveExtensions
+            ActiveExtensions object.
+        """
         data = await self._http.get_active_user_extensions(user_id=self.id, token_for=token_for)
         return ActiveExtensions(data["data"])
 
