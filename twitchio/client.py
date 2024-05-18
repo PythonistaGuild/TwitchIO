@@ -38,8 +38,8 @@ from .models.channels import ChannelInfo
 from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
 from .models.games import Game
 from .models.teams import Team
-from .user import User
 from .payloads import EventErrorPayload
+from .user import Extension, User
 from .web import AiohttpAdapter
 
 
@@ -568,6 +568,30 @@ class Client:
             first=first,
             max_results=max_results,
         )
+
+    async def fetch_extensions(self, *, token_for: str) -> list[Extension]:
+        """
+        Fetch a list of all extensions (both active and inactive) that the broadcaster has installed. The user ID in the access token identifies the broadcaster.
+
+        The user ID in the access token identifies the broadcaster.
+
+        !!! info
+            Requires a user access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
+            To include inactive extensions, you must include the `user:edit:broadcast` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            User access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
+            To include inactive extensions, you must include the `user:edit:broadcast` scope.
+
+        Returns
+        -------
+        list[UserExtension]
+            _description_
+        """
+        data = await self._http.get_user_extensions(token_for=token_for)
+        return [Extension(d) for d in data["data"]]
 
     async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
         """

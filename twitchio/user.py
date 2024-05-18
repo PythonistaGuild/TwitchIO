@@ -36,7 +36,14 @@ from .utils import parse_timestamp
 if TYPE_CHECKING:
     import datetime
 
-    from twitchio.types_.responses import UsersResponseData
+    from twitchio.types_.responses import (
+        UserActiveExtensionsResponseData,
+        UserExtensionsResponseData,
+        UserPanelComponentItem,
+        UserPanelItem,
+        UserPanelOverlayItem,
+        UsersResponseData,
+    )
 
     from .http import HTTPAsyncIterator, HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
@@ -66,7 +73,7 @@ if TYPE_CHECKING:
     from .models.teams import ChannelTeam
     from .utils import Colour
 
-__all__ = ("PartialUser", "User")
+__all__ = ("PartialUser", "User", "Extension")
 
 
 class PartialUser:
@@ -2933,7 +2940,7 @@ class PartialUser:
         """
         return await self._http.put_block_user(user_id=user_id, source=source, reason=reason, token_for=token_for)
 
-    async def unlock_user(
+    async def unblock_user(
         self,
         *,
         user_id: str | int,
@@ -2954,6 +2961,10 @@ class PartialUser:
         None
         """
         return await self._http.put_block_user(user_id=user_id, token_for=token_for)
+
+    async def fetch_active_extensions(self, token_for: str | None = None) -> ActiveExtensions:
+        data = await self._http.get_active_user_extensions(user_id=self.id, token_for=token_for)
+        return ActiveExtensions(data["data"])
 
 
 class User(PartialUser):
@@ -3018,3 +3029,90 @@ class User(PartialUser):
 
     def __repr__(self) -> str:
         return f"<User id={self.id}, name={self.name} display_name={self.display_name}>"
+
+
+class Extension:
+    """
+    Represents a user extension.
+
+    Attributes
+    ----------
+    id: str
+       An ID that identifies the extension.
+    version: str
+        The extension's version.
+    name: str
+        The extension's name.
+    can_activate: bool
+        A Boolean value that determines whether the extension is configured and can be activated. Is True if the extension is configured and can be activated.
+    type: list[Literal["component", "mobile", "overlay", "panel"]]
+        The extension types that you can activate for this extension. Possible values are:
+
+        - component
+        - mobile
+        - overlay
+        - panel
+    """
+
+    __slots__ = ("id", "version", "name", "can_activate", "type")
+
+    def __init__(self, data: UserExtensionsResponseData) -> None:
+        self.id: str = data["id"]
+        self.version: str = data["version"]
+        self.name: str = data["name"]
+        self.can_activate: bool = bool(data["can_activate"])
+        self.type: list[Literal["component", "mobile", "overlay", "panel"]] = data["type"]
+
+    def __repr__(self) -> str:
+        return f"<Extension id={self.id} name={self.name}>"
+
+
+class ExtensionItem:
+    __slots__ = ("id", "active", "name", "version")
+
+    def __init__(self, data: UserPanelItem | UserPanelOverlayItem | UserPanelComponentItem) -> None:
+        self.id: str | None = data.get("id")
+        self.name: str | None = data.get("name")
+        self.version: str | None = data.get("version")
+        self.active: bool = bool(data["active"])
+
+    def __repr__(self) -> str:
+        return f"<ExtensionItem id={self.id} name={self.name} active={self.active}>"
+
+
+class ExtensionPanel(ExtensionItem):
+    def __init__(self, data: UserPanelItem) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<ExtensionPanel id={self.id} name={self.name} active={self.active}>"
+
+
+class ExtensionOverlay(ExtensionItem):
+    def __init__(self, data: UserPanelOverlayItem) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<ExtensionOverlay id={self.id} name={self.name} active={self.active}>"
+
+
+class ExtensionComponent(ExtensionItem):
+    def __init__(self, data: UserPanelComponentItem) -> None:
+        super().__init__(data)
+        self.x: int | None = int(data["x"]) if data.get("x") else None
+        self.y: int | None = int(data["y"]) if data.get("y") else None
+
+    def __repr__(self) -> str:
+        return f"<ExtensionComponent id={self.id} name={self.name} active={self.active}>"
+
+
+class ActiveExtensions:
+    __slots__ = ("panels", "overlays", "components")
+
+    def __init__(self, data: UserActiveExtensionsResponseData) -> None:
+        self.panels: list[ExtensionPanel] = [ExtensionPanel(d) for d in data["panel"].values()]
+        self.overlays: list[ExtensionOverlay] = [ExtensionOverlay(d) for d in data["overlay"].values()]
+        self.components: list[ExtensionComponent] = [ExtensionComponent(d) for d in data["component"].values()]
+
+    def __repr__(self) -> str:
+        return f"<ActiveExtensions panels={self.panels} overlays={self.overlays} components={self.components}>"

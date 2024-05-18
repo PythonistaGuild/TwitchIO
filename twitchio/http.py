@@ -131,9 +131,11 @@ if TYPE_CHECKING:
         TopGamesResponseData,
         UnbanRequestsResponseData,
         UpdateUserResponse,
+        UserActiveExtensionsResponse,
         UserBlockListResponseData,
         UserChatColorResponse,
         UserEmotesResponseData,
+        UserExtensionsResponse,
         UsersResponse,
         VideosResponseData,
     )
@@ -2069,6 +2071,17 @@ class HTTPClient:
     ) -> None:
         params = {"target_user_id": user_id}
         route: Route = Route("DELETE", "users/blocks", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_user_extensions(self, token_for: str) -> UserExtensionsResponse:
+        route: Route = Route("GET", "users/extensions/list", token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_active_user_extensions(
+        self, *, user_id: str | int | None = None, token_for: str | None = None
+    ) -> UserActiveExtensionsResponse:
+        params: dict[str, str | int] = {"user_id": user_id} if user_id is not None else {}
+        route: Route = Route("GET", "users/extensions", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Videos ###
