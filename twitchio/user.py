@@ -26,13 +26,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from .assets import Asset
 from .exceptions import HTTPException
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
+from .utils import parse_timestamp
 
 
 if TYPE_CHECKING:
     import datetime
+
+    from twitchio.types_.responses import UsersResponseData
 
     from .http import HTTPAsyncIterator, HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
@@ -62,7 +66,7 @@ if TYPE_CHECKING:
     from .models.teams import ChannelTeam
     from .utils import Colour
 
-__all__ = ("PartialUser",)
+__all__ = ("PartialUser", "User")
 
 
 class PartialUser:
@@ -2809,3 +2813,66 @@ class PartialUser:
         return await self._http.post_whisper(
             from_user_id=self.id, to_user_id=to_user_id, token_for=token_for, message=message
         )
+
+
+class User(PartialUser):
+    """
+    Represents a User.
+
+    Attributes
+    ----------
+    id: str
+        The user's ID.
+    name: str | None
+        The user's name. In most cases, this is provided. There are however, rare cases where it is not.
+    display_name: str
+        The display name of the user.
+    type: Literal["admin", "global_mod", "staff", ""]
+        The type of the user. Possible values are:
+
+        - admin: Twitch administrator
+        - global_mod
+        - staff: Twitch staff
+        - "": Normal user
+    broadcaster_type: Literal["affiliate", "partner", ""]
+        The broadcaster type of the user. Possible values are:
+
+        - affiliate
+        - partner
+        - "": Normal user
+    description: str
+        Description of the user.
+    profile_image: Asset
+        Profile image as an asset.
+    offline_image: Asset
+        Offline image as an asset.
+    email: str | None
+        The user's verified email address. The object includes this field only if the user access token includes the `user:read:email` scope.
+    created_at: datetime
+        When the user was created.
+    """
+
+    __slots__ = (
+        "display_name",
+        "type",
+        "description",
+        "broadcaster_type",
+        "profile_image",
+        "offline_image",
+        "email",
+        "created_at",
+    )
+
+    def __init__(self, data: UsersResponseData, *, http: HTTPClient) -> None:
+        super().__init__(data["id"], data["id"], http=http)
+        self.display_name: str = data["display_name"]
+        self.type: Literal["admin", "global_mod", "staff", ""] = data["type"]
+        self.broadcaster_type: Literal["affiliate", "partner", ""] = data["broadcaster_type"]
+        self.description: str = data["description"]
+        self.profile_image: Asset = Asset(data["profile_image_url"], http=http)
+        self.offline_image: Asset = Asset(data["offline_image_url"], http=http)
+        self.email: str | None = data.get("email")
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+
+    def __repr__(self) -> str:
+        return f"<User id={self.id}, name={self.name} display_name={self.display_name}>"
