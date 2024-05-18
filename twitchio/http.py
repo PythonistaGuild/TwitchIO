@@ -287,7 +287,9 @@ class HTTPAsyncIterator(Generic[T]):
         self._converter = converter or self._base_converter
         self._buffer: deque[T] = deque()
 
-    async def _base_converter(self, data: Any, *, raw: Any = {}) -> T:
+    async def _base_converter(self, data: Any, *, raw: Any = None) -> T:
+        if raw is None:
+            raw = {}
         return data
 
     async def _call_next(self) -> None:
