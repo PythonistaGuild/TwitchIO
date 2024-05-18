@@ -325,8 +325,10 @@ class HTTPAsyncIterator(Generic[T]):
         return await self._converter(data, raw=raw)
 
     async def _flatten(self) -> list[T]:
-        items: list[T] = [item async for item in self]
-        return items
+        if not self._buffer:
+            await self._call_next()
+
+        return list(self._buffer)
 
     def __await__(self) -> Generator[Any, None, list[T]]:
         return self._flatten().__await__()
