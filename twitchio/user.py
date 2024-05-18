@@ -2826,6 +2826,38 @@ class PartialUser:
         data = await self._http.get_users(ids=[self.id])
         return User(data["data"][0], http=self._http)
 
+    async def update(self, *, token_for: str, description: str | None = None) -> User:
+        """
+        Update the user's information.
+
+        ??? note
+            Requires a user access token that includes the `user:edit` scope.
+
+        Parameters
+        ----------
+        token_for : str
+            User access token that includes the `user:edit` scope.
+        description : str | None
+            The string to update the channel's description to. The description is limited to a maximum of 300 characters.
+            To remove the description then do not pass this kwarg.
+
+        Returns
+        -------
+        User
+            User object.
+
+        Raises
+        ------
+        ValueError
+            The description must be a maximum of 300 characters.
+        """
+
+        if description is not None and len(description) > 300:
+            raise ValueError("The description must be a maximum of 300 characters.")
+
+        data = await self._http.put_user(token_for=token_for, description=description)
+        return User(data["data"][0], http=self._http)
+
 
 class User(PartialUser):
     """

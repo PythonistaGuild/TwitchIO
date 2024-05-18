@@ -130,6 +130,7 @@ if TYPE_CHECKING:
         TeamsResponse,
         TopGamesResponseData,
         UnbanRequestsResponseData,
+        UpdateUserResponse,
         UserChatColorResponse,
         UserEmotesResponseData,
         UsersResponse,
@@ -2018,6 +2019,11 @@ class HTTPClient:
     ) -> UsersResponse:
         params = {"id": ids, "login": logins}
         route: Route = Route("GET", "users", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def put_user(self, token_for: str, description: str | None) -> UpdateUserResponse:
+        params = {"description": description} if description is not None else {"description": ""}
+        route: Route = Route("PUT", "users", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Videos ###
