@@ -73,7 +73,7 @@ if TYPE_CHECKING:
     from .models.teams import ChannelTeam
     from .utils import Colour
 
-__all__ = ("PartialUser", "User", "Extension")
+__all__ = ("PartialUser", "User", "Extension", "ActiveExtensions")
 
 
 class PartialUser:
@@ -3068,6 +3068,21 @@ class Extension:
 
 
 class ExtensionItem:
+    """
+    Base class of extension items.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+    """
+
     __slots__ = ("id", "active", "name", "version")
 
     def __init__(self, data: UserPanelItem | UserPanelOverlayItem | UserPanelComponentItem) -> None:
@@ -3081,6 +3096,21 @@ class ExtensionItem:
 
 
 class ExtensionPanel(ExtensionItem):
+    """
+    Represents an extension panel item.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+    """
+
     def __init__(self, data: UserPanelItem) -> None:
         super().__init__(data)
 
@@ -3089,6 +3119,21 @@ class ExtensionPanel(ExtensionItem):
 
 
 class ExtensionOverlay(ExtensionItem):
+    """
+    Represents an extension overlay item.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+    """
+
     def __init__(self, data: UserPanelOverlayItem) -> None:
         super().__init__(data)
 
@@ -3097,6 +3142,25 @@ class ExtensionOverlay(ExtensionItem):
 
 
 class ExtensionComponent(ExtensionItem):
+    """
+    Represents an extension component item.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+    x: int | None
+        The x-coordinate where the extension is placed.
+    y: int | None
+        The y-coordinate where the extension is placed.
+    """
+
     def __init__(self, data: UserPanelComponentItem) -> None:
         super().__init__(data)
         self.x: int | None = int(data["x"]) if data.get("x") else None
