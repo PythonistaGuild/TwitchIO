@@ -39,7 +39,7 @@ from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
 from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload
-from .user import Extension, User
+from .user import ActiveExtensions, Extension, User
 from .web import AiohttpAdapter
 
 
@@ -581,17 +581,43 @@ class Client:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             User access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
             To include inactive extensions, you must include the `user:edit:broadcast` scope.
 
         Returns
         -------
         list[UserExtension]
-            _description_
+            List of UserExtension objects.
         """
         data = await self._http.get_user_extensions(token_for=token_for)
         return [Extension(d) for d in data["data"]]
+
+    async def update_extensions(self, *, user_extensions: ActiveExtensions, token_for: str) -> ActiveExtensions:
+        """
+        Updates an installed extension's information. You can update the extension's activation state, ID, and version number.
+
+        The user ID in the access token identifies the broadcaster whose extensions you're updating.
+
+        !!! tip
+            The best way to change an installed extension's configuration is to use [`fetch_active_extensions`][twitchio.user.fetch_active_extensions].
+            You can then edit the approperiate extension within the `ActiveExtensions` model and pass it to this method.
+
+        ??? info
+            Requires a user access token that includes the `user:edit:broadcast` scope.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `user:edit:broadcast` scope.
+
+        Returns
+        -------
+        ActiveExtensions
+            ActiveExtensions object.
+        """
+        data = await self._http.put_user_extensions(user_extensions=user_extensions, token_for=token_for)
+        return ActiveExtensions(data["data"])
 
     async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
         """

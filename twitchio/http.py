@@ -54,7 +54,7 @@ from .models.search import SearchChannel
 from .models.streams import Stream, VideoMarkers
 from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
 from .models.videos import Video
-from .user import PartialUser
+from .user import ActiveExtensions, PartialUser
 from .utils import Colour, _from_json  # type: ignore
 
 
@@ -130,6 +130,7 @@ if TYPE_CHECKING:
         TeamsResponse,
         TopGamesResponseData,
         UnbanRequestsResponseData,
+        UpdateUserExtensionsResponse,
         UpdateUserResponse,
         UserActiveExtensionsResponse,
         UserBlockListResponseData,
@@ -2082,6 +2083,13 @@ class HTTPClient:
     ) -> UserActiveExtensionsResponse:
         params: dict[str, str | int] = {"user_id": user_id} if user_id is not None else {}
         route: Route = Route("GET", "users/extensions", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def put_user_extensions(
+        self, *, user_extensions: ActiveExtensions, token_for: str
+    ) -> UpdateUserExtensionsResponse:
+        data = {"data": user_extensions._to_dict()}
+        route: Route = Route("PUT", "users/extensions", json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Videos ###

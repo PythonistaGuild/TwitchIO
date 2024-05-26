@@ -2810,11 +2810,11 @@ class PartialUser:
 
         Parameters
         ----------
-        to_user_id : str | int
+        to_user_id: str | int
             The ID of the user to receive the whisper.
-        token_for : str
+        token_for: str
             User access token that includes the `user:manage:whispers` scope.
-        message : str
+        message: str
             The whisper message to send. The message must not be empty.
 
             The maximum message lengths are:
@@ -2855,9 +2855,9 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for : str
+        token_for: str
             User access token that includes the `user:edit` scope.
-        description : str | None
+        description: str | None
             The string to update the channel's description to. The description is limited to a maximum of 300 characters.
             To remove the description then do not pass this kwarg.
 
@@ -2998,16 +2998,16 @@ class User(PartialUser):
     type: Literal["admin", "global_mod", "staff", ""]
         The type of the user. Possible values are:
 
-        - admin : Twitch administrator
+        - admin - Twitch administrator
         - global_mod
-        - staff : Twitch staff
-        - empty string : Normal user
+        - staff - Twitch staff
+        - empty string - Normal user
     broadcaster_type: Literal["affiliate", "partner", ""]
         The broadcaster type of the user. Possible values are:
 
         - affiliate
         - partner
-        - empty string : Normal user
+        - empty string - Normal user
 
     description: str
         Description of the user.
@@ -3110,6 +3110,9 @@ class ExtensionItem:
     def __repr__(self) -> str:
         return f"<ExtensionItem id={self.id} name={self.name} active={self.active}>"
 
+    def _to_dict(self) -> dict[str, bool | str | int | None]:
+        return {"active": self.active, "id": self.id, "version": self.version}
+
 
 class ExtensionPanel(ExtensionItem):
     """
@@ -3147,7 +3150,7 @@ class ExtensionOverlay(ExtensionItem):
     name: str | None
         The extension's name. This is None if not active.
     active: bool
-        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+        A Boolean value that determines the extension's activation state. If False, the user has not configured this panel extension.
     """
 
     def __init__(self, data: UserPanelOverlayItem) -> None:
@@ -3179,8 +3182,13 @@ class ExtensionComponent(ExtensionItem):
 
     def __init__(self, data: UserPanelComponentItem) -> None:
         super().__init__(data)
-        self.x: int | None = int(data["x"]) if data.get("x") else None
-        self.y: int | None = int(data["y"]) if data.get("y") else None
+        self.x = int(data["x"]) if "x" in data else None
+        self.y = int(data["y"]) if "y" in data else None
+
+    def _to_dict(self) -> dict[str, bool | str | int | None]:
+        data = super()._to_dict()
+        data.update({"x": self.x, "y": self.y})
+        return data
 
     def __repr__(self) -> str:
         return f"<ExtensionComponent id={self.id} name={self.name} active={self.active}>"
@@ -3196,3 +3204,14 @@ class ActiveExtensions:
 
     def __repr__(self) -> str:
         return f"<ActiveExtensions panels={self.panels} overlays={self.overlays} components={self.components}>"
+
+    def _to_dict(self) -> dict[str, dict[str, dict[str, bool | str | int | None]]]:
+        """
+        Serialise all contained extensions to a dictionary that can be easily converted to JSON.
+        This method aggregates the serialised data of all extensions in the format required by Helix.
+        """
+        return {
+            "panel": {str(i + 1): panel._to_dict() for i, panel in enumerate(self.panels)},
+            "overlay": {str(i + 1): overlay._to_dict() for i, overlay in enumerate(self.overlays)},
+            "component": {str(i + 1): component._to_dict() for i, component in enumerate(self.components)},
+        }
