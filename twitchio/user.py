@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     )
     from .models.polls import Poll
     from .models.predictions import Prediction
+    from .models.schedule import Schedule
     from .models.streams import Stream, StreamMarker, VideoMarkers
     from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
     from .models.teams import ChannelTeam
@@ -1330,6 +1331,25 @@ class PartialUser:
 
     async def cancel_raid(self, *, token_for: str) -> None:
         return await self._http.delete_raid(broadcaster_id=self.id, token_for=token_for)
+
+    def fetch_stream_schedule(
+        self,
+        *,
+        token_for: str | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Schedule]:
+        """
+        Fetches stream schedule information for a broadcaster.
+        """
+        first = max(1, min(25, first))
+
+        return self._http.get_channel_stream_schedule(
+            broadcaster_id=self.id,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
+        )
 
     async def fetch_channel_teams(self, *, token_for: str | None = None) -> list[ChannelTeam]:
         """

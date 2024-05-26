@@ -39,6 +39,7 @@ from .moderation import *
 from .polls import *
 from .predictions import *
 from .raids import *
+from .schedule import *
 from .search import *
 from .streams import *
 from .subscriptions import *

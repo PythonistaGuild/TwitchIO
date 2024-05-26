@@ -50,6 +50,7 @@ from .models.hype_train import HypeTrainEvent
 from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
 from .models.polls import Poll
 from .models.predictions import Prediction
+from .models.schedule import Schedule
 from .models.search import SearchChannel
 from .models.streams import Stream, VideoMarkers
 from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
@@ -82,6 +83,7 @@ if TYPE_CHECKING:
         ChannelEmotesResponse,
         ChannelFollowersResponseData,
         ChannelInformationResponse,
+        ChannelStreamScheduleResponse,
         ChannelTeamsResponse,
         CharityCampaignDonationsResponseData,
         CharityCampaignResponse,
@@ -294,6 +296,7 @@ class HTTPAsyncIterator(Generic[T]):
     async def _base_converter(self, data: Any, *, raw: Any = None) -> T:
         if raw is None:
             raw = {}
+
         return data
 
     async def _call_next(self) -> None:
@@ -1800,6 +1803,36 @@ class HTTPClient:
         return await self.request_json(route)
 
     ### Schedule ###
+
+    def get_channel_stream_schedule(
+        self,
+        *,
+        broadcaster_id: str | int,
+        id: str | None = None,
+        start_time: datetime.datetime | None = None,
+        first: int = 20,
+        token_for: str | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Schedule]:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "first": first,
+        }
+
+        if id is not None:
+            params["id"] = id
+        if start_time is not None:
+            params["start_time"] = start_time.isoformat()
+
+        route: Route = Route("GET", "schedule", params=params, token_for=token_for)
+
+        async def converter(data: str, *, raw: ChannelStreamScheduleResponse) -> Schedule:
+            return Schedule(raw["data"], http=self)
+
+        iterator: HTTPAsyncIterator[Schedule] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+        return iterator
 
     ### Search ###
 
