@@ -95,6 +95,7 @@ if TYPE_CHECKING:
         ClipsResponseData,
         ConduitPayload,
         ContentClassificationLabelsResponse,
+        CreateChannelStreamScheduleSegmentResponse,
         CreateClipResponse,
         CreateStreamMarkerResponse,
         CreatorGoalsResponse,
@@ -1849,11 +1850,39 @@ class HTTPClient:
         }
 
         if vacation and vacation_start_time is not None and vacation_end_time is not None and timezone is not None:
-            params["vacation_start_time"] = vacation_start_time.isoformat()
-            params["vacation_end_time"] = vacation_end_time.isoformat()
+            params["vacation_start_time"] = vacation_start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+            params["vacation_end_time"] = vacation_end_time.replace(tzinfo=datetime.timezone.utc).isoformat()
             params["timezone"] = timezone
 
         route: Route = Route("PATCH", "schedule/settings", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def post_channel_stream_schedule_segment(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        start_time: datetime.datetime,
+        timezone: str,
+        duration: int,
+        recurring: bool = True,
+        category_id: str | None = None,
+        title: str | None = None,
+    ) -> CreateChannelStreamScheduleSegmentResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        data = {
+            "start_time": start_time.replace(tzinfo=datetime.timezone.utc).isoformat(),
+            "timezone": timezone,
+            "duration": duration,
+            "is_recurring": recurring,
+        }
+
+        if category_id is not None:
+            data["category_id"] = category_id
+        if title is not None:
+            data["title"] = title
+
+        route: Route = Route("POST", "schedule/segment", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Search ###

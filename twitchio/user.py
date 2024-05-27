@@ -1363,6 +1363,9 @@ class PartialUser:
         """
         Updates the broadcaster's schedule settings, such as scheduling a vacation.
 
+        ??? note
+            Requires a user access token that includes the `channel:manage:schedule` scope.
+
         Parameters
         ----------
         vacation: bool
@@ -1395,6 +1398,69 @@ class PartialUser:
             vacation_end_time=vacation_end_time,
             timezone=timezone,
         )
+
+    async def create_schedule_segment(
+        self,
+        *,
+        token_for: str,
+        start_time: datetime.datetime,
+        timezone: str,
+        duration: int,
+        recurring: bool = True,
+        category_id: str | None = None,
+        title: str | None = None,
+    ) -> Schedule:
+        """
+        Adds a single or recurring broadcast to the broadcaster's streaming schedule. For information about scheduling broadcasts, see [Stream Schedule](https://help.twitch.tv/s/article/channel-page-setup#Schedule).
+
+        ??? note
+            Requires a user access token that includes the `channel:manage:schedule` scope.
+
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `channel:manage:schedule` scope.
+        start_time: datetime.datetime
+            Datetime that the broadcast segment starts.
+        timezone: str | None
+            The time zone that the broadcaster broadcasts from. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, `America/New_York`).
+        duration: int
+            The length of time, in minutes, that the broadcast is scheduled to run. The duration must be in the range 30 through 1380 (23 hours)
+        recurring: bool
+            A Boolean value that determines whether the broadcast recurs weekly. Is True if the broadcast recurs weekly. Only partners and affiliates may add non-recurring broadcasts.
+            Default is True.
+        category_id: str | None
+            The ID of the category that best represents the broadcast's content. To get the category ID, use the [Search Categories][twitchio.client.search_categories].
+        title: str | None
+            The broadcast's title. The title may contain a maximum of 140 characters.
+
+        Raises
+        ------
+        ValueError
+            Duration must be between 30 and 1380.
+        ValueError
+            Title must not be greater than 140 characters.
+        """
+
+        if duration < 30 or duration > 1380:
+            raise ValueError("Duration must be between 30 and 1380.")
+        if title is not None and len(title) > 140:
+            raise ValueError("Title must not be greater than 140 characters.")
+
+        from .models.schedule import Schedule
+
+        data = await self._http.post_channel_stream_schedule_segment(
+            broadcaster_id=self.id,
+            start_time=start_time,
+            token_for=token_for,
+            duration=duration,
+            recurring=recurring,
+            timezone=timezone,
+            category_id=category_id,
+            title=title,
+        )
+        return Schedule(data["data"], http=self._http)
 
     async def fetch_channel_teams(self, *, token_for: str | None = None) -> list[ChannelTeam]:
         """
