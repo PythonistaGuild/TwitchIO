@@ -56,7 +56,7 @@ from .models.streams import Stream, VideoMarkers
 from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
 from .models.videos import Video
 from .user import ActiveExtensions, PartialUser
-from .utils import Colour, _from_json  # type: ignore
+from .utils import Colour, _from_json, url_encode_datetime  # type: ignore
 
 
 if TYPE_CHECKING:
@@ -583,7 +583,7 @@ class HTTPClient:
         }
 
         if started_at is not None:
-            params["started_at"] = started_at
+            params["started_at"] = url_encode_datetime(started_at)
         if user_id:
             params["user_id"] = user_id
 
@@ -1152,9 +1152,9 @@ class HTTPClient:
             params["id"] = clip_ids
 
         if started_at:
-            params["started_at"] = started_at.isoformat()
+            params["started_at"] = url_encode_datetime(started_at)
         if ended_at:
-            params["ended_at"] = ended_at.isoformat()
+            params["ended_at"] = url_encode_datetime(ended_at)
         if is_featured is not None:
             params["is_featured"] = is_featured
 
@@ -1823,7 +1823,7 @@ class HTTPClient:
         if id is not None:
             params["id"] = id
         if start_time is not None:
-            params["start_time"] = start_time.isoformat()
+            params["start_time"] = url_encode_datetime(start_time)
 
         route: Route = Route("GET", "schedule", params=params, token_for=token_for)
 
@@ -1850,8 +1850,8 @@ class HTTPClient:
         }
 
         if vacation and vacation_start_time is not None and vacation_end_time is not None and timezone is not None:
-            params["vacation_start_time"] = vacation_start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
-            params["vacation_end_time"] = vacation_end_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+            params["vacation_start_time"] = url_encode_datetime(vacation_start_time)
+            params["vacation_end_time"] = url_encode_datetime(vacation_end_time)
             params["timezone"] = timezone
 
         route: Route = Route("PATCH", "schedule/settings", params=params, token_for=token_for)
@@ -1870,8 +1870,14 @@ class HTTPClient:
     ) -> CreateChannelStreamScheduleSegmentResponse:
         params = {"broadcaster_id": broadcaster_id}
 
+        _start_time = (
+            start_time.isoformat()
+            if start_time.tzinfo is not None
+            else start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+        )
+
         data = {
-            "start_time": start_time.replace(tzinfo=datetime.timezone.utc).isoformat(),
+            "start_time": _start_time,
             "timezone": timezone,
             "duration": duration,
             "is_recurring": recurring,

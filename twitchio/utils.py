@@ -7,8 +7,9 @@ import os
 import pathlib
 import struct
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from backports.datetime_fromisoformat import MonkeyPatch  # type: ignore
 
@@ -39,7 +40,7 @@ except ImportError:
 a_timeout = _timeout  # type: ignore
 
 
-__all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter", "parse_timestamp")
+__all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter", "parse_timestamp", "url_encode_datetime")
 
 
 def is_docker() -> bool:
@@ -414,3 +415,23 @@ Color = Colour
 def chunk_list(sequence: list[Any], n: int) -> Generator[Any, Any, Any]:
     for i in range(0, len(sequence), n):
         yield sequence[i : i + n]
+
+
+def url_encode_datetime(dt: datetime) -> str:
+    """
+    Formats a datetime object to an RFC 3339 compliant string and URL-encodes it.
+    If the datetime object does not have a timezone, it is converted to UTC first.
+
+    Parameters
+    ----------
+    dt : datetime.datetime
+        Datetime object.
+
+    Returns
+    -------
+    str
+        The URL encoded parsed datetime object.
+    """
+    formatted_dt = dt.replace(tzinfo=timezone.utc).isoformat() if dt.tzinfo is None else dt.isoformat()
+
+    return quote(formatted_dt)

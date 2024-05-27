@@ -191,7 +191,7 @@ class PartialUser:
         Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
 
         !!! info
-            - Both `started_at` and `ended_at` must be provided when requesting a date range.
+            - Both `started_at` and `ended_at` must be provided when requesting a date range. They are UTC timezone by default.
             If you omit both of these then the report includes all available data from January 31, 2018.
 
             - Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
@@ -1336,6 +1336,7 @@ class PartialUser:
         self,
         *,
         token_for: str | None = None,
+        start_time: datetime.datetime | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Schedule]:
@@ -1347,6 +1348,7 @@ class PartialUser:
         return self._http.get_channel_stream_schedule(
             broadcaster_id=self.id,
             token_for=token_for,
+            start_time=start_time,
             first=first,
             max_results=max_results,
         )
