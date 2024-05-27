@@ -139,6 +139,9 @@ class ScheduleSegment:
         """
         Updates a scheduled broadcast segment.
 
+        ??? Note
+            Requires a user access token that includes the `channel:manage:schedule` scope.
+
         Parameters
         ----------
         token_for: str
