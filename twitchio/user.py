@@ -354,7 +354,7 @@ class PartialUser:
             The time period over which data is aggregated (uses the PST time zone).
         started_at: datetime.datetime | None
             The start date, used for determining the aggregation period. Specify this parameter only if you specify the period query parameter.
-            The start date is ignored if period is all.
+            The start date is ignored if period is all. This can be timezone aware.
         user_id: str | int | None
             An ID that identifies a user that cheered bits in the channel.
             If count is greater than 1, the response may include users ranked above and below the specified user.
@@ -1208,8 +1208,10 @@ class PartialUser:
         -----------
         started_at: datetime.datetime
             The start date used to filter clips.
+            This can be timezone aware.
         ended_at: datetime.datetime
             The end date used to filter clips. If not specified, the time window is the start date plus one week.
+            This can be timezone aware.
         featured: bool | None = None
             If True, returns only clips that are featured.
             If False, returns only clips that aren't featured.
@@ -1335,6 +1337,7 @@ class PartialUser:
     def fetch_stream_schedule(
         self,
         *,
+        ids: list[str] | None = None,
         token_for: str | None = None,
         start_time: datetime.datetime | None = None,
         first: int = 20,
@@ -1342,11 +1345,39 @@ class PartialUser:
     ) -> HTTPAsyncIterator[Schedule]:
         """
         Fetches stream schedule information for a broadcaster.
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            List of scheduled segments ids to return.
+        start_time: datetime.datetime | None
+            The datetime of when to start returning segments from the schedule. This can be timezone aware.
+        token_for: str | None
+            An optional token to use instead of the default app token.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 25 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Schedule]
+            HTTPAsyncIterator of Schedule objects.
+
+        Raises
+        ------
+        ValueError
+            You may specify a maximum of 100 ids.
         """
         first = max(1, min(25, first))
 
+        if ids is not None and len(ids) > 100:
+            raise ValueError("You may specify a maximum of 100 ids.")
+
         return self._http.get_channel_stream_schedule(
             broadcaster_id=self.id,
+            ids=ids,
             token_for=token_for,
             start_time=start_time,
             first=first,
@@ -1375,9 +1406,9 @@ class PartialUser:
         token_for: str
             User access token that includes the `channel:manage:schedule` scope.
         vacation_start_time: datetime.datetime | None
-            Datetime of when the broadcaster's vacation starts. Required if `vacation` is True.
+            Datetime of when the broadcaster's vacation starts. Required if `vacation` is True. This can be timezone aware.
         vacation_end_time: datetime.datetime | None
-            Datetime of when the broadcaster's vacation ends. Required if `vacation` is True.
+            Datetime of when the broadcaster's vacation ends. Required if `vacation` is True. This can be timezone aware.
         timezone: str | None
             The time zone that the broadcaster broadcasts from. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, `America/New_York`). Required if vaction is True.
 
@@ -1472,6 +1503,7 @@ class PartialUser:
         ----------
         token_for: str | None
             An optional user token to use instead of the default app token.
+
         Returns
         -------
         list[ChannelTeam]

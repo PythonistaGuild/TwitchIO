@@ -1810,19 +1810,19 @@ class HTTPClient:
         self,
         *,
         broadcaster_id: str | int,
-        id: str | None = None,
+        ids: list[str] | None = None,
         start_time: datetime.datetime | None = None,
         first: int = 20,
         token_for: str | None = None,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Schedule]:
-        params = {
+        params: dict[str, str | int | list[str]] = {
             "broadcaster_id": broadcaster_id,
             "first": first,
         }
 
-        if id is not None:
-            params["id"] = id
+        if ids is not None:
+            params["id"] = ids
         if start_time is not None:
             params["start_time"] = url_encode_datetime(start_time)
 
