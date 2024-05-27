@@ -1834,6 +1834,28 @@ class HTTPClient:
         )
         return iterator
 
+    async def patch_channel_stream_schedule(
+        self,
+        broadcaster_id: str | int,
+        vacation: bool,
+        token_for: str,
+        vacation_start_time: datetime.datetime | None = None,
+        vacation_end_time: datetime.datetime | None = None,
+        timezone: str | None = None,
+    ) -> None:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "is_vacation_enabled": vacation,
+        }
+
+        if vacation and vacation_start_time is not None and vacation_end_time is not None and timezone is not None:
+            params["vacation_start_time"] = vacation_start_time.isoformat()
+            params["vacation_end_time"] = vacation_end_time.isoformat()
+            params["timezone"] = timezone
+
+        route: Route = Route("PATCH", "schedule/settings", params=params, token_for=token_for)
+        return await self.request_json(route)
+
     ### Search ###
 
     def get_search_categories(

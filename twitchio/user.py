@@ -1351,6 +1351,51 @@ class PartialUser:
             max_results=max_results,
         )
 
+    async def update_stream_schedule(
+        self,
+        *,
+        vacation: bool,
+        token_for: str,
+        vacation_start_time: datetime.datetime | None = None,
+        vacation_end_time: datetime.datetime | None = None,
+        timezone: str | None = None,
+    ) -> None:
+        """
+        Updates the broadcaster's schedule settings, such as scheduling a vacation.
+
+        Parameters
+        ----------
+        vacation: bool
+            A Boolean value that indicates whether the broadcaster has scheduled a vacation. Set to True to enable Vacation Mode and add vacation dates, or False to cancel a previously scheduled vacation.
+        token_for: str
+            User access token that includes the `channel:manage:schedule` scope.
+        vacation_start_time: datetime.datetime | None
+            Datetime of when the broadcaster's vacation starts. Required if `vacation` is True.
+        vacation_end_time: datetime.datetime | None
+            Datetime of when the broadcaster's vacation ends. Required if `vacation` is True.
+        timezone: str | None
+            The time zone that the broadcaster broadcasts from. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, `America/New_York`). Required if vaction is True.
+
+        Raises
+        ------
+        ValueError
+            When vacation is True, all of vacation_start_time, vacation_end_time, and timezone must be provided.
+        """
+
+        if vacation and any(v is None for v in (vacation_start_time, vacation_end_time, timezone)):
+            raise ValueError(
+                "When vacation is True, all of vacation_start_time, vacation_end_time, and timezone must be provided."
+            )
+
+        return await self._http.patch_channel_stream_schedule(
+            broadcaster_id=self.id,
+            vacation=vacation,
+            token_for=token_for,
+            vacation_start_time=vacation_start_time,
+            vacation_end_time=vacation_end_time,
+            timezone=timezone,
+        )
+
     async def fetch_channel_teams(self, *, token_for: str | None = None) -> list[ChannelTeam]:
         """
         Fetches the list of Twitch teams that the broadcaster is a member of.
