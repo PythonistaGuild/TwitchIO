@@ -691,7 +691,7 @@ class DropsEntitlementsResponseData(TypedDict):
     timestamp: str
     user_id: str
     game_id: str
-    fulfillment_status: str
+    fulfillment_status: Literal["CLAIMED", "FULFILLED"]
     last_updated: str
 
 

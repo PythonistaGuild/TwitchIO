@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
+    from .models.entitlements import Entitlement
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
@@ -333,7 +334,7 @@ class Client:
         ----------
         emote_set_ids: list[str]
             List of IDs that identifies the emote set to get. You may specify a maximum of 25 IDs.
-        token_for: str | None, optional
+        token_for: str | None
             An optional user token to use instead of the default app token.
 
         Returns
@@ -1112,6 +1113,84 @@ class Client:
             video_id=video_id,
             token_for=token_for,
             first=first,
+            max_results=max_results,
+        )
+
+    def fetch_drop_entitlements(
+        self,
+        *,
+        token_for: str | None = None,
+        ids: list[str] | None = None,
+        user_id: str | int | None = None,
+        game_id: str | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Entitlement]:
+        """
+        Fetches an organization's list of entitlements that have been granted to a game, a user, or both.
+
+        !!! info
+            Entitlements returned in the response body data are not guaranteed to be sorted by any field returned by the API.
+            To retrieve `CLAIMED` or `FULFILLED` entitlements, use the fulfillment_status query parameter to filter results.
+            To retrieve entitlements for a specific game, use the game_id query parameter to filter results.
+
+            The client ID in the access token must own the game.
+
+        | Access token type | Parameter          | Description                                                                                                           |
+        |-------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------|
+        | App               | None               | If you don't specify request parameters, the request returns all entitlements that your organization owns.             |
+        | App               | user_id            | The request returns all entitlements for any game that the organization granted to the specified user.                |
+        | App               | user_id, game_id   | The request returns all entitlements that the specified game granted to the specified user.                            |
+        | App               | game_id            | The request returns all entitlements that the specified game granted to all entitled users.                            |
+        | User              | None               | If you don't specify request parameters, the request returns all entitlements for any game that the organization granted to the user identified in the access token. |
+        | User              | user_id            | Invalid.                                                                                                              |
+        | User              | user_id, game_id   | Invalid.                                                                                                              |
+        | User              | game_id            | The request returns all entitlements that the specified game granted to the user identified in the access token.      |
+
+
+        Parameters
+        ----------
+        token_for: str | None
+            User access token. The client ID in the access token must own the game.
+            If not provided then default app token is used.
+            `The client ID in the access token must own the game.`
+        ids: list[str] | None
+            List of entitlement ids that identifies the entitlements to get.
+        user_id: str | int | None
+            User that was granted entitlements.
+        game_id: str | None
+            An ID that identifies a game that offered entitlements.
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None
+            The entitlement's fulfillment status. Used to filter the list to only those with the specified status.
+            Possible values are: `CLAIMED` and `FULFILLED`.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 1000 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Entitlement]
+            HTTPAsyncIterator of Entitlement objects.
+
+        Raises
+        ------
+        ValueError
+            You may specifiy a maximum of 100 ids.
+        """
+        first = max(1, min(1000, first))
+
+        if ids is not None and len(ids) > 100:
+            raise ValueError("You may specifiy a maximum of 100 ids.")
+
+        return self._http.get_drop_entitlements(
+            token_for=token_for,
+            ids=ids,
+            user_id=user_id,
+            game_id=game_id,
+            fulfillment_status=fulfillment_status,
             max_results=max_results,
         )
 

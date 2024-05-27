@@ -45,6 +45,7 @@ from .models.channels import ChannelFollowerEvent, ChannelFollowers, FollowedCha
 from .models.charity import CharityDonation
 from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
+from .models.entitlements import Entitlement
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
 from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
@@ -103,6 +104,7 @@ if TYPE_CHECKING:
         CustomRewardRedemptionResponseData,
         CustomRewardsResponse,
         DeleteVideosResponse,
+        DropsEntitlementsResponseData,
         EmoteSetsResponse,
         ExtensionAnalyticsResponseData,
         ExtensionTransactionsResponseData,
@@ -1232,6 +1234,34 @@ class HTTPClient:
         return await self.request_json(route)
 
     ### Entitlements ###
+
+    def get_drop_entitlements(
+        self,
+        token_for: str | None = None,
+        ids: list[str] | None = None,
+        user_id: str | int | None = None,
+        game_id: str | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Entitlement]:
+        params: dict[str, str | int | list[str]] = {"first": first}
+        if ids is not None:
+            params["id"] = ids
+        if user_id is not None:
+            params["user_id"] = user_id
+        if game_id is not None:
+            params["game_id"] = game_id
+        if fulfillment_status is not None:
+            params["fulfillment_status"] = fulfillment_status
+
+        route: Route = Route("GET", "entitlements/drops", params=params, token_for=token_for)
+
+        async def converter(data: DropsEntitlementsResponseData, *, raw: Any) -> Entitlement:
+            return Entitlement(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
 
     ### Extensions ###
 
