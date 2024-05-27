@@ -1929,6 +1929,11 @@ class HTTPClient:
         route: Route = Route("PATCH", "schedule/segment", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
+    async def delete_channel_stream_schedule_segment(self, broadcaster_id: str | int, id: str, token_for: str) -> None:
+        params = {"broadcaster_id": broadcaster_id, "id": id}
+        route: Route = Route("DELETE", "schedule/segment", params=params, token_for=token_for)
+        return await self.request_json(route)
+
     ### Search ###
 
     def get_search_categories(

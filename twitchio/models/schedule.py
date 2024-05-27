@@ -190,6 +190,25 @@ class ScheduleSegment:
 
         return Schedule(data["data"], http=self._http)
 
+    async def delete(self, *, token_for: str) -> None:
+        """
+        Removes a broadcast segment from the broadcaster's streaming schedule.
+
+        !!! info
+            For recurring segments, removing a segment removes all segments in the recurring schedule.
+
+        ??? Note
+            Requires a user access token that includes the `channel:manage:schedule` scope.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `channel:manage:schedule` scope.
+        """
+        return await self._http.delete_channel_stream_schedule_segment(
+            broadcaster_id=self._broadcaster_id, id=self.id, token_for=token_for
+        )
+
 
 class ScheduleCategory:
     """

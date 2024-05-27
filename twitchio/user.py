@@ -1559,6 +1559,27 @@ class PartialUser:
 
         return Schedule(data["data"], http=self._http)
 
+    async def delete_schedule_segment(self, *, id: str, token_for: str) -> None:
+        """
+        Removes a broadcast segment from the broadcaster's streaming schedule.
+
+        !!! info
+            For recurring segments, removing a segment removes all segments in the recurring schedule.
+
+        ??? Note
+            Requires a user access token that includes the `channel:manage:schedule` scope.
+
+        Parameters
+        ----------
+        id: str
+            The ID of the segment to remove.
+        token_for: str
+            User access token that includes the `channel:manage:schedule` scope.
+        """
+        return await self._http.delete_channel_stream_schedule_segment(
+            broadcaster_id=self.id, id=id, token_for=token_for
+        )
+
     async def fetch_channel_teams(self, *, token_for: str | None = None) -> list[ChannelTeam]:
         """
         Fetches the list of Twitch teams that the broadcaster is a member of.
