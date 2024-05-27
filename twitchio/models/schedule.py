@@ -62,7 +62,9 @@ class Schedule:
     __slots__ = ("segments", "broadcaster", "vacation")
 
     def __init__(self, data: ChannelStreamScheduleResponseData, *, http: HTTPClient) -> None:
-        self.segments: list[ScheduleSegment] = [ScheduleSegment(d) for d in data["segments"]]
+        self.segments: list[ScheduleSegment] = [
+            ScheduleSegment(d, http=http, broadcaster_id=data["broadcaster_id"]) for d in data["segments"]
+        ]
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
         self.vacation: ScheduleVacation | None = ScheduleVacation(data["vacation"]) if data["vacation"] else None
 
@@ -93,9 +95,21 @@ class ScheduleSegment:
         Indicates if the scheduled broadcast is recurring weekly.
     """
 
-    __slots__ = ("id", "start_time", "end_time", "title", "canceled_until", "recurring", "category")
+    __slots__ = (
+        "id",
+        "start_time",
+        "end_time",
+        "title",
+        "canceled_until",
+        "recurring",
+        "category",
+        "_http",
+        "_broadcaster_id",
+    )
 
-    def __init__(self, data: ChannelStreamScheduleResponseSegments) -> None:
+    def __init__(self, data: ChannelStreamScheduleResponseSegments, *, http: HTTPClient, broadcaster_id: str) -> None:
+        self._http: HTTPClient = http
+        self._broadcaster_id = broadcaster_id
         self.id: str = data["id"]
         self.start_time: datetime.datetime = parse_timestamp(data["start_time"])
         self.end_time: datetime.datetime = parse_timestamp(data["end_time"])
@@ -111,6 +125,68 @@ class ScheduleSegment:
             f"<ScheduleSegment id={self.id} start_time={self.start_time} end_time={self.end_time} title={self.title}>"
         )
 
+    async def update_segment(
+        self,
+        *,
+        token_for: str,
+        start_time: datetime.datetime | None = None,
+        duration: int | None = None,
+        category_id: str | None = None,
+        title: str | None = None,
+        canceled: bool | None = None,
+        timezone: str | None = None,
+    ) -> Schedule:
+        """
+        Updates a scheduled broadcast segment.
+
+        Parameters
+        ----------
+        token_for: str
+            User access token that includes the `channel:manage:schedule` scope.
+        start_time: datetime.datetime | None
+            The datetime that the broadcast segment starts. This can be timezone aware.
+        duration: int | None
+            he length of time, in minutes, that the broadcast is scheduled to run. The duration must be in the range 30 through 1380 (23 hours)
+        category_id: str | None
+            The ID of the category that best represents the broadcast's content. To get the category ID, use the [Search Categories][twitchio.client.search_categories].
+        title: str | None
+            The broadcast's title. The title may contain a maximum of 140 characters.
+        canceled: bool | None
+            A Boolean value that indicates whether the broadcast is canceled. Set to True to cancel the segment.
+        timezone: str | None
+            The time zone where the broadcast takes place. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, America/New_York).
+
+        Returns
+        -------
+        Schedule
+            Schedule object.
+
+        Raises
+        ------
+        ValueError
+            Duration must be between 30 and 1380.
+        ValueError
+            Title must not be greater than 140 characters.
+        """
+        if duration is not None and (duration < 30 or duration > 1380):
+            raise ValueError("Duration must be between 30 and 1380.")
+        if title is not None and len(title) > 140:
+            raise ValueError("Title must not be greater than 140 characters.")
+
+        data = await self._http.patch_channel_stream_schedule_segment(
+            broadcaster_id=self._broadcaster_id,
+            id=self.id,
+            start_time=start_time,
+            duration=duration,
+            category_id=category_id,
+            title=title,
+            canceled=canceled,
+            timezone=timezone,
+            token_for=token_for,
+        )
+
+        return Schedule(data["data"], http=self._http)
+
 
 class ScheduleCategory:
     """
@@ -118,9 +194,9 @@ class ScheduleCategory:
 
     Attributes
     -----------
-    id: :class:`str`
+    id: str
         The game or category ID.
-    name: :class:`str`
+    name: str
         The game or category name.
     """
 

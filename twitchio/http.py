@@ -133,6 +133,7 @@ if TYPE_CHECKING:
         TeamsResponse,
         TopGamesResponseData,
         UnbanRequestsResponseData,
+        UpdateChannelStreamScheduleSegmentResponse,
         UpdateUserExtensionsResponse,
         UpdateUserResponse,
         UserActiveExtensionsResponse,
@@ -1889,6 +1890,43 @@ class HTTPClient:
             data["title"] = title
 
         route: Route = Route("POST", "schedule/segment", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def patch_channel_stream_schedule_segment(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        id: str,
+        start_time: datetime.datetime | None = None,
+        timezone: str | None = None,
+        duration: int | None = None,
+        canceled: bool | None = None,
+        category_id: str | None = None,
+        title: str | None = None,
+    ) -> UpdateChannelStreamScheduleSegmentResponse:
+        params = {"broadcaster_id": broadcaster_id, "id": id}
+
+        data: dict[str, str | int | bool] = {}
+
+        if start_time is not None:
+            _start_time = (
+                start_time.isoformat()
+                if start_time.tzinfo is not None
+                else start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+            )
+            data["start_time"] = _start_time
+        if category_id is not None:
+            data["category_id"] = category_id
+        if title is not None:
+            data["title"] = title
+        if timezone is not None:
+            data["timezone"] = timezone
+        if duration is not None:
+            data["duration"] = duration
+        if canceled is not None:
+            data["is_canceled"] = canceled
+
+        route: Route = Route("PATCH", "schedule/segment", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Search ###

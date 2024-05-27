@@ -1424,7 +1424,7 @@ class PartialUser:
         token_for: str
             User access token that includes the `channel:manage:schedule` scope.
         start_time: datetime.datetime
-            Datetime that the broadcast segment starts.
+            Datetime that the broadcast segment starts. This can be timezone aware.
         timezone: str | None
             The time zone that the broadcaster broadcasts from. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, `America/New_York`).
         duration: int
