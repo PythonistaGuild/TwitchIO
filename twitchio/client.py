@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
-    from .models.entitlements import Entitlement
+    from .models.entitlements import Entitlement, EntitlementStatus
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
@@ -1135,7 +1135,8 @@ class Client:
             To retrieve `CLAIMED` or `FULFILLED` entitlements, use the fulfillment_status query parameter to filter results.
             To retrieve entitlements for a specific game, use the game_id query parameter to filter results.
 
-            The client ID in the access token must own the game.
+        !!! note
+            Requires an app access token or user access token. The client ID in the access token must own the game.
 
         | Access token type | Parameter          | Description                                                                                                           |
         |-------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------|
@@ -1193,6 +1194,55 @@ class Client:
             fulfillment_status=fulfillment_status,
             max_results=max_results,
         )
+
+    async def update_entitlements(
+        self,
+        *,
+        ids: list[str] | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        token_for: str | None = None,
+    ) -> list[EntitlementStatus]:
+        """
+        Updates the Drop entitlement's fulfillment status.
+
+        !!! note
+            Requires an app access token or user access token. The client ID in the access token must own the game.
+
+        | Access token type | Data that's updated                                                                                                            |
+        |-------------------|--------------------------------------------------------------------------------------------------------------------------------|
+        | App               | Updates all entitlements with benefits owned by the organization in the access token.                                          |
+        | User              | Updates all entitlements owned by the user in the access win the access token and where the benefits are owned by the organization in the access token. |
+
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            A list of IDs that identify the entitlements to update. You may specify a maximum of 100 IDs.
+        fulfillment_status: Literal[""CLAIMED", "FULFILLED"] | None
+            The fulfillment status to set the entitlements to.
+            Possible values are: `CLAIMED` and `FULFILLED`.
+        token_for: str | None
+            User access token. The client ID in the access token must own the game.
+
+        Returns
+        -------
+        list[EntitlementStatus]
+            List of EntitlementStatus objects.
+
+        Raises
+        ------
+        ValueError
+            You may specifiy a maximum of 100 ids.
+        """
+        if ids is not None and len(ids) > 100:
+            raise ValueError("You may specifiy a maximum of 100 ids.")
+
+        from .models.entitlements import EntitlementStatus
+
+        data = await self._http.patch_drop_entitlements(
+            ids=ids, fulfillment_status=fulfillment_status, token_for=token_for
+        )
+        return [EntitlementStatus(d) for d in data["data"]]
 
     async def _create_conduit(self, shard_count: int, /) -> list[Conduit]:
         data: ConduitPayload = await self._http.create_conduit(shard_count)

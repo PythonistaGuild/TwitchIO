@@ -701,7 +701,7 @@ class DropsEntitlementsResponse(TypedDict):
 
 
 class UpdateDropsEntitlementsResponseData(TypedDict):
-    status: str
+    status: Literal["INVALID_ID", "NOT_FOUND", "SUCCESS", "UNAUTHORIZED", "UPDATE_FAILED"]
     ids: list[str]
 
 

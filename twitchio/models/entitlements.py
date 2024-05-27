@@ -38,10 +38,11 @@ if TYPE_CHECKING:
     from twitchio.types_.responses import (
         DropsEntitlementsResponseData,
         GamesResponse,
+        UpdateDropsEntitlementsResponseData,
     )
 
 
-__all__ = ("Entitlement",)
+__all__ = ("Entitlement", "EntitlementStatus")
 
 
 class Entitlement:
@@ -104,3 +105,12 @@ class Entitlement:
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)
+
+
+class EntitlementStatus:
+    def __init__(self, data: UpdateDropsEntitlementsResponseData) -> None:
+        self.status: Literal["INVALID_ID", "NOT_FOUND", "SUCCESS", "UNAUTHORIZED", "UPDATE_FAILED"] = data["status"]
+        self.ids: list[str] = data["ids"]
+
+    def __repr__(self) -> str:
+        return f"<EntitlementStatus status={self.status} ids={self.ids}>"

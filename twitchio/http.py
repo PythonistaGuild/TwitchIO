@@ -136,6 +136,7 @@ if TYPE_CHECKING:
         TopGamesResponseData,
         UnbanRequestsResponseData,
         UpdateChannelStreamScheduleSegmentResponse,
+        UpdateDropsEntitlementsResponse,
         UpdateUserExtensionsResponse,
         UpdateUserResponse,
         UserActiveExtensionsResponse,
@@ -1262,6 +1263,22 @@ class HTTPClient:
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
+
+    async def patch_drop_entitlements(
+        self,
+        ids: list[str] | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        token_for: str | None = None,
+    ) -> UpdateDropsEntitlementsResponse:
+        data: dict[str, list[str] | str] = {}
+        if ids is not None:
+            data["entitlement_ids"] = ids
+        if fulfillment_status is not None:
+            data["fulfillment_status"] = fulfillment_status
+
+        route: Route = Route("PATCH", "entitlements/drops", json=data, token_for=token_for)
+
+        return await self.request_json(route)
 
     ### Extensions ###
 
