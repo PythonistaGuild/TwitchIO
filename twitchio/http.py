@@ -732,7 +732,9 @@ class HTTPClient:
         token_for: str,
         user_id: str | int | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> ChannelFollowers:
+        first = max(1, min(100, first))
         params = {"first": first, "broadcaster_id": broadcaster_id}
 
         if user_id is not None:
@@ -743,7 +745,7 @@ class HTTPClient:
         async def converter(data: ChannelFollowersResponseData) -> ChannelFollowerEvent:
             return ChannelFollowerEvent(data, http=self)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         data = await self.request_json(route)
 
         return ChannelFollowers(data, iterator)

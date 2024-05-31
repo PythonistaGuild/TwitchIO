@@ -526,6 +526,12 @@ class PartialUser:
             Use this parameter to see whether the user follows this broadcaster.
         token_for: str
             User token to use that includes the `user:read:follows` scope.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
 
         Returns
         -------
@@ -541,7 +547,9 @@ class PartialUser:
             max_results=max_results,
         )
 
-    async def fetch_followers(self, token_for: str, user_id: str | int | None = None) -> ChannelFollowers:
+    async def fetch_followers(
+        self, token_for: str, user_id: str | int | None = None, first: int = 20, max_results: int | None = None
+    ) -> ChannelFollowers:
         """
         Fetches information of who and when users followed this channel.
 
@@ -557,6 +565,12 @@ class PartialUser:
             Use this parameter to see whether the user follows this broadcaster.
         token_for: str
             User token to use that includes the `moderator:read:followers` scope.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
 
         Returns
         -------
@@ -568,6 +582,8 @@ class PartialUser:
             broadcaster_id=self.id,
             token_for=token_for,
             user_id=user_id,
+            first=first,
+            max_results=max_results,
         )
 
     async def create_custom_reward(
