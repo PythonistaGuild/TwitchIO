@@ -508,7 +508,11 @@ class PartialUser:
         return [ChannelEditor(d, http=self._http) for d in data["data"]]
 
     async def fetch_followed_channels(
-        self, token_for: str, broadcaster_id: str | int | None = None
+        self,
+        token_for: str,
+        broadcaster_id: str | int | None = None,
+        first: int = 20,
+        max_results: int | None = None,
     ) -> FollowedChannels | None:
         """
         Fetches information of who and when this user followed other channels.
@@ -533,6 +537,8 @@ class PartialUser:
             user_id=self.id,
             token_for=token_for,
             broadcaster_id=broadcaster_id,
+            first=first,
+            max_results=max_results,
         )
 
     async def fetch_followers(self, token_for: str, user_id: str | int | None = None) -> ChannelFollowers:

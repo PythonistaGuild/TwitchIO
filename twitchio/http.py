@@ -709,6 +709,7 @@ class HTTPClient:
         first: int = 20,
         max_results: int | None = None,
     ) -> FollowedChannels:
+        first = max(1, min(100, first))
         params = {"first": first, "user_id": user_id}
 
         if broadcaster_id is not None:
