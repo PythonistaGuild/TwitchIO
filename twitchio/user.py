@@ -3179,7 +3179,9 @@ class PartialUser:
         HTTPAsyncIterator[PartialUser]
             HTTPAsyncIterator of PartialUser objects.
         """
-        return self._http.get_user_block_list(broadcaster_id=self.id, token_for=token_for, first=first)
+        return self._http.get_user_block_list(
+            broadcaster_id=self.id, token_for=token_for, first=first, max_results=max_results
+        )
 
     async def block_user(
         self,
