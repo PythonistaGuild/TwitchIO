@@ -276,6 +276,7 @@ class HTTPAsyncIterator(Generic[T]):
         "_max_results",
         "_converter",
         "_buffer",
+        "_nested_key",
     )
 
     def __init__(
@@ -284,6 +285,7 @@ class HTTPAsyncIterator(Generic[T]):
         route: Route,
         max_results: int | None = None,
         converter: PaginatedConverter[T] = None,
+        nested_key: str | None = None,
     ) -> None:
         self._http = http
         self._route = route
@@ -297,6 +299,7 @@ class HTTPAsyncIterator(Generic[T]):
 
         self._converter = converter or self._base_converter
         self._buffer: deque[T] = deque()
+        self._nested_key: str | None = nested_key
 
     async def _base_converter(self, data: Any, *, raw: Any = None) -> T:
         if raw is None:
@@ -316,21 +319,29 @@ class HTTPAsyncIterator(Generic[T]):
         self._cursor = data.get("pagination", {}).get("cursor", False)
 
         try:
-            inner: list[RawResponse] = data["data"]
+            inner: list[RawResponse] = data["data"] if self._nested_key is None else data["data"][self._nested_key]
         except KeyError as e:
             # TODO: Proper exception...
             raise ValueError('Expected "data" key not found.') from e
 
-        for value in inner:
-            if self._max_results is None:
+        if not self._nested_key:
+            for value in inner:
+                if self._max_results is None:
+                    self._buffer.append(await self._do_conversion(value, raw=data))
+                    continue
+
+                self._max_results -= 1  # If this is causing issues, it's just pylance bugged/desynced...
+                if self._max_results < 0:
+                    return
+
                 self._buffer.append(await self._do_conversion(value, raw=data))
-                continue
+        else:
+            if self._max_results is not None:
+                self._max_results -= 1  # If this is causing issues, it's just pylance bugged/desynced...
+                if self._max_results < 0:
+                    return
+            self._buffer.append(await self._do_conversion(inner[0], raw=data))
 
-            self._max_results -= 1  # If this is causing issues, it's just pylance bugged/desynced...
-            if self._max_results < 0:
-                return
-
-            self._buffer.append(await self._do_conversion(value, raw=data))
 
     async def _do_conversion(self, data: RawResponse, *, raw: RawResponse) -> T:
         return await self._converter(data, raw=raw)
@@ -480,8 +491,9 @@ class HTTPClient:
         max_results: int | None = None,
         *,
         converter: PaginatedConverter[T] | None = None,
+        nested_key: str | None = None,
     ) -> HTTPAsyncIterator[T]:
-        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
+        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter, nested_key=nested_key)
         return iterator
 
     ### Ads ###
@@ -694,6 +706,7 @@ class HTTPClient:
         token_for: str,
         broadcaster_id: str | int | None = None,
         first: int = 20,
+        max_results: int | None = None,
     ) -> FollowedChannels:
         params = {"first": first, "user_id": user_id}
 
@@ -705,7 +718,7 @@ class HTTPClient:
         async def converter(data: FollowedChannelsResponseData, *, raw: Any) -> FollowedChannelsEvent:
             return FollowedChannelsEvent(data, http=self)
 
-        iterator = self.request_paginated(route, converter=converter)
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         data = await self.request_json(route)
 
         return FollowedChannels(data, iterator)
@@ -1879,7 +1892,7 @@ class HTTPClient:
             return Schedule(raw["data"], http=self)
 
         iterator: HTTPAsyncIterator[Schedule] = self.request_paginated(
-            route, converter=converter, max_results=max_results
+            route=route, max_results=max_results, converter=converter, nested_key="segments"
         )
         return iterator
 

@@ -61,6 +61,7 @@ class ManagedHTTPClient(OAuth):
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
         session: aiohttp.ClientSession | None = None,
+        nested_key: str | None = None,
     ) -> None:
         super().__init__(
             client_id=client_id,
@@ -80,6 +81,7 @@ class ManagedHTTPClient(OAuth):
         self._tokens: TokenMapping = {}
         self._app_token: str | None = None
         self._validate_task: asyncio.Task[None] | None = None
+        self._nested_key: str | None = None
 
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
         logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
@@ -204,8 +206,9 @@ class ManagedHTTPClient(OAuth):
         max_results: int | None = None,
         *,
         converter: PaginatedConverter[T] | None = None,
+        nested_key: str | None = None,
     ) -> HTTPAsyncIterator[T]:
-        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter)
+        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter, nested_key=nested_key)
         return iterator
 
     async def __validate_loop(self) -> None:
