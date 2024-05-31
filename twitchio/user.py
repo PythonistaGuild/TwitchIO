@@ -1055,9 +1055,13 @@ class PartialUser:
             broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, to_broadcaster_id=to_broadcaster_id
         )
 
-    # TODO App Token usage
     async def send_message(
-        self, *, sender_id: str | int, message: str, token_for: str, reply_to_message_id: str | None = None
+        self,
+        *,
+        sender_id: str | int,
+        message: str,
+        token_for: str | None = None,
+        reply_to_message_id: str | None = None,
     ) -> SentMessage:
         """
         Send a message to the broadcaster's chat room.
@@ -1067,6 +1071,7 @@ class PartialUser:
             User access token is generally recommended.
 
             - If app access token used, then additionally requires `user:bot scope` from chatting user, and either `channel:bot scope` from broadcaster or moderator status.
+            This means creating a user token for the "bot" account with the above scopes associated to the correct Client ID. This token does not need to be used.
 
         ??? tip
             Chat messages can also include emoticons. To include emoticons, use the name of the emote.

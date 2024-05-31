@@ -208,7 +208,9 @@ class ManagedHTTPClient(OAuth):
         converter: PaginatedConverter[T] | None = None,
         nested_key: str | None = None,
     ) -> HTTPAsyncIterator[T]:
-        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter, nested_key=nested_key)
+        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(
+            self, route, max_results, converter=converter, nested_key=nested_key
+        )
         return iterator
 
     async def __validate_loop(self) -> None:

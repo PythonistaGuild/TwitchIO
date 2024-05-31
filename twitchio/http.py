@@ -342,7 +342,6 @@ class HTTPAsyncIterator(Generic[T]):
                     return
             self._buffer.append(await self._do_conversion(inner[0], raw=data))
 
-
     async def _do_conversion(self, data: RawResponse, *, raw: RawResponse) -> T:
         return await self._converter(data, raw=raw)
 
@@ -493,7 +492,9 @@ class HTTPClient:
         converter: PaginatedConverter[T] | None = None,
         nested_key: str | None = None,
     ) -> HTTPAsyncIterator[T]:
-        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(self, route, max_results, converter=converter, nested_key=nested_key)
+        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(
+            self, route, max_results, converter=converter, nested_key=nested_key
+        )
         return iterator
 
     ### Ads ###
