@@ -209,7 +209,7 @@ class Bot(Client):
             if alias in self.commands:
                 del self.commands[command.name]
                 raise TwitchCommandError(
-                    f"Failed to load command <{command.name}>, a command with that name/alias already exists."
+                    f"Failed to load alias <{alias}> for command <{command.name}>, a command with that name/alias already exists.",
                 )
             self._command_aliases[alias] = command.name
 
