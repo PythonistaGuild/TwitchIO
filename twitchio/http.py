@@ -121,22 +121,8 @@ class TwitchHTTP:
             raise errors.NoClientID("A Client ID is required to use the Twitch API")
         headers = route.headers or {}
 
-        if force_app_token and "Authorization" not in headers:
-            if not self.client_secret:
-                raise errors.NoToken(
-                    "An app access token is required for this route, please provide a client id and client secret"
-                )
-            if self.app_token is None:
-                await self._generate_login()
-                headers["Authorization"] = f"Bearer {self.app_token}"
-        elif not self.token and not self.client_secret and "Authorization" not in headers:
-            raise errors.NoToken(
-                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
-            )
-        if "Authorization" not in headers:
-            if not self.token:
-                await self._generate_login()
-            headers["Authorization"] = f"Bearer {self.token}"
+        await self._apply_auth(headers, force_app_token, False)
+
         headers["Client-ID"] = self.client_id
 
         if not self.session:
@@ -165,7 +151,7 @@ class TwitchHTTP:
                     q = [("after", cursor), *q]
                 q = [("first", get_limit()), *q]
                 path = path.with_query(q)
-            body, is_text = await self._request(route, path, headers)
+            body, is_text = await self._request(route, path, headers, force_app_token=force_app_token)
             if is_text:
                 return body
             if full_body:
@@ -182,7 +168,26 @@ class TwitchHTTP:
             is_finished = reached_limit() if limit is not None else True if paginate else True
         return data
 
-    async def _request(self, route, path, headers, utilize_bucket=True):
+    async def _apply_auth(self, headers: dict, force_app_token: bool, force_apply: bool) -> None:
+        if force_app_token and "Authorization" not in headers:
+            if not self.client_secret:
+                raise errors.NoToken(
+                    "An app access token is required for this route, please provide a client id and client secret"
+                )
+            if self.app_token is None:
+                await self._generate_login()
+                headers["Authorization"] = f"Bearer {self.app_token}"
+        elif not self.token and not self.client_secret and "Authorization" not in headers:
+            raise errors.NoToken(
+                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
+            )
+        if "Authorization" not in headers or force_apply:
+            if not self.token:
+                await self._generate_login()
+
+            headers["Authorization"] = f"Bearer {self.token}"
+
+    async def _request(self, route, path, headers, utilize_bucket=True, force_app_token: bool = False):
         reason = None
 
         for attempt in range(5):
@@ -190,42 +195,62 @@ class TwitchHTTP:
                 await self.bucket.wait_reset()
             async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
                 try:
-                    logger.debug(f"Received a response from a request with status {resp.status}: {await resp.json()}")
+                    message = await resp.text(encoding="utf-8")
+                    logger.debug(f"Received a response from a request with status {resp.status}: {message}")
                 except Exception:
+                    message = None
                     logger.debug(f"Received a response from a request with status {resp.status} and without body")
+
                 if 500 <= resp.status <= 504:
                     reason = resp.reason
                     await asyncio.sleep(2**attempt + 1)
                     continue
+
                 if utilize_bucket:
                     reset = resp.headers.get("Ratelimit-Reset")
                     remaining = resp.headers.get("Ratelimit-Remaining")
 
                     self.bucket.update(reset=reset, remaining=remaining)
+
                 if 200 <= resp.status < 300:
-                    if resp.content_type == "application/json":
-                        return await resp.json(), False
-                    return await resp.text(encoding="utf-8"), True
-                if resp.status == 401:
-                    message_json = await resp.json()
+                    if resp.content_type == "application/json" and message:
+                        return json.loads(message), False
+
+                    return message, True
+
+                elif resp.status == 400:
+                    message_json = json.loads(message)
+                    raise errors.HTTPException(
+                        f"Failed to fulfill the request", reason=message_json.get("message", ""), status=resp.status
+                    )
+
+                elif resp.status == 401:
+                    message_json = json.loads(message)
                     if "Invalid OAuth token" in message_json.get("message", ""):
                         try:
                             await self._generate_login()
+                            await self._apply_auth(headers, force_app_token, True)
+                            continue
                         except:
                             raise errors.Unauthorized(
                                 "Your oauth token is invalid, and a new one could not be generated"
                             )
-                    print(resp.reason, message_json, resp)
-                    raise errors.Unauthorized("You're not authorized to use this route.")
-                if resp.status == 429:
+
+                    raise errors.Unauthorized(
+                        "You're not authorized to use this route.",
+                        reason=message_json.get("message", ""),
+                        status=resp.status,
+                    )
+
+                elif resp.status == 429:
                     reason = "Ratelimit Reached"
 
                     if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
                         await asyncio.sleep(3**attempt + 1)
+
                     continue
-                raise errors.HTTPException(
-                    f"Failed to fulfil request ({resp.status}).", reason=resp.reason, status=resp.status
-                )
+
+                raise errors.HTTPException(f"Failed to fulfill the request", reason=resp.reason, status=resp.status)
         raise errors.HTTPException("Failed to reach Twitch API", reason=reason, status=resp.status)
 
     async def _generate_login(self):
@@ -555,6 +580,7 @@ class TwitchHTTP:
         ids: Optional[List[str]] = None,
         started_at: Optional[datetime.datetime] = None,
         ended_at: Optional[datetime.datetime] = None,
+        is_featured: Optional[bool] = None,
         token: Optional[str] = None,
     ):
         if started_at and started_at.tzinfo is None:
@@ -567,6 +593,7 @@ class TwitchHTTP:
             ("game_id", game_id),
             ("started_at", started_at.isoformat() if started_at else None),
             ("ended_at", ended_at.isoformat() if ended_at else None),
+            ("is_featured", str(is_featured) if is_featured is not None else None),
         ]
         if ids:
             q.extend(("id", id) for id in ids)
@@ -624,7 +651,6 @@ class TwitchHTTP:
         )
 
     async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]]):
-        print(msgs)
         return await self.request(
             Route(
                 "POST",
@@ -634,6 +660,14 @@ class TwitchHTTP:
                 token=token,
             )
         )
+
+    async def post_snooze_ad(self, token: str, broadcaster_id: str):
+        q = [("broadcaster_id", broadcaster_id)]
+        return await self.request(Route("POST", "channels/ads/schedule/snooze", query=q, token=token))
+
+    async def get_ad_schedule(self, token: str, broadcaster_id: str):
+        q = [("broadcaster_id", broadcaster_id)]
+        return await self.request(Route("GET", "channels/ads", query=q, token=token))
 
     async def get_channel_ban_unban_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
@@ -646,6 +680,10 @@ class TwitchHTTP:
         if user_ids:
             q.extend(("user_id", id) for id in user_ids)
         return await self.request(Route("GET", "moderation/banned", query=q, token=token))
+
+    async def get_moderated_channels(self, token: str, user_id: str):
+        q = [("user_id", user_id)]
+        return await self.request(Route("GET", "moderation/channels", query=q, token=token))
 
     async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
         q = [("broadcaster_id", broadcaster_id)]
@@ -666,6 +704,13 @@ class TwitchHTTP:
         return await self.request(
             Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
         )
+
+    async def get_user_emotes(self, user_id: str, broadcaster_id: Optional[str], token: str):
+        q: List = [("user_id", user_id)]
+        if broadcaster_id:
+            q.append(("broadcaster_id", broadcaster_id))
+
+        return await self.request(Route("GET", "chat/emotes/user", query=q, token=token))
 
     async def get_stream_key(self, token: str, broadcaster_id: str):
         return await self.request(
@@ -1154,3 +1199,72 @@ class TwitchHTTP:
 
     async def get_content_classification_labels(self, locale: str):
         return await self.request(Route("GET", "content_classification_labels", "", query=[("locale", locale)]))
+
+    async def get_channel_charity_campaigns(self, broadcaster_id: str, token: str):
+        return await self.request(
+            Route("GET", "charity/campaigns", query=[("broadcaster_id", broadcaster_id)], token=token)
+        )
+
+    async def get_channel_followers(
+        self,
+        token: str,
+        broadcaster_id: str,
+        user_id: Optional[int] = None,
+    ):
+        query = [("broadcaster_id", broadcaster_id)]
+
+        if user_id is not None:
+            query.append(("user_id", str(user_id)))
+
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followers",
+                query=query,
+                token=token,
+            )
+        )
+
+    async def get_channel_followed(
+        self,
+        token: str,
+        user_id: str,
+        broadcaster_id: Optional[int] = None,
+    ):
+        query = [("user_id", user_id)]
+
+        if broadcaster_id is not None:
+            query.append(("broadcaster_id", str(broadcaster_id)))
+
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followed",
+                query=query,
+                token=token,
+            )
+        )
+
+    async def get_channel_follower_count(self, broadcaster_id: str, token: Optional[str] = None):
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followers",
+                query=[("broadcaster_id", broadcaster_id)],
+                token=token,
+            ),
+            full_body=True,
+            paginate=False,
+        )
+
+    async def get_channel_followed_count(self, token: str, user_id: str):
+        return await self.request(
+            Route(
+                "GET",
+                "channels/followed",
+                query=[("user_id", user_id)],
+                token=token,
+            ),
+            full_body=True,
+            paginate=False,
+        )

@@ -4,7 +4,7 @@ import hmac
 import hashlib
 import logging
 from enum import Enum
-from typing import Dict, TYPE_CHECKING, Optional, Type, Union, Tuple, List
+from typing import Any, Dict, TYPE_CHECKING, Optional, Type, Union, Tuple, List, overload
 from typing_extensions import Literal
 
 from aiohttp import web
@@ -13,6 +13,7 @@ from twitchio import PartialUser, parse_timestamp as _parse_datetime
 
 if TYPE_CHECKING:
     from .server import EventSubClient
+    from .websocket import EventSubWSClient
 
 try:
     import ujson as json
@@ -36,7 +37,7 @@ class EmptyObject:
 
 
 class Subscription:
-    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "created_at"
+    __slots__ = "id", "status", "type", "version", "cost", "condition", "transport", "transport_method", "created_at"
 
     def __init__(self, data: dict):
         self.id: str = data["id"]
@@ -47,8 +48,14 @@ class Subscription:
         self.condition: Dict[str, str] = data["condition"]
         self.created_at = _parse_datetime(data["created_at"])
         self.transport = EmptyObject()
-        self.transport.method: str = data["transport"]["method"]  # noqa
-        self.transport.callback: str = data["transport"]["callback"]  # noqa
+        self.transport_method: TransportType = getattr(TransportType, data["transport"]["method"])
+        self.transport.method: str = data["transport"]["method"]  # type: ignore
+
+        if self.transport_method is TransportType.webhook:
+            self.transport.callback: str = data["transport"]["callback"]  # type: ignore
+        else:
+            self.transport.callback: str = ""  # type: ignore # compatibility
+            self.transport.session_id: str = data["transport"]["session_id"]  # type: ignore
 
 
 class Headers:
@@ -82,33 +89,104 @@ class Headers:
         self._raw_timestamp = request.headers["Twitch-Eventsub-Message-Timestamp"]
 
 
+class WebsocketHeaders:
+    """
+    The headers of the inbound Websocket EventSub message
+
+    Attributes
+    -----------
+    message_id: :class:`str`
+        The unique ID of the message
+    message_type: :class:`str`
+        The type of the message coming through
+    message_retry: :class:`int`
+        Kept for compatibility with :class:`Headers`
+    signature: :class:`str`
+        Kept for compatibility with :class:`Headers`
+    subscription_type: :class:`str`
+        The type of the subscription on the inbound message
+    subscription_version: :class:`str`
+        The version of the subscription.
+    timestamp: :class:`datetime.datetime`
+        The timestamp the message was sent at
+    """
+
+    def __init__(self, frame: dict):
+        meta = frame["metadata"]
+        self.message_id: str = meta["message_id"]
+        self.timestamp = _parse_datetime(meta["message_timestamp"])
+        self.message_type: Literal["notification", "revocation", "reconnect", "session_keepalive"] = meta[
+            "message_type"
+        ]
+        self.message_retry: int = 0  # don't make breaking changes with the Header class
+        self.signature: str = ""
+        self.subscription_type: Optional[str]
+        self.subscription_version: Optional[str]
+        if frame["payload"]:
+            self.subscription_type = frame["payload"]["subscription"]["type"]
+            self.subscription_version = frame["payload"]["subscription"]["version"]
+        else:
+            self.subscription_type = None
+            self.subscription_version = None
+
+
 class BaseEvent:
     """
     The base of all the event classes
 
     Attributes
     -----------
-    subscription: :class:`Subscription`
-        The subscription attached to the message
+    subscription: Optional[:class:`Subscription`]
+        The subscription attached to the message. This is only optional when using the websocket eventsub transport
     headers: :class`Headers`
         The headers received with the message
     """
 
-    __slots__ = "_client", "_raw_data", "subscription", "headers"
+    __slots__ = ("_client", "_raw_data", "subscription", "headers")
 
-    def __init__(self, client: EventSubClient, data: str, request: web.Request):
+    @overload
+    def __init__(self, client: EventSubClient, _data: str, request: web.Request):
+        ...
+
+    @overload
+    def __init__(self, client: EventSubWSClient, _data: dict, request: None):
+        ...
+
+    def __init__(
+        self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
+    ):
         self._client = client
-        self._raw_data = data
-        _data: dict = _loads(data)
-        self.subscription = Subscription(_data["subscription"])
-        self.headers = Headers(request)
-        self.setup(_data)
+        self._raw_data = _data
+
+        if isinstance(_data, str):
+            data: dict = _loads(_data)
+        else:
+            data = _data
+
+        self.headers: Union[Headers, WebsocketHeaders]
+        self.subscription: Optional[Subscription]
+
+        if request:
+            data: dict = _loads(_data)
+            self.headers = Headers(request)
+            self.subscription = Subscription(data["subscription"])
+            self.setup(data)
+        else:
+            self.headers = WebsocketHeaders(data)
+            if data["payload"]:
+                self.subscription = Subscription(data["payload"]["subscription"])
+            else:
+                self.subscription = None
+            self.setup(data["payload"])
 
     def setup(self, data: dict):
         pass
 
     def verify(self):
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
+        """
+        Only used in webhook transport types. Verifies the message is valid
+        """
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")  # type: ignore
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -127,6 +205,9 @@ class ChallengeEvent(BaseEvent):
     """
     A challenge event.
 
+    .. note::
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubClient`
+
     Attributes
     -----------
     challenge: :class`str`
@@ -139,7 +220,7 @@ class ChallengeEvent(BaseEvent):
         self.challenge: str = data["challenge"]
 
     def verify(self):
-        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")
+        hmac_message = (self.headers.message_id + self.headers._raw_timestamp + self._raw_data).encode("utf-8")  # type: ignore
         secret = self._client.secret.encode("utf-8")
         digest = hmac.new(secret, msg=hmac_message, digestmod=hashlib.sha256).hexdigest()
 
@@ -148,6 +229,55 @@ class ChallengeEvent(BaseEvent):
             return web.Response(status=400)
 
         return web.Response(status=200, text=self.challenge)
+
+
+class ReconnectEvent(BaseEvent):
+    """
+    A reconnect event. Called by twitch when the websocket needs to be disconnected for maintenance or other reasons
+
+    .. note::
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient`
+
+    Attributes
+    -----------
+    reconnect_url: :class:`str`
+        The URL to reconnect to
+    connected_at: :class:`datetime.datetime`
+        When the original websocket connected
+    """
+
+    __slots__ = ("reconnect_url", "connected_at")
+
+    def __init__(
+        self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
+    ):
+        # we skip the super init here because reconnect events dont have headers or subscription information
+
+        self._client = client
+        self._raw_data = _data
+
+        if isinstance(_data, str):
+            data: dict = _loads(_data)
+        else:
+            data = _data
+
+        self.setup(data["payload"])
+
+    def setup(self, data: dict):
+        self.reconnect_url: str = data["session"]["reconnect_url"]
+        self.connected_at: datetime.datetime = _parse_datetime(data["session"]["connected_at"])
+
+
+class KeepAliveEvent(BaseEvent):
+    """
+    A keep-alive event. Called by twitch when no message has been sent for more than ``keepalive_timeout``
+
+    .. note::
+        These are only dispatched when using :class:`~twitchio.ext.eventsub.EventSubWSClient`
+
+    """
+
+    pass
 
 
 class NotificationEvent(BaseEvent):
@@ -1429,6 +1559,364 @@ class ChannelShoutoutReceiveData(EventData):
         self.viewer_count: int = data["viewer_count"]
 
 
+class ChannelCharityDonationData(EventData):
+    """
+    Represents a donation towards a charity campaign.
+
+    Requires the ``channel:read:charity`` scope.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the event.
+    campaign_id: :class:`str`
+        The ID of the running charity campaign.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster running the campaign.
+    user: :class:`~twitchio.PartialUser`
+        The user who donated.
+    charity_name: :class:`str`
+        The name of the charity.
+    charity_description: :class:`str`
+        The description of the charity.
+    charity_logo: :class:`str`
+        The logo of the charity.
+    charity_website: :class:`str`
+        The websiet of the charity.
+    donation_value: :class:`int`
+        The amount of money being donated.
+    donation_decimal_places: :class:`int`
+        The decimal places to put into the :attr`~.donation_amount`.
+    donation_currency: :class:`str`
+        The currency that was donated (ex. ``USD``, ``GBP``, ``EUR``)
+    """
+
+    __slots__ = (
+        "id",
+        "campaign_id",
+        "broadcaster",
+        "user",
+        "charity_name",
+        "charity_description",
+        "charity_logo",
+        "charity_website",
+        "donation_value",
+        "donation_decimal_places",
+        "donation_currency",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.id: str = data["id"]
+        self.campaign_id: str = data["campaign_id"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.charity_name: str = data["charity_name"]
+        self.charity_description: str = data["charity_description"]
+        self.charity_logo: str = data["charity_logo"]
+        self.charity_website: str = data["charity_website"]
+        self.donation_value: int = data["amount"]["value"]
+        self.donation_currency: str = data["amount"]["currency"]
+        self.donation_decimal_places: int = data["amount"]["decimal_places"]
+
+
+class ChannelUnbanRequestCreateData(EventData):
+    """
+    Represents an unban request created by a user.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the ban request.
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the user was banned.
+    user: :class:`PartialUser`
+        The user that was banned.
+    text: :class:`str`
+        The unban request text the user submitted.
+    created_at: :class:`datetime.datetime`
+        When the user submitted the request.
+    """
+
+    __slots__ = ("id", "broadcaster", "user", "text", "created_at")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.id: str = data["id"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.text: str = data["text"]
+        self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
+
+
+class ChannelUnbanRequestResolveData(EventData):
+    """
+    Represents an unban request that has been resolved by a moderator.
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The ID of the ban request.
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the user was banned.
+    user: :class:`PartialUser`
+        The user that was banned.
+    moderator: :class:`PartialUser`
+        The moderator that handled this unban request.
+    resolution_text: :class:`str`
+        The reasoning provided by the moderator.
+    status: :class:`str`
+        The resolution. either `accepted` or `denied`.
+    """
+
+    __slots__ = ("id", "broadcaster", "user", "text", "created_at")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.id: str = data["id"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.text: str = data["text"]
+        self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
+
+
+class AutomodMessageHoldData(EventData):
+    """
+    Represents a message being held by automod for manual review.
+
+    Attributes
+    ------------
+    message_id: :class:`str`
+        The ID of the message.
+    message_content: :class:`str`
+        The contents of the message
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the message was held.
+    user: :class:`PartialUser`
+        The user that sent the message.
+    level: :class:`int`
+        The level of alarm raised for this message.
+    category: :class:`str`
+        The category of alarm that was raised for this message.
+    created_at: :class:`datetime.datetime`
+        When this message was held.
+    message_fragments: :class:`dict`
+        The fragments of this message. This includes things such as emotes and cheermotes. An example from twitch is provided:
+
+        .. code:: json
+
+            {
+                "emotes": [
+                    {
+                        "text": "badtextemote1",
+                        "id": "emote-123",
+                        "set-id": "set-emote-1"
+                    },
+                    {
+                        "text": "badtextemote2",
+                        "id": "emote-234",
+                        "set-id": "set-emote-2"
+                    }
+                ],
+                "cheermotes": [
+                    {
+                        "text": "badtextcheermote1",
+                        "amount": 1000,
+                        "prefix": "prefix",
+                        "tier": 1
+                    }
+                ]
+            }
+    """
+
+    __slots__ = (
+        "message_id",
+        "message_content",
+        "broadcaster",
+        "user",
+        "level",
+        "category",
+        "message_fragments",
+        "created_at",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.message_id: str = data["message_id"]
+        self.message_content: str = data["message"]
+        self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.level: int = data["level"]
+        self.category: str = data["category"]
+        self.created_at: datetime.datetime = _parse_datetime(data["held_at"])
+
+
+class AutomodMessageUpdateData(EventData):
+    """
+    Represents a message that was updated by a moderator in the automod queue.
+
+    Attributes
+    ------------
+    message_id: :class:`str`
+        The ID of the message.
+    message_content: :class:`str`
+        The contents of the message
+    broadcaster: :class:`PartialUser`
+        The broadcaster from which the message was held.
+    user: :class:`PartialUser`
+        The user that sent the message.
+    moderator: :class:`PartialUser`
+        The moderator that updated the message status.
+    status: :class:`str`
+        The new status of the message. Typically one of ``approved`` or ``denied``.
+    level: :class:`int`
+        The level of alarm raised for this message.
+    category: :class:`str`
+        The category of alarm that was raised for this message.
+    created_at: :class:`datetime.datetime`
+        When this message was held.
+    message_fragments: :class:`dict`
+        The fragments of this message. This includes things such as emotes and cheermotes. An example from twitch is provided:
+
+        .. code:: json
+
+            {
+                "emotes": [
+                    {
+                        "text": "badtextemote1",
+                        "id": "emote-123",
+                        "set-id": "set-emote-1"
+                    },
+                    {
+                        "text": "badtextemote2",
+                        "id": "emote-234",
+                        "set-id": "set-emote-2"
+                    }
+                ],
+                "cheermotes": [
+                    {
+                        "text": "badtextcheermote1",
+                        "amount": 1000,
+                        "prefix": "prefix",
+                        "tier": 1
+                    }
+                ]
+            }
+    """
+
+    __slots__ = (
+        "message_id",
+        "message_content",
+        "broadcaster",
+        "user",
+        "moderator",
+        "level",
+        "category",
+        "message_fragments",
+        "created_at",
+        "status",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.message_id: str = data["message_id"]
+        self.message_content: str = data["message"]
+        self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.level: int = data["level"]
+        self.category: str = data["category"]
+        self.created_at: datetime.datetime = _parse_datetime(data["held_at"])
+        self.status: str = data["status"]
+
+
+class AutomodSettingsUpdateData(EventData):
+    """
+    Represents a channels automod settings being updated.
+
+    Attributes
+    ------------
+    broadcaster: :class:`PartialUser`
+        The broadcaster for which the settings were updated.
+    moderator: :class:`PartialUser`
+        The moderator that updated the settings.
+    overall :class:`int` | ``None``
+        The overall level of automod aggressiveness.
+    disability: :class:`int` | ``None``
+        The aggression towards disability.
+    aggression: :class:`int` | ``None``
+        The aggression towards aggressive users.
+    sex: :class:`int` | ``None``
+        The aggression towards sexuality/gender.
+    misogyny: :class:`int` | ``None``
+        The aggression towards misogyny.
+    bullying: :class:`int` | ``None``
+        The aggression towards bullying.
+    swearing: :class:`int` | ``None``
+        The aggression towards cursing/language.
+    race_religion: :class:`int` | ``None``
+        The aggression towards race, ethnicity, and religion.
+    sexual_terms: :class:`int` | ``None``
+        The aggression towards sexual terms/references.
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "overall",
+        "disability",
+        "aggression",
+        "sex",
+        "misogyny",
+        "bullying",
+        "swearing",
+        "race_religion",
+        "sexual_terms",
+    )
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.overall: Optional[int] = data["overall"]
+        self.disability: Optional[int] = data["disability"]
+        self.aggression: Optional[int] = data["aggression"]
+        self.sex: Optional[int] = data["sex"]
+        self.misogyny: Optional[int] = data["misogyny"]
+        self.bullying: Optional[int] = data["bullying"]
+        self.swearing: Optional[int] = data["swearing"]
+        self.race_religion: Optional[int] = data["race_ethnicity_or_religion"]
+        self.sexual_terms: Optional[int] = data["sex_based_terms"]
+
+
+class AutomodTermsUpdateData(EventData):
+    """
+    Represents a channels automod terms being updated.
+
+    .. note::
+
+        Private terms are not sent.
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The broadcaster for which the terms were updated.
+    moderator: :class:`PartialUser`
+        The moderator who updated the terms.
+    action: :class:`str`
+        The action type.
+    from_automod: :class:`bool`
+        Whether the action was taken by automod.
+    terms: List[:class:`str`]
+        The terms that were applied.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "action", "from_automod", "terms")
+
+    def __init__(self, client: EventSubClient, data: dict):
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.action: str = data["action"]
+        self.from_automod: bool = data["from_automod"]
+        self.terms: List[str] = data["terms"]
+
+
 _DataType = Union[
     ChannelBanData,
     ChannelUnbanData,
@@ -1461,6 +1949,13 @@ _DataType = Union[
     ChannelShieldModeEndData,
     ChannelShoutoutCreateData,
     ChannelShoutoutReceiveData,
+    ChannelCharityDonationData,
+    ChannelUnbanRequestCreateData,
+    ChannelUnbanRequestResolveData,
+    AutomodMessageHoldData,
+    AutomodMessageUpdateData,
+    AutomodSettingsUpdateData,
+    AutomodTermsUpdateData,
 ]
 
 
@@ -1474,6 +1969,11 @@ class _SubTypesMeta(type):
 class _SubscriptionTypes(metaclass=_SubTypesMeta):
     _type_map: Dict[str, Type[_DataType]]
     _name_map: Dict[str, str]
+
+    automod_message_hold = "automod.message.hold", 1, AutomodMessageHoldData
+    automod_message_update = "automod.message.update", 1, AutomodMessageUpdateData
+    automod_settings_update = "automod.settings.update", 1, AutomodSettingsUpdateData
+    automod_terms_update = "automod.terms.update", 1, AutomodTermsUpdateData
 
     follow = "channel.follow", 1, ChannelFollowData
     followV2 = "channel.follow", 2, ChannelFollowData
@@ -1513,6 +2013,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     channel_shoutout_create = "channel.shoutout.create", 1, ChannelShoutoutCreateData
     channel_shoutout_receive = "channel.shoutout.receive", 1, ChannelShoutoutReceiveData
 
+    channel_charity_donate = "channel.charity_campaign.donate", 1, ChannelCharityDonationData
+
     hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
     hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData
     hypetrain_end = "channel.hype_train.end", 1, HypeTrainEndData
@@ -1529,6 +2031,9 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     stream_start = "stream.online", 1, StreamOnlineData
     stream_end = "stream.offline", 1, StreamOfflineData
 
+    unban_request_create = "channel.unban_request.create", 1, ChannelUnbanRequestCreateData
+    unban_request_resolve = "channel.unban_request.resolve", 1, ChannelUnbanRequestResolveData
+
     user_authorization_grant = "user.authorization.grant", 1, UserAuthorizationGrantedData
     user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
 
@@ -1536,3 +2041,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
 
 SubscriptionTypes = _SubscriptionTypes()
+
+
+class TransportType(Enum):
+    webhook = "webhook"
+    websocket = "websocket"

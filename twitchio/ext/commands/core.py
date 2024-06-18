@@ -27,6 +27,7 @@ import inspect
 
 import itertools
 import copy
+import types
 from typing import Any, Union, Optional, Callable, Awaitable, Tuple, TYPE_CHECKING, List, Type, Set, TypeVar
 from typing_extensions import Literal
 
@@ -36,13 +37,33 @@ from .errors import *
 from . import builtin_converter
 
 if TYPE_CHECKING:
+    import sys
+
     from twitchio import Message, Chatter, PartialChatter, Channel, User, PartialUser
     from . import Cog, Bot
     from .stringparser import StringParser
+
+    if sys.version_info >= (3, 10):
+        UnionT = Union[types.UnionType, Union]
+    else:
+        UnionT = Union
+
+
 __all__ = ("Command", "command", "Group", "Context", "cooldown")
 
 
-def _boolconverter(param: str):
+class EmptyArgumentSentinel:
+    def __repr__(self) -> str:
+        return "<EMPTY>"
+
+    def __eq__(self, __value: object) -> bool:
+        return False
+
+
+EMPTY = EmptyArgumentSentinel()
+
+
+def _boolconverter(_, param: str):
     param = param.lower()
     if param in {"yes", "y", "1", "true", "on"}:
         return True
@@ -114,40 +135,131 @@ class Command:
             return self._name
         return f"{self.parent.full_name} {self._name}"
 
-    def _resolve_converter(self, converter: Union[Callable, Awaitable, type]) -> Union[Callable[..., Any]]:
+    def _is_optional_argument(self, converter: Any):
+        return (getattr(converter, "__origin__", None) is Union or isinstance(converter, types.UnionType)) and type(
+            None
+        ) in converter.__args__
+
+    def resolve_union_callback(self, name: str, converter: UnionT) -> Callable[[Context, str], Any]:
+        # print(type(converter), converter.__args__)
+
+        args = converter.__args__  # type: ignore # pyright doesnt like this
+
+        async def _resolve(context: Context, arg: str) -> Any:
+            t = EMPTY
+
+            for original in args:
+                underlying = self._resolve_converter(name, original, context)
+
+                try:
+                    t: Any = underlying(context, arg)
+                    if inspect.iscoroutine(t):
+                        t = await t
+
+                    break
+                except Exception as l:
+                    t = EMPTY  # thisll get changed when t is a coroutine, but is still invalid, so roll it back
+                    continue
+
+            if t is EMPTY:
+                raise UnionArgumentParsingFailed(name, args)
+
+            return t
+
+        return _resolve
+
+    def resolve_optional_callback(self, name: str, converter: Any, context: Context) -> Callable[[Context, str], Any]:
+        underlying = self._resolve_converter(name, converter.__args__[0], context)
+
+        async def _resolve(context: Context, arg: str) -> Any:
+            try:
+                t: Any = underlying(context, arg)
+                if inspect.iscoroutine(t):
+                    t = await t
+
+            except Exception:
+                return EMPTY  # instruct the parser to roll back and ignore this argument
+
+            return t
+
+        return _resolve
+
+    def _resolve_converter(
+        self, name: str, converter: Union[Callable, Awaitable, type], ctx: Context
+    ) -> Callable[..., Any]:
         if (
             isinstance(converter, type)
             and converter.__module__.startswith("twitchio")
             and converter in builtin_converter._mapping
         ):
-            return builtin_converter._mapping[converter]
-        return converter
+            return self._convert_builtin_type(name, converter, builtin_converter._mapping[converter])
+
+        elif converter is bool:
+            converter = self._convert_builtin_type(name, bool, _boolconverter)
+
+        elif converter in (str, int):
+            original: type[str | int] = converter  # type: ignore
+            converter = self._convert_builtin_type(name, original, lambda _, arg: original(arg))
+
+        elif self._is_optional_argument(converter):
+            return self.resolve_optional_callback(name, converter, ctx)
+
+        elif isinstance(converter, types.UnionType) or getattr(converter, "__origin__", None) is Union:
+            return self.resolve_union_callback(name, converter)  # type: ignore
+
+        elif hasattr(converter, "__metadata__"):  # Annotated
+            annotated = converter.__metadata__  # type: ignore
+            return self._resolve_converter(name, annotated[0], ctx)
+
+        return converter  # type: ignore
+
+    def _convert_builtin_type(
+        self,
+        arg_name: str,
+        original: type,
+        converter: Union[Callable[[Context, str], Any], Callable[[Context, str], Awaitable[Any]]],
+    ) -> Callable[[Context, str], Awaitable[Any]]:
+        async def resolve(ctx, arg: str) -> Any:
+            try:
+                t = converter(ctx, arg)
+
+                if inspect.iscoroutine(t):
+                    t = await t
+
+                return t
+            except Exception as e:
+                raise ArgumentParsingFailed(
+                    f"Failed to convert `{arg}` to expected type {original.__name__} for argument `{arg_name}`",
+                    original=e,
+                    argname=arg_name,
+                    expected=original,
+                ) from e
+
+        return resolve
 
     async def _convert_types(self, context: Context, param: inspect.Parameter, parsed: str) -> Any:
         converter = param.annotation
+
         if converter is param.empty:
             if param.default in (param.empty, None):
                 converter = str
             else:
                 converter = type(param.default)
-        true_converter = self._resolve_converter(converter)
+
+        true_converter = self._resolve_converter(param.name, converter, context)
 
         try:
-            if true_converter in (int, str):
-                argument = true_converter(parsed)
-            elif true_converter is bool:
-                argument = _boolconverter(parsed)
-            else:
-                argument = true_converter(context, parsed)
+            argument = true_converter(context, parsed)
             if inspect.iscoroutine(argument):
                 argument = await argument
-        except BadArgument:
+        except BadArgument as e:
+            if e.name is None:
+                e.name = param.name
+
             raise
         except Exception as e:
             raise ArgumentParsingFailed(
-                f"Invalid argument parsed at `{param.name}` in command `{self.name}`."
-                f" Expected type {converter} got {type(parsed)}.",
-                e,
+                f"Failed to parse `{parsed}` for argument {param.name}", original=e, argname=param.name, expected=None
             ) from e
         return argument
 
@@ -170,12 +282,26 @@ class Command:
                 try:
                     argument = parsed.pop(index)
                 except (KeyError, IndexError):
+                    if self._is_optional_argument(param.annotation):  # parameter is optional and at the end.
+                        args.append(param.default if param.default is not param.empty else None)
+                        continue
+
                     if param.default is param.empty:
-                        raise MissingRequiredArgument(param)
+                        raise MissingRequiredArgument(argname=param.name)
+
                     args.append(param.default)
                 else:
-                    argument = await self._convert_types(context, param, argument)
-                    args.append(argument)
+                    _parsed_arg = await self._convert_types(context, param, argument)
+
+                    if _parsed_arg is EMPTY:
+                        parsed[index] = argument
+                        index -= 1
+                        args.append(param.default if param.default is not param.empty else None)
+
+                        continue
+                    else:
+                        args.append(_parsed_arg)
+
             elif param.kind == param.KEYWORD_ONLY:
                 rest = " ".join(parsed.values())
                 if rest.startswith(" "):
@@ -183,13 +309,13 @@ class Command:
                 if rest:
                     rest = await self._convert_types(context, param, rest)
                 elif param.default is param.empty:
-                    raise MissingRequiredArgument(param)
+                    raise MissingRequiredArgument(argname=param.name)
                 else:
                     rest = param.default
                 kwargs[param.name] = rest
                 parsed.clear()
                 break
-            elif param.VAR_POSITIONAL:
+            elif param.kind == param.VAR_POSITIONAL:
                 args.extend([await self._convert_types(context, param, argument) for argument in parsed.values()])
                 parsed.clear()
                 break
@@ -201,8 +327,6 @@ class Command:
         # TODO Docs
         if not context.view:
             return
-        args, kwargs = await self.parse_args(context, self._instance, context.view.words, index=index)
-        context.args, context.kwargs = args, kwargs
 
         async def try_run(func, *, to_command=False):
             try:
@@ -213,6 +337,17 @@ class Command:
                 else:
                     context.bot.run_event("command_error", context, _e)
 
+        try:
+            args, kwargs = await self.parse_args(context, self._instance, context.view.words, index=index)
+        except (MissingRequiredArgument, BadArgument) as e:
+            if self.event_error:
+                args_ = [self._instance, context] if self._instance else [context]
+                await try_run(self.event_error(*args_, e))
+
+            context.bot.run_event("command_error", context, e)
+            return
+
+        context.args, context.kwargs = args, kwargs
         check_result = await self.handle_checks(context)
 
         if check_result is not True:
@@ -440,7 +575,7 @@ class Context(Messageable):
         """Alias to chatters."""
         return self.chatters
 
-    def get_user(self, name: str) -> Optional[Union[PartialUser, User]]:
+    def get_user(self, name: str) -> Optional[Union[PartialChatter, Chatter]]:
         """Retrieve a user from the channels user cache.
 
         Parameters
@@ -450,8 +585,8 @@ class Context(Messageable):
 
         Returns
         --------
-        Union[:class:`twitchio.user.User`, :class:`twitchio.user.PartialUser`]
-            Could be a :class:`twitchio.user.PartialUser` depending on how the user joined the channel.
+        Union[:class:`twitchio.Chatter`, :class:`twitchio.PartialChatter`]
+            Could be a :class:`twitchio.PartialChatter` depending on how the user joined the channel.
             Returns None if no user was found.
         """
         name = name.lower()
@@ -505,7 +640,7 @@ G = TypeVar("G", bound="Group")
 
 
 def command(
-    *, name: str = None, aliases: Union[list, tuple] = None, cls: C = Command, no_global_checks=False
+    *, name: str = None, aliases: Union[list, tuple] = None, cls: type[C] = Command, no_global_checks=False
 ) -> Callable[[Callable], C]:
     if cls and not inspect.isclass(cls):
         raise TypeError(f"cls must be of type <class> not <{type(cls)}>")

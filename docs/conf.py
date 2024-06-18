@@ -26,8 +26,8 @@ sys.path.append(os.path.abspath("extensions"))
 
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 project = "TwitchIO"
-copyright = "2022, TwitchIO"
-author = "TwitchIO"
+copyright = "2024, TwitchIO"
+author = "PythonistaGuild"
 
 # The full version, including alpha/beta/rc tags
 release = ''
@@ -46,7 +46,8 @@ extensions = [
     "sphinxcontrib.asyncio",
     "sphinx.ext.intersphinx",
     "attributetable",
-    "sphinxext.opengraph"
+    "sphinxext.opengraph",
+    "sphinx.ext.napoleon"
 ]
 
 # OpenGraph Meta Tags
@@ -92,8 +93,6 @@ html_static_path = ["_static"]
 html_css_files = ["styles/furo.css"]
 html_js_files = ["js/custom.js"]
 
-
-extensions.append("sphinx.ext.napoleon")
 
 napoleon_use_rtype = False
 napoleon_google_docstring = False

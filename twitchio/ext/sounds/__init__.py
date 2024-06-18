@@ -20,6 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 import asyncio
 import audioop
 import dataclasses
@@ -192,7 +193,6 @@ class Sound:
                 ],
                 stdout=subprocess.PIPE,
             )
-
 
     @classmethod
     async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):

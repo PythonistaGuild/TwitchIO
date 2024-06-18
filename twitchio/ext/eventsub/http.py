@@ -6,18 +6,21 @@ from . import models
 
 if TYPE_CHECKING:
     from .server import EventSubClient
+    from .websocket import EventSubWSClient
     from .models import EventData, Subscription
 
 __all__ = ("EventSubHTTP",)
 
 
 class EventSubHTTP:
-    def __init__(self, client: EventSubClient, token: Optional[str]):
+    def __init__(self, client: Union[EventSubClient, EventSubWSClient], token: Optional[str]):
         self._client = client
         self._http = client.client._http
         self._token = token
 
-    async def create_subscription(self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str]):
+    async def create_webhook_subscription(
+        self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str]
+    ):
         payload = {
             "type": event_type[0],
             "version": str(event_type[1]),
@@ -26,6 +29,18 @@ class EventSubHTTP:
         }
         route = Route("POST", "eventsub/subscriptions", body=payload, token=self._token)
         return await self._http.request(route, paginate=False, force_app_token=True)
+
+    async def create_websocket_subscription(
+        self, event_type: Tuple[str, int, Type[EventData]], condition: Dict[str, str], session_id: str, token: str
+    ) -> dict:
+        payload = {
+            "type": event_type[0],
+            "version": str(event_type[1]),
+            "condition": condition,
+            "transport": {"method": "websocket", "session_id": session_id},
+        }
+        route = Route("POST", "eventsub/subscriptions", body=payload, token=token)
+        return await self._http.request(route, paginate=False, full_body=True)  # type: ignore
 
     async def delete_subscription(self, subscription: Union[str, Subscription]):
         if isinstance(subscription, models.Subscription):

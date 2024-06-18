@@ -21,13 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+from __future__ import annotations
 
 import datetime
 import time
 from typing import TYPE_CHECKING, List, Optional, Union, Tuple, Dict
 
 from .enums import BroadcasterTypeEnum, UserTypeEnum
-from .errors import HTTPException, Unauthorized
+from .errors import HTTPException
 from .rewards import CustomReward
 from .utils import parse_timestamp
 
@@ -35,7 +36,19 @@ from .utils import parse_timestamp
 if TYPE_CHECKING:
     from .http import TwitchHTTP
     from .channel import Channel
-    from .models import BitsLeaderboard, Clip, ExtensionBuilder, Tag, FollowEvent, Prediction
+    from .models import (
+        AdSchedule,
+        BitsLeaderboard,
+        Clip,
+        Emote,
+        ExtensionBuilder,
+        Tag,
+        FollowEvent,
+        Prediction,
+        CharityCampaign,
+        ChannelFollowerEvent,
+        ChannelFollowingEvent,
+    )
 __all__ = (
     "PartialUser",
     "BitLeaderboardUser",
@@ -172,16 +185,14 @@ class PartialUser:
             return self._cached_rewards[1]
         try:
             data = await self._http.get_rewards(token, self.id, only_manageable, ids)
-        except Unauthorized as error:
-            raise Unauthorized("The given token is invalid", "", 401) from error
         except HTTPException as error:
             status = error.args[2]
             if status == 403:
                 raise HTTPException(
                     "The custom reward was created by a different application, or channel points are "
                     "not available for the broadcaster (403)",
-                    error.args[1],
-                    403,
+                    reason=error.args[1],
+                    status=403,
                 ) from error
             raise
         else:
@@ -248,16 +259,14 @@ class PartialUser:
                 redemptions_skip_queue,
             )
             return CustomReward(self._http, data[0], self)
-        except Unauthorized as error:
-            raise Unauthorized("The given token is invalid", "", 401) from error
         except HTTPException as error:
             status = error.args[2]
             if status == 403:
                 raise HTTPException(
                     "The custom reward was created by a different application, or channel points are "
                     "not available for the broadcaster (403)",
-                    error.args[1],
-                    403,
+                    reason=error.args[1],
+                    status=403,
                 ) from error
             raise
 
@@ -327,8 +336,53 @@ class PartialUser:
         data = await self._http.post_create_clip(token, self.id, has_delay)
         return data[0]
 
+    async def fetch_ad_schedule(self, token: str) -> AdSchedule:
+        """|coro|
+
+        Fetches the streamers's ad schedule.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The user's oauth token with the ``channel:read:ads`` scope.
+
+        Returns
+        --------
+        :class:`twitchio.AdSchedule`
+        """
+        from .models import AdSchedule
+
+        data = await self._http.get_ad_schedule(token, str(self.id))
+        return AdSchedule(data[0])
+
+    async def snooze_ad(self, token: str) -> List[AdSchedule]:
+        """|coro|
+
+        Snoozes an ad on the streamer's channel.
+
+        .. note::
+            The resulting :class:`~twitchio.AdSchedule` only has data for the :attr:`~twitchio.AdSchedule.snooze_count`,
+            :attr:`~twitchio.AdSchedule.snooze_refresh_at`, and :attr:`~twitchio.AdSchedule.next_ad_at` attributes.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The user's oauth token with the ``channel:manage:ads`` scope.
+
+        Returns
+        --------
+        :class:`twitchio.AdSchedule`
+        """
+        from .models import AdSchedule
+
+        data = await self._http.post_snooze_ad(token, str(self.id))
+        return AdSchedule(data[0])
+
     async def fetch_clips(
-        self, started_at: Optional[datetime.datetime] = None, ended_at: Optional[datetime.datetime] = None
+        self,
+        started_at: Optional[datetime.datetime] = None,
+        ended_at: Optional[datetime.datetime] = None,
+        is_featured: Optional[bool] = None,
     ) -> List["Clip"]:
         """|coro|
 
@@ -343,6 +397,9 @@ class PartialUser:
         ended_at: Optional[:class:`datetime.datetime`]
             Ending date/time for returned clips.
             If this is specified, started_at also must be specified; otherwise, the time period is ignored.
+        is_featured: Optional[:class:`bool`]
+            Optional bool to only return only featured clips or not featured clips.
+
 
         Returns
         --------
@@ -350,7 +407,7 @@ class PartialUser:
         """
         from .models import Clip
 
-        data = await self._http.get_clips(self.id, started_at=started_at, ended_at=ended_at)
+        data = await self._http.get_clips(self.id, started_at=started_at, ended_at=ended_at, is_featured=is_featured)
 
         return [Clip(self._http, x) for x in data]
 
@@ -390,28 +447,22 @@ class PartialUser:
         data = await self._http.get_channel_bans(token, str(self.id), user_ids=userids)
         return [UserBan(self._http, d) for d in data]
 
-    async def fetch_ban_events(self, token: str, userids: List[int] = None):
+    async def fetch_moderated_channels(self, token: str) -> List[PartialUser]:
         """|coro|
 
-        This has been deprecated and will be removed in a future release.
-
-        Fetches ban/unban events from the User's channel.
+        Fetches channels that this user moderates.
 
         Parameters
         -----------
         token: :class:`str`
-            The oauth token with the ``moderation:read`` scope.
-        userids: List[:class:`int`]
-            An optional list of users to fetch ban/unban events for
+            An oauth token for this user with the ``user:read:moderated_channels`` scope.
 
         Returns
         --------
-        List[:class:`twitchio.BanEvent`]
+        List[:class:`twitchio.PartialUser`]
         """
-        from .models import BanEvent
-
-        data = await self._http.get_channel_ban_unban_events(token, str(self.id), userids)
-        return [BanEvent(self._http, x, self) for x in data]
+        data = await self._http.get_moderated_channels(token, str(self.id))
+        return [PartialUser(self._http, d["broadcaster_id"], d["broadcaster_login"]) for d in data]
 
     async def fetch_moderators(self, token: str, userids: List[int] = None):
         """|coro|
@@ -489,99 +540,90 @@ class PartialUser:
         data = await self._http.get_stream_key(token, str(self.id))
         return data
 
-    async def fetch_following(self, token: Optional[str] = None) -> List["FollowEvent"]:
+    async def fetch_channel_followers(self, token: str, user_id: Optional[int] = None) -> List[ChannelFollowerEvent]:
         """|coro|
 
-        Fetches a list of users that this user is following.
+        Fetches a list of users that are following this broadcaster.
+        Requires a user access token that includes the ``moderator:read:followers`` scope.
+        The ID in the broadcaster_id query parameter must match the user ID in the access token or the user must be a moderator for the specified broadcaster.
 
         Parameters
         -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
+        token: :class:`str`
+            User access token that includes the ``moderator:read:followers`` scope for the channel.
+        user_id: Optional[:class:`int`]
+            Use this parameter to see whether the user follows this broadcaster.
+
 
         Returns
         --------
         List[:class:`twitchio.FollowEvent`]
         """
-        from .models import FollowEvent
+        from .models import ChannelFollowerEvent
 
-        data = await self._http.get_user_follows(token=token, from_id=str(self.id))
-        return [FollowEvent(self._http, d, from_=self) for d in data]
+        data = await self._http.get_channel_followers(token=token, broadcaster_id=str(self.id), user_id=user_id)
+        return [ChannelFollowerEvent(self._http, d) for d in data]
 
-    async def fetch_followers(self, token: Optional[str] = None):
+    async def fetch_channel_following(
+        self, token: str, broadcaster_id: Optional[int] = None
+    ) -> List[ChannelFollowingEvent]:
         """|coro|
 
-        Fetches a list of users that are following this user.
+        Fetches a list of users that this user follows.
+        Requires a user access token that includes the ``user:read:follows`` scope.
+        The ID in the broadcaster_id query parameter must match the user ID in the access token or the user must be a moderator for the specified broadcaster.
 
         Parameters
         -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
+        token: :class:`str`
+            User access token that includes the ``moderator:read:follows`` scope for the channel.
+        broadcaster_id: Optional[:class:`int`]
+            Use this parameter to see whether the user follows this broadcaster.
+
 
         Returns
         --------
-        List[:class:`twitchio.FollowEvent`]
+        List[:class:`twitchio.ChannelFollowingEvent`]
         """
-        from .models import FollowEvent
+        from .models import ChannelFollowingEvent
 
-        data = await self._http.get_user_follows(token=token, to_id=str(self.id))
-        return [FollowEvent(self._http, d, to=self) for d in data]
+        data = await self._http.get_channel_followed(token=token, user_id=str(self.id), broadcaster_id=broadcaster_id)
+        return [ChannelFollowingEvent(self._http, d) for d in data]
 
-    async def fetch_follow(self, to_user: "PartialUser", token: Optional[str] = None):
+    async def fetch_channel_follower_count(self, token: Optional[str] = None) -> int:
         """|coro|
 
-        Check if a user follows another user or when they followed a user.
-
-        Parameters
-        -----------
-        to_user: :class:`PartialUser`
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
-
-        Returns
-        --------
-        :class:`twitchio.FollowEvent`
-        """
-        if not isinstance(to_user, PartialUser):
-            raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
-        from .models import FollowEvent
-
-        data = await self._http.get_user_follows(token=token, from_id=str(self.id), to_id=str(to_user.id))
-        return FollowEvent(self._http, data[0]) if data else None
-
-    async def fetch_follower_count(self, token: Optional[str] = None) -> int:
-        """|coro|
-
-        Fetches a list of users that are following this user.
+        Fetches the total number of users that are following this user.
 
         Parameters
         -----------
         token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
+            An oauth token to use instead of the bots token.
 
         Returns
         --------
         :class:`int`
         """
 
-        data = await self._http.get_follow_count(token=token, to_id=str(self.id))
+        data = await self._http.get_channel_follower_count(token=token, broadcaster_id=str(self.id))
         return data["total"]
 
-    async def fetch_following_count(self, token: Optional[str] = None) -> int:
+    async def fetch_channel_following_count(self, token: str) -> int:
         """|coro|
 
-        Fetches a list of users that this user is following.
+        Fetches the total number of users that the user is following.
 
         Parameters
         -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
+        token: :class:`str`
+            Requires a user access token that includes the ``user:read:follows`` scope.
 
         Returns
         --------
         :class:`int`
         """
-        data = await self._http.get_follow_count(token=token, from_id=str(self.id))
+
+        data = await self._http.get_channel_followed_count(token=token, user_id=str(self.id))
         return data["total"]
 
     async def fetch_channel_emotes(self):
@@ -597,6 +639,33 @@ class PartialUser:
 
         data = await self._http.get_channel_emotes(str(self.id))
         return [ChannelEmote(self._http, x) for x in data]
+
+    async def fetch_user_emotes(self, token: str, broadcaster: Optional[PartialUser] = None) -> List[Emote]:
+        """|coro|
+
+        Fetches emotes the user has access to. Optionally, you can filter by a broadcaster.
+
+        .. note::
+
+            As of writing, this endpoint seems extrememly unoptimized by twitch, and may (read: will) take a lot of API requests to load.
+            See https://github.com/twitchdev/issues/issues/921 .
+
+        Parameters
+        -----------
+        token: :class:`str`
+            An OAuth token belonging to this user with the ``user:read:emotes`` scope.
+        broadcaster: Optional[:class:`~twitchio.PartialUser`]
+            A channel to filter the results with.
+            Filtering will return all emotes available to the user on that channel, including global emotes.
+
+        Returns
+        --------
+        List[:class:`~twitchio.Emote`]
+        """
+        from .models import Emote
+
+        data = await self._http.get_user_emotes(str(self.id), broadcaster and str(broadcaster.id), token)
+        return [Emote(d) for d in data]
 
     async def follow(self, userid: int, token: str, *, notifications=False):
         """|coro|
@@ -624,6 +693,10 @@ class PartialUser:
         """|coro|
 
         Unfollows the user
+
+        .. warning::
+
+            This method is obsolete as Twitch removed the endpoint.
 
         Parameters
         -----------
@@ -697,7 +770,7 @@ class PartialUser:
 
         data = await self._http.get_stream_markers(token, user_id=str(self.id), video_id=video_id)
         if data:
-            return VideoMarkers(data[0]["videos"])
+            return VideoMarkers(data[0]["videos"][0])
 
     async def fetch_extensions(self, token: str):
         """|coro|
@@ -1633,7 +1706,8 @@ class PartialUser:
         Fetches broadcaster's list of custom chat badges.
         The list is empty if the broadcaster hasn't created custom chat badges.
 
-        Returns:
+        Returns
+        --------
         List[:class:`twitchio.ChatBadge`]
         """
 
@@ -1641,6 +1715,161 @@ class PartialUser:
 
         data = await self._http.get_channel_chat_badges(broadcaster_id=str(self.id))
         return [ChatBadge(x) for x in data]
+
+    async def fetch_charity_campaigns(self, token: str) -> List[CharityCampaign]:
+        """|coro|
+
+        Fetches a list of charity campaigns the broadcaster is running.
+        Requires a user token with the ``channel:read:charity`` scope.
+
+        Returns
+        --------
+        List[:class:`twitchio.CharityCampaign`]
+        """
+        from .models import CharityCampaign
+
+        data = await self._http.get_channel_charity_campaigns(str(self.id), token)
+        return [CharityCampaign(d, self._http, self) for d in data]
+
+    # DEPRECATED
+
+    async def fetch_follow(self, to_user: "PartialUser", token: Optional[str] = None):
+        """|coro|
+
+        Check if a user follows another user or when they followed a user.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+
+        Parameters
+        -----------
+        to_user: :class:`PartialUser`
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+        :class:`twitchio.FollowEvent`
+        """
+        if not isinstance(to_user, PartialUser):
+            raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
+        from .models import FollowEvent
+
+        data = await self._http.get_user_follows(token=token, from_id=str(self.id), to_id=str(to_user.id))
+        return FollowEvent(self._http, data[0]) if data else None
+
+    async def fetch_following(self, token: Optional[str] = None) -> List["FollowEvent"]:
+        """|coro|
+
+        Fetches a list of users that this user is following.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+        List[:class:`twitchio.FollowEvent`]
+        """
+        from .models import FollowEvent
+
+        data = await self._http.get_user_follows(token=token, from_id=str(self.id))
+        return [FollowEvent(self._http, d, from_=self) for d in data]
+
+    async def fetch_followers(self, token: Optional[str] = None):
+        """|coro|
+
+        Fetches a list of users that are following this user.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+        List[:class:`twitchio.FollowEvent`]
+        """
+        from .models import FollowEvent
+
+        data = await self._http.get_user_follows(token=token, to_id=str(self.id))
+        return [FollowEvent(self._http, d, to=self) for d in data]
+
+    async def fetch_follower_count(self, token: Optional[str] = None) -> int:
+        """|coro|
+
+        Fetches the total number of users that are following this user.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+        :class:`int`
+        """
+
+        data = await self._http.get_follow_count(token=token, to_id=str(self.id))
+        return data["total"]
+
+    async def fetch_following_count(self, token: Optional[str] = None) -> int:
+        """|coro|
+
+        Fetches a list of users that this user is following.
+
+        .. warning::
+
+            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+
+        Parameters
+        -----------
+        token: Optional[:class:`str`]
+            An oauth token to use instead of the bots token
+
+        Returns
+        --------
+        :class:`int`
+        """
+        data = await self._http.get_follow_count(token=token, from_id=str(self.id))
+        return data["total"]
+
+    async def fetch_ban_events(self, token: str, userids: List[int] = None):
+        """|coro|
+
+        This has been deprecated and will be removed in a future release.
+
+        Fetches ban/unban events from the User's channel.
+
+        Parameters
+        -----------
+        token: :class:`str`
+            The oauth token with the ``moderation:read`` scope.
+        userids: List[:class:`int`]
+            An optional list of users to fetch ban/unban events for
+
+        Returns
+        --------
+        List[:class:`twitchio.BanEvent`]
+        """
+        from .models import BanEvent
+
+        data = await self._http.get_channel_ban_unban_events(token, str(self.id), userids)
+        return [BanEvent(self._http, x, self) for x in data]
 
 
 class BitLeaderboardUser(PartialUser):

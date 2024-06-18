@@ -31,12 +31,16 @@ from .utils import parse_timestamp
 from .user import BitLeaderboardUser, PartialUser, User
 
 if TYPE_CHECKING:
+    from typing_extensions import Literal
     from .http import TwitchHTTP
+
 __all__ = (
+    "AdSchedule",
     "BitsLeaderboard",
     "Clip",
     "CheerEmote",
     "CheerEmoteTier",
+    "Emote",
     "GlobalEmote",
     "ChannelEmote",
     "HypeTrainContribution",
@@ -80,7 +84,49 @@ __all__ = (
     "ChatBadge",
     "ChatBadgeVersions",
     "ContentClassificationLabel",
+    "CharityValues",
+    "CharityCampaign",
+    "ChannelFollowerEvent",
+    "ChannelFollowingEvent",
 )
+
+
+class AdSchedule:
+    """
+    Represents a channel's ad schedule.
+
+    Attributes
+    -----------
+    next_ad_at: Optional[:class:`datetime.datetime`]
+        When the next ad will roll. Will be ``None`` if the streamer does not schedule ads, or is not live.
+    last_ad_at: Optional[:class:`datetime.datetime`]
+        When the last ad rolled. Will be ``None`` if the streamer has not rolled an ad.
+        Will always be ``None`` when this comes from snoozing an ad.
+    duration: :class:`int`
+        How long the upcoming ad will be, in seconds.
+    preroll_freeze_time: Optional[:class:`int`]
+        The amount of pre-roll free time remaining for the channel in seconds. Will be 0 if the streamer is not pre-roll free.
+        Will be ``None`` when this comes from snoozing an ad.
+    snooze_count: :class:`int`
+        How many snoozes the streamer has left.
+    snooze_refresh_at: :class:`datetime.datetime`
+        When the streamer will gain another snooze.
+    """
+
+    __slots__ = "next_ad_at", "last_ad_at", "duration", "preroll_freeze_time", "snooze_count", "snooze_refresh_at"
+
+    def __init__(self, data: dict) -> None:
+        self.duration: int = data["duration"]
+        self.preroll_freeze_time: int = data["preroll_freeze_time"]
+        self.snooze_count: int = data["snooze_count"]
+
+        self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
+        self.next_ad_at: Optional[datetime.datetime] = (
+            parse_timestamp(data["next_ad_at"]) if data["next_ad_at"] else None
+        )
+        self.last_ad_at: Optional[datetime.datetime] = (
+            parse_timestamp(data["last_ad_at"]) if data["last_ad_at"] else None
+        )
 
 
 class BitsLeaderboard:
@@ -289,6 +335,8 @@ class Clip:
     vod_offset: Optional[:class:`int`]
         The zero-based offset, in seconds, to where the clip starts in the video (VOD) or stream.
         This can be None if the parent no longer exists
+    is_featured: :class:`bool`
+        Indicates if the clip is featured or not.
     """
 
     __slots__ = (
@@ -306,6 +354,7 @@ class Clip:
         "thumbnail_url",
         "duration",
         "vod_offset",
+        "is_featured",
     )
 
     def __init__(self, http: "TwitchHTTP", data: dict):
@@ -323,6 +372,7 @@ class Clip:
         self.thumbnail_url: str = data["thumbnail_url"]
         self.duration: float = data["duration"]
         self.vod_offset: Optional[int] = data["vod_offset"]
+        self.is_featured: bool = data["is_featured"]
 
     def __repr__(self):
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
@@ -508,6 +558,60 @@ class FollowEvent:
         return f"<FollowEvent from_user={self.from_user} to_user={self.to_user} followed_at={self.followed_at}>"
 
 
+class ChannelFollowerEvent:
+    """
+    Represents a ChannelFollowEvent Event.
+
+    Attributes
+    -----------
+    user: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user that followed another user.
+    followed_at: :class:`datetime.datetime`
+        When the follow happened.
+    """
+
+    __slots__ = "user", "followed_at"
+
+    def __init__(
+        self,
+        http: "TwitchHTTP",
+        data: dict,
+    ):
+        self.user: Union[User, PartialUser] = PartialUser(http, data["user_id"], data["user_login"])
+        self.followed_at = parse_timestamp(data["followed_at"])
+
+    def __repr__(self):
+        return f"<ChannelFollowerEvent user={self.user} followed_at={self.followed_at}>"
+
+
+class ChannelFollowingEvent:
+    """
+    Represents a ChannelFollowEvent Event.
+
+    Attributes
+    -----------
+    broadcaster: Union[:class:`~twitchio.User`, :class:`~twitchio.PartialUser`]
+        The user that is following another user.
+    followed_at: :class:`datetime.datetime`
+        When the follow happened.
+    """
+
+    __slots__ = "broadcaster", "followed_at"
+
+    def __init__(
+        self,
+        http: "TwitchHTTP",
+        data: dict,
+    ):
+        self.broadcaster: Union[User, PartialUser] = PartialUser(
+            http, data["broadcaster_id"], data["broadcaster_login"]
+        )
+        self.followed_at = parse_timestamp(data["followed_at"])
+
+    def __repr__(self):
+        return f"<ChannelFollowerEvent user={self.broadcaster} followed_at={self.followed_at}>"
+
+
 class SubscriptionEvent:
     """
     Represents a Subscription Event
@@ -548,6 +652,115 @@ class SubscriptionEvent:
             f"<SubscriptionEvent broadcaster={self.broadcaster} user={self.user} tier={self.tier} "
             f"plan_name={self.plan_name} gift={self.gift}>"
         )
+
+
+class Emote:
+    """
+    Represents an Emote.
+
+    .. note::
+
+        It seems twitch is sometimes returning duplicate information from the emotes endpoint.
+        To deduplicate your emotes, you can call ``set()`` on the list of emotes (or any other hashmap), which will remove the duplicates.
+
+        .. code-block:: python
+
+            my_list_of_emotes = await user.get_user_emotes(...)
+            deduplicated_emotes = set(my_list_of_emotes)
+
+    Attributes
+    -----------
+    id: :class:`str`
+        The unique ID of the emote.
+    set_id: Optional[:class:`str`]
+        The ID of the set this emote belongs to.
+        Will be ``None`` if the emote doesn't belong to a set.
+    owner_id: Optional[:class:`str`]
+        The ID of the channel this emote belongs to.
+    name: :class:`str`
+        The name of this emote, as the user sees it.
+    type: :class:`str`
+        The reason this emote is available to the user.
+        Some available values (twitch hasn't documented this properly, there might be more):
+
+        - follower
+        - subscription
+        - bitstier
+        - hypetrain
+        - globals (global emotes)
+
+    scales: list[:class:`str`]
+        The available scaling for this emote. These are typically floats (ex. "1.0", "2.0").
+    format_static: :class:`bool`
+        Whether this emote is available as a static (PNG) file.
+    format_animated: :class:`bool`
+        Whether this emote is available as an animated (GIF) file.
+    theme_light: :class:`bool`
+        Whether this emote is available in light theme background mode.
+    theme_dark: :class:`bool`
+        Whether this emote is available in dark theme background mode.
+    """
+
+    __slots__ = (
+        "id",
+        "set_id",
+        "owner_id",
+        "name",
+        "type",
+        "scales",
+        "format_static",
+        "format_animated",
+        "theme_light",
+        "theme_dark",
+    )
+
+    def __init__(self, data: dict) -> None:
+        self.id: str = data["id"]
+        self.set_id: Optional[str] = data["emote_set_id"] and None
+        self.owner_id: Optional[str] = data["owner_id"] and None
+        self.name: str = data["name"]
+        self.type: str = data["emote_type"]
+        self.scales: List[str] = data["scale"]
+        self.theme_dark: bool = "dark" in data["theme_mode"]
+        self.theme_light: bool = "light" in data["theme_mode"]
+        self.format_static: bool = "static" in data["format"]
+        self.format_animated: bool = "animated" in data["format"]
+
+    def url_for(self, format: Literal["static", "animated"], theme: Literal["dark", "light"], scale: str) -> str:
+        """
+        Returns a cdn url that can be used to download or serve the emote on a website.
+        This function validates that the arguments passed are possible values to serve the emote.
+
+        Parameters
+        -----------
+        format: Literal["static", "animated"]
+            The format of the emote. You can check what formats are available using :attr:`~.format_static` and :attr:`~.format_animated`.
+        theme: Literal["dark", "light"]
+            The theme of the emote. You can check what themes are available using :attr:`~.format_dark` and :attr:`~.format_light`.
+        scale: :class:`str`
+            The scale of the emote. This should be formatted in this format: ``"1.0"``.
+            The scales available for this emote can be checked via :attr:`~.scales`.
+
+        Returns
+        --------
+        :class:`str`
+        """
+        if scale not in self.scales:
+            raise ValueError(f"scale for this emote must be one of {', '.join(self.scales)}, not {scale}")
+
+        if (theme == "dark" and not self.theme_dark) or (theme == "light" and not self.theme_light):
+            raise ValueError(f"theme {theme} is not an available value for this emote")
+
+        if (format == "static" and not self.format_static) or (format == "animated" and not self.format_animated):
+            raise ValueError(f"format {format} is not an available value for this emote")
+
+        return f"https://static-cdn.jtvnw.net/emoticons/v2/{self.id}/{format}/{theme}/{scale}"
+
+    def __repr__(self) -> str:
+        return f"<Emote id={self.id} name={self.name}>"
+
+    def __hash__(self) -> int:  # this exists so we can do set(list of emotes) to get rid of duplicates
+        return hash(self.id)
 
 
 class Marker:
@@ -1006,7 +1219,7 @@ class Stream:
         The current stream ID.
     user: :class:`~twitchio.PartialUser`
         The user who is streaming.
-    game_id: :class:`int`
+    game_id: :class:`str`
         Current game ID being played on the channel.
     game_name: :class:`str`
         Name of the game being played on the channel.
@@ -1054,7 +1267,7 @@ class Stream:
     def __init__(self, http: "TwitchHTTP", data: dict):
         self.id: int = data["id"]
         self.user = PartialUser(http, data["user_id"], data["user_name"])
-        self.game_id: int = data["game_id"]
+        self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.type: str = data["type"]
         self.title: str = data["title"]
@@ -1589,7 +1802,7 @@ class PollChoice:
         self.title: str = data["title"]
         self.votes: int = data["votes"]
         self.channel_points_votes: int = data["channel_points_votes"]
-        self.bits_votes: int = data["bits_votes"]
+        self.bits_votes: int = 0
 
     def __repr__(self):
         return f"<PollChoice id={self.id} title={self.title} votes={self.votes} channel_points_votes={self.channel_points_votes} bits_votes={self.bits_votes}>"
@@ -1936,3 +2149,81 @@ class ContentClassificationLabel:
 
     def __repr__(self):
         return f"<ContentClassificationLabel id={self.id}>"
+
+
+class CharityValues:
+    """
+    Represents the current/target funds of a charity campaign.
+
+    Attributes
+    -----------
+    value: :class:`int`
+        The value of the campaign (either so far, or the target value).
+    decimal_places: :class:`int`
+        The decimal places to be inserted into :attr:`.value`.
+    currency: :class:`str`
+        The currency this charity is raising funds in. eg ``USD``, ``GBP``, ``EUR``.
+    """
+
+    __slots__ = ("value", "decimal_places", "currency")
+
+    def __init__(self, data: dict) -> None:
+        self.value: int = data["value"]
+        self.decimal_places: int = data["decimal_places"]
+        self.currency: str = data["currency"]
+
+    def __repr__(self) -> str:
+        return f"<CharityValues value={self.value} decimal_places={self.decimal_places} currency={self.currency}>"
+
+
+class CharityCampaign:
+    """
+    Represents a Charity Campaign on a channel.
+
+    Attributes
+    -----------
+    campaign_id: :class:`str`
+        The ID of the running charity campaign.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The broadcaster running the campaign.
+    user: :class:`~twitchio.PartialUser`
+        The user who donated.
+    charity_name: :class:`str`
+        The name of the charity.
+    charity_description: :class:`str`
+        The description of the charity.
+    charity_logo: :class:`str`
+        The logo of the charity.
+    charity_website: :class:`str`
+        The websiet of the charity.
+    current: :class:`CharityValues`
+        The current funds raised by this campaign.
+    target: :class:`CharityValues`
+        The target funds to be raised for this campaign.
+    """
+
+    __slots__ = (
+        "campaign_id",
+        "broadcaster",
+        "charity_name",
+        "charity_description",
+        "charity_logo",
+        "charity_website",
+        "current",
+        "target",
+    )
+
+    def __init__(self, data: dict, http: TwitchHTTP, broadcaster: PartialUser | None = None) -> None:
+        self.campaign_id: str = data["campaign_id"]
+        self.broadcaster: PartialUser = broadcaster or PartialUser(
+            http, data["broadcaster_id"], data["broadcaster_name"]
+        )
+        self.charity_name: str = data["charity_name"]
+        self.charity_description: str = data["charity_description"]
+        self.charity_logo: str = data["charity_logo"]
+        self.charity_website: str = data["charity_website"]
+        self.current: CharityValues = CharityValues(data["current_amount"])
+        self.target: CharityValues = CharityValues(data["target_amount"])
+
+    def __repr__(self) -> str:
+        return f"<CharityCampaign broadcaster={self.broadcaster} campaign_id={self.campaign_id} charity_name={self.charity_name}>"

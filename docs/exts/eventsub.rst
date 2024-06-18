@@ -104,7 +104,29 @@ This is a list of events dispatched by the eventsub ext.
     .. note::
         You generally won't need to interact with this event. The ext will handle responding to the challenge automatically.
 
+.. function:: event_eventsub_keepalive(event: KeepaliveEvent)
+
+    Called when a Twitch sends a keepalive event. You do not need to use this in daily usage.
+    
+    .. note::
+        You generally won't need to interact with this event.
+
+.. function:: event_eventsub_reconnect(event: ReconnectEvent)
+
+    Called when a Twitch wishes for us to reconnect.
+    
+    .. note::
+        You generally won't need to interact with this event. The library will automatically handle reconnecting.
+
 .. function:: event_eventsub_notification_follow(event: ChannelFollowData)
+
+    Called when someone creates a follow on a channel you've subscribed to.
+
+    .. warning::
+        Twitch has removed this, please use :func:`event_eventsub_notification_followV2`
+
+
+.. function:: event_eventsub_notification_followV2(event: ChannelFollowData)
 
     Called when someone creates a follow on a channel you've subscribed to.
 
@@ -128,7 +150,7 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when someone cheers on a channel you've subscribed to.
 
-.. function:: event_eventsub_notification_raid(event: Channel)
+.. function:: event_eventsub_notification_raid(event: ChannelRaidData)
 
     Called when someone raids a channel you've subscribed to.
 
@@ -208,12 +230,22 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a channel receives a shoutout.
 
+.. function:: event_eventsub_notification_channel_charity_donate(event: ChannelCharityDonationData)
+
+    Called when a user donates to an active charity campaign.
+
 API Reference
 --------------
 
 .. attributetable:: EventSubClient
 
 .. autoclass:: EventSubClient
+    :members:
+    :undoc-members:
+
+.. attributetable:: EventSubWSClient
+
+.. autoclass:: EventSubWSClient
     :members:
     :undoc-members:
 
@@ -226,6 +258,12 @@ API Reference
 .. attributetable:: Headers
 
 .. autoclass:: Headers
+    :members:
+    :inherited-members:
+
+.. attributetable:: WebsocketHeaders
+
+.. autoclass:: WebsocketHeaders
     :members:
     :inherited-members:
 
@@ -451,3 +489,44 @@ API Reference
     :members:
     :inherited-members:
 
+.. attributetable::: ChannelCharityDonationData
+
+.. autoclass:: ChannelCharityDonationData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelUnbanRequestCreateData
+
+.. autoclass:: ChannelUnbanRequestCreateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelUnbanRequestResolveData
+
+.. autoclass:: ChannelUnbanRequestResolveData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodMessageHoldData
+
+.. autoclass:: AutomodMessageHoldData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodMessageUpdateData
+
+.. autoclass:: AutomodMessageUpdateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodSettingsUpdateData
+
+.. autoclass:: AutomodSettingsUpdateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodTermsUpdateData
+
+.. autoclass:: AutomodTermsUpdateData
+    :members:
+    :inherited-members:

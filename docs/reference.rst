@@ -11,6 +11,13 @@ ActiveExtension
     :members:
     :inherited-members:
 
+AdSchedule
+------------
+.. attributetable:: AdSchedule
+
+.. autoclass:: AdSchedule
+    :members:
+
 AutomodCheckMessage
 ---------------------
 .. attributetable:: AutomodCheckMessage
@@ -71,6 +78,22 @@ ChannelEmote
 .. attributetable:: ChannelEmote
 
 .. autoclass:: ChannelEmote
+    :members:
+    :inherited-members:
+
+ChannelFollowerEvent
+---------------------
+.. attributetable:: ChannelFollowerEvent
+
+.. autoclass:: ChannelFollowerEvent
+    :members:
+    :inherited-members:
+
+ChannelFollowingEvent
+---------------------
+.. attributetable:: ChannelFollowingEvent
+
+.. autoclass:: ChannelFollowingEvent
     :members:
     :inherited-members:
 
@@ -135,6 +158,20 @@ ChatterColor
     :members:
     :inherited-members:
 
+CharityCampaign
+----------------
+.. attributetable:: CharityCampaign
+
+.. autoclass:: CharityCampaign
+    :members:
+    :inherited-members:
+
+.. attributetable:: CharityValues
+
+.. autoclass:: CharityValues
+    :members:
+    :inherited-members:
+
 CheerEmote
 ------------
 .. attributetable:: CheerEmote
@@ -182,6 +219,13 @@ CustomRewardRedemption
 .. autoclass:: CustomRewardRedemption
     :members:
     :inherited-members:
+
+Emote
+------
+.. attributetable:: Emote
+
+.. autoclass:: Emote
+    :members:
 
 Extension
 -----------

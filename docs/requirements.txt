@@ -8,3 +8,4 @@ Pygments
 furo
 pyaudio==0.2.11
 yt-dlp>=2022.2.4
+tinytag>=1.9.0
