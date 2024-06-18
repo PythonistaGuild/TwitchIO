@@ -3,10 +3,14 @@
 
 2.10.0
 =======
+- TwitchIO
+    - Bug fixes
+        - fix: :func:`~twitchio.PartialUser.fetch_markers` was passing list of one element from payload, now just passes element
+
 - ext.commands
     - Changes
         - Added which alias failed to load in the error raised by :func:`~twitchio.ext.commands.Context.add_command`
-        
+
 - ext.eventsub
     - Additions
         - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_create <EventSubClient.subscribe_channel_unban_request_create>` / 
