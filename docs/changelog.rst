@@ -1,10 +1,18 @@
 :orphan:
 
-2.9.3
+
+2.10.0
 =======
 - ext.commands
     - Changes
         - Added which alias failed to load in the error raised by :func:`~twitchio.ext.commands.Context.add_command`
+        
+- ext.eventsub
+    - Additions
+        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_create <EventSubClient.subscribe_channel_unban_request_create>` / 
+            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create <EventSubWSClient.subscribe_channel_unban_request_create>`
+        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve <EventSubClient.subscribe_channel_unban_request_resolve>` / 
+            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve <EventSubWSClient.subscribe_channel_unban_request_resolve>`
 
 2.9.2
 =======
