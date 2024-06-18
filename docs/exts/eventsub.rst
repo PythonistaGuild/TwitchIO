@@ -495,3 +495,38 @@ API Reference
     :members:
     :inherited-members:
 
+.. attributetable::: ChannelUnbanRequestCreateData
+
+.. autoclass:: ChannelUnbanRequestCreateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelUnbanRequestResolveData
+
+.. autoclass:: ChannelUnbanRequestResolveData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodMessageHoldData
+
+.. autoclass:: AutomodMessageHoldData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodMessageUpdateData
+
+.. autoclass:: AutomodMessageUpdateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodSettingsUpdateData
+
+.. autoclass:: AutomodSettingsUpdateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: AutomodTermsUpdateData
+
+.. autoclass:: AutomodTermsUpdateData
+    :members:
+    :inherited-members:

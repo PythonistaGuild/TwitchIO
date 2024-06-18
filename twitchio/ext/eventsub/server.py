@@ -276,6 +276,48 @@ class EventSubClient(web.Application):
             models.SubscriptionTypes.channel_shoutout_receive, broadcaster, moderator
         )
 
+    def subscribe_channel_unban_request_create(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.unban_request_create, broadcaster, moderator
+        )
+
+    def subscribe_channel_unban_request_resolve(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.unban_request_resolve, broadcaster, moderator
+        )
+
+    def subscribe_automod_message_hold(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.automod_message_hold, broadcaster, moderator
+        )
+
+    def subscribe_automod_message_update(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.automod_message_update, broadcaster, moderator
+        )
+
+    def subscribe_automod_settings_update(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.automod_settings_update, broadcaster, moderator
+        )
+
+    def subscribe_automod_terms_update(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.automod_terms_update, broadcaster, moderator
+        )
+
     def subscribe_channel_charity_donate(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_charity_donate, broadcaster)
 
