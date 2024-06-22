@@ -1916,6 +1916,130 @@ class AutomodTermsUpdateData(EventData):
         self.from_automod: bool = data["from_automod"]
         self.terms: List[str] = data["terms"]
 
+
+class ChannelModerateData(EventData):
+    """
+    Represents a channel moderation event.
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The channel where the moderation event occurred.
+    moderator: :class:`PartialUser`
+        The moderator who performed the action.
+    action: :class:`str`
+        The action performed.
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "action",
+        "followers",
+        "slow",
+        "vip",
+        "unvip",
+        "mod",
+        "unmod",
+        "ban",
+        "unban",
+        "timeout",
+        "untimeout",
+        "raid",
+        "unraid",
+        "delete",
+        "automod_terms",
+        "unban_request",
+    )
+
+    class Followers:
+        def __init__(self, data: dict) -> None:
+            self.follow_duration_minutes: int = data["follow_duration_minutes"]
+
+    class Slow:
+        def __init__(self, data: dict) -> None:
+            self.wait_time_seconds: int = data["wait_time_seconds"]
+
+    class VIPStatus:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+
+    class ModeratorStatus:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+
+    class Ban:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.reason: Optional[str] = data.get("reason")
+
+    class UnBan:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+
+    class Timeout:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.reason: Optional[str] = data.get("reason")
+            self.expires_at: datetime.datetime = _parse_datetime(data["expires_at"])
+
+    class UnTimeout:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+
+    class Raid:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.viewer_count: int = data["viewer_count"]
+
+    class UnRaid:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+
+    class Delete:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.message_id: str = data["message_id"]
+            self.message_body: str = data["message_body"]
+
+    class AutoModTerms:
+        def __init__(self, data: dict) -> None:
+            self.action: str = data["action"]
+            self.list: str = data["list"]
+            self.terms: List[str] = data["terms"]
+            self.from_automod: bool = data["from_automod"]
+
+    class UnBanRequest:
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.is_approved: bool = data["is_approved"]
+            self.moderator_message: str = data["moderator_message"]
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.moderator = _transform_user(client, data, "moderator_user")
+        self.action: str = data["action"]
+        self.followers = self.Followers(data["followers"]) if data.get("followers") is not None else None
+        self.slow = self.Slow(data["slow"]) if data.get("slow") is not None else None
+        self.vip = self.VIPStatus(client, data["vip"]) if data.get("vip") is not None else None
+        self.unvip = self.VIPStatus(client, data["unvip"]) if data.get("unvip") is not None else None
+        self.mod = self.ModeratorStatus(client, data["mod"]) if data.get("mod") is not None else None
+        self.unmod = self.ModeratorStatus(client, data["unmod"]) if data.get("unmod") is not None else None
+        self.ban = self.Ban(client, data["ban"]) if data.get("ban") is not None else None
+        self.unban = self.UnBan(client, data["unban"]) if data.get("unban") is not None else None
+        self.timeout = self.Timeout(client, data["timeout"]) if data.get("timeout") is not None else None
+        self.untimeout = self.UnTimeout(client, data["untimeout"]) if data.get("untimeout") is not None else None
+        self.raid = self.Raid(client, data["raid"]) if data.get("raid") is not None else None
+        self.unraid = self.UnRaid(client, data["unraid"]) if data.get("unraid") is not None else None
+        self.delete = self.Delete(client, data["delete"]) if data.get("delete") is not None else None
+        self.automod_terms = (
+            self.AutoModTerms(client, data["automod_terms"]) if data.get("automod_terms") is not None else None
+        )
+        self.unban_request = (
+            self.UnBanRequest(client, data["unban_request"]) if data.get("unban_request") is not None else None
+        )
+
+
 class SuspiciousUserUpdateData(EventData):
     """
     Represents a suspicious user update event.
@@ -1939,7 +2063,6 @@ class SuspiciousUserUpdateData(EventData):
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.user: PartialUser = _transform_user(client, data, "user")
         self.trust_status: Literal["active_monitoring", "restricted", "none"] = data["low_trust_status"]
-
 
 
 _DataType = Union[
@@ -1982,6 +2105,7 @@ _DataType = Union[
     AutomodSettingsUpdateData,
     AutomodTermsUpdateData,
     SuspiciousUserUpdateData,
+    ChannelModerateData,
 ]
 
 
@@ -2041,6 +2165,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
     channel_charity_donate = "channel.charity_campaign.donate", 1, ChannelCharityDonationData
 
+    channel_moderate = "channel.moderate", 1, ChannelModerateData
+
     hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
     hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData
     hypetrain_end = "channel.hype_train.end", 1, HypeTrainEndData
@@ -2064,7 +2190,7 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
 
     user_update = "user.update", 1, UserUpdateData
-    
+
     suspicious_user_update = "channel.suspicious_user.update", 1, SuspiciousUserUpdateData
 
 
