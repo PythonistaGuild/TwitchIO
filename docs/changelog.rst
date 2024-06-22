@@ -10,6 +10,9 @@
 - ext.commands
     - Changes
         - Added which alias failed to load in the error raised by :func:`~twitchio.ext.commands.Context.add_command`
+    
+    - Bug fixes
+        - fix string parser not properly parsing specific quoted strings
 
 - ext.eventsub
     - Additions
@@ -17,6 +20,15 @@
             :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create <EventSubWSClient.subscribe_channel_unban_request_create>`
         - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve <EventSubClient.subscribe_channel_unban_request_resolve>` / 
             :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve <EventSubWSClient.subscribe_channel_unban_request_resolve>`
+        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_terms_update <EventSubClient.subscribe_automod_terms_update>` / 
+            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_terms_update <EventSubClient.subscribe_automod_terms_update>`
+        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_settings_update <EventSubClient.subscribe_automod_settings_update>` / 
+            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_settings_update <EventSubClient.subscribe_automod_settings_update>`
+        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_update <EventSubClient.subscribe_automod_message_update>` / 
+            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_update <EventSubClient.subscribe_automod_message_update>`
+        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_hold <EventSubClient.subscribe_automod_message_hold>` / 
+            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_hold <EventSubClient.subscribe_automod_message_hold>`
+        - Added all accompanying models for those endpoints.
 - ext.sounds
     - Additions
         - Added TinyTag as a dependency to support retrieving audio metadata using TinyTag in `ext.sounds.__init__.py`.

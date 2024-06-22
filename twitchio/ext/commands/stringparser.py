@@ -37,35 +37,31 @@ class StringParser:
         self.ignore = False
 
     def process_string(self, msg: str) -> Dict[int, str]:
-        while True:
-            try:
-                loc = msg[self.count]
-            except IndexError:
-                self.eof = self.count
-                word = msg[self.start : self.eof]
-                if not word:
-                    break
-                self.words[self.index] = msg[self.start : self.eof]
-                break
+        while self.count < len(msg):
+            loc = msg[self.count]
 
-            if loc.isspace() and not self.ignore:
-                self.words[self.index] = msg[self.start : self.count].replace(" ", "", 1)
-                self.index += 1
+            if loc == '"' and not self.ignore:
+                self.ignore = True
                 self.start = self.count + 1
 
-            elif loc == '"':
-                if not self.ignore:
-                    if self.start == self.count:  # only tokenize if they're a new word
-                        self.start = self.count + 1
-                        self.ignore = True
-                else:
+            elif loc == '"' and self.ignore:
+                self.words[self.index] = msg[self.start : self.count]
+                self.index += 1
+                self.ignore = False
+                self.start = self.count + 1
+
+            elif loc.isspace() and not self.ignore:
+                if self.start != self.count:
                     self.words[self.index] = msg[self.start : self.count]
                     self.index += 1
-                    self.count += 1
-                    self.start = self.count
-                    self.ignore = False
+
+                self.start = self.count + 1
 
             self.count += 1
+
+        if self.start < len(msg) and not self.ignore:
+            self.words[self.index] = msg[self.start : len(msg)].strip()
+
         return self.words
 
     def copy(self) -> StringParser:
