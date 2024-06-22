@@ -1627,9 +1627,9 @@ class ChannelUnbanRequestCreateData(EventData):
     -----------
     id: :class:`str`
         The ID of the ban request.
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the user was banned.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that was banned.
     text: :class:`str`
         The unban request text the user submitted.
@@ -1655,11 +1655,11 @@ class ChannelUnbanRequestResolveData(EventData):
     -----------
     id: :class:`str`
         The ID of the ban request.
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the user was banned.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that was banned.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator that handled this unban request.
     resolution_text: :class:`str`
         The reasoning provided by the moderator.
@@ -1687,9 +1687,9 @@ class AutomodMessageHoldData(EventData):
         The ID of the message.
     message_content: :class:`str`
         The contents of the message
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the message was held.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that sent the message.
     level: :class:`int`
         The level of alarm raised for this message.
@@ -1758,11 +1758,11 @@ class AutomodMessageUpdateData(EventData):
         The ID of the message.
     message_content: :class:`str`
         The contents of the message
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the message was held.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that sent the message.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator that updated the message status.
     status: :class:`str`
         The new status of the message. Typically one of ``approved`` or ``denied``.
@@ -1833,9 +1833,9 @@ class AutomodSettingsUpdateData(EventData):
 
     Attributes
     ------------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster for which the settings were updated.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator that updated the settings.
     overall :class:`int` | ``None``
         The overall level of automod aggressiveness.
@@ -1895,9 +1895,9 @@ class AutomodTermsUpdateData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster for which the terms were updated.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator who updated the terms.
     action: :class:`str`
         The action type.
@@ -1923,9 +1923,9 @@ class ChannelModerateData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The channel where the moderation event occurred.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator who performed the action.
     action: :class:`str`
         The action performed.
@@ -1937,9 +1937,9 @@ class ChannelModerateData(EventData):
         Metadata associated with the vip command.
     unvip: Optional[:class:`VIPStatus`]
         Metadata associated with the vip command.
-    mod: Optional[:class:`ModStatus`]
+    mod: Optional[:class:`ModeratorStatus`]
         Metadata associated with the mod command.
-    unmod: Optional[:class:`ModStatus`]
+    unmod: Optional[:class:`ModeratorStatus`]
         Metadata associated with the mod command.
     ban: Optional[:class:`BanStatus`]
         Metadata associated with the ban command.
@@ -2014,7 +2014,7 @@ class ChannelModerateData(EventData):
 
         Attributes
         -----------
-        user: :class:`PartialUser`
+        user: :class:`~twitchio.PartialUser`
             The user who is gaining or losing VIP access.
         """
 
@@ -2027,7 +2027,7 @@ class ChannelModerateData(EventData):
 
         Attributes
         -----------
-        user: :class:`PartialUser`
+        user: :class:`~twitchio.PartialUser`
             The user who is gaining or losing moderator access.
         """
 
@@ -2040,7 +2040,7 @@ class ChannelModerateData(EventData):
 
         Attributes
         -----------
-        user: :class:`PartialUser`
+        user: :class:`~twitchio.PartialUser`
             The user who is banned / unbanned.
         reason: Optional[:class:`str`]
             Reason for the ban.
@@ -2056,7 +2056,7 @@ class ChannelModerateData(EventData):
 
         Attributes
         -----------
-        user: :class:`PartialUser`
+        user: :class:`~twitchio.PartialUser`
             The user who is timedout / untimedout.
         reason: Optional[:class:`str`]
             Reason for the timeout.
@@ -2077,7 +2077,7 @@ class ChannelModerateData(EventData):
 
         Attributes
         -----------
-        user: :class:`PartialUser`
+        user: :class:`~twitchio.PartialUser`
             The user who is timedout / untimedout.
         viewer_count: :class:`int`
             The viewer count.
@@ -2093,7 +2093,7 @@ class ChannelModerateData(EventData):
 
         Attributes
         -----------
-        user: :class:`PartialUser`
+        user: :class:`~twitchio.PartialUser`
             The user who is timedout / untimedout.
         message_id: :class:`str`
             The id of deleted message.
@@ -2134,7 +2134,7 @@ class ChannelModerateData(EventData):
 
         Attributes
         -----------
-        user: :class:`PartialUser`
+        user: :class:`~twitchio.PartialUser`
             The user who is requesting an unban.
         is_approved: :class:`bool`
             Whether or not the unban request was approved or denied.
@@ -2178,11 +2178,11 @@ class SuspiciousUserUpdateData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The channel where the treatment for a suspicious user was updated.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator who updated the terms.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The the user that sent the message.
     trust_status: :class:`Literal["active_monitoring", "restricted", "none"]`
         The status set for the suspicious user. Can be the following: “none”, “active_monitoring”, or “restricted”.
