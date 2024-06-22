@@ -542,3 +542,15 @@ API Reference
 .. autoclass:: ChannelModerateData
     :members:
     :inherited-members:
+
+.. autoclass:: ChannelVIPAddRemove
+    :members:
+    :inherited-members:
+
+.. autoclass:: AutoCustomReward
+    :members:
+    :inherited-members:
+
+.. autoclass:: AutoRewardRedeem
+    :members:
+    :inherited-members:
