@@ -1929,6 +1929,36 @@ class ChannelModerateData(EventData):
         The moderator who performed the action.
     action: :class:`str`
         The action performed.
+    followers: Optional[:class:`Followers`]
+        Metadata associated with the followers command.
+    slow: Optional[:class:`Slow`]
+        Metadata associated with the slow command.
+    vip: Optional[:class:`VIPStatus`]
+        Metadata associated with the vip command.
+    unvip: Optional[:class:`VIPStatus`]
+        Metadata associated with the vip command.
+    mod: Optional[:class:`ModStatus`]
+        Metadata associated with the mod command.
+    unmod: Optional[:class:`ModStatus`]
+        Metadata associated with the mod command.
+    ban: Optional[:class:`BanStatus`]
+        Metadata associated with the ban command.
+    unban: Optional[:class:`BanStatus`]
+        Metadata associated with the unban command.
+    timeout: Optional[:class:`TimeoutStatus`]
+        Metadata associated with the timeout command.
+    untimeout: Optional[:class:`TimeoutStatus`]
+        Metadata associated with the untimeout command.
+    raid: Optional[:class:`RaidStatus`]
+        Metadata associated with the raid command.
+    unraid: Optional[:class:`RaidStatus`]
+        Metadata associated with the unraid command.
+    delete: Optional[:class:`Delete`]
+        Metadata associated with the delete command.
+    automod_terms: Optional[:class:`AutoModTerms`]
+        Metadata associated with the automod terms changes.
+    unban_request: Optional[:class:`UnBanRequest`]
+        Metadata associated with an unban request.
     """
 
     __slots__ = (
@@ -1953,63 +1983,165 @@ class ChannelModerateData(EventData):
     )
 
     class Followers:
+        """
+        Metadata associated with the followers command.
+
+        Attributes:
+        -----------
+        follow_duration_minutes: :class:`int`
+            The length of time, in minutes, that the followers must have followed the broadcaster to participate in the chat room.
+        """
+
         def __init__(self, data: dict) -> None:
             self.follow_duration_minutes: int = data["follow_duration_minutes"]
 
     class Slow:
+        """
+        Metadata associated with the slow command.
+
+        Attributes:
+        -----------
+        wait_time_seconds: :class:`int`
+            The amount of time, in seconds, that users need to wait between sending messages.
+        """
+
         def __init__(self, data: dict) -> None:
             self.wait_time_seconds: int = data["wait_time_seconds"]
 
     class VIPStatus:
+        """
+        Metadata associated with the vip / unvip command.
+
+        Attributes:
+        -----------
+        user: :class:`PartialUser`
+            The user who is gaining or losing VIP access.
+        """
+
         def __init__(self, client: EventSubClient, data: dict) -> None:
             self.user: PartialUser = _transform_user(client, data, "user")
 
     class ModeratorStatus:
+        """
+        Metadata associated with the mod / unmod command.
+
+        Attributes:
+        -----------
+        user: :class:`PartialUser`
+            The user who is gaining or losing moderator access.
+        """
+
         def __init__(self, client: EventSubClient, data: dict) -> None:
             self.user: PartialUser = _transform_user(client, data, "user")
 
-    class Ban:
+    class BanStatus:
+        """
+        Metadata associated with the ban / unban command.
+
+        Attributes:
+        -----------
+        user: :class:`PartialUser`
+            The user who is banned / unbanned.
+        reason: Optional[:class:`str`]
+            Reason for the ban.
+        """
+
         def __init__(self, client: EventSubClient, data: dict) -> None:
             self.user: PartialUser = _transform_user(client, data, "user")
             self.reason: Optional[str] = data.get("reason")
 
-    class UnBan:
-        def __init__(self, client: EventSubClient, data: dict) -> None:
-            self.user: PartialUser = _transform_user(client, data, "user")
+    class TimeoutStatus:
+        """
+        Metadata associated with the timeout / untimeout command.
 
-    class Timeout:
+        Attributes:
+        -----------
+        user: :class:`PartialUser`
+            The user who is timedout / untimedout.
+        reason: Optional[:class:`str`]
+            Reason for the timeout.
+        expires_at: Optional[:class:`datetime.datetime`]
+            Datetime the timeout expires.
+        """
+
         def __init__(self, client: EventSubClient, data: dict) -> None:
             self.user: PartialUser = _transform_user(client, data, "user")
             self.reason: Optional[str] = data.get("reason")
-            self.expires_at: datetime.datetime = _parse_datetime(data["expires_at"])
+            self.expires_at: Optional[datetime.datetime] = (
+                _parse_datetime(data["expires_at"]) if data.get("expires_at") is not None else None
+            )
 
-    class UnTimeout:
-        def __init__(self, client: EventSubClient, data: dict) -> None:
-            self.user: PartialUser = _transform_user(client, data, "user")
+    class RaidStatus:
+        """
+        Metadata associated with the raid / unraid command.
 
-    class Raid:
+        Attributes:
+        -----------
+        user: :class:`PartialUser`
+            The user who is timedout / untimedout.
+        viewer_count: :class:`int`
+            The viewer count.
+        """
+
         def __init__(self, client: EventSubClient, data: dict) -> None:
             self.user: PartialUser = _transform_user(client, data, "user")
             self.viewer_count: int = data["viewer_count"]
 
-    class UnRaid:
-        def __init__(self, client: EventSubClient, data: dict) -> None:
-            self.user: PartialUser = _transform_user(client, data, "user")
-
     class Delete:
+        """
+        Metadata associated with the delete command.
+
+        Attributes:
+        -----------
+        user: :class:`PartialUser`
+            The user who is timedout / untimedout.
+        message_id: :class:`str`
+            The id of deleted message.
+        message_body: :class:`str`
+            The message body of the deleted message.
+        """
+
         def __init__(self, client: EventSubClient, data: dict) -> None:
             self.user: PartialUser = _transform_user(client, data, "user")
             self.message_id: str = data["message_id"]
             self.message_body: str = data["message_body"]
 
     class AutoModTerms:
+        """
+        Metadata associated with the automod terms change.
+
+        Attributes:
+        -----------
+        action: :class:`Literal["add", "remove"]`
+            Either “add” or “remove”.
+        list: :class:`Literal["blocked", "permitted"]`
+            Either “blocked” or “permitted”.
+        terms: List[:class:`str`]
+            Terms being added or removed.
+        from_automod: :class:`bool`
+            Whether the terms were added due to an Automod message approve/deny action.
+        """
+
         def __init__(self, data: dict) -> None:
-            self.action: str = data["action"]
-            self.list: str = data["list"]
+            self.action: Literal["add", "remove"] = data["action"]
+            self.list: Literal["blocked", "permitted"] = data["list"]
             self.terms: List[str] = data["terms"]
             self.from_automod: bool = data["from_automod"]
 
     class UnBanRequest:
+        """
+        Metadata associated with the slow command.
+
+        Attributes:
+        -----------
+        user: :class:`PartialUser`
+            The user who is requesting an unban.
+        is_approved: :class:`bool`
+            Whether or not the unban request was approved or denied.
+        moderator_message: :class:`str`
+            The message included by the moderator explaining their approval or denial.
+        """
+
         def __init__(self, client: EventSubClient, data: dict) -> None:
             self.user: PartialUser = _transform_user(client, data, "user")
             self.is_approved: bool = data["is_approved"]
@@ -2025,12 +2157,12 @@ class ChannelModerateData(EventData):
         self.unvip = self.VIPStatus(client, data["unvip"]) if data.get("unvip") is not None else None
         self.mod = self.ModeratorStatus(client, data["mod"]) if data.get("mod") is not None else None
         self.unmod = self.ModeratorStatus(client, data["unmod"]) if data.get("unmod") is not None else None
-        self.ban = self.Ban(client, data["ban"]) if data.get("ban") is not None else None
-        self.unban = self.UnBan(client, data["unban"]) if data.get("unban") is not None else None
-        self.timeout = self.Timeout(client, data["timeout"]) if data.get("timeout") is not None else None
-        self.untimeout = self.UnTimeout(client, data["untimeout"]) if data.get("untimeout") is not None else None
-        self.raid = self.Raid(client, data["raid"]) if data.get("raid") is not None else None
-        self.unraid = self.UnRaid(client, data["unraid"]) if data.get("unraid") is not None else None
+        self.ban = self.BanStatus(client, data["ban"]) if data.get("ban") is not None else None
+        self.unban = self.BanStatus(client, data["unban"]) if data.get("unban") is not None else None
+        self.timeout = self.TimeoutStatus(client, data["timeout"]) if data.get("timeout") is not None else None
+        self.untimeout = self.TimeoutStatus(client, data["untimeout"]) if data.get("untimeout") is not None else None
+        self.raid = self.RaidStatus(client, data["raid"]) if data.get("raid") is not None else None
+        self.unraid = self.RaidStatus(client, data["unraid"]) if data.get("unraid") is not None else None
         self.delete = self.Delete(client, data["delete"]) if data.get("delete") is not None else None
         self.automod_terms = (
             self.AutoModTerms(client, data["automod_terms"]) if data.get("automod_terms") is not None else None

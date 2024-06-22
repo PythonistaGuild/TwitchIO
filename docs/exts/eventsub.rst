@@ -530,3 +530,15 @@ API Reference
 .. autoclass:: AutomodTermsUpdateData
     :members:
     :inherited-members:
+
+.. attributetable::: SuspiciousUserUpdateData
+
+.. autoclass:: SuspiciousUserUpdateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelModerateData
+
+.. autoclass:: ChannelModerateData
+    :members:
+    :inherited-members:
