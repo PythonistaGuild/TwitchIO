@@ -1986,7 +1986,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the followers command.
 
-        Attributes:
+        Attributes
         -----------
         follow_duration_minutes: :class:`int`
             The length of time, in minutes, that the followers must have followed the broadcaster to participate in the chat room.
@@ -1999,7 +1999,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the slow command.
 
-        Attributes:
+        Attributes
         -----------
         wait_time_seconds: :class:`int`
             The amount of time, in seconds, that users need to wait between sending messages.
@@ -2012,7 +2012,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the vip / unvip command.
 
-        Attributes:
+        Attributes
         -----------
         user: :class:`PartialUser`
             The user who is gaining or losing VIP access.
@@ -2025,7 +2025,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the mod / unmod command.
 
-        Attributes:
+        Attributes
         -----------
         user: :class:`PartialUser`
             The user who is gaining or losing moderator access.
@@ -2038,7 +2038,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the ban / unban command.
 
-        Attributes:
+        Attributes
         -----------
         user: :class:`PartialUser`
             The user who is banned / unbanned.
@@ -2054,7 +2054,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the timeout / untimeout command.
 
-        Attributes:
+        Attributes
         -----------
         user: :class:`PartialUser`
             The user who is timedout / untimedout.
@@ -2075,7 +2075,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the raid / unraid command.
 
-        Attributes:
+        Attributes
         -----------
         user: :class:`PartialUser`
             The user who is timedout / untimedout.
@@ -2091,7 +2091,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the delete command.
 
-        Attributes:
+        Attributes
         -----------
         user: :class:`PartialUser`
             The user who is timedout / untimedout.
@@ -2110,7 +2110,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the automod terms change.
 
-        Attributes:
+        Attributes
         -----------
         action: :class:`Literal["add", "remove"]`
             Either “add” or “remove”.
@@ -2132,7 +2132,7 @@ class ChannelModerateData(EventData):
         """
         Metadata associated with the slow command.
 
-        Attributes:
+        Attributes
         -----------
         user: :class:`PartialUser`
             The user who is requesting an unban.
