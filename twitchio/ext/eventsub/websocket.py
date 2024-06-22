@@ -555,3 +555,17 @@ class EventSubWSClient:
         await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.automod_terms_update, broadcaster, moderator, token
         )
+
+    async def subscribe_suspicious_user_update(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        await self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.suspicious_user_update, broadcaster, moderator, token
+        )
+
+    async def subscribe_channel_moderate(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        await self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_moderate, broadcaster, moderator, token
+        )
