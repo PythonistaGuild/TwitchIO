@@ -17,6 +17,12 @@
             :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create <EventSubWSClient.subscribe_channel_unban_request_create>`
         - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve <EventSubClient.subscribe_channel_unban_request_resolve>` / 
             :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve <EventSubWSClient.subscribe_channel_unban_request_resolve>`
+- ext.sounds
+    - Additions
+        - Added TinyTag as a dependency to support retrieving audio metadata using TinyTag in `ext.sounds.__init__.py`.
+        - added :method:`Twitchio.ext.sounds.rate setter.
+        - added :method:`Twitchio.ext.sounds.channels setter.
+
 
 2.9.2
 =======
