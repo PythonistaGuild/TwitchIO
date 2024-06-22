@@ -16,24 +16,28 @@
 
 - ext.eventsub
     - Additions
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_create <EventSubClient.subscribe_channel_unban_request_create>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create <EventSubWSClient.subscribe_channel_unban_request_create>`
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve <EventSubClient.subscribe_channel_unban_request_resolve>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve <EventSubWSClient.subscribe_channel_unban_request_resolve>`
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_terms_update <EventSubClient.subscribe_automod_terms_update>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_terms_update <EventSubClient.subscribe_automod_terms_update>`
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_settings_update <EventSubClient.subscribe_automod_settings_update>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_settings_update <EventSubClient.subscribe_automod_settings_update>`
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_update <EventSubClient.subscribe_automod_message_update>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_update <EventSubClient.subscribe_automod_message_update>`
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_hold <EventSubClient.subscribe_automod_message_hold>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_hold <EventSubClient.subscribe_automod_message_hold>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_create <EventSubClient.subscribe_channel_unban_request_create>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create <EventSubWSClient.subscribe_channel_unban_request_create>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve <EventSubClient.subscribe_channel_unban_request_resolve>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve <EventSubWSClient.subscribe_channel_unban_request_resolve>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_terms_update <EventSubClient.subscribe_automod_terms_update>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_terms_update <EventSubClient.subscribe_automod_terms_update>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_settings_update <EventSubClient.subscribe_automod_settings_update>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_settings_update <EventSubClient.subscribe_automod_settings_update>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_update <EventSubClient.subscribe_automod_message_update>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_update <EventSubClient.subscribe_automod_message_update>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_hold <EventSubClient.subscribe_automod_message_hold>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_hold <EventSubClient.subscribe_automod_message_hold>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_moderate <EventSubClient.subscribe_channel_moderate>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_moderate <EventSubClient.subscribe_channel_moderate>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.channel_suspicious_user_update <EventSubClient.channel_suspicious_user_update>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.channel_suspicious_user_update <EventSubClient.channel_suspicious_user_update>`
         - Added all accompanying models for those endpoints.
 - ext.sounds
     - Additions
         - Added TinyTag as a dependency to support retrieving audio metadata using TinyTag in `ext.sounds.__init__.py`.
-        - added :method:`Twitchio.ext.sounds.rate setter.
-        - added :method:`Twitchio.ext.sounds.channels setter.
+        - added :meth:`twitchio.ext.sounds.Sound.rate` setter.
+        - added :meth:`twitchio.ext.sounds.Sound.channels` setter.
 
 
 2.9.2
