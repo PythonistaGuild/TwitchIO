@@ -145,12 +145,10 @@ class BaseEvent:
     __slots__ = ("_client", "_raw_data", "subscription", "headers")
 
     @overload
-    def __init__(self, client: EventSubClient, _data: str, request: web.Request):
-        ...
+    def __init__(self, client: EventSubClient, _data: str, request: web.Request): ...
 
     @overload
-    def __init__(self, client: EventSubWSClient, _data: dict, request: None):
-        ...
+    def __init__(self, client: EventSubWSClient, _data: dict, request: None): ...
 
     def __init__(
         self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
@@ -2164,9 +2162,7 @@ class ChannelModerateData(EventData):
         self.raid = self.RaidStatus(client, data["raid"]) if data.get("raid") is not None else None
         self.unraid = self.RaidStatus(client, data["unraid"]) if data.get("unraid") is not None else None
         self.delete = self.Delete(client, data["delete"]) if data.get("delete") is not None else None
-        self.automod_terms = (
-            self.AutoModTerms(client, data["automod_terms"]) if data.get("automod_terms") is not None else None
-        )
+        self.automod_terms = self.AutoModTerms(data["automod_terms"]) if data.get("automod_terms") is not None else None
         self.unban_request = (
             self.UnBanRequest(client, data["unban_request"]) if data.get("unban_request") is not None else None
         )
@@ -2195,6 +2191,86 @@ class SuspiciousUserUpdateData(EventData):
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.user: PartialUser = _transform_user(client, data, "user")
         self.trust_status: Literal["active_monitoring", "restricted", "none"] = data["low_trust_status"]
+
+
+class AutoCustomReward:
+    """
+    A reward object for an Auto Reward Redeem.
+
+    Attributes
+    -----------
+    type: :class:`str`
+        The type of the reward. One of ``single_message_bypass_sub_mode``, ``send_highlighted_message``, ``random_sub_emote_unlock``,
+        ``chosen_sub_emote_unlock``, ``chosen_modified_sub_emote_unlock``, ``message_effect``, ``gigantify_an_emote``, ``celebration``.
+    cost: :class:`int`
+        How much the reward costs.
+    unlocked_emote_id: Optional[:class:`str`]
+        The unlocked emote, if applicable.
+    unlocked_emote_name: Optional[:class:`str`]
+        The unlocked emote, if applicable.
+    """
+
+    def __init__(self, data: dict):
+        self.type: str = data["type"]
+        self.cost: int = data["cost"]
+        self.unlocked_emote_id: Optional[str] = data["unlocked_emote"] and data["unlocked_emote"]["id"]
+        self.unlocked_emote_name: Optional[str] = data["unlocked_emote"] and data["unlocked_emote"]["name"]
+
+
+class AutoRewardRedeem(EventData):
+    """
+    Represents an automatic reward redemption.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The channel where the reward was redeemed.
+    user: :class:`~twitchio.PartialUser`
+        The user that redeemed the reward.
+    id: :class:`str`
+        The ID of the redemption.
+    reward: :class:`AutoCustomReward`
+        The reward that was redeemed.
+    message: :class:`str`
+        The message the user sent.
+    message_emotes: :class:`dict`
+        The emote data for the message.
+    user_input: Optional[:class:`str`]
+        The input to the reward, if it requires any.
+    redeemed_at: :class:`datetime.datetime`
+        When the reward was redeemed.
+    """
+
+    __slots__ = ("broadcaster", "user", "id", "reward", "message", "message_emotes", "user_input", "redeemed_at")
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.id: str = data["id"]
+        self.reward = AutoCustomReward(data["reward"])
+        self.message: str = data["message"]
+        self.message_emotes: dict = data["message_emotes"]
+        self.user_input: Optional[str] = data["user_input"]
+        self.redeemed_at: datetime.datetime = _parse_datetime(data["redeemed_at"])
+
+
+class ChannelVIPAddRemove(EventData):
+    """
+    Represents a VIP being added/removed from a channel.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The channel that the VIP was added/removed from.
+    user: :class:`~twitchio.PartialUser`
+        The user that was added/removed as a VIP.
+    """
+
+    __slots__ = ("broadcaster", "user")
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
 
 
 _DataType = Union[
@@ -2238,6 +2314,8 @@ _DataType = Union[
     AutomodTermsUpdateData,
     SuspiciousUserUpdateData,
     ChannelModerateData,
+    AutoRewardRedeem,
+    ChannelVIPAddRemove,
 ]
 
 
@@ -2285,6 +2363,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
         CustomRewardRedemptionAddUpdateData,
     )
 
+    auto_reward_redeem = "channel.channel_points_automatic_reward_redemption.add", 1, AutoRewardRedeem
+
     channel_goal_begin = "channel.goal.begin", 1, ChannelGoalBeginProgressData
     channel_goal_progress = "channel.goal.progress", 1, ChannelGoalBeginProgressData
     channel_goal_end = "channel.goal.end", 1, ChannelGoalEndData
@@ -2317,6 +2397,9 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
 
     unban_request_create = "channel.unban_request.create", 1, ChannelUnbanRequestCreateData
     unban_request_resolve = "channel.unban_request.resolve", 1, ChannelUnbanRequestResolveData
+
+    channel_vip_add = "channel.vip.add", 1, ChannelVIPAddRemove
+    channel_vip_remove = "channel.vip.remove", 1, ChannelVIPAddRemove
 
     user_authorization_grant = "user.authorization.grant", 1, UserAuthorizationGrantedData
     user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData

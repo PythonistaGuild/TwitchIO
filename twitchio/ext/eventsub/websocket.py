@@ -97,7 +97,9 @@ class Websocket:
         self._pump_task: Optional[asyncio.Task] = None
         self._timeout: Optional[int] = None
         self._session_id: Optional[str] = None
-        self._target_user_id: int | None = None  # each websocket can only have one authenticated user on it for some bizzare reason, but this isnt documented anywhere
+        self._target_user_id: int | None = (
+            None  # each websocket can only have one authenticated user on it for some bizzare reason, but this isnt documented anywhere
+        )
         self.remaining_slots: int = 300  # default to 300
 
     def __hash__(self) -> int:
@@ -483,6 +485,9 @@ class EventSubWSClient:
     async def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int], token: str):
         await self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster, token)
 
+    async def subscribe_channel_auto_reward_redeem(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.auto_reward_redeem, broadcaster, token)
+
     async def subscribe_channel_shield_mode_begin(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
@@ -569,3 +574,9 @@ class EventSubWSClient:
         await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.channel_moderate, broadcaster, moderator, token
         )
+
+    async def subscribe_channel_vip_add(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_add, broadcaster, token)
+
+    async def subscribe_channel_vip_remove(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_remove, broadcaster, token)

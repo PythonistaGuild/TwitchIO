@@ -30,8 +30,12 @@
             :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_hold <EventSubClient.subscribe_automod_message_hold>`
         - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_moderate <EventSubClient.subscribe_channel_moderate>` / 
             :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_moderate <EventSubClient.subscribe_channel_moderate>`
-        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.channel_suspicious_user_update <EventSubClient.channel_suspicious_user_update>` / 
-            :meth:`Twitchio.ext.eventsub.EventSubWSClient.channel_suspicious_user_update <EventSubClient.channel_suspicious_user_update>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_suspicious_user_update <EventSubClient.subscribe_suspicious_user_update>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_suspicious_user_update <EventSubClient.subscribe_suspicious_user_update>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_vip_add <EventSubClient.subscribe_channel_vip_add>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_vip_add <EventSubClient.subscribe_channel_vip_add>`
+        - Added :meth:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_vip_remove <EventSubClient.subscribe_channel_vip_remove>` / 
+            :meth:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_vip_remove <EventSubClient.subscribe_channel_vip_remove>`
         - Added all accompanying models for those endpoints.
 - ext.sounds
     - Additions
