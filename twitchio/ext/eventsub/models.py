@@ -1277,7 +1277,7 @@ class StreamOnlineData(EventData):
 
     __slots__ = "broadcaster", "id", "type", "started_at"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
         self.type: Literal["live", "playlist", "watch_party", "premier", "rerun"] = data["type"]
@@ -1296,7 +1296,7 @@ class StreamOfflineData(EventData):
 
     __slots__ = ("broadcaster",)
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
 
 
@@ -1314,7 +1314,7 @@ class UserAuthorizationGrantedData(EventData):
 
     __slots__ = "client_id", "user"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "user")
         self.client_id: str = data["client_id"]
 
@@ -1333,7 +1333,7 @@ class UserAuthorizationRevokedData(EventData):
 
     __slots__ = "client_id", "user"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "user")
         self.client_id: str = data["client_id"]
 
@@ -1354,7 +1354,7 @@ class UserUpdateData(EventData):
 
     __slots__ = "user", "email", "description"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "user")
         self.email: Optional[str] = data["email"]
         self.description: str = data["description"]
@@ -1384,7 +1384,7 @@ class ChannelGoalBeginProgressData(EventData):
 
     __slots__ = "user", "id", "type", "description", "current_amount", "target_amount", "started_at"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
         self.type: str = data["type"]
@@ -1432,7 +1432,7 @@ class ChannelGoalEndData(EventData):
         "ended_at",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
         self.type: str = data["type"]
@@ -1460,7 +1460,7 @@ class ChannelShieldModeBeginData(EventData):
 
     __slots__ = ("broadcaster", "moderator", "started_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
@@ -1482,7 +1482,7 @@ class ChannelShieldModeEndData(EventData):
 
     __slots__ = ("broadcaster", "moderator", "ended_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.ended_at: datetime.datetime = _parse_datetime(data["ended_at"])
@@ -1522,7 +1522,7 @@ class ChannelShoutoutCreateData(EventData):
         "target_cooldown_ends_at",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.to_broadcaster: PartialUser = _transform_user(client, data, "to_broadcaster_user")
@@ -1552,7 +1552,7 @@ class ChannelShoutoutReceiveData(EventData):
 
     __slots__ = ("broadcaster", "from_broadcaster", "started_at", "viewer_count")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.from_broadcaster: PartialUser = _transform_user(client, data, "to_broadcaster_user")
         self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
@@ -1605,7 +1605,7 @@ class ChannelCharityDonationData(EventData):
         "donation_currency",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.id: str = data["id"]
         self.campaign_id: str = data["campaign_id"]
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
@@ -1639,7 +1639,7 @@ class ChannelUnbanRequestCreateData(EventData):
 
     __slots__ = ("id", "broadcaster", "user", "text", "created_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.id: str = data["id"]
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
         self.user: PartialUser = _transform_user(client, data, "user")
@@ -1669,7 +1669,7 @@ class ChannelUnbanRequestResolveData(EventData):
 
     __slots__ = ("id", "broadcaster", "user", "text", "created_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.id: str = data["id"]
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
         self.user: PartialUser = _transform_user(client, data, "user")
@@ -1737,7 +1737,7 @@ class AutomodMessageHoldData(EventData):
         "created_at",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.message_id: str = data["message_id"]
         self.message_content: str = data["message"]
         self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
@@ -1814,7 +1814,7 @@ class AutomodMessageUpdateData(EventData):
         "status",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.message_id: str = data["message_id"]
         self.message_content: str = data["message"]
         self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
@@ -1871,7 +1871,7 @@ class AutomodSettingsUpdateData(EventData):
         "sexual_terms",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.overall: Optional[int] = data["overall"]
@@ -1909,12 +1909,37 @@ class AutomodTermsUpdateData(EventData):
 
     __slots__ = ("broadcaster", "moderator", "action", "from_automod", "terms")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.action: str = data["action"]
         self.from_automod: bool = data["from_automod"]
         self.terms: List[str] = data["terms"]
+
+class SuspiciousUserUpdateData(EventData):
+    """
+    Represents a suspicious user update event.
+
+    Attributes
+    -----------
+    broadcaster: :class:`PartialUser`
+        The channel where the treatment for a suspicious user was updated.
+    moderator: :class:`PartialUser`
+        The moderator who updated the terms.
+    user: :class:`PartialUser`
+        The the user that sent the message.
+    trust_status: :class:`Literal["active_monitoring", "restricted", "none"]`
+        The status set for the suspicious user. Can be the following: “none”, “active_monitoring”, or “restricted”.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "user", "trust_status")
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.trust_status: Literal["active_monitoring", "restricted", "none"] = data["low_trust_status"]
+
 
 
 _DataType = Union[
@@ -1956,6 +1981,7 @@ _DataType = Union[
     AutomodMessageUpdateData,
     AutomodSettingsUpdateData,
     AutomodTermsUpdateData,
+    SuspiciousUserUpdateData,
 ]
 
 
@@ -2038,6 +2064,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
 
     user_update = "user.update", 1, UserUpdateData
+    
+    suspicious_user_update = "channel.suspicious_user.update", 1, SuspiciousUserUpdateData
 
 
 SubscriptionTypes = _SubscriptionTypes()
