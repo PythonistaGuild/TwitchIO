@@ -1802,7 +1802,7 @@ class PollChoice:
         self.title: str = data["title"]
         self.votes: int = data["votes"]
         self.channel_points_votes: int = data["channel_points_votes"]
-        self.bits_votes: int = data["bits_votes"]
+        self.bits_votes: int = 0
 
     def __repr__(self):
         return f"<PollChoice id={self.id} title={self.title} votes={self.votes} channel_points_votes={self.channel_points_votes} bits_votes={self.bits_votes}>"

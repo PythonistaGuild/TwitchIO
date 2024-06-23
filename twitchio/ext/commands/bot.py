@@ -209,7 +209,7 @@ class Bot(Client):
             if alias in self.commands:
                 del self.commands[command.name]
                 raise TwitchCommandError(
-                    f"Failed to load command <{command.name}>, a command with that name/alias already exists."
+                    f"Failed to load alias <{alias}> for command <{command.name}>, a command with that name/alias already exists.",
                 )
             self._command_aliases[alias] = command.name
 
@@ -347,7 +347,7 @@ class Bot(Client):
         await context.command(context)
 
     def load_module(self, name: str) -> None:
-        """Method which loads a module and it's cogs.
+        """Method which loads a module and its cogs.
 
         Parameters
         ------------
@@ -367,7 +367,7 @@ class Bot(Client):
         self._modules[name] = module
 
     def unload_module(self, name: str) -> None:
-        """Method which unloads a module and it's cogs.
+        """Method which unloads a module and its cogs.
 
         Parameters
         ----------
@@ -402,7 +402,7 @@ class Bot(Client):
                 del sys.modules[m]
 
     def reload_module(self, name: str):
-        """Method which reloads a module and it's cogs.
+        """Method which reloads a module and its cogs.
 
         Parameters
         ----------

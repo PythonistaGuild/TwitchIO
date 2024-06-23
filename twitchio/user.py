@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -770,7 +771,7 @@ class PartialUser:
 
         data = await self._http.get_stream_markers(token, user_id=str(self.id), video_id=video_id)
         if data:
-            return VideoMarkers(data[0]["videos"])
+            return VideoMarkers(data[0]["videos"][0])
 
     async def fetch_extensions(self, token: str):
         """|coro|

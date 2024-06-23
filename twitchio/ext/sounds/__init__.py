@@ -20,6 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 import asyncio
 import audioop
 import dataclasses
@@ -33,6 +34,7 @@ from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar, Unio
 
 import pyaudio
 from yt_dlp import YoutubeDL
+from tinytag import TinyTag
 
 
 __all__ = ("Sound", "AudioPlayer")
@@ -173,6 +175,9 @@ class Sound:
 
         elif isinstance(source, str):
             self.title = source
+            tag = TinyTag.get(source)
+            self._rate = tag.samplerate
+            self._channels = tag.channels
 
             self.proc = subprocess.Popen(
                 [
@@ -188,9 +193,6 @@ class Sound:
                 ],
                 stdout=subprocess.PIPE,
             )
-
-        self._channels = 2
-        self._rate = 48000
 
     @classmethod
     async def ytdl_search(cls, search: str, *, loop: Optional[asyncio.BaseEventLoop] = None):
@@ -216,10 +218,20 @@ class Sound:
         """The audio source channels."""
         return self._channels
 
+    @channels.setter
+    def channels(self, channels: int):
+        """Set audio source channels."""
+        self._channels = channels
+
     @property
     def rate(self):
         """The audio source sample rate."""
         return self._rate
+
+    @rate.setter
+    def rate(self, rate: int):
+        """Set audio source sample rate."""
+        self._rate = rate
 
     @property
     def source(self):

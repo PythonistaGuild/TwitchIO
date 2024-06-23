@@ -1,5 +1,49 @@
 :orphan:
 
+
+2.10.0
+=======
+- TwitchIO
+    - Bug fixes
+        - fix: :func:`~twitchio.PartialUser.fetch_markers` was passing list of one element from payload, now just passes element
+
+- ext.commands
+    - Changes
+        - Added which alias failed to load in the error raised by :func:`~twitchio.ext.commands.Bot.add_command`
+    
+    - Bug fixes
+        - fix string parser not properly parsing specific quoted strings
+
+- ext.eventsub
+    - Additions
+        - Added :meth:`EventSubClient.subscribe_channel_unban_request_create <twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_create>` /
+            :meth:`EventSubWSClient.subscribe_channel_unban_request_create <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create>`
+        - Added :meth:`EventSubClient.subscribe_channel_unban_request_resolve <twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve>` / 
+            :meth:`EventSubWSClient.subscribe_channel_unban_request_resolve <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve>`
+        - Added :meth:`EventSubClient.subscribe_automod_terms_update <twitchio.ext.eventsub.EventSubClient.subscribe_automod_terms_update>` / 
+            :meth:`EventSubWSClient.subscribe_automod_terms_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_terms_update>`
+        - Added :meth:`EventSubClient.subscribe_automod_settings_update <twitchio.ext.eventsub.EventSubClient.subscribe_automod_settings_update>` / 
+            :meth:`EventSubWSClient.subscribe_automod_settings_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_settings_update>`
+        - Added :meth:`EventSubClient.subscribe_automod_message_update <twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_update>` / 
+            :meth:`EventSubWSClient.subscribe_automod_message_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_update>`
+        - Added :meth:`EventSubClient.subscribe_automod_message_hold <twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_hold>` / 
+            :meth:`EventSubWSClient.subscribe_automod_message_hold <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_hold>`
+        - Added :meth:`EventSubClient.subscribe_channel_moderate <twitchio.ext.eventsub.EventSubClient.subscribe_channel_moderate>` / 
+            :meth:`EventSubWSClient.subscribe_channel_moderate <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_moderate>`
+        - Added :meth:`EventSubClient.subscribe_suspicious_user_update <twitchio.ext.eventsub.EventSubClient.subscribe_suspicious_user_update>` / 
+            :meth:`EventSubWSClient.subscribe_suspicious_user_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_suspicious_user_update>`
+        - Added :meth:`EventSubClient.subscribe_channel_vip_add <twitchio.ext.eventsub.EventSubClient.subscribe_channel_vip_add>` / 
+            :meth:`EventSubWSClient.subscribe_channel_vip_add <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_vip_add>`
+        - Added :meth:`EventSubClient.subscribe_channel_vip_remove <twitchio.ext.eventsub.EventSubClient.subscribe_channel_vip_remove>` / 
+            :meth:`EventSubWSClient.subscribe_channel_vip_remove <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_vip_remove>`
+        - Added all accompanying models for those endpoints.
+- ext.sounds
+    - Additions
+        - Added TinyTag as a dependency to support retrieving audio metadata.
+        - added :meth:`twitchio.ext.sounds.Sound.rate` setter.
+        - added :meth:`twitchio.ext.sounds.Sound.channels` setter.
+
+
 2.9.2
 =======
 - TwitchIO
@@ -66,7 +110,7 @@
         - New models for the new methods have been added:
             - :class:`~twitchio.ChannelFollowerEvent`
             - :class:`~twitchio.ChannelFollowingEvent`
-        - New optional ``is_featured`` query parameter for :func:`~twitchio.PartialUser.fetch_clips` 
+        - New optional ``is_featured`` query parameter for :func:`~twitchio.PartialUser.fetch_clips`
         - New attribute :attr:`~twitchio.Clip.is_featured` for :class:`~twitchio.Clip`
 
     - Bug fixes
@@ -104,14 +148,14 @@
         - Added :func:`~twitchio.Client.fetch_content_classification_labels` along with :class:`~twitchio.ContentClassificationLabel`
         - Added :attr:`~twitchio.ChannelInfo.content_classification_labels` and :attr:`~twitchio.ChannelInfo.is_branded_content` to :class:`~twitchio.ChannelInfo`
         - Added new parameters to :func:`~twitchio.PartialUser.modify_stream` for ``is_branded_content`` and ``content_classification_labels``
-            
+
     - Bug fixes
         - Fix :func:`~twitchio.Client.search_categories` due to :attr:`~twitchio.Game.igdb_id` being added to :class:`~twitchio.Game`
         - Made Chatter :attr:`~twitchio.Chatter.id` property public
         - :func:`~twitchio.Client.event_token_expired` will now be called correctly when response is ``401 Invalid OAuth token``
         - Fix reconnect loop when Twitch sends a RECONNECT via IRC websocket
         - Fix :func:`~twitchio.CustomReward.edit` so it now can enable the reward
-    
+
     - Other Changes
         - Updated the HTTPException to provide useful information when an error is raised.
 
