@@ -145,10 +145,12 @@ class BaseEvent:
     __slots__ = ("_client", "_raw_data", "subscription", "headers")
 
     @overload
-    def __init__(self, client: EventSubClient, _data: str, request: web.Request): ...
+    def __init__(self, client: EventSubClient, _data: str, request: web.Request):
+        ...
 
     @overload
-    def __init__(self, client: EventSubWSClient, _data: dict, request: None): ...
+    def __init__(self, client: EventSubWSClient, _data: dict, request: None):
+        ...
 
     def __init__(
         self, client: Union[EventSubClient, EventSubWSClient], _data: Union[str, dict], request: Optional[web.Request]
