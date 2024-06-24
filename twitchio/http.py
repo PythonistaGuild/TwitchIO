@@ -1130,7 +1130,7 @@ class HTTPClient:
         broadcaster_id: str,
         sender_id: str | int,
         message: str,
-        token_for: str,
+        token_for: str | None,
         reply_to_message_id: str | None = None,
     ) -> SendChatMessageResponse:
         data = {"broadcaster_id": broadcaster_id, "sender_id": sender_id, "message": message}
