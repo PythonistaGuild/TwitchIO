@@ -30,7 +30,7 @@ jobs:
           pip install '.[speed,sound]'
 
       - name: Build wheels
-        run: pip wheel -w ./wheelhouse/ .
+        run: pip wheel -w ./wheelhouse/ '.[speed,sound]'
 
       - uses: actions/upload-artifact@v4
         with:
