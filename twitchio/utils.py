@@ -7,25 +7,16 @@ import os
 import pathlib
 import struct
 import sys
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any, Self
 from urllib.parse import quote
 
 
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from typing_extensions import Self
-
     from .types_.colours import Colours
 
-
-try:
-    from backports.datetime_fromisoformat import MonkeyPatch  # type: ignore
-
-    MonkeyPatch.patch_fromisoformat()  # type: ignore
-except ImportError:
-    pass
 
 try:
     import orjson  # type: ignore
@@ -33,15 +24,6 @@ try:
     _from_json = orjson.loads  # type: ignore
 except ImportError:
     _from_json = json.loads
-
-
-try:
-    from asyncio.timeouts import _timeout  # type: ignore
-except ImportError:
-    from async_timeout import timeout as _timeout  # type: ignore
-
-
-a_timeout = _timeout  # type: ignore
 
 
 __all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter", "parse_timestamp", "url_encode_datetime")
@@ -436,6 +418,6 @@ def url_encode_datetime(dt: datetime) -> str:
     str
         The URL encoded parsed datetime object.
     """
-    formatted_dt = dt.replace(tzinfo=timezone.utc).isoformat() if dt.tzinfo is None else dt.isoformat()
+    formatted_dt = dt.replace(tzinfo=UTC).isoformat() if dt.tzinfo is None else dt.isoformat()
 
     return quote(formatted_dt)

@@ -8,13 +8,12 @@ authors = [{ name = "PythonistaGuild" }]
 dynamic = ["dependencies", "version"]
 description = "A fully asynchronous and modern Python wrapper around the Twitch API."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Internet",
@@ -104,4 +103,4 @@ useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false
 reportPrivateUsage = false
-pythonVersion = "3.10"
+pythonVersion = "3.11"

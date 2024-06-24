@@ -27,7 +27,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
 
 from .authentication import ManagedHTTPClient, Scopes
 from .conduits import Conduit, ConduitPool
@@ -48,7 +48,6 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Coroutine
 
     import aiohttp
-    from typing_extensions import Self, Unpack
 
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .http import HTTPAsyncIterator

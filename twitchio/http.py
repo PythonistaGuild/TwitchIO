@@ -31,7 +31,7 @@ import sys
 import urllib.parse
 from collections import deque
 from collections.abc import AsyncIterator, Awaitable, Callable
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Self, TypeAlias, TypeVar, Unpack
 
 import aiohttp
 
@@ -62,8 +62,6 @@ from .utils import Colour, _from_json, url_encode_datetime  # type: ignore
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
-
-    from typing_extensions import Self, Unpack
 
     from .assets import Asset
     from .models.channel_points import CustomReward
@@ -1938,7 +1936,7 @@ class HTTPClient:
         _start_time = (
             start_time.isoformat()
             if start_time.tzinfo is not None
-            else start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+            else start_time.replace(tzinfo=datetime.UTC).isoformat()
         )
 
         data = {
@@ -1976,7 +1974,7 @@ class HTTPClient:
             _start_time = (
                 start_time.isoformat()
                 if start_time.tzinfo is not None
-                else start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+                else start_time.replace(tzinfo=datetime.UTC).isoformat()
             )
             data["start_time"] = _start_time
         if category_id is not None:

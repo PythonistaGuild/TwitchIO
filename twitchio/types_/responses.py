@@ -24,8 +24,6 @@ SOFTWARE.
 
 from typing import Any, Generic, Literal, TypeAlias, TypedDict, TypeVar
 
-from typing_extensions import TypedDict as TypedDictExt
-
 from .conduits import ConduitData, ShardData
 
 
@@ -87,7 +85,7 @@ __all__ = (
 T = TypeVar("T")
 
 
-class Payload(TypedDictExt, Generic[T]):
+class Payload(TypedDict, Generic[T]):
     data: list[T]
 
 

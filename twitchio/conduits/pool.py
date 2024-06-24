@@ -26,24 +26,22 @@ from __future__ import annotations
 
 import logging
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 from twitchio.eventsub.enums import ShardStatus, TransportMethod
 from twitchio.types_.conduits import ShardData
 
 from ..utils import parse_timestamp
-from .websockets import Websocket
 
 
 if TYPE_CHECKING:
     import datetime
     from collections.abc import Mapping
 
-    from typing_extensions import Self
-
     from ..client import Client
     from ..ext.commands import Bot
     from ..types_.conduits import ConduitData, ShardData, ShardTransport
+    from .websockets import Websocket
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -136,40 +134,3 @@ class ConduitPool:
     @property
     def conduits(self) -> Mapping[str, Conduit]:
         return MappingProxyType(self._conduits)  # thanks lilly
-
-    async def create_conduit(self, shard_count: int, buffer: bool = False) -> list[Conduit]:
-        buffer_: int = min(50, max(int(shard_count * 0.1), 1)) if buffer else shard_count
-
-        real_count: int = min(shard_count + buffer_, 20_000)
-        if shard_count > 20_000:
-            logger.warning('"shard_count" parameter for "create_conduit" exceeds 20,000. Reducing count to 20,000.')
-
-        # TODO: Handle 429 for 5 Conduits...
-        conduits: list[Conduit] = await self._client._create_conduit(real_count)
-        for conduit in conduits:
-            self._conduits[conduit.id] = conduit
-
-        return conduits
-
-    async def fetch_conduits(self) -> Mapping[str, Conduit]:
-        data = await self._client._http.get_conduits()
-        mapping: dict[str, Conduit] = {}
-
-        for payload in data["data"]:
-            conduit = Conduit(data=payload, pool=self)
-            mapping[conduit.id] = conduit
-
-        self._conduits = mapping
-        return MappingProxyType(mapping)
-
-    async def test(self) -> None:
-        await self.fetch_conduits()
-
-        for id_, conduit in self._conduits.items():
-            shards: list[Shard] = await (await self._client._http.get_conduit_shards(id_))
-            start: int = len(shards)
-
-            for n in range(start, conduit._shard_count):
-                websocket: Websocket = Websocket(id=n)
-                await websocket.connect()
-                break

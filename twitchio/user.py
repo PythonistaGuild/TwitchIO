@@ -68,7 +68,7 @@ if TYPE_CHECKING:
     )
     from .models.polls import Poll
     from .models.predictions import Prediction
-    from .models.schedule import Schedule
+    from .models.schedule import Schedule  # noqa: TCH004
     from .models.streams import Stream, StreamMarker, VideoMarkers
     from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
     from .models.teams import ChannelTeam

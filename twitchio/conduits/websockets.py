@@ -40,7 +40,7 @@ from ..types_.conduits import (
     WelcomeMessage,
     WelcomePayload,
 )
-from ..utils import _from_json, a_timeout  # type: ignore
+from ..utils import _from_json  # type: ignore
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -82,23 +82,24 @@ class Websocket:
     def id(self) -> str:
         return self._id
 
-    async def connect(self) -> None:
-        url: str = f"{WSS}?keepalive_timeout_seconds={self._keep_alive_timeout}"
+    async def connect(self, *, reconnect_url: str | None = None) -> None:
+        url: str = reconnect_url or f"{WSS}?keepalive_timeout_seconds={self._keep_alive_timeout}"
 
         if self.connected:
-            logger.warning("Trying to connect to an already running conduit websocket with ID: %s.", self._session_id)
+            logger.warning("Trying to connect to an already running eventsub websocket with ID: %s.", self._session_id)
             return
 
         if not self._session:
             self._session = aiohttp.ClientSession()
 
         self._ready.clear()
-
         self._socket = await self._session.ws_connect(url, heartbeat=15.0)
-        self._listen_task = asyncio.create_task(self._listen())
+
+        if not self._listen_task:
+            self._listen_task = asyncio.create_task(self._listen())
 
         try:
-            async with a_timeout(10):
+            async with asyncio.timeout(10):
                 await self._ready.wait()
         except TimeoutError:
             raise WebsocketTimeoutException
@@ -124,14 +125,14 @@ class Websocket:
             type_: aiohttp.WSMsgType = message.type
             if type_ in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSING):
                 logger.debug(
-                    "Received close message [%s] on conduit websocket: %s",
+                    "Received close message [%s] on eventsub websocket: %s",
                     self._socket.close_code,
                     self._session_id,
                 )
                 return await self.close()
 
             if type_ is not aiohttp.WSMsgType.TEXT:
-                logger.debug("Received unknown message from conduit websocket: %s", self._session_id)
+                logger.debug("Received unknown message from eventsub websocket: %s", self._session_id)
                 continue
 
             self._last_keepalive = datetime.datetime.now()
@@ -139,7 +140,7 @@ class Websocket:
             try:
                 data: WebsocketMessages = cast(WebsocketMessages, _from_json(message.data))
             except Exception:
-                logger.warning("Unable to parse JSON in conduit websocket: %s", self._session_id)
+                logger.warning("Unable to parse JSON in eventsub websocket: %s", self._session_id)
                 continue
 
             metadata: MetaData = data["metadata"]
@@ -150,31 +151,31 @@ class Websocket:
                 await self._process_welcome(welcome_data)
 
             elif message_type == "session_reconnect":
-                logger.debug('Received "session_reconnect" message from conduit websocket: %s', self._session_id)
+                logger.debug('Received "session_reconnect" message from eventsub websocket: %s', self._session_id)
                 reconnect_data: ReconnectMessage = cast(ReconnectMessage, data)
                 await self._process_reconnect(reconnect_data)
 
             elif message_type == "session_keepalive":
-                logger.debug('Received "session_keepalive" message from conduit websocket: %s', self._session_id)
+                logger.debug('Received "session_keepalive" message from eventsub websocket: %s', self._session_id)
 
             elif message_type == "revocation":
-                logger.debug('Received "revocation" message from conduit websocket: %s', self._session_id)
+                logger.debug('Received "revocation" message from eventsub websocket: %s', self._session_id)
 
                 revocation_data: RevocationMessage = cast(RevocationMessage, data)
                 await self._process_revocation(revocation_data)
 
             elif message_type == "notification":
-                logger.debug('Received "notification" message from conduit websocket: %s', self._session_id)
+                logger.debug('Received "notification" message from eventsub websocket: %s', self._session_id)
 
                 notification_data: NotificationMessage = cast(NotificationMessage, data)
                 await self._process_notification(notification_data)
 
             else:
-                logger.warning("Received an unknown message type in conduit websocket: %s", self._session_id)
+                logger.warning("Received an unknown message type in eventsub websocket: %s", self._session_id)
 
     async def _process_keepalive(self) -> None:
         assert self._last_keepalive
-        logger.debug("Started keep_alive task on conduit websocket: %s", self._session_id)
+        logger.debug("Started keep_alive task on eventsub websocket: %s", self._session_id)
 
         while True:
             await asyncio.sleep(self._keep_alive_timeout)
@@ -188,9 +189,11 @@ class Websocket:
         self._session_id = payload["session"]["id"]
         self._ready.set()
 
-        logger.debug('Received "session_welcome" message from conduit websocket: %s', self._session_id)
+        logger.debug('Received "session_welcome" message from eventsub websocket: %s', self._session_id)
 
-    async def _process_reconnect(self, data: ReconnectMessage) -> None: ...
+    async def _process_reconnect(self, data: ReconnectMessage) -> None:
+        logger.info("Attempting to reconnect eventsub websocket: '%s'", self._id)
+        await self.connect(reconnect_url=data["payload"]["session"]["reconnect_url"])
 
     async def _process_revocation(self, data: RevocationMessage) -> None: ...
 
@@ -201,18 +204,18 @@ class Websocket:
             try:
                 await self._socket.close()
             except Exception:
-                ...
+                pass
 
         if self._session:
             try:
                 await self._session.close()
             except Exception:
-                ...
+                pass
 
         if self._listen_task:
             try:
                 self._listen_task.cancel()
             except Exception:
-                ...
+                pass
 
-        logger.debug("Successfully closed conduit websocket: %s", self._session_id)
+        logger.debug("Successfully closed eventsub websocket: %s", self._session_id)

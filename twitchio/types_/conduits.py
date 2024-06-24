@@ -22,9 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Any, Literal, TypeAlias, TypedDict
-
-from typing_extensions import Never, NotRequired
+from typing import Any, Literal, Never, NotRequired, TypeAlias, TypedDict
 
 
 class ShardTransport(TypedDict):

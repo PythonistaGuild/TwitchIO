@@ -24,12 +24,10 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Unpack
 
 
 if TYPE_CHECKING:
-    from typing_extensions import Unpack
-
     from ..types_.conduits import Condition
 
 
