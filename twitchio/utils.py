@@ -11,8 +11,6 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
-from backports.datetime_fromisoformat import MonkeyPatch  # type: ignore
-
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -21,7 +19,13 @@ if TYPE_CHECKING:
 
     from .types_.colours import Colours
 
-MonkeyPatch.patch_fromisoformat()  # type: ignore
+
+try:
+    from backports.datetime_fromisoformat import MonkeyPatch  # type: ignore
+
+    MonkeyPatch.patch_fromisoformat()  # type: ignore
+except ImportError:
+    pass
 
 try:
     import orjson  # type: ignore

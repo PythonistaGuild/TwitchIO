@@ -1,6 +1,6 @@
 import re
 
-from setuptools import setup
+from setuptools import setup  # type: ignore
 
 
 def get_version() -> str:
