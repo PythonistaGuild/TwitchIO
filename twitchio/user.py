@@ -68,7 +68,7 @@ if TYPE_CHECKING:
     )
     from .models.polls import Poll
     from .models.predictions import Prediction
-    from .models.schedule import Schedule  # noqa: TCH004
+    from .models.schedule import Schedule
     from .models.streams import Stream, StreamMarker, VideoMarkers
     from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
     from .models.teams import ChannelTeam
@@ -1571,6 +1571,8 @@ class PartialUser:
             raise ValueError("Duration must be between 30 and 1380.")
         if title is not None and len(title) > 140:
             raise ValueError("Title must not be greater than 140 characters.")
+
+        from .models.schedule import Schedule
 
         data = await self._http.patch_channel_stream_schedule_segment(
             broadcaster_id=self.id,
