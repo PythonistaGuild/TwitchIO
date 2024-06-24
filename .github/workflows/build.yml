@@ -8,12 +8,11 @@ on:
 jobs:
   build:
     name: Build wheels
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.7", "3.10", "3.11"]
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
 
     steps:
       - name: Checkout
@@ -31,11 +30,11 @@ jobs:
           pip install '.[speed,sound]'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.19.1
+        run: pip wheel -w ./wheelhouse/ .
 
       - uses: actions/upload-artifact@v4
         with:
-          name: artifact-cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: artifact-wheels
           path: ./wheelhouse/*.whl
 
   sdist:
