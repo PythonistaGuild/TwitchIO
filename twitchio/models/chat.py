@@ -74,7 +74,7 @@ class Chatters:
     users: HTTPAsyncIterator[PartialUser]
         The PartialUser object of the chatter.
     total: int
-        The the total number of users that are connected to the chat room. This may vary as your iterate through pages.
+        The the total number of users that are connected to the chat room. This may vary as you iterate through pages.
     """
 
     def __init__(self, iterator: HTTPAsyncIterator[PartialUser], data: ChattersResponse) -> None:
