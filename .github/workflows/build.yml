@@ -34,7 +34,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: artifact-wheels
+          name: artifact-wheels-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
 
   sdist:
