@@ -31,7 +31,7 @@ import sys
 import time
 import traceback
 from functools import partial
-from typing import Union, Optional, List, TYPE_CHECKING
+from typing import Union, Callable, Optional, List, Tuple, TYPE_CHECKING
 
 import aiohttp
 
@@ -57,7 +57,7 @@ class WSConnection:
         client: "Client",
         token: str = None,
         modes: tuple = None,
-        initial_channels: List[str] = None,
+        initial_channels: Union[List[str], Tuple[str, ...], Callable[[], Union[List[str], Tuple[str, ...]]], None] = None,
         retain_cache: Optional[bool] = True,
     ):
         self._loop = loop

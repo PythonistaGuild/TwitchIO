@@ -31,7 +31,7 @@ import traceback
 import types
 import warnings
 from functools import partial
-from typing import Callable, Optional, Union, Coroutine, Dict, List, TYPE_CHECKING, Mapping, Awaitable
+from typing import Callable, Optional, Union, Coroutine, Dict, List, Tuple, TYPE_CHECKING, Mapping, Awaitable
 
 from twitchio.client import Client
 from twitchio.http import TwitchHTTP
@@ -53,7 +53,7 @@ class Bot(Client):
         *,
         prefix: Union[str, list, tuple, set, Callable, Coroutine],
         client_secret: str = None,
-        initial_channels: Union[list, tuple, Callable] = None,
+        initial_channels: Union[List[str], Tuple[str, ...], Callable[[], Union[List[str], Tuple[str, ...]]], None] = None,
         heartbeat: Optional[float] = 30.0,
         retain_cache: Optional[bool] = True,
         **kwargs,
