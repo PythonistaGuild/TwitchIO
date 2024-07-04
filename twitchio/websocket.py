@@ -57,7 +57,9 @@ class WSConnection:
         client: "Client",
         token: str = None,
         modes: tuple = None,
-        initial_channels: Union[List[str], Tuple[str, ...], Callable[[], Union[List[str], Tuple[str, ...]]], None] = None,
+        initial_channels: Union[
+            List[str], Tuple[str, ...], Callable[[], Union[List[str], Tuple[str, ...]]], None
+        ] = None,
         retain_cache: Optional[bool] = True,
     ):
         self._loop = loop

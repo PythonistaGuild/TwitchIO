@@ -76,7 +76,9 @@ class Client:
         token: str,
         *,
         client_secret: str = None,
-        initial_channels: Union[List[str], Tuple[str, ...], Callable[[], Union[List[str], Tuple[str, ...]]], None] = None,
+        initial_channels: Union[
+            List[str], Tuple[str, ...], Callable[[], Union[List[str], Tuple[str, ...]]], None
+        ] = None,
         loop: asyncio.AbstractEventLoop = None,
         heartbeat: Optional[float] = 30.0,
         retain_cache: Optional[bool] = True,
