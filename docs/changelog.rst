@@ -1,6 +1,24 @@
 :orphan:
 
 
+2.10.1
+=======
+- ext.sounds
+    - Additions
+        - Added :class:`Twitchio.ext.sounds.AudioQueueManager` to manage a queue of audio files to be played sequentially with optional repeat functionality.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.add_audio` to add a new audio file to the queue.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.play_next` to play the next audio file in the queue.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.skip_audio` to stop the currently playing audio file.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.stop_audio` to stop the currently playing audio file and reset the playing flag.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.pause_audio` to pause the currently playing audio file.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.resume_audio` to resume the currently paused audio file.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.clear_queue` to clear all audio files from the queue.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.pause_queue` to pause the processing of the queue.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.resume_queue` to resume the processing of the queue.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.get_queue_contents` to retrieve the current contents of the queue.
+        - Added :method:`Twitchio.ext.sounds.AudioQueueManager.queue_loop` to continuously check the queue and play the next audio file if not currently playing and not paused.
+
+
 2.10.0
 =======
 - TwitchIO
