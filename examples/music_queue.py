@@ -6,7 +6,7 @@ from twitchio.ext.sounds import queuemanager
 class Bot(commands.Bot):
 
     def __init__(self):
-        super().__init__(token="TOKEN", prefix="!", initial_channels=["sockheadrps"])
+        super().__init__(token="TOKEN", prefix="!", initial_channels=["CHANNEL"])
         self.audio_manager = queuemanager.AudioQueueManager()
         self.song_dict = {
             "song_one": "C:\\PATH\\TO\\FILE.mp3",
