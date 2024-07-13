@@ -96,23 +96,18 @@ class Client:
 
         adapter: Any = options.get("adapter", None) or AiohttpAdapter
         self._adapter: Any = adapter(client=self)
-
-        # Conduits...
         self._pool: ConduitPool = ConduitPool(client=self)
-
-        # Event listeners...
-        # Cog listeners should be partials with injected self...
-        # When unloading/reloading cogs, the listeners should be removed and re-added to ensure upto date state...
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
 
-        # TODO: Temp logic for testing...
-        self._blocker: asyncio.Event = asyncio.Event()
         self._login_called: bool = False
         self._dump_tokens: bool = True
         self._has_closed: bool = False
 
+        self.__waiter: asyncio.Event = asyncio.Event()
+
     @property
     def pool(self) -> ConduitPool:
+        # TODO: Docs...
         return self._pool
 
     async def event_error(self, payload: EventErrorPayload) -> None:
@@ -146,8 +141,7 @@ class Client:
                 logger.error('Ignoring Exception in listener "%s.event_error":\n', self.__qualname__, exc_info=inner)
 
     def dispatch(self, event: str, payload: Any | None = None) -> None:
-        # TODO: Proper payload type...
-        name: str = "event_" + event.removeprefix("event_")
+        name: str = "event_" + event
 
         listeners: set[Callable[..., Coroutine[Any, Any, None]]] = self._listeners[name]
         extra: Callable[..., Coroutine[Any, Any, None]] | None = getattr(self, name, None)
@@ -230,27 +224,33 @@ class Client:
             Whether to call the [`.dump_tokens`][twitchio.Client.dump_tokens] method when the Client shuts down.
             Defaults to `True`.
         """
-        if self._has_closed:
-            raise RuntimeError("Can not start an already closed Client.")
+        self.__waiter.clear()
 
         self._dump_tokens = dump_tokens
-
         await self.login(token=token)
 
         if with_adapter:
             await self._adapter.run()
 
-        await self._block()
-
-    async def _block(self) -> None:
-        # TODO: Temp METHOD for testing...
-
         try:
-            await self._blocker.wait()
-        except KeyboardInterrupt:
+            await self.__waiter.wait()
+        finally:
             await self.close()
 
+    def run(self, token: str | None = None, *, with_adapter: bool = True, dump_tokens: bool = True) -> None:
+        # TODO: Docs...
+
+        async def run() -> None:
+            async with self:
+                await self.start(token=token, with_adapter=with_adapter, dump_tokens=dump_tokens)
+
+        try:
+            asyncio.run(run())
+        except KeyboardInterrupt:
+            pass
+
     async def close(self) -> None:
+        # TODO: Docs...
         if self._has_closed:
             return
 
@@ -267,8 +267,7 @@ class Client:
             except Exception:
                 pass
 
-        # TODO: Temp logic for testing...
-        self._blocker.set()
+        self.__waiter.set()
 
     async def add_token(self, token: str, refresh: str) -> None:
         await self._http.add_token(token, refresh)
