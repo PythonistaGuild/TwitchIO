@@ -80,6 +80,8 @@ __all__ = (
     "ChannelTeamsResponseData",
     "TeamsResponseData",
     "VideosResponseData",
+    "WarnChatUserResponseData",
+    "WarnChatUserResponse",
 )
 
 T = TypeVar("T")
@@ -1642,3 +1644,14 @@ class VideosResponse(TypedDict):
 
 class DeleteVideosResponse(TypedDict):
     data: list[str]
+
+
+class WarnChatUserResponseData(TypedDict):
+    broadcaster_id: str
+    user_id: str
+    moderator_id: str
+    reason: str
+
+
+class WarnChatUserResponse(TypedDict):
+    data: list[WarnChatUserResponseData]

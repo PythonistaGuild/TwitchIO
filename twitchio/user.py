@@ -65,6 +65,7 @@ if TYPE_CHECKING:
         ShieldModeStatus,
         Timeout,
         UnbanRequest,
+        Warning,
     )
     from .models.polls import Poll
     from .models.predictions import Prediction
@@ -3262,6 +3263,38 @@ class PartialUser:
         """
         data = await self._http.get_active_user_extensions(user_id=self.id, token_for=token_for)
         return ActiveExtensions(data["data"])
+
+    async def warn_user(self, *, moderator_id: str | int, user_id: str | int, reason: str, token_for: str) -> Warning:
+        """
+        Warns a user in the specified broadcaster's chat room, preventing them from chat interaction until the warning is acknowledged.
+        New warnings can be issued to a user when they already have a warning in the channel (new warning will replace old warning).
+
+        ??? note
+            Requires a user access token that includes the `moderator:manage:warnings` scope.
+            moderator_id must match the user id in the user access token.
+
+        Parameters
+        ----------
+        moderator_id: str | int
+            The ID of the user who requested the warning.
+        user_id: str | int
+            The ID of the user being warned.
+        reason: str
+            The reason provided for warning.
+        token_for: str
+            User access token that includes the `moderator:manage:warnings` scope.
+
+        Returns
+        -------
+        ActiveExtensions
+            ActiveExtensions object.
+        """
+        from .models.moderation import Warning
+
+        data = await self._http.post_warn_chat_user(
+            broadcaster_id=self.id, moderator_id=moderator_id, user_id=user_id, reason=reason, token_for=token_for
+        )
+        return Warning(data["data"][0], http=self._http)
 
 
 class User(PartialUser):

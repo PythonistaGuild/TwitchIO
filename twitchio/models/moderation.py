@@ -43,6 +43,7 @@ if TYPE_CHECKING:
         ResolveUnbanRequestsResponseData,
         ShieldModeStatusResponseData,
         UnbanRequestsResponseData,
+        WarnChatUserResponseData,
     )
 
 __all__ = (
@@ -54,6 +55,7 @@ __all__ = (
     "BlockedTerm",
     "ShieldModeStatus",
     "Timeout",
+    "Warning",
 )
 
 
@@ -392,3 +394,33 @@ class ShieldModeStatus:
 
     def __repr__(self) -> str:
         return f"<ShieldModeStatus active={self.active} moderator={self.moderator} last_activated_at={self.last_activated_at}>"
+
+
+class Warning:
+    """
+    Represents a warning to a user.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The channel in which the warning will take effect.
+    user: PartialUser
+        The warned user.
+    moderator: PartialUser
+        The moderator who applied the warning.
+    reason: str
+        The reason provided for warning.
+    """
+
+    __slots__ = ("broadcaster", "user", "moderator", "reason")
+
+    def __init__(self, data: WarnChatUserResponseData, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], None, http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], None, http=http)
+        self.reason: str = data["reason"]
+
+    def __repr__(self) -> str:
+        return (
+            f"<Warning broadcaster={self.broadcaster} user={self.user} moderator={self.moderator} reason={self.reason}>"
+        )
