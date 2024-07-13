@@ -48,7 +48,7 @@ class _scope_property:
             raise TypeError(f"Expected bool for scope, got {type(value).__name__}")
 
     def __str__(self) -> str:
-        return self._name.replace("_", ":")
+        return self._name.replace("_", ":", 2)
 
     def quoted(self) -> str:
         return urllib.parse.quote(str(self))
@@ -165,7 +165,7 @@ class Scopes(metaclass=_ScopeMeta):
 
         for scope in scopes:
             if isinstance(scope, str):
-                prop = getattr(self, scope.replace(":", "_"))
+                prop = getattr(self, scope.replace(":", "_"), 2)
             elif isinstance(scope, _scope_property):  # type: ignore
                 prop = scope
             else:
