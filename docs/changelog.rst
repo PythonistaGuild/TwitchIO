@@ -27,19 +27,39 @@
 
 - ext.commands
     - Changes
-        - Added which alias failed to load in the error raised by :func:`~twitchio.ext.commands.Context.add_command`
+        - Added which alias failed to load in the error raised by :func:`~twitchio.ext.commands.Bot.add_command`
+    
+    - Bug fixes
+        - fix string parser not properly parsing specific quoted strings
 
 - ext.eventsub
     - Additions
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_create <EventSubClient.subscribe_channel_unban_request_create>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create <EventSubWSClient.subscribe_channel_unban_request_create>`
-        - Added :method:`Twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve <EventSubClient.subscribe_channel_unban_request_resolve>` / 
-            :method:`Twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve <EventSubWSClient.subscribe_channel_unban_request_resolve>`
+        - Added :meth:`EventSubClient.subscribe_channel_unban_request_create <twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_create>` /
+            :meth:`EventSubWSClient.subscribe_channel_unban_request_create <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_create>`
+        - Added :meth:`EventSubClient.subscribe_channel_unban_request_resolve <twitchio.ext.eventsub.EventSubClient.subscribe_channel_unban_request_resolve>` / 
+            :meth:`EventSubWSClient.subscribe_channel_unban_request_resolve <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_unban_request_resolve>`
+        - Added :meth:`EventSubClient.subscribe_automod_terms_update <twitchio.ext.eventsub.EventSubClient.subscribe_automod_terms_update>` / 
+            :meth:`EventSubWSClient.subscribe_automod_terms_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_terms_update>`
+        - Added :meth:`EventSubClient.subscribe_automod_settings_update <twitchio.ext.eventsub.EventSubClient.subscribe_automod_settings_update>` / 
+            :meth:`EventSubWSClient.subscribe_automod_settings_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_settings_update>`
+        - Added :meth:`EventSubClient.subscribe_automod_message_update <twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_update>` / 
+            :meth:`EventSubWSClient.subscribe_automod_message_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_update>`
+        - Added :meth:`EventSubClient.subscribe_automod_message_hold <twitchio.ext.eventsub.EventSubClient.subscribe_automod_message_hold>` / 
+            :meth:`EventSubWSClient.subscribe_automod_message_hold <twitchio.ext.eventsub.EventSubWSClient.subscribe_automod_message_hold>`
+        - Added :meth:`EventSubClient.subscribe_channel_moderate <twitchio.ext.eventsub.EventSubClient.subscribe_channel_moderate>` / 
+            :meth:`EventSubWSClient.subscribe_channel_moderate <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_moderate>`
+        - Added :meth:`EventSubClient.subscribe_suspicious_user_update <twitchio.ext.eventsub.EventSubClient.subscribe_suspicious_user_update>` / 
+            :meth:`EventSubWSClient.subscribe_suspicious_user_update <twitchio.ext.eventsub.EventSubWSClient.subscribe_suspicious_user_update>`
+        - Added :meth:`EventSubClient.subscribe_channel_vip_add <twitchio.ext.eventsub.EventSubClient.subscribe_channel_vip_add>` / 
+            :meth:`EventSubWSClient.subscribe_channel_vip_add <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_vip_add>`
+        - Added :meth:`EventSubClient.subscribe_channel_vip_remove <twitchio.ext.eventsub.EventSubClient.subscribe_channel_vip_remove>` / 
+            :meth:`EventSubWSClient.subscribe_channel_vip_remove <twitchio.ext.eventsub.EventSubWSClient.subscribe_channel_vip_remove>`
+        - Added all accompanying models for those endpoints.
 - ext.sounds
     - Additions
-        - Added TinyTag as a dependency to support retrieving audio metadata using TinyTag in `ext.sounds.__init__.py`.
-        - added :method:`Twitchio.ext.sounds.rate setter.
-        - added :method:`Twitchio.ext.sounds.channels setter.
+        - Added TinyTag as a dependency to support retrieving audio metadata.
+        - added :meth:`twitchio.ext.sounds.Sound.rate` setter.
+        - added :meth:`twitchio.ext.sounds.Sound.channels` setter.
 
 
 2.9.2

@@ -483,6 +483,9 @@ class EventSubWSClient:
     async def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int], token: str):
         await self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster, token)
 
+    async def subscribe_channel_auto_reward_redeem(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.auto_reward_redeem, broadcaster, token)
+
     async def subscribe_channel_shield_mode_begin(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
     ):
@@ -555,3 +558,23 @@ class EventSubWSClient:
         await self._subscribe_with_broadcaster_moderator(
             models.SubscriptionTypes.automod_terms_update, broadcaster, moderator, token
         )
+
+    async def subscribe_suspicious_user_update(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        await self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.suspicious_user_update, broadcaster, moderator, token
+        )
+
+    async def subscribe_channel_moderate(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int], token: str
+    ):
+        await self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_moderate, broadcaster, moderator, token
+        )
+
+    async def subscribe_channel_vip_add(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_add, broadcaster, token)
+
+    async def subscribe_channel_vip_remove(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_remove, broadcaster, token)

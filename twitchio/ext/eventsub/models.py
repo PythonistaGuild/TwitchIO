@@ -1277,7 +1277,7 @@ class StreamOnlineData(EventData):
 
     __slots__ = "broadcaster", "id", "type", "started_at"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
         self.type: Literal["live", "playlist", "watch_party", "premier", "rerun"] = data["type"]
@@ -1296,7 +1296,7 @@ class StreamOfflineData(EventData):
 
     __slots__ = ("broadcaster",)
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster = _transform_user(client, data, "broadcaster_user")
 
 
@@ -1314,7 +1314,7 @@ class UserAuthorizationGrantedData(EventData):
 
     __slots__ = "client_id", "user"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "user")
         self.client_id: str = data["client_id"]
 
@@ -1333,7 +1333,7 @@ class UserAuthorizationRevokedData(EventData):
 
     __slots__ = "client_id", "user"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "user")
         self.client_id: str = data["client_id"]
 
@@ -1354,7 +1354,7 @@ class UserUpdateData(EventData):
 
     __slots__ = "user", "email", "description"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "user")
         self.email: Optional[str] = data["email"]
         self.description: str = data["description"]
@@ -1384,7 +1384,7 @@ class ChannelGoalBeginProgressData(EventData):
 
     __slots__ = "user", "id", "type", "description", "current_amount", "target_amount", "started_at"
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
         self.type: str = data["type"]
@@ -1432,7 +1432,7 @@ class ChannelGoalEndData(EventData):
         "ended_at",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.user = _transform_user(client, data, "broadcaster_user")
         self.id: str = data["id"]
         self.type: str = data["type"]
@@ -1460,7 +1460,7 @@ class ChannelShieldModeBeginData(EventData):
 
     __slots__ = ("broadcaster", "moderator", "started_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
@@ -1482,7 +1482,7 @@ class ChannelShieldModeEndData(EventData):
 
     __slots__ = ("broadcaster", "moderator", "ended_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.ended_at: datetime.datetime = _parse_datetime(data["ended_at"])
@@ -1522,7 +1522,7 @@ class ChannelShoutoutCreateData(EventData):
         "target_cooldown_ends_at",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.to_broadcaster: PartialUser = _transform_user(client, data, "to_broadcaster_user")
@@ -1552,7 +1552,7 @@ class ChannelShoutoutReceiveData(EventData):
 
     __slots__ = ("broadcaster", "from_broadcaster", "started_at", "viewer_count")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.from_broadcaster: PartialUser = _transform_user(client, data, "to_broadcaster_user")
         self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
@@ -1605,7 +1605,7 @@ class ChannelCharityDonationData(EventData):
         "donation_currency",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.id: str = data["id"]
         self.campaign_id: str = data["campaign_id"]
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
@@ -1627,9 +1627,9 @@ class ChannelUnbanRequestCreateData(EventData):
     -----------
     id: :class:`str`
         The ID of the ban request.
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the user was banned.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that was banned.
     text: :class:`str`
         The unban request text the user submitted.
@@ -1639,7 +1639,7 @@ class ChannelUnbanRequestCreateData(EventData):
 
     __slots__ = ("id", "broadcaster", "user", "text", "created_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.id: str = data["id"]
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
         self.user: PartialUser = _transform_user(client, data, "user")
@@ -1655,11 +1655,11 @@ class ChannelUnbanRequestResolveData(EventData):
     -----------
     id: :class:`str`
         The ID of the ban request.
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the user was banned.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that was banned.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator that handled this unban request.
     resolution_text: :class:`str`
         The reasoning provided by the moderator.
@@ -1669,7 +1669,7 @@ class ChannelUnbanRequestResolveData(EventData):
 
     __slots__ = ("id", "broadcaster", "user", "text", "created_at")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.id: str = data["id"]
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
         self.user: PartialUser = _transform_user(client, data, "user")
@@ -1687,9 +1687,9 @@ class AutomodMessageHoldData(EventData):
         The ID of the message.
     message_content: :class:`str`
         The contents of the message
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the message was held.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that sent the message.
     level: :class:`int`
         The level of alarm raised for this message.
@@ -1737,7 +1737,7 @@ class AutomodMessageHoldData(EventData):
         "created_at",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.message_id: str = data["message_id"]
         self.message_content: str = data["message"]
         self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
@@ -1758,11 +1758,11 @@ class AutomodMessageUpdateData(EventData):
         The ID of the message.
     message_content: :class:`str`
         The contents of the message
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster from which the message was held.
-    user: :class:`PartialUser`
+    user: :class:`~twitchio.PartialUser`
         The user that sent the message.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator that updated the message status.
     status: :class:`str`
         The new status of the message. Typically one of ``approved`` or ``denied``.
@@ -1814,7 +1814,7 @@ class AutomodMessageUpdateData(EventData):
         "status",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.message_id: str = data["message_id"]
         self.message_content: str = data["message"]
         self.message_fragments: Dict[str, Dict[str, Any]] = data["fragments"]
@@ -1833,9 +1833,9 @@ class AutomodSettingsUpdateData(EventData):
 
     Attributes
     ------------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster for which the settings were updated.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator that updated the settings.
     overall :class:`int` | ``None``
         The overall level of automod aggressiveness.
@@ -1871,7 +1871,7 @@ class AutomodSettingsUpdateData(EventData):
         "sexual_terms",
     )
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.overall: Optional[int] = data["overall"]
@@ -1895,9 +1895,9 @@ class AutomodTermsUpdateData(EventData):
 
     Attributes
     -----------
-    broadcaster: :class:`PartialUser`
+    broadcaster: :class:`~twitchio.PartialUser`
         The broadcaster for which the terms were updated.
-    moderator: :class:`PartialUser`
+    moderator: :class:`~twitchio.PartialUser`
         The moderator who updated the terms.
     action: :class:`str`
         The action type.
@@ -1909,12 +1909,370 @@ class AutomodTermsUpdateData(EventData):
 
     __slots__ = ("broadcaster", "moderator", "action", "from_automod", "terms")
 
-    def __init__(self, client: EventSubClient, data: dict):
+    def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
         self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
         self.action: str = data["action"]
         self.from_automod: bool = data["from_automod"]
         self.terms: List[str] = data["terms"]
+
+
+class ChannelModerateData(EventData):
+    """
+    Represents a channel moderation event.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The channel where the moderation event occurred.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator who performed the action.
+    action: :class:`str`
+        The action performed.
+    followers: Optional[:class:`Followers`]
+        Metadata associated with the followers command.
+    slow: Optional[:class:`Slow`]
+        Metadata associated with the slow command.
+    vip: Optional[:class:`VIPStatus`]
+        Metadata associated with the vip command.
+    unvip: Optional[:class:`VIPStatus`]
+        Metadata associated with the vip command.
+    mod: Optional[:class:`ModeratorStatus`]
+        Metadata associated with the mod command.
+    unmod: Optional[:class:`ModeratorStatus`]
+        Metadata associated with the mod command.
+    ban: Optional[:class:`BanStatus`]
+        Metadata associated with the ban command.
+    unban: Optional[:class:`BanStatus`]
+        Metadata associated with the unban command.
+    timeout: Optional[:class:`TimeoutStatus`]
+        Metadata associated with the timeout command.
+    untimeout: Optional[:class:`TimeoutStatus`]
+        Metadata associated with the untimeout command.
+    raid: Optional[:class:`RaidStatus`]
+        Metadata associated with the raid command.
+    unraid: Optional[:class:`RaidStatus`]
+        Metadata associated with the unraid command.
+    delete: Optional[:class:`Delete`]
+        Metadata associated with the delete command.
+    automod_terms: Optional[:class:`AutoModTerms`]
+        Metadata associated with the automod terms changes.
+    unban_request: Optional[:class:`UnBanRequest`]
+        Metadata associated with an unban request.
+    """
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "action",
+        "followers",
+        "slow",
+        "vip",
+        "unvip",
+        "mod",
+        "unmod",
+        "ban",
+        "unban",
+        "timeout",
+        "untimeout",
+        "raid",
+        "unraid",
+        "delete",
+        "automod_terms",
+        "unban_request",
+    )
+
+    class Followers:
+        """
+        Metadata associated with the followers command.
+
+        Attributes
+        -----------
+        follow_duration_minutes: :class:`int`
+            The length of time, in minutes, that the followers must have followed the broadcaster to participate in the chat room.
+        """
+
+        def __init__(self, data: dict) -> None:
+            self.follow_duration_minutes: int = data["follow_duration_minutes"]
+
+    class Slow:
+        """
+        Metadata associated with the slow command.
+
+        Attributes
+        -----------
+        wait_time_seconds: :class:`int`
+            The amount of time, in seconds, that users need to wait between sending messages.
+        """
+
+        def __init__(self, data: dict) -> None:
+            self.wait_time_seconds: int = data["wait_time_seconds"]
+
+    class VIPStatus:
+        """
+        Metadata associated with the vip / unvip command.
+
+        Attributes
+        -----------
+        user: :class:`~twitchio.PartialUser`
+            The user who is gaining or losing VIP access.
+        """
+
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+
+    class ModeratorStatus:
+        """
+        Metadata associated with the mod / unmod command.
+
+        Attributes
+        -----------
+        user: :class:`~twitchio.PartialUser`
+            The user who is gaining or losing moderator access.
+        """
+
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+
+    class BanStatus:
+        """
+        Metadata associated with the ban / unban command.
+
+        Attributes
+        -----------
+        user: :class:`~twitchio.PartialUser`
+            The user who is banned / unbanned.
+        reason: Optional[:class:`str`]
+            Reason for the ban.
+        """
+
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.reason: Optional[str] = data.get("reason")
+
+    class TimeoutStatus:
+        """
+        Metadata associated with the timeout / untimeout command.
+
+        Attributes
+        -----------
+        user: :class:`~twitchio.PartialUser`
+            The user who is timedout / untimedout.
+        reason: Optional[:class:`str`]
+            Reason for the timeout.
+        expires_at: Optional[:class:`datetime.datetime`]
+            Datetime the timeout expires.
+        """
+
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.reason: Optional[str] = data.get("reason")
+            self.expires_at: Optional[datetime.datetime] = (
+                _parse_datetime(data["expires_at"]) if data.get("expires_at") is not None else None
+            )
+
+    class RaidStatus:
+        """
+        Metadata associated with the raid / unraid command.
+
+        Attributes
+        -----------
+        user: :class:`~twitchio.PartialUser`
+            The user who is timedout / untimedout.
+        viewer_count: :class:`int`
+            The viewer count.
+        """
+
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.viewer_count: int = data["viewer_count"]
+
+    class Delete:
+        """
+        Metadata associated with the delete command.
+
+        Attributes
+        -----------
+        user: :class:`~twitchio.PartialUser`
+            The user who is timedout / untimedout.
+        message_id: :class:`str`
+            The id of deleted message.
+        message_body: :class:`str`
+            The message body of the deleted message.
+        """
+
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.message_id: str = data["message_id"]
+            self.message_body: str = data["message_body"]
+
+    class AutoModTerms:
+        """
+        Metadata associated with the automod terms change.
+
+        Attributes
+        -----------
+        action: :class:`Literal["add", "remove"]`
+            Either “add” or “remove”.
+        list: :class:`Literal["blocked", "permitted"]`
+            Either “blocked” or “permitted”.
+        terms: List[:class:`str`]
+            Terms being added or removed.
+        from_automod: :class:`bool`
+            Whether the terms were added due to an Automod message approve/deny action.
+        """
+
+        def __init__(self, data: dict) -> None:
+            self.action: Literal["add", "remove"] = data["action"]
+            self.list: Literal["blocked", "permitted"] = data["list"]
+            self.terms: List[str] = data["terms"]
+            self.from_automod: bool = data["from_automod"]
+
+    class UnBanRequest:
+        """
+        Metadata associated with the slow command.
+
+        Attributes
+        -----------
+        user: :class:`~twitchio.PartialUser`
+            The user who is requesting an unban.
+        is_approved: :class:`bool`
+            Whether or not the unban request was approved or denied.
+        moderator_message: :class:`str`
+            The message included by the moderator explaining their approval or denial.
+        """
+
+        def __init__(self, client: EventSubClient, data: dict) -> None:
+            self.user: PartialUser = _transform_user(client, data, "user")
+            self.is_approved: bool = data["is_approved"]
+            self.moderator_message: str = data["moderator_message"]
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster = _transform_user(client, data, "broadcaster_user")
+        self.moderator = _transform_user(client, data, "moderator_user")
+        self.action: str = data["action"]
+        self.followers = self.Followers(data["followers"]) if data.get("followers") is not None else None
+        self.slow = self.Slow(data["slow"]) if data.get("slow") is not None else None
+        self.vip = self.VIPStatus(client, data["vip"]) if data.get("vip") is not None else None
+        self.unvip = self.VIPStatus(client, data["unvip"]) if data.get("unvip") is not None else None
+        self.mod = self.ModeratorStatus(client, data["mod"]) if data.get("mod") is not None else None
+        self.unmod = self.ModeratorStatus(client, data["unmod"]) if data.get("unmod") is not None else None
+        self.ban = self.BanStatus(client, data["ban"]) if data.get("ban") is not None else None
+        self.unban = self.BanStatus(client, data["unban"]) if data.get("unban") is not None else None
+        self.timeout = self.TimeoutStatus(client, data["timeout"]) if data.get("timeout") is not None else None
+        self.untimeout = self.TimeoutStatus(client, data["untimeout"]) if data.get("untimeout") is not None else None
+        self.raid = self.RaidStatus(client, data["raid"]) if data.get("raid") is not None else None
+        self.unraid = self.RaidStatus(client, data["unraid"]) if data.get("unraid") is not None else None
+        self.delete = self.Delete(client, data["delete"]) if data.get("delete") is not None else None
+        self.automod_terms = self.AutoModTerms(data["automod_terms"]) if data.get("automod_terms") is not None else None
+        self.unban_request = (
+            self.UnBanRequest(client, data["unban_request"]) if data.get("unban_request") is not None else None
+        )
+
+
+class SuspiciousUserUpdateData(EventData):
+    """
+    Represents a suspicious user update event.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The channel where the treatment for a suspicious user was updated.
+    moderator: :class:`~twitchio.PartialUser`
+        The moderator who updated the terms.
+    user: :class:`~twitchio.PartialUser`
+        The the user that sent the message.
+    trust_status: :class:`Literal["active_monitoring", "restricted", "none"]`
+        The status set for the suspicious user. Can be the following: “none”, “active_monitoring”, or “restricted”.
+    """
+
+    __slots__ = ("broadcaster", "moderator", "user", "trust_status")
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator_user")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.trust_status: Literal["active_monitoring", "restricted", "none"] = data["low_trust_status"]
+
+
+class AutoCustomReward:
+    """
+    A reward object for an Auto Reward Redeem.
+
+    Attributes
+    -----------
+    type: :class:`str`
+        The type of the reward. One of ``single_message_bypass_sub_mode``, ``send_highlighted_message``, ``random_sub_emote_unlock``,
+        ``chosen_sub_emote_unlock``, ``chosen_modified_sub_emote_unlock``, ``message_effect``, ``gigantify_an_emote``, ``celebration``.
+    cost: :class:`int`
+        How much the reward costs.
+    unlocked_emote_id: Optional[:class:`str`]
+        The unlocked emote, if applicable.
+    unlocked_emote_name: Optional[:class:`str`]
+        The unlocked emote, if applicable.
+    """
+
+    def __init__(self, data: dict):
+        self.type: str = data["type"]
+        self.cost: int = data["cost"]
+        self.unlocked_emote_id: Optional[str] = data["unlocked_emote"] and data["unlocked_emote"]["id"]
+        self.unlocked_emote_name: Optional[str] = data["unlocked_emote"] and data["unlocked_emote"]["name"]
+
+
+class AutoRewardRedeem(EventData):
+    """
+    Represents an automatic reward redemption.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The channel where the reward was redeemed.
+    user: :class:`~twitchio.PartialUser`
+        The user that redeemed the reward.
+    id: :class:`str`
+        The ID of the redemption.
+    reward: :class:`AutoCustomReward`
+        The reward that was redeemed.
+    message: :class:`str`
+        The message the user sent.
+    message_emotes: :class:`dict`
+        The emote data for the message.
+    user_input: Optional[:class:`str`]
+        The input to the reward, if it requires any.
+    redeemed_at: :class:`datetime.datetime`
+        When the reward was redeemed.
+    """
+
+    __slots__ = ("broadcaster", "user", "id", "reward", "message", "message_emotes", "user_input", "redeemed_at")
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
+        self.id: str = data["id"]
+        self.reward = AutoCustomReward(data["reward"])
+        self.message: str = data["message"]
+        self.message_emotes: dict = data["message_emotes"]
+        self.user_input: Optional[str] = data["user_input"]
+        self.redeemed_at: datetime.datetime = _parse_datetime(data["redeemed_at"])
+
+
+class ChannelVIPAddRemove(EventData):
+    """
+    Represents a VIP being added/removed from a channel.
+
+    Attributes
+    -----------
+    broadcaster: :class:`~twitchio.PartialUser`
+        The channel that the VIP was added/removed from.
+    user: :class:`~twitchio.PartialUser`
+        The user that was added/removed as a VIP.
+    """
+
+    __slots__ = ("broadcaster", "user")
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.user: PartialUser = _transform_user(client, data, "user")
 
 
 _DataType = Union[
@@ -1956,6 +2314,10 @@ _DataType = Union[
     AutomodMessageUpdateData,
     AutomodSettingsUpdateData,
     AutomodTermsUpdateData,
+    SuspiciousUserUpdateData,
+    ChannelModerateData,
+    AutoRewardRedeem,
+    ChannelVIPAddRemove,
 ]
 
 
@@ -2003,6 +2365,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
         CustomRewardRedemptionAddUpdateData,
     )
 
+    auto_reward_redeem = "channel.channel_points_automatic_reward_redemption.add", 1, AutoRewardRedeem
+
     channel_goal_begin = "channel.goal.begin", 1, ChannelGoalBeginProgressData
     channel_goal_progress = "channel.goal.progress", 1, ChannelGoalBeginProgressData
     channel_goal_end = "channel.goal.end", 1, ChannelGoalEndData
@@ -2014,6 +2378,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     channel_shoutout_receive = "channel.shoutout.receive", 1, ChannelShoutoutReceiveData
 
     channel_charity_donate = "channel.charity_campaign.donate", 1, ChannelCharityDonationData
+
+    channel_moderate = "channel.moderate", 1, ChannelModerateData
 
     hypetrain_begin = "channel.hype_train.begin", 1, HypeTrainBeginProgressData
     hypetrain_progress = "channel.hype_train.progress", 1, HypeTrainBeginProgressData
@@ -2034,10 +2400,15 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     unban_request_create = "channel.unban_request.create", 1, ChannelUnbanRequestCreateData
     unban_request_resolve = "channel.unban_request.resolve", 1, ChannelUnbanRequestResolveData
 
+    channel_vip_add = "channel.vip.add", 1, ChannelVIPAddRemove
+    channel_vip_remove = "channel.vip.remove", 1, ChannelVIPAddRemove
+
     user_authorization_grant = "user.authorization.grant", 1, UserAuthorizationGrantedData
     user_authorization_revoke = "user.authorization.revoke", 1, UserAuthorizationRevokedData
 
     user_update = "user.update", 1, UserUpdateData
+
+    suspicious_user_update = "channel.suspicious_user.update", 1, SuspiciousUserUpdateData
 
 
 SubscriptionTypes = _SubscriptionTypes()

@@ -530,3 +530,27 @@ API Reference
 .. autoclass:: AutomodTermsUpdateData
     :members:
     :inherited-members:
+
+.. attributetable::: SuspiciousUserUpdateData
+
+.. autoclass:: SuspiciousUserUpdateData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelModerateData
+
+.. autoclass:: ChannelModerateData
+    :members:
+    :inherited-members:
+
+.. autoclass:: ChannelVIPAddRemove
+    :members:
+    :inherited-members:
+
+.. autoclass:: AutoCustomReward
+    :members:
+    :inherited-members:
+
+.. autoclass:: AutoRewardRedeem
+    :members:
+    :inherited-members:

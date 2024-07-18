@@ -248,6 +248,9 @@ class EventSubClient(web.Application):
     def subscribe_channel_prediction_end(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.prediction_end, broadcaster)
 
+    def subscribe_channel_auto_reward_redeem(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.auto_reward_redeem, broadcaster)
+
     def subscribe_channel_shield_mode_begin(
         self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
     ):
@@ -320,6 +323,26 @@ class EventSubClient(web.Application):
 
     def subscribe_channel_charity_donate(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_charity_donate, broadcaster)
+
+    def subscribe_suspicious_user_update(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.suspicious_user_update, broadcaster, moderator
+        )
+
+    def subscribe_channel_moderate(
+        self, broadcaster: Union[PartialUser, str, int], moderator: Union[PartialUser, str, int]
+    ):
+        return self._subscribe_with_broadcaster_moderator(
+            models.SubscriptionTypes.channel_moderate, broadcaster, moderator
+        )
+
+    def subscribe_channel_vip_add(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_add, broadcaster)
+
+    def subscribe_channel_vip_remove(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_remove, broadcaster)
 
     async def subscribe_user_authorization_granted(self):
         return await self._http.create_webhook_subscription(
