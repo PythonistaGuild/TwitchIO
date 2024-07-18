@@ -1,6 +1,6 @@
 import asyncio
 from twitchio.ext import sounds
-from typing import Optional
+from typing import Optional, List
 
 
 class AudioQueueManager:
@@ -23,7 +23,7 @@ class AudioQueueManager:
         Path of the currently playing audio file.
     """
 
-    def __init__(self, repeat_queue: Optional[bool] = True) -> None:
+    def __init__(self, repeat_queue: Optional[bool]=True) -> None:
         """
         Initializes an instance of AudioQueueManager with an empty queue and default settings.
 
@@ -34,7 +34,7 @@ class AudioQueueManager:
         """
         self.queue: asyncio.Queue[str] = asyncio.Queue()
         self.is_playing: bool = False
-        self.repeat_queue: bool = repeat_queue if repeat_queue is not None else True
+        self.repeat_queue: bool = repeat_queue
         self.queue_paused: bool = False
         self.player: sounds.AudioPlayer = sounds.AudioPlayer(callback=self.player_done)
         self.current_sound: str = ""
@@ -130,7 +130,7 @@ class AudioQueueManager:
         """
         self.queue_paused = False
 
-    def get_queue_contents(self) -> list[str]:
+    def get_queue_contents(self) -> List[str]:
         """
         Retrieves the current contents of the queue as a list.
 
