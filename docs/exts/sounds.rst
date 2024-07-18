@@ -185,3 +185,6 @@ API Reference
 
 .. autoclass:: AudioPlayer
     :members:
+
+.. autoclass:: AudioQueueManager
+    :members:

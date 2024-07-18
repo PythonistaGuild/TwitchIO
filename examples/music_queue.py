@@ -1,13 +1,12 @@
 import asyncio
 from twitchio.ext import commands, sounds
-from twitchio.ext.sounds import queuemanager
 
 
 class Bot(commands.Bot):
 
     def __init__(self):
         super().__init__(token="TOKEN", prefix="!", initial_channels=["CHANNEL"])
-        self.audio_manager = queuemanager.AudioQueueManager()
+        self.audio_manager = sounds.AudioQueueManager()
         self.song_dict = {
             "song_one": "C:\\PATH\\TO\\FILE.mp3",
             "song_two": "C:\\PATH\\TO\\FILE.mp3",
@@ -50,4 +49,3 @@ class Bot(commands.Bot):
 if __name__ == "__main__":
     bot = Bot()
     bot.run()
-

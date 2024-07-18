@@ -23,7 +23,7 @@ class AudioQueueManager:
         Path of the currently playing audio file.
     """
 
-    def __init__(self, repeat_queue: Optional[bool]=True) -> None:
+    def __init__(self, repeat_queue: Optional[bool] = True) -> None:
         """
         Initializes an instance of AudioQueueManager with an empty queue and default settings.
 

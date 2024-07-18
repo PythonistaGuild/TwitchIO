@@ -36,8 +36,10 @@ import pyaudio
 from yt_dlp import YoutubeDL
 from tinytag import TinyTag
 
+from .audioqueuemanager import AudioQueueManager
 
-__all__ = ("Sound", "AudioPlayer")
+
+__all__ = ("Sound", "AudioPlayer", "AudioQueueManager")
 
 
 logger = logging.getLogger(__name__)
