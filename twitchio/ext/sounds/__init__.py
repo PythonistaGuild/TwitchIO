@@ -59,9 +59,6 @@ else:
     ffmpeg_bin = "ffmpeg"
 
 
-__all__ = ("Sound", "AudioPlayer")
-
-
 @dataclasses.dataclass
 class OutputDevice:
     """Class which represents an OutputDevice usable with :class:`AudioPlayer` .
