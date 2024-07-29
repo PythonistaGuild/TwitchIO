@@ -1667,14 +1667,16 @@ class ChannelUnbanRequestResolveData(EventData):
         The resolution. either `accepted` or `denied`.
     """
 
-    __slots__ = ("id", "broadcaster", "user", "text", "created_at")
+    __slots__ = ("id", "broadcaster", "moderator" "user", "resolution_text", "created_at")
 
     def __init__(self, client: EventSubClient, data: dict) -> None:
         self.id: str = data["id"]
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster")
+        self.moderator: PartialUser = _transform_user(client, data, "moderator")
         self.user: PartialUser = _transform_user(client, data, "user")
-        self.text: str = data["text"]
+        self.resolution_text: str = data["text"]
         self.created_at: datetime.datetime = _parse_datetime(data["created_at"])
+        self.status: str = data["status"]
 
 
 class AutomodMessageHoldData(EventData):
