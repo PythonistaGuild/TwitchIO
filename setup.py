@@ -50,7 +50,7 @@ with open("README.rst") as f:
 
 sounds = [
     "yt-dlp>=2022.2.4",
-    'pyaudio==0.2.11; platform_system!="Windows"',
+    'pyaudio==0.2.14',
     'tinytag>=1.9.0',
 ]
 speed = [
@@ -89,6 +89,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Internet",
         "Topic :: Software Development :: Libraries",
         "Topic :: Software Development :: Libraries :: Python Modules",
