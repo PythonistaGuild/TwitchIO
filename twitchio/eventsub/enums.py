@@ -139,6 +139,8 @@ class SubscriptionTypes(enum.Enum):
     ChannelShieldModeEnd = "channel.shield_mode.end"
     ChannelShoutoutCreate = "channel.shoutout.create"
     ChannelShoutoutReceive = "channel.shoutout.receive"
+    ChannelWarningAcknowledgement = "channel.warning.acknowledge"
+    ChannelWarningSend = "channel.warning.send"
     StreamOnline = "stream.online"
     StreamOffline = "stream.offline"
     UserAuthorizationGrant = "user.authorization.grant"
