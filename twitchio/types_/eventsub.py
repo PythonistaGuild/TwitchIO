@@ -82,14 +82,22 @@ class BroadcasterUserEvent(BaseBroadcasterEvent):
     user_name: str
 
 
-class WebhookTransport:
+class WebhookTransport(TypedDict):
     method: Literal["webhook"]
     callback: str
 
 
-class WebsocketTransport:
+class WebsocketTransport(TypedDict):
     method: Literal["websocket"]
     session_id: str
+
+
+class WebsocketMetadata(TypedDict):
+    message_id: str
+    message_type: str
+    message_timestamp: str
+    subscription_type: str
+    subscription_version: str
 
 
 class BaseSubscription(TypedDict, Generic[T]):
@@ -102,25 +110,30 @@ class BaseSubscription(TypedDict, Generic[T]):
     created_at: str
 
 
-class WebhookSubscription(BaseSubscription[T], TypedDict):
+class WebhookSubscription(BaseSubscription[T]):
     transport: WebhookTransport
 
 
-class WebhookSocketSubscription(BaseSubscription[T], TypedDict):
+class WebhookSocketSubscription(BaseSubscription[T]):
     transport: WebhookTransport | WebsocketTransport
 
 
 class ChannelUpdateEvent(BaseBroadcasterEvent):
     title: str
     language: str
-    category_id: int
-    category_name: int
+    category_id: str
+    category_name: str
     content_classification_labels: list[str]
 
 
 class ChannelUpdateResponse(TypedDict):
     subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: ChannelUpdateEvent
+
+
+class WSChannelUpdateResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelUpdateResponse
 
 
 class ChannelFollowEvent(BroadcasterUserEvent):
@@ -130,6 +143,11 @@ class ChannelFollowEvent(BroadcasterUserEvent):
 class ChannelFollowResponse(TypedDict):
     subscription: WebhookSocketSubscription[BroadcasterModeratorCondition]
     event: ChannelFollowEvent
+
+
+class WSChannelFollowResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelFollowResponse
 
 
 class ChannelAdBreakBeginEvent(BaseBroadcasterEvent):
@@ -148,12 +166,22 @@ class ChannelAdBreakBeginResponse(TypedDict):
     event: ChannelAdBreakBeginEvent
 
 
+class WSChannelAdBreakBeginResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelAdBreakBeginResponse
+
+
 class ChannelChatClearEvent(BaseBroadcasterEvent): ...
 
 
 class ChannelChatClearResponse(TypedDict):
     subscription: WebhookSocketSubscription[BroadcasterUserCondition]
     event: ChannelChatClearEvent
+
+
+class WSChannelChatClearResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelChatClearResponse
 
 
 class ChannelChatClearMessagesEvent(BaseBroadcasterEvent):
@@ -167,6 +195,11 @@ class ChannelChatClearMessagesResponse(TypedDict):
     event: ChannelChatClearMessagesEvent
 
 
+class WSChannelChatClearMessagesResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelChatClearMessagesResponse
+
+
 class ChannelChatMessagesDeleteEvent(BaseBroadcasterEvent):
     target_user_id: str
     target_user_login: str
@@ -177,6 +210,11 @@ class ChannelChatMessagesDeleteEvent(BaseBroadcasterEvent):
 class ChannelChatMessagesDeleteResponse(TypedDict):
     subscription: WebhookSocketSubscription[BroadcasterUserCondition]
     event: ChannelChatMessagesDeleteEvent
+
+
+class WSChannelChatMessagesDeleteResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelChatMessagesDeleteResponse
 
 
 class ChannelChatSettingsUpdateEvent(BaseBroadcasterEvent):
@@ -195,6 +233,11 @@ class ChannelChatSettingsUpdateResponse(TypedDict):
     event: ChannelChatSettingsUpdateEvent
 
 
+class WSChannelChatSettingsUpdateResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelChatSettingsUpdateResponse
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
@@ -210,6 +253,11 @@ class GoalBeginProgressEvent(TypedDict):
 class GoalBeginProgressResponse(TypedDict):
     subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: GoalBeginProgressEvent
+
+
+class WSGoalBeginProgressResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: GoalBeginProgressResponse
 
 
 class GoalEndEvent(TypedDict):
@@ -231,6 +279,11 @@ class GoalEndResponse(TypedDict):
     event: GoalEndEvent
 
 
+class WSGoalEndResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: GoalEndResponse
+
+
 class StreamOnlineEvent(TypedDict):
     id: str
     broadcaster_user_id: str
@@ -245,6 +298,11 @@ class StreamOnlineResponse(TypedDict):
     event: StreamOnlineEvent
 
 
+class WSStreamOnlineResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: StreamOnlineResponse
+
+
 class StreamOfflineEvent(TypedDict):
     broadcaster_user_id: str
     broadcaster_user_login: str
@@ -254,6 +312,11 @@ class StreamOfflineEvent(TypedDict):
 class StreamOfflineResponse(TypedDict):
     subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: StreamOfflineEvent
+
+
+class WSStreamOfflineResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: StreamOfflineResponse
 
 
 class UserAuthorizationGrantEvent(TypedDict):
@@ -294,6 +357,11 @@ class UserUpdateResponse(TypedDict):
     event: UserUpdateEvent
 
 
+class WSUserUpdateResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: UserUpdateResponse
+
+
 class WhisperContent(TypedDict):
     text: str
 
@@ -312,3 +380,8 @@ class UserWhisperEvent(TypedDict):
 class UserWhisperResponse(TypedDict):
     subscription: WebhookSocketSubscription[UserCondition]
     event: UserWhisperEvent
+
+
+class WSUserWhisperResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: UserWhisperResponse
