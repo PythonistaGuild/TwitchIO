@@ -46,13 +46,17 @@ class ClientCondition(TypedDict):
     client_id: str
 
 
-class UserCondition(TypedDict):
-    user_id: str
+class BroadcasterCondition(TypedDict):
+    broadcaster_user_id: str
 
 
 class BroadcasterModeratorCondition(TypedDict):
     broadcaster_user_id: str
     moderator_user_id: str
+
+
+class UserCondition(TypedDict):
+    user_id: str
 
 
 class Transport(TypedDict):
@@ -69,6 +73,31 @@ class BaseSubscription(TypedDict, Generic[T]):
     condition: T
     transport: Transport
     created_at: str
+
+
+class StreamOnlineEvent(TypedDict):
+    id: str
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+    type: str
+    started_at: str
+
+
+class StreamOnlinePayload(TypedDict):
+    subscription: BaseSubscription[BroadcasterCondition]
+    event: StreamOnlineEvent
+
+
+class StreamOfflineEvent(TypedDict):
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+
+
+class StreamOfflinePayload(TypedDict):
+    subscription: BaseSubscription[BroadcasterCondition]
+    event: StreamOfflineEvent
 
 
 class UserAuthorizationGrantEvent(TypedDict):
