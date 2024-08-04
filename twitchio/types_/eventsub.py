@@ -58,10 +58,23 @@ class BroadcasterModeratorCondition(TypedDict):
 class UserCondition(TypedDict):
     user_id: str
 
+
 class BaseBroadcasterEvent(TypedDict):
     broadcaster_user_id: str
     broadcaster_user_login: str
     broadcaster_user_name: str
+
+
+class BaseBroadcasterModeratorEvent(BaseBroadcasterEvent):
+    moderator_user_id: str
+    moderator_user_login: str
+    moderator_user_name: str
+
+
+class BaseBroadcasterUserEvent(BaseBroadcasterEvent):
+    user_id: str
+    user_login: str
+    user_name: str
 
 
 class Transport(TypedDict):
@@ -91,6 +104,15 @@ class ChannelUpdateEvent(BaseBroadcasterEvent):
 class ChannelUpdateResponse(TypedDict):
     subscription: BaseSubscription[BroadcasterCondition]
     event: ChannelUpdateEvent
+
+
+class ChannelFollowEvent(BaseBroadcasterUserEvent):
+    followed_at: str
+
+
+class ChannelFollowResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterModeratorCondition]
+    event: ChannelFollowEvent
 
 
 class GoalBeginProgressEvent(TypedDict):
