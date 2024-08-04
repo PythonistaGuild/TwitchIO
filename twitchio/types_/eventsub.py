@@ -70,21 +70,26 @@ class BaseBroadcasterEvent(TypedDict):
     broadcaster_user_name: str
 
 
-class BaseBroadcasterModeratorEvent(BaseBroadcasterEvent):
+class BroadcasterModeratorEvent(BaseBroadcasterEvent):
     moderator_user_id: str
     moderator_user_login: str
     moderator_user_name: str
 
 
-class BaseBroadcasterUserEvent(BaseBroadcasterEvent):
+class BroadcasterUserEvent(BaseBroadcasterEvent):
     user_id: str
     user_login: str
     user_name: str
 
 
-class Transport(TypedDict):
-    method: str
-    callback: str  # TODO check for websocket payloads
+class WebhookTransport:
+    method: Literal["webhook"]
+    callback: str
+
+
+class WebsocketTransport:
+    method: Literal["websocket"]
+    session_id: str
 
 
 class BaseSubscription(TypedDict, Generic[T]):
@@ -94,8 +99,15 @@ class BaseSubscription(TypedDict, Generic[T]):
     status: str
     cost: NotRequired[int]
     condition: T
-    transport: Transport
     created_at: str
+
+
+class WebhookSubscription(BaseSubscription[T], TypedDict):
+    transport: WebhookTransport
+
+
+class WebhookSocketSubscription(BaseSubscription[T], TypedDict):
+    transport: WebhookTransport | WebsocketTransport
 
 
 class ChannelUpdateEvent(BaseBroadcasterEvent):
@@ -107,16 +119,16 @@ class ChannelUpdateEvent(BaseBroadcasterEvent):
 
 
 class ChannelUpdateResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: ChannelUpdateEvent
 
 
-class ChannelFollowEvent(BaseBroadcasterUserEvent):
+class ChannelFollowEvent(BroadcasterUserEvent):
     followed_at: str
 
 
 class ChannelFollowResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterModeratorCondition]
+    subscription: WebhookSocketSubscription[BroadcasterModeratorCondition]
     event: ChannelFollowEvent
 
 
@@ -132,7 +144,7 @@ class ChannelAdBreakBeginEvent(BaseBroadcasterEvent):
 
 
 class ChannelAdBreakBeginResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: ChannelAdBreakBeginEvent
 
 
@@ -140,7 +152,7 @@ class ChannelChatClearEvent(BaseBroadcasterEvent): ...
 
 
 class ChannelChatClearResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterUserCondition]
+    subscription: WebhookSocketSubscription[BroadcasterUserCondition]
     event: ChannelChatClearEvent
 
 
@@ -151,7 +163,7 @@ class ChannelChatClearMessagesEvent(BaseBroadcasterEvent):
 
 
 class ChannelChatClearMessagesResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterUserCondition]
+    subscription: WebhookSocketSubscription[BroadcasterUserCondition]
     event: ChannelChatClearMessagesEvent
 
 
@@ -163,7 +175,7 @@ class ChannelChatMessagesDeleteEvent(BaseBroadcasterEvent):
 
 
 class ChannelChatMessagesDeleteResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterUserCondition]
+    subscription: WebhookSocketSubscription[BroadcasterUserCondition]
     event: ChannelChatMessagesDeleteEvent
 
 
@@ -179,7 +191,7 @@ class ChannelChatSettingsUpdateEvent(BaseBroadcasterEvent):
 
 
 class ChannelChatSettingsUpdateResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterUserCondition]
+    subscription: WebhookSocketSubscription[BroadcasterUserCondition]
     event: ChannelChatSettingsUpdateEvent
 
 
@@ -196,7 +208,7 @@ class GoalBeginProgressEvent(TypedDict):
 
 
 class GoalBeginProgressResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: GoalBeginProgressEvent
 
 
@@ -215,7 +227,7 @@ class GoalEndEvent(TypedDict):
 
 
 class GoalEndResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: GoalEndEvent
 
 
@@ -229,7 +241,7 @@ class StreamOnlineEvent(TypedDict):
 
 
 class StreamOnlineResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: StreamOnlineEvent
 
 
@@ -240,7 +252,7 @@ class StreamOfflineEvent(TypedDict):
 
 
 class StreamOfflineResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: StreamOfflineEvent
 
 
@@ -259,12 +271,12 @@ class UserAuthorizationRevokeEvent(TypedDict):
 
 
 class UserAuthorizationGrantResponse(TypedDict):
-    subscription: BaseSubscription[ClientCondition]
+    subscription: WebhookSubscription[ClientCondition]
     event: UserAuthorizationGrantEvent
 
 
 class UserAuthorizationRevokeResponse(TypedDict):
-    subscription: BaseSubscription[ClientCondition]
+    subscription: WebhookSubscription[ClientCondition]
     event: UserAuthorizationRevokeEvent
 
 
@@ -278,7 +290,7 @@ class UserUpdateEvent(TypedDict):
 
 
 class UserUpdateResponse(TypedDict):
-    subscription: BaseSubscription[UserCondition]
+    subscription: WebhookSocketSubscription[UserCondition]
     event: UserUpdateEvent
 
 
@@ -298,5 +310,5 @@ class UserWhisperEvent(TypedDict):
 
 
 class UserWhisperResponse(TypedDict):
-    subscription: BaseSubscription[UserCondition]
+    subscription: WebhookSocketSubscription[UserCondition]
     event: UserWhisperEvent
