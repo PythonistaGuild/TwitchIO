@@ -115,6 +115,22 @@ class ChannelFollowResponse(TypedDict):
     event: ChannelFollowEvent
 
 
+class ChannelAdBreakBeginEvent(BaseBroadcasterEvent):
+    requester_user_id: str
+    requester_user_login: str
+    requester_user_name: str
+    duration_seconds: str
+    duration_seconds: str
+    duration_seconds: str
+    started_at: str
+    is_automatic: str
+
+
+class ChannelAdBreakBeginResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterCondition]
+    event: ChannelAdBreakBeginEvent
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
