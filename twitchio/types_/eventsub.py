@@ -50,6 +50,11 @@ class BroadcasterCondition(TypedDict):
     broadcaster_user_id: str
 
 
+class BroadcasterUserCondition(TypedDict):
+    broadcaster_user_id: str
+    user_id: str
+
+
 class BroadcasterModeratorCondition(TypedDict):
     broadcaster_user_id: str
     moderator_user_id: str
@@ -134,9 +139,20 @@ class ChannelAdBreakBeginResponse(TypedDict):
 class ChannelChatClearEvent(BaseBroadcasterEvent): ...
 
 
-class ChannelChatClearnResponse(TypedDict):
-    subscription: BaseSubscription[BroadcasterCondition]
+class ChannelChatClearResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterUserCondition]
     event: ChannelChatClearEvent
+
+
+class ChannelChatClearMessagesEvent(BaseBroadcasterEvent):
+    target_user_id: str
+    target_user_login: str
+    target_user_user_name: str
+
+
+class ChannelChatClearMessagesResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterUserCondition]
+    event: ChannelChatClearMessagesEvent
 
 
 class GoalBeginProgressEvent(TypedDict):
