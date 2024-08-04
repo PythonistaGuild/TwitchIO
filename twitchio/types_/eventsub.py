@@ -167,6 +167,22 @@ class ChannelChatMessagesDeleteResponse(TypedDict):
     event: ChannelChatMessagesDeleteEvent
 
 
+class ChannelChatSettingsUpdateEvent(BaseBroadcasterEvent):
+    emote_mode: bool
+    follower_mode: bool
+    follower_mode: bool
+    follower_mode_duration_minutes: bool
+    slow_mode: bool
+    slow_mode_wait_time_seconds: int
+    subscriber_mode: bool
+    unique_chat_mode: bool
+
+
+class ChannelChatSettingsUpdateResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterUserCondition]
+    event: ChannelChatSettingsUpdateEvent
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
