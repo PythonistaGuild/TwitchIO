@@ -58,6 +58,11 @@ class BroadcasterModeratorCondition(TypedDict):
 class UserCondition(TypedDict):
     user_id: str
 
+class BaseBroadcasterEvent(TypedDict):
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+
 
 class Transport(TypedDict):
     method: str
@@ -73,6 +78,19 @@ class BaseSubscription(TypedDict, Generic[T]):
     condition: T
     transport: Transport
     created_at: str
+
+
+class ChannelUpdateEvent(BaseBroadcasterEvent):
+    title: str
+    language: str
+    category_id: int
+    category_name: int
+    content_classification_labels: list[str]
+
+
+class ChannelUpdateResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterCondition]
+    event: ChannelUpdateEvent
 
 
 class GoalBeginProgressEvent(TypedDict):
