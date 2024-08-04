@@ -87,7 +87,7 @@ class GoalBeginProgressEvent(TypedDict):
     started_at: str
 
 
-class GoalBeginProgressPayload(TypedDict):
+class GoalBeginProgressResponse(TypedDict):
     subscription: BaseSubscription[BroadcasterCondition]
     event: GoalBeginProgressEvent
 
@@ -106,7 +106,7 @@ class GoalEndEvent(TypedDict):
     ended_at: str
 
 
-class GoalEndPayload(TypedDict):
+class GoalEndResponse(TypedDict):
     subscription: BaseSubscription[BroadcasterCondition]
     event: GoalEndEvent
 
@@ -120,7 +120,7 @@ class StreamOnlineEvent(TypedDict):
     started_at: str
 
 
-class StreamOnlinePayload(TypedDict):
+class StreamOnlineResponse(TypedDict):
     subscription: BaseSubscription[BroadcasterCondition]
     event: StreamOnlineEvent
 
@@ -131,7 +131,7 @@ class StreamOfflineEvent(TypedDict):
     broadcaster_user_name: str
 
 
-class StreamOfflinePayload(TypedDict):
+class StreamOfflineResponse(TypedDict):
     subscription: BaseSubscription[BroadcasterCondition]
     event: StreamOfflineEvent
 
@@ -150,12 +150,12 @@ class UserAuthorizationRevokeEvent(TypedDict):
     user_name: str | None
 
 
-class UserAuthorizationGrantPayload(TypedDict):
+class UserAuthorizationGrantResponse(TypedDict):
     subscription: BaseSubscription[ClientCondition]
     event: UserAuthorizationGrantEvent
 
 
-class UserAuthorizationRevokePayload(TypedDict):
+class UserAuthorizationRevokeResponse(TypedDict):
     subscription: BaseSubscription[ClientCondition]
     event: UserAuthorizationRevokeEvent
 
@@ -169,7 +169,7 @@ class UserUpdateEvent(TypedDict):
     description: str
 
 
-class UserUpdatePayload(TypedDict):
+class UserUpdateResponse(TypedDict):
     subscription: BaseSubscription[UserCondition]
     event: UserUpdateEvent
 
@@ -189,6 +189,6 @@ class UserWhisperEvent(TypedDict):
     whisper: WhisperContent
 
 
-class UserWhisperPayload(TypedDict):
+class UserWhisperResponse(TypedDict):
     subscription: BaseSubscription[UserCondition]
     event: UserWhisperEvent
