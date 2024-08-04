@@ -75,6 +75,42 @@ class BaseSubscription(TypedDict, Generic[T]):
     created_at: str
 
 
+class GoalBeginProgressEvent(TypedDict):
+    id: str
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+    type: str
+    description: str
+    current_amount: int
+    target_amount: int
+    started_at: str
+
+
+class GoalBeginProgressPayload(TypedDict):
+    subscription: BaseSubscription[BroadcasterCondition]
+    event: GoalBeginProgressEvent
+
+
+class GoalEndEvent(TypedDict):
+    id: str
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+    type: str
+    description: str
+    is_achieved: bool
+    current_amount: int
+    target_amount: int
+    started_at: str
+    ended_at: str
+
+
+class GoalEndPayload(TypedDict):
+    subscription: BaseSubscription[BroadcasterCondition]
+    event: GoalEndEvent
+
+
 class StreamOnlineEvent(TypedDict):
     id: str
     broadcaster_user_id: str
