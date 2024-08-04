@@ -131,6 +131,14 @@ class ChannelAdBreakBeginResponse(TypedDict):
     event: ChannelAdBreakBeginEvent
 
 
+class ChannelChatClearEvent(BaseBroadcasterEvent): ...
+
+
+class ChannelChatClearnResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterCondition]
+    event: ChannelChatClearEvent
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
