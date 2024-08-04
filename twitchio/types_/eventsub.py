@@ -155,6 +155,18 @@ class ChannelChatClearMessagesResponse(TypedDict):
     event: ChannelChatClearMessagesEvent
 
 
+class ChannelChatMessagesDeleteEvent(BaseBroadcasterEvent):
+    target_user_id: str
+    target_user_login: str
+    target_user_user_name: str
+    message_id: str
+
+
+class ChannelChatMessagesDeleteResponse(TypedDict):
+    subscription: BaseSubscription[BroadcasterUserCondition]
+    event: ChannelChatMessagesDeleteEvent
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
