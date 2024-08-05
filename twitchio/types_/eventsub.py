@@ -64,6 +64,10 @@ class UserCondition(TypedDict):
     user_id: str
 
 
+class ToBroadcasterCondition(TypedDict):
+    to_broadcaster_user_id: str
+
+
 class BaseBroadcasterEvent(TypedDict):
     broadcaster_user_id: str
     broadcaster_user_login: str
@@ -329,6 +333,26 @@ class ChannelCheerResponse(TypedDict):
 class WSChannelCheerResponse(TypedDict):
     metadata: WebsocketMetadata
     payload: ChannelCheerResponse
+
+
+class ChannelRaidEvent(TypedDict):
+    from_broadcaster_user_id: str
+    from_broadcaster_user_login: str
+    from_broadcaster_user_name: str
+    to_broadcaster_user_id: str
+    to_broadcaster_user_login: str
+    to_broadcaster_user_name: str
+    viewers: int
+
+
+class ChannelRaidResponse(TypedDict):
+    subscription: WebhookSocketSubscription[ToBroadcasterCondition]
+    event: ChannelRaidEvent
+
+
+class WSChannelRaidResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelRaidResponse
 
 
 class GoalBeginProgressEvent(TypedDict):
