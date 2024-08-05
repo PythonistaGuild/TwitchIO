@@ -372,7 +372,7 @@ class ChannelBanEvent(BroadcasterModUserEvent):
 
 
 class ChannelBanResponse(TypedDict):
-    subscription: WebhookSocketSubscription[ToBroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: ChannelBanEvent
 
 
@@ -385,7 +385,7 @@ class ChannelUnbanEvent(BroadcasterModUserEvent): ...
 
 
 class ChannelUnbanResponse(TypedDict):
-    subscription: WebhookSocketSubscription[ToBroadcasterCondition]
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
     event: ChannelUnbanEvent
 
 
