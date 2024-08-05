@@ -55,7 +55,7 @@ class BroadcasterUserCondition(TypedDict):
     user_id: str
 
 
-class BroadcasterModeratorCondition(TypedDict):
+class BroadcasterModCondition(TypedDict):
     broadcaster_user_id: str
     moderator_user_id: str
 
@@ -154,7 +154,7 @@ class ChannelFollowEvent(BroadcasterUserEvent):
 
 
 class ChannelFollowResponse(TypedDict):
-    subscription: WebhookSocketSubscription[BroadcasterModeratorCondition]
+    subscription: WebhookSocketSubscription[BroadcasterModCondition]
     event: ChannelFollowEvent
 
 
@@ -392,6 +392,22 @@ class ChannelUnbanResponse(TypedDict):
 class WSChannelUnbanResponse(TypedDict):
     metadata: WebsocketMetadata
     payload: ChannelUnbanResponse
+
+
+class ChannelUnbanRequestEvent(BroadcasterUserEvent):
+    id: str
+    text: str
+    created_at: str
+
+
+class ChannelUnbanRequestResponse(TypedDict):
+    subscription: WebhookSocketSubscription[BroadcasterModCondition]
+    event: ChannelUnbanRequestEvent
+
+
+class WSChannelUnbanRequestResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelUnbanRequestResponse
 
 
 class GoalBeginProgressEvent(TypedDict):
