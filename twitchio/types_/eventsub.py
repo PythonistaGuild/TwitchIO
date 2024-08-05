@@ -285,6 +285,36 @@ class WSChannelSubscribeGiftResponse(TypedDict):
     payload: ChannelSubscribeGiftResponse
 
 
+class SubscribeEmotes(TypedDict):
+    begin: int
+    end: int
+    id: str
+
+
+class SubscribeMessage(TypedDict):
+    text: str
+    emotes: list[SubscribeEmotes]
+
+
+class ChannelSubscribeMessageEvent(BroadcasterUserEvent):
+    total: int
+    tier: str
+    cumulative_months: int
+    streak_months: int | None
+    duration_monhs: int
+    message: dict[str, str]
+
+
+class ChannelSubscribeMessageResponse(TypedDict):
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
+    event: ChannelSubscribeMessageEvent
+
+
+class WSChannelSubscribeMessageResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelSubscribeMessageResponse
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
