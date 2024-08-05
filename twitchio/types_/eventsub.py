@@ -74,16 +74,22 @@ class BaseBroadcasterEvent(TypedDict):
     broadcaster_user_name: str
 
 
-class BroadcasterModeratorEvent(BaseBroadcasterEvent):
+class BaseUserEvent(TypedDict):
+    user_id: str
+    user_login: str
+    user_name: str
+
+
+class BaseModeratorEvent(TypedDict):
     moderator_user_id: str
     moderator_user_login: str
     moderator_user_name: str
 
 
-class BroadcasterUserEvent(BaseBroadcasterEvent):
-    user_id: str
-    user_login: str
-    user_name: str
+class BroadcasterModeratorEvent(BaseBroadcasterEvent, BaseModeratorEvent): ...
+
+
+class BroadcasterUserEvent(BaseBroadcasterEvent, BaseUserEvent): ...
 
 
 class BroadcasterModUserEvent(BaseBroadcasterEvent):
