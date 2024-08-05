@@ -381,6 +381,19 @@ class WSChannelBanResponse(TypedDict):
     payload: ChannelBanResponse
 
 
+class ChannelUnbanEvent(BroadcasterModUserEvent): ...
+
+
+class ChannelUnbanResponse(TypedDict):
+    subscription: WebhookSocketSubscription[ToBroadcasterCondition]
+    event: ChannelUnbanEvent
+
+
+class WSChannelUnbanResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelUnbanResponse
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
