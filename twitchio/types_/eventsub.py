@@ -315,6 +315,22 @@ class WSChannelSubscribeMessageResponse(TypedDict):
     payload: ChannelSubscribeMessageResponse
 
 
+class ChannelCheerEvent(BroadcasterUserEvent):
+    is_anonymous: bool
+    message: str
+    bits: int
+
+
+class ChannelCheerResponse(TypedDict):
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
+    event: ChannelCheerEvent
+
+
+class WSChannelCheerResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelCheerResponse
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
