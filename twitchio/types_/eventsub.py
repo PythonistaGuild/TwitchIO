@@ -238,6 +238,21 @@ class WSChannelChatSettingsUpdateResponse(TypedDict):
     payload: ChannelChatSettingsUpdateResponse
 
 
+class ChannelSubscribeEvent(BroadcasterUserEvent):
+    tier: str
+    is_gift: bool
+
+
+class ChannelSubscribeResponse(TypedDict):
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
+    event: ChannelSubscribeEvent
+
+
+class WSChannelSubscribe(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelSubscribeResponse
+
+
 class GoalBeginProgressEvent(TypedDict):
     id: str
     broadcaster_user_id: str
