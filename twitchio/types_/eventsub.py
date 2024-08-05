@@ -86,6 +86,15 @@ class BroadcasterUserEvent(BaseBroadcasterEvent):
     user_name: str
 
 
+class BroadcasterModUserEvent(BaseBroadcasterEvent):
+    moderator_user_id: str
+    moderator_user_login: str
+    moderator_user_name: str
+    user_id: str
+    user_login: str
+    user_name: str
+
+
 class WebhookTransport(TypedDict):
     method: Literal["webhook"]
     callback: str
@@ -353,6 +362,23 @@ class ChannelRaidResponse(TypedDict):
 class WSChannelRaidResponse(TypedDict):
     metadata: WebsocketMetadata
     payload: ChannelRaidResponse
+
+
+class ChannelBanEvent(BroadcasterModUserEvent):
+    reason: str
+    banned_at: str
+    ends_at: str
+    is_permanent: bool
+
+
+class ChannelBanResponse(TypedDict):
+    subscription: WebhookSocketSubscription[ToBroadcasterCondition]
+    event: ChannelBanEvent
+
+
+class WSChannelBanResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelBanResponse
 
 
 class GoalBeginProgressEvent(TypedDict):
