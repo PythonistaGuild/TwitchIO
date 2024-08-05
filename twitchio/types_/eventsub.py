@@ -248,7 +248,7 @@ class ChannelSubscribeResponse(TypedDict):
     event: ChannelSubscribeEvent
 
 
-class WSChannelSubscribe(TypedDict):
+class WSChannelSubscribeResponse(TypedDict):
     metadata: WebsocketMetadata
     payload: ChannelSubscribeResponse
 
@@ -263,9 +263,26 @@ class ChannelSubscribeEndResponse(TypedDict):
     event: ChannelSubscribeEndEvent
 
 
-class WSChannelSubscribeEnd(TypedDict):
+class WSChannelSubscribeEndResponse(TypedDict):
     metadata: WebsocketMetadata
     payload: ChannelSubscribeResponse
+
+
+class ChannelSubscribeGiftEvent(BroadcasterUserEvent):
+    total: int
+    tier: str
+    cumulative_total: int | None
+    is_anonymous: bool
+
+
+class ChannelSubscribeGiftResponse(TypedDict):
+    subscription: WebhookSocketSubscription[BroadcasterCondition]
+    event: ChannelSubscribeGiftEvent
+
+
+class WSChannelSubscribeGiftResponse(TypedDict):
+    metadata: WebsocketMetadata
+    payload: ChannelSubscribeGiftResponse
 
 
 class GoalBeginProgressEvent(TypedDict):
