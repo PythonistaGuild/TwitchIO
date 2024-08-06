@@ -26,7 +26,15 @@ except ImportError:
     _from_json = json.loads
 
 
-__all__ = ("_from_json", "setup_logging", "ColourFormatter", "ColorFormatter", "parse_timestamp", "url_encode_datetime")
+__all__ = (
+    "_from_json",
+    "setup_logging",
+    "ColourFormatter",
+    "ColorFormatter",
+    "parse_timestamp",
+    "url_encode_datetime",
+    "MISSING",
+)
 
 
 def is_docker() -> bool:
@@ -421,3 +429,22 @@ def url_encode_datetime(dt: datetime) -> str:
     formatted_dt = dt.replace(tzinfo=UTC).isoformat() if dt.tzinfo is None else dt.isoformat()
 
     return quote(formatted_dt)
+
+
+class _MissingSentinel:
+    __slots__ = ()
+
+    def __eq__(self, other: Any) -> bool:
+        return False
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __hash__(self) -> int:
+        return 0
+
+    def __repr__(self) -> str:
+        return "..."
+
+
+MISSING: Any = _MissingSentinel()
