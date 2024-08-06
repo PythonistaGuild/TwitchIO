@@ -37,11 +37,11 @@ class APIRequestKwargs(TypedDict, total=False):
     headers: dict[str, str]
     data: dict[str, Any]
     params: ParamMapping
-    json: dict[str, Any]
+    json: Any
     token_for: str | None
 
 
 class APIRequest(TypedDict, total=False):
     headers: dict[str, str]
     data: dict[str, Any]
-    json: dict[str, Any]
+    json: Any

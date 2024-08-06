@@ -24,6 +24,8 @@ SOFTWARE.
 
 from typing import Generic, Literal, NotRequired, TypedDict, TypeVar
 
+from .conduits import Condition
+
 
 T = TypeVar("T")
 
@@ -40,6 +42,22 @@ EventSubHeaders = TypedDict(
     },
     total=False,
 )
+
+
+class SubscriptionCreateTransport(TypedDict):
+    method: Literal["websocket"] | Literal["webhook"] | Literal["conduit"]
+    callback: NotRequired[str]
+    secret: NotRequired[str]
+    session_id: NotRequired[str]
+
+
+class SubscriptionCreateRequest(TypedDict):
+    type: str
+    version: str
+    condition: Condition
+    transport: SubscriptionCreateTransport
+    session_id: NotRequired[str]
+    conduit_id: NotRequired[str]
 
 
 class ClientCondition(TypedDict):
@@ -111,6 +129,11 @@ class WebsocketTransport(TypedDict):
     session_id: str
 
 
+class ConduitTransport(TypedDict):
+    method: Literal["conduit"]
+    conduit_id: str
+
+
 class WebsocketMetadata(TypedDict):
     message_id: str
     message_type: str
@@ -123,7 +146,7 @@ class BaseSubscription(TypedDict, Generic[T]):
     id: str
     type: str
     version: str
-    status: str
+    status: Literal["enabled"] | Literal["webhook_callback_verification_pending"]
     cost: NotRequired[int]
     condition: T
     created_at: str
@@ -135,6 +158,17 @@ class WebhookSubscription(BaseSubscription[T]):
 
 class WebhookSocketSubscription(BaseSubscription[T]):
     transport: WebhookTransport | WebsocketTransport
+
+
+class AnySubscription(BaseSubscription[T]):
+    transport: WebhookTransport | WebsocketTransport | ConduitTransport
+
+
+class SubscriptionResponse(TypedDict):
+    data: list[AnySubscription[Condition]]
+    total: int
+    total_cost: int
+    max_total_cost: int
 
 
 class ChannelUpdateEvent(BaseBroadcasterEvent):

@@ -30,13 +30,14 @@ __all__ = (
     "ShardStatus",
     "CloseCode",
     "MessageType",
-    "SubscriptionTypes",
+    "SubscriptionType",
 )
 
 
 class TransportMethod(enum.Enum):
     WEBHOOK = "webhook"
     WEBSOCKET = "websocket"
+    CONDUIT = "conduit"
 
 
 class ShardStatus(enum.Enum):
@@ -72,7 +73,7 @@ class MessageType(enum.Enum):
     REVOCATION = "revocation"
 
 
-class SubscriptionTypes(enum.Enum):
+class SubscriptionType(enum.Enum):
     AutomodMessageHold = "automod.message.hold"
     AutomodMessageUpdate = "automod.message.update"
     AutomodSettingsUpdate = "automod.settings.update"
