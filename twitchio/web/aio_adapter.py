@@ -133,7 +133,7 @@ class AiohttpAdapter(web.Application):
                 "No scopes provided in request to <%s>. Scopes are a required parameter that is missing.",
                 self.oauth_redirect.__qualname__,
             )
-            return web.Response(status=400)
+            return web.Response(text="No scopes were provided. Scopes must be provided.", status=400)
 
         scopes_: Scopes = Scopes(unquote_plus(scopes).split())
 

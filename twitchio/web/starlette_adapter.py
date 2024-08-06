@@ -142,7 +142,7 @@ class StarletteAdapter(Starlette):
                 "No scopes provided in request to <%s>. Scopes are a required parameter that is missing.",
                 self.oauth_redirect.__qualname__,
             )
-            return Response(status_code=400)
+            return Response("No scopes were provided. Scopes must be provided.", status_code=400)
 
         scopes_: Scopes = Scopes(unquote_plus(scopes).split())
 
