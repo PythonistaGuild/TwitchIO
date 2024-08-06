@@ -64,9 +64,11 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
 
     from .assets import Asset
+    from .eventsub.enums import SubscriptionType
     from .models.channel_points import CustomReward
     from .models.moderation import AutomodCheckMessage, AutomodSettings
-    from .types_.conduits import ShardData, ShardUpdateRequest
+    from .types_.conduits import Condition, ShardData, ShardUpdateRequest
+    from .types_.eventsub import SubscriptionCreateRequest, SubscriptionCreateTransport, SubscriptionResponse
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         AddBlockedTermResponse,
@@ -194,7 +196,7 @@ class Route:
         **kwargs: Unpack[APIRequestKwargs],
     ) -> None:
         self.params: ParamMapping = kwargs.pop("params", {})
-        self.json: dict[str, Any] = kwargs.get("json", {})
+        self.json: Any = kwargs.get("json", {})
         self.headers: dict[str, str] = kwargs.get("headers", {})
         self.token_for: str = str(kwargs.get("token_for", ""))
 
@@ -1299,6 +1301,36 @@ class HTTPClient:
     ### Extensions ###
 
     ### EventSub ###
+
+    async def create_eventsub_subscription(
+        self,
+        *,
+        type: SubscriptionType,
+        version: str,
+        condition: Condition,
+        transport: SubscriptionCreateTransport,
+        token_for: str | None = None,
+        token: str | None = None,
+    ) -> SubscriptionResponse:
+        # TODO: Token?
+
+        method: str = transport["method"]
+        if method in ("webhook", "conduit"):
+            # Webhook/conduit must use app tokens...
+            token_for = None
+
+        elif method == "websocket" and not token_for and not token:
+            raise ValueError("A valid User Access token must be passed for websocket subscriptions.")
+
+        data: SubscriptionCreateRequest = {
+            "type": type.value,
+            "version": version,
+            "condition": condition,
+            "transport": transport,
+        }
+
+        route: Route = Route("POST", "eventsub/subscriptions", token_for=token_for, json=data)
+        return await self.request_json(route)
 
     ### Games ###
 
