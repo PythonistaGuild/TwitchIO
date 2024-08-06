@@ -22,7 +22,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from typing import Unpack
+
 from twitchio.client import Client
+from twitchio.eventsub.enums import TransportMethod
+from twitchio.eventsub.payloads import SubscriptionPayload
+from twitchio.types_.options import ClientOptions
 
 
-class Bot(Client): ...
+class Bot(Client):
+    def __init__(self, *, client_id: str, client_secret: str, bot_id: str, **options: Unpack[ClientOptions]) -> None:
+        super().__init__(client_id=client_id, client_secret=client_secret, bot_id=bot_id, **options)
+
+    @property
+    def bot_id(self) -> str:
+        assert self._bot_id
+        return self._bot_id
+
+    async def subscribe(
+        self,
+        method: TransportMethod,
+        payload: SubscriptionPayload,
+        as_bot: bool = True,
+        token_for: str | None = None,
+        socket_id: str | None = None,
+    ) -> ...:
+        return await super().subscribe(method, payload, as_bot, token_for, socket_id=socket_id)

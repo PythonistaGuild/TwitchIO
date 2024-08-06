@@ -24,6 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
+import abc
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Unpack
 
 
@@ -34,7 +35,7 @@ if TYPE_CHECKING:
 __all__ = ("SubscriptionPayload", "ChannelChatMessageSubscription")
 
 
-class SubscriptionPayload:
+class SubscriptionPayload(abc.ABC):
     type: ClassVar[Any]
     version: ClassVar[Any]
 
@@ -54,18 +55,11 @@ class SubscriptionPayload:
     )
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
-        self.broadcaster_user_id: str | None = condition.get("broadcaster_user_id", None)
-        self.moderator_user_id: str | None = condition.get("moderator_user_id", None)
-        self.user_id: str | None = condition.get("user_id", None)
-        self.campaign_id: str | None = condition.get("campaign_id", None)
-        self.category_id: str | None = condition.get("category_id", None)
-        self.organization_id: str | None = condition.get("organization_id", None)
-        self.client_id: str | None = condition.get("client_id", None)
-        self.conduit_id: str | None = condition.get("conduit_id", None)
-        self.reward_id: str | None = condition.get("reward_id", None)
-        self.from_broadcaster_user_id: str | None = condition.get("from_broadcaster_user_id", None)
-        self.to_broadcaster_user_id: str | None = condition.get("to_broadcaster_user_id", None)
-        self.broadcaster_id: str | None = condition.get("broadcaster_id")
+        raise NotImplementedError
+
+    @property
+    def condition(self) -> Condition:
+        raise NotImplementedError
 
 
 class ChannelChatMessageSubscription(SubscriptionPayload):
@@ -73,7 +67,12 @@ class ChannelChatMessageSubscription(SubscriptionPayload):
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
-        super().__init__(**condition)
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.user_id: str = condition.get("user_id", "")
 
         if not self.broadcaster_user_id or not self.user_id:
             raise ValueError('The parameters "broadcaster_user_id" and "user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
