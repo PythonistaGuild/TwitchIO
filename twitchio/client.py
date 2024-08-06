@@ -30,7 +30,9 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
 
 from .authentication import ManagedHTTPClient, Scopes
-from .conduits import Conduit, ConduitPool
+from .eventsub.enums import SubscriptionType, TransportMethod
+from .eventsub.websockets import Websocket
+from .exceptions import HTTPException
 from .http import HTTPAsyncIterator
 from .models.bits import Cheermote, ExtensionTransaction
 from .models.ccls import ContentClassificationLabel
@@ -50,14 +52,15 @@ if TYPE_CHECKING:
     import aiohttp
 
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
+    from .eventsub.payloads import SubscriptionPayload
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.entitlements import Entitlement, EntitlementStatus
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
+    from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse
     from .types_.options import ClientOptions
-    from .types_.responses import ConduitPayload
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -80,11 +83,14 @@ class Client:
         *,
         client_id: str,
         client_secret: str,
+        bot_id: str | None = None,
         **options: Unpack[ClientOptions],
     ) -> None:
         redirect_uri: str | None = options.get("redirect_uri", None)
         scopes: Scopes | None = options.get("scopes", None)
         session: aiohttp.ClientSession | None = options.get("session", None)
+
+        self._bot_id: str | None = bot_id
 
         self._http = ManagedHTTPClient(
             client_id=client_id,
@@ -96,19 +102,21 @@ class Client:
 
         adapter: Any = options.get("adapter", None) or AiohttpAdapter
         self._adapter: Any = adapter(client=self)
-        self._pool: ConduitPool = ConduitPool(client=self)
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
 
         self._login_called: bool = False
         self._dump_tokens: bool = True
         self._has_closed: bool = False
 
+        # Websockets for EventSub
+        self._websockets: dict[str, dict[str, Websocket]] = defaultdict(dict)
+
         self.__waiter: asyncio.Event = asyncio.Event()
 
     @property
-    def pool(self) -> ConduitPool:
+    def bot_id(self) -> str | None:
         # TODO: Docs...
-        return self._pool
+        return self._bot_id
 
     async def event_error(self, payload: EventErrorPayload) -> None:
         """
@@ -232,6 +240,9 @@ class Client:
         if with_adapter:
             await self._adapter.run()
 
+        # Dispatch ready event... May change places in the future.
+        self.dispatch("ready")
+
         try:
             await self.__waiter.wait()
         finally:
@@ -266,6 +277,10 @@ class Client:
                 await self._adapter.close()
             except Exception:
                 pass
+
+        sockets: list[Websocket] = [w for p in self._websockets.values() for w in p.values()]
+        for socket in sockets:
+            await socket.close()
 
         self.__waiter.set()
 
@@ -1242,9 +1257,73 @@ class Client:
         )
         return [EntitlementStatus(d) for d in data["data"]]
 
-    async def _create_conduit(self, shard_count: int, /) -> list[Conduit]:
-        data: ConduitPayload = await self._http.create_conduit(shard_count)
-        return [Conduit(data=c, pool=self._pool) for c in data["data"]]
+    async def subscribe(
+        self,
+        method: TransportMethod,
+        payload: SubscriptionPayload,
+        as_bot: bool = False,
+        token_for: str | None = None,
+        socket_id: str | None = None,
+    ) -> ...:
+        if method is TransportMethod.WEBSOCKET:
+            if as_bot and not self.bot_id:
+                raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
+
+            elif as_bot and self.bot_id:
+                token_for = self.bot_id
+
+            if not token_for:
+                raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
+
+            sockets: dict[str, Websocket] = self._websockets[token_for]
+            websocket: Websocket
+
+            if socket_id:
+                try:
+                    websocket = sockets[socket_id]
+                except KeyError:
+                    raise KeyError(f"The websocket with ID '{socket_id}' does not exist.")
+
+            elif not sockets:
+                websocket = Websocket(client=self, token_for=token_for)
+                await websocket.connect(fail_once=True)
+                self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore # session_id is guaranteed at this point.
+
+            else:
+                sorted_: list[Websocket] = sorted(sockets.values(), key=lambda s: s.subscription_count)
+
+                try:
+                    websocket = next(s for s in sorted_ if s.can_subscribe)
+                except StopIteration:
+                    raise ValueError(
+                        "No suitable websocket can be used to subscribe to this event. You may have exahusted your 'toal_cost' allocation or max subscription count for this user token."
+                    )
+
+            session_id: str | None = websocket.session_id
+            if not session_id:
+                # This really shouldn't ever happen that I am aware of.
+                raise ValueError("Eventsub Websocket is missing 'session_id'.")
+
+            type_ = SubscriptionType(payload.type)
+            version: str = payload.version
+            transport: SubscriptionCreateTransport = {"method": "websocket", "session_id": session_id}
+
+            try:
+                resp: SubscriptionResponse = await self._http.create_eventsub_subscription(
+                    type=type_, version=version, condition=payload.condition, transport=transport, token_for=token_for
+                )
+            except HTTPException as e:
+                if e.status == 409:
+                    logger.error(
+                        "Disregarding HTTPException in subscribe: A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                        payload.type,
+                        str(payload.condition),
+                    )
+                    return
+
+                raise e
+
+            return resp
 
     def doc_test(self, thing: int = 1) -> int:
         """
