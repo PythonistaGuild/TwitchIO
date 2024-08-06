@@ -39,9 +39,9 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from ..client import Client
+    from ..eventsub.websockets import Websocket
     from ..ext.commands import Bot
     from ..types_.conduits import ConduitData, ShardData, ShardTransport
-    from .websockets import Websocket
 
 
 logger: logging.Logger = logging.getLogger(__name__)
