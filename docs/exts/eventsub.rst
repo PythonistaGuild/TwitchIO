@@ -234,6 +234,10 @@ This is a list of events dispatched by the eventsub ext.
 
     Called when a user donates to an active charity campaign.
 
+.. function:: event_eventsub_notification_channel_ad_break_begin(event: ChannelAdBreakBeginData)
+
+    Called when a user runs a midroll commercial break, either manually or automatically via ads manager.
+
 API Reference
 --------------
 
@@ -538,6 +542,12 @@ API Reference
     :inherited-members:
 
 .. attributetable::: ChannelModerateData
+
+.. autoclass:: ChannelAdBreakBeginData
+    :members:
+    :inherited-members:
+
+.. attributetable::: ChannelAdBreakBeginData
 
 .. autoclass:: ChannelModerateData
     :members:
