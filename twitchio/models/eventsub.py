@@ -29,11 +29,11 @@ from twitchio.types_.eventsub import (
     ChannelAdBreakBeginEvent,
     ChannelChatClearEvent,
     ChannelChatClearUserMessagesEvent,
+    ChannelChatMessageDeleteEvent,
+    ChannelChatSettingsUpdateEvent,
     ChannelFollowEvent,
     ChannelUpdateEvent,
     ChannelVIPAddEvent,
-    ChannelChatMessageDeleteEvent,
-    ChannelChatSettingsUpdateEvent,
 )
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
