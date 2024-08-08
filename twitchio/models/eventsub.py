@@ -22,12 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Any, ClassVar, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from twitchio.http import HTTPClient
-from twitchio.types_.eventsub import ChannelFollowEvent, ChannelUpdateEvent, ChannelAdBreakBeginEvent
+from twitchio.types_.eventsub import (
+    ChannelAdBreakBeginEvent,
+    ChannelChatClearEvent,
+    ChannelFollowEvent,
+    ChannelUpdateEvent,
+)
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
+
 
 if TYPE_CHECKING:
     import datetime
@@ -101,3 +107,17 @@ class ChannelAdBreakBegin(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelAdBreakBegin broadcaster={self.broadcaster} requester={self.requester} started_at={self.started_at}>"
+
+
+class ChannelChatClear(BaseEvent):
+    type = "channel.chat.clear"
+
+    __slots__ = ("broadcaster",)
+
+    def __init__(self, payload: ChannelChatClearEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+
+    def __repr__(self) -> str:
+        return f"<ChannelChatClear broadcaster={self.broadcaster}>"
