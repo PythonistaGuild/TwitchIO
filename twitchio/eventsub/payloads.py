@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from ..types_.conduits import Condition
 
 
-__all__ = ("SubscriptionPayload", "ChannelChatMessageSubscription")
+__all__ = ("SubscriptionPayload", "ChannelUpdateSubscription", "ChannelChatMessageSubscription")
 
 
 class SubscriptionPayload(abc.ABC):
@@ -60,6 +60,21 @@ class SubscriptionPayload(abc.ABC):
     @property
     def condition(self) -> Condition:
         raise NotImplementedError
+
+
+class ChannelUpdateSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.update"]] = "channel.update"
+    version: ClassVar[Literal["2"]] = "2"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
 
 
 class ChannelChatMessageSubscription(SubscriptionPayload):

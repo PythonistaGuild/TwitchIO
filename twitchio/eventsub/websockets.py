@@ -33,6 +33,7 @@ import aiohttp
 
 from ..backoff import Backoff
 from ..exceptions import WebsocketConnectionException
+from ..models.eventsub import BaseEvent
 from ..types_.conduits import (
     MessageTypes,
     MetaData,
@@ -311,11 +312,12 @@ class Websocket:
 
     async def _process_notification(self, data: NotificationMessage) -> None:
         # TODO: Proper dispatch...
-
-        event: str = data["metadata"]["subscription_type"].replace(".", "_")
+        subscription_type = data["metadata"]["subscription_type"]
+        event: str = subscription_type.replace(".", "_")
+        payload_class = BaseEvent.create_instance(subscription_type, data["payload"]["event"])
 
         if self._client:
-            self._client.dispatch(event=event, payload=data["payload"])
+            self._client.dispatch(event=event, payload=payload_class)
 
     async def close(self) -> None:
         if self._listen_task:
