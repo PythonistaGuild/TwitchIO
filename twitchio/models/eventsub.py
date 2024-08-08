@@ -25,7 +25,7 @@ SOFTWARE.
 from typing import Any, ClassVar, TYPE_CHECKING
 
 from twitchio.http import HTTPClient
-from twitchio.types_.eventsub import ChannelFollowEvent, ChannelUpdateEvent
+from twitchio.types_.eventsub import ChannelFollowEvent, ChannelUpdateEvent, ChannelAdBreakBeginEvent
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
@@ -81,3 +81,23 @@ class ChannelFollow(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelFollow broadcaster={self.broadcaster} user={self.user} followed_at={self.followed_at}>"
+
+
+class ChannelAdBreakBegin(BaseEvent):
+    type = "channel.ad_break.begin"
+
+    __slots__ = ("broadcaster", "requester", "duration", "automatic", "started_at")
+
+    def __init__(self, payload: ChannelAdBreakBeginEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.requester: PartialUser = PartialUser(
+            payload["requester_user_id"], payload["requester_user_login"], http=http
+        )
+        self.duration: int = int(payload["duration_seconds"])
+        self.automatic: bool = payload["is_automatic"] == "true"  # TODO confirm this is a string and not a bool
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelAdBreakBegin broadcaster={self.broadcaster} requester={self.requester} started_at={self.started_at}>"
