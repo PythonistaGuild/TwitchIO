@@ -41,7 +41,7 @@ from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
 from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload
-from .user import ActiveExtensions, Extension, User
+from .user import ActiveExtensions, Extension, PartialUser, User
 from .web import AiohttpAdapter
 
 
@@ -319,6 +319,27 @@ class Client:
             raise ValueError("Listeners and Events must be coroutines.")
 
         self._listeners[name].add(listener)
+
+    def create_partialuser(self, user_id: str | int, user_login: str | None = None) -> PartialUser:
+        """
+        Helper method to create a PartialUser.
+
+        .. versionchanged:: 3.0
+            This has been renamed from `create_user` to `create_partialuser`.
+
+        Parameters
+        ----------
+        user_id: str | int
+            ID of the user you wish to create a PartialUser for.
+        user_login: str | None
+            Login name of the user you wish to create a PartialUser for, if available.
+
+        Returns
+        -------
+        PartialUser
+            A PartialUser object.
+        """
+        return PartialUser(user_id, user_login, http=self._http)
 
     async def fetch_chat_badges(self) -> list[ChatBadge]:
         """
