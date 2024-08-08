@@ -22,9 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Generic, Literal, NotRequired, TypedDict, TypeVar
-
-from .conduits import Condition
+from typing import Literal, NotRequired, TypedDict, TypeVar
 
 
 T = TypeVar("T")
@@ -135,7 +133,7 @@ class ChannelChatClearUserMessagesEvent(BaseBroadcasterEvent):
     target_user_user_name: str
 
 
-class ChannelChatMessagesDeleteEvent(BaseBroadcasterEvent):
+class ChannelChatMessageDeleteEvent(BaseBroadcasterEvent):
     target_user_id: str
     target_user_login: str
     target_user_user_name: str

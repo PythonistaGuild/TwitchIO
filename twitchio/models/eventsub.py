@@ -32,6 +32,7 @@ from twitchio.types_.eventsub import (
     ChannelFollowEvent,
     ChannelUpdateEvent,
     ChannelVIPAddEvent,
+    ChannelChatMessageDeleteEvent,
 )
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
@@ -137,7 +138,23 @@ class ChannelChatClearUserMessages(BaseEvent):
         self.user: PartialUser = PartialUser(payload["target_user_id"], payload["target_user_login"], http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelChatClear broadcaster={self.broadcaster}>"
+        return f"<ChannelChatClearUserMessages broadcaster={self.broadcaster}>"
+
+
+class ChannelChatMessageDelete(BaseEvent):
+    type = "channel.chat.message_delete"
+
+    __slots__ = ("broadcaster", "user", "message_id")
+
+    def __init__(self, payload: ChannelChatMessageDeleteEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["target_user_id"], payload["target_user_login"], http=http)
+        self.message_id: str = payload["message_id"]
+
+    def __repr__(self) -> str:
+        return f"<ChannelChatMessageDelete broadcaster={self.broadcaster}>"
 
 
 class ChannelVIPAdd(BaseEvent):
@@ -152,4 +169,4 @@ class ChannelVIPAdd(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelChatClear broadcaster={self.broadcaster}>"
+        return f"<ChannelVIPAdd broadcaster={self.broadcaster}>"
