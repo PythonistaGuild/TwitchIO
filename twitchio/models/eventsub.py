@@ -28,6 +28,7 @@ from twitchio.http import HTTPClient
 from twitchio.types_.eventsub import (
     ChannelAdBreakBeginEvent,
     ChannelChatClearEvent,
+    ChannelChatClearUserMessagesEvent,
     ChannelFollowEvent,
     ChannelUpdateEvent,
 )
@@ -118,6 +119,21 @@ class ChannelChatClear(BaseEvent):
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
+
+    def __repr__(self) -> str:
+        return f"<ChannelChatClear broadcaster={self.broadcaster}>"
+
+
+class ChannelChatClearUserMessages(BaseEvent):
+    type = "channel.chat.clear"
+
+    __slots__ = ("broadcaster", "user")
+
+    def __init__(self, payload: ChannelChatClearUserMessagesEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["target_user_id"], payload["target_user_login"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelChatClear broadcaster={self.broadcaster}>"

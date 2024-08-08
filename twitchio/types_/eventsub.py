@@ -237,7 +237,7 @@ class WSChannelChatClearResponse(TypedDict):
     payload: ChannelChatClearResponse
 
 
-class ChannelChatClearMessagesEvent(BaseBroadcasterEvent):
+class ChannelChatClearUserMessagesEvent(BaseBroadcasterEvent):
     target_user_id: str
     target_user_login: str
     target_user_user_name: str
