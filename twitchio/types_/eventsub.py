@@ -22,7 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Literal, NotRequired, TypedDict, TypeVar
+from typing import Generic, Literal, NotRequired, TypedDict, TypeVar
+
+from .conduits import Condition
 
 
 T = TypeVar("T")
@@ -42,30 +44,20 @@ EventSubHeaders = TypedDict(
 )
 
 
-class ClientCondition(TypedDict):
-    client_id: str
+class SubscriptionCreateTransport(TypedDict):
+    method: Literal["websocket"] | Literal["webhook"] | Literal["conduit"]
+    callback: NotRequired[str]
+    secret: NotRequired[str]
+    session_id: NotRequired[str]
 
 
-class BroadcasterCondition(TypedDict):
-    broadcaster_user_id: str
-
-
-class BroadcasterUserCondition(TypedDict):
-    broadcaster_user_id: str
-    user_id: str
-
-
-class BroadcasterModCondition(TypedDict):
-    broadcaster_user_id: str
-    moderator_user_id: str
-
-
-class UserCondition(TypedDict):
-    user_id: str
-
-
-class ToBroadcasterCondition(TypedDict):
-    to_broadcaster_user_id: str
+class SubscriptionCreateRequest(TypedDict):
+    type: str
+    version: str
+    condition: Condition
+    transport: SubscriptionCreateTransport
+    session_id: NotRequired[str]
+    conduit_id: NotRequired[str]
 
 
 class BaseBroadcasterEvent(TypedDict):
@@ -99,6 +91,50 @@ class BroadcasterModUserEvent(BaseBroadcasterEvent):
     user_id: str
     user_login: str
     user_name: str
+
+
+class WebhookTransport(TypedDict):
+    method: Literal["webhook"]
+    callback: str
+
+
+class WebsocketTransport(TypedDict):
+    method: Literal["websocket"]
+    session_id: str
+
+
+class ConduitTransport(TypedDict):
+    method: Literal["conduit"]
+    conduit_id: str
+
+
+class WebsocketMetadata(TypedDict):
+    message_id: str
+    message_type: str
+    message_timestamp: str
+    subscription_type: str
+    subscription_version: str
+
+
+class BaseSubscription(TypedDict, Generic[T]):
+    id: str
+    type: str
+    version: str
+    status: Literal["enabled"] | Literal["webhook_callback_verification_pending"]
+    cost: NotRequired[int]
+    condition: T
+    created_at: str
+
+
+class AnySubscription(BaseSubscription[T]):
+    transport: WebhookTransport | WebsocketTransport | ConduitTransport
+
+
+class SubscriptionResponse(TypedDict):
+    data: list[AnySubscription[Condition]]
+    total: int
+    total_cost: int
+    max_total_cost: int
 
 
 class ChannelUpdateEvent(BaseBroadcasterEvent):
@@ -144,9 +180,9 @@ class ChannelChatSettingsUpdateEvent(BaseBroadcasterEvent):
     emote_mode: bool
     follower_mode: bool
     follower_mode: bool
-    follower_mode_duration_minutes: bool
+    follower_mode_duration_minutes: int | None
     slow_mode: bool
-    slow_mode_wait_time_seconds: int
+    slow_mode_wait_time_seconds: int | None
     subscriber_mode: bool
     unique_chat_mode: bool
 
@@ -185,7 +221,7 @@ class ChannelSubscribeMessageEvent(BroadcasterUserEvent):
     cumulative_months: int
     streak_months: int | None
     duration_monhs: int
-    message: dict[str, str]
+    message: SubscribeMessage
 
 
 class ChannelCheerEvent(BroadcasterUserEvent):

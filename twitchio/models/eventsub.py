@@ -33,6 +33,7 @@ from twitchio.types_.eventsub import (
     ChannelUpdateEvent,
     ChannelVIPAddEvent,
     ChannelChatMessageDeleteEvent,
+    ChannelChatSettingsUpdateEvent,
 )
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
@@ -73,7 +74,7 @@ class ChannelUpdate(BaseEvent):
         self.content_classification_labels = payload["content_classification_labels"]
 
     def __repr__(self) -> str:
-        return f"<ChannelUpdate title={self.title} language={self.language} category_id={self.category_id}>"
+        return f"<ChannelUpdate title={self.title} language={self.language} category_id={self.category_id} category_name={self.category_name}>"
 
 
 class ChannelFollow(BaseEvent):
@@ -127,7 +128,7 @@ class ChannelChatClear(BaseEvent):
 
 
 class ChannelChatClearUserMessages(BaseEvent):
-    type = "channel.chat.clear"
+    type = "channel.chat.clear_user_messages"
 
     __slots__ = ("broadcaster", "user")
 
@@ -138,7 +139,7 @@ class ChannelChatClearUserMessages(BaseEvent):
         self.user: PartialUser = PartialUser(payload["target_user_id"], payload["target_user_login"], http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelChatClearUserMessages broadcaster={self.broadcaster}>"
+        return f"<ChannelChatClearUserMessages broadcaster={self.broadcaster} user={self.user}>"
 
 
 class ChannelChatMessageDelete(BaseEvent):
@@ -154,7 +155,39 @@ class ChannelChatMessageDelete(BaseEvent):
         self.message_id: str = payload["message_id"]
 
     def __repr__(self) -> str:
-        return f"<ChannelChatMessageDelete broadcaster={self.broadcaster}>"
+        return (
+            f"<ChannelChatMessageDelete broadcaster={self.broadcaster} user={self.user} message_id={self.message_id}>"
+        )
+
+
+class ChannelChatSettingsUpdate(BaseEvent):
+    type = "channel.chat_settings.update"
+
+    __slots__ = (
+        "broadcaster",
+        "emote_mode",
+        "follower_mode",
+        "follower_mode_duration",
+        "slow_mode",
+        "slow_mode_wait_time",
+        "subscriber_mode",
+        "unique_chat_mode",
+    )
+
+    def __init__(self, payload: ChannelChatSettingsUpdateEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.emote_mode: bool = bool(payload["emote_mode"])
+        self.follower_mode: bool = bool(payload["follower_mode"])
+        self.slow_mode: bool = bool(payload["slow_mode"])
+        self.subscriber_mode: bool = bool(payload["subscriber_mode"])
+        self.unique_chat_mode: bool = bool(payload["unique_chat_mode"])
+        self.slow_mode_wait_time: int | None = payload.get("slow_mode_wait_time_seconds")
+        self.follower_mode_duration: int | None = payload.get("follower_mode_duration_minutes")
+
+    def __repr__(self) -> str:
+        return f"<ChannelChatSettingsUpdate broadcaster={self.broadcaster} {self.slow_mode_wait_time} {self.follower_mode_duration}>"
 
 
 class ChannelVIPAdd(BaseEvent):
@@ -169,4 +202,4 @@ class ChannelVIPAdd(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelVIPAdd broadcaster={self.broadcaster}>"
+        return f"<ChannelVIPAdd broadcaster={self.broadcaster} user={self.user}>"
