@@ -22,11 +22,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TYPE_CHECKING
 
 from twitchio.http import HTTPClient
 from twitchio.types_.eventsub import ChannelFollowEvent, ChannelUpdateEvent
 from twitchio.user import PartialUser
+from twitchio.utils import parse_timestamp
+
+if TYPE_CHECKING:
+    import datetime
 
 
 class BaseEvent:
@@ -69,9 +73,11 @@ class ChannelFollow(BaseEvent):
     __slots__ = ("broadcaster", "user", "followed_at")
 
     def __init__(self, payload: ChannelFollowEvent, *, http: HTTPClient) -> None:
-        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
-        self.user = PartialUser(payload["user_id"], payload["user_login"], http=http)
-        self.followed_at = payload["followed_at"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.followed_at: datetime.datetime = parse_timestamp(payload["followed_at"])
 
     def __repr__(self) -> str:
-        return f"<ChannelFollow broadcaster={self.broadcaster} followed_at={self.followed_at}>"
+        return f"<ChannelFollow broadcaster={self.broadcaster} user={self.user} followed_at={self.followed_at}>"
