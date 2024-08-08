@@ -31,6 +31,7 @@ from twitchio.types_.eventsub import (
     ChannelChatClearUserMessagesEvent,
     ChannelFollowEvent,
     ChannelUpdateEvent,
+    ChannelVIPAddEvent,
 )
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
@@ -134,6 +135,21 @@ class ChannelChatClearUserMessages(BaseEvent):
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
         self.user: PartialUser = PartialUser(payload["target_user_id"], payload["target_user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelChatClear broadcaster={self.broadcaster}>"
+
+
+class ChannelVIPAdd(BaseEvent):
+    type = "channel.vip.add"
+
+    __slots__ = ("broadcaster", "user")
+
+    def __init__(self, payload: ChannelVIPAddEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelChatClear broadcaster={self.broadcaster}>"

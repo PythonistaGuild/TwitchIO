@@ -243,16 +243,6 @@ class ChannelChatClearUserMessagesEvent(BaseBroadcasterEvent):
     target_user_user_name: str
 
 
-class ChannelChatClearMessagesResponse(TypedDict):
-    subscription: WebhookSocketSubscription[BroadcasterUserCondition]
-    event: ChannelChatClearMessagesEvent
-
-
-class WSChannelChatClearMessagesResponse(TypedDict):
-    metadata: WebsocketMetadata
-    payload: ChannelChatClearMessagesResponse
-
-
 class ChannelChatMessagesDeleteEvent(BaseBroadcasterEvent):
     target_user_id: str
     target_user_login: str
@@ -464,6 +454,9 @@ class ChannelUnbanRequestSolveResponse(TypedDict):
 class WSChannelUnbanRequestSolveResponse(TypedDict):
     metadata: WebsocketMetadata
     payload: ChannelUnbanRequestSolveResponse
+
+
+class ChannelVIPAddEvent(BroadcasterUserEvent): ...
 
 
 class GoalBeginProgressEvent(TypedDict):
