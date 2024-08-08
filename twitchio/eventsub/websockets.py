@@ -52,6 +52,7 @@ from ..utils import (
 
 if TYPE_CHECKING:
     from ..client import Client
+    from ..http import HTTPClient
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -75,6 +76,7 @@ class Websocket:
         "__subscription_count",
         "_client",
         "_token_for",
+        "_http",
     )
 
     def __init__(
@@ -85,6 +87,7 @@ class Websocket:
         reconnect_attempts: int | None = MISSING,
         client: Client | None = None,
         token_for: str,
+        http: HTTPClient,
     ) -> None:
         self._keep_alive_timeout: int = max(10, min(int(keep_alive_timeout), 600))
         self._last_keepalive: datetime.datetime | None = None
@@ -108,6 +111,7 @@ class Websocket:
 
         self._client: Client | None = client
         self._token_for: str = token_for
+        self._http: HTTPClient = http
 
         if not client:
             logger.warning(
@@ -314,7 +318,7 @@ class Websocket:
         # TODO: Proper dispatch...
         subscription_type = data["metadata"]["subscription_type"]
         event: str = subscription_type.replace(".", "_")
-        payload_class = BaseEvent.create_instance(subscription_type, data["payload"]["event"])
+        payload_class = BaseEvent.create_instance(subscription_type, data["payload"]["event"], http=self._http)
 
         if self._client:
             self._client.dispatch(event=event, payload=payload_class)

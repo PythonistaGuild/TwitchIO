@@ -1306,7 +1306,7 @@ class Client:
                     raise KeyError(f"The websocket with ID '{socket_id}' does not exist.")
 
             elif not sockets:
-                websocket = Websocket(client=self, token_for=token_for)
+                websocket = Websocket(client=self, token_for=token_for, http=self._http)
                 await websocket.connect(fail_once=True)
                 self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore # session_id is guaranteed at this point.
 

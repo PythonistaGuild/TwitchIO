@@ -24,7 +24,9 @@ SOFTWARE.
 
 from typing import Any, ClassVar
 
+from twitchio.http import HTTPClient
 from twitchio.types_.eventsub import ChannelFollowEvent, ChannelUpdateEvent
+from twitchio.user import PartialUser
 
 
 class BaseEvent:
@@ -37,11 +39,11 @@ class BaseEvent:
             BaseEvent._registry[cls.type] = cls
 
     @classmethod
-    def create_instance(cls, event_type: str, payload: dict[str, Any]) -> Any:
+    def create_instance(cls, event_type: str, payload: dict[str, Any], http: HTTPClient | None = None) -> Any:
         event_cls = cls._registry.get(event_type)
         if event_cls is None:
             raise ValueError(f"No class registered for event type {event_type}")
-        return event_cls(payload)
+        return event_cls(payload) if http is None else event_cls(payload, http=http)
 
 
 class ChannelUpdate(BaseEvent):
@@ -49,8 +51,8 @@ class ChannelUpdate(BaseEvent):
 
     __slots__ = ("broadcaster", "title", "category_id", "category_name", "content_classification_labels")
 
-    def __init__(self, payload: ChannelUpdateEvent) -> None:
-        # self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=None)
+    def __init__(self, payload: ChannelUpdateEvent, *, http: HTTPClient) -> None:
+        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
         self.title = payload["title"]
         self.language = payload["language"]
         self.category_id = payload["category_id"]
@@ -66,9 +68,9 @@ class ChannelFollow(BaseEvent):
 
     __slots__ = ("broadcaster", "user", "followed_at")
 
-    def __init__(self, payload: ChannelFollowEvent) -> None:
-        # self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=None)
-        # self.user = PartialUser(payload["user_id"], payload["user_login"], http=None)
+    def __init__(self, payload: ChannelFollowEvent, *, http: HTTPClient) -> None:
+        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
+        self.user = PartialUser(payload["user_id"], payload["user_login"], http=http)
         self.followed_at = payload["followed_at"]
 
     def __repr__(self) -> str:
