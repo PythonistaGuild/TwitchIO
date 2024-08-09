@@ -43,6 +43,10 @@ __all__ = (
     "ChannelChatMessageDeleteSubscription",
     "ChannelChatSettingsUpdateSubscription",
     "ChannelVIPAddSubscription",
+    "StreamOnlineSubscription",
+    "StreamOfflineSubscription",
+    "UserAuthorizationGrantSubscription",
+    "UserAuthorizationRevokeSubscription",
 )
 
 
@@ -242,3 +246,33 @@ class StreamOfflineSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class UserAuthorizationGrantSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["user.authorization.grant"]] = "user.authorization.grant"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.client_id: str = condition.get("client_id", "")
+
+        if not self.client_id:
+            raise ValueError('The parameter "client_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"client_id": self.client_id}
+
+
+class UserAuthorizationRevokeSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["user.authorization.revoke"]] = "user.authorization.revoke"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.client_id: str = condition.get("client_id", "")
+
+        if not self.client_id:
+            raise ValueError('The parameter "client_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"client_id": self.client_id}
