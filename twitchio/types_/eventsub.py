@@ -296,7 +296,7 @@ class StreamOnlineEvent(TypedDict):
     broadcaster_user_id: str
     broadcaster_user_login: str
     broadcaster_user_name: str
-    type: str
+    type: Literal["live", "playlist", "watch_party", "premiere", "rerun"]
     started_at: str
 
 
