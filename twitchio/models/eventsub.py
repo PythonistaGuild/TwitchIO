@@ -22,25 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from twitchio.http import HTTPClient
-from twitchio.types_.eventsub import (
-    ChannelAdBreakBeginEvent,
-    ChannelChatClearEvent,
-    ChannelChatClearUserMessagesEvent,
-    ChannelChatMessageDeleteEvent,
-    ChannelChatSettingsUpdateEvent,
-    ChannelFollowEvent,
-    ChannelUpdateEvent,
-    ChannelVIPAddEvent,
-)
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
 
 if TYPE_CHECKING:
     import datetime
+
+    from twitchio.http import HTTPClient
+    from twitchio.types_.eventsub import (
+        ChannelAdBreakBeginEvent,
+        ChannelChatClearEvent,
+        ChannelChatClearUserMessagesEvent,
+        ChannelChatMessageDeleteEvent,
+        ChannelChatSettingsUpdateEvent,
+        ChannelFollowEvent,
+        ChannelUpdateEvent,
+        ChannelVIPAddEvent,
+    )
 
 
 class BaseEvent:
