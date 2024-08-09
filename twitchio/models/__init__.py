@@ -22,33 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__all__ = (
-    "ads",
-    "analytics",
-    "bits",
-    "ccls",
-    "channel_points",
-    "channels",
-    "charity",
-    "chat",
-    "clips",
-    "entitlements",
-    "games",
-    "goals",
-    "guest_star",
-    "hype_train",
-    "moderation",
-    "polls",
-    "predictions",
-    "raids",
-    "schedule",
-    "search",
-    "streams",
-    "subscriptions",
-    "teams",
-    "videos",
-)
-
 from .ads import *
 from .analytics import *
 from .bits import *
@@ -59,6 +32,7 @@ from .charity import *
 from .chat import *
 from .clips import *
 from .entitlements import *
+from .eventsub_ import *
 from .games import *
 from .goals import *
 from .guest_star import *

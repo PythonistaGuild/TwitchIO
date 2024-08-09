@@ -1331,7 +1331,11 @@ class Client:
 
             try:
                 resp: SubscriptionResponse = await self._http.create_eventsub_subscription(
-                    type=type_, version=version, condition=payload.condition, transport=transport, token_for=token_for
+                    type=type_,
+                    version=version,
+                    condition=payload.condition,
+                    transport=transport,
+                    token_for=token_for,
                 )
             except HTTPException as e:
                 if e.status == 409:

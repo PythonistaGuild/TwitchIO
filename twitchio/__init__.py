@@ -33,6 +33,5 @@ from .assets import Asset as Asset
 from .client import Client as Client
 from .exceptions import *
 from .models import *
-from .models.eventsub import *
 from .payloads import *
 from .utils import Color as Color, Colour as Colour
