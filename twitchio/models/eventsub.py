@@ -218,3 +218,19 @@ class UserAuthorizationGrant(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<UserAuthorizationGrant client_id={self.client_id} user={self.user}>"
+
+
+class UserAuthorizationRevoke(BaseEvent):
+    type = "user.authorization.revoke"
+
+    __slots__ = ("client_id", "user")
+
+    def __init__(self, payload: UserAuthorizationRevokeEvent, *, http: HTTPClient) -> None:
+        self.client_id: str = payload["client_id"]
+        if payload.get("user_id", None):
+            self.user: PartialUser | None = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        else:
+            self.user = None
+
+    def __repr__(self) -> str:
+        return f"<UserAuthorizationGrant client_id={self.client_id} user={self.user}>"
