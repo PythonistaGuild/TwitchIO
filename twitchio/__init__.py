@@ -28,7 +28,7 @@ __license__ = "MIT"
 __copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
 __version__ = "3.0.0dev"
 
-from . import authentication as authentication, utils as utils, web as web
+from . import authentication as authentication, eventsub as eventsub, utils as utils, web as web
 from .assets import Asset as Asset
 from .client import Client as Client
 from .exceptions import *

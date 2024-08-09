@@ -33,7 +33,7 @@ import aiohttp
 
 from ..backoff import Backoff
 from ..exceptions import WebsocketConnectionException
-from ..models.eventsub import BaseEvent
+from ..models.eventsub_ import BaseEvent
 from ..types_.conduits import (
     MessageTypes,
     MetaData,
@@ -151,6 +151,8 @@ class Websocket:
         if self.connected and not reconnect_url:
             logger.warning("Trying to connect to an already running eventsub websocket: <%r>.", self)
             return
+
+        # TODO: Close...
 
         if not self._session:
             self._session = aiohttp.ClientSession()

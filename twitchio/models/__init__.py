@@ -32,6 +32,7 @@ from .charity import *
 from .chat import *
 from .clips import *
 from .entitlements import *
+from .eventsub_ import *
 from .games import *
 from .goals import *
 from .guest_star import *
