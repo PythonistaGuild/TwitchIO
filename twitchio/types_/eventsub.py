@@ -192,7 +192,7 @@ class ChannelSubscribeEvent(BroadcasterUserEvent):
     is_gift: bool
 
 
-class ChannelSubscribeEndEvent(BroadcasterUserEvent):
+class ChannelSubscriptionEndEvent(BroadcasterUserEvent):
     tier: str
     is_gift: bool
 

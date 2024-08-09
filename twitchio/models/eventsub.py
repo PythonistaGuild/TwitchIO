@@ -33,6 +33,7 @@ from twitchio.types_.eventsub import (
     ChannelChatSettingsUpdateEvent,
     ChannelFollowEvent,
     ChannelSubscribeEvent,
+    ChannelSubscriptionEndEvent,
     ChannelUpdateEvent,
     ChannelVIPAddEvent,
     StreamOfflineEvent,
@@ -217,6 +218,28 @@ class ChannelSubscribe(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelSubscribe broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
+
+
+class ChannelSubscriptionEnd(BaseEvent):
+    subscription_type = "channel.subscribe.end"
+
+    __slots__ = (
+        "broadcaster",
+        "user",
+        "tier",
+        "gift",
+    )
+
+    def __init__(self, payload: ChannelSubscriptionEndEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.tier: str = payload["tier"]
+        self.gift: bool = bool(payload["is_gift"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelSubscriptionEnd broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
 
 
 class ChannelVIPAdd(BaseEvent):
