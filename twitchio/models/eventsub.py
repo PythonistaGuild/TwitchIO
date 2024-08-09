@@ -34,6 +34,7 @@ from twitchio.types_.eventsub import (
     ChannelFollowEvent,
     ChannelSubscribeEvent,
     ChannelSubscriptionEndEvent,
+    ChannelSubscriptionGiftEvent,
     ChannelUpdateEvent,
     ChannelVIPAddEvent,
     StreamOfflineEvent,
@@ -240,6 +241,26 @@ class ChannelSubscriptionEnd(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelSubscriptionEnd broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
+
+
+class ChannelSubscriptionGift(BaseEvent):
+    subscription_type = "channel.subscribe.end"
+
+    __slots__ = ("broadcaster", "user", "tier", "total", "cumulative_total", "anonymous")
+
+    def __init__(self, payload: ChannelSubscriptionGiftEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.tier: str = payload["tier"]
+        self.total: int = int(payload["total"])
+        self.anonymous: bool = bool(payload["is_anonymous"])
+        cumulative_total = payload.get("cumulative_total")
+        self.cumulative_total: int | None = int(cumulative_total) if cumulative_total is not None else None
+
+    def __repr__(self) -> str:
+        return f"<ChannelSubscriptionGift broadcaster={self.broadcaster} user={self.user} tier={self.tier} total={self.total}>"
 
 
 class ChannelVIPAdd(BaseEvent):

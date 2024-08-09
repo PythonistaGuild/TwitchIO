@@ -197,7 +197,7 @@ class ChannelSubscriptionEndEvent(BroadcasterUserEvent):
     is_gift: bool
 
 
-class ChannelSubscribeGiftEvent(BroadcasterUserEvent):
+class ChannelSubscriptionGiftEvent(BroadcasterUserEvent):
     total: int
     tier: str
     cumulative_total: int | None
