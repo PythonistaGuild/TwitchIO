@@ -26,7 +26,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-from twitchio.http import HTTPClient
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
