@@ -48,6 +48,7 @@ __all__ = (
     "UserAuthorizationGrantSubscription",
     "UserAuthorizationRevokeSubscription",
     "UserUpdateSubscription",
+    "WhisperReceivedSubscription",
 )
 
 
@@ -281,6 +282,21 @@ class UserAuthorizationRevokeSubscription(SubscriptionPayload):
 
 class UserUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["user.update"]] = "user.update"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.user_id: str = condition.get("user_id", "")
+
+        if not self.user_id:
+            raise ValueError('The parameter "user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"user_id": self.user_id}
+
+
+class WhisperReceivedSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["user.whisper.message"]] = "user.whisper.message"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:

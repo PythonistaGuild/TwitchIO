@@ -39,6 +39,7 @@ from twitchio.types_.eventsub import (
     UserAuthorizationGrantEvent,
     UserAuthorizationRevokeEvent,
     UserUpdateEvent,
+    UserWhisperEvent,
 )
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
@@ -275,10 +276,25 @@ class UserUpdate(BaseEvent):
     __slots__ = ("user", "email", "verified", "description")
 
     def __init__(self, payload: UserUpdateEvent, *, http: HTTPClient) -> None:
-        self.user: PartialUser | None = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
         self.verified: bool = bool(payload["email_verified"])
         self.description: str = payload["description"]
         self.email: str | None = payload.get("email", None)
 
     def __repr__(self) -> str:
         return f"<UserUpdate user={self.user} verified={self.verified} description={self.description}>"
+
+
+class Whisper(BaseEvent):
+    subscription_type = "user.whisper.message"
+
+    __slots__ = ("sender", "recipient", "id", "message")
+
+    def __init__(self, payload: UserWhisperEvent, *, http: HTTPClient) -> None:
+        self.sender: PartialUser = PartialUser(payload["from_user_id"], payload["from_user_login"], http=http)
+        self.recipient: PartialUser = PartialUser(payload["to_user_id"], payload["to_user_login"], http=http)
+        self.id: str = payload["whisper_id"]
+        self.message: str = payload["whisper"]["text"]
+
+    def __repr__(self) -> str:
+        return f"<Whisper sender={self.sender} recipient={self.recipient} id={self.id} message={self.message}>"
