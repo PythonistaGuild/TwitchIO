@@ -24,8 +24,9 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
+from twitchio.http import HTTPClient
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
@@ -41,19 +42,28 @@ if TYPE_CHECKING:
         ChannelChatMessageDeleteEvent,
         ChannelChatSettingsUpdateEvent,
         ChannelFollowEvent,
+        ChannelSubscribeEvent,
+        ChannelSubscriptionEndEvent,
+        ChannelSubscriptionGiftEvent,
         ChannelUpdateEvent,
         ChannelVIPAddEvent,
+        StreamOfflineEvent,
+        StreamOnlineEvent,
+        UserAuthorizationGrantEvent,
+        UserAuthorizationRevokeEvent,
+        UserUpdateEvent,
+        UserWhisperEvent,
     )
 
 
 class BaseEvent:
     _registry: ClassVar[dict[str, type]] = {}
-    type: ClassVar[str | None] = None
+    subscription_type: ClassVar[str | None] = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
-        if cls.type is not None:
-            BaseEvent._registry[cls.type] = cls
+        if cls.subscription_type is not None:
+            BaseEvent._registry[cls.subscription_type] = cls
 
     @classmethod
     def create_instance(cls, event_type: str, payload: dict[str, Any], http: HTTPClient | None = None) -> Any:
@@ -64,7 +74,7 @@ class BaseEvent:
 
 
 class ChannelUpdate(BaseEvent):
-    type = "channel.update"
+    subscription_type = "channel.update"
 
     __slots__ = ("broadcaster", "title", "category_id", "category_name", "content_classification_labels")
 
@@ -81,7 +91,7 @@ class ChannelUpdate(BaseEvent):
 
 
 class ChannelFollow(BaseEvent):
-    type = "channel.follow"
+    subscription_type = "channel.follow"
 
     __slots__ = ("broadcaster", "user", "followed_at")
 
@@ -97,7 +107,7 @@ class ChannelFollow(BaseEvent):
 
 
 class ChannelAdBreakBegin(BaseEvent):
-    type = "channel.ad_break.begin"
+    subscription_type = "channel.ad_break.begin"
 
     __slots__ = ("broadcaster", "requester", "duration", "automatic", "started_at")
 
@@ -117,7 +127,7 @@ class ChannelAdBreakBegin(BaseEvent):
 
 
 class ChannelChatClear(BaseEvent):
-    type = "channel.chat.clear"
+    subscription_type = "channel.chat.clear"
 
     __slots__ = ("broadcaster",)
 
@@ -131,7 +141,7 @@ class ChannelChatClear(BaseEvent):
 
 
 class ChannelChatClearUserMessages(BaseEvent):
-    type = "channel.chat.clear_user_messages"
+    subscription_type = "channel.chat.clear_user_messages"
 
     __slots__ = ("broadcaster", "user")
 
@@ -146,7 +156,7 @@ class ChannelChatClearUserMessages(BaseEvent):
 
 
 class ChannelChatMessageDelete(BaseEvent):
-    type = "channel.chat.message_delete"
+    subscription_type = "channel.chat.message_delete"
 
     __slots__ = ("broadcaster", "user", "message_id")
 
@@ -164,7 +174,7 @@ class ChannelChatMessageDelete(BaseEvent):
 
 
 class ChannelChatSettingsUpdate(BaseEvent):
-    type = "channel.chat_settings.update"
+    subscription_type = "channel.chat_settings.update"
 
     __slots__ = (
         "broadcaster",
@@ -190,11 +200,75 @@ class ChannelChatSettingsUpdate(BaseEvent):
         self.follower_mode_duration: int | None = payload.get("follower_mode_duration_minutes")
 
     def __repr__(self) -> str:
-        return f"<ChannelChatSettingsUpdate broadcaster={self.broadcaster} {self.slow_mode_wait_time} {self.follower_mode_duration}>"
+        return f"<ChannelChatSettingsUpdate broadcaster={self.broadcaster} slow_mode={self.slow_mode} follower_mode={self.follower_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
+
+
+class ChannelSubscribe(BaseEvent):
+    subscription_type = "channel.subscribe"
+
+    __slots__ = (
+        "broadcaster",
+        "user",
+        "tier",
+        "gift",
+    )
+
+    def __init__(self, payload: ChannelSubscribeEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.tier: str = payload["tier"]
+        self.gift: bool = bool(payload["is_gift"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelSubscribe broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
+
+
+class ChannelSubscriptionEnd(BaseEvent):
+    subscription_type = "channel.subscribe.end"
+
+    __slots__ = (
+        "broadcaster",
+        "user",
+        "tier",
+        "gift",
+    )
+
+    def __init__(self, payload: ChannelSubscriptionEndEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.tier: str = payload["tier"]
+        self.gift: bool = bool(payload["is_gift"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelSubscriptionEnd broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
+
+
+class ChannelSubscriptionGift(BaseEvent):
+    subscription_type = "channel.subscribe.end"
+
+    __slots__ = ("broadcaster", "user", "tier", "total", "cumulative_total", "anonymous")
+
+    def __init__(self, payload: ChannelSubscriptionGiftEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.tier: str = payload["tier"]
+        self.total: int = int(payload["total"])
+        self.anonymous: bool = bool(payload["is_anonymous"])
+        cumulative_total = payload.get("cumulative_total")
+        self.cumulative_total: int | None = int(cumulative_total) if cumulative_total is not None else None
+
+    def __repr__(self) -> str:
+        return f"<ChannelSubscriptionGift broadcaster={self.broadcaster} user={self.user} tier={self.tier} total={self.total}>"
 
 
 class ChannelVIPAdd(BaseEvent):
-    type = "channel.vip.add"
+    subscription_type = "channel.vip.add"
 
     __slots__ = ("broadcaster", "user")
 
@@ -206,3 +280,92 @@ class ChannelVIPAdd(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelVIPAdd broadcaster={self.broadcaster} user={self.user}>"
+
+
+class StreamOnline(BaseEvent):
+    subscription_type = "stream.online"
+
+    __slots__ = ("broadcaster", "id", "type", "started_at")
+
+    def __init__(self, payload: StreamOnlineEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.type: Literal["live", "playlist", "watch_party", "premiere", "rerun"] = payload["type"]
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<StreamOnline id={self.id} broadcaster={self.broadcaster} started_at={self.started_at}>"
+
+
+class StreamOffline(BaseEvent):
+    subscription_type = "stream.offline"
+
+    __slots__ = "broadcaster"
+
+    def __init__(self, payload: StreamOfflineEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+
+    def __repr__(self) -> str:
+        return f"<StreamOffline broadcaster={self.broadcaster}>"
+
+
+class UserAuthorizationGrant(BaseEvent):
+    subscription_type = "user.authorization.grant"
+
+    __slots__ = ("client_id", "user")
+
+    def __init__(self, payload: UserAuthorizationGrantEvent, *, http: HTTPClient) -> None:
+        self.client_id: str = payload["client_id"]
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<UserAuthorizationGrant client_id={self.client_id} user={self.user}>"
+
+
+class UserAuthorizationRevoke(BaseEvent):
+    subscription_type = "user.authorization.revoke"
+
+    __slots__ = ("client_id", "user")
+
+    def __init__(self, payload: UserAuthorizationRevokeEvent, *, http: HTTPClient) -> None:
+        self.client_id: str = payload["client_id"]
+        self.user: PartialUser | None = (
+            PartialUser(payload["user_id"], payload["user_login"], http=http) if payload.get("user_id") else None
+        )
+
+    def __repr__(self) -> str:
+        return f"<UserAuthorizationRevoke client_id={self.client_id} user={self.user}>"
+
+
+class UserUpdate(BaseEvent):
+    subscription_type = "user.update"
+
+    __slots__ = ("user", "email", "verified", "description")
+
+    def __init__(self, payload: UserUpdateEvent, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.verified: bool = bool(payload["email_verified"])
+        self.description: str = payload["description"]
+        self.email: str | None = payload.get("email", None)
+
+    def __repr__(self) -> str:
+        return f"<UserUpdate user={self.user} verified={self.verified} description={self.description}>"
+
+
+class Whisper(BaseEvent):
+    subscription_type = "user.whisper.message"
+
+    __slots__ = ("sender", "recipient", "id", "message")
+
+    def __init__(self, payload: UserWhisperEvent, *, http: HTTPClient) -> None:
+        self.sender: PartialUser = PartialUser(payload["from_user_id"], payload["from_user_login"], http=http)
+        self.recipient: PartialUser = PartialUser(payload["to_user_id"], payload["to_user_login"], http=http)
+        self.id: str = payload["whisper_id"]
+        self.message: str = payload["whisper"]["text"]
+
+    def __repr__(self) -> str:
+        return f"<Whisper sender={self.sender} recipient={self.recipient} id={self.id} message={self.message}>"
