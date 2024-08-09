@@ -38,6 +38,7 @@ from twitchio.types_.eventsub import (
     StreamOnlineEvent,
     UserAuthorizationGrantEvent,
     UserAuthorizationRevokeEvent,
+    UserUpdateEvent,
 )
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
@@ -260,10 +261,24 @@ class UserAuthorizationRevoke(BaseEvent):
 
     def __init__(self, payload: UserAuthorizationRevokeEvent, *, http: HTTPClient) -> None:
         self.client_id: str = payload["client_id"]
-        if payload.get("user_id", None):
-            self.user: PartialUser | None = PartialUser(payload["user_id"], payload["user_login"], http=http)
-        else:
-            self.user = None
+        self.user: PartialUser | None = (
+            PartialUser(payload["user_id"], payload["user_login"], http=http) if payload.get("user_id") else None
+        )
 
     def __repr__(self) -> str:
-        return f"<UserAuthorizationGrant client_id={self.client_id} user={self.user}>"
+        return f"<UserAuthorizationRevoke client_id={self.client_id} user={self.user}>"
+
+
+class UserUpdate(BaseEvent):
+    subscription_type = "user.update"
+
+    __slots__ = ("user", "email", "verified", "description")
+
+    def __init__(self, payload: UserUpdateEvent, *, http: HTTPClient) -> None:
+        self.user: PartialUser | None = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.verified: bool = bool(payload["email_verified"])
+        self.description: str = payload["description"]
+        self.email: str | None = payload.get("email", None)
+
+    def __repr__(self) -> str:
+        return f"<UserUpdate user={self.user} verified={self.verified} description={self.description}>"

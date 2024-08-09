@@ -47,6 +47,7 @@ __all__ = (
     "StreamOfflineSubscription",
     "UserAuthorizationGrantSubscription",
     "UserAuthorizationRevokeSubscription",
+    "UserUpdateSubscription",
 )
 
 
@@ -276,3 +277,18 @@ class UserAuthorizationRevokeSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"client_id": self.client_id}
+
+
+class UserUpdateSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["user.update"]] = "user.update"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.user_id: str = condition.get("user_id", "")
+
+        if not self.user_id:
+            raise ValueError('The parameter "user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"user_id": self.user_id}
