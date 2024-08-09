@@ -32,6 +32,7 @@ from twitchio.types_.eventsub import (
     ChannelChatMessageDeleteEvent,
     ChannelChatSettingsUpdateEvent,
     ChannelFollowEvent,
+    ChannelSubscribeEvent,
     ChannelUpdateEvent,
     ChannelVIPAddEvent,
     StreamOfflineEvent,
@@ -193,7 +194,29 @@ class ChannelChatSettingsUpdate(BaseEvent):
         self.follower_mode_duration: int | None = payload.get("follower_mode_duration_minutes")
 
     def __repr__(self) -> str:
-        return f"<ChannelChatSettingsUpdate broadcaster={self.broadcaster} {self.slow_mode_wait_time} {self.follower_mode_duration}>"
+        return f"<ChannelChatSettingsUpdate broadcaster={self.broadcaster} slow_mode={self.slow_mode} follower_mode={self.follower_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
+
+
+class ChannelSubscribe(BaseEvent):
+    subscription_type = "channel.subscribe"
+
+    __slots__ = (
+        "broadcaster",
+        "user",
+        "tier",
+        "gift",
+    )
+
+    def __init__(self, payload: ChannelSubscribeEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.tier: str = payload["tier"]
+        self.gift: bool = bool(payload["is_gift"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelSubscribe broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
 
 
 class ChannelVIPAdd(BaseEvent):
