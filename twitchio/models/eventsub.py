@@ -34,6 +34,8 @@ from twitchio.types_.eventsub import (
     ChannelFollowEvent,
     ChannelUpdateEvent,
     ChannelVIPAddEvent,
+    UserAuthorizationGrantEvent,
+    UserAuthorizationRevokeEvent,
 )
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
@@ -203,3 +205,16 @@ class ChannelVIPAdd(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelVIPAdd broadcaster={self.broadcaster} user={self.user}>"
+
+
+class UserAuthorizationGrant(BaseEvent):
+    type = "user.authorization.grant"
+
+    __slots__ = ("client_id", "user")
+
+    def __init__(self, payload: UserAuthorizationGrantEvent, *, http: HTTPClient) -> None:
+        self.client_id: str = payload["client_id"]
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<UserAuthorizationGrant client_id={self.client_id} user={self.user}>"
