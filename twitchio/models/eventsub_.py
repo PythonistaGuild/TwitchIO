@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
+from twitchio.assets import Asset
 from twitchio.models.chat import EmoteSet
 from twitchio.user import PartialUser
 from twitchio.utils import Colour, parse_timestamp
@@ -41,6 +42,7 @@ if TYPE_CHECKING:
         ChannelChatClearUserMessagesEvent,
         ChannelChatMessageDeleteEvent,
         ChannelChatMessageEvent,
+        ChannelChatNotificationEvent,
         ChannelChatSettingsUpdateEvent,
         ChannelFollowEvent,
         ChannelSubscribeEvent,
@@ -48,12 +50,24 @@ if TYPE_CHECKING:
         ChannelSubscriptionGiftEvent,
         ChannelUpdateEvent,
         ChannelVIPAddEvent,
-        ChatMessageBadge as ChatMessageBadgeData,
-        ChatMessageCheer as ChatMessageCheerData,
-        ChatMessageCheermote as ChatMessageCheermoteData,
-        ChatMessageEmote as ChatMessageEmoteData,
-        ChatMessageFragments as ChatMessageFragmentsData,
-        ChatMessageReply as ChatMessageReplyData,
+        ChatAnnouncementData,
+        ChatBitsBadgeTierData,
+        ChatCharityAmountData,
+        ChatCharityDonationData,
+        ChatCommunitySubGiftData,
+        ChatGiftPaidUpgradeData,
+        ChatMessageBadgeData,
+        ChatMessageCheerData,
+        ChatMessageCheermoteData,
+        ChatMessageEmoteData,
+        ChatMessageFragmentsData,
+        ChatMessageReplyData,
+        ChatPayItForwardData,
+        ChatPrimePaidUpgradeData,
+        ChatRaidData,
+        ChatResubData,
+        ChatSubData,
+        ChatSubGiftData,
         StreamOfflineEvent,
         StreamOnlineEvent,
         UserAuthorizationGrantEvent,
@@ -260,7 +274,7 @@ class ChatMessageFragment:
         return f"<ChatMessageFragment type={self.type} text={self.text}>"
 
 
-class ChannelChatMessage(BaseEvent):
+class ChatMessage(BaseEvent):
     subscription_type = "channel.chat.message"
 
     __slots__ = (
@@ -269,7 +283,7 @@ class ChannelChatMessage(BaseEvent):
         "id",
         "text",
         "fragments",
-        "color",
+        "colour",
         "badges",
         "message_type",
         "cheer",
@@ -285,7 +299,7 @@ class ChannelChatMessage(BaseEvent):
         self.chatter: PartialUser = PartialUser(payload["chatter_user_id"], payload["chatter_user_login"], http=http)
         self.id: str = payload["message_id"]
         self.text: str = payload["message"]["text"]
-        self.color: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
+        self.colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self.channel_points_id: str | None = payload["channel_points_custom_reward_id"]
         self.channel_points_animation_id: str | None = payload["channel_points_animation_id"]
         self.reply: ChatMessageReply | None = (
@@ -310,16 +324,282 @@ class ChannelChatMessage(BaseEvent):
         ]
 
     @property
-    def colour(self) -> Colour | None:
-        return self.color
+    def color(self) -> Colour | None:
+        return self.colour
 
     def __repr__(self) -> str:
-        return (
-            f"<ChannelChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
+        return f"<ChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
+
+
+class ChatSub:
+    __slots__ = ("tier", "prime", "duration_months")
+
+    def __init__(self, data: ChatSubData) -> None:
+        self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
+        self.prime: bool = bool(data["is_prime"])
+        self.duration_months: int = int(data["duration_months"])
+
+    def __repr__(self) -> str:
+        return f"<ChatSub tier={self.tier} prime={self.prime} duration_months={self.duration_months}>"
+
+
+class ChatResub:
+    __slots__ = (
+        "tier",
+        "prime",
+        "duration",
+        "cumulative",
+        "streak",
+        "gift",
+        "anonymous",
+        "gifter",
+    )
+
+    def __init__(self, data: ChatResubData, *, http: HTTPClient) -> None:
+        self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
+        self.prime: bool = bool(data["is_prime"])
+        self.gift: bool = bool(data["is_gift"])
+        self.duration: int = int(data["duration_months"])
+        self.cumulative: int = int(data["cumulative_months"])
+        self.streak: int = int(data["streak_months"])
+        self.anonymous: bool | None = (
+            bool(data["gifter_is_anonymous"]) if data.get("gifter_is_anonymous") is not None else None
+        )
+        gifter = data.get("gifter_user_id")
+        self.gifter: PartialUser | None = (
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http)
+            if gifter is not None
+            else None
         )
 
+    def __repr__(self) -> str:
+        return f"<ChatResub tier={self.tier} prime={self.prime} duration={self.duration}>"
 
-class ChannelChatMessageDelete(BaseEvent):
+
+class ChatSubGift:
+    __slots__ = ("duration", "tier", "cumulative", "recipient", "community_gift_id")
+
+    def __init__(self, data: ChatSubGiftData, *, http: HTTPClient) -> None:
+        self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
+        self.duration: int = int(data["duration_months"])
+        self.cumulative: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
+        self.community_gift_id: str | None = data.get("community_gift_id")
+        self.recipient: PartialUser = PartialUser(data["recipient_user_id"], data["recipient_user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChatSubGift tier={self.tier} duration={self.duration} recipient={self.recipient}>"
+
+
+class ChatCommunitySubGift:
+    __slots__ = ("total", "tier", "cumulative", "id")
+
+    def __init__(self, data: ChatCommunitySubGiftData) -> None:
+        self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
+        self.total: int = int(data["total"])
+        self.cumulative: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
+        self.id: str | None = data.get("community_gift_id")
+
+    def __repr__(self) -> str:
+        return f"<ChatCommunitySubGift id={self.id} tier={self.tier} total={self.total}>"
+
+
+class ChatGiftPaidUpgrade:
+    __slots__ = ("anonymous", "gifter")
+
+    def __init__(self, data: ChatGiftPaidUpgradeData, *, http: HTTPClient) -> None:
+        self.anonymous: bool = bool(data["gifter_is_anonymous"])
+        gifter = data.get("gifter_user_id")
+        self.gifter: PartialUser | None = (
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http)
+            if gifter is not None
+            else None
+        )
+
+    def __repr__(self) -> str:
+        return f"<ChatGiftPaidUpgrade anonymous={self.anonymous} gifter={self.gifter}>"
+
+
+class ChatPrimePaidUpgrade:
+    __slots__ = ("tier",)
+
+    def __init__(self, data: ChatPrimePaidUpgradeData) -> None:
+        self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
+
+    def __repr__(self) -> str:
+        return f"<ChatPrimePaidUpgrade tier={self.tier}>"
+
+
+class ChatRaid:
+    __slots__ = ("user", "viewer_count", "profile_image")
+
+    def __init__(self, data: ChatRaidData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.viewer_count = int(data["viewer_count"])
+        self.profile_image: Asset = Asset(data["profile_image_url"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChatRaid user={self.user} viewer_count={self.viewer_count}>"
+
+
+class ChatPayItForward:
+    __slots__ = ("anonymous", "gifter")
+
+    def __init__(self, data: ChatPayItForwardData, *, http: HTTPClient) -> None:
+        self.anonymous: bool = bool(data["gifter_is_anonymous"])
+        gifter = data.get("gifter_user_id")
+        self.gifter: PartialUser | None = (
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http)
+            if gifter is not None
+            else None
+        )
+
+    def __repr__(self) -> str:
+        return f"<ChatPayItForward anonymous={self.anonymous} gifter={self.gifter}>"
+
+
+class ChatAnnouncement:
+    __slots__ = ("colour",)
+
+    def __init__(self, data: ChatAnnouncementData) -> None:
+        self.colour: Colour = Colour.from_hex(data["color"])
+
+    @property
+    def color(self) -> Colour | None:
+        return self.colour
+
+    def __repr__(self) -> str:
+        return f"<ChatAnnouncement colour={self.colour}>"
+
+
+class ChatBitsBadgeTier:
+    __slots__ = ("tier",)
+
+    def __init__(self, data: ChatBitsBadgeTierData) -> None:
+        self.tier: int = int(data["tier"])
+
+    def __repr__(self) -> str:
+        return f"<ChatBitsBadgeTier tier={self.tier}>"
+
+
+class ChatCharityValues:
+    __slots__ = ("value", "decimal_place", "currency")
+
+    def __init__(self, data: ChatCharityAmountData) -> None:
+        self.value: int = int(data["value"])
+        self.decimal_place: int = int(data["decimal_place"])
+        self.currency: str = data["currency"]
+
+    def __repr__(self) -> str:
+        return f"<ChatCharityValues value={self.value} decimal_place={self.decimal_place} currency={self.currency}>"
+
+
+class ChatCharityDonation:
+    __slots__ = ("name", "amount")
+
+    def __init__(self, data: ChatCharityDonationData) -> None:
+        self.name: str = data["charity_name"]
+        self.amount: ChatCharityValues = ChatCharityValues(data["amount"])
+
+    def __repr__(self) -> str:
+        return f"<ChatCharityDonation name={self.name}>"
+
+
+class ChatNotification(BaseEvent):
+    subscription_type = "channel.chat.notification"
+
+    __slots__ = (
+        "broadcaster",
+        "chatter",
+        "anonymous",
+        "colour",
+        "badges",
+        "system_message",
+        "id",
+        "text",
+        "fragments",
+        "notice_type",
+        "sub",
+        "resub",
+        "sub_gift",
+        "community_sub_gift",
+        "gift_paid_upgrade",
+        "prime_paid_upgrade",
+        "raid",
+        "unraid",
+        "pay_it_forward",
+        "announcement",
+        "bits_badge_tier",
+        "charity_donation",
+    )
+
+    def __init__(self, payload: ChannelChatNotificationEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.chatter: PartialUser = PartialUser(payload["chatter_user_id"], payload["chatter_user_login"], http=http)
+        self.anonymous: bool = bool(payload["chatter_is_anonymous"])
+        self.colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
+        self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
+        self.system_message: str = payload["system_message"]
+        self.id: str = payload["message_id"]
+        self.text: str = payload["message"]["text"]
+        self.fragments: list[ChatMessageFragment] = [
+            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
+        ]
+        self.sub: ChatSub | None = ChatSub(payload["sub"]) if payload["sub"] is not None else None
+        self.resub: ChatResub | None = ChatResub(payload["resub"], http=http) if payload["resub"] is not None else None
+        self.sub_gift: ChatSubGift | None = (
+            ChatSubGift(payload["sub_gift"], http=http) if payload["sub_gift"] is not None else None
+        )
+        self.community_sub_gift: ChatCommunitySubGift | None = (
+            ChatCommunitySubGift(payload["community_sub_gift"]) if payload["community_sub_gift"] is not None else None
+        )
+        self.gift_paid_upgrade: ChatGiftPaidUpgrade | None = (
+            ChatGiftPaidUpgrade(payload["gift_paid_upgrade"], http=http)
+            if payload["gift_paid_upgrade"] is not None
+            else None
+        )
+        self.prime_paid_upgrade: ChatPrimePaidUpgrade | None = (
+            ChatPrimePaidUpgrade(payload["prime_paid_upgrade"]) if payload["prime_paid_upgrade"] is not None else None
+        )
+        self.raid: ChatRaid | None = ChatRaid(payload["raid"], http=http) if payload["raid"] is not None else None
+        self.unraid: None  # TODO This returns an empty payload otherwise None so just make it None?
+        self.pay_it_forward: ChatPayItForward | None = (
+            ChatPayItForward(payload["pay_it_forward"], http=http) if payload["pay_it_forward"] is not None else None
+        )
+        self.announcement: ChatAnnouncement | None = (
+            ChatAnnouncement(payload["announcement"]) if payload["announcement"] is not None else None
+        )
+        self.bits_badge_tier: ChatBitsBadgeTier | None = (
+            ChatBitsBadgeTier(payload["bits_badge_tier"]) if payload["bits_badge_tier"] is not None else None
+        )
+        self.charity_donation: ChatCharityDonation | None = (
+            ChatCharityDonation(payload["charity_donation"]) if payload["charity_donation"] is not None else None
+        )
+        self.notice_type: Literal[
+            "sub",
+            "resub",
+            "sub_gift",
+            "community_sub_gift",
+            "gift_paid_upgrade",
+            "prime_paid_upgrade",
+            "raid",
+            "unraid",
+            "pay_it_forward",
+            "announcement",
+            "bits_badge_tier",
+            "charity_donation",
+        ] = payload["notice_type"]
+
+    @property
+    def color(self) -> Colour | None:
+        return self.colour
+
+    def __repr__(self) -> str:
+        return f"<ChatNotification broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
+
+
+class ChatMessageDelete(BaseEvent):
     subscription_type = "channel.chat.message_delete"
 
     __slots__ = ("broadcaster", "user", "message_id")
@@ -332,12 +612,10 @@ class ChannelChatMessageDelete(BaseEvent):
         self.message_id: str = payload["message_id"]
 
     def __repr__(self) -> str:
-        return (
-            f"<ChannelChatMessageDelete broadcaster={self.broadcaster} user={self.user} message_id={self.message_id}>"
-        )
+        return f"<ChatMessageDelete broadcaster={self.broadcaster} user={self.user} message_id={self.message_id}>"
 
 
-class ChannelChatSettingsUpdate(BaseEvent):
+class ChatSettingsUpdate(BaseEvent):
     subscription_type = "channel.chat_settings.update"
 
     __slots__ = (
@@ -364,7 +642,7 @@ class ChannelChatSettingsUpdate(BaseEvent):
         self.follower_mode_duration: int | None = payload.get("follower_mode_duration_minutes")
 
     def __repr__(self) -> str:
-        return f"<ChannelChatSettingsUpdate broadcaster={self.broadcaster} slow_mode={self.slow_mode} follower_mode={self.follower_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
+        return f"<ChatSettingsUpdate broadcaster={self.broadcaster} slow_mode={self.slow_mode} follower_mode={self.follower_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
 
 
 class ChannelSubscribe(BaseEvent):

@@ -84,7 +84,7 @@ class PartialUser:
 
     Attributes
     -----------
-    id: str
+    id: str | int
         The user's ID.
     name: str | None
         The user's name. In most cases, this is provided. There are however, rare cases where it is not.
@@ -92,7 +92,7 @@ class PartialUser:
 
     __slots__ = "id", "name", "_http", "_cached_rewards"
 
-    def __init__(self, id: int | str, name: str | None = None, *, http: HTTPClient) -> None:
+    def __init__(self, id: str | int, name: str | None = None, *, http: HTTPClient) -> None:
         self._http = http
         self.id = str(id)
         self.name = name

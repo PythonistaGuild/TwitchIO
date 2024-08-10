@@ -169,7 +169,7 @@ class ChannelChatClearUserMessagesEvent(BaseBroadcasterEvent):
     target_user_user_name: str
 
 
-class ChatMessageEmote(TypedDict):
+class ChatMessageEmoteData(TypedDict):
     id: str
     emote_set_id: str
     owner_id: str
@@ -179,21 +179,21 @@ class ChatMessageEmote(TypedDict):
 class ChatMessageMention(BaseUserEvent): ...
 
 
-class ChatMessageCheermote(TypedDict):
+class ChatMessageCheermoteData(TypedDict):
     prefix: str
     bits: int
     tier: int
 
 
-class ChatMessageFragments(TypedDict):
+class ChatMessageFragmentsData(TypedDict):
     text: str
     type: Literal["text", "cheermote", "emote", "mention"]
-    cheermote: ChatMessageCheermote | None
-    emote: ChatMessageEmote | None
+    cheermote: ChatMessageCheermoteData | None
+    emote: ChatMessageEmoteData | None
     mention: ChatMessageMention | None
 
 
-class ChatMessageReply(TypedDict):
+class ChatMessageReplyData(TypedDict):
     parent_message_id: str
     parent_message_body: str
     parent_user_id: str
@@ -205,7 +205,7 @@ class ChatMessageReply(TypedDict):
     thread_user_login: str
 
 
-class ChatMessageBadge(TypedDict):
+class ChatMessageBadgeData(TypedDict):
     set_id: str
     id: str
     info: str
@@ -213,10 +213,10 @@ class ChatMessageBadge(TypedDict):
 
 class ChatMessage(TypedDict):
     text: str
-    fragments: list[ChatMessageFragments]
+    fragments: list[ChatMessageFragmentsData]
 
 
-class ChatMessageCheer(TypedDict):
+class ChatMessageCheerData(TypedDict):
     bits: int
 
 
@@ -235,11 +235,133 @@ class ChannelChatMessageEvent(BaseBroadcasterEvent):
         "power_ups_message_effect",
         "power_ups_gigantified_emote",
     ]
-    badges: list[ChatMessageBadge]
-    reply: ChatMessageReply | None
-    cheer: ChatMessageCheer | None
+    badges: list[ChatMessageBadgeData]
+    reply: ChatMessageReplyData | None
+    cheer: ChatMessageCheerData | None
     channel_points_custom_reward_id: str | None
     channel_points_animation_id: str | None
+
+
+class ChatSubData(TypedDict):
+    sub_tier: Literal["1000", "2000", "3000"]
+    is_prime: bool
+    duration_months: int
+
+
+class ChatResubData(TypedDict):
+    cumulative_months: int
+    duration_months: int
+    streak_months: int
+    sub_tier: Literal["1000", "2000", "3000"]
+    is_prime: bool
+    is_gift: bool
+    gifter_is_anonymous: bool | None
+    gifter_user_id: str | None
+    gifter_user_name: str | None
+    gifter_user_login: str | None
+
+
+class ChatSubGiftData(TypedDict):
+    duration_months: int
+    cumulative_total: int | None
+    recipient_user_id: str
+    recipient_user_name: str
+    recipient_user_login: str
+    sub_tier: Literal["1000", "2000", "3000"]
+    community_gift_id: str | None
+
+
+class ChatCommunitySubGiftData(TypedDict):
+    id: str
+    total: int
+    sub_tier: Literal["1000", "2000", "3000"]
+    cumulative_total: int | None
+
+
+class ChatGiftPaidUpgradeData(TypedDict):
+    gifter_is_anonymous: bool
+    gifter_user_id: str | None
+    gifter_user_name: str | None
+    gifter_user_login: str | None
+
+
+class ChatPrimePaidUpgradeData(TypedDict):
+    sub_tier: Literal["1000", "2000", "3000"]
+
+
+class ChatRaidData(TypedDict):
+    user_id: str
+    user_name: str
+    user_login: str
+    viewer_count: int
+    profile_image_url: str
+
+
+class ChatUnraidData(TypedDict, total=False): ...
+
+
+class ChatPayItForwardData(TypedDict):
+    gifter_is_anonymous: bool
+    gifter_user_id: str | None
+    gifter_user_name: str | None
+    gifter_user_login: str | None
+
+
+class ChatAnnouncementData(TypedDict):
+    color: str
+
+
+class ChatCharityAmountData(TypedDict):
+    value: int
+    decimal_place: int
+    currency: str
+
+
+class ChatCharityDonationData(TypedDict):
+    charity_name: str
+    amount: ChatCharityAmountData
+
+
+class ChatBitsBadgeTierData(TypedDict):
+    tier: int
+
+
+class ChannelChatNotificationEvent(BaseBroadcasterEvent):
+    chatter_user_id: str
+    chatter_user_login: str
+    chatter_user_name: str
+    chatter_is_anonymous: bool
+    color: str
+    badges: list[ChatMessageBadgeData]
+    system_message: str
+    message_id: str
+    message: ChatMessage
+    notice_type: Literal[
+        "sub",
+        "resub",
+        "sub_gift",
+        "community_sub_gift",
+        "gift_paid_upgrade",
+        "prime_paid_upgrade",
+        "raid",
+        "unraid",
+        "pay_it_forward",
+        "announcement",
+        "bits_badge_tier",
+        "charity_donation",
+    ]
+    sub: ChatSubData | None
+    resub: ChatResubData | None
+    sub_gift: ChatSubGiftData | None
+    community_sub_gift: ChatCommunitySubGiftData | None
+    gift_paid_upgrade: ChatGiftPaidUpgradeData | None
+    prime_paid_upgrade: ChatPrimePaidUpgradeData | None
+    raid: ChatRaidData | None
+    unraid: ChatUnraidData | None
+    pay_it_forward: ChatPayItForwardData | None
+    announcement: ChatAnnouncementData | None
+    bits_badge_tier: ChatBitsBadgeTierData | None
+    charity_donation: ChatCharityDonationData | None
 
 
 class ChannelChatMessageDeleteEvent(BaseBroadcasterEvent):

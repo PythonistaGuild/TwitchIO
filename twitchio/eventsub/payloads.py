@@ -40,6 +40,7 @@ __all__ = (
     "ChannelChatClearSubscription",
     "ChannelChatClearUserMessagesSubscription",
     "ChannelChatMessageSubscription",
+    "ChannelChatNotificationSubscription",
     "ChannelChatMessageDeleteSubscription",
     "ChannelChatSettingsUpdateSubscription",
     "ChannelSubscribeSubscription",
@@ -160,6 +161,22 @@ class ChannelChatClearUserMessagesSubscription(SubscriptionPayload):
 
 class ChannelChatMessageSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.message"]] = "channel.chat.message"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.user_id: str = condition.get("user_id", "")
+
+        if not self.broadcaster_user_id or not self.user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
+
+
+class ChannelChatNotificationSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.chat.notification"]] = "channel.chat.notification"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
