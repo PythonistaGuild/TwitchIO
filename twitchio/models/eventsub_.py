@@ -26,8 +26,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
+from twitchio.models.chat import EmoteSet
 from twitchio.user import PartialUser
-from twitchio.utils import parse_timestamp
+from twitchio.utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -39,6 +40,7 @@ if TYPE_CHECKING:
         ChannelChatClearEvent,
         ChannelChatClearUserMessagesEvent,
         ChannelChatMessageDeleteEvent,
+        ChannelChatMessageEvent,
         ChannelChatSettingsUpdateEvent,
         ChannelFollowEvent,
         ChannelSubscribeEvent,
@@ -46,6 +48,12 @@ if TYPE_CHECKING:
         ChannelSubscriptionGiftEvent,
         ChannelUpdateEvent,
         ChannelVIPAddEvent,
+        ChatMessageBadge as ChatMessageBadgeData,
+        ChatMessageCheer as ChatMessageCheerData,
+        ChatMessageCheermote as ChatMessageCheermoteData,
+        ChatMessageEmote as ChatMessageEmoteData,
+        ChatMessageFragments as ChatMessageFragmentsData,
+        ChatMessageReply as ChatMessageReplyData,
         StreamOfflineEvent,
         StreamOnlineEvent,
         UserAuthorizationGrantEvent,
@@ -152,6 +160,163 @@ class ChannelChatClearUserMessages(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelChatClearUserMessages broadcaster={self.broadcaster} user={self.user}>"
+
+
+class ChatMessageReply:
+    __slots__ = (
+        "parent_message_id",
+        "parent_message_body",
+        "parent_user_id",
+        "parent_user_name",
+        "parent_user_login",
+        "thread_message_id",
+        "thread_user_id",
+        "thread_user_name",
+        "thread_user_login",
+    )
+
+    def __init__(self, data: ChatMessageReplyData) -> None:
+        self.parent_message_id: str = data["parent_message_id"]
+        self.parent_message_body: str = data["parent_message_body"]
+        self.parent_user_id: str = data["parent_user_id"]
+        self.parent_user_name: str = data["parent_user_name"]
+        self.parent_user_login: str = data["parent_user_login"]
+        self.thread_message_id: str = data["thread_message_id"]
+        self.thread_user_id: str = data["thread_user_id"]
+        self.thread_user_name: str = data["thread_user_name"]
+        self.thread_user_login: str = data["thread_user_login"]
+
+    def __repr__(self) -> str:
+        return f"<ChatMessageReply parent_message_id={self.parent_message_id} parent_user_id={self.parent_user_id}>"
+
+
+class ChatMessageCheer:
+    __slots__ = ("bits",)
+
+    def __init__(self, data: ChatMessageCheerData) -> None:
+        self.bits: int = int(data["bits"])
+
+    def __repr__(self) -> str:
+        return f"<ChatMessageCheer bits={self.bits}>"
+
+
+class ChatMessageBadge:
+    __slots__ = ("set_id", "id", "info")
+
+    def __init__(self, data: ChatMessageBadgeData) -> None:
+        self.set_id: str = data["set_id"]
+        self.id: str = data["id"]
+        self.info: str = data["info"]
+
+    def __repr__(self) -> str:
+        return f"<ChatMessageBadge set_id={self.set_id} id={self.id} info={self.info}>"
+
+
+class ChatMessageEmote:
+    __slots__ = ("set_id", "id", "owner_id", "format")
+
+    def __init__(self, data: ChatMessageEmoteData, *, http: HTTPClient) -> None:
+        self.set_id: str = data["emote_set_id"]
+        self.id: str = data["id"]
+        self.owner_id: str = data["owner_id"]
+        self.format: list[Literal["static", "animated"]] = data["format"]
+
+    def __repr__(self) -> str:
+        return f"<ChatMessageEmote set_id={self.set_id} id={self.id} owner_id={self.owner_id} format={self.format}>"
+
+    async def fetch_emote_set(self, *, http: HTTPClient, token_for: str | None = None) -> EmoteSet:
+        data = await http.get_emote_sets(emote_set_ids=[self.set_id], token_for=token_for)
+        return EmoteSet(data["data"][0], template=data["template"], http=http)
+
+
+class ChatMessageCheermote:
+    __slots__ = ("prefix", "bits", "tier")
+
+    def __init__(self, data: ChatMessageCheermoteData) -> None:
+        self.prefix: str = data["prefix"]
+        self.bits: int = int(data["bits"])
+        self.tier: int = int(data["tier"])
+
+    def __repr__(self) -> str:
+        return f"<ChatMessageCheermote prefix={self.prefix} bits={self.bits} tier={self.tier}>"
+
+
+class ChatMessageFragment:
+    __slots__ = ("text", "type", "cheermote", "emote", "mention")
+
+    def __init__(self, data: ChatMessageFragmentsData, *, http: HTTPClient) -> None:
+        self.text = data["text"]
+        self.type: Literal["text", "cheermote", "emote", "mention"] = data["type"]
+        user = data.get("mention")
+        self.mention: PartialUser | None = (
+            PartialUser(user["user_id"], user["user_login"], http=http) if user is not None else None
+        )
+        self.cheermote: ChatMessageCheermote | None = (
+            ChatMessageCheermote(data["cheermote"]) if data["cheermote"] is not None else None
+        )
+        self.emote: ChatMessageEmote | None = ChatMessageEmote(data["emote"], http=http) if data["emote"] else None
+
+    def __repr__(self) -> str:
+        return f"<ChatMessageFragment type={self.type} text={self.text}>"
+
+
+class ChannelChatMessage(BaseEvent):
+    subscription_type = "channel.chat.message"
+
+    __slots__ = (
+        "broadcaster",
+        "chatter",
+        "id",
+        "text",
+        "fragments",
+        "color",
+        "badges",
+        "message_type",
+        "cheer",
+        "reply",
+        "channel_points_id",
+        "channel_points_animation_id",
+    )
+
+    def __init__(self, payload: ChannelChatMessageEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.chatter: PartialUser = PartialUser(payload["chatter_user_id"], payload["chatter_user_login"], http=http)
+        self.id: str = payload["message_id"]
+        self.text: str = payload["message"]["text"]
+        self.color: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
+        self.channel_points_id: str | None = payload["channel_points_custom_reward_id"]
+        self.channel_points_animation_id: str | None = payload["channel_points_animation_id"]
+        self.reply: ChatMessageReply | None = (
+            ChatMessageReply(payload["reply"]) if payload["reply"] is not None else None
+        )
+        self.message_type: Literal[
+            "text",
+            "channel_points_highlighted",
+            "channel_points_sub_only",
+            "user_intro",
+            "power_ups_message_effect",
+            "power_ups_gigantified_emote",
+        ] = payload["message_type"]
+
+        self.cheer: ChatMessageCheer | None = (
+            ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
+        )
+        self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
+
+        self.fragments: list[ChatMessageFragment] = [
+            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
+        ]
+
+    @property
+    def colour(self) -> Colour | None:
+        return self.color
+
+    def __repr__(self) -> str:
+        return (
+            f"<ChannelChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
+        )
 
 
 class ChannelChatMessageDelete(BaseEvent):

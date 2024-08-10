@@ -235,6 +235,7 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+
 class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscribe.end"]] = "channel.subscribe.end"
     version: ClassVar[Literal["1"]] = "1"

@@ -320,6 +320,7 @@ class Websocket:
         # TODO: Proper dispatch...
         subscription_type = data["metadata"]["subscription_type"]
         event: str = subscription_type.replace(".", "_")
+
         payload_class = BaseEvent.create_instance(subscription_type, data["payload"]["event"], http=self._http)
 
         if self._client:

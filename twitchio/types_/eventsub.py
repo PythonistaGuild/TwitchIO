@@ -169,6 +169,79 @@ class ChannelChatClearUserMessagesEvent(BaseBroadcasterEvent):
     target_user_user_name: str
 
 
+class ChatMessageEmote(TypedDict):
+    id: str
+    emote_set_id: str
+    owner_id: str
+    format: list[Literal["static", "animated"]]
+
+
+class ChatMessageMention(BaseUserEvent): ...
+
+
+class ChatMessageCheermote(TypedDict):
+    prefix: str
+    bits: int
+    tier: int
+
+
+class ChatMessageFragments(TypedDict):
+    text: str
+    type: Literal["text", "cheermote", "emote", "mention"]
+    cheermote: ChatMessageCheermote | None
+    emote: ChatMessageEmote | None
+    mention: ChatMessageMention | None
+
+
+class ChatMessageReply(TypedDict):
+    parent_message_id: str
+    parent_message_body: str
+    parent_user_id: str
+    parent_user_name: str
+    parent_user_login: str
+    thread_message_id: str
+    thread_user_id: str
+    thread_user_name: str
+    thread_user_login: str
+
+
+class ChatMessageBadge(TypedDict):
+    set_id: str
+    id: str
+    info: str
+
+
+class ChatMessage(TypedDict):
+    text: str
+    fragments: list[ChatMessageFragments]
+
+
+class ChatMessageCheer(TypedDict):
+    bits: int
+
+
+class ChannelChatMessageEvent(BaseBroadcasterEvent):
+    chatter_user_id: str
+    chatter_user_login: str
+    chatter_user_name: str
+    message_id: str
+    message: ChatMessage
+    color: str
+    message_type: Literal[
+        "text",
+        "channel_points_highlighted",
+        "channel_points_sub_only",
+        "user_intro",
+        "power_ups_message_effect",
+        "power_ups_gigantified_emote",
+    ]
+    badges: list[ChatMessageBadge]
+    reply: ChatMessageReply | None
+    cheer: ChatMessageCheer | None
+    channel_points_custom_reward_id: str | None
+    channel_points_animation_id: str | None
+
+
 class ChannelChatMessageDeleteEvent(BaseBroadcasterEvent):
     target_user_id: str
     target_user_login: str
