@@ -118,7 +118,7 @@ class ChannelAdBreakBegin(BaseEvent):
             payload["requester_user_id"], payload["requester_user_login"], http=http
         )
         self.duration: int = int(payload["duration_seconds"])
-        self.automatic: bool = payload["is_automatic"] == "true"  # TODO confirm this is a string and not a bool
+        self.automatic: bool = bool(payload["is_automatic"])
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
 
     def __repr__(self) -> str:
