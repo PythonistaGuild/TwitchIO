@@ -106,6 +106,20 @@ class AutomodMessageHold(BaseEvent):
         return f"<AutomodMessageHold broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"
 
 
+class AutomodMessageUpdate(AutomodMessageHold):
+    subscription_type = "automod.message.update"
+
+    __slots__ = ("moderator", "status")
+
+    def __init__(self, payload: AutomodMessageUpdateEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload=payload, http=http)
+        self.moderator = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.status: Literal["Approved", "Denied", "Expired"] = payload["status"]
+
+    def __repr__(self) -> str:
+        return f"<AutomodMessageUpdate broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"
+
+
 class ChannelUpdate(BaseEvent):
     subscription_type = "channel.update"
 
