@@ -31,8 +31,22 @@ from twitchio.types_.options import ClientOptions
 
 
 class Bot(Client):
-    def __init__(self, *, client_id: str, client_secret: str, bot_id: str, **options: Unpack[ClientOptions]) -> None:
-        super().__init__(client_id=client_id, client_secret=client_secret, bot_id=bot_id, **options)
+    def __init__(
+        self,
+        *,
+        client_id: str,
+        client_secret: str,
+        bot_id: str,
+        eventsub_secret: str | None = None,
+        **options: Unpack[ClientOptions],
+    ) -> None:
+        super().__init__(
+            client_id=client_id,
+            client_secret=client_secret,
+            bot_id=bot_id,
+            eventsub_secret=eventsub_secret,
+            **options,
+        )
 
     @property
     def bot_id(self) -> str:
@@ -46,5 +60,13 @@ class Bot(Client):
         as_bot: bool = True,
         token_for: str | None = None,
         socket_id: str | None = None,
+        callback_url: str | None = None,
     ) -> ...:
-        return await super().subscribe(method, payload, as_bot, token_for, socket_id=socket_id)
+        return await super().subscribe(
+            method,
+            payload,
+            as_bot,
+            token_for,
+            socket_id=socket_id,
+            callback_url=callback_url,
+        )

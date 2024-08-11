@@ -171,8 +171,9 @@ class ReconnectMessage(TypedDict):
 
 
 class RevocationTransport(TypedDict):
-    method: Literal["websocket"]
-    session_id: str
+    method: Literal["websocket"] | Literal["webhook"]
+    session_id: NotRequired[str]
+    callback: NotRequired[str]
 
 
 class RevocationSubscription(TypedDict):

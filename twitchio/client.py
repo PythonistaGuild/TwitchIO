@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
-    from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse
+    from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
     from .types_.options import ClientOptions
 
 
@@ -84,6 +84,7 @@ class Client:
         client_id: str,
         client_secret: str,
         bot_id: str | None = None,
+        eventsub_secret: str | None = None,
         **options: Unpack[ClientOptions],
     ) -> None:
         redirect_uri: str | None = options.get("redirect_uri", None)
@@ -101,7 +102,7 @@ class Client:
         )
 
         adapter: Any = options.get("adapter", None) or AiohttpAdapter
-        self._adapter: Any = adapter(client=self)
+        self._adapter: Any = adapter(client=self, eventsub_secret=eventsub_secret)
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
 
         self._login_called: bool = False
@@ -135,9 +136,7 @@ class Client:
         """
         logger.error('Ignoring Exception in listener "%s":\n', payload.listener.__qualname__, exc_info=payload.error)
 
-    async def _dispatch(
-        self, listener: Callable[..., Coroutine[Any, Any, None]], *, original: Any | None = None
-    ) -> None:
+    async def _dispatch(self, listener: Callable[..., Coroutine[Any, Any, None]], *, original: Any | None = None) -> None:
         try:
             called_: Awaitable[None] = listener(original) if original else listener()
             await called_
@@ -199,7 +198,7 @@ class Client:
             validated: ValidateTokenPayload = await self._http.validate_token(payload.access_token)
             token = payload.access_token
 
-            logger.info("Generated App Token for Client: %s", validated.client_id)
+            logger.info("Generated App Token for Client-ID: %s", validated.client_id)
 
         await self.load_tokens()
 
@@ -1273,9 +1272,7 @@ class Client:
 
         from .models.entitlements import EntitlementStatus
 
-        data = await self._http.patch_drop_entitlements(
-            ids=ids, fulfillment_status=fulfillment_status, token_for=token_for
-        )
+        data = await self._http.patch_drop_entitlements(ids=ids, fulfillment_status=fulfillment_status, token_for=token_for)
         return [EntitlementStatus(d) for d in data["data"]]
 
     async def subscribe(
@@ -1285,7 +1282,10 @@ class Client:
         as_bot: bool = False,
         token_for: str | None = None,
         socket_id: str | None = None,
+        callback_url: str | None = None,
     ) -> ...:
+        # TODO: Docs...
+
         if method is TransportMethod.WEBSOCKET:
             if as_bot and not self.bot_id:
                 raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
@@ -1308,7 +1308,9 @@ class Client:
             elif not sockets:
                 websocket = Websocket(client=self, token_for=token_for, http=self._http)
                 await websocket.connect(fail_once=True)
-                self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore # session_id is guaranteed at this point.
+
+                # session_id is guaranteed at this point.
+                self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore
 
             else:
                 sorted_: list[Websocket] = sorted(sockets.values(), key=lambda s: s.subscription_count)
@@ -1329,14 +1331,16 @@ class Client:
             version: str = payload.version
             transport: SubscriptionCreateTransport = {"method": "websocket", "session_id": session_id}
 
+            data: _SubscriptionData = {
+                "type": type_,
+                "version": version,
+                "condition": payload.condition,
+                "transport": transport,
+                "token_for": token_for,
+            }
+
             try:
-                resp: SubscriptionResponse = await self._http.create_eventsub_subscription(
-                    type=type_,
-                    version=version,
-                    condition=payload.condition,
-                    transport=transport,
-                    token_for=token_for,
-                )
+                resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
             except HTTPException as e:
                 if e.status == 409:
                     logger.error(
@@ -1348,7 +1352,21 @@ class Client:
 
                 raise e
 
+            for sub in resp["data"]:
+                identifier: str = sub["id"]
+                websocket._subscriptions[identifier] = data
+
             return resp
+
+        elif method is TransportMethod.WEBHOOK:
+            if not self._adapter and not callback_url:
+                raise ValueError(
+                    "Either a 'twitchio.web' Adapter or 'callback_url' should be provided for webhook based eventsub. "
+                    "See: ... for more info."
+                )
+
+            if self._adapter:
+                ...
 
     def doc_test(self, thing: int = 1) -> int:
         """
