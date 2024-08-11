@@ -47,6 +47,7 @@ __all__ = (
     "ChatNotificationSubscription",
     "ChatMessageDeleteSubscription",
     "ChatSettingsUpdateSubscription",
+    "ChatUserMessageHoldSubscription",
     "ChannelSubscribeSubscription",
     "ChannelSubscriptionEndSubscription",
     "ChannelSubscriptionGiftSubscription",
