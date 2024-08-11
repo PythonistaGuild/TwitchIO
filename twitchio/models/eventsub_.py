@@ -829,6 +829,24 @@ class ChannelUnban(BaseEvent):
         return f"<ChannelUnban broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
 
 
+class ChannelUnbanRequest(BaseEvent):
+    subscription_type = "channel.unban_request.create"
+
+    __slots__ = ("broadcaster", "user", "id", "text", "created_at")
+
+    def __init__(self, payload: ChannelUnbanRequestEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.id: str = payload["id"]
+        self.text: str = payload["text"]
+        self.created_at: datetime.datetime = parse_timestamp(payload["created_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelUnbanRequest broadcaster={self.broadcaster} user={self.user} id={self.id}>"
+
+
 class ChannelVIPAdd(BaseEvent):
     subscription_type = "channel.vip.add"
 
