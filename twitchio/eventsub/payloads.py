@@ -37,6 +37,7 @@ __all__ = (
     "AutomodMessageHoldSubscription",
     "AutomodMessageUpdateSubscription",
     "AutomodSettingsUpdateSubscription",
+    "AutomodTermsUpdateSubscription",
     "ChannelUpdateSubscription",
     "ChannelFollowSubscription",
     "ChannelAdBreakBeginSubscription",
