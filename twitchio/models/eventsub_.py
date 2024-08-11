@@ -324,6 +324,10 @@ class ChatMessage(BaseEvent):
         ]
 
     @property
+    def mentions(self) -> list[PartialUser]:
+        return [f.mention for f in self.fragments if f.mention is not None]
+
+    @property
     def color(self) -> Colour | None:
         return self.colour
 
