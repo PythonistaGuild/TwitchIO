@@ -43,6 +43,7 @@ __all__ = (
     "ChannelChatMessageEvent",
     "ChannelChatNotificationEvent",
     "ChannelChatSettingsUpdateEvent",
+    "ChatUserMessageHoldEvent",
     "ChannelCheerEvent",
     "ChannelFollowEvent",
     "ChannelRaidEvent",
@@ -291,8 +292,8 @@ class ChannelChatClearUserMessagesEvent(BaseBroadcasterEvent):
 class ChatMessageEmoteData(TypedDict):
     id: str
     emote_set_id: str
-    owner_id: str
-    format: list[Literal["static", "animated"]]
+    owner_id: NotRequired[str]
+    format: NotRequired[list[Literal["static", "animated"]]]
 
 
 class ChatMessageMention(BaseUserEvent): ...
@@ -309,7 +310,7 @@ class ChatMessageFragmentsData(TypedDict):
     type: Literal["text", "cheermote", "emote", "mention"]
     cheermote: ChatMessageCheermoteData | None
     emote: ChatMessageEmoteData | None
-    mention: ChatMessageMention | None
+    mention: NotRequired[ChatMessageMention | None]
 
 
 class ChatMessageReplyData(TypedDict):
@@ -499,6 +500,11 @@ class ChannelChatSettingsUpdateEvent(BaseBroadcasterEvent):
     slow_mode_wait_time_seconds: int | None
     subscriber_mode: bool
     unique_chat_mode: bool
+
+
+class ChatUserMessageHoldEvent(BroadcasterUserEvent):
+    message_id: str
+    message: ChatMessage
 
 
 class ChannelSubscribeEvent(BroadcasterUserEvent):

@@ -307,8 +307,8 @@ class ChatMessageEmote:
         self._http: HTTPClient = http
         self.set_id: str = data["emote_set_id"]
         self.id: str = data["id"]
-        self.owner_id: str = data["owner_id"]
-        self.format: list[Literal["static", "animated"]] = data["format"]
+        self.owner_id: str | None = data.get("owner_id")
+        self.format: list[Literal["static", "animated"]] = data.get("format", [])
 
     def __repr__(self) -> str:
         return f"<ChatMessageEmote set_id={self.set_id} id={self.id} owner_id={self.owner_id} format={self.format}>"
@@ -349,15 +349,41 @@ class ChatMessageFragment:
         return f"<ChatMessageFragment type={self.type} text={self.text}>"
 
 
-class ChatMessage(BaseEvent):
+class BaseChatMessage(BaseEvent):
+    __slots__ = (
+        "broadcaster",
+        "text",
+        "fragments",
+        "id",
+    )
+
+    def __init__(self, payload: ChannelChatMessageEvent | ChatUserMessageHoldEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.text: str = payload["message"]["text"]
+        self.id: str = payload["message_id"]
+        self.fragments: list[ChatMessageFragment] = [
+            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
+        ]
+
+    @property
+    def emotes(self) -> list[ChatMessageEmote]:
+        return [f.emote for f in self.fragments if f.emote is not None]
+
+    @property
+    def cheermotes(self) -> list[ChatMessageCheermote]:
+        return [f.cheermote for f in self.fragments if f.cheermote is not None]
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} broadcaster={self.broadcaster} id={self.id} text={self.text}>"
+
+
+class ChatMessage(BaseChatMessage):
     subscription_type = "channel.chat.message"
 
     __slots__ = (
-        "broadcaster",
         "chatter",
-        "id",
-        "text",
-        "fragments",
         "colour",
         "badges",
         "message_type",
@@ -368,12 +394,8 @@ class ChatMessage(BaseEvent):
     )
 
     def __init__(self, payload: ChannelChatMessageEvent, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
+        super().__init__(payload, http=http)
         self.chatter: PartialUser = PartialUser(payload["chatter_user_id"], payload["chatter_user_login"], http=http)
-        self.id: str = payload["message_id"]
-        self.text: str = payload["message"]["text"]
         self.colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self.channel_points_id: str | None = payload["channel_points_custom_reward_id"]
         self.channel_points_animation_id: str | None = payload["channel_points_animation_id"]
@@ -389,21 +411,10 @@ class ChatMessage(BaseEvent):
 
         self.cheer: ChatMessageCheer | None = ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
-        self.fragments: list[ChatMessageFragment] = [
-            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
-        ]
 
     @property
     def mentions(self) -> list[PartialUser]:
         return [f.mention for f in self.fragments if f.mention is not None]
-
-    @property
-    def emotes(self) -> list[ChatMessageEmote]:
-        return [f.emote for f in self.fragments if f.emote is not None]
-
-    @property
-    def cheermotes(self) -> list[ChatMessageCheermote]:
-        return [f.cheermote for f in self.fragments if f.cheermote is not None]
 
     @property
     def color(self) -> Colour | None:
@@ -719,6 +730,19 @@ class ChatSettingsUpdate(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChatSettingsUpdate broadcaster={self.broadcaster} slow_mode={self.slow_mode} follower_mode={self.follower_mode} subscriber_mode={self.subscriber_mode} unique_chat_mode={self.unique_chat_mode}>"
+
+
+class ChatUserMessageHold(BaseChatMessage):
+    subscription_type = "channel.chat.user_message_hold"
+
+    __slots__ = ("user",)
+
+    def __init__(self, payload: ChatUserMessageHoldEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChatUserMessageHold broadcaster={self.broadcaster} user={self.user} id={self.id} text={self.text}>"
 
 
 class ChannelSubscribe(BaseEvent):

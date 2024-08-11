@@ -40,13 +40,13 @@ __all__ = (
     "AutomodTermsUpdateSubscription",
     "ChannelUpdateSubscription",
     "ChannelFollowSubscription",
-    "ChannelAdBreakBeginSubscription",
-    "ChannelChatClearSubscription",
-    "ChannelChatClearUserMessagesSubscription",
-    "ChannelChatMessageSubscription",
-    "ChannelChatNotificationSubscription",
-    "ChannelChatMessageDeleteSubscription",
-    "ChannelChatSettingsUpdateSubscription",
+    "AdBreakBeginSubscription",
+    "ChatClearSubscription",
+    "ChatClearUserMessagesSubscription",
+    "ChatMessageSubscription",
+    "ChatNotificationSubscription",
+    "ChatMessageDeleteSubscription",
+    "ChatSettingsUpdateSubscription",
     "ChannelSubscribeSubscription",
     "ChannelSubscriptionEndSubscription",
     "ChannelSubscriptionGiftSubscription",
@@ -191,7 +191,7 @@ class ChannelFollowSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
 
-class ChannelAdBreakBeginSubscription(SubscriptionPayload):
+class AdBreakBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.ad_break.begin"]] = "channel.ad_break.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -206,7 +206,7 @@ class ChannelAdBreakBeginSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
 
-class ChannelChatClearSubscription(SubscriptionPayload):
+class ChatClearSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.clear"]] = "channel.chat.clear"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -222,7 +222,7 @@ class ChannelChatClearSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
 
 
-class ChannelChatClearUserMessagesSubscription(SubscriptionPayload):
+class ChatClearUserMessagesSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.clear_user_messages"]] = "channel.chat.clear_user_messages"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -238,7 +238,7 @@ class ChannelChatClearUserMessagesSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
 
 
-class ChannelChatMessageSubscription(SubscriptionPayload):
+class ChatMessageSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.message"]] = "channel.chat.message"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -254,7 +254,7 @@ class ChannelChatMessageSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
 
 
-class ChannelChatNotificationSubscription(SubscriptionPayload):
+class ChatNotificationSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.notification"]] = "channel.chat.notification"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -270,7 +270,7 @@ class ChannelChatNotificationSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
 
 
-class ChannelChatMessageDeleteSubscription(SubscriptionPayload):
+class ChatMessageDeleteSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.message_delete"]] = "channel.chat.message_delete"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -286,8 +286,24 @@ class ChannelChatMessageDeleteSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
 
 
-class ChannelChatSettingsUpdateSubscription(SubscriptionPayload):
+class ChatSettingsUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat_settings.update"]] = "channel.chat_settings.update"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.user_id: str = condition.get("user_id", "")
+
+        if not self.broadcaster_user_id or not self.user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
+
+
+class ChatUserMessageHoldSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.chat.user_message_hold"]] = "channel.chat.user_message_hold"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
