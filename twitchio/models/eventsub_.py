@@ -389,7 +389,6 @@ class ChatMessage(BaseEvent):
 
         self.cheer: ChatMessageCheer | None = ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
-
         self.fragments: list[ChatMessageFragment] = [
             ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
         ]
@@ -397,6 +396,14 @@ class ChatMessage(BaseEvent):
     @property
     def mentions(self) -> list[PartialUser]:
         return [f.mention for f in self.fragments if f.mention is not None]
+
+    @property
+    def emotes(self) -> list[ChatMessageEmote]:
+        return [f.emote for f in self.fragments if f.emote is not None]
+
+    @property
+    def cheermotes(self) -> list[ChatMessageCheermote]:
+        return [f.cheermote for f in self.fragments if f.cheermote is not None]
 
     @property
     def color(self) -> Colour | None:
