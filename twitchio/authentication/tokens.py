@@ -227,7 +227,7 @@ class ManagedHTTPClient(OAuth):
 
                 try:
                     await self.__isolated.validate_token(data["token"])
-                    logger.debug('Token for "%s" was successfully re-validated.', data["user_id"])
+                    # logger.debug('Token for "%s" was successfully re-validated.', data["user_id"])
                 except HTTPException as e:
                     if e.status >= 500:
                         logger.warning("Received invalid response from Twitch when re-validating token.")
