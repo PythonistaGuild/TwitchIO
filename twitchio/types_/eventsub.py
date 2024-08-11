@@ -44,6 +44,7 @@ __all__ = (
     "ChannelChatNotificationEvent",
     "ChannelChatSettingsUpdateEvent",
     "ChatUserMessageHoldEvent",
+    "ChatUserMessageUpdateEvent",
     "ChannelCheerEvent",
     "ChannelFollowEvent",
     "ChannelRaidEvent",
@@ -505,6 +506,10 @@ class ChannelChatSettingsUpdateEvent(BaseBroadcasterEvent):
 class ChatUserMessageHoldEvent(BroadcasterUserEvent):
     message_id: str
     message: ChatMessage
+
+
+class ChatUserMessageUpdateEvent(ChatUserMessageHoldEvent):
+    status: Literal["approved", "denied", "invalid"]
 
 
 class ChannelSubscribeEvent(BroadcasterUserEvent):

@@ -357,7 +357,9 @@ class BaseChatMessage(BaseEvent):
         "id",
     )
 
-    def __init__(self, payload: ChannelChatMessageEvent | ChatUserMessageHoldEvent, *, http: HTTPClient) -> None:
+    def __init__(
+        self, payload: ChannelChatMessageEvent | ChatUserMessageHoldEvent | ChatUserMessageUpdateEvent, *, http: HTTPClient
+    ) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
@@ -743,6 +745,20 @@ class ChatUserMessageHold(BaseChatMessage):
 
     def __repr__(self) -> str:
         return f"<ChatUserMessageHold broadcaster={self.broadcaster} user={self.user} id={self.id} text={self.text}>"
+
+
+class ChatUserMessageUpdate(BaseChatMessage):
+    subscription_type = "channel.chat.user_message_update"
+
+    __slots__ = ("user", "status")
+
+    def __init__(self, payload: ChatUserMessageUpdateEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.status: Literal["approved", "denied", "invalid"] = payload["status"]
+
+    def __repr__(self) -> str:
+        return f"<ChatUserMessageUpdate broadcaster={self.broadcaster} user={self.user} id={self.id} text={self.text}>"
 
 
 class ChannelSubscribe(BaseEvent):
