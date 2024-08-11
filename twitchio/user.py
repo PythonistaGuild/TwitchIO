@@ -2006,7 +2006,7 @@ class PartialUser:
             max_results=max_results,
         )
 
-    async def resolve_unban_requests(
+    async def resolve_unban_request(
         self,
         *,
         moderator_id: str | int,
