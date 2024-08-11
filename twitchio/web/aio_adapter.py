@@ -25,13 +25,19 @@ SOFTWARE.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import logging
-from typing import TYPE_CHECKING
+from collections import deque
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import unquote_plus
 
 from aiohttp import web
 
 from ..authentication import Scopes
+from ..models.eventsub_ import BaseEvent
+from ..types_.eventsub import EventSubHeaders
+from ..utils import _from_json, parse_timestamp  # type: ignore
+from .utils import MESSAGE_TYPES, verify_message
 
 
 if TYPE_CHECKING:
@@ -46,7 +52,14 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class AiohttpAdapter(web.Application):
-    def __init__(self, client: Client, *, host: str | None = None, port: int | None = None) -> None:
+    def __init__(
+        self,
+        client: Client,
+        *,
+        host: str | None = None,
+        port: int | None = None,
+        eventsub_secret: str | None,
+    ) -> None:
         super().__init__()
         self._runner: web.AppRunner | None = None
 
@@ -54,6 +67,8 @@ class AiohttpAdapter(web.Application):
 
         self._host: str = host or "localhost"
         self._port: int = port or 4343
+
+        self._eventsub_secret: str | None = eventsub_secret
 
         self._runner_task: asyncio.Task[None] | None = None
         self._redirect_uri: str = client._http.redirect_uri or f"http://{self._host}:{self._port}/oauth/callback"
@@ -63,6 +78,9 @@ class AiohttpAdapter(web.Application):
 
         self.router.add_route("GET", "/oauth/callback", self.oauth_callback)
         self.router.add_route("GET", "/oauth", self.oauth_redirect)
+        self.router.add_route("POST", "/callback", self.eventsub_callback)
+
+        self._responded: deque[str] = deque(maxlen=5000)
 
     def __init_subclass__(cls: type[AiohttpAdapter]) -> None:
         return
@@ -96,6 +114,64 @@ class AiohttpAdapter(web.Application):
 
         site: web.TCPSite = web.TCPSite(self._runner, host or self._host, port or self._port)
         self._runner_task = asyncio.create_task(site.start(), name=f"twitchio-web-adapter:{self.__class__.__qualname__}")
+
+    async def eventsub_callback(self, request: web.Request) -> web.Response:
+        headers: EventSubHeaders = cast(EventSubHeaders, request.headers)
+        msg_type: str | None = headers.get("Twitch-Eventsub-Message-Type")
+
+        if not msg_type or msg_type not in MESSAGE_TYPES:
+            logger.debug("Eventsub Webhook received an unknown Message-Type header value.")
+            return web.Response(status=400)
+
+        if not self._eventsub_secret:
+            msg: str = f"Eventsub Webhook '{self!r}' must be passed a secret. See: ... for more info.'"
+            return web.Response(text=msg, status=400)
+
+        msg_id: str | None = headers.get("Twitch-Eventsub-Message-Id", None)
+        timestamp: str | None = headers.get("Twitch-Eventsub-Message-Timestamp", None)
+
+        if not msg_id or not timestamp:
+            return web.Response(text="Bad Request. Invalid Message-ID or Message-Timestamp.", status=400)
+
+        if msg_id in self._responded:
+            return web.Response(text="Previously responded to Message.", status=400)
+
+        self._responded.append(msg_id)
+
+        try:
+            resp: bytes = await verify_message(request=request, secret=self._eventsub_secret)
+        except ValueError:
+            return web.Response(text="Challenge Failed. Failed to verify the integrity of the message.", status=400)
+        except Exception as e:
+            return web.Response(text=f"Challenge Failed. Failed to verify the integrity of the message: {e}", status=400)
+
+        # TODO: Types...
+        data: Any = _from_json(resp)  # type: ignore
+        sent: datetime.datetime = parse_timestamp(timestamp)
+        now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+
+        if sent + datetime.timedelta(minutes=10) <= now:
+            return web.Response(text="Message has expired.", status=400)
+
+        if msg_type == "webhook_callback_verification":
+            return web.Response(text=data["challenge"], status=200, headers={"Content-Type": "text/plain"})
+
+        elif msg_type == "notification":
+            subscription_type: str = data["subscription"]["type"]
+            event: str = subscription_type.replace(".", "_")
+
+            try:
+                payload_class = BaseEvent.create_instance(subscription_type, data["event"], http=self.client._http)
+            except ValueError:
+                logger.warning("Webhook '%s' received an unhandled eventsub event: '%s'.", self, event)
+                return web.Response(status=200)
+
+            self.client.dispatch(event=event, payload=payload_class)
+            return web.Response(status=200)
+
+        elif msg_type == "revocation":
+            # TODO: ...
+            return web.Response(status=200)
 
     async def fetch_token(self, request: web.Request) -> web.Response:
         if "code" not in request.query:
