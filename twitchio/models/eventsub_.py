@@ -737,6 +737,8 @@ class ChatSettingsUpdate(BaseEvent):
 class ChatUserMessageHold(BaseChatMessage):
     subscription_type = "channel.chat.user_message_hold"
 
+    # TODO text is the caught text. Maybe we shouldn't inherit here after all.
+
     __slots__ = ("user",)
 
     def __init__(self, payload: ChatUserMessageHoldEvent, *, http: HTTPClient) -> None:
@@ -746,9 +748,15 @@ class ChatUserMessageHold(BaseChatMessage):
     def __repr__(self) -> str:
         return f"<ChatUserMessageHold broadcaster={self.broadcaster} user={self.user} id={self.id} text={self.text}>"
 
+    @property
+    def full_message(self) -> str:
+        return " ".join(fragment.text for fragment in self.fragments if fragment.type == "text")
+
 
 class ChatUserMessageUpdate(BaseChatMessage):
     subscription_type = "channel.chat.user_message_update"
+
+    # TODO text is the caught text. Maybe we shouldn't inherit here after all.
 
     __slots__ = ("user", "status")
 
@@ -759,6 +767,10 @@ class ChatUserMessageUpdate(BaseChatMessage):
 
     def __repr__(self) -> str:
         return f"<ChatUserMessageUpdate broadcaster={self.broadcaster} user={self.user} id={self.id} text={self.text}>"
+
+    @property
+    def full_message(self) -> str:
+        return " ".join(fragment.text for fragment in self.fragments if fragment.type == "text")
 
 
 class ChannelSubscribe(BaseEvent):
