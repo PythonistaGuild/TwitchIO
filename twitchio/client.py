@@ -1290,7 +1290,7 @@ class Client:
             if as_bot and not self.bot_id:
                 raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
 
-            elif as_bot and self.bot_id:
+            elif as_bot:
                 token_for = self.bot_id
 
             if not token_for:
