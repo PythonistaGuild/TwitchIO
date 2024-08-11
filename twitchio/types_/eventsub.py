@@ -33,6 +33,7 @@ __all__ = (
     "AutomodCheermoteData",
     "AutomodMessageHoldEvent",
     "AutomodMessageUpdateEvent",
+    "AutomodSettingsUpdateEvent",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
     "ChannelChatClearEvent",
@@ -234,6 +235,18 @@ class AutomodMessageUpdateEvent(BroadcasterModUserEvent):
     held_at: str
     status: Literal["Approved", "Denied", "Expired"]
     fragments: AutomodFragments
+
+
+class AutomodSettingsUpdateEvent(BroadcasterModeratorEvent):
+    overall_level: int | None
+    disability: int
+    aggression: int
+    sexuality_sex_or_gender: int
+    misogyny: int
+    bullying: int
+    swearing: int
+    race_ethnicity_or_religion: int
+    sex_based_terms: int
 
 
 class ChannelUpdateEvent(BaseBroadcasterEvent):

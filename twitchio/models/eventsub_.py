@@ -120,6 +120,38 @@ class AutomodMessageUpdate(AutomodMessageHold):
         return f"<AutomodMessageUpdate broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"
 
 
+class AutomodSettingsUpdate(BaseEvent):
+    subscription_type = "automod.message.hold"
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "overall_level",
+        "disability",
+        "aggression",
+        "misogyny",
+        "bullying",
+        "swearing",
+        "race_ethnicity_or_religion",
+        "sex_based_terms",
+    )
+
+    def __init__(self, payload: AutomodSettingsUpdateEvent, *, http: HTTPClient) -> None:
+        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
+        self.moderator = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.overall_level: int | None = int(payload["overall_level"]) if payload["overall_level"] is not None else None
+        self.disability: int = int(payload["disability"])
+        self.aggression: int = int(payload["aggression"])
+        self.misogyny: int = int(payload["misogyny"])
+        self.bullying: int = int(payload["bullying"])
+        self.swearing: int = int(payload["swearing"])
+        self.race_ethnicity_or_religion: int = int(payload["race_ethnicity_or_religion"])
+        self.sex_based_terms: int = int(payload["sex_based_terms"])
+
+    def __repr__(self) -> str:
+        return f"<AutomodSettingsUpdate broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"
+
+
 class ChannelUpdate(BaseEvent):
     subscription_type = "channel.update"
 
