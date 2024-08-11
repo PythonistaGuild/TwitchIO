@@ -791,6 +791,44 @@ class ChannelRaid(BaseEvent):
         return f"<ChannelRaid from_broadcaster={self.from_broadcaster} to_broadcaster={self.to_broadcaster} viewer_count={self.viewer_count}>"
 
 
+class ChannelBan(BaseEvent):
+    subscription_type = "channel.ban"
+
+    __slots__ = ("broadcaster", "user", "moderator", "reason", "banned_at", "ends_at", "permanent")
+
+    def __init__(self, payload: ChannelBanEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.reason: str = payload["reason"]
+        self.banned_at: datetime.datetime = parse_timestamp(payload["banned_at"])
+        self.ends_at: datetime.datetime | None = (
+            parse_timestamp(payload["ends_at"]) if payload["ends_at"] is not None else None
+        )
+        self.permanent: bool = bool(payload["is_permanent"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelBan broadcaster={self.broadcaster} user={self.user} moderator={self.moderator} banned_at={self.banned_at}>"
+
+
+class ChannelUnban(BaseEvent):
+    subscription_type = "channel.unban"
+
+    __slots__ = ("broadcaster", "user", "moderator")
+
+    def __init__(self, payload: ChannelUnbanEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelUnban broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
+
+
 class ChannelVIPAdd(BaseEvent):
     subscription_type = "channel.vip.add"
 

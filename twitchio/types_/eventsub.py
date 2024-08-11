@@ -450,7 +450,7 @@ class ChannelRaidEvent(TypedDict):
 class ChannelBanEvent(BroadcasterModUserEvent):
     reason: str
     banned_at: str
-    ends_at: str
+    ends_at: str | None
     is_permanent: bool
 
 
