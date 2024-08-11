@@ -75,6 +75,8 @@ if TYPE_CHECKING:
         ChatResubData,
         ChatSubData,
         ChatSubGiftData,
+        ShoutoutCreateEvent,
+        ShoutoutReceiveEvent,
         StreamOfflineEvent,
         StreamOnlineEvent,
         SubscribeEmoteData,
@@ -880,6 +882,55 @@ class ChannelVIPAdd(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelVIPAdd broadcaster={self.broadcaster} user={self.user}>"
+
+
+class ShoutoutCreate(BaseEvent):
+    subscription_type = "channel.shoutout.create"
+
+    __slots__ = (
+        "broadcaster",
+        "to_broadcaster",
+        "moderator",
+        "viewer_count",
+        "started_at",
+        "cooldown_ends_at",
+        "target_cooldown_ends_at",
+    )
+
+    def __init__(self, payload: ShoutoutCreateEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.to_broadcaster: PartialUser = PartialUser(
+            payload["to_broadcaster_user_id"], payload["to_broadcaster_user_login"], http=http
+        )
+        self.viewer_count: int = int(payload["viewer_count"])
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+        self.cooldown_ends_at: datetime.datetime = parse_timestamp(payload["cooldown_ends_at"])
+        self.target_cooldown_ends_at: datetime.datetime = parse_timestamp(payload["target_cooldown_ends_at"])
+
+    def __repr__(self) -> str:
+        return f"<ShoutoutCreate broadcaster={self.broadcaster} to_broadcaster={self.to_broadcaster} started_at={self.started_at}>"
+
+
+class ShoutoutReceive(BaseEvent):
+    subscription_type = "channel.shoutout.receive"
+
+    __slots__ = ("broadcaster", "from_broadcaster", "viewer_count", "started_at")
+
+    def __init__(self, payload: ShoutoutReceiveEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.from_broadcaster: PartialUser = PartialUser(
+            payload["from_broadcaster_user_id"], payload["from_broadcaster_user_login"], http=http
+        )
+        self.viewer_count: int = int(payload["viewer_count"])
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<ShoutoutReceive broadcaster={self.broadcaster} from_broadcaster={self.from_broadcaster} started_at={self.started_at}>"
 
 
 class StreamOnline(BaseEvent):

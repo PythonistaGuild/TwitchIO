@@ -498,6 +498,24 @@ class GoalEndEvent(TypedDict):
     ended_at: str
 
 
+class ShoutoutCreateEvent(BroadcasterModeratorEvent):
+    to_broadcaster_user_id: str
+    to_broadcaster_user_login: str
+    to_broadcaster_user_name: str
+    started_at: str
+    viewer_count: int
+    cooldown_ends_at: str
+    target_cooldown_ends_at: str
+
+
+class ShoutoutReceiveEvent(BaseBroadcasterEvent):
+    from_broadcaster_user_id: str
+    from_broadcaster_user_login: str
+    from_broadcaster_user_name: str
+    started_at: str
+    viewer_count: int
+
+
 class StreamOnlineEvent(TypedDict):
     id: str
     broadcaster_user_id: str

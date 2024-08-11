@@ -52,7 +52,10 @@ __all__ = (
     "ChannelBanSubscription",
     "ChannelUnbanSubscription",
     "ChannelUnbanRequestSubscription",
+    "ChannelUnbanRequestResolveSubscription",
     "ChannelVIPAddSubscription",
+    "ShoutoutCreateSubscription",
+    "ShoutoutReceiveSubscription",
     "StreamOnlineSubscription",
     "StreamOfflineSubscription",
     "UserAuthorizationGrantSubscription",
@@ -396,6 +399,38 @@ class ChannelVIPAddSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class ShoutoutCreateSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.shoutout.create"]] = "channel.shoutout.create"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
+
+class ShoutoutReceiveSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.shoutout.receive"]] = "channel.shoutout.receive"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
 
 class StreamOnlineSubscription(SubscriptionPayload):
