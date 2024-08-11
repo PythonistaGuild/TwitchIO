@@ -95,9 +95,7 @@ class AiohttpAdapter(web.Application):
         await self._runner.setup()
 
         site: web.TCPSite = web.TCPSite(self._runner, host or self._host, port or self._port)
-        self._runner_task = asyncio.create_task(
-            site.start(), name=f"twitchio-web-adapter:{self.__class__.__qualname__}"
-        )
+        self._runner_task = asyncio.create_task(site.start(), name=f"twitchio-web-adapter:{self.__class__.__qualname__}")
 
     async def fetch_token(self, request: web.Request) -> web.Response:
         if "code" not in request.query:
@@ -144,9 +142,7 @@ class AiohttpAdapter(web.Application):
                 force_verify=force_verify,
             )
         except Exception as e:
-            logger.error(
-                "Exception raised while fetching Authorization URL in <%s>: %s", self.__class__.__qualname__, e
-            )
+            logger.error("Exception raised while fetching Authorization URL in <%s>: %s", self.__class__.__qualname__, e)
             return web.Response(status=500)
 
         raise web.HTTPPermanentRedirect(payload["url"])

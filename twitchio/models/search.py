@@ -95,9 +95,7 @@ class SearchChannel:
         self.tags: list[str] = data["tags"]
 
     def __repr__(self) -> str:
-        return (
-            f"<SearchChannel broadcaster={self.broadcaster} title={self.title} live={self.live} game_id={self.game_id}>"
-        )
+        return f"<SearchChannel broadcaster={self.broadcaster} title={self.title} live={self.live} game_id={self.game_id}>"
 
     async def fetch_game(self) -> Game:
         """

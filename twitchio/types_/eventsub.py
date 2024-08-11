@@ -24,6 +24,7 @@ SOFTWARE.
 
 from typing import Generic, Literal, NotRequired, TypedDict, TypeVar
 
+from ..eventsub.enums import SubscriptionType
 from .conduits import Condition
 
 
@@ -49,6 +50,14 @@ class SubscriptionCreateTransport(TypedDict):
     callback: NotRequired[str]
     secret: NotRequired[str]
     session_id: NotRequired[str]
+
+
+class _SubscriptionData(TypedDict):  # type: ignore
+    type: SubscriptionType
+    version: str
+    condition: Condition
+    transport: SubscriptionCreateTransport
+    token_for: str
 
 
 class SubscriptionCreateRequest(TypedDict):

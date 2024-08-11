@@ -240,9 +240,7 @@ class CustomReward:
         token_for: str
             The user's token that has permission delete the reward.
         """
-        await self._http.delete_custom_reward(
-            broadcaster_id=self.broadcaster.id, reward_id=self.id, token_for=token_for
-        )
+        await self._http.delete_custom_reward(broadcaster_id=self.broadcaster.id, reward_id=self.id, token_for=token_for)
 
     async def update(
         self,

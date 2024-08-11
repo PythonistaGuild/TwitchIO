@@ -38,6 +38,9 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+MESSAGE_TYPES = ["notification", "webhook_callback_verification", "revocation"]
+
+
 async def verify_message(*, request: Request | web.Request, secret: str) -> bytes:
     body: bytes
     headers: EventSubHeaders = request.headers  # type: ignore

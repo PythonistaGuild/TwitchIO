@@ -177,9 +177,7 @@ class ChatBadgeVersions:
         "_http",
     )
 
-    def __init__(
-        self, data: ChannelChatBadgesResponseVersions | GlobalChatBadgesResponseVersions, http: HTTPClient
-    ) -> None:
+    def __init__(self, data: ChannelChatBadgesResponseVersions | GlobalChatBadgesResponseVersions, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.id: str = data["id"]
         self.image_url_1x: str = data["image_url_1x"]

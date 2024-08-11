@@ -78,9 +78,7 @@ class CharityCampaign:
         self.logo: Asset = Asset(data["charity_logo"], http=http, dimensions=(100, 100))
         self.website: str = data["charity_website"]
         self.current_amount: CharityValues = CharityValues(data["current_amount"])
-        self.target_amount: CharityValues | None = (
-            CharityValues(data["target_amount"]) if data["target_amount"] else None
-        )
+        self.target_amount: CharityValues | None = CharityValues(data["target_amount"]) if data["target_amount"] else None
 
 
 class CharityValues:

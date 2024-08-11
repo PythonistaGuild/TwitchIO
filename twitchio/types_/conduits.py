@@ -195,12 +195,6 @@ class RevocationMessage(TypedDict):
     payload: RevocationPayload
 
 
-WebsocketMessages: TypeAlias = (
-    WelcomeMessage | ReconnectMessage | RevocationMessage | NotificationMessage | KeepAliveMessage
-)
-MetaData: TypeAlias = (
-    WelcomeMetaData | ReconnectMetadata | RevocationMetaData | NotificationMetaData | KeepAliveMetaData
-)
-MessageTypes: TypeAlias = Literal[
-    "session_welcome", "session_reconnect", "session_keepalive", "notification", "revocation"
-]
+WebsocketMessages: TypeAlias = WelcomeMessage | ReconnectMessage | RevocationMessage | NotificationMessage | KeepAliveMessage
+MetaData: TypeAlias = WelcomeMetaData | ReconnectMetadata | RevocationMetaData | NotificationMetaData | KeepAliveMetaData
+MessageTypes: TypeAlias = Literal["session_welcome", "session_reconnect", "session_keepalive", "notification", "revocation"]

@@ -128,11 +128,7 @@ class AuthorizationURLResponse(TypedDict):
 
 
 OAuthResponses: TypeAlias = (
-    RefreshTokenResponse
-    | ValidateTokenResponse
-    | ClientCredentialsResponse
-    | UserTokenResponse
-    | AuthorizationURLResponse
+    RefreshTokenResponse | ValidateTokenResponse | ClientCredentialsResponse | UserTokenResponse | AuthorizationURLResponse
 )
 RawResponse: TypeAlias = dict[str, Any]
 

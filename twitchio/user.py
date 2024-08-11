@@ -1606,9 +1606,7 @@ class PartialUser:
         token_for: str
             User access token that includes the `channel:manage:schedule` scope.
         """
-        return await self._http.delete_channel_stream_schedule_segment(
-            broadcaster_id=self.id, id=id, token_for=token_for
-        )
+        return await self._http.delete_channel_stream_schedule_segment(broadcaster_id=self.id, id=id, token_for=token_for)
 
     async def fetch_channel_teams(self, *, token_for: str | None = None) -> list[ChannelTeam]:
         """
@@ -1666,9 +1664,7 @@ class PartialUser:
         """
         from .models.moderation import AutoModStatus
 
-        data = await self._http.post_check_automod_status(
-            broadcaster_id=self.id, messages=messages, token_for=token_for
-        )
+        data = await self._http.post_check_automod_status(broadcaster_id=self.id, messages=messages, token_for=token_for)
         return [AutoModStatus(d) for d in data["data"]]
 
     async def approve_automod_messages(self, *, msg_id: str, token_for: str) -> None:
@@ -1731,9 +1727,7 @@ class PartialUser:
         """
         from .models import AutomodSettings
 
-        data = await self._http.get_automod_settings(
-            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
-        )
+        data = await self._http.get_automod_settings(broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for)
         return AutomodSettings(data["data"][0], http=self._http)
 
     async def update_automod_settings(
@@ -2190,9 +2184,7 @@ class PartialUser:
             id=id,
         )
 
-    async def delete_chat_messages(
-        self, *, moderator_id: str | int, token_for: str, message_id: str | None = None
-    ) -> None:
+    async def delete_chat_messages(self, *, moderator_id: str | int, token_for: str, message_id: str | None = None) -> None:
         """
         Removes a single chat message or all chat messages from the broadcaster's chat room.
 
@@ -2457,9 +2449,7 @@ class PartialUser:
 
         return await self._http.delete_vip(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
 
-    async def update_shield_mode_status(
-        self, *, moderator_id: str | int, active: bool, token_for: str
-    ) -> ShieldModeStatus:
+    async def update_shield_mode_status(self, *, moderator_id: str | int, active: bool, token_for: str) -> ShieldModeStatus:
         """
         Activates or deactivates  the broadcaster's Shield Mode.
 

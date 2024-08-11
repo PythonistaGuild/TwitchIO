@@ -139,15 +139,15 @@ class ChannelAdBreakBegin(BaseEvent):
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
-        self.requester: PartialUser = PartialUser(
-            payload["requester_user_id"], payload["requester_user_login"], http=http
-        )
+        self.requester: PartialUser = PartialUser(payload["requester_user_id"], payload["requester_user_login"], http=http)
         self.duration: int = int(payload["duration_seconds"])
         self.automatic: bool = bool(payload["is_automatic"])
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
 
     def __repr__(self) -> str:
-        return f"<ChannelAdBreakBegin broadcaster={self.broadcaster} requester={self.requester} started_at={self.started_at}>"
+        return (
+            f"<ChannelAdBreakBegin broadcaster={self.broadcaster} requester={self.requester} started_at={self.started_at}>"
+        )
 
 
 class ChannelChatClear(BaseEvent):
@@ -305,9 +305,7 @@ class ChatMessage(BaseEvent):
         self.colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self.channel_points_id: str | None = payload["channel_points_custom_reward_id"]
         self.channel_points_animation_id: str | None = payload["channel_points_animation_id"]
-        self.reply: ChatMessageReply | None = (
-            ChatMessageReply(payload["reply"]) if payload["reply"] is not None else None
-        )
+        self.reply: ChatMessageReply | None = ChatMessageReply(payload["reply"]) if payload["reply"] is not None else None
         self.message_type: Literal[
             "text",
             "channel_points_highlighted",
@@ -317,9 +315,7 @@ class ChatMessage(BaseEvent):
             "power_ups_gigantified_emote",
         ] = payload["message_type"]
 
-        self.cheer: ChatMessageCheer | None = (
-            ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
-        )
+        self.cheer: ChatMessageCheer | None = ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
 
         self.fragments: list[ChatMessageFragment] = [
@@ -374,9 +370,7 @@ class ChatResub:
         )
         gifter = data.get("gifter_user_id")
         self.gifter: PartialUser | None = (
-            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http)
-            if gifter is not None
-            else None
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http) if gifter is not None else None
         )
 
     def __repr__(self) -> str:
@@ -389,9 +383,7 @@ class ChatSubGift:
     def __init__(self, data: ChatSubGiftData, *, http: HTTPClient) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
         self.duration: int = int(data["duration_months"])
-        self.cumulative_total: int | None = (
-            int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
-        )
+        self.cumulative_total: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
         self.community_gift_id: str | None = data.get("community_gift_id")
         self.recipient: PartialUser = PartialUser(data["recipient_user_id"], data["recipient_user_login"], http=http)
 
@@ -405,9 +397,7 @@ class ChatCommunitySubGift:
     def __init__(self, data: ChatCommunitySubGiftData) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
         self.total: int = int(data["total"])
-        self.cumulative_total: int | None = (
-            int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
-        )
+        self.cumulative_total: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
         self.id: str | None = data.get("community_gift_id")
 
     def __repr__(self) -> str:
@@ -421,9 +411,7 @@ class ChatGiftPaidUpgrade:
         self.anonymous: bool = bool(data["gifter_is_anonymous"])
         gifter = data.get("gifter_user_id")
         self.gifter: PartialUser | None = (
-            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http)
-            if gifter is not None
-            else None
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http) if gifter is not None else None
         )
 
     def __repr__(self) -> str:
@@ -459,9 +447,7 @@ class ChatPayItForward:
         self.anonymous: bool = bool(data["gifter_is_anonymous"])
         gifter = data.get("gifter_user_id")
         self.gifter: PartialUser | None = (
-            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http)
-            if gifter is not None
-            else None
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http) if gifter is not None else None
         )
 
     def __repr__(self) -> str:
@@ -717,7 +703,9 @@ class ChannelSubscriptionGift(BaseEvent):
         self.cumulative_total: int | None = int(cumulative_total) if cumulative_total is not None else None
 
     def __repr__(self) -> str:
-        return f"<ChannelSubscriptionGift broadcaster={self.broadcaster} user={self.user} tier={self.tier} total={self.total}>"
+        return (
+            f"<ChannelSubscriptionGift broadcaster={self.broadcaster} user={self.user} tier={self.tier} total={self.total}>"
+        )
 
 
 class SubscribeEmote:
@@ -756,9 +744,7 @@ class ChannelSubscriptionMessage(BaseEvent):
         self.message: SubscribeMessage = SubscribeMessage(payload["message"])
 
     def __repr__(self) -> str:
-        return (
-            f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} message={self.message.text}>"
-        )
+        return f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} message={self.message.text}>"
 
 
 class ChannelVIPAdd(BaseEvent):

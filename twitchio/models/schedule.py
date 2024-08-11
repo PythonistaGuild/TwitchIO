@@ -121,9 +121,7 @@ class ScheduleSegment:
         self.recurring: bool = bool(data["is_recurring"])
 
     def __repr__(self) -> str:
-        return (
-            f"<ScheduleSegment id={self.id} start_time={self.start_time} end_time={self.end_time} title={self.title}>"
-        )
+        return f"<ScheduleSegment id={self.id} start_time={self.start_time} end_time={self.end_time} title={self.title}>"
 
     async def update_segment(
         self,

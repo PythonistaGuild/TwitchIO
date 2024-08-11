@@ -166,7 +166,9 @@ class AutomodSettings:
         self.sex_based_terms: int = data["sex_based_terms"]
 
     def __repr__(self) -> str:
-        return f"<AutomodSettings broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"
+        return (
+            f"<AutomodSettings broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"
+        )
 
     def to_dict(self, use_ids: bool = False) -> dict[str, str | int | None]:
         """
@@ -338,15 +340,11 @@ class UnbanRequest:
         self.text: str = data["text"]
         self.status: Literal["pending", "approved", "denied", "acknowledged", "canceled"] = data["status"]
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
-        self.resolved_at: datetime.datetime | None = (
-            parse_timestamp(data["resolved_at"]) if data["resolved_at"] else None
-        )
+        self.resolved_at: datetime.datetime | None = parse_timestamp(data["resolved_at"]) if data["resolved_at"] else None
         self.resolution_text: str | None = data["resolution_text"] or None
 
     def __repr__(self) -> str:
-        return (
-            f"<UnbanRequest id={self.id} broadcaster={self.broadcaster} user={self.user} created_at={self.created_at}>"
-        )
+        return f"<UnbanRequest id={self.id} broadcaster={self.broadcaster} user={self.user} created_at={self.created_at}>"
 
 
 class BlockedTerm:
@@ -393,7 +391,9 @@ class ShieldModeStatus:
         self.last_activated_at: datetime.datetime = parse_timestamp(data["last_activated_at"])
 
     def __repr__(self) -> str:
-        return f"<ShieldModeStatus active={self.active} moderator={self.moderator} last_activated_at={self.last_activated_at}>"
+        return (
+            f"<ShieldModeStatus active={self.active} moderator={self.moderator} last_activated_at={self.last_activated_at}>"
+        )
 
 
 class Warning:
@@ -421,6 +421,4 @@ class Warning:
         self.reason: str = data["reason"]
 
     def __repr__(self) -> str:
-        return (
-            f"<Warning broadcaster={self.broadcaster} user={self.user} moderator={self.moderator} reason={self.reason}>"
-        )
+        return f"<Warning broadcaster={self.broadcaster} user={self.user} moderator={self.moderator} reason={self.reason}>"

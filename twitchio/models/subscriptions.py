@@ -152,9 +152,7 @@ class BroadcasterSubscriptions:
         "points",
     )
 
-    def __init__(
-        self, data: BroadcasterSubscriptionsResponse, iterator: HTTPAsyncIterator[BroadcasterSubscription]
-    ) -> None:
+    def __init__(self, data: BroadcasterSubscriptionsResponse, iterator: HTTPAsyncIterator[BroadcasterSubscription]) -> None:
         self.subscriptions: HTTPAsyncIterator[BroadcasterSubscription] = iterator
         self.total: int = data["total"]
         self.points: int = data["points"]

@@ -74,9 +74,7 @@ class BitsLeaderboard:
     __slots__ = ("leaders", "started_at", "ended_at")
 
     def __init__(self, data: BitsLeaderboardResponse, *, http: HTTPClient) -> None:
-        self.started_at = (
-            parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
-        )
+        self.started_at = parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
         self.ended_at = parse_timestamp(data["date_range"]["ended_at"]) if data["date_range"]["ended_at"] else None
         self.leaders = [BitLeaderboardUser(d, http=http) for d in data["data"]]
 

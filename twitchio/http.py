@@ -68,7 +68,12 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.moderation import AutomodCheckMessage, AutomodSettings
     from .types_.conduits import Condition, ShardData, ShardUpdateRequest
-    from .types_.eventsub import SubscriptionCreateRequest, SubscriptionCreateTransport, SubscriptionResponse
+    from .types_.eventsub import (
+        SubscriptionCreateRequest,
+        SubscriptionCreateTransport,
+        SubscriptionResponse,
+        _SubscriptionData,
+    )
     from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
     from .types_.responses import (
         AddBlockedTermResponse,
@@ -686,9 +691,7 @@ class HTTPClient:
 
         if classification_labels is not None:
             converted_labels = [
-                {"id": label, "is_enabled": enabled}
-                for item in classification_labels
-                for label, enabled in item.items()
+                {"id": label, "is_enabled": enabled} for item in classification_labels for label, enabled in item.items()
             ]
             data["content_classification_labels"] = converted_labels
 
@@ -1302,17 +1305,16 @@ class HTTPClient:
 
     ### EventSub ###
 
-    async def create_eventsub_subscription(
-        self,
-        *,
-        type: SubscriptionType,
-        version: str,
-        condition: Condition,
-        transport: SubscriptionCreateTransport,
-        token_for: str | None = None,
-        token: str | None = None,
-    ) -> SubscriptionResponse:
+    # MARK
+    async def create_eventsub_subscription(self, **kwargs: Unpack[_SubscriptionData]) -> SubscriptionResponse:
         # TODO: Token?
+        token: str | None = None
+
+        type: SubscriptionType = kwargs["type"]
+        version: str = kwargs["version"]
+        condition: Condition = kwargs["condition"]
+        transport: SubscriptionCreateTransport = kwargs["transport"]
+        token_for: str | None = kwargs["token_for"]
 
         method: str = transport["method"]
         if method in ("webhook", "conduit"):
@@ -1470,9 +1472,7 @@ class HTTPClient:
         async def converter(data: BannedUsersResponseData, *, raw: Any) -> BannedUser:
             return BannedUser(data, http=self)
 
-        iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(
-            route, converter=converter, max_results=max_results
-        )
+        iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(route, converter=converter, max_results=max_results)
 
         return iterator
 
@@ -1848,9 +1848,7 @@ class HTTPClient:
         async def converter(data: PredictionsResponseData, *, raw: Any) -> Prediction:
             return Prediction(data, http=self)
 
-        iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(
-            route, converter=converter, max_results=max_results
-        )
+        iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(route, converter=converter, max_results=max_results)
 
         return iterator
 
@@ -1981,9 +1979,7 @@ class HTTPClient:
         params = {"broadcaster_id": broadcaster_id}
 
         _start_time = (
-            start_time.isoformat()
-            if start_time.tzinfo is not None
-            else start_time.replace(tzinfo=datetime.UTC).isoformat()
+            start_time.isoformat() if start_time.tzinfo is not None else start_time.replace(tzinfo=datetime.UTC).isoformat()
         )
 
         data = {
@@ -2119,9 +2115,7 @@ class HTTPClient:
         async def converter(data: StreamsResponseData, *, raw: Any) -> Stream:
             return Stream(data, http=self)
 
-        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(
-            route, converter=converter, max_results=max_results
-        )
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter, max_results=max_results)
 
         return iterator
 
@@ -2149,9 +2143,7 @@ class HTTPClient:
         async def converter(data: StreamsResponseData, *, raw: Any) -> Stream:
             return Stream(data, http=self)
 
-        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(
-            route, converter=converter, max_results=max_results
-        )
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter, max_results=max_results)
 
         return iterator
 

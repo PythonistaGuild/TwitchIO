@@ -84,3 +84,6 @@ class InvalidTokenException(HTTPException):
 
 class WebsocketConnectionException(TwitchioException):
     """..."""
+
+
+class EventsubVerifyException(TwitchioException): ...
