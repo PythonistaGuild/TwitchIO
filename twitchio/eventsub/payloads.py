@@ -256,7 +256,7 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
 
 
 class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
-    type: ClassVar[Literal["channel.subscribe.end"]] = "channel.subscribe.end"
+    type: ClassVar[Literal["channel.subscribe.gift"]] = "channel.subscribe.gift"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:

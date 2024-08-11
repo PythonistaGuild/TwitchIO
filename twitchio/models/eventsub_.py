@@ -694,7 +694,7 @@ class ChannelSubscriptionEnd(BaseEvent):
 
 
 class ChannelSubscriptionGift(BaseEvent):
-    subscription_type = "channel.subscribe.end"
+    subscription_type = "channel.subscribe.gift"
 
     __slots__ = ("broadcaster", "user", "tier", "total", "cumulative_total", "anonymous")
 
