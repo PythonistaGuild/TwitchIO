@@ -34,6 +34,7 @@ __all__ = (
     "AutomodMessageHoldEvent",
     "AutomodMessageUpdateEvent",
     "AutomodSettingsUpdateEvent",
+    "AutomodTermsUpdateEvent",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
     "ChannelChatClearEvent",
@@ -247,6 +248,12 @@ class AutomodSettingsUpdateEvent(BroadcasterModeratorEvent):
     swearing: int
     race_ethnicity_or_religion: int
     sex_based_terms: int
+
+
+class AutomodTermsUpdateEvent(BroadcasterModeratorEvent):
+    action: Literal["add_permitted", "remove_permitted", "add_blocked", "remove_blocked"]
+    from_automod: bool
+    terms: list[str]
 
 
 class ChannelUpdateEvent(BaseBroadcasterEvent):

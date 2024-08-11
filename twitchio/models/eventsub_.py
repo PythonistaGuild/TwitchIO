@@ -121,7 +121,7 @@ class AutomodMessageUpdate(AutomodMessageHold):
 
 
 class AutomodSettingsUpdate(BaseEvent):
-    subscription_type = "automod.message.hold"
+    subscription_type = "automod.settings.update"
 
     __slots__ = (
         "broadcaster",
@@ -150,6 +150,22 @@ class AutomodSettingsUpdate(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<AutomodSettingsUpdate broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"
+
+
+class AutomodTermsUpdate(BaseEvent):
+    subscription_type = "automod.terms.update"
+
+    __slots__ = ("broadcaster", "moderator", "action", "automod", "terms")
+
+    def __init__(self, payload: AutomodTermsUpdateEvent, *, http: HTTPClient) -> None:
+        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
+        self.moderator = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.action: Literal["add_permitted", "remove_permitted", "add_blocked", "remove_blocked"] = payload["action"]
+        self.automod: bool = bool(payload["from_automod"])
+        self.terms: list[str] = payload["terms"]
+
+    def __repr__(self) -> str:
+        return f"<AutomodTermsUpdate broadcaster={self.broadcaster} moderator={self.moderator} action={self.action} automod={self.automod}>"
 
 
 class ChannelUpdate(BaseEvent):
