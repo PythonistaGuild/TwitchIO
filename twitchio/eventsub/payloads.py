@@ -44,6 +44,8 @@ __all__ = (
     "ChannelChatMessageDeleteSubscription",
     "ChannelChatSettingsUpdateSubscription",
     "ChannelSubscribeSubscription",
+    "ChannelSubscriptionEndSubscription",
+    "ChannelSubscriptionGiftSubscription",
     "ChannelVIPAddSubscription",
     "StreamOnlineSubscription",
     "StreamOfflineSubscription",
