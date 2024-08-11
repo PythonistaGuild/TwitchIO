@@ -56,6 +56,56 @@ class BaseEvent:
         return event_cls(payload) if http is None else event_cls(payload, http=http)
 
 
+class AutomodEmote:
+    __slots__ = ("set_id", "id", "text", "_http")
+
+    def __init__(self, data: AutomodEmoteData, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
+        self.set_id: str = data["set-id"]
+        self.id: str = data["id"]
+        self.text: str = data["text"]
+
+    def __repr__(self) -> str:
+        return f"<AutomodEmote set_id={self.set_id} id={self.id} text={self.text}>"
+
+    async def fetch_emote_set(self, *, token_for: str | None = None) -> EmoteSet:
+        data = await self._http.get_emote_sets(emote_set_ids=[self.set_id], token_for=token_for)
+        return EmoteSet(data["data"][0], template=data["template"], http=self._http)
+
+
+class AutomodCheermote:
+    __slots__ = ("prefix", "amount", "text", "tier")
+
+    def __init__(self, data: AutomodCheermoteData) -> None:
+        self.text: str = data["text"]
+        self.prefix: str = data["prefix"]
+        self.amount: int = int(data["amount"])
+        self.tier: int = int(data["tier"])
+
+    def __repr__(self) -> str:
+        return f"<AutomodCheermote prefix={self.prefix} amount={self.amount} text={self.text} tier={self.tier}>"
+
+
+class AutomodMessageHold(BaseEvent):
+    subscription_type = "automod.message.hold"
+
+    __slots__ = ("broadcaster", "user", "message_id", "message", "level", "category", "held_at", "emotes", "cheermotes")
+
+    def __init__(self, payload: AutomodMessageHoldEvent, *, http: HTTPClient) -> None:
+        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
+        self.user = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.message_id: str = payload["message_id"]
+        self.message: str = payload["message"]
+        self.level: int = int(payload["level"])
+        self.category: str = payload["category"]
+        self.held_at: datetime.datetime = parse_timestamp(payload["held_at"])
+        self.emotes: list[AutomodEmote] = [AutomodEmote(e, http=http) for e in payload["fragments"]["emotes"]]
+        self.cheermotes: list[AutomodCheermote] = [AutomodCheermote(e) for e in payload["fragments"]["cheermotes"]]
+
+    def __repr__(self) -> str:
+        return f"<AutomodMessageHold broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"
+
+
 class ChannelUpdate(BaseEvent):
     subscription_type = "channel.update"
 
@@ -189,9 +239,10 @@ class ChatMessageBadge:
 
 
 class ChatMessageEmote:
-    __slots__ = ("set_id", "id", "owner_id", "format")
+    __slots__ = ("set_id", "id", "owner_id", "format", "_http")
 
     def __init__(self, data: ChatMessageEmoteData, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
         self.set_id: str = data["emote_set_id"]
         self.id: str = data["id"]
         self.owner_id: str = data["owner_id"]
@@ -200,9 +251,9 @@ class ChatMessageEmote:
     def __repr__(self) -> str:
         return f"<ChatMessageEmote set_id={self.set_id} id={self.id} owner_id={self.owner_id} format={self.format}>"
 
-    async def fetch_emote_set(self, *, http: HTTPClient, token_for: str | None = None) -> EmoteSet:
-        data = await http.get_emote_sets(emote_set_ids=[self.set_id], token_for=token_for)
-        return EmoteSet(data["data"][0], template=data["template"], http=http)
+    async def fetch_emote_set(self, *, token_for: str | None = None) -> EmoteSet:
+        data = await self._http.get_emote_sets(emote_set_ids=[self.set_id], token_for=token_for)
+        return EmoteSet(data["data"][0], template=data["template"], http=self._http)
 
 
 class ChatMessageCheermote:

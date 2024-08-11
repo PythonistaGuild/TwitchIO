@@ -29,6 +29,10 @@ from .conduits import Condition
 
 
 __all__ = (
+    "AutomodEmoteData",
+    "AutomodCheermoteData",
+    "AutomodMessageHoldEvent",
+    "AutomodMessageUpdateEvent",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
     "ChannelChatClearEvent",
@@ -196,6 +200,40 @@ class SubscriptionResponse(TypedDict):
     total: int
     total_cost: int
     max_total_cost: int
+
+
+AutomodEmoteData = TypedDict("AutomodEmoteData", {"text": str, "id": str, "set-id": str})
+
+
+class AutomodCheermoteData(TypedDict):
+    text: str
+    amount: int
+    prefix: str
+    tier: int
+
+
+class AutomodFragments(TypedDict):
+    emotes: list[AutomodEmoteData]
+    cheermotes: list[AutomodCheermoteData]
+
+
+class AutomodMessageHoldEvent(BroadcasterUserEvent):
+    message_id: str
+    message: str
+    level: int
+    category: str
+    held_at: str
+    fragments: AutomodFragments
+
+
+class AutomodMessageUpdateEvent(BroadcasterModUserEvent):
+    message_id: str
+    message: str
+    level: int
+    category: str
+    held_at: str
+    status: Literal["Approved", "Denied", "Expired"]
+    fragments: AutomodFragments
 
 
 class ChannelUpdateEvent(BaseBroadcasterEvent):
