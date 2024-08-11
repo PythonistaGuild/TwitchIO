@@ -399,15 +399,15 @@ class ChannelSubscriptionGiftEvent(BroadcasterUserEvent):
     is_anonymous: bool
 
 
-class SubscribeEmotes(TypedDict):
+class SubscribeEmoteData(TypedDict):
     begin: int
     end: int
     id: str
 
 
-class SubscribeMessage(TypedDict):
+class SubscribeMessageData(TypedDict):
     text: str
-    emotes: list[SubscribeEmotes]
+    emotes: list[SubscribeEmoteData]
 
 
 class ChannelSubscribeMessageEvent(BroadcasterUserEvent):
@@ -415,8 +415,8 @@ class ChannelSubscribeMessageEvent(BroadcasterUserEvent):
     tier: str
     cumulative_months: int
     streak_months: int | None
-    duration_monhs: int
-    message: SubscribeMessage
+    duration_months: int
+    message: SubscribeMessageData
 
 
 class ChannelCheerEvent(BroadcasterUserEvent):

@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         ChannelChatSettingsUpdateEvent,
         ChannelFollowEvent,
         ChannelSubscribeEvent,
+        ChannelSubscribeMessageEvent,
         ChannelSubscriptionEndEvent,
         ChannelSubscriptionGiftEvent,
         ChannelUpdateEvent,
@@ -70,6 +71,8 @@ if TYPE_CHECKING:
         ChatSubGiftData,
         StreamOfflineEvent,
         StreamOnlineEvent,
+        SubscribeEmoteData,
+        SubscribeMessageData,
         UserAuthorizationGrantEvent,
         UserAuthorizationRevokeEvent,
         UserUpdateEvent,
@@ -352,8 +355,8 @@ class ChatResub:
         "tier",
         "prime",
         "duration",
-        "cumulative",
-        "streak",
+        "cumulative_months",
+        "streak_months",
         "gift",
         "anonymous",
         "gifter",
@@ -364,8 +367,8 @@ class ChatResub:
         self.prime: bool = bool(data["is_prime"])
         self.gift: bool = bool(data["is_gift"])
         self.duration: int = int(data["duration_months"])
-        self.cumulative: int = int(data["cumulative_months"])
-        self.streak: int = int(data["streak_months"])
+        self.cumulative_months: int = int(data["cumulative_months"])
+        self.streak_months: int = int(data["streak_months"])
         self.anonymous: bool | None = (
             bool(data["gifter_is_anonymous"]) if data.get("gifter_is_anonymous") is not None else None
         )
@@ -381,12 +384,14 @@ class ChatResub:
 
 
 class ChatSubGift:
-    __slots__ = ("duration", "tier", "cumulative", "recipient", "community_gift_id")
+    __slots__ = ("duration", "tier", "cumulative_total", "recipient", "community_gift_id")
 
     def __init__(self, data: ChatSubGiftData, *, http: HTTPClient) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
         self.duration: int = int(data["duration_months"])
-        self.cumulative: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
+        self.cumulative_total: int | None = (
+            int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
+        )
         self.community_gift_id: str | None = data.get("community_gift_id")
         self.recipient: PartialUser = PartialUser(data["recipient_user_id"], data["recipient_user_login"], http=http)
 
@@ -395,12 +400,14 @@ class ChatSubGift:
 
 
 class ChatCommunitySubGift:
-    __slots__ = ("total", "tier", "cumulative", "id")
+    __slots__ = ("total", "tier", "cumulative_total", "id")
 
     def __init__(self, data: ChatCommunitySubGiftData) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
         self.total: int = int(data["total"])
-        self.cumulative: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
+        self.cumulative_total: int | None = (
+            int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
+        )
         self.id: str | None = data.get("community_gift_id")
 
     def __repr__(self) -> str:
@@ -711,6 +718,47 @@ class ChannelSubscriptionGift(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelSubscriptionGift broadcaster={self.broadcaster} user={self.user} tier={self.tier} total={self.total}>"
+
+
+class SubscribeEmote:
+    def __init__(self, data: SubscribeEmoteData) -> None:
+        self.begin: int = int(data["begin"])
+        self.end: int = int(data["end"])
+        self.id: str = data["id"]
+
+    def __repr__(self) -> str:
+        return f"<SubscribeEmote id={self.id} begin={self.id} end={self.end}>"
+
+
+class SubscribeMessage:
+    def __init__(self, data: SubscribeMessageData) -> None:
+        self.text: str = data["text"]
+        self.emotes: list[SubscribeEmote] = [SubscribeEmote(emote) for emote in data["emotes"]]
+
+    def __repr__(self) -> str:
+        return f"<SubscribeMessage text={self.text} emotes={self.emotes}>"
+
+
+class ChannelSubscriptionMessage(BaseEvent):
+    subscription_type = "channel.subscribe.message"
+
+    __slots__ = ("broadcaster", "user", "tier", "message", "cumulative_months", "streak_months", "duration")
+
+    def __init__(self, payload: ChannelSubscribeMessageEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.tier: str = payload["tier"]
+        self.duration_months: int = int(payload["duration_months"])
+        self.cumulative_months: int = int(payload["cumulative_months"])
+        self.streak_months: int | None = int(payload["streak_months"]) if payload["streak_months"] is not None else None
+        self.message: SubscribeMessage = SubscribeMessage(payload["message"])
+
+    def __repr__(self) -> str:
+        return (
+            f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} message={self.message.text}>"
+        )
 
 
 class ChannelVIPAdd(BaseEvent):

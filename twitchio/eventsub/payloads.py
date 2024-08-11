@@ -46,6 +46,7 @@ __all__ = (
     "ChannelSubscribeSubscription",
     "ChannelSubscriptionEndSubscription",
     "ChannelSubscriptionGiftSubscription",
+    "ChannelSubscriptionMessageSubscription",
     "ChannelVIPAddSubscription",
     "StreamOnlineSubscription",
     "StreamOfflineSubscription",
@@ -257,6 +258,21 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
 
 class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscribe.gift"]] = "channel.subscribe.gift"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id or not self.user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class ChannelSubscriptionMessageSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.subscribe.message"]] = "channel.subscribe.message"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
