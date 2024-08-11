@@ -40,7 +40,7 @@ starlette = ["starlette", "uvicorn"]
 dev = ["ruff", "pyright", "isort"]
 
 [tool.ruff]
-line-length = 120
+line-length = 125
 indent-width = 4
 exclude = ["venv"]
 
