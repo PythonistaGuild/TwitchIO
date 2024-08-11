@@ -543,13 +543,13 @@ API Reference
 
 .. attributetable::: ChannelModerateData
 
-.. autoclass:: ChannelAdBreakBeginData
+.. autoclass:: ChannelModerateData
     :members:
     :inherited-members:
 
 .. attributetable::: ChannelAdBreakBeginData
 
-.. autoclass:: ChannelModerateData
+.. autoclass:: ChannelAdBreakBeginData
     :members:
     :inherited-members:
 
