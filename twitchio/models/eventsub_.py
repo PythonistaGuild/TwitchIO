@@ -44,6 +44,7 @@ if TYPE_CHECKING:
         ChannelChatMessageEvent,
         ChannelChatNotificationEvent,
         ChannelChatSettingsUpdateEvent,
+        ChannelCheerEvent,
         ChannelFollowEvent,
         ChannelSubscribeEvent,
         ChannelSubscribeMessageEvent,
@@ -745,6 +746,26 @@ class ChannelSubscriptionMessage(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} message={self.message.text}>"
+
+
+class ChannelCheer(BaseEvent):
+    subscription_type = "channel.cheer"
+
+    __slots__ = ("broadcaster", "user", "anonymous", "message", "bits")
+
+    def __init__(self, payload: ChannelCheerEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.anonymous: bool = bool(payload["is_anonymous"])
+        self.bits: int = int(payload["bits"])
+        self.message: str = payload["message"]
+        self.user: PartialUser | None = (
+            PartialUser(payload["user_id"], payload["user_login"], http=http) if payload["user_id"] is not None else None
+        )
+
+    def __repr__(self) -> str:
+        return f"<ChannelCheer broadcaster={self.broadcaster} user={self.user} bits={self.bits} message={self.message}>"
 
 
 class ChannelVIPAdd(BaseEvent):

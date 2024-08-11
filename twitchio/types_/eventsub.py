@@ -428,7 +428,10 @@ class ChannelSubscribeMessageEvent(BroadcasterUserEvent):
     message: SubscribeMessageData
 
 
-class ChannelCheerEvent(BroadcasterUserEvent):
+class ChannelCheerEvent(BaseBroadcasterEvent):
+    user_id: str | None
+    user_login: str | None
+    user_name: str | None
     is_anonymous: bool
     message: str
     bits: int
