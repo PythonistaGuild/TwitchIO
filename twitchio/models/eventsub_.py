@@ -54,7 +54,7 @@ if TYPE_CHECKING:
         ChannelSubscriptionGiftEvent,
         ChannelUnbanEvent,
         ChannelUnbanRequestEvent,
-        ChannelUnbanRequestSolveEvent,
+        ChannelUnbanRequestResolveEvent,
         ChannelUpdateEvent,
         ChannelVIPAddEvent,
         ChatAnnouncementData,
@@ -845,6 +845,26 @@ class ChannelUnbanRequest(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelUnbanRequest broadcaster={self.broadcaster} user={self.user} id={self.id}>"
+
+
+class ChannelUnbanRequestResolve(BaseEvent):
+    subscription_type = "channel.unban_request.resolve"
+
+    __slots__ = ("broadcaster", "user", "id", "resolution_text", "status")
+
+    def __init__(self, payload: ChannelUnbanRequestResolveEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.id: str = payload["id"]
+        self.resolution_text: str = payload["resolution_text"]
+        self.status: Literal["approved", "canceled", "denied"] = payload["status"]
+
+    def __repr__(self) -> str:
+        return (
+            f"<ChannelUnbanRequestResolve broadcaster={self.broadcaster} user={self.user} id={self.id} status={self.status}>"
+        )
 
 
 class ChannelVIPAdd(BaseEvent):

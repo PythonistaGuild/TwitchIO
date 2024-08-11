@@ -463,10 +463,10 @@ class ChannelUnbanRequestEvent(BroadcasterUserEvent):
     created_at: str
 
 
-class ChannelUnbanRequestSolveEvent(BroadcasterModUserEvent):
+class ChannelUnbanRequestResolveEvent(BroadcasterModUserEvent):
     id: str
     resolution_text: str
-    status: str
+    status: Literal["approved", "canceled", "denied"]
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...
