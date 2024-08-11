@@ -46,8 +46,9 @@ __all__ = (
     "ChannelSubscribeSubscription",
     "ChannelSubscriptionEndSubscription",
     "ChannelSubscriptionGiftSubscription",
-    "ChannelSubscriptionMessageSubscription",
+    "ChannelSubscribeMessageSubscription",
     "ChannelCheerSubscription",
+    "ChannelRaidSubscription",
     "ChannelVIPAddSubscription",
     "StreamOnlineSubscription",
     "StreamOfflineSubscription",
@@ -234,7 +235,7 @@ class ChannelSubscribeSubscription(SubscriptionPayload):
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
-        if not self.broadcaster_user_id or not self.user_id:
+        if not self.broadcaster_user_id:
             raise ValueError('The parameter "broadcaster_user_id" must be passed.')
 
     @property
@@ -249,7 +250,7 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
-        if not self.broadcaster_user_id or not self.user_id:
+        if not self.broadcaster_user_id:
             raise ValueError('The parameter "broadcaster_user_id" must be passed.')
 
     @property
@@ -264,7 +265,7 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
-        if not self.broadcaster_user_id or not self.user_id:
+        if not self.broadcaster_user_id:
             raise ValueError('The parameter "broadcaster_user_id" must be passed.')
 
     @property
@@ -272,14 +273,14 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
 
-class ChannelSubscriptionMessageSubscription(SubscriptionPayload):
+class ChannelSubscribeMessageSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscribe.message"]] = "channel.subscribe.message"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
-        if not self.broadcaster_user_id or not self.user_id:
+        if not self.broadcaster_user_id:
             raise ValueError('The parameter "broadcaster_user_id" must be passed.')
 
     @property
@@ -294,8 +295,23 @@ class ChannelCheerSubscription(SubscriptionPayload):
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
-        if not self.broadcaster_user_id or not self.user_id:
+        if not self.broadcaster_user_id:
             raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class ChannelRaidSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.raid"]] = "channel.raid"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.to_broadcaster_user_id: str = condition.get("to_broadcaster_user_id", "")
+
+        if not self.to_broadcaster_user_id:
+            raise ValueError('The parameter "to_broadcaster_user_id" must be passed.')
 
     @property
     def condition(self) -> Condition:

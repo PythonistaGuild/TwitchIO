@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from twitchio.http import HTTPClient
     from twitchio.types_.eventsub import (
         ChannelAdBreakBeginEvent,
+        ChannelBanEvent,
         ChannelChatClearEvent,
         ChannelChatClearUserMessagesEvent,
         ChannelChatMessageDeleteEvent,
@@ -46,10 +47,14 @@ if TYPE_CHECKING:
         ChannelChatSettingsUpdateEvent,
         ChannelCheerEvent,
         ChannelFollowEvent,
+        ChannelRaidEvent,
         ChannelSubscribeEvent,
         ChannelSubscribeMessageEvent,
         ChannelSubscriptionEndEvent,
         ChannelSubscriptionGiftEvent,
+        ChannelUnbanEvent,
+        ChannelUnbanRequestEvent,
+        ChannelUnbanRequestSolveEvent,
         ChannelUpdateEvent,
         ChannelVIPAddEvent,
         ChatAnnouncementData,
@@ -766,6 +771,24 @@ class ChannelCheer(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<ChannelCheer broadcaster={self.broadcaster} user={self.user} bits={self.bits} message={self.message}>"
+
+
+class ChannelRaid(BaseEvent):
+    subscription_type = "channel.raid"
+
+    __slots__ = ("from_broadcaster", "to_boradcaster", "viewer_count")
+
+    def __init__(self, payload: ChannelRaidEvent, *, http: HTTPClient) -> None:
+        self.from_broadcaster: PartialUser = PartialUser(
+            payload["from_broadcaster_user_id"], payload["from_broadcaster_user_login"], http=http
+        )
+        self.to_broadcaster: PartialUser = PartialUser(
+            payload["to_broadcaster_user_id"], payload["to_broadcaster_user_login"], http=http
+        )
+        self.viewer_count: int = int(payload["viewers"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelRaid from_broadcaster={self.from_broadcaster} to_broadcaster={self.to_broadcaster} viewer_count={self.viewer_count}>"
 
 
 class ChannelVIPAdd(BaseEvent):
