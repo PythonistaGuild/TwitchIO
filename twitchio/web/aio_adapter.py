@@ -37,7 +37,7 @@ from ..authentication import Scopes
 from ..models.eventsub_ import BaseEvent
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
-from .utils import MESSAGE_TYPES, verify_message
+from .utils import MESSAGE_TYPES, BaseAdapter, verify_message
 
 
 if TYPE_CHECKING:
@@ -51,27 +51,24 @@ __all__ = ("AiohttpAdapter",)
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class AiohttpAdapter(web.Application):
+class AiohttpAdapter(BaseAdapter, web.Application):
+    client: Client
+
     def __init__(
         self,
-        client: Client,
         *,
         host: str | None = None,
         port: int | None = None,
-        eventsub_secret: str | None,
+        eventsub_secret: str | None = None,
     ) -> None:
         super().__init__()
         self._runner: web.AppRunner | None = None
-
-        self.client: Client = client
 
         self._host: str = host or "localhost"
         self._port: int = port or 4343
 
         self._eventsub_secret: str | None = eventsub_secret
-
         self._runner_task: asyncio.Task[None] | None = None
-        self._redirect_uri: str = client._http.redirect_uri or f"http://{self._host}:{self._port}/oauth/callback"
 
         self.startup = self.event_startup
         self.shutdown = self.event_shutdown
@@ -86,6 +83,7 @@ class AiohttpAdapter(web.Application):
         return
 
     async def event_startup(self) -> None:
+        self._redirect_uri: str = self.client._http.redirect_uri or f"http://{self._host}:{self._port}/oauth/callback"
         logger.info("Starting TwitchIO AiohttpAdapter on http://%s:%s.", self._host, self._port)
 
     async def event_shutdown(self) -> None:

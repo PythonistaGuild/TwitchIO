@@ -40,7 +40,7 @@ from ..authentication import Scopes
 from ..models.eventsub_ import BaseEvent
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
-from .utils import MESSAGE_TYPES, verify_message
+from .utils import MESSAGE_TYPES, BaseAdapter, verify_message
 
 
 if TYPE_CHECKING:
@@ -56,24 +56,21 @@ __all__ = ("StarletteAdapter",)
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class StarletteAdapter(Starlette):
+class StarletteAdapter(BaseAdapter, Starlette):
+    client: Client
+
     def __init__(
         self,
-        client: Client,
         *,
         host: str | None = None,
         port: int | None = None,
-        eventsub_secret: str | None,
+        eventsub_secret: str | None = None,
     ) -> None:
-        self.client: Client = client
-
         self._host: str = host or "localhost"
         self._port: int = port or 4343
         self._eventsub_secret: str | None = eventsub_secret
 
         self._runner_task: asyncio.Task[None] | None = None
-        self._redirect_uri: str = client._http.redirect_uri or f"http://{self._host}:{self._port}/oauth/callback"
-
         self._responded: deque[str] = deque(maxlen=5000)
 
         super().__init__(
@@ -90,6 +87,7 @@ class StarletteAdapter(Starlette):
         return f"StarletteAdapter(host={self._host}, port={self._port})"
 
     async def event_startup(self) -> None:
+        self._redirect_uri: str = self.client._http.redirect_uri or f"http://{self._host}:{self._port}/oauth/callback"
         logger.info("Starting TwitchIO StarletteAdapter on http://%s:%s.", self._host, self._port)
 
     async def event_shutdown(self) -> None:

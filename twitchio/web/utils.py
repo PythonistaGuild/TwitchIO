@@ -22,10 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import abc
 import hashlib
 import hmac
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 from starlette.requests import Request
@@ -39,6 +40,32 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 MESSAGE_TYPES = ["notification", "webhook_callback_verification", "revocation"]
+
+
+class BaseAdapter(abc.ABC):
+    @abc.abstractmethod
+    async def event_startup(self) -> None: ...
+
+    @abc.abstractmethod
+    async def event_shutdown(self) -> None: ...
+
+    @abc.abstractmethod
+    async def close(self) -> None: ...
+
+    @abc.abstractmethod
+    async def run(self, host: str | None = None, port: int | None = None) -> None: ...
+
+    @abc.abstractmethod
+    async def eventsub_callback(self, request: Any) -> Any: ...
+
+    @abc.abstractmethod
+    async def fetch_token(self, request: Any) -> Any: ...
+
+    @abc.abstractmethod
+    async def oauth_callback(self, request: Any) -> Any: ...
+
+    @abc.abstractmethod
+    async def oauth_redirect(self, request: Any) -> Any: ...
 
 
 async def verify_message(*, request: Request | web.Request, secret: str) -> bytes:

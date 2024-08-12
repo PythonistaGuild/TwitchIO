@@ -43,6 +43,7 @@ from .models.teams import Team
 from .payloads import EventErrorPayload
 from .user import ActiveExtensions, Extension, PartialUser, User
 from .web import AiohttpAdapter
+from .web.utils import BaseAdapter
 
 
 if TYPE_CHECKING:
@@ -60,7 +61,7 @@ if TYPE_CHECKING:
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
     from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
-    from .types_.options import ClientOptions
+    from .types_.options import AdapterOT, ClientOptions
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -101,8 +102,14 @@ class Client:
             session=session,
         )
 
-        adapter: Any = options.get("adapter", None) or AiohttpAdapter
-        self._adapter: Any = adapter(client=self, eventsub_secret=eventsub_secret)
+        adapter: AdapterOT = options.get("adapter", AiohttpAdapter)
+        if isinstance(adapter, BaseAdapter):
+            adapter.client = self
+            self._adapter = adapter
+        else:
+            self._adapter = adapter(eventsub_secret=eventsub_secret)
+            self._adapter.client = self
+
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
 
         self._login_called: bool = False

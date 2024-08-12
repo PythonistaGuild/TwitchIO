@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import TypedDict
+from typing import NotRequired, TypeAlias, TypedDict
 
 import aiohttp
 
@@ -30,8 +30,11 @@ from ..authentication import Scopes
 from ..web import *
 
 
+AdapterOT: TypeAlias = type[StarletteAdapter | AiohttpAdapter] | StarletteAdapter | AiohttpAdapter
+
+
 class ClientOptions(TypedDict, total=False):
     redirect_uri: str | None
     scopes: Scopes | None
     session: aiohttp.ClientSession | None
-    adapter: type[StarletteAdapter | AiohttpAdapter] | None
+    adapter: NotRequired[AdapterOT]
