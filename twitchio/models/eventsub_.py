@@ -1037,6 +1037,24 @@ class ChannelWarningAcknowledge(BaseEvent):
         return f"<ChannelWarningAcknowledge broadcaster={self.broadcaster} user={self.user}>"
 
 
+class ChannelWarningSend(BaseEvent):
+    subscription_type = "channel.warning.send"
+
+    __slots__ = ("broadcaster", "user", "moderator", "reason", "chat_rules")
+
+    def __init__(self, payload: ChannelWarningSendEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.reason: str | None = payload.get("reason")
+        self.chat_rules: list[str] | None = payload.get("chat_rules_cited")
+
+    def __repr__(self) -> str:
+        return f"<ChannelWarningSend broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
+
+
 class ShoutoutCreate(BaseEvent):
     subscription_type = "channel.shoutout.create"
 

@@ -59,6 +59,7 @@ __all__ = (
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
     "ChannelWarningAcknowledgeEvent",
+    "ChannelWarningSendEvent",
     "ChatAnnouncementData",
     "ChatBitsBadgeTierData",
     "ChatCharityAmountData",
@@ -599,6 +600,11 @@ class ChannelVIPRemoveEvent(BroadcasterUserEvent): ...
 
 
 class ChannelWarningAcknowledgeEvent(BroadcasterUserEvent): ...
+
+
+class ChannelWarningSendEvent(BroadcasterModUserEvent):
+    reason: str
+    chat_rules_cited: list[str] | None
 
 
 class GoalBeginProgressEvent(TypedDict):
