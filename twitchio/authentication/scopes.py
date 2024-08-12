@@ -146,6 +146,7 @@ class Scopes(metaclass=_ScopeMeta):
     user_read_subscriptions = _scope_property()
     user_read_emotes = _scope_property()
     user_manage_whispers = _scope_property()
+    user_read_whispers = _scope_property()
     channel_bot = _scope_property()
     channel_moderate = _scope_property()
     chat_edit = _scope_property()
