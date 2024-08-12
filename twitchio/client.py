@@ -85,7 +85,6 @@ class Client:
         client_id: str,
         client_secret: str,
         bot_id: str | None = None,
-        eventsub_secret: str | None = None,
         **options: Unpack[ClientOptions],
     ) -> None:
         redirect_uri: str | None = options.get("redirect_uri", None)
@@ -102,12 +101,13 @@ class Client:
             session=session,
         )
 
+        # TODO: Note, adapter must be subclassed to use with ES...
         adapter: AdapterOT = options.get("adapter", AiohttpAdapter)
         if isinstance(adapter, BaseAdapter):
             adapter.client = self
             self._adapter = adapter
         else:
-            self._adapter = adapter(eventsub_secret=eventsub_secret)
+            self._adapter = adapter()
             self._adapter.client = self
 
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
@@ -1290,19 +1290,19 @@ class Client:
         token_for: str | None = None,
         socket_id: str | None = None,
         callback_url: str | None = None,
-    ) -> ...:
+        eventsub_secret: str | None = None,
+    ) -> SubscriptionResponse | None:
         # TODO: Docs...
+        if as_bot and not self.bot_id:
+            raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
+
+        elif as_bot:
+            token_for = self.bot_id
+
+        if not token_for:
+            raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
 
         if method is TransportMethod.WEBSOCKET:
-            if as_bot and not self.bot_id:
-                raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
-
-            elif as_bot:
-                token_for = self.bot_id
-
-            if not token_for:
-                raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
-
             sockets: dict[str, Websocket] = self._websockets[token_for]
             websocket: Websocket
 
@@ -1372,8 +1372,47 @@ class Client:
                     "See: ... for more info."
                 )
 
-            if self._adapter:
-                ...
+            callback: str | None = self._adapter.eventsub_url or callback_url
+            if not callback:
+                raise ValueError(
+                    "A callback URL must be provided when subscribing to events via Webhook. "
+                    "Use 'twitchio.web' Adapter or provide a 'callback_url'. See ... for more info."
+                )
+
+            secret: str | None = self._adapter._eventsub_secret or eventsub_secret
+            if not secret:
+                raise ValueError(
+                    "An eventsub secret must be provided when subscribing to events via Webhook. " "See .. for more info."
+                )
+
+            if secret and not 10 <= len(secret) <= 100:
+                raise ValueError("The 'eventsub_secret' must be between 10 and 100 characters long.")
+
+            type_ = SubscriptionType(payload.type)
+            version: str = payload.version
+            transport: SubscriptionCreateTransport = {"method": "webhook", "callback": callback, "secret": secret}
+
+            data: _SubscriptionData = {
+                "type": type_,
+                "version": version,
+                "condition": payload.condition,
+                "transport": transport,
+                "token_for": token_for,
+            }
+
+            try:
+                resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
+            except HTTPException as e:
+                if e.status == 409:
+                    logger.debug(
+                        "Disregarding HTTPException in subscribe: A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                        payload.type,
+                        str(payload.condition),
+                    )
+                    return
+
+                raise e
+            return resp
 
     def doc_test(self, thing: int = 1) -> int:
         """

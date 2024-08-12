@@ -64,11 +64,26 @@ class StarletteAdapter(BaseAdapter, Starlette):
         *,
         host: str | None = None,
         port: int | None = None,
+        domain: str | None = None,
+        eventsub_path: str | None = None,
         eventsub_secret: str | None = None,
     ) -> None:
         self._host: str = host or "localhost"
         self._port: int = port or 4343
+
         self._eventsub_secret: str | None = eventsub_secret
+        if eventsub_secret and not 10 <= len(eventsub_secret) <= 100:
+            raise ValueError("Eventsub Secret must be between 10 and 100 characters long.")
+
+        self._domain: str | None = None
+        if domain:
+            domain_ = domain.removeprefix("http://").removeprefix("https://").removesuffix("/")
+            self._domain = f"https://{domain_}"
+        else:
+            self._domain = f"http://{self._host}:{self._port}"
+
+        path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
+        self._eventsub_path: str = f"/{path}"
 
         self._runner_task: asyncio.Task[None] | None = None
         self._responded: deque[str] = deque(maxlen=5000)
@@ -77,7 +92,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
             routes=[
                 Route("/oauth/callback", self.oauth_callback, methods=["GET"]),
                 Route("/oauth", self.oauth_redirect, methods=["GET"]),
-                Route("/callback", self.eventsub_callback, methods=["POST"]),
+                Route(self._eventsub_path, self.eventsub_callback, methods=["POST"]),
             ],
             on_shutdown=[self.event_shutdown],
             on_startup=[self.event_startup],
@@ -86,8 +101,15 @@ class StarletteAdapter(BaseAdapter, Starlette):
     def __repr__(self) -> str:
         return f"StarletteAdapter(host={self._host}, port={self._port})"
 
+    @property
+    def eventsub_url(self) -> str:
+        return f"{self._domain}{self._eventsub_path}"
+
+    @property
+    def redirect_url(self) -> str:
+        return f"{self._domain}/oauth/callback"
+
     async def event_startup(self) -> None:
-        self._redirect_uri: str = self.client._http.redirect_uri or f"http://{self._host}:{self._port}/oauth/callback"
         logger.info("Starting TwitchIO StarletteAdapter on http://%s:%s.", self._host, self._port)
 
     async def event_shutdown(self) -> None:
@@ -189,7 +211,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         try:
             payload: UserTokenPayload = await self.client._http.user_access_token(
                 request.query_params["code"],
-                redirect_uri=self._redirect_uri,
+                redirect_uri=self.redirect_url,
             )
         except Exception as e:
             logger.error("Exception raised while fetching Token in <%s>: %s", self.__class__.__qualname__, e)
@@ -223,7 +245,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         try:
             payload: AuthorizationURLPayload = self.client._http.get_authorization_url(
                 scopes=scopes_,
-                redirect_uri=self._redirect_uri,
+                redirect_uri=self.redirect_url,
                 force_verify=force_verify,
             )
         except Exception as e:

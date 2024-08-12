@@ -37,14 +37,12 @@ class Bot(Client):
         client_id: str,
         client_secret: str,
         bot_id: str,
-        eventsub_secret: str | None = None,
         **options: Unpack[ClientOptions],
     ) -> None:
         super().__init__(
             client_id=client_id,
             client_secret=client_secret,
             bot_id=bot_id,
-            eventsub_secret=eventsub_secret,
             **options,
         )
 
@@ -61,6 +59,7 @@ class Bot(Client):
         token_for: str | None = None,
         socket_id: str | None = None,
         callback_url: str | None = None,
+        eventsub_secret: str | None = None,
     ) -> ...:
         return await super().subscribe(
             method,
@@ -69,4 +68,5 @@ class Bot(Client):
             token_for,
             socket_id=socket_id,
             callback_url=callback_url,
+            eventsub_secret=eventsub_secret,
         )
