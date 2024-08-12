@@ -1007,6 +1007,21 @@ class ChannelVIPAdd(BaseEvent):
         return f"<ChannelVIPAdd broadcaster={self.broadcaster} user={self.user}>"
 
 
+class ChannelVIPRemove(BaseEvent):
+    subscription_type = "channel.vip.remove"
+
+    __slots__ = ("broadcaster", "user")
+
+    def __init__(self, payload: ChannelVIPRemoveEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelVIPRemove broadcaster={self.broadcaster} user={self.user}>"
+
+
 class ShoutoutCreate(BaseEvent):
     subscription_type = "channel.shoutout.create"
 

@@ -57,6 +57,7 @@ __all__ = (
     "ChannelUnbanRequestResolveEvent",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
+    "ChannelVIPRemoveEvent",
     "ChatAnnouncementData",
     "ChatBitsBadgeTierData",
     "ChatCharityAmountData",
@@ -591,6 +592,9 @@ class ChannelUnbanRequestResolveEvent(BroadcasterModUserEvent):
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...
+
+
+class ChannelVIPRemoveEvent(BroadcasterUserEvent): ...
 
 
 class GoalBeginProgressEvent(TypedDict):
