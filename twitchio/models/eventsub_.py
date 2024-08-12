@@ -550,10 +550,10 @@ class ChatAnnouncement:
     __slots__ = ("colour",)
 
     def __init__(self, data: ChatAnnouncementData) -> None:
-        self.colour: Colour = Colour.from_hex(data["color"])
+        self.colour: Literal["BLUE", "PURPLE", "ORANGE", "GREEN", "PRIMARY"] = data["color"]
 
     @property
-    def color(self) -> Colour | None:
+    def color(self) -> Literal["BLUE", "PURPLE", "ORANGE", "GREEN", "PRIMARY"]:
         return self.colour
 
     def __repr__(self) -> str:

@@ -429,7 +429,7 @@ class ChatPayItForwardData(TypedDict):
 
 
 class ChatAnnouncementData(TypedDict):
-    color: str
+    color: Literal["BLUE", "PURPLE", "ORANGE", "GREEN", "PRIMARY"]
 
 
 class ChatCharityAmountData(TypedDict):
