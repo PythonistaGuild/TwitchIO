@@ -77,6 +77,9 @@ class Client:
     client_secret: str
         The client secret of the application you registered on the Twitch Developer Portal.
         This must be associated with the same `client_id`.
+    bot_id: str | None
+        An optional `str` which should be the User ID associated with the Bot Account. It is highly recommended setting this
+        parameter.
     """
 
     def __init__(
@@ -123,7 +126,10 @@ class Client:
 
     @property
     def bot_id(self) -> str | None:
-        # TODO: Docs...
+        """Property which returns the User-ID associated with this Client if set, or `None`.
+
+        This can be set using the `bot_id` parameter on [`Client`][twitchio.Client]
+        """
         return self._bot_id
 
     async def event_error(self, payload: EventErrorPayload) -> None:
@@ -1282,7 +1288,7 @@ class Client:
         data = await self._http.patch_drop_entitlements(ids=ids, fulfillment_status=fulfillment_status, token_for=token_for)
         return [EntitlementStatus(d) for d in data["data"]]
 
-    async def subscribe(
+    async def _subscribe(
         self,
         method: TransportMethod,
         payload: SubscriptionPayload,
@@ -1292,7 +1298,61 @@ class Client:
         callback_url: str | None = None,
         eventsub_secret: str | None = None,
     ) -> SubscriptionResponse | None:
-        # TODO: Docs...
+        if method is TransportMethod.WEBSOCKET:
+            return await self.subscribe_websocket(payload=payload, as_bot=as_bot, token_for=token_for, socket_id=socket_id)
+
+        elif method is TransportMethod.WEBHOOK:
+            return await self.subscribe_webhook(
+                payload=payload,
+                as_bot=as_bot,
+                token_for=token_for,
+                callback_url=callback_url,
+                eventsub_secret=eventsub_secret,
+            )
+
+    async def subscribe_websocket(
+        self,
+        *,
+        payload: SubscriptionPayload,
+        as_bot: bool = False,
+        token_for: str | None = None,
+        socket_id: str | None = None,
+    ) -> SubscriptionResponse | None:
+        # TODO: Complete docs...
+        """Subscribe to an EventSub Event via Websockets.
+
+        !!! tip
+            See: ... for more information and recipes on using eventsub.
+
+        Parameters
+        ----------
+        payload: SubscriptionPayload
+            The payload which should include the required conditions to subscribe to.
+        as_bot: bool
+            Whether to subscribe to this event using the token associated with the provided
+            [`bot_id`][twitchio.Client.bot_id]. If this is set to `True` and `bot_id` has not been set, this method will
+            raise `ValueError`. Defaults to `False` on [`Client`][twitchio.Client] but will default to `True` on
+            [`Bot`][twitchio.ext.commands.Bot].
+        token_for: str | None
+            An optional user ID to use to subscribe. If `as_bot` is passed, this is always the token associated with the
+            [`bot_id`][twitchio.Client.bot_id] account. Defaults to `None`.
+        socket_id: str | None
+            An optional `str` corresponding to an exisiting and connected websocket session, to use for this subscription.
+            You usually do not need to pass this parameter as TwitchIO delegates subscriptions to websockets as needed.
+            Defaults to `None`.
+
+        Returns
+        -------
+        SubscriptionResponse
+            ...
+
+        Raises
+        ------
+        ValueError
+            One of the provided parameters is incorrect or incompatible.
+        HTTPException
+            An error was raised while making the subscription request to Twitch.
+        """
         if as_bot and not self.bot_id:
             raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
 
@@ -1302,117 +1362,175 @@ class Client:
         if not token_for:
             raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
 
-        if method is TransportMethod.WEBSOCKET:
-            sockets: dict[str, Websocket] = self._websockets[token_for]
-            websocket: Websocket
+        sockets: dict[str, Websocket] = self._websockets[token_for]
+        websocket: Websocket
 
-            if socket_id:
-                try:
-                    websocket = sockets[socket_id]
-                except KeyError:
-                    raise KeyError(f"The websocket with ID '{socket_id}' does not exist.")
+        if socket_id:
+            try:
+                websocket = sockets[socket_id]
+            except KeyError:
+                raise KeyError(f"The websocket with ID '{socket_id}' does not exist.")
 
-            elif not sockets:
-                websocket = Websocket(client=self, token_for=token_for, http=self._http)
-                await websocket.connect(fail_once=True)
+        elif not sockets:
+            websocket = Websocket(client=self, token_for=token_for, http=self._http)
+            await websocket.connect(fail_once=True)
 
-                # session_id is guaranteed at this point.
-                self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore
+            # session_id is guaranteed at this point.
+            self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore
 
-            else:
-                sorted_: list[Websocket] = sorted(sockets.values(), key=lambda s: s.subscription_count)
-
-                try:
-                    websocket = next(s for s in sorted_ if s.can_subscribe)
-                except StopIteration:
-                    raise ValueError(
-                        "No suitable websocket can be used to subscribe to this event. You may have exahusted your 'toal_cost' allocation or max subscription count for this user token."
-                    )
-
-            session_id: str | None = websocket.session_id
-            if not session_id:
-                # This really shouldn't ever happen that I am aware of.
-                raise ValueError("Eventsub Websocket is missing 'session_id'.")
-
-            type_ = SubscriptionType(payload.type)
-            version: str = payload.version
-            transport: SubscriptionCreateTransport = {"method": "websocket", "session_id": session_id}
-
-            data: _SubscriptionData = {
-                "type": type_,
-                "version": version,
-                "condition": payload.condition,
-                "transport": transport,
-                "token_for": token_for,
-            }
+        else:
+            sorted_: list[Websocket] = sorted(sockets.values(), key=lambda s: s.subscription_count)
 
             try:
-                resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
-            except HTTPException as e:
-                if e.status == 409:
-                    logger.error(
-                        "Disregarding HTTPException in subscribe: A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
-                        payload.type,
-                        str(payload.condition),
-                    )
-                    return
-
-                raise e
-
-            for sub in resp["data"]:
-                identifier: str = sub["id"]
-                websocket._subscriptions[identifier] = data
-
-            return resp
-
-        elif method is TransportMethod.WEBHOOK:
-            if not self._adapter and not callback_url:
+                websocket = next(s for s in sorted_ if s.can_subscribe)
+            except StopIteration:
                 raise ValueError(
-                    "Either a 'twitchio.web' Adapter or 'callback_url' should be provided for webhook based eventsub. "
-                    "See: ... for more info."
+                    "No suitable websocket can be used to subscribe to this event. "
+                    "You may have exahusted your 'toal_cost' allocation or max subscription count for this user token."
                 )
 
-            callback: str | None = self._adapter.eventsub_url or callback_url
-            if not callback:
-                raise ValueError(
-                    "A callback URL must be provided when subscribing to events via Webhook. "
-                    "Use 'twitchio.web' Adapter or provide a 'callback_url'. See ... for more info."
+        session_id: str | None = websocket.session_id
+        if not session_id:
+            # This really shouldn't ever happen that I am aware of.
+            raise ValueError("Eventsub Websocket is missing 'session_id'.")
+
+        type_ = SubscriptionType(payload.type)
+        version: str = payload.version
+        transport: SubscriptionCreateTransport = {"method": "websocket", "session_id": session_id}
+
+        data: _SubscriptionData = {
+            "type": type_,
+            "version": version,
+            "condition": payload.condition,
+            "transport": transport,
+            "token_for": token_for,
+        }
+
+        try:
+            resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
+        except HTTPException as e:
+            if e.status == 409:
+                logger.error(
+                    "Disregarding HTTPException in subscribe: "
+                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                    payload.type,
+                    str(payload.condition),
                 )
+                return
 
-            secret: str | None = self._adapter._eventsub_secret or eventsub_secret
-            if not secret:
-                raise ValueError(
-                    "An eventsub secret must be provided when subscribing to events via Webhook. " "See .. for more info."
+            raise e
+
+        for sub in resp["data"]:
+            identifier: str = sub["id"]
+            websocket._subscriptions[identifier] = data
+
+        return resp
+
+    async def subscribe_webhook(
+        self,
+        *,
+        payload: SubscriptionPayload,
+        as_bot: bool = False,
+        token_for: str | None = None,
+        callback_url: str | None = None,
+        eventsub_secret: str | None = None,
+    ) -> SubscriptionResponse | None:
+        # TODO: Complete docs...
+        """Subscribe to an EventSub Event via Webhook.
+
+        !!! tip
+            For more information on how to setup your bot with webhooks, see: ...
+
+        ??? warning
+            Usually you wouldn't use webhooks to subscribe to the
+            [`Channel Chat Message`][twitchio.eventsub.ChatMessageSubscription] subscription.
+            Consider using [`.subscribe_websocket`][twitchio.Client.subscribe_websocket] for this subscription.
+
+        Parameters
+        ----------
+        payload: SubscriptionPayload
+            The payload which should include the required conditions to subscribe to.
+        as_bot: bool
+            Whether to subscribe to this event using the token associated with the provided
+            [`bot_id`][twitchio.Client.bot_id]. If this is set to `True` and `bot_id` has not been set, this method will
+            raise `ValueError`. Defaults to `False` on [`Client`][twitchio.Client] but will default to `True` on
+            [`Bot`][twitchio.ext.commands.Bot].
+        token_for: str | None
+            An optional user ID to use to subscribe. If `as_bot` is passed, this is always the token associated with the
+            [`bot_id`][twitchio.Client.bot_id] account. Defaults to `None`.
+        callback_url: str | None
+            An optional url to use as the webhook `callback_url` for this subscription. If you are using one of the built-in
+            web adapters, you should not need to set this. See: (web adapter docs link) for more info.
+        eventsub_secret: str | None
+            An optional `str` to use as the eventsub_secret, which is required by Twitch. If you are using one of the
+            built-in web adapters, you should not need to set this. See: (web adapter docs link) for more info.
+
+        Returns
+        -------
+        SubscriptionResponse
+            ...
+
+        Raises
+        ------
+        ValueError
+            One of the provided parameters is incorrect or incompatible.
+        HTTPException
+            An error was raised while making the subscription request to Twitch.
+        """
+        if as_bot and not self.bot_id:
+            raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
+
+        elif as_bot:
+            token_for = self.bot_id
+
+        if not token_for:
+            raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
+
+        if not self._adapter and not callback_url:
+            raise ValueError(
+                "Either a 'twitchio.web' Adapter or 'callback_url' should be provided for webhook based eventsub."
+            )
+
+        callback: str | None = self._adapter.eventsub_url or callback_url
+        if not callback:
+            raise ValueError(
+                "A callback URL must be provided when subscribing to events via Webhook. "
+                "Use 'twitchio.web' Adapter or provide a 'callback_url'."
+            )
+
+        secret: str | None = self._adapter._eventsub_secret or eventsub_secret
+        if not secret:
+            raise ValueError("An eventsub secret must be provided when subscribing to events via Webhook. ")
+
+        if secret and not 10 <= len(secret) <= 100:
+            raise ValueError("The 'eventsub_secret' must be between 10 and 100 characters long.")
+
+        type_ = SubscriptionType(payload.type)
+        version: str = payload.version
+        transport: SubscriptionCreateTransport = {"method": "webhook", "callback": callback, "secret": secret}
+
+        data: _SubscriptionData = {
+            "type": type_,
+            "version": version,
+            "condition": payload.condition,
+            "transport": transport,
+            "token_for": token_for,
+        }
+
+        try:
+            resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
+        except HTTPException as e:
+            if e.status == 409:
+                logger.warning(
+                    "Disregarding HTTPException in subscribe: "
+                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                    payload.type,
+                    str(payload.condition),
                 )
+                return
 
-            if secret and not 10 <= len(secret) <= 100:
-                raise ValueError("The 'eventsub_secret' must be between 10 and 100 characters long.")
-
-            type_ = SubscriptionType(payload.type)
-            version: str = payload.version
-            transport: SubscriptionCreateTransport = {"method": "webhook", "callback": callback, "secret": secret}
-
-            data: _SubscriptionData = {
-                "type": type_,
-                "version": version,
-                "condition": payload.condition,
-                "transport": transport,
-                "token_for": token_for,
-            }
-
-            try:
-                resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
-            except HTTPException as e:
-                if e.status == 409:
-                    logger.debug(
-                        "Disregarding HTTPException in subscribe: A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
-                        payload.type,
-                        str(payload.condition),
-                    )
-                    return
-
-                raise e
-            return resp
+            raise e
+        return resp
 
     def doc_test(self, thing: int = 1) -> int:
         """
