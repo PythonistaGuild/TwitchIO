@@ -71,6 +71,7 @@ nav:
     - Authentication and Tokens: getting-started/authenticating.md
     #- Examples: getting-started/examples.md
   - Guides:
+    - EventSub: guides/eventsub.md
     - Placeholder: guides/placeholder.md
   - References:
     - Events: references/events.md

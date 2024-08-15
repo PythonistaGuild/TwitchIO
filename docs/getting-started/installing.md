@@ -5,8 +5,8 @@
 
 | Python Version           | Status                                                                                       | Notes                                                          |
 | -----------              | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **`<= 3.9`**             | :fontawesome-solid-triangle-exclamation:{ .icon-warning .pythonista-tag title="Unsupported"} | Unsupported                                                    |
-| **`3.10, 3.11, 3.12`**   | :fontawesome-solid-check:{ .icon-check .pythonista-tag title="Supported" }                   | Supported                                                      |
+| **`<= 3.10`**            | :fontawesome-solid-triangle-exclamation:{ .icon-warning .pythonista-tag title="Unsupported"} | Unsupported                                                    |
+| **`3.11, 3.12`**         | :fontawesome-solid-check:{ .icon-check .pythonista-tag title="Supported" }                   | Supported                                                      |
 | **`3.13`**               | :fontawesome-solid-question:{ .icon-unknown .pythonista-tag title="Unknown" }                | Unknown                                                        |
 
 
@@ -24,10 +24,10 @@ Below are some simple commands to help you get started with a **venv** and Twitc
     cd path/to/project
 
     # Create the virtual environment...
-    # Replace 3.10 with the Python version you want to use...
+    # Replace 3.11 with the Python version you want to use...
     # You can check what Python versions you have installed with:
     # py -0
-    py -3.10 -m venv venv
+    py -3.11 -m venv venv
 
     # Activate your venv...
     # Everytime you want to use your venv in a new terminal you should run this command...
@@ -58,8 +58,8 @@ Below are some simple commands to help you get started with a **venv** and Twitc
     cd path/to/project
 
     # Create the virtual environment...
-    # Replace 3.10 with the Python version you want to use...
-    python3.10 -m venv venv
+    # Replace 3.11 with the Python version you want to use...
+    python3.11 -m venv venv
 
     # Activate your venv...
     # Everytime you want to use your venv in a new terminal you should run this command...
@@ -122,7 +122,7 @@ pip install -U twitchio --extra-index-url https://pip.pythonista.gg
 ```
 
 ## Installation Issues
-Make sure you have the latest version of Python installed, or if you prefer, a Python version of 3.10 or greater.
+Make sure you have the latest version of Python installed, or if you prefer, a Python version of 3.11 or greater.
 
 If you have any other issues feel free to search for duplicates and then create a new issue on [GitHub](https://github.com/PythonistaGuild/twitchio) with as much detail as possible. Including providing the output of pip, your OS details and Python version.
 
