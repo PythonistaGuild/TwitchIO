@@ -37,7 +37,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
 
 from ..authentication import Scopes
-from ..models.eventsub_ import BaseEvent
+from ..models.eventsub_ import BaseEvent, SubscriptionRevoked
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
 from .utils import MESSAGE_TYPES, BaseAdapter, verify_message
@@ -201,8 +201,10 @@ class StarletteAdapter(BaseAdapter, Starlette):
             return Response(status_code=200)
 
         elif msg_type == "revocation":
-            # TODO: ...
-            return Response(status_code=200)
+            payload: SubscriptionRevoked = SubscriptionRevoked(data["subscription"])
+            self.client.dispatch(event="subscription_revoked", payload=payload)
+
+            return Response(status_code=204)
 
     async def fetch_token(self, request: Request) -> Response:
         if "code" not in request.query_params:
@@ -217,7 +219,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
             logger.error("Exception raised while fetching Token in <%s>: %s", self.__class__.__qualname__, e)
             return Response(status_code=500)
 
-        await self.client.add_token(payload["access_token"], payload["refresh_token"])
+        self.client.dispatch(event="oauth_authorized", payload=payload)
         return Response("Success. You can leave this page.", status_code=200)
 
     async def oauth_callback(self, request: Request) -> Response:

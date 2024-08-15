@@ -34,7 +34,7 @@ from urllib.parse import unquote_plus
 from aiohttp import web
 
 from ..authentication import Scopes
-from ..models.eventsub_ import BaseEvent
+from ..models.eventsub_ import BaseEvent, SubscriptionRevoked
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
 from .utils import MESSAGE_TYPES, BaseAdapter, verify_message
@@ -189,8 +189,10 @@ class AiohttpAdapter(BaseAdapter, web.Application):
             return web.Response(status=200)
 
         elif msg_type == "revocation":
-            # TODO: ...
-            return web.Response(status=200)
+            payload: SubscriptionRevoked = SubscriptionRevoked(data["subscription"])
+            self.client.dispatch(event="subscription_revoked", payload=payload)
+
+            return web.Response(status=204)
 
     async def fetch_token(self, request: web.Request) -> web.Response:
         if "code" not in request.query:
@@ -205,7 +207,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
             logger.error("Exception raised while fetching Token in <%s>: %s", self.__class__.__qualname__, e)
             return web.Response(status=500)
 
-        await self.client.add_token(payload["access_token"], payload["refresh_token"])
+        self.client.dispatch(event="oauth_authorized", payload=payload)
         return web.Response(body="Success. You can leave this page.", status=200)
 
     async def oauth_callback(self, request: web.Request) -> web.Response:

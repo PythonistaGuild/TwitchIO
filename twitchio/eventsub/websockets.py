@@ -33,7 +33,7 @@ import aiohttp
 
 from ..backoff import Backoff
 from ..exceptions import HTTPException, WebsocketConnectionException
-from ..models.eventsub_ import BaseEvent
+from ..models.eventsub_ import BaseEvent, SubscriptionRevoked
 from ..types_.conduits import (
     MessageTypes,
     MetaData,
@@ -131,6 +131,9 @@ class Websocket:
     def __repr__(self) -> str:
         return f"EventsubWebsocket(session_id={self._session_id})"
 
+    def __str__(self) -> str:
+        return f"{self._session_id}"
+
     @property
     def keep_alive_timeout(self) -> int:
         return self._keep_alive_timeout
@@ -158,7 +161,7 @@ class Websocket:
             return
 
         if self.connected:
-            logger.warning("Trying to connect to an already running eventsub websocket: <%r>.", self)
+            logger.warning("Trying to connect to an already running eventsub websocket: <%s>.", self)
             return
 
         self._connecting = True
@@ -168,7 +171,7 @@ class Websocket:
 
         retries: int | None = self._reconnect_attempts
         if retries == 0 and reconnect:
-            logger.info("<%r> was closed unexepectedly, but is flagged as 'should not reconnect'.", self)
+            logger.info("Websocket <%s> was closed unexepectedly, but is flagged as 'should not reconnect'.", self)
             return await self.close()
 
         while True:
@@ -177,7 +180,7 @@ class Websocket:
                     new = await session.ws_connect(url_, heartbeat=15.0)
                     session.detach()
             except Exception as e:
-                logger.debug("Failed to connect to eventsub websocket <%r>: %s.", self, e)
+                logger.debug("Failed to connect to eventsub websocket <%s>: %s.", self, e)
 
                 if fail_once:
                     await self.close()
@@ -189,7 +192,7 @@ class Websocket:
                 await self.close()
 
                 raise WebsocketConnectionException(
-                    "Failed to connect to eventsub websocket <%r> after %s retries. "
+                    "Failed to connect to eventsub websocket <%s> after %s retries. "
                     "Please attempt to reconnect or re-subscribe this eventsub connection.",
                     self,
                     self._reconnect_attempts,
@@ -199,7 +202,7 @@ class Websocket:
                 retries -= 1
 
             delay: float = self._backoff.calculate()
-            logger.info('<%r> retrying to reconnect websocket connection in "%s" seconds.', self, delay)
+            logger.info('Websocket <%s> retrying to reconnect websocket connection in "%s" seconds.', self, delay)
 
             await asyncio.sleep(delay)
 
@@ -218,7 +221,7 @@ class Websocket:
             await self.close()
 
             raise WebsocketConnectionException(
-                "<%r> did not receive a welcome message from Twitch within the allowed timeframe. "
+                "Websocket <%s> did not receive a welcome message from Twitch within the allowed timeframe. "
                 "Please attempt to reconnect or re-subscribe this eventsub connection.",
                 self,
             )
@@ -298,11 +301,11 @@ class Websocket:
 
             type_: aiohttp.WSMsgType = message.type
             if type_ in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSING):
-                logger.debug("Received close message [%s] on eventsub websocket: <%r>", self._socket.close_code, self)
+                logger.debug("Received close message [%s] on eventsub websocket: <%s>", self._socket.close_code, self)
 
                 if self._socket.close_code == 4001:
                     logger.critical(
-                        "<%r> attempted to send an outgoing message to Twitch. "
+                        "Websocket <%s> attempted to send an outgoing message to Twitch. "
                         "Twitch prohibits sending outgoing messages to the server, this will result in a disconnect. "
                         "This websocket will NOT attempt to reconnect.",
                         self,
@@ -316,7 +319,7 @@ class Websocket:
                 break
 
             if type_ is not aiohttp.WSMsgType.TEXT:
-                logger.debug("Received unknown message from eventsub websocket: <%r>", self)
+                logger.debug("Received unknown message from eventsub websocket: <%s>", self)
                 continue
 
             self._last_keepalive = datetime.datetime.now()
@@ -324,7 +327,7 @@ class Websocket:
             try:
                 data: WebsocketMessages = cast(WebsocketMessages, _from_json(message.data))
             except Exception:
-                logger.warning("Unable to parse JSON in eventsub websocket: <%r>", self)
+                logger.warning("Unable to parse JSON in eventsub websocket: <%s>", self)
                 continue
 
             metadata: MetaData = data["metadata"]
@@ -336,32 +339,32 @@ class Websocket:
                 await self._process_welcome(welcome_data)
 
             elif message_type == "session_reconnect":
-                logger.debug('Received "session_reconnect" message from eventsub websocket: <%r>', self)
+                logger.debug('Received "session_reconnect" message from eventsub websocket: <%s>', self)
                 reconnect_data: ReconnectMessage = cast(ReconnectMessage, data)
 
                 await self._process_reconnect(reconnect_data)
 
             elif message_type == "session_keepalive":
-                logger.debug('Received "session_keepalive" message from eventsub websocket: <%r>', self)
+                logger.debug('Received "session_keepalive" message from eventsub websocket: <%s>', self)
 
             elif message_type == "revocation":
-                logger.debug('Received "revocation" message from eventsub websocket: <%r>', self)
+                logger.debug('Received "revocation" message from eventsub websocket: <%s>', self)
 
                 revocation_data: RevocationMessage = cast(RevocationMessage, data)
                 await self._process_revocation(revocation_data)
 
             elif message_type == "notification":
-                logger.debug('Received "notification" message from eventsub websocket: <%r>. %s', self, data)
+                logger.debug('Received "notification" message from eventsub websocket: <%s>. %s', self, data)
 
                 notification_data: NotificationMessage = cast(NotificationMessage, data)
                 await self._process_notification(notification_data)
 
             else:
-                logger.warning("Received an unknown message type in eventsub websocket: <%r>", self)
+                logger.warning("Received an unknown message type in eventsub websocket: <%s>", self)
 
     async def _process_keepalive(self) -> None:
         assert self._last_keepalive
-        logger.debug("Started keep_alive task on eventsub websocket: <%r>", self)
+        logger.debug("Started keep_alive task on eventsub websocket: <%s>", self)
 
         while True:
             await asyncio.sleep(self._keep_alive_timeout)
@@ -385,13 +388,17 @@ class Websocket:
         assert self._listen_task
 
         self._listen_task.set_name(f"EventsubWebsocketListener: {self._session_id}")
-        logger.info('Received "session_welcome" message from eventsub websocket: <%r>', self)
+        logger.info('Received "session_welcome" message from eventsub websocket: <%s>', self)
 
     async def _process_reconnect(self, data: ReconnectMessage) -> None:
-        logger.info("Attempting to reconnect eventsub websocket due to a reconnect message from Twitch: <%r>", self)
+        logger.info("Attempting to reconnect eventsub websocket due to a reconnect message from Twitch: <%s>", self)
         await self._reconnect(url=data["payload"]["session"]["reconnect_url"])
 
-    async def _process_revocation(self, data: RevocationMessage) -> None: ...
+    async def _process_revocation(self, data: RevocationMessage) -> None:
+        payload: SubscriptionRevoked = SubscriptionRevoked(data=data["payload"]["subscription"])
+
+        if self._client:
+            self._client.dispatch(event="subscription_revoked", payload=payload)
 
     async def _process_notification(self, data: NotificationMessage) -> None:
         subscription_type = data["metadata"]["subscription_type"]
@@ -439,4 +446,4 @@ class Websocket:
         self._listen_task = None
         self._socket = None
 
-        logger.debug("Successfully closed eventsub websocket: <%r>", self)
+        logger.debug("Successfully closed eventsub websocket: <%s>", self)

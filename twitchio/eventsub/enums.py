@@ -31,6 +31,7 @@ __all__ = (
     "CloseCode",
     "MessageType",
     "SubscriptionType",
+    "RevocationReason",
 )
 
 
@@ -148,3 +149,10 @@ class SubscriptionType(enum.Enum):
     UserAuthorizationRevoke = "user.authorization.revoke"
     UserUpdate = "user.update"
     UserWhisperMessage = "user.whisper.message"
+
+
+class RevocationReason(enum.Enum):
+    USER_REMOVED = "user_removed"
+    AUTHORIZATION_REVOKED = "authorization_revoked"
+    NOTIFICATION_FAILURES_EXCEEDED = "notification_failures_exceeded"
+    VERSION_REMOVED = "version_removed"

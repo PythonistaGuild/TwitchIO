@@ -405,8 +405,7 @@ class HTTPClient:
     def clear(self) -> None:
         if self._session and self._session.closed:
             logger.debug(
-                "Clearing %s session. A new session will be created on the next request.",
-                self.__class__.__qualname__,
+                "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
             )
             self._session = None
 
@@ -415,11 +414,7 @@ class HTTPClient:
             try:
                 await self._session.close()
             except Exception as e:
-                logger.debug(
-                    "Ignoring exception caught while closing %s session: %s.",
-                    self.__class__.__qualname__,
-                    e,
-                )
+                logger.debug("Ignoring exception caught while closing %s session: %s.", self.__class__.__qualname__, e)
 
             self.clear()
             logger.debug("%s session closed successfully.", self.__class__.__qualname__)

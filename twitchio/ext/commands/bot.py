@@ -25,8 +25,6 @@ SOFTWARE.
 from typing import Unpack
 
 from twitchio.client import Client
-from twitchio.eventsub.enums import TransportMethod
-from twitchio.eventsub.payloads import SubscriptionPayload
 from twitchio.types_.options import ClientOptions
 
 
@@ -50,23 +48,3 @@ class Bot(Client):
     def bot_id(self) -> str:
         assert self._bot_id
         return self._bot_id
-
-    async def subscribe(
-        self,
-        method: TransportMethod,
-        payload: SubscriptionPayload,
-        as_bot: bool = True,
-        token_for: str | None = None,
-        socket_id: str | None = None,
-        callback_url: str | None = None,
-        eventsub_secret: str | None = None,
-    ) -> ...:
-        return await super().subscribe(
-            method,
-            payload,
-            as_bot,
-            token_for,
-            socket_id=socket_id,
-            callback_url=callback_url,
-            eventsub_secret=eventsub_secret,
-        )

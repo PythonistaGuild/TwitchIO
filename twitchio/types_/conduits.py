@@ -178,7 +178,7 @@ class RevocationTransport(TypedDict):
 
 class RevocationSubscription(TypedDict):
     id: str
-    status: Literal["authorization_revoked", "user_removed", "version_removed"]
+    status: Literal["authorization_revoked", "user_removed", "version_removed", "notification_failures_exceeded"]
     type: str
     version: str
     cost: int

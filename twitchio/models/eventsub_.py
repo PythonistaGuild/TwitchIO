@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from twitchio.assets import Asset
+from twitchio.eventsub import RevocationReason, TransportMethod
 from twitchio.models.chat import EmoteSet
 from twitchio.user import PartialUser
 from twitchio.utils import Colour, parse_timestamp
@@ -36,6 +37,7 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPClient
+    from twitchio.types_.conduits import RevocationSubscription, RevocationTransport
     from twitchio.types_.eventsub import *
 
 
@@ -1191,3 +1193,20 @@ class Whisper(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<Whisper sender={self.sender} recipient={self.recipient} id={self.id} message={self.message}>"
+
+
+class SubscriptionRevoked:
+    __slots__ = (
+        "raw",
+        "status",
+        "reason",
+        "transport_method",
+        "transport_data",
+    )
+
+    def __init__(self, data: RevocationSubscription) -> None:
+        self.raw: RevocationSubscription = data
+        self.status: RevocationReason = RevocationReason(data["status"])
+        self.reason: RevocationReason = self.status
+        self.transport_method: TransportMethod = TransportMethod(data["transport"]["method"])
+        self.transport_data: RevocationTransport = data["transport"]

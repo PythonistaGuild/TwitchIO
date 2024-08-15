@@ -29,7 +29,7 @@ import logging
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
 
-from .authentication import ManagedHTTPClient, Scopes
+from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
 from .eventsub.enums import SubscriptionType, TransportMethod
 from .eventsub.websockets import Websocket
 from .exceptions import HTTPException
@@ -1531,6 +1531,9 @@ class Client:
 
             raise e
         return resp
+
+    async def event_oauth_authorized(self, payload: UserTokenPayload) -> None:
+        await self.add_token(payload["access_token"], payload["refresh_token"])
 
     def doc_test(self, thing: int = 1) -> int:
         """

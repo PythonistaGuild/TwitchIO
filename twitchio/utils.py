@@ -410,7 +410,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             red_colour = twitchio.Colour.red()
         ```
         """
@@ -424,7 +424,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             blue_colour = twitchio.Colour.blue()
         ```
         """
@@ -438,7 +438,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             green_colour = twitchio.Colour.green()
         ```
         """
@@ -452,7 +452,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             firebrick_colour = twitchio.Colour.firebrick()
         ```
         """
@@ -466,7 +466,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             coral_colour = twitchio.Colour.coral()
         ```
         """
@@ -480,7 +480,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             yellow_green_colour = twitchio.Colour.yellow_green()
         ```
         """
@@ -494,7 +494,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             orange_red_colour = twitchio.Colour.orange_red()
         ```
         """
@@ -508,7 +508,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             sea_green_colour = twitchio.Colour.sea_green()
         ```
         """
@@ -522,7 +522,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             golden_rod_colour = twitchio.Colour.golden_rod()
         ```
         """
@@ -536,7 +536,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             chocolate_colour = twitchio.Colour.chocolate()
         ```
         """
@@ -550,7 +550,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             cadet_blue_colour = twitchio.Colour.cadet_blue()
         ```
         """
@@ -564,7 +564,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             dodger_blue_colour = twitchio.Colour.dodger_blue()
         ```
         """
@@ -578,7 +578,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             hot_pink_colour = twitchio.Colour.hot_pink()
         ```
         """
@@ -592,7 +592,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             blue_violet_colour = twitchio.Colour.blue_violet()
         ```
         """
@@ -606,7 +606,7 @@ class Colour:
 
         Example
         -------
-        ```py
+        ```python
             sping_green_colour = twitchio.Colour.spring_green()
         ```
         """
