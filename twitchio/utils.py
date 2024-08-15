@@ -402,6 +402,216 @@ class Colour:
 
         return cls.from_hex(hex_)
 
+    @classmethod
+    def red(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `red` colour from the Twitch API.
+
+        This corresponds to hex: `#FF0000`
+
+        Example
+        -------
+        ```py
+            red_colour = twitch.Colour.red()
+        ```
+        """
+        return cls.from_hex("FF0000")
+
+    @classmethod
+    def blue(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `blue` colour from the Twitch API.
+
+        This corresponds to hex: `#0000FF`
+
+        Example
+        -------
+        ```py
+            blue_colour = twitch.Colour.blue()
+        ```
+        """
+        return cls.from_hex("0000FF")
+
+    @classmethod
+    def green(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `green` colour from the Twitch API.
+
+        This corresponds to hex: `008000`
+
+        Example
+        -------
+        ```py
+            green_colour = twitch.Colour.green()
+        ```
+        """
+        return cls.from_hex("008000")
+
+    @classmethod
+    def firebrick(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `firebrick` colour from the Twitch API.
+
+        This corresponds to hex: `#B22222`
+
+        Example
+        -------
+        ```py
+            firebrick_colour = twitch.Colour.firebrick()
+        ```
+        """
+        return cls.from_hex("B22222")
+
+    @classmethod
+    def coral(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `coral` colour from the Twitch API.
+
+        This corresponds to hex: `#FF7F50`
+
+        Example
+        -------
+        ```py
+            coral_colour = twitch.Colour.coral()
+        ```
+        """
+        return cls.from_hex("FF7F50")
+
+    @classmethod
+    def yellow_green(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `yellow_green` colour from the Twitch API.
+
+        This corresponds to hex: `#9ACD32`
+
+        Example
+        -------
+        ```py
+            yellow_green_colour = twitch.Colour.yellow_green()
+        ```
+        """
+        return cls.from_hex("9ACD32")
+
+    @classmethod
+    def orange_red(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `orange_red` colour from the Twitch API.
+
+        This corresponds to hex: `#FF4500`
+
+        Example
+        -------
+        ```py
+            orange_red_colour = twitch.Colour.orange_red()
+        ```
+        """
+        return cls.from_hex("FF4500")
+
+    @classmethod
+    def sea_green(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `sea_green` colour from the Twitch API.
+
+        This corresponds to hex: `#2E8B57`
+
+        Example
+        -------
+        ```py
+            sea_green_colour = twitch.Colour.sea_green()
+        ```
+        """
+        return cls.from_hex("2E8B57")
+
+    @classmethod
+    def golden_rod(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `golden_rod` colour from the Twitch API.
+
+        This corresponds to hex: `#DAA520`
+
+        Example
+        -------
+        ```py
+            golden_rod_colour = twitch.Colour.golden_rod()
+        ```
+        """
+        return cls.from_hex("DAA520")
+
+    @classmethod
+    def chocolate(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `chocolate` colour from the Twitch API.
+
+        This corresponds to hex: `#D2691E`
+
+        Example
+        -------
+        ```py
+            chocolate_colour = twitch.Colour.chocolate()
+        ```
+        """
+        return cls.from_hex("D2691E")
+
+    @classmethod
+    def cadet_blue(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `cadet_blue` colour from the Twitch API.
+
+        This corresponds to hex: `#5F9EA0`
+
+        Example
+        -------
+        ```py
+            cadet_blue_colour = twitch.Colour.cadet_blue()
+        ```
+        """
+        return cls.from_hex("5F9EA0")
+
+    @classmethod
+    def dodger_blue(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `dodger_blue` colour from the Twitch API.
+
+        This corresponds to hex: `#1E90FF`
+
+        Example
+        -------
+        ```py
+            dodger_blue_colour = twitch.Colour.dodger_blue()
+        ```
+        """
+        return cls.from_hex("1E90FF")
+
+    @classmethod
+    def hot_pink(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `hot_pink` colour from the Twitch API.
+
+        This corresponds to hex: `#FF69B4`
+
+        Example
+        -------
+        ```py
+            hot_pink_colour = twitch.Colour.hot_pink()
+        ```
+        """
+        return cls.from_hex("FF69B4")
+
+    @classmethod
+    def blue_violet(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `blue_violet` colour from the Twitch API.
+
+        This corresponds to hex: `#8A2BE2`
+
+        Example
+        -------
+        ```py
+            blue_violet_colour = twitch.Colour.blue_violet()
+        ```
+        """
+        return cls.from_hex("8A2BE2")
+
+    @classmethod
+    def spring_green(cls) -> Self:
+        """Class method to create a [`Colour`][twitchio.Colour] with the default `spring_green` colour from the Twitch API.
+
+        This corresponds to hex: `#00FF7F`
+
+        Example
+        -------
+        ```py
+            sping_green_colour = twitch.Colour.spring_green()
+        ```
+        """
+        return cls.from_hex("00FF7F")
+
 
 Color = Colour
 
