@@ -434,7 +434,7 @@ class Colour:
     def green(cls) -> Self:
         """Class method to create a [`Colour`][twitchio.Colour] with the default `green` colour from the Twitch API.
 
-        This corresponds to hex: `008000`
+        This corresponds to hex: `#008000`
 
         Example
         -------
