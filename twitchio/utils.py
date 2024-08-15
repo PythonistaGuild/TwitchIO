@@ -411,7 +411,7 @@ class Colour:
         Example
         -------
         ```py
-            red_colour = twitch.Colour.red()
+            red_colour = twitchio.Colour.red()
         ```
         """
         return cls.from_hex("FF0000")
@@ -425,7 +425,7 @@ class Colour:
         Example
         -------
         ```py
-            blue_colour = twitch.Colour.blue()
+            blue_colour = twitchio.Colour.blue()
         ```
         """
         return cls.from_hex("0000FF")
@@ -439,7 +439,7 @@ class Colour:
         Example
         -------
         ```py
-            green_colour = twitch.Colour.green()
+            green_colour = twitchio.Colour.green()
         ```
         """
         return cls.from_hex("008000")
@@ -453,7 +453,7 @@ class Colour:
         Example
         -------
         ```py
-            firebrick_colour = twitch.Colour.firebrick()
+            firebrick_colour = twitchio.Colour.firebrick()
         ```
         """
         return cls.from_hex("B22222")
@@ -467,7 +467,7 @@ class Colour:
         Example
         -------
         ```py
-            coral_colour = twitch.Colour.coral()
+            coral_colour = twitchio.Colour.coral()
         ```
         """
         return cls.from_hex("FF7F50")
@@ -481,7 +481,7 @@ class Colour:
         Example
         -------
         ```py
-            yellow_green_colour = twitch.Colour.yellow_green()
+            yellow_green_colour = twitchio.Colour.yellow_green()
         ```
         """
         return cls.from_hex("9ACD32")
@@ -495,7 +495,7 @@ class Colour:
         Example
         -------
         ```py
-            orange_red_colour = twitch.Colour.orange_red()
+            orange_red_colour = twitchio.Colour.orange_red()
         ```
         """
         return cls.from_hex("FF4500")
@@ -509,7 +509,7 @@ class Colour:
         Example
         -------
         ```py
-            sea_green_colour = twitch.Colour.sea_green()
+            sea_green_colour = twitchio.Colour.sea_green()
         ```
         """
         return cls.from_hex("2E8B57")
@@ -523,7 +523,7 @@ class Colour:
         Example
         -------
         ```py
-            golden_rod_colour = twitch.Colour.golden_rod()
+            golden_rod_colour = twitchio.Colour.golden_rod()
         ```
         """
         return cls.from_hex("DAA520")
@@ -537,7 +537,7 @@ class Colour:
         Example
         -------
         ```py
-            chocolate_colour = twitch.Colour.chocolate()
+            chocolate_colour = twitchio.Colour.chocolate()
         ```
         """
         return cls.from_hex("D2691E")
@@ -551,7 +551,7 @@ class Colour:
         Example
         -------
         ```py
-            cadet_blue_colour = twitch.Colour.cadet_blue()
+            cadet_blue_colour = twitchio.Colour.cadet_blue()
         ```
         """
         return cls.from_hex("5F9EA0")
@@ -565,7 +565,7 @@ class Colour:
         Example
         -------
         ```py
-            dodger_blue_colour = twitch.Colour.dodger_blue()
+            dodger_blue_colour = twitchio.Colour.dodger_blue()
         ```
         """
         return cls.from_hex("1E90FF")
@@ -579,7 +579,7 @@ class Colour:
         Example
         -------
         ```py
-            hot_pink_colour = twitch.Colour.hot_pink()
+            hot_pink_colour = twitchio.Colour.hot_pink()
         ```
         """
         return cls.from_hex("FF69B4")
@@ -593,7 +593,7 @@ class Colour:
         Example
         -------
         ```py
-            blue_violet_colour = twitch.Colour.blue_violet()
+            blue_violet_colour = twitchio.Colour.blue_violet()
         ```
         """
         return cls.from_hex("8A2BE2")
@@ -607,7 +607,7 @@ class Colour:
         Example
         -------
         ```py
-            sping_green_colour = twitch.Colour.spring_green()
+            sping_green_colour = twitchio.Colour.spring_green()
         ```
         """
         return cls.from_hex("00FF7F")
