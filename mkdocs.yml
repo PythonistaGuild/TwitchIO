@@ -73,6 +73,7 @@ nav:
   - Guides:
     - Placeholder: guides/placeholder.md
   - References:
+    - Events: references/events.md
     - Client: references/client.md
     - Payloads: references/payloads.md
     - Asset: references/asset.md
