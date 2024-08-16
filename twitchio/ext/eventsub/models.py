@@ -1554,7 +1554,7 @@ class ChannelShoutoutReceiveData(EventData):
 
     def __init__(self, client: EventSubClient, data: dict) -> None:
         self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
-        self.from_broadcaster: PartialUser = _transform_user(client, data, "to_broadcaster_user")
+        self.from_broadcaster: PartialUser = _transform_user(client, data, "from_broadcaster_user")
         self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
         self.viewer_count: int = data["viewer_count"]
 
