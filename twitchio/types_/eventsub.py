@@ -66,6 +66,8 @@ __all__ = (
     "ModerateWarnData",
     "ChannelModerateEvent",
     "ChannelModerateEventV2",
+    "ChannelModeratorAddEvent",
+    "ChannelModeratorRemoveEvent",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
@@ -752,6 +754,12 @@ class ChannelModerateEventV2(BaseChannelModerate, BroadcasterModeratorEvent):
         "warn",
     ]
     warn: ModerateWarnData | None
+
+
+class ChannelModeratorAddEvent(BroadcasterUserEvent): ...
+
+
+class ChannelModeratorRemoveEvent(BroadcasterUserEvent): ...
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...

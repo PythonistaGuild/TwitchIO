@@ -61,6 +61,8 @@ __all__ = (
     "ChannelUnbanRequestResolveSubscription",
     "ChannelModerateSubscription",
     "ChannelModerateV2Subscription",
+    "ChannelModeratorAddSubscription",
+    "ChannelModeratorRemoveSubscription",
     "ChannelVIPAddSubscription",
     "ChannelVIPRemoveSubscription",
     "ChannelWarningAcknowledgementSubscription",
@@ -523,6 +525,36 @@ class ChannelModerateV2Subscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
+
+class ChannelModeratorAddSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.moderator.add"]] = "channel.moderator.add"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class ChannelModeratorRemoveSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.moderator.remove"]] = "channel.moderator.remove"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
 
 
 class ChannelVIPAddSubscription(SubscriptionPayload):

@@ -1212,6 +1212,36 @@ class ChannelModerate(BaseEvent):
         self.warn: ModerateWarn | None = ModerateWarn(warn, http=http) if warn is not None else None
 
 
+class ChannelModeratorAdd(BaseEvent):
+    subscription_type = "channel.moderator.add"
+
+    __slots__ = ("broadcaster", "user")
+
+    def __init__(self, payload: ChannelModeratorAddEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelModeratorAdd broadcaster={self.broadcaster} user={self.user}>"
+
+
+class ChannelModeratorRemove(BaseEvent):
+    subscription_type = "channel.moderator.remove"
+
+    __slots__ = ("broadcaster", "user")
+
+    def __init__(self, payload: ChannelModeratorRemoveEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelModeratorAdd broadcaster={self.broadcaster} user={self.user}>"
+
+
 class ChannelVIPAdd(BaseEvent):
     subscription_type = "channel.vip.add"
 
