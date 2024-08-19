@@ -55,6 +55,17 @@ __all__ = (
     "ChannelUnbanEvent",
     "ChannelUnbanRequestEvent",
     "ChannelUnbanRequestResolveEvent",
+    "ModerateFollowersData",
+    "ModerateSlowData",
+    "ModerateBanData",
+    "ModerateTimeoutData",
+    "ModerateRaidData",
+    "ModerateDeleteData",
+    "ModerateAutoModTermsData",
+    "ModerateUnbanRequestData",
+    "ModerateWarnData",
+    "ChannelModerateEvent",
+    "ChannelModerateEventV2",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
@@ -591,6 +602,156 @@ class ChannelUnbanRequestResolveEvent(BroadcasterModUserEvent):
     id: str
     resolution_text: str
     status: Literal["approved", "canceled", "denied"]
+
+
+class ModerateFollowersData(TypedDict):
+    follow_duration_minutes: int
+
+
+class ModerateSlowData(TypedDict):
+    wait_time_seconds: int
+
+
+class ModerateVIPData(BaseUserEvent): ...
+
+
+class ModerateUnVIPData(BaseUserEvent): ...
+
+
+class ModerateModData(BaseUserEvent): ...
+
+
+class ModerateUnmodData(BaseUserEvent): ...
+
+
+class ModerateBanData(BaseUserEvent):
+    reason: str | None
+
+
+class ModerateUnbanData(BaseUserEvent): ...
+
+
+class ModerateTimeoutData(BaseUserEvent):
+    reason: str | None
+    expires_at: str
+
+
+class ModerateUntimeoutData(BaseUserEvent): ...
+
+
+class ModerateRaidData(BaseUserEvent):
+    viewer_count: int
+
+
+class ModerateUnraidData(BaseUserEvent): ...
+
+
+class ModerateDeleteData(BaseUserEvent):
+    message_id: str
+    message_body: str
+
+
+class ModerateAutoModTermsData(TypedDict):
+    action: Literal["add", "remove"]
+    terms: list[str]
+    list: Literal["blocked", "permitted"]
+    from_automod: bool
+
+
+class ModerateUnbanRequestData(BaseUserEvent):
+    is_approved: bool
+    moderator_message: str
+
+
+class ModerateWarnData(BaseUserEvent):
+    chat_rules_cited: list[str] | None
+    reason: str | None
+
+
+class BaseChannelModerate(TypedDict):
+    followers: ModerateFollowersData | None
+    slow: ModerateSlowData | None
+    vip: ModerateVIPData | None
+    unvip: ModerateUnVIPData | None
+    mod: ModerateModData | None
+    unmod: ModerateUnmodData | None
+    ban: ModerateBanData | None
+    unban: ModerateUnbanData | None
+    timeout: ModerateTimeoutData | None
+    untimeout: ModerateUntimeoutData | None
+    raid: ModerateRaidData | None
+    unraid: ModerateUnraidData | None
+    delete: ModerateDeleteData | None
+    automod_terms: ModerateAutoModTermsData | None
+    unban_request: ModerateUnbanRequestData | None
+
+
+class ChannelModerateEvent(BaseChannelModerate, BroadcasterModeratorEvent):
+    action: Literal[
+        "ban",
+        "timeout",
+        "unban",
+        "untimeout",
+        "clear",
+        "emoteonly",
+        "emoteonlyoff",
+        "followers",
+        "followersoff",
+        "uniquechat",
+        "uniquechatoff",
+        "slow",
+        "slowoff",
+        "subscribers",
+        "subscribersoff",
+        "unraid",
+        "delete",
+        "unvip",
+        "vip",
+        "raid",
+        "add_blocked_term",
+        "add_permitted_term",
+        "remove_blocked_term",
+        "remove_permitted_term",
+        "mod",
+        "unmod",
+        "approve_unban_request",
+        "deny_unban_request",
+    ]
+
+
+class ChannelModerateEventV2(BaseChannelModerate, BroadcasterModeratorEvent):
+    action: Literal[
+        "ban",
+        "timeout",
+        "unban",
+        "untimeout",
+        "clear",
+        "emoteonly",
+        "emoteonlyoff",
+        "followers",
+        "followersoff",
+        "uniquechat",
+        "uniquechatoff",
+        "slow",
+        "slowoff",
+        "subscribers",
+        "subscribersoff",
+        "unraid",
+        "delete",
+        "unvip",
+        "vip",
+        "raid",
+        "add_blocked_term",
+        "add_permitted_term",
+        "remove_blocked_term",
+        "remove_permitted_term",
+        "mod",
+        "unmod",
+        "approve_unban_request",
+        "deny_unban_request",
+        "warn",
+    ]
+    warn: ModerateWarnData | None
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...

@@ -59,6 +59,8 @@ __all__ = (
     "ChannelUnbanSubscription",
     "ChannelUnbanRequestSubscription",
     "ChannelUnbanRequestResolveSubscription",
+    "ChannelModerateSubscription",
+    "ChannelModerateV2Subscription",
     "ChannelVIPAddSubscription",
     "ChannelVIPRemoveSubscription",
     "ChannelWarningAcknowledgementSubscription",
@@ -478,6 +480,38 @@ class ChannelUnbanRequestSubscription(SubscriptionPayload):
 class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.unban_request.resolve"]] = "channel.unban_request.resolve"
     version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
+
+class ChannelModerateSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.moderate"]] = "channel.moderate"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
+
+class ChannelModerateV2Subscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.moderate"]] = "channel.moderate"
+    version: ClassVar[Literal["2"]] = "2"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")

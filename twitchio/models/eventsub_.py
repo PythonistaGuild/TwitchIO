@@ -994,6 +994,224 @@ class ChannelUnbanRequestResolve(BaseEvent):
         )
 
 
+class ModerateFollowers:
+    __slots__ = ("follow_duration",)
+
+    def __init__(self, data: ModerateFollowersData) -> None:
+        self.follow_duration: int = int(data["follow_duration_minutes"])
+
+    def __repr__(self) -> str:
+        return f"<ModerateFollowers follow_duration={self.follow_duration}>"
+
+
+class ModerateBan:
+    __slots__ = ("user", "reason")
+
+    def __init__(self, data: ModerateBanData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.reason: str | None = data.get("reason")
+
+    def __repr__(self) -> str:
+        return f"<ModerateBan user={self.user} reason={self.reason}>"
+
+
+class ModerateTimeout:
+    __slots__ = ("user", "reason", "expires_at")
+
+    def __init__(self, data: ModerateTimeoutData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.reason: str | None = data.get("reason")
+        self.expires_at: datetime.datetime = parse_timestamp(data["expires_at"])
+
+    def __repr__(self) -> str:
+        return f"<ModerateTimeout user={self.user} expires_at={self.expires_at}>"
+
+
+class ModerateSlow:
+    __slots__ = ("wait_time",)
+
+    def __init__(self, data: ModerateSlowData) -> None:
+        self.wait_time: int = int(data["wait_time_seconds"])
+
+    def __repr__(self) -> str:
+        return f"<ModerateSlow wait_time={self.wait_time}>"
+
+
+class ModerateRaid:
+    __slots__ = ("user", "viewer_count")
+
+    def __init__(self, data: ModerateRaidData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.viewer_count: int = int(data["viewer_count"])
+
+    def __repr__(self) -> str:
+        return f"<ModerateRaid user={self.user} viewer_count={self.viewer_count}>"
+
+
+class ModerateDelete:
+    __slots__ = ("user", "message_id", "message")
+
+    def __init__(self, data: ModerateDeleteData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.message_id: str = data["message_id"]
+        self.message: str = data["message_body"]
+
+    def __repr__(self) -> str:
+        return f"<ModerateDelete user={self.user} message_id={self.message_id} message={self.message}>"
+
+
+class ModerateAutomodTerms:
+    __slots__ = ("action", "list", "terms", "from_automod")
+
+    def __init__(self, data: ModerateAutoModTermsData) -> None:
+        self.action: Literal["add", "remove"] = data["action"]
+        self.list: Literal["blocked", "permitted"] = data["list"]
+        self.terms: list[str] = data["terms"]
+        self.from_automod: bool = bool(data["from_automod"])
+
+    def __repr__(self) -> str:
+        return f"<ModerateAutomodTerms action={self.action} list={self.list} terms={self.terms} from_automod={self.from_automod}>"
+
+
+class ModerateUnbanRequest:
+    __slots__ = ("approved", "user", "message")
+
+    def __init__(self, data: ModerateUnbanRequestData, *, http: HTTPClient) -> None:
+        self.approved: bool = bool(data["is_approved"])
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.message: str = data["moderator_message"]
+
+    def __repr__(self) -> str:
+        return f"<ModerateUnbanRequest approved={self.approved} user={self.user} message={self.message}>"
+
+
+class ModerateWarn:
+    __slots__ = ("user", "reason", "chat_rules")
+
+    def __init__(self, data: ModerateWarnData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.reason: str | None = data.get("reason")
+        self.chat_rules: list[str] | None = data.get("chat_rules_cited")
+
+    def __repr__(self) -> str:
+        return f"<ModerateWarn user={self.user} reason={self.reason} chat_rules={self.chat_rules}>"
+
+
+class ChannelModerate(BaseEvent):
+    subscription_type = "channel.moderate"
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "action",
+        "followers",
+        "slow",
+        "vip",
+        "unvip",
+        "mod",
+        "unmod",
+        "ban",
+        "unban",
+        "timeout",
+        "untimeout",
+        "raid",
+        "unraid",
+        "delete",
+        "automod_terms",
+        "unban_request",
+    )
+
+    def __init__(self, payload: ChannelModerateEvent | ChannelModerateEventV2, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.followers: ModerateFollowers | None = (
+            ModerateFollowers(payload["followers"]) if payload["followers"] is not None else None
+        )
+        self.slow: ModerateSlow | None = ModerateSlow(payload["slow"]) if payload["slow"] is not None else None
+        self.vip: PartialUser | None = (
+            PartialUser(payload["vip"]["user_id"], payload["vip"]["user_login"], http=http)
+            if payload["vip"] is not None
+            else None
+        )
+        self.unvip: PartialUser | None = (
+            PartialUser(payload["unvip"]["user_id"], payload["unvip"]["user_login"], http=http)
+            if payload["unvip"] is not None
+            else None
+        )
+        self.mod: PartialUser | None = (
+            PartialUser(payload["mod"]["user_id"], payload["mod"]["user_login"], http=http)
+            if payload["mod"] is not None
+            else None
+        )
+        self.unmod: PartialUser | None = (
+            PartialUser(payload["unmod"]["user_id"], payload["unmod"]["user_login"], http=http)
+            if payload["unmod"] is not None
+            else None
+        )
+        self.ban: ModerateBan | None = ModerateBan(payload["ban"], http=http) if payload["ban"] is not None else None
+        self.unban: PartialUser | None = (
+            PartialUser(payload["unban"]["user_id"], payload["unban"]["user_login"], http=http)
+            if payload["unban"] is not None
+            else None
+        )
+        self.timeout: ModerateTimeout | None = (
+            ModerateTimeout(payload["timeout"], http=http) if payload["timeout"] is not None else None
+        )
+        self.untimeout: PartialUser | None = (
+            PartialUser(payload["untimeout"]["user_id"], payload["untimeout"]["user_login"], http=http)
+            if payload["untimeout"] is not None
+            else None
+        )
+        self.raid: ModerateRaid | None = ModerateRaid(payload["raid"], http=http) if payload["raid"] is not None else None
+        self.unraid: PartialUser | None = (
+            PartialUser(payload["unraid"]["user_id"], payload["unraid"]["user_login"], http=http)
+            if payload["unraid"] is not None
+            else None
+        )
+        self.delete: ModerateDelete | None = ModerateDelete(payload["delete"], http=http) if payload["delete"] else None
+        self.automod_terms: ModerateAutomodTerms | None = (
+            ModerateAutomodTerms(payload["automod_terms"]) if payload["automod_terms"] is not None else None
+        )
+        self.unban_request: ModerateUnbanRequest | None = (
+            ModerateUnbanRequest(payload["unban_request"], http=http) if payload["unban_request"] is not None else None
+        )
+        self.action: Literal[
+            "ban",
+            "timeout",
+            "unban",
+            "untimeout",
+            "clear",
+            "emoteonly",
+            "emoteonlyoff",
+            "followers",
+            "followersoff",
+            "uniquechat",
+            "uniquechatoff",
+            "slow",
+            "slowoff",
+            "subscribers",
+            "subscribersoff",
+            "unraid",
+            "delete",
+            "unvip",
+            "vip",
+            "raid",
+            "add_blocked_term",
+            "add_permitted_term",
+            "remove_blocked_term",
+            "remove_permitted_term",
+            "mod",
+            "unmod",
+            "approve_unban_request",
+            "deny_unban_request",
+            "warn",
+        ] = payload["action"]
+        warn = payload.get("warn")
+        self.warn: ModerateWarn | None = ModerateWarn(warn, http=http) if warn is not None else None
+
+
 class ChannelVIPAdd(BaseEvent):
     subscription_type = "channel.vip.add"
 
