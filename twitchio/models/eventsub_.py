@@ -841,23 +841,22 @@ class ChannelSubscriptionGift(BaseEvent):
         )
 
 
-class SubscribeEmote:
-    def __init__(self, data: SubscribeEmoteData) -> None:
+class BaseEmote:
+    def __init__(self, data: BaseEmoteData) -> None:
         self.begin: int = int(data["begin"])
         self.end: int = int(data["end"])
         self.id: str = data["id"]
 
     def __repr__(self) -> str:
-        return f"<SubscribeEmote id={self.id} begin={self.id} end={self.end}>"
+        return f"<BaseEmote id={self.id} begin={self.id} end={self.end}>"
 
 
-class SubscribeMessage:
-    def __init__(self, data: SubscribeMessageData) -> None:
-        self.text: str = data["text"]
-        self.emotes: list[SubscribeEmote] = [SubscribeEmote(emote) for emote in data["emotes"]]
+class SubscribeEmote(BaseEmote):
+    def __init__(self, data: SubscribeEmoteData) -> None:
+        super().__init__(data)
 
     def __repr__(self) -> str:
-        return f"<SubscribeMessage text={self.text} emotes={self.emotes}>"
+        return f"<SubscribeEmote id={self.id} begin={self.id} end={self.end}>"
 
 
 class ChannelSubscriptionMessage(BaseEvent):
@@ -874,10 +873,11 @@ class ChannelSubscriptionMessage(BaseEvent):
         self.duration_months: int = int(payload["duration_months"])
         self.cumulative_months: int = int(payload["cumulative_months"])
         self.streak_months: int | None = int(payload["streak_months"]) if payload["streak_months"] is not None else None
-        self.message: SubscribeMessage = SubscribeMessage(payload["message"])
+        self.text: str = payload["message"]["text"]
+        self.emotes: list[SubscribeEmote] = [SubscribeEmote(emote) for emote in payload["message"]["emotes"]]
 
     def __repr__(self) -> str:
-        return f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} message={self.message.text}>"
+        return f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} text={self.text}>"
 
 
 class ChannelCheer(BaseEvent):
@@ -1239,7 +1239,35 @@ class ChannelModeratorRemove(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelModeratorAdd broadcaster={self.broadcaster} user={self.user}>"
+        return f"<ChannelModeratorRemove broadcaster={self.broadcaster} user={self.user}>"
+
+
+class ChannelPointsEmote(BaseEmote):
+    def __init__(self, data: ChannelPointsEmoteData) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<ChannelPointsEmote id={self.id} begin={self.id} end={self.end}>"
+
+
+class ChannelPointsAutoRedeemAdd(BaseEvent):
+    subscription_type = "channel.channel_points_automatic_reward_redemption.add"
+
+    __slots__ = ("broadcaster", "user", "id", "reward", "text", "emotes", "user_input", "redeemed_at")
+
+    def __init__(self, payload: ChannelPointsAutoRewardRedemptionEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.id: str = payload["id"]
+        self.text: str = payload["message"]["text"]
+        self.emotes: list[ChannelPointsEmote] = [ChannelPointsEmote(emote) for emote in payload["message"]["emotes"]]
+        self.user_input: str | None = payload.get("user_input")
+        self.redeemed_attributes: datetime.datetime = parse_timestamp(payload["redeemed_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelPointsAutoRedeemAdd broadcaster={self.broadcaster} user={self.user} id={self.id}>"
 
 
 class ChannelVIPAdd(BaseEvent):

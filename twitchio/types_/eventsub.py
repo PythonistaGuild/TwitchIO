@@ -35,6 +35,7 @@ __all__ = (
     "AutomodMessageUpdateEvent",
     "AutomodSettingsUpdateEvent",
     "AutomodTermsUpdateEvent",
+    "BaseEmoteData",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
     "ChannelChatClearEvent",
@@ -55,6 +56,7 @@ __all__ = (
     "ChannelUnbanEvent",
     "ChannelUnbanRequestEvent",
     "ChannelUnbanRequestResolveEvent",
+    "ChannelPointsEmoteData",
     "ModerateFollowersData",
     "ModerateSlowData",
     "ModerateBanData",
@@ -68,6 +70,7 @@ __all__ = (
     "ChannelModerateEventV2",
     "ChannelModeratorAddEvent",
     "ChannelModeratorRemoveEvent",
+    "ChannelPointsAutoRewardRedemptionEvent",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
@@ -545,15 +548,21 @@ class ChannelSubscriptionGiftEvent(BroadcasterUserEvent):
     is_anonymous: bool
 
 
-class SubscribeEmoteData(TypedDict):
+class BaseEmoteData(TypedDict):
     begin: int
     end: int
     id: str
 
 
-class SubscribeMessageData(TypedDict):
+class BaseMessageData(TypedDict):
     text: str
-    emotes: list[SubscribeEmoteData]
+    emotes: list[BaseEmoteData]
+
+
+class SubscribeEmoteData(BaseEmoteData): ...
+
+
+class SubscribeMessageData(BaseMessageData): ...
 
 
 class ChannelSubscribeMessageEvent(BroadcasterUserEvent):
@@ -760,6 +769,40 @@ class ChannelModeratorAddEvent(BroadcasterUserEvent): ...
 
 
 class ChannelModeratorRemoveEvent(BroadcasterUserEvent): ...
+
+
+class ChannelPointsEmoteData(BaseEmoteData): ...
+
+
+class ChannelPointsMessageData(BaseMessageData): ...
+
+
+class ChannelPointsUnlockedEmoteData(TypedDict):
+    id: str
+    name: str
+
+
+class BaseChannelPointsRewardData(TypedDict):
+    type: Literal[
+        "single_message_bypass_sub_mode",
+        "send_highlighted_message",
+        "random_sub_emote_unlock",
+        "chosen_sub_emote_unlock",
+        "chosen_modified_sub_emote_unlock",
+        "message_effect",
+        "gigantify_an_emote",
+        "celebration",
+    ]
+    cost: int
+    unlocked_emote: ChannelPointsUnlockedEmoteData | None
+
+
+class ChannelPointsAutoRewardRedemptionEvent(BroadcasterUserEvent):
+    id: str
+    reward: BaseChannelPointsRewardData
+    message: ChannelPointsMessageData
+    user_input: str | None
+    redeemed_at: str
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...
