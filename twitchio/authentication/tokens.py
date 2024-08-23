@@ -140,6 +140,10 @@ class ManagedHTTPClient(OAuth):
         logger.debug('Token successfully added to TokenManager: "%s"', resp.user_id)
         return resp
 
+    def remove_token(self, user_id: str) -> TokenMappingData | None:
+        data: TokenMappingData | None = self._tokens.pop(user_id, None)
+        return data
+
     def _find_token(self, route: Route) -> TokenMappingData | None | str:
         token: str | None = route.headers.get("Authorization")
         if token:
@@ -269,9 +273,10 @@ class ManagedHTTPClient(OAuth):
         if not self._validate_task:
             self._validate_task = asyncio.create_task(self.__validate_loop())
 
-    async def close(self) -> None:
+    def cleanup(self) -> None:
         self._tokens.clear()
 
+    async def close(self) -> None:
         if self._validate_task:
             try:
                 self._validate_task.cancel()
