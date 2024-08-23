@@ -27,6 +27,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections import defaultdict
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
 
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
@@ -62,6 +63,7 @@ if TYPE_CHECKING:
     from .models.videos import Video
     from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
     from .types_.options import AdapterOT, ClientOptions
+    from .types_.tokens import TokenMappingData
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -116,13 +118,29 @@ class Client:
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
 
         self._login_called: bool = False
-        self._dump_tokens: bool = True
         self._has_closed: bool = False
 
         # Websockets for EventSub
         self._websockets: dict[str, dict[str, Websocket]] = defaultdict(dict)
 
         self.__waiter: asyncio.Event = asyncio.Event()
+
+    @property
+    def tokens(self) -> MappingProxyType[str, TokenMappingData]:
+        """Property which returns a read-only mapping of the tokens that are managed by the client.
+
+        See:
+        - [`.add_token`][twitchio.Client.add_token]
+        - [`.remove_token`][twitchio.Client.remove_token]
+        - [`.load_tokens`][twitchio.Client.load_tokens]
+        - [`.dump_tokens`][twitchio.dump_tokens]
+
+        For various methods of managing the tokens on the client.
+
+        !!! warn
+            This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
+        """
+        return MappingProxyType(self._http._tokens)
 
     @property
     def bot_id(self) -> str | None:
@@ -224,7 +242,7 @@ class Client:
     async def __aexit__(self, *_: Any) -> None:
         await self.close()
 
-    async def start(self, token: str | None = None, *, with_adapter: bool = True, dump_tokens: bool = True) -> None:
+    async def start(self, token: str | None = None, *, with_adapter: bool = True) -> None:
         """
         Method to login the client and create a continuously running event loop.
 
@@ -240,13 +258,8 @@ class Client:
             An optional app token to use instead of generating one automatically.
         with_adapter: bool
             Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
-        dump_tokens: bool
-            Whether to call the [`.dump_tokens`][twitchio.Client.dump_tokens] method when the Client shuts down.
-            Defaults to `True`.
         """
         self.__waiter.clear()
-
-        self._dump_tokens = dump_tokens
         await self.login(token=token)
 
         if with_adapter:
@@ -260,12 +273,12 @@ class Client:
         finally:
             await self.close()
 
-    def run(self, token: str | None = None, *, with_adapter: bool = True, dump_tokens: bool = True) -> None:
+    def run(self, token: str | None = None, *, with_adapter: bool = True) -> None:
         # TODO: Docs...
 
         async def run() -> None:
             async with self:
-                await self.start(token=token, with_adapter=with_adapter, dump_tokens=dump_tokens)
+                await self.start(token=token, with_adapter=with_adapter)
 
         try:
             asyncio.run(run())
@@ -278,10 +291,6 @@ class Client:
             return
 
         self._has_closed = True
-
-        if self._dump_tokens:
-            await self.dump_tokens()
-
         await self._http.close()
 
         if self._adapter._runner_task is not None:
@@ -294,10 +303,16 @@ class Client:
         for socket in sockets:
             await socket.close()
 
+        await self.dump_tokens()
+        self._http.cleanup()
+
         self.__waiter.set()
 
     async def add_token(self, token: str, refresh: str) -> None:
         await self._http.add_token(token, refresh)
+
+    async def remove_tokens(self, user_id: str, /) -> TokenMappingData | None:
+        return self._http.remove_token(user_id)
 
     async def load_tokens(self, path: str | None = None, /) -> None:
         await self._http.load_tokens(name=path)
