@@ -231,7 +231,8 @@ class Client:
 
             logger.info("Generated App Token for Client-ID: %s", validated.client_id)
 
-        await self.load_tokens()
+        async with self._http._token_lock:
+            await self.load_tokens()
 
         self._http._app_token = token
         await self.setup_hook()
@@ -303,9 +304,10 @@ class Client:
         for socket in sockets:
             await socket.close()
 
-        await self.dump_tokens()
-        self._http.cleanup()
+        async with self._http._token_lock:
+            await self.dump_tokens()
 
+        self._http.cleanup()
         self.__waiter.set()
 
     async def add_token(self, token: str, refresh: str) -> None:

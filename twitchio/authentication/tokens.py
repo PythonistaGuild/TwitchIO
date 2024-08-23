@@ -83,6 +83,9 @@ class ManagedHTTPClient(OAuth):
         self._validate_task: asyncio.Task[None] | None = None
         self._nested_key: str | None = None
 
+        self._token_lock: asyncio.Lock = asyncio.Lock()
+        self._has_loaded: bool = False
+
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
         logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
 
@@ -289,6 +292,9 @@ class ManagedHTTPClient(OAuth):
         await self.__isolated.close()
 
     async def dump(self, name: str | None = None) -> None:
+        if not self._has_loaded:
+            return
+
         name = name or ".tio.tokens.json"
 
         with open(name, "w+", encoding="UTF-8") as fp:
@@ -319,3 +325,5 @@ class ManagedHTTPClient(OAuth):
         if failed:
             msg: str = f"The following users tokens failed to load: {', '.join(failed)}"
             logger.warning(msg)
+
+        self._has_loaded = True
