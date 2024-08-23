@@ -131,13 +131,14 @@ class Client:
 
         See:
 
-        - [`.add_token`][twitchio.Client.add_token]
+        [`.add_token`][twitchio.Client.add_token]
 
-        - [`.remove_token`][twitchio.Client.remove_token]
+        [`.remove_token`][twitchio.Client.remove_token]
 
-        - [`.load_tokens`][twitchio.Client.load_tokens]
+        [`.load_tokens`][twitchio.Client.load_tokens]
 
-        - [`.dump_tokens`][twitchio.dump_tokens]
+        [`.dump_tokens`][twitchio.Client.dump_tokens]
+
 
         For various methods of managing the tokens on the client.
 
