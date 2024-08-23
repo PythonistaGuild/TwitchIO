@@ -130,14 +130,18 @@ class Client:
         """Property which returns a read-only mapping of the tokens that are managed by the client.
 
         See:
+
         - [`.add_token`][twitchio.Client.add_token]
+
         - [`.remove_token`][twitchio.Client.remove_token]
+
         - [`.load_tokens`][twitchio.Client.load_tokens]
+
         - [`.dump_tokens`][twitchio.dump_tokens]
 
         For various methods of managing the tokens on the client.
 
-        !!! warn
+        !!! danger
             This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
         """
         return MappingProxyType(self._http._tokens)
