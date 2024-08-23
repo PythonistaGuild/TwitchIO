@@ -141,9 +141,10 @@ class StarletteAdapter(BaseAdapter, Starlette):
             port=self._port,
             log_level="critical",
             workers=0,
+            timeout_graceful_shutdown=3,
         )
-        server: uvicorn.Server = uvicorn.Server(config)
 
+        server: uvicorn.Server = uvicorn.Server(config)
         self._runner_task = asyncio.create_task(server.serve(), name=f"twitchio-web-adapter:{self.__class__.__qualname__}")
 
     async def eventsub_callback(self, request: Request) -> Response:
