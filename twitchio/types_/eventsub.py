@@ -94,6 +94,10 @@ __all__ = (
     "ChatResubData",
     "ChatSubData",
     "ChatSubGiftData",
+    "HypeTrainBeginEvent",
+    "HypeTrainProgressEvent",
+    "HypeTrainEndEvent",
+    "HypeTrainContributionData",
     "ShieldModeBeginEvent",
     "ShieldModeEndEvent",
     "ShoutoutCreateEvent",
@@ -845,6 +849,48 @@ class GoalEndEvent(TypedDict):
     target_amount: int
     started_at: str
     ended_at: str
+
+
+class HypeTrainContributionData(TypedDict):
+    user_id: str
+    user_login: str
+    user_name: str
+    type: Literal["bits", "subscription", "other"]
+    total: int
+
+
+class HypeTrainBeginEvent(BaseBroadcasterEvent):
+    id: str
+    total: int
+    progress: int
+    goal: int
+    top_contributions: list[HypeTrainContributionData]
+    last_contribution: HypeTrainContributionData
+    level: int
+    started_at: str
+    expires_at: str
+
+
+class HypeTrainProgressEvent(BaseBroadcasterEvent):
+    id: str
+    total: int
+    progress: int
+    goal: int
+    top_contributions: list[HypeTrainContributionData]
+    last_contribution: HypeTrainContributionData
+    level: int
+    started_at: str
+    expires_at: str
+
+
+class HypeTrainEndEvent(BaseBroadcasterEvent):
+    id: str
+    level: int
+    total: int
+    top_contributions: list[HypeTrainContributionData]
+    started_at: str
+    ended_at: str
+    cooldown_ends_at: str
 
 
 class ShieldModeBeginEvent(BroadcasterModeratorEvent):

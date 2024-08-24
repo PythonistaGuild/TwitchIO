@@ -1353,6 +1353,123 @@ class ShieldModeBegin(BaseEvent):
         return f"<ShieldModeBegin broadcaster={self.broadcaster} moderator={self.moderator} started_at={self.started_at}>"
 
 
+class HypeTrainContribution:
+    __slots__ = ("user", "type", "total")
+
+    def __init__(self, data: HypeTrainContributionData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.type: Literal["bits", "subscription", "other"] = data["type"]
+        self.total: int = int(data["total"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainContribution user={self.user} type={self.type} total={self.total}>"
+
+
+class HypeTrainBegin(BaseEvent):
+    subscription_type = "channel.hype_train.begin"
+
+    __slots__ = (
+        "broadcaster",
+        "id",
+        "level",
+        "total",
+        "progress",
+        "goal",
+        "top_contributions",
+        "last_contribution",
+        "started_at",
+        "expires_at",
+    )
+
+    def __init__(self, payload: HypeTrainBeginEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.level: int = int(payload["level"])
+        self.total: int = int(payload["total"])
+        self.progress: int = int(payload["progress"])
+        self.goal: int = int(payload["goal"])
+        self.top_contributions: list[HypeTrainContribution] = [
+            HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
+        ]
+        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+        self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainBegin id={self.id} broadcaster={self.broadcaster} goal={self.goal} started_at={self.started_at}>"
+
+
+class HypeTrainProgress(BaseEvent):
+    subscription_type = "channel.hype_train.progress"
+
+    __slots__ = (
+        "broadcaster",
+        "id",
+        "level",
+        "total",
+        "progress",
+        "goal",
+        "top_contributions",
+        "last_contribution",
+        "started_at",
+        "expires_at",
+    )
+
+    def __init__(self, payload: HypeTrainProgressEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.level: int = int(payload["level"])
+        self.total: int = int(payload["total"])
+        self.progress: int = int(payload["progress"])
+        self.goal: int = int(payload["goal"])
+        self.top_contributions: list[HypeTrainContribution] = [
+            HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
+        ]
+        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+        self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainProgress id={self.id} broadcaster={self.broadcaster} goal={self.goal} progress={self.progress}>"
+
+
+class HypeTrainEnd(BaseEvent):
+    subscription_type = "channel.hype_train.end"
+
+    __slots__ = (
+        "broadcaster",
+        "id",
+        "level",
+        "total",
+        "top_contributions",
+        "cooldown_ends_at",
+        "started_at",
+        "ended_at",
+    )
+
+    def __init__(self, payload: HypeTrainEndEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.level: int = int(payload["level"])
+        self.total: int = int(payload["total"])
+
+        self.top_contributions: list[HypeTrainContribution] = [
+            HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
+        ]
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
+        self.cooldown_ends_at: datetime.datetime = parse_timestamp(payload["cooldown_ends_at"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainEnd id={self.id} broadcaster={self.broadcaster} total={self.total} ended_at={self.ended_at}>"
+
+
 class ShieldModeEnd(BaseEvent):
     subscription_type = "channel.shield_mode.end"
 
@@ -1370,7 +1487,7 @@ class ShieldModeEnd(BaseEvent):
         self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
 
     def __repr__(self) -> str:
-        return f"<ShieldModeBegin broadcaster={self.broadcaster} moderator={self.moderator} ended_at={self.ended_at}>"
+        return f"<ShieldModeEnd broadcaster={self.broadcaster} moderator={self.moderator} ended_at={self.ended_at}>"
 
 
 class ShoutoutCreate(BaseEvent):
