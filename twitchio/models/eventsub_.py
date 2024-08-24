@@ -1366,6 +1366,8 @@ class HypeTrainContribution:
 
 
 class GoalBegin(BaseEvent):
+    subscription_type = "channel.goal.begin"
+    
     __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
 
     def __init__(self, payload: GoalBeginEvent, *, http: HTTPClient) -> None:
@@ -1392,6 +1394,8 @@ class GoalBegin(BaseEvent):
 
 
 class GoalProgress(BaseEvent):
+    subscription_type = "channel.goal.progress"
+    
     __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
 
     def __init__(self, payload: GoalProgressEvent, *, http: HTTPClient) -> None:
@@ -1418,6 +1422,8 @@ class GoalProgress(BaseEvent):
 
 
 class GoalEnd(BaseEvent):
+    subscription_type = "channel.goal.end"
+    
     __slots__ = (
         "id",
         "broadcaster",
@@ -1452,7 +1458,7 @@ class GoalEnd(BaseEvent):
         self.achieved: bool = bool(payload["is_achieved"])
 
     def __repr__(self) -> str:
-        return f"<GoalEnd id={self.id} broadcaster={self.broadcaster} type={self.type} started_at={self.started_at} ended_at={self.ended_at}>"
+        return f"<GoalEnd id={self.id} broadcaster={self.broadcaster} type={self.type} started_at={self.started_at} ended_at={self.ended_at} achieved={self.achieved}>"
 
 
 class HypeTrainBegin(BaseEvent):
