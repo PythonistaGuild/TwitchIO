@@ -341,14 +341,15 @@ class Client:
         -------
 
         ```python
-            class Client(twitchio.Client):
+        class Client(twitchio.Client):
 
-                async def add_token(self, token: str, refresh: str) -> None:
-                    # Code to add token to database here...
-                    ...
+            async def add_token(self, token: str, refresh: str) -> None:
+                # Code to add token to database here...
+                ...
 
-                    # Adds the token to the client...
-                    await super().add_token()
+                # Adds the token to the client...
+                await super().add_token()
+        ```
         """
         await self._http.add_token(token, refresh)
 
