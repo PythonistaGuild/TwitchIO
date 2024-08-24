@@ -353,7 +353,7 @@ class Client:
         """
         await self._http.add_token(token, refresh)
 
-    async def remove_tokens(self, user_id: str, /) -> TokenMappingData | None:
+    async def remove_token(self, user_id: str, /) -> TokenMappingData | None:
         """Removes a token for the specified user-ID from the Client.
 
         Removing a token will ensure the client stops managing the token.
