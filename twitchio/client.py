@@ -348,7 +348,7 @@ class Client:
                 ...
 
                 # Adds the token to the client...
-                await super().add_token()
+                await super().add_token(token, refresh)
         ```
         """
         await self._http.add_token(token, refresh)
