@@ -30,6 +30,7 @@ __version__ = "3.0.0dev"
 
 from . import authentication as authentication, eventsub as eventsub, utils as utils, web as web
 from .assets import Asset as Asset
+from .authentication import Scopes as Scopes
 from .client import Client as Client
 from .exceptions import *
 from .models import *
