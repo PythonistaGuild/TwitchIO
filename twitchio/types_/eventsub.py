@@ -76,6 +76,10 @@ __all__ = (
     "ChannelVIPRemoveEvent",
     "ChannelWarningAcknowledgeEvent",
     "ChannelWarningSendEvent",
+    "CharityCampaignDonationEvent",
+    "CharityCampaignStartEvent",
+    "CharityCampaignProgressEvent",
+    "CharityCampaignStopEvent",
     "ChatAnnouncementData",
     "ChatBitsBadgeTierData",
     "ChatCharityAmountData",
@@ -826,6 +830,42 @@ class ChannelWarningAcknowledgeEvent(BroadcasterUserEvent): ...
 class ChannelWarningSendEvent(BroadcasterModUserEvent):
     reason: str
     chat_rules_cited: list[str] | None
+
+
+class CharityDonationData(TypedDict):
+    value: int
+    decimal_places: int
+    currency: str
+
+
+class BaseCharityCampaignData(BaseBroadcasterEvent):
+    id: str
+    charity_name: str
+    charity_description: str
+    charity_logo: str
+    charity_website: str
+
+
+class CharityCampaignDonationEvent(BaseCharityCampaignData, BaseUserEvent):
+    campaign_id: str
+    amount: CharityDonationData
+
+
+class CharityCampaignStartEvent(BaseCharityCampaignData):
+    current_amount: CharityDonationData
+    target_amount: CharityDonationData
+    started_at: str
+
+
+class CharityCampaignProgressEvent(BaseCharityCampaignData):
+    current_amount: CharityDonationData
+    target_amount: CharityDonationData
+
+
+class CharityCampaignStopEvent(BaseCharityCampaignData):
+    current_amount: CharityDonationData
+    target_amount: CharityDonationData
+    stopped_at: str
 
 
 class GoalBeginEvent(TypedDict):

@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from twitchio.assets import Asset
 from twitchio.eventsub import RevocationReason, TransportMethod
+from twitchio.models.charity import CharityValues
 from twitchio.models.chat import EmoteSet
 from twitchio.user import PartialUser
 from twitchio.utils import Colour, parse_timestamp
@@ -1333,6 +1334,99 @@ class ChannelWarningSend(BaseEvent):
         return f"<ChannelWarningSend broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
 
 
+class CharityDonation(BaseEvent):
+    subscription_type = "channel.charity_campaign.donate"
+
+    __slots__ = ("broadcaster", "user", "id", "campaign_id", "name", "description", "logo", "website", "amount")
+
+    def __init__(self, payload: CharityCampaignDonationEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.id: str = payload["id"]
+        self.campaign_id: str = payload["campaign_id"]
+        self.name: str = payload["charity_name"]
+        self.description: str = payload["charity_description"]
+        self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
+        self.website: str = payload["charity_website"]
+        self.amount: CharityValues = CharityValues(payload["amount"])
+
+    def __repr__(self) -> str:
+        return f"<CharityDonation broadcaster={self.broadcaster} user={self.user} id={self.id} name={self.name}>"
+
+
+class CharityCampaignStart(BaseEvent):
+    subscription_type = "channel.charity_campaign.start"
+
+    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target", "started_at")
+
+    def __init__(self, payload: CharityCampaignStartEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.name: str = payload["charity_name"]
+        self.description: str = payload["charity_description"]
+        self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
+        self.website: str = payload["charity_website"]
+        self.current: CharityValues = CharityValues(payload["current_amount"])
+        self.target: CharityValues = CharityValues(payload["target_amount"])
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<CharityCampaignStart broadcaster={self.broadcaster} id={self.id} name={self.name} started_at={self.started_at}>"
+
+
+class CharityCampaignProgress(BaseEvent):
+    subscription_type = "channel.charity_campaign.progress"
+
+    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target")
+
+    def __init__(self, payload: CharityCampaignProgressEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.name: str = payload["charity_name"]
+        self.description: str = payload["charity_description"]
+        self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
+        self.website: str = payload["charity_website"]
+        self.current: CharityValues = CharityValues(payload["current_amount"])
+        self.target: CharityValues = CharityValues(payload["target_amount"])
+
+    def __repr__(self) -> str:
+        return f"<CharityCampaignProgress broadcaster={self.broadcaster} id={self.id} name={self.name} current={self.current} target={self.target}>"
+
+
+class CharityCampaignStop(BaseEvent):
+    subscription_type = "channel.charity_campaign.stop"
+
+    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target", "stopped_at")
+
+    def __init__(self, payload: CharityCampaignStopEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.name: str = payload["charity_name"]
+        self.description: str = payload["charity_description"]
+        self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
+        self.website: str = payload["charity_website"]
+        self.current: CharityValues = CharityValues(payload["current_amount"])
+        self.target: CharityValues = CharityValues(payload["target_amount"])
+        self.stopped_at: datetime.datetime = parse_timestamp(payload["stopped_at"])
+
+    def __repr__(self) -> str:
+        return f"<CharityCampaignStop broadcaster={self.broadcaster} id={self.id} name={self.name} stopped_at={self.stopped_at}>"
+
+
 class ShieldModeBegin(BaseEvent):
     subscription_type = "channel.shield_mode.begin"
 
@@ -1367,7 +1461,7 @@ class HypeTrainContribution:
 
 class GoalBegin(BaseEvent):
     subscription_type = "channel.goal.begin"
-    
+
     __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
 
     def __init__(self, payload: GoalBeginEvent, *, http: HTTPClient) -> None:
@@ -1395,7 +1489,7 @@ class GoalBegin(BaseEvent):
 
 class GoalProgress(BaseEvent):
     subscription_type = "channel.goal.progress"
-    
+
     __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
 
     def __init__(self, payload: GoalProgressEvent, *, http: HTTPClient) -> None:
@@ -1423,7 +1517,7 @@ class GoalProgress(BaseEvent):
 
 class GoalEnd(BaseEvent):
     subscription_type = "channel.goal.end"
-    
+
     __slots__ = (
         "id",
         "broadcaster",

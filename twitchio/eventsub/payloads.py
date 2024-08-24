@@ -645,6 +645,66 @@ class ChannelWarningSendSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
 
+class CharityDonationSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.charity_campaign.donate"]] = "channel.charity_campaign.donate"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class CharityCampaignStartSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.charity_campaign.start"]] = "channel.charity_campaign.start"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class CharityCampaignProgressSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.charity_campaign.progress"]] = "channel.charity_campaign.progress"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class CharityCampaignStopSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.charity_campaign.stop"]] = "channel.charity_campaign.stop"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
 class GoalBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.goal.begin"]] = "channel.goal.begin"
     version: ClassVar[Literal["1"]] = "1"
