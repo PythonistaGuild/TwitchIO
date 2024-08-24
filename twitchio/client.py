@@ -364,8 +364,8 @@ class Client:
 
         Parameters
         ----------
-        `/` user_id: str
-            The user-ID for the token to remove from the client. This argument is positional-only.
+        user_id: str
+            The user-ID for the token to remove from the client. This argument is `positional-only`.
 
         Returns
         -------
