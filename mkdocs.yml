@@ -74,12 +74,39 @@ nav:
     - EventSub: guides/eventsub.md
     - Placeholder: guides/placeholder.md
   - References:
-    - Events: references/events.md
+    - Events:
+      - General: references/events/general.md
+      - OAuth: references/events/oauth.md
     - Client: references/client.md
+    - Models:
+      - Ads: references/models/ads.md
+      - Analytics: references/models/analytics.md
+      - Bits: references/models/bits.md
+      - CCL: references/models/ccl.md
+      - Channel Points: references/models/channel_points.md
+      - Channels: references/models/channels.md
+      - Charity: references/models/charity.md
+      - Chat: references/models/chat.md
+      - Clips: references/models/clips.md
+      - Entitlements: references/models/entitlements.md
+      - EventSub: references/models/eventsub.md
+      - Games: references/models/games.md
+      - Goals: references/models/goals.md
+      - Hype Train: references/models/hype_train.md
+      - Moderation: references/models/moderation.md
+      - Polls: references/models/polls.md
+      - Predictions: references/models/predictions.md
+      - Raids: references/models/raids.md
+      - Schedule: references/models/schedule.md
+      - Search: references/models/search.md
+      - Stream: references/models/streams.md
+      - Subscriptions: references/models/subscriptions.md
+      - Teams: references/models/teams.md
+      - Videos: references/models/videos.md
+    - Utils:
+      - Asset: references/utils/asset.md
+      - Colour: references/utils/colour.md
     - Payloads: references/payloads.md
-    - Asset: references/asset.md
-    - Models: references/models.md
-    - Utils: references/utils.md
   - Extensions:
     - Commands:
       - Bot: extensions/commands/placehold.md
