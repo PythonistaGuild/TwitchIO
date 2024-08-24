@@ -104,6 +104,7 @@ nav:
       - Teams: references/models/teams.md
       - Videos: references/models/videos.md
     - Utils:
+      - Scopes: references/utils/scopes.md
       - Asset: references/utils/asset.md
       - Colour: references/utils/colour.md
     - Payloads: references/payloads.md
