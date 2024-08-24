@@ -445,10 +445,9 @@ class Client:
         self._listeners[name].add(listener)
 
     def create_partialuser(self, user_id: str | int, user_login: str | None = None) -> PartialUser:
-        """
-        Helper method to create a PartialUser.
+        """Helper method to create a PartialUser.
 
-        .. versionchanged:: 3.0
+        !!! version "3.0.0"
             This has been renamed from `create_user` to `create_partialuser`.
 
         Parameters
