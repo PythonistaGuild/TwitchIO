@@ -377,6 +377,37 @@ class Client:
         return self._http.remove_token(user_id)
 
     async def load_tokens(self, path: str | None = None, /) -> None:
+        """Method used to load tokens when the client starts.
+
+        !!! info
+            This method is always called by the client during `login` but **before** `setup_hook`.
+
+        You can override this method to implement your own token loading logic into the client, such as from a database.
+
+        By default this method loads tokens from a file named `".tio.tokens.json"` if it is present; usually if you use
+        the default method of dumping tokens. **However**, it is preferred you would override this function to load your
+        tokens from a database, as this has far less chance of being corrupted, damaged or lost.
+
+        Parameters
+        ----------
+        path: Optional[str | None]
+            The path to load tokens from, if this is `None` and the method has not been overriden, this will default to
+            `.tio.tokens.json`. Defaults to `None`.
+
+        Example
+        -------
+
+        ```python
+        class Client(twitchio.Client):
+
+            async def load_tokens(self, path: str | None = None) -> None:
+                # Code to fetch all tokens from the database here...
+                ...
+
+                for row in tokens:
+                    await self.add_token(row["token"], row["refresh"])
+        ```
+        """
         await self._http.load_tokens(name=path)
 
     async def dump_tokens(self, path: str | None = None, /) -> None:
