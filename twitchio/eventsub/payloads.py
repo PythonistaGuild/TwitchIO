@@ -68,6 +68,9 @@ __all__ = (
     "ChannelVIPRemoveSubscription",
     "ChannelWarningAcknowledgementSubscription",
     "ChannelWarningSendSubscription",
+    "GoalBeginSubscription",
+    "GoalProgressSubscription",
+    "GoalEndSubscription",
     "HypeTrainBeginSubscription",
     "HypeTrainProgressSubscription",
     "HypeTrainEndSubscription",
@@ -642,6 +645,66 @@ class ChannelWarningSendSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
 
+class GoalBeginSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.goal.begin"]] = "channel.goal.begin"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class GoalProgressSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.goal.progress"]] = "channel.goal.progress"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class GoalEndSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.goal.end"]] = "channel.goal.end"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class HypeTrainBeginSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.hype_train.begin"]] = "channel.hype_train.begin"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
 class HypeTrainProgressSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.hype_train.progress"]] = "channel.hype_train.progress"
     version: ClassVar[Literal["1"]] = "1"
@@ -659,21 +722,6 @@ class HypeTrainProgressSubscription(SubscriptionPayload):
 
 class HypeTrainEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.hype_train.end"]] = "channel.hype_train.end"
-    version: ClassVar[Literal["1"]] = "1"
-
-    def __init__(self, **condition: Unpack[Condition]) -> None:
-        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
-
-        if not self.broadcaster_user_id:
-            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
-
-    @property
-    def condition(self) -> Condition:
-        return {"broadcaster_user_id": self.broadcaster_user_id}
-
-
-class HypeTrainBeginSubscription(SubscriptionPayload):
-    type: ClassVar[Literal["channel.hype_train.begin"]] = "channel.hype_train.begin"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:

@@ -94,6 +94,9 @@ __all__ = (
     "ChatResubData",
     "ChatSubData",
     "ChatSubGiftData",
+    "GoalBeginEvent",
+    "GoalProgressEvent",
+    "GoalEndEvent",
     "HypeTrainBeginEvent",
     "HypeTrainProgressEvent",
     "HypeTrainEndEvent",
@@ -825,12 +828,40 @@ class ChannelWarningSendEvent(BroadcasterModUserEvent):
     chat_rules_cited: list[str] | None
 
 
-class GoalBeginProgressEvent(TypedDict):
+class GoalBeginEvent(TypedDict):
     id: str
     broadcaster_user_id: str
     broadcaster_user_login: str
     broadcaster_user_name: str
-    type: str
+    type: Literal[
+        "follow",
+        "subscription",
+        "subscription_count",
+        "new_subscription",
+        "new_subscription_count",
+        "new_bit",
+        "new_cheerer",
+    ]
+    description: str
+    current_amount: int
+    target_amount: int
+    started_at: str
+
+
+class GoalProgressEvent(TypedDict):
+    id: str
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+    type: Literal[
+        "follow",
+        "subscription",
+        "subscription_count",
+        "new_subscription",
+        "new_subscription_count",
+        "new_bit",
+        "new_cheerer",
+    ]
     description: str
     current_amount: int
     target_amount: int
@@ -842,7 +873,15 @@ class GoalEndEvent(TypedDict):
     broadcaster_user_id: str
     broadcaster_user_login: str
     broadcaster_user_name: str
-    type: str
+    type: Literal[
+        "follow",
+        "subscription",
+        "subscription_count",
+        "new_subscription",
+        "new_subscription_count",
+        "new_bit",
+        "new_cheerer",
+    ]
     description: str
     is_achieved: bool
     current_amount: int

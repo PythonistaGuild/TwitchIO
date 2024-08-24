@@ -1365,6 +1365,96 @@ class HypeTrainContribution:
         return f"<HypeTrainContribution user={self.user} type={self.type} total={self.total}>"
 
 
+class GoalBegin(BaseEvent):
+    __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
+
+    def __init__(self, payload: GoalBeginEvent, *, http: HTTPClient) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.type: Literal[
+            "follow",
+            "subscription",
+            "subscription_count",
+            "new_subscription",
+            "new_subscription_count",
+            "new_bit",
+            "new_cheerer",
+        ] = payload["type"]
+        self.description: str = payload["description"]
+        self.current_amount: int = int(payload["current_amount"])
+        self.target_amount: int = int(payload["target_amount"])
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<GoalBegin id={self.id} broadcaster={self.broadcaster} type={self.type} target_amount={self.target_amount} started_at={self.started_at}>"
+
+
+class GoalProgress(BaseEvent):
+    __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
+
+    def __init__(self, payload: GoalProgressEvent, *, http: HTTPClient) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.type: Literal[
+            "follow",
+            "subscription",
+            "subscription_count",
+            "new_subscription",
+            "new_subscription_count",
+            "new_bit",
+            "new_cheerer",
+        ] = payload["type"]
+        self.description: str = payload["description"]
+        self.current_amount: int = int(payload["current_amount"])
+        self.target_amount: int = int(payload["target_amount"])
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<GoalProgress id={self.id} broadcaster={self.broadcaster} type={self.type} current_amount={self.current_amount} target_amount={self.target_amount} started_at={self.started_at}>"
+
+
+class GoalEnd(BaseEvent):
+    __slots__ = (
+        "id",
+        "broadcaster",
+        "type",
+        "description",
+        "current_amount",
+        "target_amount",
+        "started_at",
+        "ended_at",
+        "achieved",
+    )
+
+    def __init__(self, payload: GoalEndEvent, *, http: HTTPClient) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.type: Literal[
+            "follow",
+            "subscription",
+            "subscription_count",
+            "new_subscription",
+            "new_subscription_count",
+            "new_bit",
+            "new_cheerer",
+        ] = payload["type"]
+        self.description: str = payload["description"]
+        self.current_amount: int = int(payload["current_amount"])
+        self.target_amount: int = int(payload["target_amount"])
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
+        self.achieved: bool = bool(payload["is_achieved"])
+
+    def __repr__(self) -> str:
+        return f"<GoalEnd id={self.id} broadcaster={self.broadcaster} type={self.type} started_at={self.started_at} ended_at={self.ended_at}>"
+
+
 class HypeTrainBegin(BaseEvent):
     subscription_type = "channel.hype_train.begin"
 
