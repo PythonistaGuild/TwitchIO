@@ -131,14 +131,13 @@ class Client:
 
         See:
 
-        [`.add_token`][twitchio.Client.add_token]
+        - [`.add_token`][twitchio.Client.add_token]
 
-        [`.remove_token`][twitchio.Client.remove_token]
+        - [`.remove_token`][twitchio.Client.remove_token]
 
-        [`.load_tokens`][twitchio.Client.load_tokens]
+        - [`.load_tokens`][twitchio.Client.load_tokens]
 
-        [`.dump_tokens`][twitchio.Client.dump_tokens]
-
+        - [`.dump_tokens`][twitchio.Client.dump_tokens]
 
         For various methods of managing the tokens on the client.
 
@@ -316,9 +315,64 @@ class Client:
         self.__waiter.set()
 
     async def add_token(self, token: str, refresh: str) -> None:
+        """Adds a token/refresh pair to the client to be automatically managed.
+
+        After successfully adding a token to the client, the token will be automatically revalidated and refreshed when
+        required.
+
+        This method is automatically called in the [`event_oauth_authorized`][twitchio.events.event_oauth_authorized] event,
+        when a token is via the built-in OAuth.
+
+        You can override the [`event_oauth_authorized`][twitchio.events.event_oauth_authorized] or this method to
+        implement custom functionality such as storing the token in a database.
+
+        ??? note
+
+            Both `token` and `refresh` are required parameters.
+
+        Parameters
+        ----------
+        token: str
+            The User-Access token to add.
+        refresh: str
+            The refresh token associated with the User-Access token to add.
+
+        Example
+        -------
+
+        ```python
+            class Client(twitchio.Client):
+
+                async def add_token(self, token: str, refresh: str) -> None:
+                    # Code to add token to database here...
+                    ...
+
+                    # Adds the token to the client...
+                    await super().add_token()
+        """
         await self._http.add_token(token, refresh)
 
     async def remove_tokens(self, user_id: str, /) -> TokenMappingData | None:
+        """Removes a token for the specified user-ID from the Client.
+
+        Removing a token will ensure the client stops managing the token.
+
+        This method has been made `async` for convenience when overriding the default functionality.
+
+        You can use override this method to implement custom logic, such as removing a token from your database.
+
+        Parameters
+        ----------
+        `/` user_id: str
+            The user-ID for the token to remove from the client. This argument is positional-only.
+
+        Returns
+        -------
+        TokenMappingData
+            The token data assoicated with the user-id that was successfully removed.
+        None
+            The user-id was not managed by the client.
+        """
         return self._http.remove_token(user_id)
 
     async def load_tokens(self, path: str | None = None, /) -> None:
@@ -329,9 +383,13 @@ class Client:
         Method which dumps all the added OAuth tokens currently managed by this Client.
 
         !!! info
+            This method is always called by the client when it is gracefully closed.
+
+        ??? note
             By default this method dumps to a JSON file named `".tio.tokens.json"`.
 
-        You can override this method to implement your own custom logic, such as saving tokens to a database.
+        You can override this method to implement your own custom logic, such as saving tokens to a database, however
+        it is preferred to use [`.add_token`][twitchio.Client.add_token] to ensure the tokens are handled as they are added.
 
         Parameters
         ----------
