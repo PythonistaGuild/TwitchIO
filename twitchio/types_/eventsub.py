@@ -94,6 +94,8 @@ __all__ = (
     "ChatResubData",
     "ChatSubData",
     "ChatSubGiftData",
+    "ShieldModeBeginEvent",
+    "ShieldModeEndEvent",
     "ShoutoutCreateEvent",
     "ShoutoutReceiveEvent",
     "StreamOfflineEvent",
@@ -842,6 +844,14 @@ class GoalEndEvent(TypedDict):
     current_amount: int
     target_amount: int
     started_at: str
+    ended_at: str
+
+
+class ShieldModeBeginEvent(BroadcasterModeratorEvent):
+    started_at: str
+
+
+class ShieldModeEndEvent(BroadcasterModeratorEvent):
     ended_at: str
 
 

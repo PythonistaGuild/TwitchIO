@@ -1333,6 +1333,46 @@ class ChannelWarningSend(BaseEvent):
         return f"<ChannelWarningSend broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
 
 
+class ShieldModeBegin(BaseEvent):
+    subscription_type = "channel.shield_mode.begin"
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "started_at",
+    )
+
+    def __init__(self, payload: ShieldModeBeginEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<ShieldModeBegin broadcaster={self.broadcaster} moderator={self.moderator} started_at={self.started_at}>"
+
+
+class ShieldModeEnd(BaseEvent):
+    subscription_type = "channel.shield_mode.end"
+
+    __slots__ = (
+        "broadcaster",
+        "moderator",
+        "ended_at",
+    )
+
+    def __init__(self, payload: ShieldModeEndEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
+
+    def __repr__(self) -> str:
+        return f"<ShieldModeBegin broadcaster={self.broadcaster} moderator={self.moderator} ended_at={self.ended_at}>"
+
+
 class ShoutoutCreate(BaseEvent):
     subscription_type = "channel.shoutout.create"
 
