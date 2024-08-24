@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from twitchio.assets import Asset
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
@@ -81,7 +82,7 @@ class Video:
         "created_at",
         "published_at",
         "url",
-        "thumbnail_url",
+        "thumbnail",
         "viewable",
         "view_count",
         "language",
@@ -98,7 +99,7 @@ class Video:
         self.created_at = parse_timestamp(data["created_at"])
         self.published_at = parse_timestamp(data["published_at"])
         self.url: str = data["url"]
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
         self.viewable: str = data["viewable"]
         self.view_count: int = data["view_count"]
         self.language: str = data["language"]

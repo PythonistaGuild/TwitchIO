@@ -73,8 +73,8 @@ class Stream:
         UTC timestamp of when the stream started.
     language: str
         Language of the channel.
-    thumbnail_url: str
-        Thumbnail URL of the stream.
+    thumbnail: Asset
+        The [`Asset`][twitchio.assets.Asset] which can be used to read or save the thumbnail associated with this stream.
     is_mature: bool
         Indicates whether the stream is intended for mature audience.
     tags: list[str]

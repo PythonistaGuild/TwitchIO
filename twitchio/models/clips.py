@@ -26,8 +26,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from twitchio.assets import Asset
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
+
+from .games import Game
 
 
 if TYPE_CHECKING:
@@ -37,7 +40,10 @@ if TYPE_CHECKING:
     from twitchio.types_.responses import (
         ClipsResponseData,
         CreateClipResponseData,
+        GamesResponse,
     )
+
+    from .videos import Video
 
 
 __all__ = ("Clip", "CreatedClip")
@@ -71,8 +77,8 @@ class Clip:
         The amount of views this clip has.
     created_at: datetime.datetime
         When the clip was created.
-    thumbnail_url: str
-        The url of the clip thumbnail.
+    thumbnail: twitchio.Asset
+        The [`Asset`][twitchio.assets.Asset] that can be used to read or save the thumbnail associated with this Clip.
     is_featured: bool
         Indicates if the clip is featured or not.
     """
@@ -89,8 +95,9 @@ class Clip:
         "title",
         "views",
         "created_at",
-        "thumbnail_url",
+        "thumbnail",
         "is_featured",
+        "_http",
     )
 
     def __init__(self, data: ClipsResponseData, *, http: HTTPClient) -> None:
@@ -105,14 +112,43 @@ class Clip:
         self.title: str = data["title"]
         self.views: int = data["view_count"]
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
-        self.thumbnail_url: str = data["thumbnail_url"]
+        self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
         self.is_featured: bool = data["is_featured"]
+        self._http: HTTPClient = http
 
     def __repr__(self) -> str:
         return f"<Clip id={self.id} broadcaster={self.broadcaster} creator={self.creator}>"
 
     def __str__(self) -> str:
         return self.id
+
+    async def fetch_game(self) -> Game:
+        """Fetches the [`Game`][twitchio.Game] associated with this Clip.
+
+        Returns
+        -------
+        twitchio.Game
+            The game associated with this Clip.
+        """
+        payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
+        return Game(payload["data"][0], http=self._http)
+
+    async def fetch_video(self) -> Video | None:
+        """Fetches the [`Video`][twitchio.Video] associated with this clip, if it can be found.
+
+        Returns
+        -------
+        twitchio.Video
+            The video associated with this Clip.
+        None
+            The video was not found.
+        """
+        data: list[Video] = await self._http.get_videos(ids=[self.video_id], period="all", sort="time", type="all", first=1)
+
+        if not data:
+            return None
+
+        return data[0]
 
 
 class CreatedClip:

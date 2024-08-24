@@ -29,6 +29,8 @@ from typing import TYPE_CHECKING
 from twitchio.user import PartialUser
 from twitchio.utils import parse_timestamp
 
+from .games import Game
+
 
 if TYPE_CHECKING:
     from twitchio.http import HTTPAsyncIterator, HTTPClient
@@ -39,8 +41,8 @@ if TYPE_CHECKING:
         ChannelInformationResponseData,
         FollowedChannelsResponse,
         FollowedChannelsResponseData,
+        GamesResponse,
     )
-
 
 __all__ = (
     "ChannelEditor",
@@ -201,6 +203,7 @@ class ChannelInfo:
         "tags",
         "classification_labels",
         "is_branded_content",
+        "_http",
     )
 
     def __init__(self, data: ChannelInformationResponseData, *, http: HTTPClient) -> None:
@@ -214,5 +217,19 @@ class ChannelInfo:
         self.classification_labels: list[str] = data["content_classification_labels"]
         self.is_branded_content: bool = data["is_branded_content"]
 
+        self._http: HTTPClient = http
+
     def __repr__(self) -> str:
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
+
+    async def fetch_game(self) -> Game:
+        """
+        Fetches the [`Game`][twitchio.Game] associated with this ChannelInfo.
+
+        Returns
+        -------
+        twitchio.Game
+            The game associated with this ChannelInfo.
+        """
+        payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
+        return Game(payload["data"][0], http=self._http)

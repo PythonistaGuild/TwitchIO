@@ -93,8 +93,8 @@ class ChatterColor:
     -----------
     user: twitchio.PartialUser
         PartialUser of the chatter.
-    color: str
-        The hex color code of the chatter's name.
+    colour: twitchio.Colour
+        The [`Colour`][twitchio.utils.Colour]. There is an alias to this named `color`.
     """
 
     __slots__ = ("user", "_colour")
@@ -367,8 +367,8 @@ class EmoteSet(Emote):
         An ID that identifies the emote set that the emote belongs to.
     type: str
         The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
-    owner_id: str
-        The ID of the broadcaster who owns the emote.
+    owner: str
+        The [`PartialUser`][twitchio.PartialUser] who owns this emote set.
     format: list[str]
         The formats that the emote is available in.
     scale: list[str]
@@ -377,17 +377,17 @@ class EmoteSet(Emote):
         The background themes that the emote is available in.
     """
 
-    __slots__ = ("type", "images", "set_id", "owner_id")
+    __slots__ = ("type", "images", "set_id", "owner")
 
     def __init__(self, data: EmoteSetsResponseData, *, template: str, http: HTTPClient) -> None:
         super().__init__(data, template=template, http=http)
         self.images: GlobalEmotesResponseImages = data["images"]
         self.set_id: str = data["emote_set_id"]
         self.type: str = data["emote_type"]
-        self.owner_id: str = data["owner_id"]
+        self.owner: PartialUser = PartialUser(id=data["owner_id"], http=http)
 
     def __repr__(self) -> str:
-        return f"<EmoteSet set_id={self.set_id} owner_id={self.owner_id}>"
+        return f"<EmoteSet set_id={self.set_id} owner={self.owner}>"
 
 
 class ChannelEmote(Emote):
@@ -408,8 +408,8 @@ class ChannelEmote(Emote):
         An ID that identifies the emote set that the emote belongs to.
     type: str
         The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
-    owner_id: str
-        The ID of the broadcaster who owns the emote.
+    owner: twitchio.PartialUser
+        The [`PartialUser`][twitchio.PartialUser] who owns this emote.
     format: list[str]
         The formats that the emote is available in.
     scale: list[str]
@@ -462,7 +462,7 @@ class UserEmote(Emote):
         The type of emote. Please see docs for full list of possible values.
     set_id: str
         An ID that identifies the emote set that the emote belongs to.
-    owner_id: str
+    owner: twitchio.PartialUser
         The ID of the broadcaster who owns the emote.
     format: list[str]
         The formats that the emote is available in.

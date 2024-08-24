@@ -1146,7 +1146,6 @@ class Client:
         One of `ids`, `user_id` or `game_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
 
-
         Parameters
         ----------
         ids: list[str | int] | None

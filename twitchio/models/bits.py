@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Literal
 
 from twitchio.assets import Asset
 from twitchio.user import PartialUser
-from twitchio.utils import parse_timestamp
+from twitchio.utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -104,8 +104,8 @@ class CheermoteTier:
         The minimum bits for the tier
     id: str
         The ID of the tier
-    colour: str
-        The colour of the tier
+    colour: twitchio.Colour
+        The [`Colour`][twitchio.utils.Colour] of the tier. There is an alias named `color`.
     images: dict[str, dict[str, dict[str, str]]]
         contains two dicts, ``light`` and ``dark``. Each item will have an ``animated`` and ``static`` item,
         which will contain yet another dict, with sizes ``1``, ``1.5``, ``2``, ``3``, and ``4``.
@@ -116,13 +116,14 @@ class CheermoteTier:
         Indicates whether twitch hides the emote from the bits card.
     """
 
-    __slots__ = ("min_bits", "id", "color", "images", "can_cheer", "show_in_bits_card", "_http")
+    __slots__ = ("min_bits", "id", "colour", "color", "images", "can_cheer", "show_in_bits_card", "_http")
 
     def __init__(self, data: CheermotesResponseTiers, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.min_bits: int = data["min_bits"]
         self.id: str = data["id"]
-        self.color: str = data["color"]
+        self.colour: Colour = Colour.from_hex(data["color"])
+        self.color = self.colour
         self.images = data["images"]
         self.can_cheer: bool = data["can_cheer"]
         self.show_in_bits_card: bool = data["show_in_bits_card"]
