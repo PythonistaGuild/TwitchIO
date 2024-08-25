@@ -402,7 +402,7 @@ class Websocket:
 
     async def _process_notification(self, data: NotificationMessage) -> None:
         subscription_type = data["metadata"]["subscription_type"]
-        event: str = subscription_type.replace(".", "_")
+        event: str = subscription_type.replace("channel.channel_", "channel.").replace(".", "_")
 
         try:
             payload_class = BaseEvent.create_instance(subscription_type, data["payload"]["event"], http=self._http)

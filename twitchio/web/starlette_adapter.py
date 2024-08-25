@@ -190,7 +190,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
 
         elif msg_type == "notification":
             subscription_type: str = data["subscription"]["type"]
-            event: str = subscription_type.replace(".", "_")
+            event: str = subscription_type.replace("channel.channel_", "channel.").replace(".", "_")
 
             try:
                 payload_class = BaseEvent.create_instance(subscription_type, data["event"], http=self.client._http)
