@@ -75,6 +75,8 @@ __all__ = (
     "ChannelPointsCustomRewardAddEvent",
     "ChannelPointsCustomRewardUpdateEvent",
     "ChannelPointsCustomRewardRemoveEvent",
+    "ChannelPointsRewardRedemptionAddEvent",
+    "ChannelPointsRewardRedemptionUpdateEvent",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
@@ -865,6 +867,27 @@ class ChannelPointsCustomRewardUpdateEvent(BaseChannelPointsCustomReward): ...
 
 
 class ChannelPointsCustomRewardRemoveEvent(BaseChannelPointsCustomReward): ...
+
+
+class ReedemedRewardData(TypedDict):
+    id: str
+    title: str
+    cost: str
+    prompt: str
+
+
+class BaseChannelPointsCustomRewardRedeemData(BroadcasterUserEvent):
+    id: str
+    user_input: str
+    status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"]
+    reward: ReedemedRewardData
+    redeemed_at: str
+
+
+class ChannelPointsRewardRedemptionAddEvent(BaseChannelPointsCustomRewardRedeemData): ...
+
+
+class ChannelPointsRewardRedemptionUpdateEvent(BaseChannelPointsCustomRewardRedeemData): ...
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...

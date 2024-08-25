@@ -1334,37 +1334,33 @@ class BaseChannelPointsReward(BaseEvent):
         http: HTTPClient,
     ) -> None:
         self._http: HTTPClient = http
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=self._http
-        )
         self.id: str = payload["id"]
         self.title: str = payload["title"]
         self.cost: int = int(payload["cost"])
         self.prompt: str = payload["prompt"]
-        self.enabled: bool = bool(payload["is_enabled"])
-        self.paused: bool = bool(payload["is_paused"])
-        self.in_stock: bool = bool(payload["is_in_stock"])
-        self.input_required: bool = bool(payload["is_user_input_required"])
-        self.skip_queue: bool = bool(payload["should_redemptions_skip_request_queue"])
-        self.colour: Colour | None = Colour.from_hex(payload["background_color"])
+        self.broadcaster: PartialUser | None = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=self._http
+        ) if payload.get("broadcaster_user_id", "") else None
+        self.enabled: bool | None = payload.get("is_enabled")
+        self.paused: bool | None = payload.get("is_paused")
+        self.in_stock: bool | None = payload.get("is_in_stock")
+        self.input_required: bool | None = payload.get("is_user_input_required")
+        self.skip_queue: bool | None = payload.get("should_redemptions_skip_request_queue")
+        self.colour: Colour | None = Colour.from_hex(payload["background_color"]) if payload["background_color"] else None
         self.cooldown_until: datetime.datetime | None = (
             parse_timestamp(payload["cooldown_expires_at"]) if payload["cooldown_expires_at"] is not None else None
         )
-        self.max_per_stream: RewardLimitSettings = RewardLimitSettings(
+        self.max_per_stream: RewardLimitSettings  | None  = RewardLimitSettings(
             enabled=payload["max_per_stream"]["is_enabled"], value=payload["max_per_stream"]["value"]
-        )
-        self.max_per_user_per_stream: RewardLimitSettings = RewardLimitSettings(
+        ) if payload.get("max_per_stream", {}) else None
+        self.max_per_user_per_stream: RewardLimitSettings  | None = RewardLimitSettings(
             enabled=payload["max_per_user_per_stream"]["is_enabled"], value=int(payload["max_per_user_per_stream"]["value"])
-        )
-        self.global_cooldown: CooldownSettings = CooldownSettings(
+        ) if payload.get("max_per_user_per_stream", {}) else None
+        self.global_cooldown: CooldownSettings  | None = CooldownSettings(
             enabled=payload["global_cooldown"]["is_enabled"], seconds=int(payload["global_cooldown"]["seconds"])
-        )
-        self.default_image: dict[str, str] = {k: str(v) for k, v in payload["default_image"].items()}
-        self.current_stream_redeems: int | None = (
-            int(payload["redemptions_redeemed_current_stream"])
-            if payload["redemptions_redeemed_current_stream"] is not None
-            else None
-        )
+        ) if payload.get("global_cooldown", {}) else None
+        self.default_image: dict[str, str]  | None = {k: str(v) for k, v in payload["default_image"].items()} if payload.get("default_image", {}) else None
+        self.current_stream_redeems: int | None = payload.get("redemptions_redeemed_current_stream", 0)
         self._image: ChannelPointsImageData | None = payload.get("image")
 
     def __repr__(self) -> str:
@@ -1381,10 +1377,10 @@ class BaseChannelPointsReward(BaseEvent):
         else:
             return None
 
-    def get_image(self, size: Literal["1x", "2x", "4x"] = "2x", use_default: bool = False) -> Asset:
+    def get_image(self, size: Literal["1x", "2x", "4x"] = "2x", use_default: bool = False) -> Asset | None:
         """
         Get an image Asset for the reward at a specified size.
-        Falls back to default images if no custom images have been uploaded.
+        Falls back to default images if no custom images have been uploaded or if specified.
 
         Parameters
         ----------
@@ -1395,11 +1391,14 @@ class BaseChannelPointsReward(BaseEvent):
 
         Returns
         -------
-        Asset
+        Asset | None
             The Asset for the image. Falls back to default images if no custom images have been uploaded.
         """
         if use_default or self.image is None or f"url_{size}" not in self.image:
-            url = self.default_image[f"url_{size}"]
+            if self.default_image and f"url_{size}" in self.default_image:
+                url = self.default_image[f"url_{size}"]
+            else:
+                return None
         else:
             url = self.image[f"url_{size}"]
 
