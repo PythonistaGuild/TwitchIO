@@ -1326,7 +1326,12 @@ class BaseChannelPointsReward(BaseEvent):
     )
 
     def __init__(
-        self, payload: ChannelPointsCustomRewardAddEvent | ChannelPointsCustomRewardUpdateEvent, *, http: HTTPClient
+        self,
+        payload: ChannelPointsCustomRewardAddEvent
+        | ChannelPointsCustomRewardUpdateEvent
+        | ChannelPointsCustomRewardRemoveEvent,
+        *,
+        http: HTTPClient,
     ) -> None:
         self._http: HTTPClient = http
         self.broadcaster: PartialUser = PartialUser(
@@ -1421,6 +1426,14 @@ class ChannelPointsRewardUpdate(BaseChannelPointsReward):
         return f"<ChannelPointsRewardUpdate broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
 
+class ChannelPointsRewardRemove(BaseChannelPointsReward):
+    subscription_type = "channel.channel_points_custom_reward.remove"
+
+    def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelPointsRewardRemove broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
 
 class ChannelVIPAdd(BaseEvent):

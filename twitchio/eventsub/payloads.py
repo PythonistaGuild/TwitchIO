@@ -70,6 +70,7 @@ __all__ = (
     "ChannelWarningSendSubscription",
     "ChannelPointsRewardAddSubscription",
     "ChannelPointsRewardUpdateSubscription",
+    "ChannelPointsRewardRemoveSubscription",
     "GoalBeginSubscription",
     "GoalProgressSubscription",
     "GoalEndSubscription",

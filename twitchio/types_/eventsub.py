@@ -74,6 +74,7 @@ __all__ = (
     "ChannelPointsAutoRewardRedemptionEvent",
     "ChannelPointsCustomRewardAddEvent",
     "ChannelPointsCustomRewardUpdateEvent",
+    "ChannelPointsCustomRewardRemoveEvent",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
@@ -860,9 +861,10 @@ class BaseChannelPointsCustomReward(BaseBroadcasterEvent):
 class ChannelPointsCustomRewardAddEvent(BaseChannelPointsCustomReward): ...
 
 
-class ChannelPointsCustomRewardUpdateEvent(BaseBroadcasterEvent): ...
+class ChannelPointsCustomRewardUpdateEvent(BaseChannelPointsCustomReward): ...
 
 
+class ChannelPointsCustomRewardRemoveEvent(BaseChannelPointsCustomReward): ...
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...
