@@ -73,6 +73,7 @@ __all__ = (
     "ChannelModeratorRemoveEvent",
     "ChannelPointsAutoRewardRedemptionEvent",
     "ChannelPointsCustomRewardAddEvent",
+    "ChannelPointsCustomRewardUpdateEvent",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
@@ -837,6 +838,26 @@ class ChannelPointsImageData(TypedDict):
 
 
 class ChannelPointsCustomRewardAddEvent(BaseBroadcasterEvent):
+    id: str
+    is_enabled: bool
+    is_paused: bool
+    is_in_stock: bool
+    title: str
+    cost: int
+    prompt: str
+    is_user_input_required: bool
+    should_redemptions_skip_request_queue: bool
+    cooldown_expires_at: str | None
+    redemptions_redeemed_current_stream: int | None
+    max_per_stream: ChannelPointsMaxPerData
+    max_per_user_per_stream: ChannelPointsMaxPerData
+    global_cooldown: ChannelPointsGlobalCooldownData
+    background_color: str
+    image: ChannelPointsImageData
+    default_image: ChannelPointsImageData
+
+
+class ChannelPointsCustomRewardUpdateEvent(BaseBroadcasterEvent):
     id: str
     is_enabled: bool
     is_paused: bool

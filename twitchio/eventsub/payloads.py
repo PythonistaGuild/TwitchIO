@@ -69,6 +69,7 @@ __all__ = (
     "ChannelWarningAcknowledgementSubscription",
     "ChannelWarningSendSubscription",
     "ChannelPointsRewardAddSubscription",
+    "ChannelPointsRewardUpdateSubscription",
     "GoalBeginSubscription",
     "GoalProgressSubscription",
     "GoalEndSubscription",
