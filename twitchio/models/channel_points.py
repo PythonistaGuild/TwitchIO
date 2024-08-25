@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from twitchio.assets import Asset
 from twitchio.user import PartialUser
@@ -42,52 +42,40 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("CustomReward", "RewardStreamSetting", "RewardCooldown", "CustomRewardRedemption")
+__all__ = ("CustomReward", "RewardLimitSettings", "RewardCooldown", "CustomRewardRedemption")
 
 
-class RewardCooldown:
+class RewardCooldown(NamedTuple):
     """
-    Represents a custom reward's global cooldown settings
+    NamedTuple that represents a custom reward's cooldown settings.
 
     Attributes
     -----------
-    is_enabled: bool
+    enabled: bool
         Whether a coooldown between redemptions is enabled or not. Default is False.
-    cooldown_seconds: int
+    seconds: int
         The cooldown period in seconds. This only applies if ``is_enabled`` is True.
         Min value is 1; however, the minimum value is 60 for it to be shown in the Twitch UX.
     """
 
-    __slots__ = ("is_enabled", "cooldown_seconds")
-
-    def __init__(self, is_enabled: bool, cooldown_seconds: int) -> None:
-        self.is_enabled: bool = is_enabled
-        self.cooldown_seconds: int = cooldown_seconds
-
-    def __repr__(self) -> str:
-        return f"<RewardCooldown is_enabled={self.is_enabled} cooldown_seconds={self.cooldown_seconds}>"
+    enabled: bool
+    seconds: int
 
 
-class RewardStreamSetting:
+class RewardLimitSettings(NamedTuple):
     """
-    Represents a custom reward's stream settings.
+    NamedTuple that represents a custom reward's stream limit settings.
 
     Attributes
     -----------
-    is_enabled: bool
-        Whether the stream setting is enabled or not. Default is False.
-    max_value: int
+    enabled: bool
+        Whether the stream setting is enabled or not.
+    value: int
         The max number of redemptions allowed. Minimum value is 1.
     """
 
-    __slots__ = ("is_enabled", "max_value")
-
-    def __init__(self, is_enabled: bool, max_value: int) -> None:
-        self.is_enabled: bool = is_enabled
-        self.max_value: int = max_value
-
-    def __repr__(self) -> str:
-        return f"<RewardStreamSetting is_enabled={self.is_enabled} max_value={self.max_value}>"
+    enabled: bool
+    value: int
 
 
 class CustomReward:
@@ -129,9 +117,9 @@ class CustomReward:
         The datetime of when the cooldown period expires. Is null if the reward isn't in a cooldown state
     cooldown: RewardCooldown
         The cooldown settings of a reward. This represents whether reward has a cooldown enabled and the cooldown period in seconds.
-    max_per_stream: RewardStreamSetting
+    max_per_stream: RewardLimitSettings
         The settings of a reward over a live stream. This represents whether a reward has a max number of redemptions per stream and if the setting is enabled or not.
-    max_per_user_stream: RewardStreamSetting
+    max_per_user_stream: RewardLimitSettings
         The settings of a reward over a live stream per user. This represents whether a reward has a max number of redemptions per user per stream and if the setting is enabled or not.
     """
 
@@ -144,7 +132,7 @@ class CustomReward:
         "cost",
         "_image",
         "default_image",
-        "background_color",
+        "colour",
         "enabled",
         "input_required",
         "max_per_stream",
@@ -160,31 +148,36 @@ class CustomReward:
     def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=self._http)
-        self._image: CustomRewardsResponseImage | None = data["image"]
+        self._image: CustomRewardsResponseImage | None = data.get("image")
         self.id: str = data["id"]
         self.title: str = data["title"]
         self.prompt: str = data["prompt"]
         self.cost: int = int(data["cost"])
         self.default_image: dict[str, str] = {k: str(v) for k, v in data["default_image"].items()}
-        self.background_color: Colour = Colour.from_hex(data["background_color"])
+        self.colour: Colour = Colour.from_hex(data["background_color"])
         self.enabled: bool = data["is_enabled"]
         self.input_required: bool = data["is_user_input_required"]
         self.paused: bool = data["is_paused"]
         self.in_stock: bool = data["is_in_stock"]
         self.skip_queue: bool = data["should_redemptions_skip_request_queue"]
-        self.current_stream_redeems: int | None = data.get("redemptions_redeemed_current_stream")
+        self.current_stream_redeems: int | None = (
+            int(data["redemptions_redeemed_current_stream"])
+            if data["redemptions_redeemed_current_stream"] is not None
+            else None
+        )
         self.cooldown_until: datetime.datetime | None = (
             parse_timestamp(data["cooldown_expires_at"]) if data["cooldown_expires_at"] else None
         )
         self.cooldown: RewardCooldown = RewardCooldown(
-            data["global_cooldown_setting"]["is_enabled"], data["global_cooldown_setting"]["global_cooldown_seconds"]
+            bool(data["global_cooldown_setting"]["is_enabled"]),
+            int(data["global_cooldown_setting"]["global_cooldown_seconds"]),
         )
-        self.max_per_stream: RewardStreamSetting = RewardStreamSetting(
-            data["max_per_stream_setting"]["is_enabled"], data["max_per_stream_setting"]["max_per_stream"]
+        self.max_per_stream: RewardLimitSettings = RewardLimitSettings(
+            bool(data["max_per_stream_setting"]["is_enabled"]), int(data["max_per_stream_setting"]["max_per_stream"])
         )
-        self.max_per_user_stream: RewardStreamSetting = RewardStreamSetting(
-            data["max_per_user_per_stream_setting"]["is_enabled"],
-            data["max_per_user_per_stream_setting"]["max_per_user_per_stream"],
+        self.max_per_user_stream: RewardLimitSettings = RewardLimitSettings(
+            bool(data["max_per_user_per_stream_setting"]["is_enabled"]),
+            int(data["max_per_user_per_stream_setting"]["max_per_user_per_stream"]),
         )
 
     def __repr__(self) -> str:
@@ -192,6 +185,10 @@ class CustomReward:
 
     def __str__(self) -> str:
         return self.title
+
+    @property
+    def color(self) -> Colour | None:
+        return self.colour
 
     @property
     def image(self) -> dict[str, str] | None:

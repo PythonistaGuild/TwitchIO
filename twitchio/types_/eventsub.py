@@ -57,6 +57,7 @@ __all__ = (
     "ChannelUnbanRequestEvent",
     "ChannelUnbanRequestResolveEvent",
     "ChannelPointsEmoteData",
+    "ChannelPointsImageData",
     "ModerateFollowersData",
     "ModerateSlowData",
     "ModerateBanData",
@@ -71,6 +72,7 @@ __all__ = (
     "ChannelModeratorAddEvent",
     "ChannelModeratorRemoveEvent",
     "ChannelPointsAutoRewardRedemptionEvent",
+    "ChannelPointsCustomRewardAddEvent",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
@@ -816,6 +818,42 @@ class ChannelPointsAutoRewardRedemptionEvent(BroadcasterUserEvent):
     message: ChannelPointsMessageData
     user_input: str | None
     redeemed_at: str
+
+
+class ChannelPointsMaxPerData(TypedDict):
+    is_enabled: bool
+    value: int
+
+
+class ChannelPointsGlobalCooldownData(TypedDict):
+    is_enabled: bool
+    seconds: int
+
+
+class ChannelPointsImageData(TypedDict):
+    url_1x: str
+    url_2x: str
+    url_4x: str
+
+
+class ChannelPointsCustomRewardAddEvent(BaseBroadcasterEvent):
+    id: str
+    is_enabled: bool
+    is_paused: bool
+    is_in_stock: bool
+    title: str
+    cost: int
+    prompt: str
+    is_user_input_required: bool
+    should_redemptions_skip_request_queue: bool
+    cooldown_expires_at: str | None
+    redemptions_redeemed_current_stream: int | None
+    max_per_stream: ChannelPointsMaxPerData
+    max_per_user_per_stream: ChannelPointsMaxPerData
+    global_cooldown: ChannelPointsGlobalCooldownData
+    background_color: str
+    image: ChannelPointsImageData
+    default_image: ChannelPointsImageData
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...
