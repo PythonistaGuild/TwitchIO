@@ -37,7 +37,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
 
 from ..authentication import Scopes
-from ..models.eventsub_ import BaseEvent, SubscriptionRevoked
+from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
 from .utils import MESSAGE_TYPES, BaseAdapter, verify_message
@@ -193,7 +193,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
             event: str = subscription_type.replace("channel.channel_", "channel.").replace(".", "_")
 
             try:
-                payload_class = BaseEvent.create_instance(subscription_type, data["event"], http=self.client._http)
+                payload_class = create_event_instance(subscription_type, data["event"], http=self.client._http)
             except ValueError:
                 logger.warning("Webhook '%s' received an unhandled eventsub event: '%s'.", self, event)
                 return Response(status_code=200)

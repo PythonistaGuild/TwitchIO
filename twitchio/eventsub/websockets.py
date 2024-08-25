@@ -33,7 +33,7 @@ import aiohttp
 
 from ..backoff import Backoff
 from ..exceptions import HTTPException, WebsocketConnectionException
-from ..models.eventsub_ import BaseEvent, SubscriptionRevoked
+from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
 from ..types_.conduits import (
     MessageTypes,
     MetaData,
@@ -405,7 +405,7 @@ class Websocket:
         event: str = subscription_type.replace("channel.channel_", "channel.").replace(".", "_")
 
         try:
-            payload_class = BaseEvent.create_instance(subscription_type, data["payload"]["event"], http=self._http)
+            payload_class = create_event_instance(subscription_type, data["payload"]["event"], http=self._http)
         except ValueError:
             logger.warning("Websocket '%s' received an unhandled eventsub event: '%s'.", self, event)
             return

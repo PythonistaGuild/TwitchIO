@@ -51,12 +51,12 @@ class BaseEvent:
         if cls.subscription_type is not None:
             BaseEvent._registry[cls.subscription_type] = cls
 
-    @classmethod
-    def create_instance(cls, event_type: str, payload: dict[str, Any], http: HTTPClient | None = None) -> Any:
-        event_cls = cls._registry.get(event_type)
-        if event_cls is None:
-            raise ValueError(f"No class registered for event type {event_type}")
-        return event_cls(payload) if http is None else event_cls(payload, http=http)
+
+def create_event_instance(event_type: str, payload: dict[str, Any], http: HTTPClient | None = None) -> Any:
+    event_cls = BaseEvent._registry.get(event_type)
+    if event_cls is None:
+        raise ValueError(f"No class registered for event type {event_type}")
+    return event_cls(payload) if http is None else event_cls(payload, http=http)
 
 
 class AutomodEmote:
