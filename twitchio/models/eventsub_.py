@@ -1303,9 +1303,7 @@ class CooldownSettings(NamedTuple):
     seconds: int
 
 
-class ChannelPointsRewardAdd(BaseEvent):
-    subscription_type = "channel.channel_points_custom_reward.add"
-
+class BaseChannelPointsReward(BaseEvent):
     __slots__ = (
         "_http",
         "broadcaster",
@@ -1327,7 +1325,9 @@ class ChannelPointsRewardAdd(BaseEvent):
         "current_stream_redeems",
     )
 
-    def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
+    def __init__(
+        self, payload: ChannelPointsCustomRewardAddEvent | ChannelPointsCustomRewardUpdateEvent, *, http: HTTPClient
+    ) -> None:
         self._http: HTTPClient = http
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=self._http
@@ -1401,102 +1401,26 @@ class ChannelPointsRewardAdd(BaseEvent):
         return Asset(url, http=self._http)
 
 
-class ChannelPointsRewardUpdate(BaseEvent):
+class ChannelPointsRewardAdd(BaseChannelPointsReward):
+    subscription_type = "channel.channel_points_custom_reward.add"
+
+    def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelPointsRewardAdd broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
+
+
+class ChannelPointsRewardUpdate(BaseChannelPointsReward):
     subscription_type = "channel.channel_points_custom_reward.update"
 
-    __slots__ = (
-        "_http",
-        "broadcaster",
-        "id",
-        "enabled",
-        "paused",
-        "in_stock",
-        "title",
-        "cost",
-        "prompt",
-        "input_required",
-        "skip_queue",
-        "cooldown_until",
-        "colour",
-        "max_per_stream",
-        "max_per_user_per_stream",
-        "_image",
-        "default_image",
-        "current_stream_redeems",
-    )
-
-    def __init__(self, payload: ChannelPointsCustomRewardUpdateEvent, *, http: HTTPClient) -> None:
-        self._http: HTTPClient = http
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=self._http
-        )
-        self.id: str = payload["id"]
-        self.title: str = payload["title"]
-        self.cost: int = int(payload["cost"])
-        self.prompt: str = payload["prompt"]
-        self.enabled: bool = bool(payload["is_enabled"])
-        self.paused: bool = bool(payload["is_paused"])
-        self.in_stock: bool = bool(payload["is_in_stock"])
-        self.input_required: bool = bool(payload["is_user_input_required"])
-        self.skip_queue: bool = bool(payload["should_redemptions_skip_request_queue"])
-        self.colour: Colour | None = Colour.from_hex(payload["background_color"])
-        self.cooldown_until: datetime.datetime | None = (
-            parse_timestamp(payload["cooldown_expires_at"]) if payload["cooldown_expires_at"] is not None else None
-        )
-        self.max_per_stream: RewardLimitSettings = RewardLimitSettings(
-            enabled=payload["max_per_stream"]["is_enabled"], value=payload["max_per_stream"]["value"]
-        )
-        self.max_per_user_per_stream: RewardLimitSettings = RewardLimitSettings(
-            enabled=payload["max_per_user_per_stream"]["is_enabled"], value=int(payload["max_per_user_per_stream"]["value"])
-        )
-        self.global_cooldown: CooldownSettings = CooldownSettings(
-            enabled=payload["global_cooldown"]["is_enabled"], seconds=int(payload["global_cooldown"]["seconds"])
-        )
-        self.default_image: dict[str, str] = {k: str(v) for k, v in payload["default_image"].items()}
-        self.current_stream_redeems: int | None = (
-            int(payload["redemptions_redeemed_current_stream"])
-            if payload["redemptions_redeemed_current_stream"] is not None
-            else None
-        )
-        self._image: ChannelPointsImageData | None = payload.get("image")
+    def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelPointsRewardUpdate broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
-    @property
-    def color(self) -> Colour | None:
-        return self.colour
 
-    @property
-    def image(self) -> dict[str, str] | None:
-        if self._image is not None:
-            return {k: str(v) for k, v in self._image.items()}
-        else:
-            return None
-
-    def get_image(self, size: Literal["1x", "2x", "4x"] = "2x", use_default: bool = False) -> Asset:
-        """
-        Get an image Asset for the reward at a specified size.
-        Falls back to default images if no custom images have been uploaded.
-
-        Parameters
-        ----------
-        size : str
-            The size key of the image. Options are "1x", "2x", "4x". Defaults to "2x".
-        use_default : bool
-            Use default images instead of user uploaded images.
-
-        Returns
-        -------
-        Asset
-            The Asset for the image. Falls back to default images if no custom images have been uploaded.
-        """
-        if use_default or self.image is None or f"url_{size}" not in self.image:
-            url = self.default_image[f"url_{size}"]
-        else:
-            url = self.image[f"url_{size}"]
-
-        return Asset(url, http=self._http)
 
 
 class ChannelVIPAdd(BaseEvent):
