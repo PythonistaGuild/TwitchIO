@@ -71,6 +71,8 @@ __all__ = (
     "ChannelPointsRewardAddSubscription",
     "ChannelPointsRewardUpdateSubscription",
     "ChannelPointsRewardRemoveSubscription",
+    "ChannelPointsRedeemAddSubscription",
+    "ChannelPointsRedeemUpdateSubscription",
     "GoalBeginSubscription",
     "GoalProgressSubscription",
     "GoalEndSubscription",
@@ -649,7 +651,7 @@ class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
 
 
-class ChannelPointsRedeemUpdateubscription(SubscriptionPayload):
+class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.channel_points_custom_reward_redemption.update"]] = (
         "channel.channel_points_custom_reward_redemption.update"
     )

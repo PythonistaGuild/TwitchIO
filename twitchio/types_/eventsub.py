@@ -77,6 +77,7 @@ __all__ = (
     "ChannelPointsCustomRewardRemoveEvent",
     "ChannelPointsRewardRedemptionAddEvent",
     "ChannelPointsRewardRedemptionUpdateEvent",
+    "ReedemedRewardData",
     "ChannelUpdateEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",

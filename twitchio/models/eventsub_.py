@@ -1303,7 +1303,7 @@ class CooldownSettings(NamedTuple):
     seconds: int
 
 
-class BaseChannelPointsReward(BaseEvent):
+class ChannelPointsReward(BaseEvent):
     __slots__ = (
         "_http",
         "broadcaster",
@@ -1329,7 +1329,8 @@ class BaseChannelPointsReward(BaseEvent):
         self,
         payload: ChannelPointsCustomRewardAddEvent
         | ChannelPointsCustomRewardUpdateEvent
-        | ChannelPointsCustomRewardRemoveEvent,
+        | ChannelPointsCustomRewardRemoveEvent
+        | ReedemedRewardData,
         *,
         http: HTTPClient,
     ) -> None:
@@ -1338,33 +1339,52 @@ class BaseChannelPointsReward(BaseEvent):
         self.title: str = payload["title"]
         self.cost: int = int(payload["cost"])
         self.prompt: str = payload["prompt"]
-        self.broadcaster: PartialUser | None = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=self._http
-        ) if payload.get("broadcaster_user_id", "") else None
+        self.broadcaster: PartialUser | None = (
+            PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=self._http)
+            if "broadcaster_user_id" in payload
+            else None
+        )
+
         self.enabled: bool | None = payload.get("is_enabled")
         self.paused: bool | None = payload.get("is_paused")
         self.in_stock: bool | None = payload.get("is_in_stock")
         self.input_required: bool | None = payload.get("is_user_input_required")
         self.skip_queue: bool | None = payload.get("should_redemptions_skip_request_queue")
-        self.colour: Colour | None = Colour.from_hex(payload["background_color"]) if payload["background_color"] else None
+        self.colour: Colour | None = Colour.from_hex(payload["background_color"]) if "background_color" in payload else None
         self.cooldown_until: datetime.datetime | None = (
-            parse_timestamp(payload["cooldown_expires_at"]) if payload["cooldown_expires_at"] is not None else None
+            parse_timestamp(payload["cooldown_expires_at"])
+            if "cooldown_expires_at" in payload and payload["cooldown_expires_at"] is not None
+            else None
         )
-        self.max_per_stream: RewardLimitSettings  | None  = RewardLimitSettings(
-            enabled=payload["max_per_stream"]["is_enabled"], value=payload["max_per_stream"]["value"]
-        ) if payload.get("max_per_stream", {}) else None
-        self.max_per_user_per_stream: RewardLimitSettings  | None = RewardLimitSettings(
-            enabled=payload["max_per_user_per_stream"]["is_enabled"], value=int(payload["max_per_user_per_stream"]["value"])
-        ) if payload.get("max_per_user_per_stream", {}) else None
-        self.global_cooldown: CooldownSettings  | None = CooldownSettings(
-            enabled=payload["global_cooldown"]["is_enabled"], seconds=int(payload["global_cooldown"]["seconds"])
-        ) if payload.get("global_cooldown", {}) else None
-        self.default_image: dict[str, str]  | None = {k: str(v) for k, v in payload["default_image"].items()} if payload.get("default_image", {}) else None
-        self.current_stream_redeems: int | None = payload.get("redemptions_redeemed_current_stream", 0)
+        self.max_per_stream: RewardLimitSettings | None = (
+            RewardLimitSettings(enabled=payload["max_per_stream"]["is_enabled"], value=payload["max_per_stream"]["value"])
+            if "max_per_stream" in payload
+            else None
+        )
+        self.max_per_user_per_stream: RewardLimitSettings | None = (
+            RewardLimitSettings(
+                enabled=payload["max_per_user_per_stream"]["is_enabled"],
+                value=int(payload["max_per_user_per_stream"]["value"]),
+            )
+            if "max_per_user_per_stream" in payload
+            else None
+        )
+
+        self.global_cooldown: CooldownSettings | None = (
+            CooldownSettings(
+                enabled=payload["global_cooldown"]["is_enabled"], seconds=int(payload["global_cooldown"]["seconds"])
+            )
+            if "global_cooldown" in payload
+            else None
+        )
+        self.default_image: dict[str, str] | None = (
+            {k: str(v) for k, v in payload["default_image"].items()} if "default_image" in payload else None
+        )
+        self.current_stream_redeems: int | None = payload.get("redemptions_redeemed_current_stream")
         self._image: ChannelPointsImageData | None = payload.get("image")
 
     def __repr__(self) -> str:
-        return f"<ChannelPointsRewardAdd broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
+        return f"<ChannelPointsReward broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
     @property
     def color(self) -> Colour | None:
@@ -1405,7 +1425,8 @@ class BaseChannelPointsReward(BaseEvent):
         return Asset(url, http=self._http)
 
 
-class ChannelPointsRewardAdd(BaseChannelPointsReward):
+# TODO We could possibly just make these the Baseclass of ChannelPointsReward
+class ChannelPointsRewardAdd(ChannelPointsReward):
     subscription_type = "channel.channel_points_custom_reward.add"
 
     def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
@@ -1415,7 +1436,7 @@ class ChannelPointsRewardAdd(BaseChannelPointsReward):
         return f"<ChannelPointsRewardAdd broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
 
-class ChannelPointsRewardUpdate(BaseChannelPointsReward):
+class ChannelPointsRewardUpdate(ChannelPointsReward):
     subscription_type = "channel.channel_points_custom_reward.update"
 
     def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
@@ -1425,7 +1446,7 @@ class ChannelPointsRewardUpdate(BaseChannelPointsReward):
         return f"<ChannelPointsRewardUpdate broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
 
-class ChannelPointsRewardRemove(BaseChannelPointsReward):
+class ChannelPointsRewardRemove(ChannelPointsReward):
     subscription_type = "channel.channel_points_custom_reward.remove"
 
     def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
@@ -1433,6 +1454,44 @@ class ChannelPointsRewardRemove(BaseChannelPointsReward):
 
     def __repr__(self) -> str:
         return f"<ChannelPointsRewardRemove broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
+
+
+class BaseChannelPointsRedeem(BaseEvent):
+    __slots__ = ("broadcaster", "user", "status", "reward", "redeemed_at")
+
+    def __init__(
+        self, payload: ChannelPointsRewardRedemptionAddEvent | ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient
+    ) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"] = payload["status"]
+        self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
+        self.reward: ChannelPointsReward = ChannelPointsReward(payload["reward"], http=http)
+
+    def __repr__(self) -> str:
+        return f"<BaseChannelPointsRedeem broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+
+
+class ChannelPointsRedeemAdd(BaseChannelPointsRedeem):
+    subscription_type = "channel.channel_points_custom_reward_redemption.add"
+
+    def __init__(self, payload: ChannelPointsRewardRedemptionAddEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelPointsRedeemAdd broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+
+
+class ChannelPointsRedeemUpdate(BaseChannelPointsRedeem):
+    subscription_type = "channel.channel_points_custom_reward_redemption.update"
+
+    def __init__(self, payload: ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<ChannelPointsRedeemUpdate broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
 class ChannelVIPAdd(BaseEvent):
