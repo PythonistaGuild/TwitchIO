@@ -1612,7 +1612,7 @@ class Client:
         if not secret:
             raise ValueError("An eventsub secret must be provided when subscribing to events via Webhook. ")
 
-        if secret and not 10 <= len(secret) <= 100:
+        if not 10 <= len(secret) <= 100:
             raise ValueError("The 'eventsub_secret' must be between 10 and 100 characters long.")
 
         type_ = SubscriptionType(payload.type)

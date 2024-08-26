@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPClient
+    from twitchio.models.channel_points import CustomReward
     from twitchio.types_.conduits import RevocationSubscription, RevocationTransport
     from twitchio.types_.eventsub import *
 
@@ -1327,24 +1328,19 @@ class ChannelPointsReward(BaseEvent):
 
     def __init__(
         self,
-        payload: ChannelPointsCustomRewardAddEvent
-        | ChannelPointsCustomRewardUpdateEvent
-        | ChannelPointsCustomRewardRemoveEvent
-        | ReedemedRewardData,
+        payload: ChannelPointsCustomRewardAddEvent | ChannelPointsCustomRewardUpdateEvent | ReedemedRewardData,
         *,
         http: HTTPClient,
+        broadcaster: PartialUser | None = None,
     ) -> None:
         self._http: HTTPClient = http
         self.id: str = payload["id"]
         self.title: str = payload["title"]
         self.cost: int = int(payload["cost"])
         self.prompt: str = payload["prompt"]
-        self.broadcaster: PartialUser | None = (
-            PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=self._http)
-            if "broadcaster_user_id" in payload
-            else None
+        self.broadcaster: PartialUser = broadcaster or (
+            PartialUser(payload.get("broadcaster_user_id", ""), payload.get("broadcaster_user_login"), http=self._http)
         )
-
         self.enabled: bool | None = payload.get("is_enabled")
         self.paused: bool | None = payload.get("is_paused")
         self.in_stock: bool | None = payload.get("is_in_stock")
@@ -1384,7 +1380,7 @@ class ChannelPointsReward(BaseEvent):
         self._image: ChannelPointsImageData | None = payload.get("image")
 
     def __repr__(self) -> str:
-        return f"<ChannelPointsReward broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
+        return f"<ChannelPointsReward broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost}>"
 
     @property
     def color(self) -> Colour | None:
@@ -1423,6 +1419,10 @@ class ChannelPointsReward(BaseEvent):
             url = self.image[f"url_{size}"]
 
         return Asset(url, http=self._http)
+
+    async def fetch_reward(self, *, token_for: str) -> CustomReward:
+        reward = await self.broadcaster.fetch_custom_rewards(ids=[self.id], token_for=token_for)
+        return reward[0]
 
 
 # TODO We could possibly just make these the Baseclass of ChannelPointsReward
@@ -1468,7 +1468,7 @@ class BaseChannelPointsRedeem(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
         self.status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"] = payload["status"]
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
-        self.reward: ChannelPointsReward = ChannelPointsReward(payload["reward"], http=http)
+        self.reward: ChannelPointsReward = ChannelPointsReward(payload["reward"], http=http, broadcaster=self.broadcaster)
 
     def __repr__(self) -> str:
         return f"<BaseChannelPointsRedeem broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
