@@ -4,7 +4,7 @@
     options:
       show_root_heading: true
   
-::: twitchio.RewardStreamSetting
+::: twitchio.RewardLimitSettings
     options:
       show_root_heading: true
 
