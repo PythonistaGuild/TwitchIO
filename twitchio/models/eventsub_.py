@@ -24,10 +24,11 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, cast
 
 from twitchio.assets import Asset
 from twitchio.eventsub import RevocationReason, TransportMethod
+from twitchio.models.channel_points import CustomReward
 from twitchio.models.charity import CharityValues
 from twitchio.models.chat import EmoteSet
 from twitchio.user import PartialUser
@@ -38,7 +39,7 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPClient
-    from twitchio.models.channel_points import CustomReward
+    from twitchio.models.channel_points import CustomRewardRedemption
     from twitchio.types_.conduits import RevocationSubscription, RevocationTransport
     from twitchio.types_.eventsub import *
 
@@ -1456,12 +1457,13 @@ class ChannelPointsRewardRemove(ChannelPointsReward):
         return f"<ChannelPointsRewardRemove broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
 
-class BaseChannelPointsRedeem(BaseEvent):
-    __slots__ = ("broadcaster", "user", "status", "reward", "redeemed_at")
+class BaseChannelPointsRedemption(BaseEvent):
+    __slots__ = ("id", "broadcaster", "user", "status", "reward", "redeemed_at")
 
     def __init__(
         self, payload: ChannelPointsRewardRedemptionAddEvent | ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient
     ) -> None:
+        self.id: str = payload["id"]
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
@@ -1471,27 +1473,54 @@ class BaseChannelPointsRedeem(BaseEvent):
         self.reward: ChannelPointsReward = ChannelPointsReward(payload["reward"], http=http, broadcaster=self.broadcaster)
 
     def __repr__(self) -> str:
-        return f"<BaseChannelPointsRedeem broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+        return f"<BaseChannelPointsRedemption broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
-class ChannelPointsRedeemAdd(BaseChannelPointsRedeem):
+class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
     subscription_type = "channel.channel_points_custom_reward_redemption.add"
 
     def __init__(self, payload: ChannelPointsRewardRedemptionAddEvent, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
         super().__init__(payload, http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelPointsRedeemAdd broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+        return f"<ChannelPointsRedemptionAdd broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+
+    async def fulfill(self, *, token_for: str) -> CustomRewardRedemption:
+        from twitchio.models.channel_points import CustomRewardRedemption
+
+        data = await self._http.patch_custom_reward_redemption(
+            broadcaster_id=self.reward.broadcaster.id,
+            id=self.id,
+            token_for=token_for,
+            reward_id=self.reward.id,
+            status="FULFILLED",
+        )
+        reward = cast(CustomReward, self.reward)
+        return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
+
+    async def refund(self, *, token_for: str) -> CustomRewardRedemption:
+        from twitchio.models.channel_points import CustomRewardRedemption
+
+        data = await self._http.patch_custom_reward_redemption(
+            broadcaster_id=self.reward.broadcaster.id,
+            id=self.id,
+            token_for=token_for,
+            reward_id=self.reward.id,
+            status="CANCELED",
+        )
+        reward = cast(CustomReward, self.reward)
+        return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
 
-class ChannelPointsRedeemUpdate(BaseChannelPointsRedeem):
+class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
     subscription_type = "channel.channel_points_custom_reward_redemption.update"
 
     def __init__(self, payload: ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelPointsRedeemUpdate broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+        return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
 class ChannelVIPAdd(BaseEvent):
