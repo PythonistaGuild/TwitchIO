@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import colorsys
 import json
 import logging
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
     from .types_.colours import Colours
+    from .types_.options import WaitPredicateT
 
 
 try:
@@ -658,3 +660,47 @@ class _MissingSentinel:
 
 
 MISSING: Any = _MissingSentinel()
+
+
+class EventWaiter:
+    _set: set[Self]
+
+    def __init__(self, *, event: str, predicate: WaitPredicateT | None = None, timeout: float | None = None) -> None:
+        self._event: str = event
+        self._timeout: float | None = timeout
+        self._predicate: WaitPredicateT = predicate or self.predicate
+        self.__future: asyncio.Future[Any] = asyncio.Future()
+
+    async def __call__(self, *args: Any) -> Any:
+        if self.__future.done():
+            self._set.discard(self)
+            return
+
+        try:
+            result = await self._predicate(*args)
+        except Exception as e:
+            self._set.discard(self)
+            self.__future.set_result(e)
+            return
+
+        if not result:
+            return
+
+        self._set.discard(self)
+
+        if len(args) == 0:
+            self.__future.set_result(None)
+        else:
+            self.__future.set_result(*args)
+
+    async def wait(self) -> Any:
+        try:
+            async with asyncio.timeout(self._timeout):
+                args = await self.__future
+                return args
+        except TimeoutError:
+            self._set.discard(self)
+            raise
+
+    async def predicate(self, *args: Any) -> bool:
+        return True

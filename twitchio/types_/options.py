@@ -22,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import NotRequired, TypeAlias, TypedDict
+from collections.abc import Callable, Coroutine
+from typing import Any, NotRequired, TypeAlias, TypedDict
 
 import aiohttp
 
@@ -38,3 +39,6 @@ class ClientOptions(TypedDict, total=False):
     scopes: Scopes | None
     session: aiohttp.ClientSession | None
     adapter: NotRequired[AdapterOT]
+
+
+WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]

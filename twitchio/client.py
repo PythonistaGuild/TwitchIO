@@ -43,6 +43,7 @@ from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload
 from .user import ActiveExtensions, Extension, PartialUser, User
+from .utils import EventWaiter
 from .web import AiohttpAdapter
 from .web.utils import BaseAdapter
 
@@ -62,7 +63,7 @@ if TYPE_CHECKING:
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
     from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
-    from .types_.options import AdapterOT, ClientOptions
+    from .types_.options import AdapterOT, ClientOptions, WaitPredicateT
     from .types_.tokens import TokenMappingData
 
 
@@ -116,6 +117,7 @@ class Client:
             self._adapter.client = self
 
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
+        self._wait_fors: dict[str, set[EventWaiter]] = defaultdict(set)
 
         self._login_called: bool = False
         self._has_closed: bool = False
@@ -183,7 +185,7 @@ class Client:
                 logger.error('Ignoring Exception in listener "%s.event_error":\n', self.__qualname__, exc_info=inner)
 
     def dispatch(self, event: str, payload: Any | None = None) -> None:
-        name: str = "event_" + event
+        name: str = "event_" + event.lower()
 
         listeners: set[Callable[..., Coroutine[Any, Any, None]]] = self._listeners[name]
         extra: Callable[..., Coroutine[Any, Any, None]] | None = getattr(self, name, None)
@@ -191,6 +193,14 @@ class Client:
             listeners.add(extra)
 
         _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
+
+        waits: set[asyncio.Task[None]] = set()
+        for waiter in self._wait_fors[name]:
+            coro = waiter(payload) if payload else waiter()
+            task = asyncio.create_task(coro, name=f'TwitchIO:Client.wait_for: "{name}"')
+
+            task.add_done_callback(waits.discard)
+            waits.add(task)
 
     async def setup_hook(self) -> None:
         """
@@ -313,6 +323,19 @@ class Client:
 
         self._http.cleanup()
         self.__waiter.set()
+
+    async def wait_for(self, event: str, *, timeout: float | None = None, predicate: WaitPredicateT | None = None) -> Any:
+        # TODO: Docs...
+        # TODO: Overloads...
+        name: str = "event_" + event.lower()
+
+        set_ = self._wait_fors[name]
+        waiter: EventWaiter = EventWaiter(event=name, predicate=predicate, timeout=timeout)
+
+        waiter._set = set_
+        set_.add(waiter)
+
+        return await waiter.wait()
 
     async def add_token(self, token: str, refresh: str) -> None:
         """Adds a token/refresh pair to the client to be automatically managed.
