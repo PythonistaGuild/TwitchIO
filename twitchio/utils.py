@@ -680,7 +680,7 @@ class EventWaiter:
             result = await self._predicate(*args)
         except Exception as e:
             self._set.discard(self)
-            self.__future.set_result(e)
+            self.__future.set_exception(e)
             return
 
         if not result:
