@@ -1531,7 +1531,7 @@ class PollChoice:
         self.title: str = data["title"]
         self.channel_points_votes: int | None = data.get("channel_points_votes")
         self.votes: int | None = data.get("votes")
-        
+
     def __repr__(self) -> str:
         return f"<PollChoice id={self.id} title={self.title}>"
 
@@ -1576,7 +1576,7 @@ class BaseChannelPoll(BaseEvent):
 
 class ChannelPollBegin(BaseChannelPoll):
     subscription_type = "channel.poll.begin"
-    
+
     __slots__ = ("ends_at",)
 
     def __init__(self, payload: ChannelPollBeginEvent, *, http: HTTPClient) -> None:
@@ -1591,7 +1591,7 @@ class ChannelPollBegin(BaseChannelPoll):
 
 class ChannelPollProgress(BaseChannelPoll):
     subscription_type = "channel.poll.progress"
-    
+
     __slots__ = ("ends_at",)
 
     def __init__(self, payload: ChannelPollProgressEvent, *, http: HTTPClient) -> None:
@@ -1604,7 +1604,7 @@ class ChannelPollProgress(BaseChannelPoll):
 
 class ChannelPollEnd(BaseChannelPoll):
     subscription_type = "channel.poll.end"
-    
+
     __slots__ = ("status", "ended_at")
 
     def __init__(self, payload: ChannelPollEndEvent, *, http: HTTPClient) -> None:
