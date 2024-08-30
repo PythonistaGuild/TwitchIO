@@ -688,7 +688,7 @@ class EventWaiter:
 
         self._set.discard(self)
 
-        if len(args) == 0:
+        if not args:
             self.__future.set_result(None)
         else:
             self.__future.set_result(*args)
@@ -696,8 +696,7 @@ class EventWaiter:
     async def wait(self) -> Any:
         try:
             async with asyncio.timeout(self._timeout):
-                args = await self.__future
-                return args
+                return await self.__future
         except TimeoutError:
             self._set.discard(self)
             raise
