@@ -1523,6 +1523,99 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
         return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
+class PollChoice:
+    __slots__ = ("id", "title", "channel_points_votes", "votes")
+
+    def __init__(self, data: PollChoiceData) -> None:
+        self.id: str = data["id"]
+        self.title: str = data["title"]
+        self.channel_points_votes: int | None = data.get("channel_points_votes")
+        self.votes: int | None = data.get("votes")
+        
+    def __repr__(self) -> str:
+        return f"<PollChoice id={self.id} title={self.title}>"
+
+
+class PollVoting(NamedTuple):
+    """
+    NamedTuple that represents a channel poll's voting settings.
+
+    Attributes
+    -----------
+    enabled: bool
+        Indicates if Channel Points can be used for voting.
+    amount: int
+        Number of Channel Points required to vote once with Channel Points.
+    """
+
+    enabled: bool
+    amount: int
+
+
+class BaseChannelPoll(BaseEvent):
+    __slots__ = ("broadcaster", "id", "title", "status", "choices", "channel_points_voting", "started_at")
+
+    def __init__(
+        self, payload: ChannelPollBeginEvent | ChannelPollProgressEvent | ChannelPollEndEvent, *, http: HTTPClient
+    ) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.title: str = payload["title"]
+        self.choices: list[PollChoice] = [PollChoice(choice) for choice in payload["choices"]]
+        self.channel_points_voting = PollVoting(
+            enabled=payload["channel_points_voting"]["is_enabled"],
+            amount=payload["channel_points_voting"]["amount_per_vote"],
+        )
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<BaseChannelPoll broadcaster={self.broadcaster} id={self.id} title={self.title}>"
+
+
+class ChannelPollBegin(BaseChannelPoll):
+    subscription_type = "channel.poll.begin"
+    
+    __slots__ = ("ends_at",)
+
+    def __init__(self, payload: ChannelPollBeginEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload=payload, http=http)
+        self.ends_at: datetime.datetime = parse_timestamp(payload["ends_at"])
+
+    def __repr__(self) -> str:
+        return (
+            f"<ChannelPollBegin broadcaster={self.broadcaster} id={self.id} title={self.title} started_at={self.started_at}>"
+        )
+
+
+class ChannelPollProgress(BaseChannelPoll):
+    subscription_type = "channel.poll.progress"
+    
+    __slots__ = ("ends_at",)
+
+    def __init__(self, payload: ChannelPollProgressEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload=payload, http=http)
+        self.ends_at: datetime.datetime = parse_timestamp(payload["ends_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelPollProgress broadcaster={self.broadcaster} id={self.id} title={self.title} started_at={self.started_at}>"
+
+
+class ChannelPollEnd(BaseChannelPoll):
+    subscription_type = "channel.poll.end"
+    
+    __slots__ = ("status", "ended_at")
+
+    def __init__(self, payload: ChannelPollEndEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload=payload, http=http)
+        self.status: Literal["completed", "terminated", "archived"] = payload["status"]
+        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelPollEnd broadcaster={self.broadcaster} id={self.id} title={self.title} started_at={self.started_at} ended_at={self.ended_at}>"
+
+
 class ChannelVIPAdd(BaseEvent):
     subscription_type = "channel.vip.add"
 

@@ -79,6 +79,10 @@ __all__ = (
     "ChannelPointsRewardRedemptionUpdateEvent",
     "ReedemedRewardData",
     "ChannelUpdateEvent",
+    "ChannelPollBeginEvent",
+    "ChannelPollProgressEvent",
+    "ChannelPollEndEvent",
+    "PollChoiceData",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
     "ChannelWarningAcknowledgeEvent",
@@ -889,6 +893,41 @@ class ChannelPointsRewardRedemptionAddEvent(BaseChannelPointsCustomRewardRedeemD
 
 
 class ChannelPointsRewardRedemptionUpdateEvent(BaseChannelPointsCustomRewardRedeemData): ...
+
+
+class PollVotingData(TypedDict):
+    is_enabled: bool
+    amount_per_vote: int
+
+
+class PollChoiceData(TypedDict):
+    id: str
+    title: str
+    bits_votes: int
+    channel_points_votes: int
+    votes: int
+
+
+class BaseChannelPoll(BaseBroadcasterEvent):
+    id: str
+    title: str
+    choices: list[PollChoiceData]
+    bits_voting: PollVotingData
+    channel_points_voting: PollVotingData
+    started_at: str
+
+
+class ChannelPollBeginEvent(BaseChannelPoll):
+    ends_at: str
+
+
+class ChannelPollProgressEvent(BaseChannelPoll):
+    ends_at: str
+
+
+class ChannelPollEndEvent(BaseChannelPoll):
+    status: Literal["completed", "archived", "terminated"]
+    ended_at: str
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...
