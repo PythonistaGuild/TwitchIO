@@ -157,25 +157,25 @@ class PredictionOutcome:
         The number of Channel Points spent by viewers on this outcome.
     top_predictors: int
         A list of viewers who were the top predictors; otherwise, None if none.
-    color: Literal["BLUE", "PINK"]
+    colour: Literal["BLUE", "PINK"]
         The number of votes cast using Channel Points.
     """
 
-    __slots__ = ("id", "title", "color", "channel_points", "users", "top_predictors")
+    __slots__ = ("id", "title", "colour", "channel_points", "users", "top_predictors")
 
     def __init__(self, data: PredictionsResponseOutcomes, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.title: str = data["title"]
         self.users: int = int(data["users"])
         self.channel_points: int = int(data["channel_points"])
-        self.color: str = data["color"]
+        self.colour: str = data["color"]
         self.top_predictors: list[Predictor] | None = (
             [Predictor(d, http=http) for d in data["top_predictors"]] if data["top_predictors"] else None
         )
 
     @property
-    def colour(self) -> str:
-        """The colour of the prediction. Alias to color."""
+    def color(self) -> str:
+        """The color of the prediction. Alias to colour."""
         return self.color
 
     def __repr__(self) -> str:
