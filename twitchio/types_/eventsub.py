@@ -83,6 +83,11 @@ __all__ = (
     "ChannelPollProgressEvent",
     "ChannelPollEndEvent",
     "PollChoiceData",
+    "ChannelPredictionBeginEvent",
+    "ChannelPredictionBeginEvent",
+    "ChannelPredictionLockEvent",
+    "ChannelPredictionProgressEvent",
+    "ChannelPredictionEndEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
     "ChannelWarningAcknowledgeEvent",
@@ -927,6 +932,44 @@ class ChannelPollProgressEvent(BaseChannelPoll):
 
 class ChannelPollEndEvent(BaseChannelPoll):
     status: Literal["completed", "archived", "terminated"]
+    ended_at: str
+
+
+class PredictorData(BaseUserEvent):
+    channel_points_won: int | None
+    channel_points_used: int
+
+
+class PredictionOutcomeData(TypedDict):
+    id: str
+    title: str
+    color: str
+    users: int
+    channel_points: NotRequired[int]
+    top_predictors: NotRequired[list[PredictorData]]
+
+
+class BaseChannelPredictionData(BaseBroadcasterEvent):
+    id: str
+    title: str
+    outcomes: list[PredictorData]
+    started_at: str
+
+
+class ChannelPredictionBeginEvent(BaseChannelPredictionData):
+    locks_at: str
+
+
+class ChannelPredictionProgressEvent(BaseChannelPredictionData):
+    locks_at: str
+
+
+class ChannelPredictionLockEvent(BaseChannelPredictionData):
+    locked_at: str
+
+
+class ChannelPredictionEndEvent(BaseChannelPredictionData):
+    status: Literal["resolved", "canceled"]
     ended_at: str
 
 
