@@ -363,13 +363,19 @@ class BaseChatMessage(BaseEvent):
     )
 
     def __init__(
-        self, payload: ChannelChatMessageEvent | ChatUserMessageHoldEvent | ChatUserMessageUpdateEvent, *, http: HTTPClient
+        self,
+        payload: ChannelChatMessageEvent
+        | ChatUserMessageHoldEvent
+        | ChatUserMessageUpdateEvent
+        | ChannelSuspiciousUserMessageEvent,
+        *,
+        http: HTTPClient,
     ) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
         self.text: str = payload["message"]["text"]
-        self.id: str = payload["message_id"]
+        self.id = payload.get("message_id") or payload["message"].get("message_id")
         self.fragments: list[ChatMessageFragment] = [
             ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
         ]
@@ -1614,6 +1620,43 @@ class ChannelPollEnd(BaseChannelPoll):
 
     def __repr__(self) -> str:
         return f"<ChannelPollEnd broadcaster={self.broadcaster} id={self.id} title={self.title} started_at={self.started_at} ended_at={self.ended_at}>"
+
+
+class SuspiciousUserUpdate(BaseEvent):
+    subscription_type = "channel.suspicious_user.update"
+
+    __slots__ = ("broadcaster", "user", "moderator", "low_trust_status")
+
+    def __init__(self, payload: ChannelSuspiciousUserUpdateEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.low_trust_status: Literal["none", "active_monitoring", "restricted"] = payload["low_trust_status"]
+
+    def __repr__(self) -> str:
+        return f"<SuspiciousUserUpdate broadcaster={self.broadcaster} user={self.user} moderator={self.moderator} low_trust_status={self.low_trust_status}>"
+
+
+class SuspiciousUserMessage(BaseEvent):
+    subscription_type = "channel.suspicious_user.message"
+
+    __slots__ = ("broadcaster", "user", "low_trust_status", "banned_channels", "types", "evaluation")
+
+    def __init__(self, payload: ChannelSuspiciousUserMessageEvent, *, http: HTTPClient) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.low_trust_status: Literal["none", "active_monitoring", "restricted"] = payload["low_trust_status"]
+        self.banned_channels: list[str] = payload["shared_ban_channel_ids"]
+        self.types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]] = payload["types"]
+        self.evaluation: Literal["unknown", "possible", "likely"] = payload["ban_evasion_evaluation"]
+        self.message: BaseChatMessage = BaseChatMessage(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<SuspiciousUserMessage broadcaster={self.broadcaster} user={self.user} low_trust_status={self.low_trust_status}>"
 
 
 class ChannelVIPAdd(BaseEvent):

@@ -90,6 +90,7 @@ __all__ = (
     "ChannelPredictionEndEvent",
     "ChannelSuspiciousUserUpdateEvent",
     "ChannelSuspiciousUserMessageEvent",
+    "SuspiciousMessageData",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
     "ChannelWarningAcknowledgeEvent",
