@@ -88,6 +88,8 @@ __all__ = (
     "ChannelPredictionLockEvent",
     "ChannelPredictionProgressEvent",
     "ChannelPredictionEndEvent",
+    "ChannelSuspiciousUserUpdateEvent",
+    "ChannelSuspiciousUserMessageEvent",
     "ChannelVIPAddEvent",
     "ChannelVIPRemoveEvent",
     "ChannelWarningAcknowledgeEvent",
@@ -971,6 +973,22 @@ class ChannelPredictionLockEvent(BaseChannelPredictionData):
 class ChannelPredictionEndEvent(BaseChannelPredictionData):
     status: Literal["resolved", "canceled"]
     ended_at: str
+
+
+class ChannelSuspiciousUserUpdateEvent(BroadcasterModUserEvent):
+    low_trust_status: Literal["none", "active_monitoring", "restricted"]
+
+
+class SuspiciousMessageData(ChatMessage):
+    message_id: str
+
+
+class ChannelSuspiciousUserMessageEvent(BroadcasterUserEvent):
+    low_trust_status: Literal["none", "active_monitoring", "restricted"]
+    shared_ban_channel_ids: list[str]
+    types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
+    ban_evasion_evaluation: Literal["unknown", "possible", "likely"]
+    message: SuspiciousMessageData
 
 
 class ChannelVIPAddEvent(BroadcasterUserEvent): ...

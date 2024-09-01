@@ -76,6 +76,8 @@ __all__ = (
     "ChannelPollBeginSubscription",
     "ChannelPollProgressSubscription",
     "ChannelPollEndSubscription",
+    "SuspiciousUserUpdateSubscription",
+    "SuspiciousUserMessageSubscription",
     "GoalBeginSubscription",
     "GoalProgressSubscription",
     "GoalEndSubscription",
@@ -775,6 +777,38 @@ class ChannelPredictionEndSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class SuspiciousUserUpdateSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.suspicious_user.update"]] = "channel.suspicious_user.update"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
+
+class SuspiciousUserMessageSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.suspicious_user.message"]] = "channel.suspicious_user.message"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
 
 class ChannelVIPAddSubscription(SubscriptionPayload):
