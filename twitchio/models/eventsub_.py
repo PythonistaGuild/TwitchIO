@@ -174,23 +174,55 @@ class AutomodTermsUpdate(BaseEvent):
 
 
 class ChannelUpdate(BaseEvent):
+    """
+    Represents a channel update event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        An ID that identifies the emote set that the emote belongs to.
+    title: str
+        The channel's stream title.
+    language: str
+        The channel's broadcast language.
+    category_id: str
+        The channel's category ID.
+    category_name: str
+        The category name.
+    content_classification_labels: list[str]
+        List of content classification label IDs currently applied on the Channel.
+    """
+
     subscription_type = "channel.update"
 
     __slots__ = ("broadcaster", "title", "category_id", "category_name", "content_classification_labels")
 
     def __init__(self, payload: ChannelUpdateEvent, *, http: HTTPClient) -> None:
         self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
-        self.title = payload["title"]
-        self.language = payload["language"]
-        self.category_id = payload["category_id"]
-        self.category_name = payload["category_name"]
-        self.content_classification_labels = payload["content_classification_labels"]
+        self.title: str = payload["title"]
+        self.language: str = payload["language"]
+        self.category_id: str = payload["category_id"]
+        self.category_name: str = payload["category_name"]
+        self.content_classification_labels: list[str] = payload["content_classification_labels"]
 
     def __repr__(self) -> str:
         return f"<ChannelUpdate title={self.title} language={self.language} category_id={self.category_id} category_name={self.category_name}>"
 
 
 class ChannelFollow(BaseEvent):
+    """
+    Represents a channel follow event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The requested broadcaster to listen to follows for.
+    user: PartialUser
+        The user that is now following the specified channel.
+    followed_at: datetime.datetime
+        Datetime when the follow occurred.
+    """
+
     subscription_type = "channel.follow"
 
     __slots__ = ("broadcaster", "user", "followed_at")
@@ -207,6 +239,23 @@ class ChannelFollow(BaseEvent):
 
 
 class ChannelAdBreakBegin(BaseEvent):
+    """
+    Represents a channel ad break event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster the ad was run on.
+    requester: PartialUser
+        The user that requested the ad.
+    duration: int
+        Length in seconds of the mid-roll ad break requested.
+    automatic: bool
+        Indicates if the ad was automatically scheduled via Ads Manager.
+    started_at: datetime.datetime
+        Datetime when the follow occurred.
+    """
+
     subscription_type = "channel.ad_break.begin"
 
     __slots__ = ("broadcaster", "requester", "duration", "automatic", "started_at")
@@ -227,6 +276,15 @@ class ChannelAdBreakBegin(BaseEvent):
 
 
 class ChannelChatClear(BaseEvent):
+    """
+    Represents a channel chat clear event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster's chat that was cleared.
+    """
+
     subscription_type = "channel.chat.clear"
 
     __slots__ = ("broadcaster",)
@@ -241,6 +299,17 @@ class ChannelChatClear(BaseEvent):
 
 
 class ChannelChatClearUserMessages(BaseEvent):
+    """
+    Represents a user's channel chat clear event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster's chat that had the user's messages cleared.
+    user: PartialUser
+        The user that was banned or put in a timeout and had all their messaged deleted.
+    """
+
     subscription_type = "channel.chat.clear_user_messages"
 
     __slots__ = ("broadcaster", "user")
@@ -256,34 +325,52 @@ class ChannelChatClearUserMessages(BaseEvent):
 
 
 class ChatMessageReply:
+    """
+    Represents a chat message reply.
+
+    Attributes
+    ----------
+    parent_message_id: str
+        An ID that uniquely identifies the parent message that this message is replying to.
+    parent_message_body: str
+        The message body of the parent message.
+    parent_user: PartialUser
+        The sender of the parent message.
+    thread_message_id: str
+        An ID that identifies the parent message of the reply thread.
+    thread_user: PartialUser
+        The sender of the thread's parent message.
+    """
+
     __slots__ = (
         "parent_message_id",
         "parent_message_body",
-        "parent_user_id",
-        "parent_user_name",
-        "parent_user_login",
+        "parent_user",
         "thread_message_id",
-        "thread_user_id",
-        "thread_user_name",
-        "thread_user_login",
+        "thread_user",
     )
 
-    def __init__(self, data: ChatMessageReplyData) -> None:
+    def __init__(self, data: ChatMessageReplyData, *, http: HTTPClient) -> None:
         self.parent_message_id: str = data["parent_message_id"]
         self.parent_message_body: str = data["parent_message_body"]
-        self.parent_user_id: str = data["parent_user_id"]
-        self.parent_user_name: str = data["parent_user_name"]
-        self.parent_user_login: str = data["parent_user_login"]
+        self.parent_user: PartialUser = PartialUser(data["parent_user_id"], data["parent_user_login"], http=http)
         self.thread_message_id: str = data["thread_message_id"]
-        self.thread_user_id: str = data["thread_user_id"]
-        self.thread_user_name: str = data["thread_user_name"]
-        self.thread_user_login: str = data["thread_user_login"]
+        self.thread_user: PartialUser = PartialUser(data["thread_user_id"], data["thread_user_login"], http=http)
 
     def __repr__(self) -> str:
-        return f"<ChatMessageReply parent_message_id={self.parent_message_id} parent_user_id={self.parent_user_id}>"
+        return f"<ChatMessageReply parent_message_id={self.parent_message_id} parent_user={self.parent_user}>"
 
 
 class ChatMessageCheer:
+    """
+    Represents a chat message cheer.
+
+    Attributes
+    ----------
+    bits: int
+        The amount of Bits the user cheered.
+    """
+
     __slots__ = ("bits",)
 
     def __init__(self, data: ChatMessageCheerData) -> None:
@@ -294,6 +381,21 @@ class ChatMessageCheer:
 
 
 class ChatMessageBadge:
+    """
+    Represents a chat message badge.
+
+    Attributes
+    ----------
+    set_id: str
+        An ID that identifies this set of chat badges. For example, Bits or Subscriber.
+    id: str
+        An ID that identifies this version of the badge. The ID can be any value.
+        For example, for Bits, the ID is the Bits tier level, but for World of Warcraft, it could be Alliance or Horde.
+    info: str
+        Contains metadata related to the chat badges in the badges tag.
+        Currently, this tag contains metadata only for subscriber badges, to indicate the number of months the user has been a subscriber.
+    """
+
     __slots__ = ("set_id", "id", "info")
 
     def __init__(self, data: ChatMessageBadgeData) -> None:
@@ -306,24 +408,73 @@ class ChatMessageBadge:
 
 
 class ChatMessageEmote:
-    __slots__ = ("set_id", "id", "owner_id", "format", "_http")
+    """
+    Represents a chat message emote.
+
+    Attributes
+    ----------
+    set_id: str
+        An ID that identifies the emote set that the emote belongs to.
+    id: str
+        An ID that uniquely identifies this emote.
+    owner: PartialUser
+        The broadcaster who owns the emote.
+    format: list[Literal["static", "animated"]]
+        The formats that the emote is available in. For example, if the emote is available only as a static PNG, the array contains only static.
+        But if the emote is available as a static PNG and an animated GIF, the array contains static and animated. The possible formats are:
+
+        - animated - An animated GIF is available for this emote.
+        - static - A static PNG file is available for this emote.
+
+    """
+
+    __slots__ = ("set_id", "id", "owner", "format", "_http")
 
     def __init__(self, data: ChatMessageEmoteData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.set_id: str = data["emote_set_id"]
         self.id: str = data["id"]
-        self.owner_id: str | None = data.get("owner_id")
+        owner_id = data.get("owner_id")
+        self.owner: PartialUser | None = PartialUser(owner_id, None, http=http) if owner_id is not None else None
         self.format: list[Literal["static", "animated"]] = data.get("format", [])
 
     def __repr__(self) -> str:
-        return f"<ChatMessageEmote set_id={self.set_id} id={self.id} owner_id={self.owner_id} format={self.format}>"
+        return f"<ChatMessageEmote set_id={self.set_id} id={self.id} owner={self.owner} format={self.format}>"
 
     async def fetch_emote_set(self, *, token_for: str | None = None) -> EmoteSet:
+        """
+        Fetches emotes for this emote set.
+
+        Parameters
+        ----------
+        token_for : str | None
+            An optional user token to use instead of the default app token.
+
+        Returns
+        -------
+        EmoteSet
+            A list of EmoteSet objects.
+        """
         data = await self._http.get_emote_sets(emote_set_ids=[self.set_id], token_for=token_for)
         return EmoteSet(data["data"][0], template=data["template"], http=self._http)
 
 
 class ChatMessageCheermote:
+    """
+    Represents a chat message cheermote.
+
+    Attributes
+    ----------
+    prefix: str
+        The name portion of the Cheermote string that you use in chat to cheer Bits. The full Cheermote string is the concatenation of {prefix} + {number of Bits}.
+        For example, if the prefix is “Cheer” and you want to cheer 100 Bits, the full Cheermote string is Cheer100.
+        When the Cheermote string is entered in chat, Twitch converts it to the image associated with the Bits tier that was cheered.
+    bits: int
+        The amount of bits cheered.
+    tier: int
+        The tier level of the cheermote.
+    """
+
     __slots__ = ("prefix", "bits", "tier")
 
     def __init__(self, data: ChatMessageCheermoteData) -> None:
@@ -336,6 +487,29 @@ class ChatMessageCheermote:
 
 
 class ChatMessageFragment:
+    """
+    Represents a chat message's fragments.
+
+    Attributes
+    ----------
+    text: str
+        The chat message in plain text.
+    type: Literal["text", "cheermote", "emote", "mention"]
+        The type of message fragment. Possible values:
+
+        - text
+        - cheermote
+        - emote
+         -mention
+
+    mention: PartialUser | None
+        The user that is mentioned, if one is mentioned.
+    cheermote: ChatMessageCheermote | None
+        Cheermote data if a cheermote is sent.
+    emote: ChatMessageEmote | None
+        Emote data if a cheermote is sent.
+    """
+
     __slots__ = ("text", "type", "cheermote", "emote", "mention")
 
     def __init__(self, data: ChatMessageFragmentsData, *, http: HTTPClient) -> None:
@@ -380,26 +554,83 @@ class BaseChatMessage(BaseEvent):
             ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
         ]
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} broadcaster={self.broadcaster} id={self.id} text={self.text}>"
+
     @property
     def emotes(self) -> list[ChatMessageEmote]:
+        """
+        A property that lists all of the emotes of a message.
+        If no emotes are in the message this will return an empty list.
+
+        Returns
+        -------
+        list[ChatMessageEmote]
+            A list of ChatMessageEmote objects.
+        """
         return [f.emote for f in self.fragments if f.emote is not None]
 
     @property
     def cheermotes(self) -> list[ChatMessageCheermote]:
-        return [f.cheermote for f in self.fragments if f.cheermote is not None]
+        """
+        A property that lists all of the cheermotes of a message.
+        If no cheermotes are in the message this will return an empty list.
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} broadcaster={self.broadcaster} id={self.id} text={self.text}>"
+        Returns
+        -------
+        list[ChatMessageCheermote]
+            A list of ChatMessageCheermote objects.
+        """
+        return [f.cheermote for f in self.fragments if f.cheermote is not None]
 
 
 class ChatMessage(BaseChatMessage):
+    """
+    Represents a chat message.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose room recieved the message.
+    chatter: PartialUser
+        The user / chatter who sent the message.
+    id: str
+        A UUID that identifies the message.
+    text: str
+        The chat message in plain text.
+    reply: ChatMessageReply | None
+        Data regarding parent message and thread, if this message is a reply.
+    type: Literal["text", "channel_points_highlighted", "channel_points_sub_only", "user_intro", "power_ups_message_effect", "power_ups_gigantified_emote"]
+        The type of message. Possible values:
+
+        - text
+        - channel_points_highlighted
+        - channel_points_sub_only
+        - user_intro
+        - power_ups_message_effect
+        - power_ups_gigantified_emote
+
+    fragments: ChatMessageFragment
+        The chat message fragments.
+    colour: Colour | None
+        The colour of the user's name in the chat room.
+    channel_points_id: str | None
+        The ID of a channel points custom reward that was redeemed.
+    channel_points_animation_id: str | None
+        An ID for the type of animation selected as part of an “animate my message” redemption.
+    cheer: ChatMessageCheer | None
+        Data for a cheer, if received.
+    badges: list[ChatMessageBadge]
+        List of ChatMessageBadge for chat badges.
+    """
+
     subscription_type = "channel.chat.message"
 
     __slots__ = (
         "chatter",
         "colour",
         "badges",
-        "message_type",
+        "type",
         "cheer",
         "reply",
         "channel_points_id",
@@ -412,8 +643,10 @@ class ChatMessage(BaseChatMessage):
         self.colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self.channel_points_id: str | None = payload["channel_points_custom_reward_id"]
         self.channel_points_animation_id: str | None = payload["channel_points_animation_id"]
-        self.reply: ChatMessageReply | None = ChatMessageReply(payload["reply"]) if payload["reply"] is not None else None
-        self.message_type: Literal[
+        self.reply: ChatMessageReply | None = (
+            ChatMessageReply(payload["reply"], http=http) if payload["reply"] is not None else None
+        )
+        self.type: Literal[
             "text",
             "channel_points_highlighted",
             "channel_points_sub_only",
@@ -425,16 +658,18 @@ class ChatMessage(BaseChatMessage):
         self.cheer: ChatMessageCheer | None = ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
 
+    def __repr__(self) -> str:
+        return f"<ChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
+
     @property
     def mentions(self) -> list[PartialUser]:
+        """List of PartialUsers of chatters who were mentioned in the message."""
         return [f.mention for f in self.fragments if f.mention is not None]
 
     @property
     def color(self) -> Colour | None:
+        """An alias for colour"""
         return self.colour
-
-    def __repr__(self) -> str:
-        return f"<ChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
 
 
 class ChatSub:
