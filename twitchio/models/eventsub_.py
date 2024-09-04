@@ -2050,7 +2050,404 @@ class CharityCampaignStop(BaseEvent):
         return f"<CharityCampaignStop broadcaster={self.broadcaster} id={self.id} name={self.name} stopped_at={self.stopped_at}>"
 
 
+class BaseGoal(BaseEvent):
+    __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
+
+    def __init__(self, payload: GoalBeginEvent | GoalProgressEvent | GoalEndEvent, *, http: HTTPClient) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.type: Literal[
+            "follow",
+            "subscription",
+            "subscription_count",
+            "new_subscription",
+            "new_subscription_count",
+            "new_bit",
+            "new_cheerer",
+        ] = payload["type"]
+        self.description: str = payload["description"]
+        self.current_amount: int = int(payload["current_amount"])
+        self.target_amount: int = int(payload["target_amount"])
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<BaseGoal id={self.id} broadcaster={self.broadcaster} type={self.type} target_amount={self.target_amount} started_at={self.started_at}>"
+
+
+class GoalBegin(BaseGoal):
+    """
+    Represents a goal begin event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster who started a goal.
+    id: str
+        An ID that identifies this event.
+    type: Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
+        The type of goal.
+
+        | type                  | Description                                                                                                                                                              |
+        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | follow                | The goal is to increase followers.                                                                                                                                       |
+        | subscription          | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                     |
+        | subscription_count    | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                      |
+        | new_subscription      | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started). |
+        | new_subscription_count| The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                 |
+        | new_bit               | The goal is to increase the amount of Bits used on the channel.                                                                                                          |
+        | new_cheerer           | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                           |
+
+    description: str
+        A description of the goal, if specified. The description may contain a maximum of 40 characters.
+    current_amount: int
+        The goal's current value. The goal's type determines how this value is increased or decreased.
+
+        | type                  | Description                                                                                                                                |
+        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+        | follow                | This number increases with new followers and decreases when users unfollow the broadcaster.                                                |
+        | subscription          | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
+        | subscription_count    | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                  |
+        | new_subscription      | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1. |
+        | new_subscription_count| This field is increased by 1 for each new subscription.                                                                                     |
+
+    target_amount: int
+        The goal's target value. For example, if the broadcaster has 200 followers before creating the goal, and their goal is to double that number, this field is set to 400.
+    started_at: datetime.datetime
+        The datetime when the broadcaster started the goal.
+    """
+
+    subscription_type = "channel.goal.begin"
+
+    def __init__(self, payload: GoalBeginEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<GoalBegin id={self.id} broadcaster={self.broadcaster} type={self.type} target_amount={self.target_amount} started_at={self.started_at}>"
+
+
+class GoalProgress(BaseGoal):
+    """
+    Represents a goal progress event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose goal progressed.
+    id: str
+        An ID that identifies this event.
+    type: Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
+        The type of goal.
+
+        | type                  | Description                                                                                                                                                              |
+        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | follow                | The goal is to increase followers.                                                                                                                                       |
+        | subscription          | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                     |
+        | subscription_count    | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                      |
+        | new_subscription      | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started). |
+        | new_subscription_count| The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                 |
+        | new_bit               | The goal is to increase the amount of Bits used on the channel.                                                                                                          |
+        | new_cheerer           | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                           |
+
+    description: str
+        A description of the goal, if specified. The description may contain a maximum of 40 characters.
+    current_amount: int
+        The goal's current value. The goal's type determines how this value is increased or decreased.
+
+        | type                  | Description                                                                                                                                |
+        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+        | follow                | This number increases with new followers and decreases when users unfollow the broadcaster.                                                |
+        | subscription          | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
+        | subscription_count    | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                  |
+        | new_subscription      | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1. |
+        | new_subscription_count| This field is increased by 1 for each new subscription.                                                                                     |
+
+    target_amount: int
+        The goal's target value. For example, if the broadcaster has 200 followers before creating the goal, and their goal is to double that number, this field is set to 400.
+    started_at: datetime.datetime
+        The datetime when the broadcaster started the goal.
+    """
+
+    subscription_type = "channel.goal.progress"
+
+    def __init__(self, payload: GoalProgressEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<GoalProgress id={self.id} broadcaster={self.broadcaster} type={self.type} current_amount={self.current_amount} target_amount={self.target_amount} started_at={self.started_at}>"
+
+
+class GoalEnd(BaseGoal):
+    """
+    Represents a goal end event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose goal ended.
+    id: str
+        An ID that identifies this event.
+    type: Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
+        The type of goal.
+
+        | type                  | Description                                                                                                                                                              |
+        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | follow                | The goal is to increase followers.                                                                                                                                       |
+        | subscription          | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                     |
+        | subscription_count    | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                      |
+        | new_subscription      | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started). |
+        | new_subscription_count| The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                 |
+        | new_bit               | The goal is to increase the amount of Bits used on the channel.                                                                                                          |
+        | new_cheerer           | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                           |
+
+    description: str
+        A description of the goal, if specified. The description may contain a maximum of 40 characters.
+    current_amount: int
+        The goal's current value. The goal's type determines how this value is increased or decreased.
+
+        | type                  | Description                                                                                                                                |
+        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+        | follow                | This number increases with new followers and decreases when users unfollow the broadcaster.                                                |
+        | subscription          | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
+        | subscription_count    | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                  |
+        | new_subscription      | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1. |
+        | new_subscription_count| This field is increased by 1 for each new subscription.                                                                                     |
+
+    target_amount: int
+        The goal's target value. For example, if the broadcaster has 200 followers before creating the goal, and their goal is to double that number, this field is set to 400.
+    started_at: datetime.datetime
+        The datetime when the broadcaster started the goal.
+    ended_at: datetime.datetime
+        The datetime when the broadcaster ended the goal.
+    achieved: bool
+        Whether the broadcaster achieved their goal. Is True if the goal was achieved; otherwise, False.
+    """
+
+    subscription_type = "channel.goal.end"
+
+    __slots__ = ("ended_at", "achieved")
+
+    def __init__(self, payload: GoalEndEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
+        self.achieved: bool = bool(payload["is_achieved"])
+
+    def __repr__(self) -> str:
+        return f"<GoalEnd id={self.id} broadcaster={self.broadcaster} type={self.type} started_at={self.started_at} ended_at={self.ended_at} achieved={self.achieved}>"
+
+
+class HypeTrainContribution:
+    """
+    Represents a hype train contribution.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user that made the contribution.
+    type: Literal["bits", "subscription", "other"]
+        The contribution method used. Possible values are:
+
+        | type          | Description                                                       |
+        |---------------|-------------------------------------------------------------------|
+        | bits          | Cheering with Bits.                                               |
+        | subscription  | Subscription activity like subscribing or gifting subscriptions.  |
+        | other         | Covers other contribution methods not listed.                     |
+
+    total: int
+        The total amount contributed. If type is bits, total represents the amount of Bits used.
+        If type is subscription, total is 500, 1000, or 2500 to represent tier 1, 2, or 3 subscriptions, respectively.
+    """
+
+    __slots__ = ("user", "type", "total")
+
+    def __init__(self, data: HypeTrainContributionData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.type: Literal["bits", "subscription", "other"] = data["type"]
+        self.total: int = int(data["total"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainContribution user={self.user} type={self.type} total={self.total}>"
+
+
+class BaseHypeTrain(BaseEvent):
+    __slots__ = (
+        "broadcaster",
+        "id",
+        "level",
+        "total",
+        "top_contributions",
+        "started_at",
+    )
+
+    def __init__(
+        self, payload: HypeTrainBeginEvent | HypeTrainProgressEvent | HypeTrainEndEvent, *, http: HTTPClient
+    ) -> None:
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.id: str = payload["id"]
+        self.level: int = int(payload["level"])
+        self.total: int = int(payload["total"])
+        self.top_contributions: list[HypeTrainContribution] = [
+            HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
+        ]
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<BaseHypeTrain id={self.id} broadcaster={self.broadcaster} goal={self.goal} started_at={self.started_at}>"
+
+
+class HypeTrainBegin(BaseHypeTrain):
+    """
+    Represents a hype train begin event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster who has a hype train begin.
+    id: str
+        The hype train ID.
+    level: int
+        The starting level of the hype train.
+    total: int
+        Total points contributed to the hype train.
+    progress: int
+        The number of points contributed to the hype train at the current level.
+    goal: int
+        The number of points required to reach the next level.
+    top_contributions: list[HypeTrainContribution]
+        The contributors with the most points contributed.
+    last_contribution: HypeTrainContribution
+        The most recent contribution.
+    started_at: datetime.datetime
+        The datetime of when the hype train started.
+    expires_at: datetime.datetime
+        The datetime when the hype train expires. The expiration is extended when the hype train reaches a new level.
+    """
+
+    subscription_type = "channel.hype_train.begin"
+
+    __slots__ = (
+        "progress",
+        "goal",
+        "last_contribution",
+        "expires_at",
+    )
+
+    def __init__(self, payload: HypeTrainBeginEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.progress: int = int(payload["progress"])
+        self.goal: int = int(payload["goal"])
+        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
+        self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainBegin id={self.id} broadcaster={self.broadcaster} goal={self.goal} started_at={self.started_at}>"
+
+
+class HypeTrainProgress(BaseHypeTrain):
+    """
+    Represents a hype train progress event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose hype train progressed.
+    id: str
+        The hype train ID.
+    level: int
+        The current level of the hype train.
+    total: int
+        Total points contributed to the hype train.
+    progress: int
+        The number of points contributed to the hype train at the current level.
+    goal: int
+        The number of points required to reach the next level.
+    top_contributions: list[HypeTrainContribution]
+        The contributors with the most points contributed.
+    last_contribution: HypeTrainContribution
+        The most recent contribution.
+    started_at: datetime.datetime
+        The datetime of when the hype train started.
+    expires_at: datetime.datetime
+        The datetime when the hype train expires. The expiration is extended when the hype train reaches a new level.
+    """
+
+    subscription_type = "channel.hype_train.progress"
+
+    __slots__ = (
+        "progress",
+        "goal",
+        "last_contribution",
+        "expires_at",
+    )
+
+    def __init__(self, payload: HypeTrainProgressEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.progress: int = int(payload["progress"])
+        self.goal: int = int(payload["goal"])
+        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
+        self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainProgress id={self.id} broadcaster={self.broadcaster} goal={self.goal} progress={self.progress}>"
+
+
+class HypeTrainEnd(BaseHypeTrain):
+    """
+    Represents a hype train end event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose hype train has ended.
+    id: str
+        The hype train ID.
+    level: int
+        The final level of the hype train.
+    total: int
+        Total points contributed to the hype train.
+    top_contributions: list[HypeTrainContribution]
+        The contributors with the most points contributed.
+    started_at: datetime.datetime
+        The datetime of when the hype train started.
+    ended_at: datetime.datetime
+        The datetime of when the hype train ended.
+    cooldown_until: datetime.datetime
+        The datetime when the hype train cooldown ends so that the next hype train can start.
+    """
+
+    subscription_type = "channel.hype_train.end"
+
+    __slots__ = (
+        "cooldown_until",
+        "ended_at",
+    )
+
+    def __init__(self, payload: HypeTrainEndEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
+        self.cooldown_until: datetime.datetime = parse_timestamp(payload["cooldown_ends_at"])
+
+    def __repr__(self) -> str:
+        return f"<HypeTrainEnd id={self.id} broadcaster={self.broadcaster} total={self.total} ended_at={self.ended_at}>"
+
+
 class ShieldModeBegin(BaseEvent):
+    """
+    Represents a shield mode begin event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose shield mode status was updated.
+    moderator: PartialUser
+        The moderator that updated the shield mode status. This will be the same as the `broadcaster` if the broadcaster updated the status.
+    started_at: datetime.datetime
+        The UTC datetime of when the moderator activated shield mode.
+    """
+
     subscription_type = "channel.shield_mode.begin"
 
     __slots__ = (
@@ -2070,220 +2467,20 @@ class ShieldModeBegin(BaseEvent):
         return f"<ShieldModeBegin broadcaster={self.broadcaster} moderator={self.moderator} started_at={self.started_at}>"
 
 
-class HypeTrainContribution:
-    __slots__ = ("user", "type", "total")
-
-    def __init__(self, data: HypeTrainContributionData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
-        self.type: Literal["bits", "subscription", "other"] = data["type"]
-        self.total: int = int(data["total"])
-
-    def __repr__(self) -> str:
-        return f"<HypeTrainContribution user={self.user} type={self.type} total={self.total}>"
-
-
-class GoalBegin(BaseEvent):
-    subscription_type = "channel.goal.begin"
-
-    __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
-
-    def __init__(self, payload: GoalBeginEvent, *, http: HTTPClient) -> None:
-        self.id: str = payload["id"]
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.type: Literal[
-            "follow",
-            "subscription",
-            "subscription_count",
-            "new_subscription",
-            "new_subscription_count",
-            "new_bit",
-            "new_cheerer",
-        ] = payload["type"]
-        self.description: str = payload["description"]
-        self.current_amount: int = int(payload["current_amount"])
-        self.target_amount: int = int(payload["target_amount"])
-        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-
-    def __repr__(self) -> str:
-        return f"<GoalBegin id={self.id} broadcaster={self.broadcaster} type={self.type} target_amount={self.target_amount} started_at={self.started_at}>"
-
-
-class GoalProgress(BaseEvent):
-    subscription_type = "channel.goal.progress"
-
-    __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
-
-    def __init__(self, payload: GoalProgressEvent, *, http: HTTPClient) -> None:
-        self.id: str = payload["id"]
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.type: Literal[
-            "follow",
-            "subscription",
-            "subscription_count",
-            "new_subscription",
-            "new_subscription_count",
-            "new_bit",
-            "new_cheerer",
-        ] = payload["type"]
-        self.description: str = payload["description"]
-        self.current_amount: int = int(payload["current_amount"])
-        self.target_amount: int = int(payload["target_amount"])
-        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-
-    def __repr__(self) -> str:
-        return f"<GoalProgress id={self.id} broadcaster={self.broadcaster} type={self.type} current_amount={self.current_amount} target_amount={self.target_amount} started_at={self.started_at}>"
-
-
-class GoalEnd(BaseEvent):
-    subscription_type = "channel.goal.end"
-
-    __slots__ = (
-        "id",
-        "broadcaster",
-        "type",
-        "description",
-        "current_amount",
-        "target_amount",
-        "started_at",
-        "ended_at",
-        "achieved",
-    )
-
-    def __init__(self, payload: GoalEndEvent, *, http: HTTPClient) -> None:
-        self.id: str = payload["id"]
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.type: Literal[
-            "follow",
-            "subscription",
-            "subscription_count",
-            "new_subscription",
-            "new_subscription_count",
-            "new_bit",
-            "new_cheerer",
-        ] = payload["type"]
-        self.description: str = payload["description"]
-        self.current_amount: int = int(payload["current_amount"])
-        self.target_amount: int = int(payload["target_amount"])
-        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
-        self.achieved: bool = bool(payload["is_achieved"])
-
-    def __repr__(self) -> str:
-        return f"<GoalEnd id={self.id} broadcaster={self.broadcaster} type={self.type} started_at={self.started_at} ended_at={self.ended_at} achieved={self.achieved}>"
-
-
-class HypeTrainBegin(BaseEvent):
-    subscription_type = "channel.hype_train.begin"
-
-    __slots__ = (
-        "broadcaster",
-        "id",
-        "level",
-        "total",
-        "progress",
-        "goal",
-        "top_contributions",
-        "last_contribution",
-        "started_at",
-        "expires_at",
-    )
-
-    def __init__(self, payload: HypeTrainBeginEvent, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.id: str = payload["id"]
-        self.level: int = int(payload["level"])
-        self.total: int = int(payload["total"])
-        self.progress: int = int(payload["progress"])
-        self.goal: int = int(payload["goal"])
-        self.top_contributions: list[HypeTrainContribution] = [
-            HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
-        ]
-        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
-        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-        self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
-
-    def __repr__(self) -> str:
-        return f"<HypeTrainBegin id={self.id} broadcaster={self.broadcaster} goal={self.goal} started_at={self.started_at}>"
-
-
-class HypeTrainProgress(BaseEvent):
-    subscription_type = "channel.hype_train.progress"
-
-    __slots__ = (
-        "broadcaster",
-        "id",
-        "level",
-        "total",
-        "progress",
-        "goal",
-        "top_contributions",
-        "last_contribution",
-        "started_at",
-        "expires_at",
-    )
-
-    def __init__(self, payload: HypeTrainProgressEvent, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.id: str = payload["id"]
-        self.level: int = int(payload["level"])
-        self.total: int = int(payload["total"])
-        self.progress: int = int(payload["progress"])
-        self.goal: int = int(payload["goal"])
-        self.top_contributions: list[HypeTrainContribution] = [
-            HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
-        ]
-        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
-        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-        self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
-
-    def __repr__(self) -> str:
-        return f"<HypeTrainProgress id={self.id} broadcaster={self.broadcaster} goal={self.goal} progress={self.progress}>"
-
-
-class HypeTrainEnd(BaseEvent):
-    subscription_type = "channel.hype_train.end"
-
-    __slots__ = (
-        "broadcaster",
-        "id",
-        "level",
-        "total",
-        "top_contributions",
-        "cooldown_ends_at",
-        "started_at",
-        "ended_at",
-    )
-
-    def __init__(self, payload: HypeTrainEndEvent, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.id: str = payload["id"]
-        self.level: int = int(payload["level"])
-        self.total: int = int(payload["total"])
-
-        self.top_contributions: list[HypeTrainContribution] = [
-            HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
-        ]
-        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-        self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
-        self.cooldown_ends_at: datetime.datetime = parse_timestamp(payload["cooldown_ends_at"])
-
-    def __repr__(self) -> str:
-        return f"<HypeTrainEnd id={self.id} broadcaster={self.broadcaster} total={self.total} ended_at={self.ended_at}>"
-
-
 class ShieldModeEnd(BaseEvent):
+    """
+    Represents a shield mode end event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose shield mode status was updated.
+    moderator: PartialUser
+        The moderator that updated the shield mode status. This will be the same as the `broadcaster` if the broadcaster updated the status.
+    ended_at: datetime.datetime
+        The UTC datetime of when the moderator deactivated shield mode.
+    """
+
     subscription_type = "channel.shield_mode.end"
 
     __slots__ = (
@@ -2304,6 +2501,27 @@ class ShieldModeEnd(BaseEvent):
 
 
 class ShoutoutCreate(BaseEvent):
+    """
+    Represents a shoutout create event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster that sent the shoutout.
+    moderator: PartialUser
+        The moderator that sent the shoutout. This may be the same as the broadcaster.
+    to_broadcaster: PartialUser
+        The broadcaster that received the shoutout.
+    viewer_count: int
+        The number of users that were watching the broadcaster's stream at the time of the shoutout.
+    started_at: datetime.datetime
+        The UTC datetime of when the moderator sent the shoutout.
+    cooldown_until: datetime.datetime
+        The UTC datetime of when the broadcaster may send a shoutout to a different broadcaster.
+    target_cooldown_until: datetime.datetime
+        The UTC datetime of when the broadcaster may send another shoutout to the `to_broadcaster` again.
+    """
+
     subscription_type = "channel.shoutout.create"
 
     __slots__ = (
@@ -2312,8 +2530,8 @@ class ShoutoutCreate(BaseEvent):
         "moderator",
         "viewer_count",
         "started_at",
-        "cooldown_ends_at",
-        "target_cooldown_ends_at",
+        "cooldown_until",
+        "target_cooldown_until",
     )
 
     def __init__(self, payload: ShoutoutCreateEvent, *, http: HTTPClient) -> None:
@@ -2326,14 +2544,29 @@ class ShoutoutCreate(BaseEvent):
         )
         self.viewer_count: int = int(payload["viewer_count"])
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-        self.cooldown_ends_at: datetime.datetime = parse_timestamp(payload["cooldown_ends_at"])
-        self.target_cooldown_ends_at: datetime.datetime = parse_timestamp(payload["target_cooldown_ends_at"])
+        self.cooldown_until: datetime.datetime = parse_timestamp(payload["cooldown_ends_at"])
+        self.target_cooldown_until: datetime.datetime = parse_timestamp(payload["target_cooldown_ends_at"])
 
     def __repr__(self) -> str:
         return f"<ShoutoutCreate broadcaster={self.broadcaster} to_broadcaster={self.to_broadcaster} started_at={self.started_at}>"
 
 
 class ShoutoutReceive(BaseEvent):
+    """
+    Represents a shoutout received event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster that received the shoutout.
+    from_broadcaster: PartialUser
+        The broadcaster that sent the shoutout.
+    viewer_count: int
+        The number of users that were watching the from_broadcaster's stream at the time of the shoutout.
+    started_at: datetime.datetime
+        The UTC datetime of when the moderator sent the shoutout.
+    """
+
     subscription_type = "channel.shoutout.receive"
 
     __slots__ = ("broadcaster", "from_broadcaster", "viewer_count", "started_at")
@@ -2353,6 +2586,28 @@ class ShoutoutReceive(BaseEvent):
 
 
 class StreamOnline(BaseEvent):
+    """
+    Represents a stream online event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The user whose stream is now online.
+    id: str
+        The ID of the stream.
+    type: Literal["live", "playlist", "watch_party", "premiere", "rerun"]
+        The stream type. Valid values are:
+
+        - live
+        - playlist
+        - watch_party
+        - premiere
+        - rerun
+
+    started_at: datetime.datetime
+        The datetime of when the stream started.
+    """
+
     subscription_type = "stream.online"
 
     __slots__ = ("broadcaster", "id", "type", "started_at")
@@ -2370,6 +2625,15 @@ class StreamOnline(BaseEvent):
 
 
 class StreamOffline(BaseEvent):
+    """
+    Represents a stream offline event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The user whose stream is now offline.
+    """
+
     subscription_type = "stream.offline"
 
     __slots__ = "broadcaster"
@@ -2384,6 +2648,20 @@ class StreamOffline(BaseEvent):
 
 
 class UserAuthorizationGrant(BaseEvent):
+    """
+    Represents a user authorisation grant event.
+
+    !!! info
+        This subscription type is only supported by webhooks, and cannot be used with WebSockets.
+
+    Attributes
+    ----------
+    client_id: str
+        The client_id  of the application that was granted user access.
+    user: PartialUser
+        The user who has granted authorization for your client id.
+    """
+
     subscription_type = "user.authorization.grant"
 
     __slots__ = ("client_id", "user")
@@ -2397,6 +2675,22 @@ class UserAuthorizationGrant(BaseEvent):
 
 
 class UserAuthorizationRevoke(BaseEvent):
+    """
+    Represents a user authorisation reoke event.
+
+    !!! info
+        This subscription type is only supported by webhooks, and cannot be used with WebSockets.
+
+        The `user.id` will always be populated but `user.name` can be `None` if the user no longer exists.
+
+    Attributes
+    ----------
+    client_id: str
+        The client_id of the application with revoked user access.
+    user: PartialUser
+        The user who has revoked authorization for your client id.
+    """
+
     subscription_type = "user.authorization.revoke"
 
     __slots__ = ("client_id", "user")
@@ -2412,6 +2706,24 @@ class UserAuthorizationRevoke(BaseEvent):
 
 
 class UserUpdate(BaseEvent):
+    """
+    Represents a user update event.
+
+    ??? note
+        The email attribute requires the `user:read:email` scope otherwise it is None.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user who has updated their account.
+    verified: bool
+        Whether Twitch has verified the user's email address.
+    description: str
+        The user's description.
+    email: str | None
+        The user's email address. Requires the `user:read:email` scope for the user.
+    """
+
     subscription_type = "user.update"
 
     __slots__ = ("user", "email", "verified", "description")
@@ -2427,18 +2739,33 @@ class UserUpdate(BaseEvent):
 
 
 class Whisper(BaseEvent):
+    """
+    Represents a whisper event.
+
+    Attributes
+    ----------
+    sender: PartialUser
+        The user sending the whisper.
+    recipient: PartialUser
+        The user receiving the whisper.
+    id: str
+        The whisper ID.
+    text: str
+        The message text.
+    """
+
     subscription_type = "user.whisper.message"
 
-    __slots__ = ("sender", "recipient", "id", "message")
+    __slots__ = ("sender", "recipient", "id", "text")
 
     def __init__(self, payload: UserWhisperEvent, *, http: HTTPClient) -> None:
         self.sender: PartialUser = PartialUser(payload["from_user_id"], payload["from_user_login"], http=http)
         self.recipient: PartialUser = PartialUser(payload["to_user_id"], payload["to_user_login"], http=http)
         self.id: str = payload["whisper_id"]
-        self.message: str = payload["whisper"]["text"]
+        self.text: str = payload["whisper"]["text"]
 
     def __repr__(self) -> str:
-        return f"<Whisper sender={self.sender} recipient={self.recipient} id={self.id} message={self.message}>"
+        return f"<Whisper sender={self.sender} recipient={self.recipient} id={self.id} text={self.text}>"
 
 
 class SubscriptionRevoked:
