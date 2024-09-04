@@ -2295,7 +2295,7 @@ class BaseHypeTrain(BaseEvent):
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
 
     def __repr__(self) -> str:
-        return f"<BaseHypeTrain id={self.id} broadcaster={self.broadcaster} goal={self.goal} started_at={self.started_at}>"
+        return f"<BaseHypeTrain id={self.id} broadcaster={self.broadcaster} started_at={self.started_at}>"
 
 
 class HypeTrainBegin(BaseHypeTrain):
