@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypedDict, TypeVar
 
 
 if TYPE_CHECKING:
@@ -30,3 +30,7 @@ if TYPE_CHECKING:
 
 
 Cog_T = TypeVar("Cog_T", bound="Cog | None")
+
+
+class CommandOptions(TypedDict, total=False):
+    aliases: list[str]

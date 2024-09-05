@@ -173,7 +173,7 @@ class Group(Mixin[Cog_T], Command[Cog_T, P]):
     def walk_commands(self) -> ...: ...
 
 
-def command(name: str | None = None) -> Any:
+def command(name: str | None = None, aliases: list[str] | None = None) -> Any:
     def wrapper(
         func: Callable[Concatenate[Cog_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro] | Command[Any, ...],
     ) -> Command[Any, ...]:
@@ -181,6 +181,6 @@ def command(name: str | None = None) -> Any:
             raise ValueError(f'Callback "{func._callback.__name__}" is already a Command.')
 
         name_ = name or func.__name__
-        return Command(name=name_, callback=func)
+        return Command(name=name_, callback=func, aliases=aliases or [])
 
     return wrapper
