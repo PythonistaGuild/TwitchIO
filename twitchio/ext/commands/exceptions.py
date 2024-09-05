@@ -30,6 +30,7 @@ __all__ = (
     "CommandInvokeError",
     "CommandHookError",
     "CommandNotFound",
+    "CommandExistsError",
     "PrefixError",
     "InputError",
     "ArgumentError",
@@ -49,6 +50,9 @@ class CommandHookError(CommandInvokeError): ...
 
 
 class CommandNotFound(CommandError): ...
+
+
+class CommandExistsError(CommandError): ...
 
 
 class PrefixError(CommandError): ...

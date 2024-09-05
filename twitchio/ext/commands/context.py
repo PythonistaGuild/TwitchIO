@@ -53,6 +53,7 @@ class Context:
         self._command: Command[Any, ...] | None = None
         self._invoked_with: str | None = None
         self._command_failed: bool = False
+        self._error_dispatched: bool = False
 
         self._view: StringView = StringView(self._raw_content)
 
@@ -87,6 +88,14 @@ class Context:
     @property
     def content(self) -> str:
         return self._raw_content
+
+    @property
+    def error_dispatched(self) -> bool:
+        return self._error_dispatched
+
+    @error_dispatched.setter
+    def error_dispatched(self, value: bool, /) -> None:
+        self._error_dispatched = value
 
     def is_valid(self) -> bool:
         return self._prefix is not None

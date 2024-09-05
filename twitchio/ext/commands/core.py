@@ -26,10 +26,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Unpack
 
-from .exceptions import CommandError, CommandInvokeError
-from .types_ import Cog_T
+from .exceptions import *
+from .types_ import Cog_T, CommandOptions
 
 
 __all__ = (
@@ -63,12 +63,14 @@ class CommandErrorPayload:
 class Command(Generic[Cog_T, P]):
     def __init__(
         self,
+        callback: Callable[Concatenate[Cog_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
         *,
         name: str,
-        callback: Callable[Concatenate[Cog_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        **kwargs: Unpack[CommandOptions],
     ) -> None:
         self._name: str = name
         self._callback = callback
+        self._aliases: list[str] = kwargs.get("aliases", [])
 
         self._cog: Cog_T | None = None
         self._error: Callable[[Cog_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
@@ -79,6 +81,18 @@ class Command(Generic[Cog_T, P]):
     @property
     def cog(self) -> Cog_T | None:
         return self._cog
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def aliases(self) -> list[str]:
+        return self._aliases
+
+    @property
+    def has_error(self) -> bool:
+        return self._error is not None
 
     async def _invoke(self, context: Context) -> None:
         # TODO: Argument parsing...
@@ -102,6 +116,7 @@ class Command(Generic[Cog_T, P]):
         if self._cog is not None:
             await self._cog.cog_command_error(payload=payload)
 
+        context.error_dispatched = True
         context.bot.dispatch("command_error", payload=payload)
 
     def error(
@@ -119,6 +134,39 @@ class Mixin(Generic[Cog_T]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._commands: dict[str, Command[Cog_T, ...]] = {}
         super().__init__(*args, **kwargs)
+
+    def add_command(self, command: Command[Cog_T, ...], /) -> None:
+        if not isinstance(command, Command):  # type: ignore
+            raise TypeError(f'Expected "{Command}" got "{type(command)}".')
+
+        if command.name in self._commands:
+            raise CommandExistsError(f'A command with the name "{command.name}" is already registered.')
+
+        name: str = command.name
+        self._commands[name] = command
+
+        for alias in command.aliases:
+            if alias in self._commands:
+                self.remove_command(name)
+                raise CommandExistsError(f'A command with the alias "{alias}" already exists.')
+
+            self._commands[name] = command
+
+    def remove_command(self, name: str, /) -> Command[Any, ...] | None:
+        command = self._commands.pop(name, None)
+        if not command:
+            return
+
+        if name in command.aliases:
+            return command
+
+        for alias in command.aliases:
+            cmd = self._commands.pop(alias, None)
+
+            if cmd is not None and cmd != command:
+                self._commands[alias] = cmd
+
+        return command
 
 
 class Group(Mixin[Cog_T], Command[Cog_T, P]):
