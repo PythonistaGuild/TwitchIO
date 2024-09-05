@@ -25,12 +25,12 @@ SOFTWARE.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING, Any, Unpack
 
 from twitchio.client import Client
 
 from .context import Context
-from .core import CommandErrorPayload, Mixin
+from .core import Command, CommandErrorPayload, Mixin
 from .exceptions import *
 
 
@@ -90,6 +90,10 @@ class Bot(Mixin[None], Client):
         await self.process_commands(payload)
 
     async def event_command_error(self, payload: CommandErrorPayload) -> None:
+        command: Command[Any, ...] | None = payload.context.command
+        if command and command.has_error and payload.context.error_dispatched:
+            return
+
         msg = f'Ignoring exception in command "{payload.context.command}":\n'
         logger.error(msg, exc_info=payload.exception)
 
