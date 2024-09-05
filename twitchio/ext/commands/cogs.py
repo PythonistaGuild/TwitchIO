@@ -22,26 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from collections.abc import Callable, Coroutine, Iterable
-from typing import Any, NotRequired, TypeAlias, TypedDict
-
-import aiohttp
-
-from ..authentication import Scopes
-from ..ext.commands import Bot
-from ..models import ChatMessage
-from ..web import *
+from .core import CommandErrorPayload
 
 
-AdapterOT: TypeAlias = type[StarletteAdapter | AiohttpAdapter] | StarletteAdapter | AiohttpAdapter
+__all__ = ("Cog",)
 
 
-class ClientOptions(TypedDict, total=False):
-    redirect_uri: str | None
-    scopes: Scopes | None
-    session: aiohttp.ClientSession | None
-    adapter: NotRequired[AdapterOT]
-
-
-WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]
-Prefix_T: TypeAlias = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
+class Cog:
+    async def cog_command_error(self, payload: CommandErrorPayload) -> None: ...

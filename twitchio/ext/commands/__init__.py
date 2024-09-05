@@ -23,3 +23,7 @@ SOFTWARE.
 """
 
 from .bot import Bot as Bot
+from .cogs import *
+from .context import *
+from .core import *
+from .exceptions import *
