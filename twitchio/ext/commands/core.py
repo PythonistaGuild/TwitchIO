@@ -186,6 +186,9 @@ def command(name: str | None = None, aliases: list[str] | None = None) -> Any:
         if isinstance(func, Command):
             raise ValueError(f'Callback "{func._callback.__name__}" is already a Command.')
 
+        if not asyncio.iscoroutinefunction(func):
+            raise TypeError(f'Command callback for "{func.__qualname__}" must be a coroutine function.')
+
         name_ = name or func.__name__
         return Command(name=name_, callback=func, aliases=aliases or [])
 
