@@ -179,7 +179,7 @@ class Context:
         self.bot.dispatch("command_invoked")
 
         try:
-            await self._command._invoke(self)
+            await self._command.invoke(self)
         except CommandError as e:
             await self._command._dispatch_error(self, e)
             return

@@ -104,6 +104,12 @@ class Command(Generic[Cog_T, P]):
         except Exception as e:
             raise CommandInvokeError(msg=str(e), original=e) from e
 
+    async def invoke(self, context: Context) -> None:
+        try:
+            await self._invoke(context)
+        except CommandError as e:
+            await self._dispatch_error(context, e)
+
     async def _dispatch_error(self, context: Context, exception: CommandError) -> None:
         payload = CommandErrorPayload(context=context, exception=exception)
 
