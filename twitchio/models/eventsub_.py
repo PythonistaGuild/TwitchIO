@@ -1667,7 +1667,6 @@ class ChannelPointsReward(BaseEvent):
         return reward[0]
 
 
-# TODO We could possibly just make these the Baseclass of ChannelPointsReward
 class ChannelPointsRewardAdd(ChannelPointsReward):
     subscription_type = "channel.channel_points_custom_reward.add"
 
@@ -1699,7 +1698,7 @@ class ChannelPointsRewardRemove(ChannelPointsReward):
 
 
 class BaseChannelPointsRedemption(BaseEvent):
-    __slots__ = ("id", "broadcaster", "user", "status", "reward", "redeemed_at")
+    __slots__ = ("id", "broadcaster", "user", "status", "reward", "redeemed_at", "user_input")
 
     def __init__(
         self, payload: ChannelPointsRewardRedemptionAddEvent | ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient
@@ -1712,12 +1711,40 @@ class BaseChannelPointsRedemption(BaseEvent):
         self.status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"] = payload["status"]
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
         self.reward: ChannelPointsReward = ChannelPointsReward(payload["reward"], http=http, broadcaster=self.broadcaster)
+        self.user_input: str = payload["user_input"]
 
     def __repr__(self) -> str:
         return f"<BaseChannelPointsRedemption broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
 class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
+    """
+    Represents a channel points redemption add event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel where the reward was redeemed.
+    user: PartialUser
+        The user that redeemed the reward.
+    user_input: str
+        The user input provided. Empty string if not provided.
+    id: str
+        The ID of the redemption.
+    status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"]
+        The status of the redemption. Defaults to unfulfilled.
+
+        - unknown
+        - unfulfilled
+        - fulfilled
+        - canceled
+
+    redeemed_at: datetime.datetime
+        Datetime when the reward was redeemed.
+    reward: ChannelPointsReward
+        Information about the reward that was redeemed, at the time it was redeemed.
+    """
+
     subscription_type = "channel.channel_points_custom_reward_redemption.add"
 
     def __init__(self, payload: ChannelPointsRewardRedemptionAddEvent, *, http: HTTPClient) -> None:
@@ -1728,6 +1755,21 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         return f"<ChannelPointsRedemptionAdd broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
     async def fulfill(self, *, token_for: str) -> CustomRewardRedemption:
+        """
+        Updates the redemption's status to FULFILLED.
+
+        !!! note
+            Requires a user access token that includes the ``channel:manage:redemptions`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            The user's token that has permission manage the broadcaster's reward redemptions.
+
+        Returns
+        --------
+        CustomRewardRedemption
+        """
         from twitchio.models.channel_points import CustomRewardRedemption
 
         data = await self._http.patch_custom_reward_redemption(
@@ -1741,6 +1783,21 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
     async def refund(self, *, token_for: str) -> CustomRewardRedemption:
+        """
+        Updates the redemption's status to CANCELED.
+
+        !!! note
+            Requires a user access token that includes the ``channel:manage:redemptions`` scope.
+
+        Parameters
+        -----------
+        token_for: str
+            The user's token that has permission manage the broadcaster's reward redemptions.
+
+        Returns
+        --------
+        CustomRewardRedemption
+        """
         from twitchio.models.channel_points import CustomRewardRedemption
 
         data = await self._http.patch_custom_reward_redemption(
@@ -1755,6 +1812,32 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
 
 
 class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
+    """
+    Represents a channel points redemption update event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel where the reward was redeemed.
+    user: PartialUser
+        The user that redeemed the reward.
+    user_input: str
+        The user input provided. Empty string if not provided.
+    id: str
+        The ID of the redemption.
+    status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"]
+        The status of the redemption. Will be fulfilled or canceled.
+
+        - unknown
+        - unfulfilled
+        - fulfilled
+        - canceled
+
+    redeemed_at: datetime.datetime
+        Datetime when the reward was redeemed.
+    reward: ChannelPointsReward
+        Information about the reward that was redeemed, at the time it was redeemed.
+    """
     subscription_type = "channel.channel_points_custom_reward_redemption.update"
 
     def __init__(self, payload: ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient) -> None:
@@ -1765,6 +1848,24 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
 
 
 class PollChoice:
+    """
+    Represents a poll choice.
+
+    !!! info
+        channel_points_votes and votes will both be None for a Channel Poll Begin event.
+
+    Attributes
+    ----------
+    id: str
+        ID for the choice.
+    title: str
+        Text displayed for the choice.
+    channel_points_votes: int | None
+        Number of votes received via channel points. This is None for a Channel Poll Begin event.
+    votes: int | None
+        Total number of votes received for the choice across all methods of voting. This is None for a Channel Poll Begin event.
+    """
+
     __slots__ = ("id", "title", "channel_points_votes", "votes")
 
     def __init__(self, data: PollChoiceData) -> None:
@@ -1816,6 +1917,27 @@ class BaseChannelPoll(BaseEvent):
 
 
 class ChannelPollBegin(BaseChannelPoll):
+    """
+    Represents a channel poll begin event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel started a poll.
+    id: str
+        ID of the poll.
+    title: str
+        Question displayed for the poll.
+    choices: list[PollChoice]
+        A list of choices for the poll.
+    channel_points_voting: PollVoting
+        The channel points voting settings.
+    started_at: datetime.datetime
+        The time the poll started.
+    ends_at: datetime.datetime
+       The time the poll will end.
+    """
+
     subscription_type = "channel.poll.begin"
 
     __slots__ = ("ends_at",)
@@ -1831,6 +1953,27 @@ class ChannelPollBegin(BaseChannelPoll):
 
 
 class ChannelPollProgress(BaseChannelPoll):
+    """
+    Represents a channel poll progress event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had received a poll update.
+    id: str
+        ID of the poll.
+    title: str
+        Question displayed for the poll.
+    choices: list[PollChoice]
+        A list of choices for the poll.
+    channel_points_voting: PollVoting
+        The channel points voting settings.
+    started_at: datetime.datetime
+        The time the poll started.
+    ends_at: datetime.datetime
+       The time the poll will end.
+    """
+
     subscription_type = "channel.poll.progress"
 
     __slots__ = ("ends_at",)
@@ -1844,6 +1987,34 @@ class ChannelPollProgress(BaseChannelPoll):
 
 
 class ChannelPollEnd(BaseChannelPoll):
+    """
+    Represents a channel poll begin event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had received a poll update.
+    id: str
+        ID of the poll.
+    title: str
+        Question displayed for the poll.
+    choices: list[PollChoice]
+        A list of choices for the poll.
+    channel_points_voting: PollVoting
+        The channel points voting settings.
+    status: Literal["completed", "terminated", "archived"]
+        The status of the poll. Valid values are:
+
+        - completed
+        - archived
+        - terminated
+
+    started_at: datetime.datetime
+        The time the poll started.
+    ended_at: datetime.datetime
+       The time the poll ended.
+    """
+
     subscription_type = "channel.poll.end"
 
     __slots__ = ("status", "ended_at")
@@ -1858,6 +2029,25 @@ class ChannelPollEnd(BaseChannelPoll):
 
 
 class SuspiciousUserUpdate(BaseEvent):
+    """
+    Represents a suspicious user update event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had the treatment for a suspicious user was updated.
+    user: PartialUser
+        The suspicious user whose treatment was updated.
+    moderator: PartialUser
+        The moderator that updated the treatment for a suspicious user.
+    low_trust_status: Literal["none", "active_monitoring", "restricted"]
+        The status set for the suspicious user. Can be the following:
+
+        - none
+        - active_monitoring
+        - restricted
+    """
+
     subscription_type = "channel.suspicious_user.update"
 
     __slots__ = ("broadcaster", "user", "moderator", "low_trust_status")
@@ -1875,6 +2065,42 @@ class SuspiciousUserUpdate(BaseEvent):
 
 
 class SuspiciousUserMessage(BaseEvent):
+    """
+    Represents a suspicious user message event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had the treatment for a suspicious user was updated.
+    user: PartialUser
+        The user that sent the message.
+    low_trust_status: Literal["none", "active_monitoring", "restricted"]
+        The status set for the suspicious user. Can be the following:
+
+        - none
+        - active_monitoring
+        - restricted
+
+    banned_channels: list[str]
+        A list of channel IDs where the suspicious user is also banned.
+    types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
+        User types (if any) that apply to the suspicious user. Can be the following:
+
+        - manual
+        - ban_evader_detector
+        - shared_channel_ban
+
+    evaluation: Literal["unknown", "possible", "likely"]
+        A ban evasion likelihood value (if any) that as been applied to the user automatically by Twitch. Can be:
+
+        - unknown
+        - possible
+        - likely
+
+    message: BaseChatMessage
+        The chat message.
+    """
+
     subscription_type = "channel.suspicious_user.message"
 
     __slots__ = ("broadcaster", "user", "low_trust_status", "banned_channels", "types", "evaluation")
@@ -1895,6 +2121,17 @@ class SuspiciousUserMessage(BaseEvent):
 
 
 class ChannelVIPAdd(BaseEvent):
+    """
+    Represents a channel VIP remove event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had a VIP added.
+    user: PartialUser
+        The user who was added as a VIP.
+    """
+
     subscription_type = "channel.vip.add"
 
     __slots__ = ("broadcaster", "user")
@@ -1910,6 +2147,17 @@ class ChannelVIPAdd(BaseEvent):
 
 
 class ChannelVIPRemove(BaseEvent):
+    """
+    Represents a channel VIP remove event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had a VIP removed.
+    user: PartialUser
+        The user who was removed as a VIP.
+    """
+
     subscription_type = "channel.vip.remove"
 
     __slots__ = ("broadcaster", "user")
@@ -1925,6 +2173,17 @@ class ChannelVIPRemove(BaseEvent):
 
 
 class ChannelWarningAcknowledge(BaseEvent):
+    """
+    Represents a channel warning acknowledge event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel sent a warning.
+    user: PartialUser
+        The user that has acknowledged their warning.
+    """
+
     subscription_type = "channel.warning.acknowledge"
 
     __slots__ = ("broadcaster", "user")
@@ -1940,6 +2199,23 @@ class ChannelWarningAcknowledge(BaseEvent):
 
 
 class ChannelWarningSend(BaseEvent):
+    """
+    Represents a channel warning send event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel sent a warning.
+    user: PartialUser
+        The user being warned.
+    moderator: PartialUser
+        The moderator who sent the warning.
+    reason: str | None
+        The reason given for the warning.
+    chat_rules: list[str] | None
+        The chat rules cited for the warning.
+    """
+
     subscription_type = "channel.warning.send"
 
     __slots__ = ("broadcaster", "user", "moderator", "reason", "chat_rules")
@@ -1958,6 +2234,31 @@ class ChannelWarningSend(BaseEvent):
 
 
 class CharityDonation(BaseEvent):
+    """
+    Represents a charity campaign start event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster that's running the campaign.
+    user: PartialUser
+        The user that donated to the campaign.
+    id: str
+        An ID that identifies the donation. The ID is unique across campaigns.
+    campaign_id: str
+        An ID that identifies the charity campaign.
+    name: str
+        The name of the charity.
+    description: str
+        A description of the charity.
+    logo: Asset
+        The charity logo as an asset.
+    website: str
+        A URL to the charity's website.
+    amount: CharityValues
+        The amount of money that the user donated.
+    """
+
     subscription_type = "channel.charity_campaign.donate"
 
     __slots__ = ("broadcaster", "user", "id", "campaign_id", "name", "description", "logo", "website", "amount")
@@ -1979,12 +2280,15 @@ class CharityDonation(BaseEvent):
         return f"<CharityDonation broadcaster={self.broadcaster} user={self.user} id={self.id} name={self.name}>"
 
 
-class CharityCampaignStart(BaseEvent):
-    subscription_type = "channel.charity_campaign.start"
+class BaseCharityCampaign(BaseEvent):
+    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target")
 
-    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target", "started_at")
-
-    def __init__(self, payload: CharityCampaignStartEvent, *, http: HTTPClient) -> None:
+    def __init__(
+        self,
+        payload: CharityCampaignStartEvent | CharityCampaignProgressEvent | CharityCampaignStopEvent,
+        *,
+        http: HTTPClient,
+    ) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
@@ -1995,55 +2299,114 @@ class CharityCampaignStart(BaseEvent):
         self.website: str = payload["charity_website"]
         self.current: CharityValues = CharityValues(payload["current_amount"])
         self.target: CharityValues = CharityValues(payload["target_amount"])
+
+    def __repr__(self) -> str:
+        return f"<CharityCampaignStart broadcaster={self.broadcaster} id={self.id} name={self.name}>"
+
+
+class CharityCampaignStart(BaseCharityCampaign):
+    """
+    Represents a charity campaign start event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster that's running the campaign.
+    id: str
+        ID that identifies the charity campaign.
+    name: str
+        The name of the charity.
+    description: str
+        A description of the charity.
+    logo: Asset
+        The charity logo as an asset.
+    website: str
+        A URL to the charity's website.
+    current: CharityValues
+        The current amount of donations that the campaign has received.
+    target: CharityValues
+        The target amount of donations that the campaign has received.
+    started_at: datetime.datetime
+        Datetime of when the broadcaster started the campaign.
+    """
+
+    subscription_type = "channel.charity_campaign.start"
+
+    __slots__ = ("started_at",)
+
+    def __init__(self, payload: CharityCampaignStartEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
 
     def __repr__(self) -> str:
         return f"<CharityCampaignStart broadcaster={self.broadcaster} id={self.id} name={self.name} started_at={self.started_at}>"
 
 
-class CharityCampaignProgress(BaseEvent):
+class CharityCampaignProgress(BaseCharityCampaign):
+    """
+    Represents a charity campaign progress event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster that's running the campaign.
+    id: str
+        ID that identifies the charity campaign.
+    name: str
+        The name of the charity.
+    description: str
+        A description of the charity.
+    logo: Asset
+        The charity logo as an asset.
+    website: str
+        A URL to the charity's website.
+    current: CharityValues
+        The current amount of donations that the campaign has received.
+    target: CharityValues
+        The target amount of donations that the campaign has received.
+    """
+
     subscription_type = "channel.charity_campaign.progress"
 
-    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target")
-
     def __init__(self, payload: CharityCampaignProgressEvent, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.id: str = payload["id"]
-        self.name: str = payload["charity_name"]
-        self.description: str = payload["charity_description"]
-        self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
-        self.website: str = payload["charity_website"]
-        self.current: CharityValues = CharityValues(payload["current_amount"])
-        self.target: CharityValues = CharityValues(payload["target_amount"])
+        super().__init__(payload, http=http)
 
     def __repr__(self) -> str:
         return f"<CharityCampaignProgress broadcaster={self.broadcaster} id={self.id} name={self.name} current={self.current} target={self.target}>"
 
 
-class CharityCampaignStop(BaseEvent):
+class CharityCampaignStop(BaseCharityCampaign):
+    """
+    Represents a charity campaign stop event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster that's running the campaign.
+    id: str
+        ID that identifies the charity campaign.
+    name: str
+        The name of the charity.
+    description: str
+        A description of the charity.
+    logo: Asset
+        The charity logo as an asset.
+    website: str
+        A URL to the charity's website.
+    current: CharityValues
+        The current amount of donations that the campaign has received.
+    target: CharityValues
+        The target amount of donations that the campaign has received.
+    stopped_at: datetime.datetime
+        Datetime of when the broadcaster stopped the campaign.
+    """
+
     subscription_type = "channel.charity_campaign.stop"
 
-    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target", "stopped_at")
+    __slots__ = ("stopped_at",)
 
     def __init__(self, payload: CharityCampaignStopEvent, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
-        )
-        self.id: str = payload["id"]
-        self.name: str = payload["charity_name"]
-        self.description: str = payload["charity_description"]
-        self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
-        self.website: str = payload["charity_website"]
-        self.current: CharityValues = CharityValues(payload["current_amount"])
-        self.target: CharityValues = CharityValues(payload["target_amount"])
+        super().__init__(payload, http=http)
         self.stopped_at: datetime.datetime = parse_timestamp(payload["stopped_at"])
 
     def __repr__(self) -> str:
