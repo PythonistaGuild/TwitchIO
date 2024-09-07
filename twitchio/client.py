@@ -467,6 +467,11 @@ class Client:
 
         self._listeners[name].add(listener)
 
+    def remove_listener(self, listener: Callable[..., Coroutine[Any, Any, None]]) -> None:
+        for listeners in self._listeners.values():
+            if listener in listeners:
+                listeners.remove(listener)
+
     def create_partialuser(self, user_id: str | int, user_login: str | None = None) -> PartialUser:
         """Helper method to create a PartialUser.
 
