@@ -27,6 +27,7 @@ from twitchio.exceptions import TwitchioException
 
 __all__ = (
     "CommandError",
+    "ComponentLoadError",
     "CommandInvokeError",
     "CommandHookError",
     "CommandNotFound",
@@ -38,6 +39,9 @@ __all__ = (
 
 
 class CommandError(TwitchioException): ...
+
+
+class ComponentLoadError(TwitchioException): ...
 
 
 class CommandInvokeError(CommandError):

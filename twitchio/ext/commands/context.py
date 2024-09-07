@@ -171,7 +171,7 @@ class Context:
             raise CommandNotFound(f'The command "{self._invoked_with}" was not found.')
 
         try:
-            await self._bot.before_invoke_hook(self)
+            await self._bot.before_invoke(self)
         except Exception as e:
             raise CommandHookError(str(e), e) from e
 
@@ -185,7 +185,7 @@ class Context:
             return
 
         try:
-            await self._bot.after_invoke_hook(self)
+            await self._bot.after_invoke(self)
         except Exception as e:
             raise CommandHookError(str(e), e) from e
 

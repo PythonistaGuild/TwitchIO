@@ -40,6 +40,8 @@ if TYPE_CHECKING:
 
     from twitchio.types_.options import ClientOptions
 
+    from .components import Component
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -62,26 +64,54 @@ class Bot(Mixin[None], Client):
         )
 
         self._get_prefix: Prefix_T = prefix
+        self._components: dict[str, Component] = {}
 
     @property
     def bot_id(self) -> str:
         assert self._bot_id
         return self._bot_id
 
+    def _cleanup_component(self, component: Component, /) -> None:
+        for command in component.__all_commands__.values():
+            self.remove_command(command.name)
+
+        for listeners in component.__all_listeners__.values():
+            for listener in listeners:
+                self.remove_listener(listener)
+
+    async def _add_component(self, component: Component, /) -> None:
+        for command in component.__all_commands__.values():
+            command._injected = component
+            self.add_command(command)
+
+        for name, listeners in component.__all_listeners__.items():
+            for listener in listeners:
+                self.add_listener(listener, event=name)
+
+        await component.component_load()
+
+    async def add_component(self, component: Component, /) -> None:
+        try:
+            await self._add_component(component)
+        except Exception as e:
+            self._cleanup_component(component)
+            raise ComponentLoadError from e
+
+        self._components[component.__component_name__] = component
+
     async def _process_commands(self, message: ChatMessage) -> None:
         ctx: Context = Context(message, bot=self)
-
-        try:
-            await self.invoke(ctx)
-        except CommandError as e:
-            payload = CommandErrorPayload(context=ctx, exception=e)
-            self.dispatch("command_error", payload=payload)
+        await self.invoke(ctx)
 
     async def process_commands(self, message: ChatMessage) -> None:
         await self._process_commands(message)
 
     async def invoke(self, ctx: Context) -> None:
-        await ctx.invoke()
+        try:
+            await ctx.invoke()
+        except CommandError as e:
+            payload = CommandErrorPayload(context=ctx, exception=e)
+            self.dispatch("command_error", payload=payload)
 
     async def event_channel_chat_message(self, payload: ChatMessage) -> None:
         if payload.chatter.id == self.bot_id:
@@ -97,6 +127,6 @@ class Bot(Mixin[None], Client):
         msg = f'Ignoring exception in command "{payload.context.command}":\n'
         logger.error(msg, exc_info=payload.exception)
 
-    async def before_invoke_hook(self, ctx: Context) -> None: ...
+    async def before_invoke(self, ctx: Context) -> None: ...
 
-    async def after_invoke_hook(self, ctx: Context) -> None: ...
+    async def after_invoke(self, ctx: Context) -> None: ...

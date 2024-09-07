@@ -29,7 +29,7 @@ from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Unpack
 
 from .exceptions import *
-from .types_ import Cog_T, CommandOptions
+from .types_ import CommandOptions, Component_T
 
 
 __all__ = (
@@ -60,10 +60,10 @@ class CommandErrorPayload:
         self.exception: CommandError = exception
 
 
-class Command(Generic[Cog_T, P]):
+class Command(Generic[Component_T, P]):
     def __init__(
         self,
-        callback: Callable[Concatenate[Cog_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        callback: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
         *,
         name: str,
         **kwargs: Unpack[CommandOptions],
@@ -72,15 +72,15 @@ class Command(Generic[Cog_T, P]):
         self._callback = callback
         self._aliases: list[str] = kwargs.get("aliases", [])
 
-        self._cog: Cog_T | None = None
-        self._error: Callable[[Cog_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
+        self._injected: Component_T | None = None
+        self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
 
     def __str__(self) -> str:
         return self._name
 
     @property
-    def cog(self) -> Cog_T | None:
-        return self._cog
+    def component(self) -> Component_T | None:
+        return self._injected
 
     @property
     def name(self) -> str:
@@ -97,7 +97,7 @@ class Command(Generic[Cog_T, P]):
     async def _invoke(self, context: Context) -> None:
         # TODO: Argument parsing...
         # TODO: Checks... Including cooldowns...
-        callback = self._callback(self._cog, context) if self._cog else self._callback(context)  # type: ignore
+        callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
 
         try:
             await callback
@@ -114,21 +114,21 @@ class Command(Generic[Cog_T, P]):
         payload = CommandErrorPayload(context=context, exception=exception)
 
         if self._error is not None:
-            if self._cog:
-                await self._error(self._cog, payload)  # type: ignore
+            if self._injected:
+                await self._error(self._injected, payload)  # type: ignore
             else:
                 await self._error(payload)  # type: ignore
 
-        if self._cog is not None:
-            await self._cog.cog_command_error(payload=payload)
+        if self._injected is not None:
+            await self._injected.component_command_error(payload=payload)
 
         context.error_dispatched = True
         context.bot.dispatch("command_error", payload=payload)
 
     def error(
         self,
-        func: Callable[[Cog_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro],
-    ) -> Callable[[Cog_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro]:
+        func: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro],
+    ) -> Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro]:
         if not asyncio.iscoroutinefunction(func):
             raise TypeError(f'Command specific "error" callback for "{self._name}" must be a coroutine function.')
 
@@ -136,12 +136,12 @@ class Command(Generic[Cog_T, P]):
         return func
 
 
-class Mixin(Generic[Cog_T]):
+class Mixin(Generic[Component_T]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._commands: dict[str, Command[Cog_T, ...]] = {}
+        self._commands: dict[str, Command[Component_T, ...]] = {}
         super().__init__(*args, **kwargs)
 
-    def add_command(self, command: Command[Cog_T, ...], /) -> None:
+    def add_command(self, command: Command[Component_T, ...], /) -> None:
         if not isinstance(command, Command):  # type: ignore
             raise TypeError(f'Expected "{Command}" got "{type(command)}".')
 
@@ -175,13 +175,15 @@ class Mixin(Generic[Cog_T]):
         return command
 
 
-class Group(Mixin[Cog_T], Command[Cog_T, P]):
+class Group(Mixin[Component_T], Command[Component_T, P]):
     def walk_commands(self) -> ...: ...
 
 
 def command(name: str | None = None, aliases: list[str] | None = None) -> Any:
     def wrapper(
-        func: Callable[Concatenate[Cog_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro] | Command[Any, ...],
+        func: Callable[Concatenate[Component_T, Context, P], Coro]
+        | Callable[Concatenate[Context, P], Coro]
+        | Command[Any, ...],
     ) -> Command[Any, ...]:
         if isinstance(func, Command):
             raise ValueError(f'Callback "{func._callback.__name__}" is already a Command.')

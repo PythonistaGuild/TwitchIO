@@ -26,11 +26,15 @@ from typing import TYPE_CHECKING, TypedDict, TypeVar
 
 
 if TYPE_CHECKING:
-    from .cogs import Cog
+    from .components import Component
 
 
-Cog_T = TypeVar("Cog_T", bound="Cog | None")
+Component_T = TypeVar("Component_T", bound="Component | None")
 
 
 class CommandOptions(TypedDict, total=False):
     aliases: list[str]
+
+
+class ComponentOptions(TypedDict, total=False):
+    name: str | None
