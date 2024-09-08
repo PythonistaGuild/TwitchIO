@@ -33,8 +33,6 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "AutomodEmoteData",
-    "AutomodCheermoteData",
     "AutomodMessageHoldEvent",
     "AutomodMessageUpdateEvent",
     "AutomodSettingsUpdateEvent",
