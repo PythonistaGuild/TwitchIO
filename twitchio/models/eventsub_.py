@@ -1118,6 +1118,84 @@ class ChatCharityDonation:
 
 
 class ChatNotification(BaseEvent):
+    """
+    Represents a chat notification.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster / channel that received the notification.
+    chatter: PartialUser
+        The chatter / user that sent the message.
+    anonymous: bool
+        Whether or not the chatter is anonymous.
+    colour: Colour
+        The colour of the chatter / user's name in the chat room.
+    badges: list[ChatMessageBadge]
+        A list of badges the chatter / user has.
+    system_message: str
+        The message Twitch shows in the chat room for this notice.
+    id: str
+        The message ID (This is a UUID).
+    text: str
+        The chat message in plain text.
+    fragments: list[ChatMessageFragment]
+        A list of chat fragments, each containing structured data related to the messages, such as:
+
+            - text
+            - cheermote
+            - emote
+            - mention
+
+    sub: ChatSub | None
+        Information about the sub event. `None` if `notice_type` is not sub.
+    resub: ChatResub | None
+        Information about the resub event. `None` if `notice_type` is not resub.
+    sub_gift: ChatSubGift | None
+                Information about the gift sub event. `None` if `notice_type` is not sub_gift.
+    community_sub_gift: ChatCommunitySubGift | None
+        Information about the community gift sub event. `None` if `notice_type` is not community_sub_gift.
+    gift_paid_upgrade: ChatGiftPaidUpgrade | None
+        nformation about the community gift paid upgrade event. `None` if `notice_type` is not gift_paid_upgrade.
+    prime_paid_upgrade: ChatPrimePaidUpgrade | None
+        Information about the Prime gift paid upgrade event. `None` if `notice_type` is not prime_paid_upgrade.
+    raid: ChatRaid | None
+        Information about the raid event. `None` if `notice_type` is not raid.
+    unraid: None
+        Returns None as this is an empty payload. You will need to check the `notice_type`.
+    pay_it_forward: ChatPayItForward | None
+        Information about the pay it forward event. `None` if `notice_type` is not pay_it_forward
+    announcement: ChatAnnouncement | None
+        Information about the announcement event. `None` if `notice_type` is not announcement
+    bits_badge_tier: ChatBitsBadgeTier | None
+        nformation about the bits badge tier event. `None` if `notice_type` is not bits_badge_tier
+    charity_donation: ChatCharityDonation
+        Information about the announcement event. `None` if `notice_type` is not charity_donation
+    notice_type: Literal["sub", "resub", "sub_gift", "community_sub_gift", "gift_paid_upgrade", "prime_paid_upgrade", "raid", "unraid", "pay_it_forward", "announcement", "bits_badge_tier", "charity_donation"]
+        The type of notice. Possible values are:
+
+            - sub
+            - resub
+            - sub_gift
+            - community_sub_gift
+            - gift_paid_upgrade
+            - prime_paid_upgrade
+            - raid
+            - unraid
+            - pay_it_forward
+            - announcement
+            - bits_badge_tier
+            - charity_donation
+            - shared_chat_sub
+            - shared_chat_resub
+            - shared_chat_community_sub_gift
+            - shared_chat_gift_paid_upgrade
+            - shared_chat_prime_paid_upgrade
+            - shared_chat_raid
+            - shared_chat_pay_it_forward
+            - shared_chat_announcement
+    """
+
     subscription_type = "channel.chat.notification"
 
     __slots__ = (
