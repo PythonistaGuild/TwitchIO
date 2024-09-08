@@ -22,10 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Generic, Literal, NotRequired, TypedDict, TypeVar
+from __future__ import annotations
 
-from ..eventsub.enums import SubscriptionType
-from .conduits import Condition
+from typing import TYPE_CHECKING, Generic, Literal, NotRequired, TypedDict, TypeVar
+
+
+if TYPE_CHECKING:
+    from ..eventsub.enums import SubscriptionType
+    from .conduits import Condition
 
 
 __all__ = (
@@ -257,38 +261,21 @@ class SubscriptionResponse(TypedDict):
     max_total_cost: int
 
 
-AutomodEmoteData = TypedDict("AutomodEmoteData", {"text": str, "id": str, "set-id": str})
-
-
-class AutomodCheermoteData(TypedDict):
-    text: str
-    amount: int
-    prefix: str
-    tier: int
-
-
-class AutomodFragments(TypedDict):
-    emotes: list[AutomodEmoteData]
-    cheermotes: list[AutomodCheermoteData]
-
-
 class AutomodMessageHoldEvent(BroadcasterUserEvent):
     message_id: str
-    message: str
+    message: ChatMessage
     level: int
     category: str
     held_at: str
-    fragments: AutomodFragments
 
 
 class AutomodMessageUpdateEvent(BroadcasterModUserEvent):
     message_id: str
-    message: str
+    message: ChatMessage
     level: int
     category: str
     held_at: str
     status: Literal["Approved", "Denied", "Expired"]
-    fragments: AutomodFragments
 
 
 class AutomodSettingsUpdateEvent(BroadcasterModeratorEvent):

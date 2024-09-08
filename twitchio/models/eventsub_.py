@@ -61,57 +61,116 @@ def create_event_instance(event_type: str, payload: dict[str, Any], http: HTTPCl
     return event_cls(payload) if http is None else event_cls(payload, http=http)
 
 
-class AutomodEmote:
-    __slots__ = ("set_id", "id", "text", "_http")
-
-    def __init__(self, data: AutomodEmoteData, *, http: HTTPClient) -> None:
-        self._http: HTTPClient = http
-        self.set_id: str = data["set-id"]
-        self.id: str = data["id"]
-        self.text: str = data["text"]
-
-    def __repr__(self) -> str:
-        return f"<AutomodEmote set_id={self.set_id} id={self.id} text={self.text}>"
-
-    async def fetch_emote_set(self, *, token_for: str | None = None) -> EmoteSet:
-        data = await self._http.get_emote_sets(emote_set_ids=[self.set_id], token_for=token_for)
-        return EmoteSet(data["data"][0], template=data["template"], http=self._http)
-
-
-class AutomodCheermote:
-    __slots__ = ("prefix", "amount", "text", "tier")
-
-    def __init__(self, data: AutomodCheermoteData) -> None:
-        self.text: str = data["text"]
-        self.prefix: str = data["prefix"]
-        self.amount: int = int(data["amount"])
-        self.tier: int = int(data["tier"])
-
-    def __repr__(self) -> str:
-        return f"<AutomodCheermote prefix={self.prefix} amount={self.amount} text={self.text} tier={self.tier}>"
-
-
 class AutomodMessageHold(BaseEvent):
+    """
+    Represents an automod message hold event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster specified in the request.
+    user: PartialUser
+        The user who sent the message.
+    message_id: str
+        The ID of the message that was flagged by automod.
+    text: str
+        The text content of the message.
+    level: int
+        The level of severity. Measured between 1 to 4.
+    category: str
+        The category of the message.
+    held_at: datetime.datetime
+        The datetime of when automod saved the message.
+    emotes: list[ChatMessageEmote]
+        List of emotes in the message.
+    cheermotes: list[ChatMessageCheermote]
+        List of cheermotes in the message.
+    fragments: list[ChatMessageFragment]
+        List of chat message fragments.
+    """
+
     subscription_type = "automod.message.hold"
 
-    __slots__ = ("broadcaster", "user", "message_id", "message", "level", "category", "held_at", "emotes", "cheermotes")
+    __slots__ = ("broadcaster", "user", "message_id", "text", "level", "category", "held_at")
 
     def __init__(self, payload: AutomodMessageHoldEvent, *, http: HTTPClient) -> None:
         self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
         self.user = PartialUser(payload["user_id"], payload["user_login"], http=http)
         self.message_id: str = payload["message_id"]
-        self.message: str = payload["message"]
+        self.text: str = payload["message"]["text"]
         self.level: int = int(payload["level"])
         self.category: str = payload["category"]
         self.held_at: datetime.datetime = parse_timestamp(payload["held_at"])
-        self.emotes: list[AutomodEmote] = [AutomodEmote(e, http=http) for e in payload["fragments"]["emotes"]]
-        self.cheermotes: list[AutomodCheermote] = [AutomodCheermote(e) for e in payload["fragments"]["cheermotes"]]
+        self.fragments: list[ChatMessageFragment] = [
+            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
+        ]
 
     def __repr__(self) -> str:
         return f"<AutomodMessageHold broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"
 
+    @property
+    def emotes(self) -> list[ChatMessageEmote]:
+        """
+        A property that lists all of the emotes of a message.
+        If no emotes are in the message this will return an empty list.
+
+        Returns
+        -------
+        list[ChatMessageEmote]
+            A list of ChatMessageEmote objects.
+        """
+        return [f.emote for f in self.fragments if f.emote is not None]
+
+    @property
+    def cheermotes(self) -> list[ChatMessageCheermote]:
+        """
+        A property that lists all of the cheermotes of a message.
+        If no cheermotes are in the message this will return an empty list.
+
+        Returns
+        -------
+        list[ChatMessageCheermote]
+            A list of ChatMessageCheermote objects.
+        """
+        return [f.cheermote for f in self.fragments if f.cheermote is not None]
+
 
 class AutomodMessageUpdate(AutomodMessageHold):
+    """
+    Represents an automod message update event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster specified in the request.
+    moderator: PartialUser
+        The moderator who approved or denied the message.
+    user: PartialUser
+        The user who sent the message.
+    message_id: str
+        The ID of the message that was flagged by automod.
+    text: str
+        The text content of the message.
+    level: int
+        The level of severity. Measured between 1 to 4.
+    category: str
+        The category of the message.
+    held_at: datetime.datetime
+        The datetime of when automod saved the message.
+    emotes: list[ChatMessageEmote]
+        List of emotes in the message.
+    cheermotes: list[ChatMessageCheermote]
+        List of cheermotes in the message.
+    fragments: list[ChatMessageFragment]
+        List of chat message fragments.
+    status: Literal["Approved", "Denied", "Expired"]
+        The message's status. Possible values are:
+
+        - Approved
+        - Denied
+        - Expired
+    """
+
     subscription_type = "automod.message.update"
 
     __slots__ = ("moderator", "status")
@@ -126,6 +185,35 @@ class AutomodMessageUpdate(AutomodMessageHold):
 
 
 class AutomodSettingsUpdate(BaseEvent):
+    """
+    Represents an automod settings update event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster who had their automod settings updated.
+    moderator: PartialUser
+        The moderator who changed the channel settings.
+    overall_level: int | None
+        The default AutoMod level for the broadcaster. This is `None` if the broadcaster has set one or more of the individual settings.
+    disability: int
+        The Automod level for discrimination against disability.
+    aggression: int
+        The Automod level for hostility involving aggression.
+    misogyny: int
+        The Automod level for discrimination against women.
+    bullying: int
+        The Automod level for hostility involving name calling or insults.
+    swearing: int
+        The Automod level for profanity.
+    race_ethnicity_or_religion: int
+        The Automod level for racial discrimination.
+    sex_based_terms: int
+        The Automod level for sexual content.
+    sexuality_sex_or_gender: int
+        The AutoMod level for discrimination based on sexuality, sex, or gender.
+    """
+
     subscription_type = "automod.settings.update"
 
     __slots__ = (
@@ -139,6 +227,7 @@ class AutomodSettingsUpdate(BaseEvent):
         "swearing",
         "race_ethnicity_or_religion",
         "sex_based_terms",
+        "sexuality_sex_or_gender",
     )
 
     def __init__(self, payload: AutomodSettingsUpdateEvent, *, http: HTTPClient) -> None:
@@ -152,12 +241,36 @@ class AutomodSettingsUpdate(BaseEvent):
         self.swearing: int = int(payload["swearing"])
         self.race_ethnicity_or_religion: int = int(payload["race_ethnicity_or_religion"])
         self.sex_based_terms: int = int(payload["sex_based_terms"])
+        self.sexuality_sex_or_gender: int = int(payload["sexuality_sex_or_gender"])
 
     def __repr__(self) -> str:
         return f"<AutomodSettingsUpdate broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"
 
 
 class AutomodTermsUpdate(BaseEvent):
+    """
+    Represents an automod terms update event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster specified in the request.
+    moderator: PartialUser
+        The moderator who changed the channel settings.
+    action: Literal["add_permitted", "remove_permitted", "add_blocked", "remove_blocked"]
+        The status change applied to the terms. Possible options are:
+
+        - add_permitted
+        - remove_permitted
+        - add_blocked
+        - remove_blocked
+
+    automod: bool
+        Whether this term was added due to an Automod message approve/deny action
+    terms: list[str]
+        The list of terms that had a status change.
+    """
+
     subscription_type = "automod.terms.update"
 
     __slots__ = ("broadcaster", "moderator", "action", "automod", "terms")
@@ -434,7 +547,7 @@ class ChatMessageEmote:
         self._http: HTTPClient = http
         self.set_id: str = data["emote_set_id"]
         self.id: str = data["id"]
-        owner_id = data.get("owner_id")
+        owner_id: str | None = data.get("owner_id")
         self.owner: PartialUser | None = PartialUser(owner_id, None, http=http) if owner_id is not None else None
         self.format: list[Literal["static", "animated"]] = data.get("format", [])
 
