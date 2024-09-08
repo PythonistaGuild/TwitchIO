@@ -1147,31 +1147,7 @@ class ChatNotification(BaseEvent):
             - emote
             - mention
 
-    sub: ChatSub | None
-        Information about the sub event. `None` if `notice_type` is not sub.
-    resub: ChatResub | None
-        Information about the resub event. `None` if `notice_type` is not resub.
-    sub_gift: ChatSubGift | None
-                Information about the gift sub event. `None` if `notice_type` is not sub_gift.
-    community_sub_gift: ChatCommunitySubGift | None
-        Information about the community gift sub event. `None` if `notice_type` is not community_sub_gift.
-    gift_paid_upgrade: ChatGiftPaidUpgrade | None
-        nformation about the community gift paid upgrade event. `None` if `notice_type` is not gift_paid_upgrade.
-    prime_paid_upgrade: ChatPrimePaidUpgrade | None
-        Information about the Prime gift paid upgrade event. `None` if `notice_type` is not prime_paid_upgrade.
-    raid: ChatRaid | None
-        Information about the raid event. `None` if `notice_type` is not raid.
-    unraid: None
-        Returns None as this is an empty payload. You will need to check the `notice_type`.
-    pay_it_forward: ChatPayItForward | None
-        Information about the pay it forward event. `None` if `notice_type` is not pay_it_forward
-    announcement: ChatAnnouncement | None
-        Information about the announcement event. `None` if `notice_type` is not announcement
-    bits_badge_tier: ChatBitsBadgeTier | None
-        nformation about the bits badge tier event. `None` if `notice_type` is not bits_badge_tier
-    charity_donation: ChatCharityDonation
-        Information about the announcement event. `None` if `notice_type` is not charity_donation
-    notice_type: Literal["sub", "resub", "sub_gift", "community_sub_gift", "gift_paid_upgrade", "prime_paid_upgrade", "raid", "unraid", "pay_it_forward", "announcement", "bits_badge_tier", "charity_donation"]
+    notice_type: Literal["sub", "resub", "sub_gift", "community_sub_gift", "gift_paid_upgrade", "prime_paid_upgrade", "raid", "unraid", "pay_it_forward", "announcement", "bits_badge_tier", "charity_donation", "shared_chat_sub", "shared_chat_resub", "shared_chat_community_sub_gift", "shared_chat_gift_paid_upgrade", "shared_chat_prime_paid_upgrade", "shared_chat_raid", "shared_chat_pay_it_forward", "shared_chat_announcement"]
         The type of notice. Possible values are:
 
             - sub
@@ -1194,6 +1170,58 @@ class ChatNotification(BaseEvent):
             - shared_chat_raid
             - shared_chat_pay_it_forward
             - shared_chat_announcement
+
+    sub: ChatSub | None
+        Information about the sub event. `None` if `notice_type` is not `sub`.
+    resub: ChatResub | None
+        Information about the resub event. `None` if `notice_type` is not `resub`.
+    sub_gift: ChatSubGift | None
+                Information about the gift sub event. `None` if `notice_type` is not `sub_gift`.
+    community_sub_gift: ChatCommunitySubGift | None
+        Information about the community gift sub event. `None` if `notice_type` is not `community_sub_gift`.
+    gift_paid_upgrade: ChatGiftPaidUpgrade | None
+        nformation about the community gift paid upgrade event. `None` if `notice_type` is not `gift_paid_upgrade`.
+    prime_paid_upgrade: ChatPrimePaidUpgrade | None
+        Information about the Prime gift paid upgrade event. `None` if `notice_type` is not `prime_paid_upgrade`.
+    raid: ChatRaid | None
+        Information about the raid event. `None` if `notice_type` is not `raid`.
+    unraid: None
+        Returns None as this is an empty payload. You will need to check the `notice_type`.
+    pay_it_forward: ChatPayItForward | None
+        Information about the pay it forward event. `None` if `notice_type` is not `pay_it_forward`
+    announcement: ChatAnnouncement | None
+        Information about the announcement event. `None` if `notice_type` is not `announcement`
+    bits_badge_tier: ChatBitsBadgeTier | None
+        Information about the bits badge tier event. `None` if `notice_type` is not `bits_badge_tier`
+    charity_donation: ChatCharityDonation
+        Information about the announcement event. `None` if `notice_type` is not `charity_donation`
+    shared_sub: ChatSub | None
+        Information about the shared_chat_sub event. Is `None` if `notice_type` is not `shared_chat_sub`.
+        This field has the same information as the sub field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_resub: ChatResub | None
+        Information about the shared_chat_resub event. Is `None` if `notice_type` is not `shared_chat_resub`.
+        This field has the same information as the resub field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_sub_gift: ChatSubGift | None
+        Information about the shared_chat_sub_gift event. Is `None` if `notice_type` is not `shared_chat_sub_gift`.
+        This field has the same information as the chat_sub_gift field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_community_sub_gift: ChatCommunitySubGift | None
+        Information about the shared_chat_community_sub_gift event. Is `None` if `notice_type` is not `shared_chat_community_sub_gift`.
+        This field has the same information as the community_sub_gift field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_gift_paid_upgrade: ChatGiftPaidUpgrade | None
+        Information about the shared_chat_gift_paid_upgrade event. Is `None` if `notice_type` is not `shared_chat_gift_paid_upgrade`.
+        This field has the same information as the gift_paid_upgrade field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_prime_paid_upgrade: ChatPrimePaidUpgrade | None
+        Information about the shared_chat_chat_prime_paid_upgrade event. Is `None` if `notice_type` is not `shared_chat_prime_paid_upgrade`.
+        This field has the same information as the prime_paid_upgrade field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_raid: ChatRaid | None
+        Information about the shared_chat_raid event. Is `None` if `notice_type` is not `shared_chat_raid`.
+        This field has the same information as the raid field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_pay_it_forward: ChatPayItForward | None
+        Information about the shared_chat_pay_it_forward event. Is `None` if `notice_type` is not `shared_chat_pay_it_forward`.
+        This field has the same information as the pay_it_forward field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_announcement: ChatAnnouncement | None
+        Information about the shared_chat_announcement event. Is `None` if `notice_type` is not `shared_chat_announcement`.
+        This field has the same information as the announcement field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
     """
 
     subscription_type = "channel.chat.notification"
@@ -1221,6 +1249,15 @@ class ChatNotification(BaseEvent):
         "announcement",
         "bits_badge_tier",
         "charity_donation",
+        "shared_chat_sub",
+        "shared_chat_resub",
+        "shared_chat_sub_gift",
+        "shared_chat_community_sub_gift",
+        "shared_chat_gift_paid_upgrade",
+        "shared_chat_prime_paid_upgrade",
+        "shared_chat_raid",
+        "shared_chat_pay_it_forward",
+        "shared_chat_announcement",
     )
 
     def __init__(self, payload: ChannelChatNotificationEvent, *, http: HTTPClient) -> None:
@@ -1267,6 +1304,44 @@ class ChatNotification(BaseEvent):
         self.charity_donation: ChatCharityDonation | None = (
             ChatCharityDonation(payload["charity_donation"]) if payload["charity_donation"] is not None else None
         )
+        self.shared_sub: ChatSub | None = (
+            ChatSub(payload["shared_chat_sub"]) if payload["shared_chat_sub"] is not None else None
+        )
+        self.shared_resub: ChatResub | None = (
+            ChatResub(payload["shared_chat_resub"], http=http) if payload["shared_chat_resub"] is not None else None
+        )
+        self.shared_sub_gift: ChatSubGift | None = (
+            ChatSubGift(payload["shared_chat_sub_gift"], http=http) if payload["shared_chat_sub_gift"] is not None else None
+        )
+        self.shared_community_sub_gift: ChatCommunitySubGift | None = (
+            ChatCommunitySubGift(payload["shared_chat_community_sub_gift"])
+            if payload["shared_chat_community_sub_gift"] is not None
+            else None
+        )
+        self.shared_gift_paid_upgrade: ChatGiftPaidUpgrade | None = (
+            ChatGiftPaidUpgrade(payload["shared_chat_gift_paid_upgrade"], http=http)
+            if payload["shared_chat_gift_paid_upgrade"] is not None
+            else None
+        )
+        self.shared_prime_paid_upgrade: ChatPrimePaidUpgrade | None = (
+            ChatPrimePaidUpgrade(payload["shared_chat_prime_paid_upgrade"])
+            if payload["shared_chat_prime_paid_upgrade"] is not None
+            else None
+        )
+        self.shared_raid: ChatRaid | None = (
+            ChatRaid(payload["shared_chat_raid"], http=http) if payload["shared_chat_raid"] is not None else None
+        )
+        self.shared_pay_it_forward: ChatPayItForward | None = (
+            ChatPayItForward(payload["shared_chat_pay_it_forward"], http=http)
+            if payload["shared_chat_pay_it_forward"] is not None
+            else None
+        )
+        self.shared_announcement: ChatAnnouncement | None = (
+            ChatAnnouncement(payload["shared_chat_announcement"])
+            if payload["shared_chat_announcement"] is not None
+            else None
+        )
+
         self.notice_type: Literal[
             "sub",
             "resub",
@@ -1280,6 +1355,15 @@ class ChatNotification(BaseEvent):
             "announcement",
             "bits_badge_tier",
             "charity_donation",
+            "shared_chat_sub",
+            "shared_chat_resub",
+            "shared_chat_sub_gift",
+            "shared_chat_community_sub_gift",
+            "shared_chat_gift_paid_upgrade",
+            "shared_chat_prime_paid_upgrade",
+            "shared_chat_raid",
+            "shared_chat_pay_it_forward",
+            "shared_chat_announcement",
         ] = payload["notice_type"]
 
     @property

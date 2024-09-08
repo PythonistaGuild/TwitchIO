@@ -508,6 +508,15 @@ class ChannelChatNotificationEvent(BaseBroadcasterEvent):
         "announcement",
         "bits_badge_tier",
         "charity_donation",
+        "shared_chat_sub",
+        "shared_chat_resub",
+        "shared_chat_sub_gift",
+        "shared_chat_community_sub_gift",
+        "shared_chat_gift_paid_upgrade",
+        "shared_chat_prime_paid_upgrade",
+        "shared_chat_raid",
+        "shared_chat_pay_it_forward",
+        "shared_chat_announcement",
     ]
     sub: ChatSubData | None
     resub: ChatResubData | None
@@ -521,6 +530,15 @@ class ChannelChatNotificationEvent(BaseBroadcasterEvent):
     announcement: ChatAnnouncementData | None
     bits_badge_tier: ChatBitsBadgeTierData | None
     charity_donation: ChatCharityDonationData | None
+    shared_chat_sub: ChatSubData | None
+    shared_chat_resub: ChatResubData | None
+    shared_chat_sub_gift: ChatSubGiftData | None
+    shared_chat_community_sub_gift: ChatCommunitySubGiftData | None
+    shared_chat_gift_paid_upgrade: ChatGiftPaidUpgradeData | None
+    shared_chat_prime_paid_upgrade: ChatPrimePaidUpgradeData | None
+    shared_chat_pay_it_forward: ChatPayItForwardData | None
+    shared_chat_raid: ChatRaidData | None
+    shared_chat_announcement: ChatAnnouncementData | None
 
 
 class ChannelChatMessageDeleteEvent(BaseBroadcasterEvent):
