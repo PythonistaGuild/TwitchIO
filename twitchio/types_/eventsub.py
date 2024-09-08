@@ -567,7 +567,7 @@ class ChatUserMessageUpdateEvent(ChatUserMessageHoldEvent):
 
 
 class ChannelSubscribeEvent(BroadcasterUserEvent):
-    tier: str
+    tier: Literal["1000", "2000", "3000"]
     is_gift: bool
 
 
@@ -576,7 +576,10 @@ class ChannelSubscriptionEndEvent(BroadcasterUserEvent):
     is_gift: bool
 
 
-class ChannelSubscriptionGiftEvent(BroadcasterUserEvent):
+class ChannelSubscriptionGiftEvent(BaseBroadcasterEvent):
+    user_id: str | None
+    user_login: str | None
+    user_name: str | None
     total: int
     tier: str
     cumulative_total: int | None
@@ -644,7 +647,10 @@ class ChannelUnbanRequestEvent(BroadcasterUserEvent):
     created_at: str
 
 
-class ChannelUnbanRequestResolveEvent(BroadcasterModUserEvent):
+class ChannelUnbanRequestResolveEvent(BroadcasterUserEvent):
+    moderator_user_id: str | None
+    moderator_user_login: str | None
+    moderator_user_name: str | None
     id: str
     resolution_text: str
     status: Literal["approved", "canceled", "denied"]

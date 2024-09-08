@@ -1375,6 +1375,19 @@ class ChatNotification(BaseEvent):
 
 
 class ChatMessageDelete(BaseEvent):
+    """
+    Represents a chat message delete event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel deleted the message.
+    user: PartialUser
+        The user whose message was deleted.
+    message_id: str
+        The message ID of the deleted message.
+    """
+
     subscription_type = "channel.chat.message_delete"
 
     __slots__ = ("broadcaster", "user", "message_id")
@@ -1391,6 +1404,30 @@ class ChatMessageDelete(BaseEvent):
 
 
 class ChatSettingsUpdate(BaseEvent):
+    """
+    Represents a chat settings update event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel updated their chat settings.
+    emote_mode: bool
+        Whether chat messages must contain only emotes.
+    slow_mode: bool
+        Whether the broadcaster limits how often users in the chat room are allowed to send messages.
+    slow_mode_wait_time: int | None
+        The amount of time, in seconds, that users need to wait between sending messages. `None` if `slow_mode` is False.
+    follower_mode: bool
+        Whether the broadcaster restricts the chat room to followers only, based on how long they've followed.
+    follower_mode_duration: int | None
+        The length of time, in minutes, that the followers must have followed the broadcaster to participate in the chat room.
+        `None` if `follower_mode` is False.
+    subscriber_mode: bool
+        Whether only users that subscribe to the broadcaster's channel can talk in the chat room.
+    unique_chat_mode: bool
+        Whether the broadcaster requires users to post only unique messages in the chat room.
+    """
+
     subscription_type = "channel.chat_settings.update"
 
     __slots__ = (
@@ -1460,6 +1497,21 @@ class ChatUserMessageUpdate(BaseChatMessage):
 
 
 class ChannelSubscribe(BaseEvent):
+    """
+    Represents a channel subscribe event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel received a subscription.
+    user: PartialUser
+        The user who subscribed to the channel.
+    tier: str
+        The tier of the subscription. Valid values are 1000, 2000, and 3000.
+    gift: bool
+        Whether the subscription is a gift.
+    """
+
     subscription_type = "channel.subscribe"
 
     __slots__ = (
@@ -1474,7 +1526,7 @@ class ChannelSubscribe(BaseEvent):
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
-        self.tier: str = payload["tier"]
+        self.tier: Literal["1000", "2000", "3000"] = payload["tier"]
         self.gift: bool = bool(payload["is_gift"])
 
     def __repr__(self) -> str:
@@ -1482,7 +1534,22 @@ class ChannelSubscribe(BaseEvent):
 
 
 class ChannelSubscriptionEnd(BaseEvent):
-    subscription_type = "channel.subscribe.end"
+    """
+    Represents a channel subscription end event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had the subscription end.
+    user: PartialUser
+        The user whose subscription ended.
+    tier: str
+        The tier of the subscription that ended. Valid values are 1000, 2000, and 3000.
+    gift: bool
+        Whether the subscription was a gift.
+    """
+
+    subscription_type = "channel.subscription.end"
 
     __slots__ = (
         "broadcaster",
@@ -1504,7 +1571,27 @@ class ChannelSubscriptionEnd(BaseEvent):
 
 
 class ChannelSubscriptionGift(BaseEvent):
-    subscription_type = "channel.subscribe.gift"
+    """
+    Represents a channel subscription gift event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel received the gift subscriptions.
+    user: PartialUser | None
+        The user who sent the gift. `None` if it was an anonymous subscription gift.
+    tier: str
+        The tier of the subscription that ended. Valid values are 1000, 2000, and 3000.
+    total: int
+        The number of subscriptions in the subscription gift.
+    anonymous: bool
+        Whether the subscription gift was anonymous.
+    cumulative_total: int | None
+        The number of subscriptions gifted by this user in the channel.
+        This is `None` for anonymous gifts or if the gifter has opted out of sharing this information
+    """
+
+    subscription_type = "channel.subscription.gift"
 
     __slots__ = ("broadcaster", "user", "tier", "total", "cumulative_total", "anonymous")
 
@@ -1512,7 +1599,9 @@ class ChannelSubscriptionGift(BaseEvent):
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser | None = (
+            PartialUser(payload["user_id"], payload["user_login"], http=http) if payload["user_id"] is not None else None
+        )
         self.tier: str = payload["tier"]
         self.total: int = int(payload["total"])
         self.anonymous: bool = bool(payload["is_anonymous"])
@@ -1536,6 +1625,19 @@ class BaseEmote:
 
 
 class SubscribeEmote(BaseEmote):
+    """
+    Represents a subscription emote.
+
+    Attributes
+    ----------
+    begin: int
+        The index of where the emote starts in the text.
+    end: int
+        The index of where the emote ends in the text.
+    id: str
+        The emote ID.
+    """
+
     def __init__(self, data: SubscribeEmoteData) -> None:
         super().__init__(data)
 
@@ -1544,9 +1646,33 @@ class SubscribeEmote(BaseEmote):
 
 
 class ChannelSubscriptionMessage(BaseEvent):
-    subscription_type = "channel.subscribe.message"
+    """
+    Represents a subscription message event.
 
-    __slots__ = ("broadcaster", "user", "tier", "message", "cumulative_months", "streak_months", "duration")
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel received a subscription message.
+    user: PartialUser
+        The user who sent a resubscription chat message.
+    tier: str
+        The tier of the user's subscription.
+    months: str
+        The month duration of the subscription.
+    cumulative_months: int
+        The total number of months the user has been subscribed to the channel.
+    streak_months: int | None
+        The number of consecutive months the user's current subscription has been active.
+        `None` if the user has opted out of sharing this information
+    text: str
+        The text of the resubscription chat message.
+    emotes: list[SubscribeEmote]
+        List of emote information for the subscription message. This includes start and end positions for where the emote appears in the text.
+    """
+
+    subscription_type = "channel.subscription.message"
+
+    __slots__ = ("broadcaster", "user", "tier", "message", "cumulative_months", "streak_months", "months")
 
     def __init__(self, payload: ChannelSubscribeMessageEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -1554,7 +1680,7 @@ class ChannelSubscriptionMessage(BaseEvent):
         )
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
         self.tier: str = payload["tier"]
-        self.duration_months: int = int(payload["duration_months"])
+        self.months: int = int(payload["duration_months"])
         self.cumulative_months: int = int(payload["cumulative_months"])
         self.streak_months: int | None = int(payload["streak_months"]) if payload["streak_months"] is not None else None
         self.text: str = payload["message"]["text"]
@@ -1565,6 +1691,23 @@ class ChannelSubscriptionMessage(BaseEvent):
 
 
 class ChannelCheer(BaseEvent):
+    """
+    Represents a channel cheer event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel received a cheer.
+    user: PartialUser | None
+        The user who cheered on the specified channel. `None` if anonymous is true.
+    anonymous: bool
+        Whether the user cheered anonymously or not.
+    bits: int
+        The number of bits cheered.
+    message: str
+        The message sent with the cheer.
+    """
+
     subscription_type = "channel.cheer"
 
     __slots__ = ("broadcaster", "user", "anonymous", "message", "bits")
@@ -1585,6 +1728,19 @@ class ChannelCheer(BaseEvent):
 
 
 class ChannelRaid(BaseEvent):
+    """
+    Represents a channel raid event.
+
+    Attributes
+    ----------
+    from_broadcaster: PartialUser
+        The broadcaster whose channel started a raid.
+    to_broadcaster: PartialUser
+        The broadcaster whose channel is being raided.
+    viewer_count: int
+        The number of viewers in the raid.
+    """
+
     subscription_type = "channel.raid"
 
     __slots__ = ("from_broadcaster", "to_boradcaster", "viewer_count")
@@ -1603,6 +1759,27 @@ class ChannelRaid(BaseEvent):
 
 
 class ChannelBan(BaseEvent):
+    """
+    Represents a channel ban event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel banned a user.
+    user: PartialUser
+        The user who was banned on the specified channel.
+    moderator: PartialUser
+        The moderator who banned the user.
+    reason: str
+        The reason behind the ban.
+    banned_at: datetime.datetime
+        The datetime of when the user was banned or put in a timeout.
+    ends_at: datetime.datetime | None
+        The datetime of when the timeout ends. `None` if the user was banned instead of put in a timeout
+    permanent: bool
+        Indicates whether the ban is permanent (True) or a timeout (False). If True, `ends_at` will be `None`.
+    """
+
     subscription_type = "channel.ban"
 
     __slots__ = ("broadcaster", "user", "moderator", "reason", "banned_at", "ends_at", "permanent")
@@ -1625,6 +1802,19 @@ class ChannelBan(BaseEvent):
 
 
 class ChannelUnban(BaseEvent):
+    """
+    Represents a channel unban event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel unbanned a user.
+    user: PartialUser
+        The user who was unbanned on the specified channel.
+    moderator: PartialUser
+        The moderator who unbanned the user.
+    """
+
     subscription_type = "channel.unban"
 
     __slots__ = ("broadcaster", "user", "moderator")
@@ -1641,6 +1831,23 @@ class ChannelUnban(BaseEvent):
 
 
 class ChannelUnbanRequest(BaseEvent):
+    """
+    Represents a channel unban request event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel received an unban request.
+    user: PartialUser
+        The user that is requesting to be unbanned.
+    id: str
+        The ID of the unban request.
+    text: str
+        The message sent in the unban request.
+    created_at: datetime.datetime
+        The datetime of when the unban request was created.
+    """
+
     subscription_type = "channel.unban_request.create"
 
     __slots__ = ("broadcaster", "user", "id", "text", "created_at")
@@ -1659,17 +1866,45 @@ class ChannelUnbanRequest(BaseEvent):
 
 
 class ChannelUnbanRequestResolve(BaseEvent):
+    """
+    Represents a channel unban request resolve event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel resolved an unban request.
+    user: PartialUser
+        The user that is requesting to be unbanned.
+    moderator: PartialUser | None
+        The moderator who approved/denied the request. This is None is the user is unbanned (/unban) via chat.
+    id: str
+        The ID of the unban request.
+    text: str
+        The message sent in the unban request.
+    status: Literal["approved", "canceled", "denied"]
+        Whether the unban request was approved or denied. Can be the following:
+
+        - approved
+        - canceled
+        - denied
+    """
+
     subscription_type = "channel.unban_request.resolve"
 
-    __slots__ = ("broadcaster", "user", "id", "resolution_text", "status")
+    __slots__ = ("broadcaster", "user", "id", "text", "status")
 
     def __init__(self, payload: ChannelUnbanRequestResolveEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
         )
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.moderator: PartialUser | None = (
+            PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+            if payload["moderator_user_id"] is not None
+            else None
+        )
         self.id: str = payload["id"]
-        self.resolution_text: str = payload["resolution_text"]
+        self.text: str = payload["resolution_text"]
         self.status: Literal["approved", "canceled", "denied"] = payload["status"]
 
     def __repr__(self) -> str:
