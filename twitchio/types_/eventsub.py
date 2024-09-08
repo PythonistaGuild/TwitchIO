@@ -410,7 +410,7 @@ class ChatSubData(TypedDict):
 class ChatResubData(TypedDict):
     cumulative_months: int
     duration_months: int
-    streak_months: int
+    streak_months: int | None
     sub_tier: Literal["1000", "2000", "3000"]
     is_prime: bool
     is_gift: bool

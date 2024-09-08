@@ -786,22 +786,73 @@ class ChatMessage(BaseChatMessage):
 
 
 class ChatSub:
-    __slots__ = ("tier", "prime", "duration_months")
+    """
+    Represents a chat subscription.
+
+    Attributes
+    ----------
+    tier: Literal["1000", "2000", "3000"]
+        The type of subscription plan being used.
+
+        | Type | Description |
+        |------|-------------|
+        | 1000 | First level of paid or Prime subscription. |
+        | 2000 | Second level of paid subscription. |
+        | 3000 | Third level of paid subscription. |
+
+    prime: bool
+        Indicates if the subscription was obtained through Amazon Prime.
+    months: int
+        The number of months the subscription is for.
+    """
+
+    __slots__ = ("tier", "prime", "months")
 
     def __init__(self, data: ChatSubData) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
         self.prime: bool = bool(data["is_prime"])
-        self.duration_months: int = int(data["duration_months"])
+        self.months: int = int(data["duration_months"])
 
     def __repr__(self) -> str:
-        return f"<ChatSub tier={self.tier} prime={self.prime} duration_months={self.duration_months}>"
+        return f"<ChatSub tier={self.tier} prime={self.prime} months={self.months}>"
 
 
 class ChatResub:
+    """
+    Represents a chat resubscription.
+
+    Attributes
+    ----------
+    tier: Literal["1000", "2000", "3000"]
+        The type of subscription plan being used.
+
+        | Type | Description |
+        |------|-------------|
+        | 1000 | First level of paid or Prime subscription. |
+        | 2000 | Second level of paid subscription. |
+        | 3000 | Third level of paid subscription. |
+
+    prime: bool
+        Indicates if the subscription was obtained through Amazon Prime.
+    months: int
+        The number of months the subscription is for.
+    cumulative_months: int
+        The total number of months the user has subscribed.
+    streak_months: int
+        The number of consecutive months the user's current subscription has been active.
+        This is None if the user has opted out of sharing this information.
+    gift: bool
+        Whether or not the resub was a result of a gift.
+    anonymous: bool | None
+        Whether or not the gift was anonymous.
+    gifter: PartialUser | None
+        The user who gifted the subscription.
+    """
+
     __slots__ = (
         "tier",
         "prime",
-        "duration",
+        "months",
         "cumulative_months",
         "streak_months",
         "gift",
@@ -813,9 +864,9 @@ class ChatResub:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
         self.prime: bool = bool(data["is_prime"])
         self.gift: bool = bool(data["is_gift"])
-        self.duration: int = int(data["duration_months"])
+        self.months: int = int(data["duration_months"])
         self.cumulative_months: int = int(data["cumulative_months"])
-        self.streak_months: int = int(data["streak_months"])
+        self.streak_months: int | None = int(data["streak_months"]) if data["streak_months"] is not None else None
         self.anonymous: bool | None = (
             bool(data["gifter_is_anonymous"]) if data.get("gifter_is_anonymous") is not None else None
         )
@@ -825,37 +876,94 @@ class ChatResub:
         )
 
     def __repr__(self) -> str:
-        return f"<ChatResub tier={self.tier} prime={self.prime} duration={self.duration}>"
+        return f"<ChatResub tier={self.tier} prime={self.prime} months={self.months}>"
 
 
 class ChatSubGift:
-    __slots__ = ("duration", "tier", "cumulative_total", "recipient", "community_gift_id")
+    """
+    Represents a chat subscription gift.
+
+    Attributes
+    ----------
+    tier: Literal["1000", "2000", "3000"]
+        The type of subscription plan being used.
+
+        | Type | Description |
+        |------|-------------|
+        | 1000 | First level of paid or Prime subscription. |
+        | 2000 | Second level of paid subscription. |
+        | 3000 | Third level of paid subscription. |
+
+    months: int
+        The number of months the subscription is for.
+    cumulative_total: int | None
+        The amount of gifts the gifter has given in this channel. `None` if anonymous.
+    community_gift_id: int | None
+        The ID of the associated community gift. `Mone` if not associated with a community gift.
+    recipient: PartialUser
+        The user who received the gift subscription.
+    """
+
+    __slots__ = ("months", "tier", "cumulative_total", "recipient", "community_gift_id")
 
     def __init__(self, data: ChatSubGiftData, *, http: HTTPClient) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
-        self.duration: int = int(data["duration_months"])
+        self.months: int = int(data["duration_months"])
         self.cumulative_total: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
         self.community_gift_id: str | None = data.get("community_gift_id")
         self.recipient: PartialUser = PartialUser(data["recipient_user_id"], data["recipient_user_login"], http=http)
 
     def __repr__(self) -> str:
-        return f"<ChatSubGift tier={self.tier} duration={self.duration} recipient={self.recipient}>"
+        return f"<ChatSubGift tier={self.tier} months={self.months} recipient={self.recipient}>"
 
 
 class ChatCommunitySubGift:
+    """
+    Represents a chat community subscription gift.
+
+    Attributes
+    ----------
+    tier: Literal["1000", "2000", "3000"]
+        The type of subscription plan being used.
+
+        | Type | Description |
+        |------|-------------|
+        | 1000 | First level of paid or Prime subscription. |
+        | 2000 | Second level of paid subscription. |
+        | 3000 | Third level of paid subscription. |
+
+    total: int
+        Number of subscriptions being gifted.
+    cumulative_total: int | None
+        The amount of gifts the gifter has given in this channel. `None`` if anonymous.
+    id: str
+        The ID of the associated community gift. `Mone` if not associated with a community gift.
+    """
+
     __slots__ = ("total", "tier", "cumulative_total", "id")
 
     def __init__(self, data: ChatCommunitySubGiftData) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
         self.total: int = int(data["total"])
         self.cumulative_total: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
-        self.id: str | None = data.get("community_gift_id")
+        self.id: str = data["id"]
 
     def __repr__(self) -> str:
         return f"<ChatCommunitySubGift id={self.id} tier={self.tier} total={self.total}>"
 
 
 class ChatGiftPaidUpgrade:
+    """
+    Represents a paid chat subscription upgrade gift.
+
+    Attributes
+    ----------
+    anonymous: bool
+        Whether the gift was given anonymously.
+    gifter: PartialUser | None
+        The user who gifted the subscription. `None` if anonymous.
+    """
+
     __slots__ = ("anonymous", "gifter")
 
     def __init__(self, data: ChatGiftPaidUpgradeData, *, http: HTTPClient) -> None:
@@ -870,6 +978,21 @@ class ChatGiftPaidUpgrade:
 
 
 class ChatPrimePaidUpgrade:
+    """
+    Represents a prime chat subscription upgrade.
+
+    Attributes
+    ----------
+    tier: Literal["1000", "2000", "3000"]
+        The type of subscription plan being used.
+
+        | Type | Description |
+        |------|-------------|
+        | 1000 | First level of paid or Prime subscription. |
+        | 2000 | Second level of paid subscription. |
+        | 3000 | Third level of paid subscription. |
+    """
+
     __slots__ = ("tier",)
 
     def __init__(self, data: ChatPrimePaidUpgradeData) -> None:
@@ -880,6 +1003,19 @@ class ChatPrimePaidUpgrade:
 
 
 class ChatRaid:
+    """
+    Represents a chat raid event.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user raiding this channel.
+    viewer_count: int
+        The number of viewers raiding this channel from the user's channel.
+    profile_image: Asset
+        Profile image, as an Asset, of the user raiding this channel.
+    """
+
     __slots__ = ("user", "viewer_count", "profile_image")
 
     def __init__(self, data: ChatRaidData, *, http: HTTPClient) -> None:
@@ -892,6 +1028,17 @@ class ChatRaid:
 
 
 class ChatPayItForward:
+    """
+    Represents a pay it forward gift subscription.
+
+    Attributes
+    ----------
+    anonymous: bool
+        Whether the gift was given anonymously.
+    gifter: PartialUser | None
+        The user who gifted the subscription. `None` if anonymous.
+    """
+
     __slots__ = ("anonymous", "gifter")
 
     def __init__(self, data: ChatPayItForwardData, *, http: HTTPClient) -> None:
@@ -906,6 +1053,15 @@ class ChatPayItForward:
 
 
 class ChatAnnouncement:
+    """
+    Represents a pay it forward gift subscription.
+
+    Attributes
+    ----------
+    colour: Literal["BLUE", "PURPLE", "ORANGE", "GREEN", "PRIMARY"]
+        Colour of the announcement.
+    """
+
     __slots__ = ("colour",)
 
     def __init__(self, data: ChatAnnouncementData) -> None:
@@ -913,6 +1069,7 @@ class ChatAnnouncement:
 
     @property
     def color(self) -> Literal["BLUE", "PURPLE", "ORANGE", "GREEN", "PRIMARY"]:
+        """An alias for Colour"""
         return self.colour
 
     def __repr__(self) -> str:
@@ -920,6 +1077,15 @@ class ChatAnnouncement:
 
 
 class ChatBitsBadgeTier:
+    """
+    Represents a bits badge tier.
+
+    Attributes
+    ----------
+    tier: int
+        The tier of the Bits badge the user just earned. For example, 100, 1000, or 10000.
+    """
+
     __slots__ = ("tier",)
 
     def __init__(self, data: ChatBitsBadgeTierData) -> None:
@@ -929,24 +1095,23 @@ class ChatBitsBadgeTier:
         return f"<ChatBitsBadgeTier tier={self.tier}>"
 
 
-class ChatCharityValues:
-    __slots__ = ("value", "decimal_place", "currency")
-
-    def __init__(self, data: ChatCharityAmountData) -> None:
-        self.value: int = int(data["value"])
-        self.decimal_place: int = int(data["decimal_place"])
-        self.currency: str = data["currency"]
-
-    def __repr__(self) -> str:
-        return f"<ChatCharityValues value={self.value} decimal_place={self.decimal_place} currency={self.currency}>"
-
-
 class ChatCharityDonation:
+    """
+    Represents a charity donation.
+
+    Attributes
+    ----------
+    name: str
+        Name of the charity.
+    amount: CharityValues
+        The amount of money donation. This includes currency and decimal places.
+    """
+
     __slots__ = ("name", "amount")
 
     def __init__(self, data: ChatCharityDonationData) -> None:
         self.name: str = data["charity_name"]
-        self.amount: ChatCharityValues = ChatCharityValues(data["amount"])
+        self.amount: CharityValues = CharityValues(data["amount"])
 
     def __repr__(self) -> str:
         return f"<ChatCharityDonation name={self.name}>"
@@ -1011,7 +1176,7 @@ class ChatNotification(BaseEvent):
             ChatPrimePaidUpgrade(payload["prime_paid_upgrade"]) if payload["prime_paid_upgrade"] is not None else None
         )
         self.raid: ChatRaid | None = ChatRaid(payload["raid"], http=http) if payload["raid"] is not None else None
-        self.unraid: None  # TODO This returns an empty payload otherwise None so just make it None?
+        self.unraid: None = None
         self.pay_it_forward: ChatPayItForward | None = (
             ChatPayItForward(payload["pay_it_forward"], http=http) if payload["pay_it_forward"] is not None else None
         )

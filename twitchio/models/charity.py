@@ -32,6 +32,7 @@ from twitchio.user import PartialUser
 
 if TYPE_CHECKING:
     from ..http import HTTPClient
+    from ..types_.eventsub import ChatCharityAmountData
     from ..types_.responses import (
         CharityCampaignDonationsResponseAmount,
         CharityCampaignDonationsResponseData,
@@ -102,10 +103,12 @@ class CharityValues:
         self,
         data: CharityCampaignResponseCurrentAmount
         | CharityCampaignResponseTargetAmount
-        | CharityCampaignDonationsResponseAmount,
+        | CharityCampaignDonationsResponseAmount
+        | ChatCharityAmountData,
     ) -> None:
         self.value: int = int(data["value"])
-        self.decimal_places: int = int(data["decimal_places"])
+        decimal_places: int = data.get("decimal_places") or data.get("decimal_place", 0)
+        self.decimal_places: int = decimal_places
         self.currency: str = data["currency"]
 
     def __repr__(self) -> str:
