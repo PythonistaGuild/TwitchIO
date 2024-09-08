@@ -74,6 +74,7 @@ class Command(Generic[Component_T, P]):
 
         self._injected: Component_T | None = None
         self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
+        self._extras: dict[Any, Any] = kwargs.get("extras", {})
 
     def __str__(self) -> str:
         return self._name
@@ -89,6 +90,10 @@ class Command(Generic[Component_T, P]):
     @property
     def aliases(self) -> list[str]:
         return self._aliases
+
+    @property
+    def extras(self) -> dict[Any, Any]:
+        return self._extras
 
     @property
     def has_error(self) -> bool:
@@ -179,7 +184,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
     def walk_commands(self) -> ...: ...
 
 
-def command(name: str | None = None, aliases: list[str] | None = None) -> Any:
+def command(name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None) -> Any:
     def wrapper(
         func: Callable[Concatenate[Component_T, Context, P], Coro]
         | Callable[Concatenate[Context, P], Coro]
@@ -192,6 +197,6 @@ def command(name: str | None = None, aliases: list[str] | None = None) -> Any:
             raise TypeError(f'Command callback for "{func.__qualname__}" must be a coroutine function.')
 
         name_ = name or func.__name__
-        return Command(name=name_, callback=func, aliases=aliases or [])
+        return Command(name=name_, callback=func, aliases=aliases or [], extras=extras or {})
 
     return wrapper

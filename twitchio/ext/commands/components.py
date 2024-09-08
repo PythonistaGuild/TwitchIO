@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-from typing import TYPE_CHECKING, Any, Self, Unpack
+from typing import TYPE_CHECKING, Any, ClassVar, Self, Unpack
 
 from .core import Command, CommandErrorPayload
 
@@ -44,14 +44,25 @@ __all__ = ("Component",)
 
 class _MetaComponent:
     __component_name__: str
+    __component_extras__: dict[Any, Any]
+    __component_specials__: ClassVar[list[str]] = []
     __all_commands__: dict[str, Command[Any, ...]]
     __all_listeners__: dict[str, list[Callable[..., Coroutine[Any, Any, None]]]]
     __all_checks__: list[Callable[..., Coroutine[Any, Any, None]]]
+
+    @classmethod
+    def _component_special(cls, obj: Any) -> ...:
+        setattr(obj, "__component_special__", True)
+        cls.__component_specials__.append(obj.__name__)
+
+        return obj
 
     def __init_subclass__(cls, **kwargs: Unpack[ComponentOptions]) -> None:
         name: str | None = kwargs.get("name", None)
         if name:
             cls.__component_name__ = name
+
+        cls.__component_extras__ = kwargs.get("extras", {})
 
     def __new__(cls, *args: Any, **Kwargs: Any) -> Self:
         self: Self = super().__new__(cls)
@@ -64,12 +75,19 @@ class _MetaComponent:
         checks: list[Callable[..., Coroutine[Any, Any, None]]] = []
 
         no_special: str = 'Commands, listeners and checks must not start with special name "component_" in components:'
+        no_over: str = 'The special method "{}" can not be overriden in components.'
 
         for base in reversed(cls.__mro__):
             for name, member in base.__dict__.items():
+                if name in self.__component_specials__ and not hasattr(member, "__component_special__"):
+                    raise TypeError(no_over.format(name))
+
                 if isinstance(member, Command):
                     if name.startswith("component_"):
                         raise TypeError(f'{no_special} "{member._callback.__qualname__}" is invalid.')  # type: ignore
+
+                    if not member.extras:
+                        member._extras = self.__component_extras__
 
                     commands[name] = member
 
@@ -106,6 +124,14 @@ class Component(_MetaComponent):
 
     async def component_load(self) -> None: ...
 
+    async def component_before_invoke(self, ctx: Context) -> None: ...
+
+    async def component_after_invoke(self, ctx: Context) -> None: ...
+
+    @_MetaComponent._component_special
+    def extras(self) -> dict[Any, Any]:
+        return self.__component_extras__
+
     @classmethod
     def listener(cls, name: str | None = None) -> Any:
         def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
@@ -132,7 +158,3 @@ class Component(_MetaComponent):
             return func
 
         return wrapper
-
-    async def component_before_invoke(self, ctx: Context) -> None: ...
-
-    async def component_after_invoke(self, ctx: Context) -> None: ...

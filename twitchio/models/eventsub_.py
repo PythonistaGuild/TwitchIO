@@ -1838,6 +1838,7 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
     reward: ChannelPointsReward
         Information about the reward that was redeemed, at the time it was redeemed.
     """
+
     subscription_type = "channel.channel_points_custom_reward_redemption.update"
 
     def __init__(self, payload: ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient) -> None:

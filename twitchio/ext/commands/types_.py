@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import TYPE_CHECKING, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 
 if TYPE_CHECKING:
@@ -34,7 +34,9 @@ Component_T = TypeVar("Component_T", bound="Component | None")
 
 class CommandOptions(TypedDict, total=False):
     aliases: list[str]
+    extras: dict[Any, Any]
 
 
 class ComponentOptions(TypedDict, total=False):
     name: str | None
+    extras: dict[Any, Any]
