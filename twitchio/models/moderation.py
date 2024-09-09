@@ -260,7 +260,7 @@ class Ban:
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
 
     def __repr__(self) -> str:
-        return f"<BanEvent user={self.user} created_at={self.created_at} end_time={self.end_time}>"
+        return f"<Ban broadcaster={self.broadcaster} user={self.user} created_at={self.created_at}>"
 
 
 class Timeout:
@@ -291,7 +291,7 @@ class Timeout:
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
 
     def __repr__(self) -> str:
-        return f"<BanEvent user={self.user} created_at={self.created_at} end_time={self.end_time}>"
+        return f"<Timeout broadcaster={self.broadcaster} user={self.user} created_at={self.created_at} end_time={self.end_time}>"
 
 
 class UnbanRequest:
