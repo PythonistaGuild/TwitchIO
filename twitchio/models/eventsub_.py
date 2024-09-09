@@ -1914,6 +1914,15 @@ class ChannelUnbanRequestResolve(BaseEvent):
 
 
 class ModerateFollowers:
+    """
+    Represents data associated with the followers command.
+
+    Attributes
+    ----------
+    follow_duration: int
+        The length of time, in minutes, that the followers must have followed the broadcaster to participate in the chat room.
+    """
+
     __slots__ = ("follow_duration",)
 
     def __init__(self, data: ModerateFollowersData) -> None:
@@ -1924,6 +1933,17 @@ class ModerateFollowers:
 
 
 class ModerateBan:
+    """
+    Represents data associated with the ban command.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user being banned.
+    reason: str | None
+        Reason given for the ban.
+    """
+
     __slots__ = ("user", "reason")
 
     def __init__(self, data: ModerateBanData, *, http: HTTPClient) -> None:
@@ -1935,6 +1955,19 @@ class ModerateBan:
 
 
 class ModerateTimeout:
+    """
+    Represents data associated with the timeout command.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user being timed out.
+    reason: str | None
+        Reason given for the timeout.
+    expires_at: datetime.datetime
+        The time at which the timeout ends.
+    """
+
     __slots__ = ("user", "reason", "expires_at")
 
     def __init__(self, data: ModerateTimeoutData, *, http: HTTPClient) -> None:
@@ -1947,6 +1980,15 @@ class ModerateTimeout:
 
 
 class ModerateSlow:
+    """
+    Represents data associated with the slow command.
+
+    Attributes
+    ----------
+    wait_time: int
+        The amount of time, in seconds, that users need to wait between sending messages.
+    """
+
     __slots__ = ("wait_time",)
 
     def __init__(self, data: ModerateSlowData) -> None:
@@ -1957,6 +1999,17 @@ class ModerateSlow:
 
 
 class ModerateRaid:
+    """
+    Represents data associated with the raid command.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user being raided.
+    viewer_count: int
+        The viewer count.
+    """
+
     __slots__ = ("user", "viewer_count")
 
     def __init__(self, data: ModerateRaidData, *, http: HTTPClient) -> None:
@@ -1968,18 +2021,46 @@ class ModerateRaid:
 
 
 class ModerateDelete:
-    __slots__ = ("user", "message_id", "message")
+    """
+    Represents data associated with the delete command.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user whose message is being deleted.
+    message_id: str
+        The ID of the message being deleted.
+    text: str
+        The text of the message being deleted.
+    """
+
+    __slots__ = ("user", "message_id", "text")
 
     def __init__(self, data: ModerateDeleteData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
         self.message_id: str = data["message_id"]
-        self.message: str = data["message_body"]
+        self.text: str = data["message_body"]
 
     def __repr__(self) -> str:
-        return f"<ModerateDelete user={self.user} message_id={self.message_id} message={self.message}>"
+        return f"<ModerateDelete user={self.user} message_id={self.message_id} text={self.text}>"
 
 
 class ModerateAutomodTerms:
+    """
+    Represents data associated with the automod terms changes.
+
+    Attributes
+    ----------
+    action: Literal["add", "remove"]
+        Either “add” or “remove”.
+    list: Literal["blocked", "permitted"]
+        Either “blocked” or “permitted”.
+    terms: list[str]
+        Terms being added or removed.
+    from_automod: bool
+        Whether the terms were added due to an Automod message approve/deny action.
+    """
+
     __slots__ = ("action", "list", "terms", "from_automod")
 
     def __init__(self, data: ModerateAutoModTermsData) -> None:
@@ -1993,18 +2074,44 @@ class ModerateAutomodTerms:
 
 
 class ModerateUnbanRequest:
-    __slots__ = ("approved", "user", "message")
+    """
+    Represents data associated with an unban request.
+
+    Attributes
+    ----------
+    approved: bool
+        Whether or not the unban request was approved or denied.
+    user: PartialUser
+        The banned user.
+    text: str
+        The message included by the moderator explaining their approval or denial.
+    """
+
+    __slots__ = ("approved", "user", "text")
 
     def __init__(self, data: ModerateUnbanRequestData, *, http: HTTPClient) -> None:
         self.approved: bool = bool(data["is_approved"])
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
-        self.message: str = data["moderator_message"]
+        self.text: str = data["moderator_message"]
 
     def __repr__(self) -> str:
-        return f"<ModerateUnbanRequest approved={self.approved} user={self.user} message={self.message}>"
+        return f"<ModerateUnbanRequest approved={self.approved} user={self.user} text={self.text}>"
 
 
 class ModerateWarn:
+    """
+    Represents data associated with the warn command.
+
+    Attributes
+    ----------
+    user: PartialUser
+        The user being warned.
+    reason: str | None
+        Reason given for the warning.
+    chat_rules: list[str]
+        Chat rules cited for the warning.
+    """
+
     __slots__ = ("user", "reason", "chat_rules")
 
     def __init__(self, data: ModerateWarnData, *, http: HTTPClient) -> None:
@@ -2132,6 +2239,17 @@ class ChannelModerate(BaseEvent):
 
 
 class ChannelModeratorAdd(BaseEvent):
+    """
+    Represents a moderator add event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster who had a new moderator added.
+    user: PartialUser
+        The new moderator.
+    """
+
     subscription_type = "channel.moderator.add"
 
     __slots__ = ("broadcaster", "user")
@@ -2147,6 +2265,17 @@ class ChannelModeratorAdd(BaseEvent):
 
 
 class ChannelModeratorRemove(BaseEvent):
+    """
+    Represents a moderator remove event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster who had a moderator removed.
+    user: PartialUser
+        The removed moderator.
+    """
+
     subscription_type = "channel.moderator.remove"
 
     __slots__ = ("broadcaster", "user")
