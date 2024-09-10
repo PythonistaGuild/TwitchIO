@@ -143,9 +143,11 @@ class Client:
 
         :meth:`~Client.add_token`
 
+
         For various methods of managing the tokens on the client.
 
-        .. warn::
+
+        .. warning::
 
             This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
         """
