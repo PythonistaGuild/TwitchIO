@@ -131,19 +131,17 @@ class Client:
     def tokens(self) -> MappingProxyType[str, TokenMappingData]:
         """Property which returns a read-only mapping of the tokens that are managed by the client.
 
-        See:
-
-        - [`.add_token`][twitchio.Client.add_token]
-
-        - [`.remove_token`][twitchio.Client.remove_token]
-
-        - [`.load_tokens`][twitchio.Client.load_tokens]
-
-        - [`.dump_tokens`][twitchio.Client.dump_tokens]
+        **See:**
+        :meth:`~Client.add_token`
+        :meth:`~Client.remove_token`
+        :meth:`~Client.load_tokens`
+        :meth:`~Client.dump_tokens`
+        :meth:`~Client.add_token`
 
         For various methods of managing the tokens on the client.
 
-        !!! danger
+        .. danger::
+
             This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
         """
         return MappingProxyType(self._http._tokens)
