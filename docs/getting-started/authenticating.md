@@ -1,2 +1,0 @@
-# TwitchIO and OAuth
-

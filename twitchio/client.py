@@ -1677,6 +1677,17 @@ class Client:
         """
         This is a test method to test and view certain elements of the mkdocs style documentation.
 
+        .. error::
+
+            I'm sorry, whe3454 eu. I'm afraid I can't do that.
+
+
+        .. code-block:: python3
+
+            print("Hello World!")
+            # Hi
+            ...
+
         For more information see: [`Material Docs`](https://squidfunk.github.io/mkdocs-material/reference/)
 
         **Linking to another method/object:** [`twitchio.Client.fetch_channels`][]

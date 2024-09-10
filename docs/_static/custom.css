@@ -1,0 +1,250 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+:root {
+    --color-primary--dark: rgba(255, 255, 255, .8);
+    --color-primary-dim--dark: rgba(255, 255, 255, .7);
+    --color-background--dark: #15151c;
+    --color-background-dim--dark: #1a1a23;
+    --color-accent--dark: #dcb5f3;
+    --color-links--dark: #889ad9;
+    --color-header-back--dark: #1a1a23;
+    --color-scrollbar--dark: #dcb5f338;
+    --color-button-hover--dark: #9363af81;
+    --color-error: rgb(221, 46, 46);
+    --color-success: rgb(32, 158, 105);
+    --color-warn: #FFDD00;
+
+    /* Code Blocks */
+    --color-pre-background--dark: #1a1a23;
+    --color-pre-primary--dark: rgba(255, 255, 255, .9);
+    --font-pre--mono: "JetBrains Mono", monospace;
+}
+
+* {
+    scrollbar-width: thin;
+}
+
+body {
+    font-family: "Lato", sans-serif;
+    font-size: 0.9em;
+    font-weight: 300;
+}
+
+pre, code {
+    font-family: var(--font-pre--mono);
+    font-weight: 300;
+    font-size: 0.9em;
+}
+
+body.theme-dark {
+    color: var(--color-primary--dark);
+    background-color: var(--color-background--dark);
+}
+
+body.theme-dark {
+    .input-group-text.bg-white {
+        background-color: var(--color-background-dim--dark) !important;
+        border-color: var(--color-links--dark)!important;
+    }
+
+    .sidebar-container {
+        border-color: var(--color-background-dim--dark) !important;
+    }
+
+    hr {
+        border-color: var(--color-background-dim--dark) !important;
+    }
+
+    .btn-light {
+        background-color: var(--color-background-dim--dark);
+        color: var(--color-primary--dark);
+        border-color: var(--color-scrollbar--dark);
+    }
+
+    .btn-light:hover {
+        background-color: var(--color-button-hover--dark);
+    }
+
+    .border-top {
+        border-color: var(--color-background-dim--dark)!important;
+    }
+
+    table.docutils:not(.field-list) thead th {
+        background-color: var(--color-background-dim--dark);
+    }
+
+    table.docutils:not(.field-list) tbody tr:nth-of-type(odd) {
+        background-color: var(--color-background--dark);
+    }
+
+    table.docutils:not(.field-list) {
+        background-color: var(--color-background-dim--dark);
+    }
+
+    td {
+        border-color: var(--color-button-hover--dark)!important;
+    }
+
+    th {
+        border-color: var(--color-button-hover--dark)!important;
+    }
+}
+
+.theme-dark {
+    a {
+        color: var(--color-links--dark) !important;
+    }
+
+    a>code {
+        color: var(--color-links--dark) !important;
+    }
+
+    .bg-primary {
+        background-color: var(--color-header-back--dark) !important;
+    }
+
+    .sig {
+        background-color: var(--color-background-dim--dark);
+    }
+
+    .sig-name {
+        color: var(--color-accent--dark);
+    }
+
+    .sig-prename {
+        color: var(--color-accent--dark);
+    }
+
+    .form-control {
+        background-color: var(--color-background-dim--dark) !important;
+        border-color: var(--color-links--dark)!important;
+    }
+
+    .toc>ul:not(:last-child) {
+        border-color: var(--color-background-dim--dark);
+    }
+
+    pre {
+        color: var(--color-pre-primary--dark);
+        background-color: var(--color-pre-background--dark);
+    }
+
+    scrollbar-color: var(--color-scrollbar--dark) var(--color-background-dim--dark);
+}
+
+.error-tio {
+    font-weight: 600;
+    color: var(--color-error);
+}
+
+.error-tio::before {
+    font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f06a";
+    margin-right: 0.5rem;
+}
+
+.success-tio {
+    font-weight: 600;
+    color: var(--color-success);
+}
+
+.success-tio::before {
+    font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f00c";
+    margin-right: 0.5rem;
+}
+
+.warn-tio {
+    font-weight: 600;
+    color: var(--color-warn);
+}
+
+.warn-tio::before {
+    font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f059";
+    margin-right: 0.5rem;
+}
+
+
+.sig {
+    font-size: 1em;
+    padding: 0.5rem;
+    word-spacing: 0.25rem;
+}
+
+.sig-param {
+    font-style: normal;
+    padding: 0 0.125rem;
+    color: var(--color-primary-dim--dark);
+}
+
+.sig-paren {
+    padding: 0 0.125rem;
+}
+
+dt {
+    font-weight: 400;
+}
+
+a {
+    text-decoration: none;
+}
+
+.py.class>.sig {
+    padding: 0.75rem;
+    border-left: 1px solid var(--color-links--dark);
+}
+
+/* attribute tables */
+.py-attribute-table {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin: 0 2em;
+    padding-top: 16px;
+}
+
+.py-attribute-table-column {
+    flex: 1 1 auto;
+}
+
+.py-attribute-table-column>span {
+    font-weight: bold;
+}
+
+main .py-attribute-table-column>ul {
+    list-style: none;
+    margin: 4px 0px;
+    padding-left: 0;
+    font-size: 0.95em;
+}
+
+.py-attribute-table-entry {
+    margin: 0;
+    padding: 2px 0;
+    padding-left: 0.2em;
+    border-left: 1px solid var(--color-links--dark);
+    display: flex;
+    line-height: 1.2em;
+}
+
+.py-attribute-table-entry>a {
+    padding-left: 0.5em;
+    flex-grow: 1;
+}
+
+.py-attribute-table-entry>a:hover {
+    text-decoration: none;
+}
+
+.py-attribute-table-entry:hover {
+    border-left: 1px solid var(--color-accent--dark);
+    text-decoration: none;
+}
+
+.py-attribute-table-badge {
+    flex-basis: 3em;
+    text-align: right;
+    font-size: 0.9em;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}

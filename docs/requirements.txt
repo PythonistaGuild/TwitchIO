@@ -1,3 +1,9 @@
-griffe
-mkdocstrings-python
-mkdocs-material
+sphinx-wagtail-theme
+sphinx
+docutils<0.18
+sphinxcontrib-napoleon
+sphinxcontrib-asyncio
+sphinxcontrib-websupport
+Pygments
+sphinx-hoverxref
+sphinxcontrib_trio

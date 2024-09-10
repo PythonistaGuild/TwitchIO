@@ -1,0 +1,22 @@
+pre {
+    color: var(--color-pre-primary--dark);
+}
+
+pre > .c1 {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/*
+  --md-code-hl-number-color: #6ca3eb;
+  --md-code-hl-function-color: #C7A65D;
+  --md-code-hl-comment-color: #676773;
+  --md-code-hl-constant-color: #D6B387;
+  --md-code-hl-keyword-color: #929be0;
+  --md-code-hl-string-color: #A6E3A1;
+  --md-code-hl-name-color: #F5C2DA;
+  --md-code-hl-operator-color: #F5C2E7;
+  --md-code-hl-punctuation-color: #F5C2DA;
+  --md-code-hl-special-color: #ff0077;
+  --md-code-hl-generic-color: #F5C2DA;
+  --md-code-hl-variable-color: #F5C2DA;
+*/
