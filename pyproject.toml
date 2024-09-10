@@ -35,7 +35,17 @@ twitchio = ["py.typed"]
 dependencies = { file = ["requirements.txt"] }
 
 [project.optional-dependencies]
-docs = ["mkdocs-material", "mkdocstrings-python", "mkdocstrings"]
+docs = [
+    "sphinx-wagtail-theme",
+    "sphinx",
+    "docutils<0.18",
+    "sphinxcontrib-napoleon",
+    "sphinxcontrib-asyncio",
+    "sphinxcontrib-websupport",
+    "Pygments",
+    "sphinx-hoverxref",
+    "sphinxcontrib_trio",
+]
 starlette = ["starlette", "uvicorn"]
 dev = ["ruff", "pyright", "isort"]
 
