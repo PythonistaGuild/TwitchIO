@@ -132,15 +132,20 @@ class Client:
         """Property which returns a read-only mapping of the tokens that are managed by the client.
 
         **See:**
+
         :meth:`~Client.add_token`
+
         :meth:`~Client.remove_token`
+
         :meth:`~Client.load_tokens`
+
         :meth:`~Client.dump_tokens`
+
         :meth:`~Client.add_token`
 
         For various methods of managing the tokens on the client.
 
-        .. danger::
+        .. warn::
 
             This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
         """
