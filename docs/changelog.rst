@@ -1,6 +1,24 @@
 :orphan:
 
 
+2.10.1
+=======
+- ext.sounds
+    - Additions
+        - Added :class:`twitchio.ext.sounds.AudioQueueManager` 
+        - Added :meth:`AudioQueueManager.add_audio <twitchio.ext.sounds.AudioQueueManager.add_audio>` 
+        - Added :meth:`AudioQueueManager.play_next <twitchio.ext.sounds.AudioQueueManager.play_next>` 
+        - Added :meth:`AudioQueueManager.skip_audio <twitchio.ext.sounds.AudioQueueManager.skip_audio>`
+        - Added :meth:`AudioQueueManager.stop_audio <twitchio.ext.sounds.AudioQueueManager.stop_audio>` 
+        - Added :meth:`AudioQueueManager.pause_audio <twitchio.ext.sounds.AudioQueueManager.pause_audio>` 
+        - Added :meth:`AudioQueueManager.resume_audio <twitchio.ext.sounds.AudioQueueManager.resume_audio>` 
+        - Added :meth:`AudioQueueManager.clear_queue <twitchio.ext.sounds.AudioQueueManager.clear_queue>` 
+        - Added :meth:`AudioQueueManager.pause_queue <twitchio.ext.sounds.AudioQueueManager.pause_queue>` 
+        - Added :meth:`AudioQueueManager.resume_queue <twitchio.ext.sounds.AudioQueueManager.resume_queue>`
+        - Added :meth:`AudioQueueManager.get_queue_contents <twitchio.ext.sounds.AudioQueueManager.get_queue_contents>`
+        - Added :meth:`AudioQueueManager.queue_loop <twitchio.ext.sounds.AudioQueueManager.queue_loop>`
+
+
 2.10.0
 =======
 - TwitchIO
@@ -168,6 +186,7 @@
         - Added wheels on external pypi index for cchardet and ciso8601
         - Bumped ciso8601 from >=2.2,<2.3 to >=2.2,<3
         - Bumped cchardet from >=2.1,<2.2 to >=2.1,<3
+
 
 2.6.0
 ======
