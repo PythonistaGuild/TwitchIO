@@ -330,6 +330,22 @@ class Routine:
         """
         return self._start_time
 
+    @property
+    def next_run(self) -> Optional[datetime.datetime]:
+        """Calculate and return the next run time of the routine."""
+        now = datetime.datetime.now(datetime.timezone.utc)
+
+        if self._time:
+            next_run = self._time + datetime.timedelta(days=self._completed_loops)
+            if next_run < now:
+                next_run += datetime.timedelta(days=1)
+        elif self._delta:
+            next_run = self._start_time + datetime.timedelta(seconds=self._delta * (self._completed_loops + 1))
+            if next_run < now:
+                next_run = now + datetime.timedelta(seconds=self._delta)
+
+        return next_run
+
     def _can_be_cancelled(self) -> bool:
         return self._task and not self._task.done()
 
