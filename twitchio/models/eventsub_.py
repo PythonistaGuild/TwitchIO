@@ -1496,6 +1496,114 @@ class ChatUserMessageUpdate(BaseChatMessage):
         return " ".join(fragment.text for fragment in self.fragments if fragment.type == "text")
 
 
+class BaseSharedChatSession(BaseEvent):
+    __slots__ = (
+        "session_id",
+        "broadcaster",
+        "host",
+    )
+
+    def __init__(
+        self,
+        payload: ChannelSharedChatSessionBeginEvent | ChannelSharedChatSessionUpdateEvent | ChannelSharedChatSessionEndEvent,
+        *,
+        http: HTTPClient,
+    ) -> None:
+        self.session_id: str = payload["session_id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.host: PartialUser = PartialUser(
+            payload["host_broadcaster_user_id"], payload["host_broadcaster_user_login"], http=http
+        )
+
+    def __repr__(self) -> str:
+        return f"<BaseSharedChatSession session_id={self.session_id} broadcaster={self.broadcaster} host={self.host}>"
+
+
+class SharedChatSessionBegin(BaseSharedChatSession):
+    """
+    Represents a shared chat session begin event.
+
+    Attributes
+    ----------
+    session_id: PartialUser
+        The unique identifier for the shared chat session.
+    broadcaster: PartialUser
+        The user of the channel in the subscription condition which is now active in the shared chat session.
+    host: PartialUser
+        The user of the host channel.
+    participants: str
+        List of participants in the session.
+    """
+
+    subscription_type = "channel.shared_chat.begin"
+
+    __slots__ = ("participants",)
+
+    def __init__(self, payload: ChannelSharedChatSessionBeginEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.participants: list[PartialUser] = [
+            PartialUser(p["broadcaster_user_id"], p["broadcaster_user_login"], http=http) for p in payload["participants"]
+        ]
+
+    def __repr__(self) -> str:
+        return f"<BaseSharedChatSession session_id={self.session_id} broadcaster={self.broadcaster} host={self.host}>"
+
+
+class SharedChatSessionUpdate(BaseSharedChatSession):
+    """
+    Represents a shared chat session begin event.
+
+    Attributes
+    ----------
+    session_id: PartialUser
+        The unique identifier for the shared chat session.
+    broadcaster: PartialUser
+        The user of the channel in the subscription condition which is now active in the shared chat session.
+    host: PartialUser
+        The user of the host channel.
+    participants: str
+        List of participants in the session.
+    """
+
+    subscription_type = "channel.shared_chat.update"
+
+    __slots__ = ("participants",)
+
+    def __init__(self, payload: ChannelSharedChatSessionUpdateEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+        self.participants: list[PartialUser] = [
+            PartialUser(p["broadcaster_user_id"], p["broadcaster_user_login"], http=http) for p in payload["participants"]
+        ]
+
+    def __repr__(self) -> str:
+        return f"<SharedChatSessionUpdate session_id={self.session_id} broadcaster={self.broadcaster} host={self.host}>"
+
+
+class SharedChatSessionEnd(BaseSharedChatSession):
+    """
+    Represents a shared chat session end event.
+
+    Attributes
+    ----------
+    session_id: PartialUser
+        The unique identifier for the shared chat session.
+    broadcaster: PartialUser
+        The user of the channel in the subscription condition which is no longer active in the shared chat session.
+    host: PartialUser
+        The user of the host channel.
+    """
+
+    subscription_type = "channel.shared_chat.end"
+
+    def __init__(self, payload: ChannelSharedChatSessionUpdateEvent, *, http: HTTPClient) -> None:
+        super().__init__(payload, http=http)
+
+    def __repr__(self) -> str:
+        return f"<SharedChatSessionEnd session_id={self.session_id} broadcaster={self.broadcaster} host={self.host}>"
+
+
 class ChannelSubscribe(BaseEvent):
     """
     Represents a channel subscribe event.

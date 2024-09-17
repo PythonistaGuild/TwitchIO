@@ -126,6 +126,9 @@ __all__ = (
     "HypeTrainProgressEvent",
     "HypeTrainEndEvent",
     "HypeTrainContributionData",
+    "ChannelSharedChatSessionBeginEvent",
+    "ChannelSharedChatSessionUpdateEvent",
+    "ChannelSharedChatSessionEndEvent",
     "ShieldModeBeginEvent",
     "ShieldModeEndEvent",
     "ShoutoutCreateEvent",
@@ -564,6 +567,24 @@ class ChatUserMessageHoldEvent(BroadcasterUserEvent):
 
 class ChatUserMessageUpdateEvent(ChatUserMessageHoldEvent):
     status: Literal["approved", "denied", "invalid"]
+
+
+class BaseSharedChatSessionData(BaseBroadcasterEvent):
+    session_id: str
+    host_broadcaster_user_id: str
+    host_broadcaster_user_login: str
+    host_broadcaster_user_name: str
+
+
+class ChannelSharedChatSessionBeginEvent(BaseSharedChatSessionData):
+    participants: list[BaseBroadcasterEvent]
+
+
+class ChannelSharedChatSessionUpdateEvent(BaseSharedChatSessionData):
+    participants: list[BaseBroadcasterEvent]
+
+
+class ChannelSharedChatSessionEndEvent(BaseSharedChatSessionData): ...
 
 
 class ChannelSubscribeEvent(BroadcasterUserEvent):

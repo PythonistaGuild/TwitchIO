@@ -362,6 +362,51 @@ class ChatUserMessageUpdateSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id, "user_id": self.user_id}
 
 
+class SharedChatSessionBeginSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.shared_chat.begin"]] = "channel.shared_chat.begin"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class SharedChatSessionUpdateSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.shared_chat.update"]] = "channel.shared_chat.update"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class SharedChatSessionEndSubscription(SubscriptionPayload):
+    type: ClassVar[Literal["channel.shared_chat.end"]] = "channel.shared_chat.end"
+    version: ClassVar[Literal["1"]] = "1"
+
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
 class ChannelSubscribeSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscribe"]] = "channel.subscribe"
     version: ClassVar[Literal["1"]] = "1"
