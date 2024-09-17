@@ -57,6 +57,8 @@ __all__ = (
     "ChannelEditorsResponseData",
     "FollowedChannelsResponseData",
     "ChannelEmotesResponse",
+    "SharedChatSessionResponse",
+    "SharedChatSessionResponseData",
     "GlobalEmotesResponse",
     "GlobalEmotesResponseData",
     "GlobalChatBadgesResponse",
@@ -584,6 +586,22 @@ class ChatSettingsResponseData(TypedDict):
 
 class ChatSettingsResponse(TypedDict):
     data: list[ChatSettingsResponseData]
+
+
+class SharedChatParticipantsData(TypedDict):
+    broadcaster_id: str
+
+
+class SharedChatSessionResponseData(TypedDict):
+    session_id: str
+    host_broadcaster_id: str
+    participants: list[SharedChatParticipantsData]
+    created_at: str
+    updated_at: str
+
+
+class SharedChatSessionResponse(TypedDict):
+    data: list[SharedChatSessionResponseData]
 
 
 class UserEmotesResponseData(TypedDict):

@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
-    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, Chatters, SentMessage, UserEmote
+    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, Chatters, SentMessage, SharedChatSession, UserEmote
     from .models.clips import Clip, CreatedClip
     from .models.goals import Goal
     from .models.hype_train import HypeTrainEvent
@@ -1012,6 +1012,25 @@ class PartialUser:
         )
 
         return ChatSettings(data["data"][0], http=self._http)
+
+    async def fetch_shared_chat_session(self, token_for: str | None = None) -> SharedChatSession:
+        """
+        Fetches the active shared chat session for a channel.
+
+        Parameters
+        ----------
+        token_for: str | None,
+            An optional user token to use instead of the default app token.
+
+        Returns
+        --------
+        SharedChatSession
+            Object representing the user's shared chat session.
+        """
+        from .models.chat import SharedChatSession
+
+        data = await self._http.get_shared_chat_session(broadcaster_id=self.id, token_for=token_for)
+        return SharedChatSession(data["data"][0], http=self._http)
 
     async def send_announcement(
         self,

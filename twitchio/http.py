@@ -130,6 +130,7 @@ if TYPE_CHECKING:
         ResolveUnbanRequestsResponse,
         SearchChannelsResponseData,
         SendChatMessageResponse,
+        SharedChatSessionResponse,
         ShieldModeStatusResponse,
         SnoozeNextAdResponse,
         StartARaidResponse,
@@ -1094,6 +1095,13 @@ class HTTPClient:
         data = {k: v for k, v in _data.items() if v is not None}
 
         route: Route = Route("PATCH", "chat/settings", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_shared_chat_session(
+        self, broadcaster_id: str | int, *, token_for: str | None = None
+    ) -> SharedChatSessionResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("POST", "chat/shared_chat/session", params=params, token_for=token_for)
         return await self.request_json(route)
 
     async def post_chat_announcement(

@@ -28,10 +28,12 @@ from typing import TYPE_CHECKING, Literal
 
 from twitchio.assets import Asset
 from twitchio.user import PartialUser
-from twitchio.utils import Colour
+from twitchio.utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
+    import datetime
+
     from twitchio.http import HTTPAsyncIterator, HTTPClient
     from twitchio.types_.responses import (
         ChannelChatBadgesResponseData,
@@ -46,6 +48,7 @@ if TYPE_CHECKING:
         GlobalEmotesResponseData,
         GlobalEmotesResponseImages,
         SendChatMessageResponseData,
+        SharedChatSessionResponseData,
         UserChatColorResponseData,
         UserEmotesResponseData,
     )
@@ -519,7 +522,6 @@ class ChatSettings:
     non_moderator_chat_delay_duration: int | None
         The amount of time, in seconds, that messages are delayed before appearing in chat. Is None if non_moderator_chat_delay is False.
         The response includes this field only if the request specifies a user access token that includes the ``moderator:read:chat_settings scope`` and the user in the moderator_id query parameter is one of the broadcaster's moderators.
-
     """
 
     __slots__ = (
@@ -558,6 +560,21 @@ class ChatSettings:
 
 
 class SentMessage:
+    """
+    Represents the settings of a broadcaster's chat settings.
+
+    Attributes
+    ----------
+    id: str
+        The ID for the message that was sent.
+    sent: bool
+        Whether the message passed all checks and was sent.
+    dropped_code: str | None
+        Code for why the message was dropped.
+    dropped_message: str | None
+        Message for why the message was dropped.
+    """
+
     __slots__ = ("id", "sent", "dropped_code", "dropped_message")
 
     def __init__(self, data: SendChatMessageResponseData) -> None:
@@ -569,3 +586,36 @@ class SentMessage:
 
     def __repr__(self) -> str:
         return f"<SentMessage id={self.id} sent={self.sent}>"
+
+
+class SharedChatSession:
+    """
+    Represents a shared chat session.
+
+    Attributes
+    ----------
+    id: str
+        The unique identifier for the shared chat session.
+    host: PartialUser
+        The User of the host channel.
+    participants: list[PartialUser]
+        The list of participants / users in the session.
+    created_at: datetime.datetime
+        When the session was created.
+    updated_at: datetime.datetime
+        When the session was last updated.
+    """
+
+    __slots__ = ("id", "host", "participants", "created_at", "updated_at")
+
+    def __init__(self, data: SharedChatSessionResponseData, *, http: HTTPClient) -> None:
+        self.id: str = data["session_id"]
+        self.host: PartialUser = PartialUser(data["host_broadcaster_id"], None, http=http)
+        self.participants: list[PartialUser] = [
+            PartialUser(u["broadcaster_id"], None, http=http) for u in data["participants"]
+        ]
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
+
+    def __repr__(self) -> str:
+        return f"<SharedChatSession id={self.id} host={self.host} created_at={self.created_at}>"
