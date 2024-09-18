@@ -400,6 +400,11 @@ class ChannelChatMessageEvent(BaseBroadcasterEvent):
     cheer: ChatMessageCheerData | None
     channel_points_custom_reward_id: str | None
     channel_points_animation_id: str | None
+    source_broadcaster_user_id: str | None
+    source_broadcaster_user_login: str | None
+    source_broadcaster_user_name: str | None
+    source_message_id: str | None
+    source_badges: list[ChatMessageBadgeData] | None
 
 
 class ChatSubData(TypedDict):

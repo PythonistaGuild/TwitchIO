@@ -735,6 +735,18 @@ class ChatMessage(BaseChatMessage):
         Data for a cheer, if received.
     badges: list[ChatMessageBadge]
         List of ChatMessageBadge for chat badges.
+    source_broadcaster: PartialUser | None
+        The broadcaster of the channel the message was sent from.
+        Is `None` when the message happens in the same channel as the broadcaster.
+        Is not `None` when in a shared chat session, and the action happens in the channel of a participant other than the broadcaster.
+    source_id: str | None
+        The source message ID from the channel the message was sent from.
+        Is `None` when the message happens in the same channel as the broadcaster.
+        Is not `None` when in a shared chat session, and the action happens in the channel of a participant other than the broadcaster.
+    source_badges: list[ChatMessageBadge]
+        The list of chat badges for the chatter in the channel the message was sent from.
+        Is `None` when the message happens in the same channel as the broadcaster.
+        Is not `None` when in a shared chat session, and the action happens in the channel of a participant other than the broadcaster.
     """
 
     subscription_type = "channel.chat.message"
@@ -748,6 +760,9 @@ class ChatMessage(BaseChatMessage):
         "reply",
         "channel_points_id",
         "channel_points_animation_id",
+        "source_broadcaster",
+        "source_id",
+        "source_badges",
     )
 
     def __init__(self, payload: ChannelChatMessageEvent, *, http: HTTPClient) -> None:
@@ -770,6 +785,15 @@ class ChatMessage(BaseChatMessage):
 
         self.cheer: ChatMessageCheer | None = ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
+        self.source_broadcaster: PartialUser | None = (
+            PartialUser(payload["source_broadcaster_user_id"], payload["source_broadcaster_user_login"], http=http)
+            if payload["source_broadcaster_user_id"] is not None
+            else None
+        )
+        self.source_id: str | None = payload.get("source_message_id")
+        self.source_badges: list[ChatMessageBadge] = [
+            ChatMessageBadge(badge) for badge in (payload.get("source_badges") or [])
+        ]
 
     def __repr__(self) -> str:
         return f"<ChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
