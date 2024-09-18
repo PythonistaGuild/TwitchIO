@@ -2256,6 +2256,141 @@ class ModerateWarn:
 
 
 class ChannelModerate(BaseEvent):
+    """
+    Represents a channel moderate event, both V1 and V2.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster who had a moderate event occur.
+    source_broadcaster: PartialUser
+        The channel in which the action originally occurred. Is the same as `broadcaster` if not in shared chat.
+    moderator: PartialUser
+        The moderator who performed the action.
+    followers: ModerateFollowers | None
+        Information associated with the followers command.
+    slow: ModerateSlow | None
+        Information associated with the slow command.
+    vip: PartialUser | None
+        Information associated with the vip command.
+    unvip: PartialUser | None
+        Information associated with the unvip command.
+    mod: PartialUser | None
+        Information associated with the mod command.
+    unmod: PartialUser | None
+        Information associated with the unmod command.
+    ban: ModerateBan | None
+        Information associated with the ban command.
+    unban: PartialUser | None
+        Information associated with the unban command.
+    timeout: ModerateTimeout | None
+        Information associated with the timeout command.
+    untimeout: PartialUser | None
+        Information associated with the untimeout command.
+    raid: ModerateRaid | None
+        Information associated with the raid command.
+    unraid: PartialUser | None
+        Information associated with the unraid command.
+    delete: ModerateDelete | None
+        Information associated with the delete command.
+    automod_terms: ModerateAutomodTerms | None
+        Information associated with the automod terms changes.
+    unban_request: ModerateUnbanRequest | None
+        Information associated with an unban request.
+    shared_ban: ModerateBan | None
+        Information about the shared_chat_ban event.
+        Is `None` if action is not shared_chat_ban.
+        This field has the same information as the ban field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_unban: PartialUser | None
+        Information about the shared_chat_unban event.
+        Is `None` if action is not shared_chat_unban.
+        This field has the same information as the unban field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_timeout: ModerateTimeout | None
+        Information about the shared_chat_timeout event.
+        Is `None` if action is not shared_chat_timeout.
+        This field has the same information as the timeout field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_untimeout: PartialUser | None
+        Information about the shared_chat_untimeout event.
+        Is `None` if action is not shared_chat_untimeout.
+        This field has the same information as the untimeout field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_delete: ModerateDelete | None
+        Information about the shared_chat_delete event.
+        Is `None` if action is not shared_chat_delete.
+        This field has the same information as the delete field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    action: Literal[
+            "ban",
+            "timeout",
+            "unban",
+            "untimeout",
+            "clear",
+            "emoteonly",
+            "emoteonlyoff",
+            "followers",
+            "followersoff",
+            "uniquechat",
+            "uniquechatoff",
+            "slow",
+            "slowoff",
+            "subscribers",
+            "subscribersoff",
+            "unraid",
+            "delete",
+            "unvip",
+            "vip",
+            "raid",
+            "add_blocked_term",
+            "add_permitted_term",
+            "remove_blocked_term",
+            "remove_permitted_term",
+            "mod",
+            "unmod",
+            "approve_unban_request",
+            "deny_unban_request",
+            "warn",
+            "shared_chat_ban",
+            "shared_chat_unban",
+            "shared_chat_timeout",
+            "shared_chat_untimeout",
+            "shared_chat_delete",
+        ]
+        The type of action. `warn` is only available with V2.
+
+            - ban
+            - timeout
+            - unban
+            - untimeout
+            - clear
+            - emoteonly
+            - emoteonlyoff
+            - followers
+            - followersoff
+            - uniquechat
+            - uniquechatoff
+            - slow
+            - slowoff
+            - subscribers
+            - subscribersoff
+            - unraid
+            - delete
+            - unvip
+            - vip
+            - raid
+            - add_blocked_term
+            - add_permitted_term
+            - remove_blocked_term
+            - remove_permitted_term
+            - mod
+            - unmod
+            - approve_unban_request
+            - deny_unban_request
+            - warn
+            - shared_chat_ban
+            - shared_chat_timeout
+            - shared_chat_unban
+            - shared_chat_untimeout
+            - shared_chat_delete
+    """
+
     subscription_type = "channel.moderate"
 
     __slots__ = (

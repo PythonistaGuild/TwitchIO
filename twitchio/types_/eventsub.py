@@ -762,6 +762,9 @@ class BaseChannelModerate(TypedDict):
     delete: ModerateDeleteData | None
     automod_terms: ModerateAutoModTermsData | None
     unban_request: ModerateUnbanRequestData | None
+    source_broadcaster_user_id: str
+    source_broadcaster_user_login: str
+    source_broadcaster_user_name: str
     shared_chat_ban: ModerateBanData | None
     shared_chat_unban: ModerateUnbanData | None
     shared_chat_timeout: ModerateTimeoutData | None
