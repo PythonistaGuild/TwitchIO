@@ -2277,6 +2277,11 @@ class ChannelModerate(BaseEvent):
         "delete",
         "automod_terms",
         "unban_request",
+        "shared_ban",
+        "shared_unban",
+        "shared_timeout",
+        "shared_untimeout",
+        "shared_delete",
     )
 
     def __init__(self, payload: ChannelModerateEvent | ChannelModerateEventV2, *, http: HTTPClient) -> None:
@@ -2335,6 +2340,30 @@ class ChannelModerate(BaseEvent):
         self.unban_request: ModerateUnbanRequest | None = (
             ModerateUnbanRequest(payload["unban_request"], http=http) if payload["unban_request"] is not None else None
         )
+        self.shared_ban: ModerateBan | None = (
+            ModerateBan(payload["shared_chat_ban"], http=http) if payload["shared_chat_ban"] is not None else None
+        )
+        self.shared_unban: PartialUser | None = (
+            PartialUser(payload["shared_chat_unban"]["user_id"], payload["shared_chat_unban"]["user_login"], http=http)
+            if payload["shared_chat_unban"] is not None
+            else None
+        )
+        self.shared_timeout: ModerateTimeout | None = (
+            ModerateTimeout(payload["shared_chat_timeout"], http=http)
+            if payload["shared_chat_timeout"] is not None
+            else None
+        )
+        self.shared_untimeout: PartialUser | None = (
+            PartialUser(
+                payload["shared_chat_untimeout"]["user_id"], payload["shared_chat_untimeout"]["user_login"], http=http
+            )
+            if payload["shared_chat_untimeout"] is not None
+            else None
+        )
+        self.shared_delete: ModerateDelete | None = (
+            ModerateDelete(payload["shared_chat_delete"], http=http) if payload["shared_chat_delete"] else None
+        )
+
         self.action: Literal[
             "ban",
             "timeout",
@@ -2365,6 +2394,11 @@ class ChannelModerate(BaseEvent):
             "approve_unban_request",
             "deny_unban_request",
             "warn",
+            "shared_chat_ban",
+            "shared_chat_unban",
+            "shared_chat_timeout",
+            "shared_chat_untimeout",
+            "shared_chat_delete",
         ] = payload["action"]
         warn = payload.get("warn")
         self.warn: ModerateWarn | None = ModerateWarn(warn, http=http) if warn is not None else None
