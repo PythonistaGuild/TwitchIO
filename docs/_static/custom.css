@@ -24,7 +24,7 @@
     --color-accent--light: #a071bb;
     --color-links--light: #7b90db;
     --color-header-back--light: #2d2d37;
-    --color-scrollbar--light: #dcb5f338;
+    --color-scrollbar--light: #b589ce7c;
     --color-button-hover--light: #9363af81;
 
     /* Code Blocks */
@@ -51,8 +51,8 @@
 
 * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-scrollbar--light) var(--color-background-dim--light);
 }
+
 
 body {
     font-family: "Lato", sans-serif;
@@ -60,6 +60,7 @@ body {
     font-weight: 300;
     color: var(--color-primary--light);
     background-color: var(--color-background--light);
+    scrollbar-color: var(--color-scrollbar--light) var(--color-background-dim--light);
 }
 
 pre,
@@ -290,7 +291,7 @@ body.theme-dark {
         background-color: var(--color-pre-background--dark);
     }
 
-    scrollbar-color: var(--color-scrollbar--dark) var(--color-background-dim--dark);
+    scrollbar-color: var(--color-scrollbar--dark) var(--color-background-dim--dark) !important;
 
     .sig-param {
         color: var(--color-primary-dim--dark);
