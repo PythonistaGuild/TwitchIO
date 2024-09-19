@@ -19,6 +19,11 @@
     --color-pre-background--dark: #1a1a23;
     --color-pre-primary--dark: rgba(255, 255, 255, .9);
     --font-pre--mono: "JetBrains Mono", monospace;
+
+    /* Admonitions */
+    --color-warning-background: #ffdd0015;
+    --color-warning-background--title: #ffdd00e0;
+    --color-warning--title: #2b2b2b;
 }
 
 * {
@@ -88,6 +93,16 @@ body.theme-dark {
 
     th {
         border-color: var(--color-button-hover--dark)!important;
+    }
+
+    .admonition.warning {
+        background-color: var(--color-warning-background)!important;
+        
+    }
+
+    .warning > .admonition-title {
+        background-color: var(--color-warning-background--title)!important;
+        color: var(--color-warning--title);
     }
 }
 
