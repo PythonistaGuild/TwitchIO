@@ -2,6 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 :root {
+    /* Dark Theme */
     --color-primary--dark: rgba(255, 255, 255, .8);
     --color-primary-dim--dark: rgba(255, 255, 255, .7);
     --color-background--dark: #15151c;
@@ -13,33 +14,187 @@
     --color-button-hover--dark: #9363af81;
     --color-error: rgb(221, 46, 46);
     --color-success: rgb(32, 158, 105);
-    --color-warn: #FFDD00;
+    --color-warn: #ebcc00;
+
+    /* Light Theme */
+    --color-primary--light: rgba(21, 21, 28, 0.8);
+    --color-primary-dim--light: rgba(21, 21, 28, 0.7);
+    --color-background--light: #ffffff;
+    --color-background-dim--light: #f0f0f8;
+    --color-accent--light: #a071bb;
+    --color-links--light: #7b90db;
+    --color-header-back--light: #2d2d37;
+    --color-scrollbar--light: #dcb5f338;
+    --color-button-hover--light: #9363af81;
 
     /* Code Blocks */
     --color-pre-background--dark: #1a1a23;
     --color-pre-primary--dark: rgba(255, 255, 255, .9);
+    --color-pre-background--light: #f0f0f8;
+    --color-pre-primary--light: rgba(21, 21, 28, 0.9);
     --font-pre--mono: "JetBrains Mono", monospace;
 
     /* Admonitions */
     --color-warning-background: #ffdd0015;
     --color-warning-background--title: #ffdd00e0;
     --color-warning--title: #2b2b2b;
+    --color-important-background--title: #cd526a;
+    --color-important-background: #cd526a15;
+    --color-note-background--title: #269da1;
+    --color-note-background: #269da115;
+    --color-versionadd-background--title: #5aa569;
+    --color-versionadd-background: #5aa56915;
+    --color-versionchange-background--title: #616faf;
+    --color-versionchange-background: #616faf15;
+
 }
 
 * {
     scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar--light) var(--color-background-dim--light);
 }
 
 body {
     font-family: "Lato", sans-serif;
     font-size: 0.9em;
     font-weight: 300;
+    color: var(--color-primary--light);
+    background-color: var(--color-background--light);
 }
 
-pre, code {
+pre,
+code {
     font-family: var(--font-pre--mono);
     font-weight: 300;
     font-size: 0.9em;
+}
+
+/* Colours Light */
+.input-group-text.bg-white {
+    background-color: var(--color-background-dim--light) !important;
+    border-color: var(--color-links--light) !important;
+}
+
+.sidebar-container {
+    border-color: var(--color-background-dim--light) !important;
+}
+
+hr {
+    border-color: var(--color-background-dim--light) !important;
+}
+
+.btn-light {
+    background-color: var(--color-background-dim--light);
+    color: var(--color-primary--light);
+    border-color: var(--color-scrollbar--light);
+}
+
+.btn-light:hover {
+    background-color: var(--color-button-hover--light);
+}
+
+.border-top {
+    border-color: var(--color-background-dim--light) !important;
+}
+
+table.docutils:not(.field-list) thead th {
+    background-color: var(--color-background-dim--light);
+}
+
+table.docutils:not(.field-list) tbody tr:nth-of-type(odd) {
+    background-color: var(--color-background--light);
+}
+
+table.docutils:not(.field-list) {
+    background-color: var(--color-background-dim--light);
+}
+
+td {
+    border-color: var(--color-button-hover--light) !important;
+}
+
+th {
+    border-color: var(--color-button-hover--light) !important;
+}
+
+.admonition.warning {
+    background-color: var(--color-warning-background) !important;
+
+}
+
+.warning>.admonition-title {
+    background-color: var(--color-warning-background--title) !important;
+    color: var(--color-warning--title) !important;
+}
+
+.admonition.important {
+    background-color: var(--color-important-background) !important;
+}
+
+.important>.admonition-title {
+    background-color: var(--color-important-background--title) !important;
+}
+
+.admonition.note {
+    background-color: var(--color-note-background) !important;
+}
+
+.note>.admonition-title {
+    background-color: var(--color-note-background--title) !important;
+}
+
+.versionadded {
+    background-color: var(--color-versionadd-background) !important;
+}
+
+.versionmodified.added {
+    background-color: var(--color-versionadd-background--title) !important;
+}
+
+.versionchanged {
+    background-color: var(--color-versionchange-background) !important;
+}
+
+.versionmodified.changed {
+    background-color: var(--color-versionchange-background--title) !important;
+}
+
+a {
+    color: var(--color-links--light) !important;
+}
+
+a>code {
+    color: var(--color-links--light) !important;
+}
+
+.bg-primary {
+    background-color: var(--color-header-back--light) !important;
+}
+
+.sig {
+    background-color: var(--color-background-dim--light);
+}
+
+.sig-name {
+    color: var(--color-accent--light);
+}
+
+.sig-prename {
+    color: var(--color-accent--light);
+}
+
+.form-control {
+    background-color: var(--color-background-dim--light) !important;
+    border-color: var(--color-links--light) !important;
+}
+
+.toc>ul:not(:last-child) {
+    border-color: var(--color-background-dim--light);
+}
+
+pre {
+    color: var(--color-pre-primary--light) !important;
+    background-color: var(--color-pre-background--light);
 }
 
 body.theme-dark {
@@ -50,7 +205,7 @@ body.theme-dark {
 body.theme-dark {
     .input-group-text.bg-white {
         background-color: var(--color-background-dim--dark) !important;
-        border-color: var(--color-links--dark)!important;
+        border-color: var(--color-links--dark) !important;
     }
 
     .sidebar-container {
@@ -72,7 +227,7 @@ body.theme-dark {
     }
 
     .border-top {
-        border-color: var(--color-background-dim--dark)!important;
+        border-color: var(--color-background-dim--dark) !important;
     }
 
     table.docutils:not(.field-list) thead th {
@@ -88,21 +243,11 @@ body.theme-dark {
     }
 
     td {
-        border-color: var(--color-button-hover--dark)!important;
+        border-color: var(--color-button-hover--dark) !important;
     }
 
     th {
-        border-color: var(--color-button-hover--dark)!important;
-    }
-
-    .admonition.warning {
-        background-color: var(--color-warning-background)!important;
-        
-    }
-
-    .warning > .admonition-title {
-        background-color: var(--color-warning-background--title)!important;
-        color: var(--color-warning--title);
+        border-color: var(--color-button-hover--dark) !important;
     }
 }
 
@@ -133,7 +278,7 @@ body.theme-dark {
 
     .form-control {
         background-color: var(--color-background-dim--dark) !important;
-        border-color: var(--color-links--dark)!important;
+        border-color: var(--color-links--dark) !important;
     }
 
     .toc>ul:not(:last-child) {
@@ -141,11 +286,15 @@ body.theme-dark {
     }
 
     pre {
-        color: var(--color-pre-primary--dark);
+        color: var(--color-pre-primary--dark) !important;
         background-color: var(--color-pre-background--dark);
     }
 
     scrollbar-color: var(--color-scrollbar--dark) var(--color-background-dim--dark);
+
+    .sig-param {
+        color: var(--color-primary-dim--dark);
+    }
 }
 
 .error-tio {
@@ -154,7 +303,9 @@ body.theme-dark {
 }
 
 .error-tio::before {
-    font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f06a";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f06a";
     margin-right: 0.5rem;
 }
 
@@ -164,7 +315,9 @@ body.theme-dark {
 }
 
 .success-tio::before {
-    font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f00c";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f00c";
     margin-right: 0.5rem;
 }
 
@@ -174,7 +327,9 @@ body.theme-dark {
 }
 
 .warn-tio::before {
-    font-family: "Font Awesome 5 Free"; font-weight: 900; content: "\f059";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f059";
     margin-right: 0.5rem;
 }
 
@@ -188,7 +343,7 @@ body.theme-dark {
 .sig-param {
     font-style: normal;
     padding: 0 0.125rem;
-    color: var(--color-primary-dim--dark);
+    color: var(--color-primary-dim--light);
 }
 
 .sig-paren {

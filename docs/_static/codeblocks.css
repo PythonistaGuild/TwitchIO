@@ -1,10 +1,13 @@
-pre {
-    color: var(--color-pre-primary--dark);
+pre>.c1 {
+  color: rgba(0, 0, 0, 0.5);
 }
 
-pre > .c1 {
+.theme-dark {
+  pre>.c1 {
     color: rgba(255, 255, 255, 0.4);
+  }
 }
+
 
 /*
   --md-code-hl-number-color: #6ca3eb;
