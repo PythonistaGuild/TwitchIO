@@ -400,6 +400,11 @@ class ChannelChatMessageEvent(BaseBroadcasterEvent):
     cheer: ChatMessageCheerData | None
     channel_points_custom_reward_id: str | None
     channel_points_animation_id: str | None
+    source_broadcaster_user_id: str | None
+    source_broadcaster_user_login: str | None
+    source_broadcaster_user_name: str | None
+    source_message_id: str | None
+    source_badges: list[ChatMessageBadgeData] | None
 
 
 class ChatSubData(TypedDict):
@@ -757,6 +762,14 @@ class BaseChannelModerate(TypedDict):
     delete: ModerateDeleteData | None
     automod_terms: ModerateAutoModTermsData | None
     unban_request: ModerateUnbanRequestData | None
+    source_broadcaster_user_id: str
+    source_broadcaster_user_login: str
+    source_broadcaster_user_name: str
+    shared_chat_ban: ModerateBanData | None
+    shared_chat_unban: ModerateUnbanData | None
+    shared_chat_timeout: ModerateTimeoutData | None
+    shared_chat_untimeout: ModerateUntimeoutData | None
+    shared_chat_delete: ModerateDeleteData | None
 
 
 class ChannelModerateEvent(BaseChannelModerate, BroadcasterModeratorEvent):
@@ -789,6 +802,11 @@ class ChannelModerateEvent(BaseChannelModerate, BroadcasterModeratorEvent):
         "unmod",
         "approve_unban_request",
         "deny_unban_request",
+        "shared_chat_ban",
+        "shared_chat_unban",
+        "shared_chat_timeout",
+        "shared_chat_untimeout",
+        "shared_chat_delete",
     ]
 
 
@@ -823,6 +841,11 @@ class ChannelModerateEventV2(BaseChannelModerate, BroadcasterModeratorEvent):
         "approve_unban_request",
         "deny_unban_request",
         "warn",
+        "shared_chat_ban",
+        "shared_chat_unban",
+        "shared_chat_timeout",
+        "shared_chat_untimeout",
+        "shared_chat_delete",
     ]
     warn: ModerateWarnData | None
 

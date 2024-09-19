@@ -735,6 +735,18 @@ class ChatMessage(BaseChatMessage):
         Data for a cheer, if received.
     badges: list[ChatMessageBadge]
         List of ChatMessageBadge for chat badges.
+    source_broadcaster: PartialUser | None
+        The broadcaster of the channel the message was sent from.
+        Is `None` when the message happens in the same channel as the broadcaster.
+        Is not `None` when in a shared chat session, and the action happens in the channel of a participant other than the broadcaster.
+    source_id: str | None
+        The source message ID from the channel the message was sent from.
+        Is `None` when the message happens in the same channel as the broadcaster.
+        Is not `None` when in a shared chat session, and the action happens in the channel of a participant other than the broadcaster.
+    source_badges: list[ChatMessageBadge]
+        The list of chat badges for the chatter in the channel the message was sent from.
+        Is `None` when the message happens in the same channel as the broadcaster.
+        Is not `None` when in a shared chat session, and the action happens in the channel of a participant other than the broadcaster.
     """
 
     subscription_type = "channel.chat.message"
@@ -748,6 +760,9 @@ class ChatMessage(BaseChatMessage):
         "reply",
         "channel_points_id",
         "channel_points_animation_id",
+        "source_broadcaster",
+        "source_id",
+        "source_badges",
     )
 
     def __init__(self, payload: ChannelChatMessageEvent, *, http: HTTPClient) -> None:
@@ -770,6 +785,15 @@ class ChatMessage(BaseChatMessage):
 
         self.cheer: ChatMessageCheer | None = ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
+        self.source_broadcaster: PartialUser | None = (
+            PartialUser(payload["source_broadcaster_user_id"], payload["source_broadcaster_user_login"], http=http)
+            if payload["source_broadcaster_user_id"] is not None
+            else None
+        )
+        self.source_id: str | None = payload.get("source_message_id")
+        self.source_badges: list[ChatMessageBadge] = [
+            ChatMessageBadge(badge) for badge in (payload.get("source_badges") or [])
+        ]
 
     def __repr__(self) -> str:
         return f"<ChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
@@ -2232,6 +2256,141 @@ class ModerateWarn:
 
 
 class ChannelModerate(BaseEvent):
+    """
+    Represents a channel moderate event, both V1 and V2.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster who had a moderate event occur.
+    source_broadcaster: PartialUser
+        The channel in which the action originally occurred. Is the same as `broadcaster` if not in shared chat.
+    moderator: PartialUser
+        The moderator who performed the action.
+    followers: ModerateFollowers | None
+        Information associated with the followers command.
+    slow: ModerateSlow | None
+        Information associated with the slow command.
+    vip: PartialUser | None
+        Information associated with the vip command.
+    unvip: PartialUser | None
+        Information associated with the unvip command.
+    mod: PartialUser | None
+        Information associated with the mod command.
+    unmod: PartialUser | None
+        Information associated with the unmod command.
+    ban: ModerateBan | None
+        Information associated with the ban command.
+    unban: PartialUser | None
+        Information associated with the unban command.
+    timeout: ModerateTimeout | None
+        Information associated with the timeout command.
+    untimeout: PartialUser | None
+        Information associated with the untimeout command.
+    raid: ModerateRaid | None
+        Information associated with the raid command.
+    unraid: PartialUser | None
+        Information associated with the unraid command.
+    delete: ModerateDelete | None
+        Information associated with the delete command.
+    automod_terms: ModerateAutomodTerms | None
+        Information associated with the automod terms changes.
+    unban_request: ModerateUnbanRequest | None
+        Information associated with an unban request.
+    shared_ban: ModerateBan | None
+        Information about the shared_chat_ban event.
+        Is `None` if action is not shared_chat_ban.
+        This field has the same information as the ban field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_unban: PartialUser | None
+        Information about the shared_chat_unban event.
+        Is `None` if action is not shared_chat_unban.
+        This field has the same information as the unban field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_timeout: ModerateTimeout | None
+        Information about the shared_chat_timeout event.
+        Is `None` if action is not shared_chat_timeout.
+        This field has the same information as the timeout field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_untimeout: PartialUser | None
+        Information about the shared_chat_untimeout event.
+        Is `None` if action is not shared_chat_untimeout.
+        This field has the same information as the untimeout field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    shared_delete: ModerateDelete | None
+        Information about the shared_chat_delete event.
+        Is `None` if action is not shared_chat_delete.
+        This field has the same information as the delete field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    action: Literal[
+            "ban",
+            "timeout",
+            "unban",
+            "untimeout",
+            "clear",
+            "emoteonly",
+            "emoteonlyoff",
+            "followers",
+            "followersoff",
+            "uniquechat",
+            "uniquechatoff",
+            "slow",
+            "slowoff",
+            "subscribers",
+            "subscribersoff",
+            "unraid",
+            "delete",
+            "unvip",
+            "vip",
+            "raid",
+            "add_blocked_term",
+            "add_permitted_term",
+            "remove_blocked_term",
+            "remove_permitted_term",
+            "mod",
+            "unmod",
+            "approve_unban_request",
+            "deny_unban_request",
+            "warn",
+            "shared_chat_ban",
+            "shared_chat_unban",
+            "shared_chat_timeout",
+            "shared_chat_untimeout",
+            "shared_chat_delete",
+        ]
+        The type of action. `warn` is only available with V2.
+
+            - ban
+            - timeout
+            - unban
+            - untimeout
+            - clear
+            - emoteonly
+            - emoteonlyoff
+            - followers
+            - followersoff
+            - uniquechat
+            - uniquechatoff
+            - slow
+            - slowoff
+            - subscribers
+            - subscribersoff
+            - unraid
+            - delete
+            - unvip
+            - vip
+            - raid
+            - add_blocked_term
+            - add_permitted_term
+            - remove_blocked_term
+            - remove_permitted_term
+            - mod
+            - unmod
+            - approve_unban_request
+            - deny_unban_request
+            - warn
+            - shared_chat_ban
+            - shared_chat_timeout
+            - shared_chat_unban
+            - shared_chat_untimeout
+            - shared_chat_delete
+    """
+
     subscription_type = "channel.moderate"
 
     __slots__ = (
@@ -2253,6 +2412,11 @@ class ChannelModerate(BaseEvent):
         "delete",
         "automod_terms",
         "unban_request",
+        "shared_ban",
+        "shared_unban",
+        "shared_timeout",
+        "shared_untimeout",
+        "shared_delete",
     )
 
     def __init__(self, payload: ChannelModerateEvent | ChannelModerateEventV2, *, http: HTTPClient) -> None:
@@ -2311,6 +2475,30 @@ class ChannelModerate(BaseEvent):
         self.unban_request: ModerateUnbanRequest | None = (
             ModerateUnbanRequest(payload["unban_request"], http=http) if payload["unban_request"] is not None else None
         )
+        self.shared_ban: ModerateBan | None = (
+            ModerateBan(payload["shared_chat_ban"], http=http) if payload["shared_chat_ban"] is not None else None
+        )
+        self.shared_unban: PartialUser | None = (
+            PartialUser(payload["shared_chat_unban"]["user_id"], payload["shared_chat_unban"]["user_login"], http=http)
+            if payload["shared_chat_unban"] is not None
+            else None
+        )
+        self.shared_timeout: ModerateTimeout | None = (
+            ModerateTimeout(payload["shared_chat_timeout"], http=http)
+            if payload["shared_chat_timeout"] is not None
+            else None
+        )
+        self.shared_untimeout: PartialUser | None = (
+            PartialUser(
+                payload["shared_chat_untimeout"]["user_id"], payload["shared_chat_untimeout"]["user_login"], http=http
+            )
+            if payload["shared_chat_untimeout"] is not None
+            else None
+        )
+        self.shared_delete: ModerateDelete | None = (
+            ModerateDelete(payload["shared_chat_delete"], http=http) if payload["shared_chat_delete"] else None
+        )
+
         self.action: Literal[
             "ban",
             "timeout",
@@ -2341,6 +2529,11 @@ class ChannelModerate(BaseEvent):
             "approve_unban_request",
             "deny_unban_request",
             "warn",
+            "shared_chat_ban",
+            "shared_chat_unban",
+            "shared_chat_timeout",
+            "shared_chat_untimeout",
+            "shared_chat_delete",
         ] = payload["action"]
         warn = payload.get("warn")
         self.warn: ModerateWarn | None = ModerateWarn(warn, http=http) if warn is not None else None
