@@ -470,8 +470,9 @@ class PartialUser:
             Only users with Partner status may set this field. The maximum delay is 900 seconds (15 minutes).
         tags: list[str] | None
             A list of channel-defined tags to apply to the channel. To remove all tags from the channel, set tags to an empty array. Tags help identify the content that the channel streams.
-            You may set a maximum of 10 tags, each limited to 25 characters. They can not be empty strings, contain spaces or special characters
-            See here for more [information](https://help.twitch.tv/s/article/guide-to-tags)
+            You may set a maximum of 10 tags, each limited to 25 characters. They can not be empty strings, contain spaces or special characters.
+
+            See `here for more information <https://help.twitch.tv/s/article/guide-to-tags>`_
         classification_labels: list[dict[Literal["DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]] | None
             List of labels that should be set as the Channel's CCLs.
         branded: bool | None
@@ -1442,7 +1443,7 @@ class PartialUser:
         vacation_end_time: datetime.datetime | None
             Datetime of when the broadcaster's vacation ends. Required if `vacation` is True. This can be timezone aware.
         timezone: str | None
-            The time zone that the broadcaster broadcasts from. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, `America/New_York`). Required if vaction is True.
+            The time zone that the broadcaster broadcasts from. Specify the time zone using `IANA time zone database <https://www.iana.org/time-zones>`_ format (for example, `America/New_York`). Required if vaction is True.
 
         Raises
         ------
@@ -1477,7 +1478,7 @@ class PartialUser:
     ) -> Schedule:
         """Adds a single or recurring broadcast to the broadcaster's streaming schedule.
 
-        For information about scheduling broadcasts, see [Stream Schedule](https://help.twitch.tv/s/article/channel-page-setup#Schedule).
+        For information about scheduling broadcasts, see `Stream Schedule <https://help.twitch.tv/s/article/channel-page-setup#Schedule>`_.
 
         .. note::
             Requires a user access token that includes the ``channel:manage:schedule`` scope.
@@ -1489,7 +1490,7 @@ class PartialUser:
         start_time: datetime.datetime
             Datetime that the broadcast segment starts. This can be timezone aware.
         timezone: str | None
-            The time zone that the broadcaster broadcasts from. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, `America/New_York`).
+            The time zone that the broadcaster broadcasts from. Specify the time zone using `IANA time zone database <https://www.iana.org/time-zones>`_ format (for example, `America/New_York`).
         duration: int
             The length of time, in minutes, that the broadcast is scheduled to run. The duration must be in the range 30 through 1380 (23 hours)
         recurring: bool
@@ -1558,7 +1559,7 @@ class PartialUser:
         canceled: bool | None
             A Boolean value that indicates whether the broadcast is canceled. Set to True to cancel the segment.
         timezone: str | None
-            The time zone where the broadcast takes place. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, America/New_York).
+            The time zone where the broadcast takes place. Specify the time zone using `IANA time zone database <https://www.iana.org/time-zones>`_  format (for example, America/New_York).
 
         Returns
         -------
@@ -1650,7 +1651,7 @@ class PartialUser:
             Moderators approve or deny the messages that AutoMod flags; only approved messages are released to chat.
             AutoMod detects misspellings and evasive language automatically.
 
-            For information about AutoMod, see [How to Use AutoMod](https://help.twitch.tv/s/article/how-to-use-automod?language=en_US).
+            For information about AutoMod, see `How to Use AutoMod <https://help.twitch.tv/s/article/how-to-use-automod?language=en_US>`_.
 
         .. note::
             Requires a user access token that includes the ``moderation:read`` scope.
@@ -3033,7 +3034,7 @@ class PartialUser:
         You may whisper to a maximum of 40 unique recipients per day. Within the per day limit, you may whisper a maximum of 3 whispers per second and a maximum of 100 whispers per minute.
 
         .. important::
-            The user sending the whisper must have a verified phone number (see the [Phone Number setting in your Security and Privacy](https://www.twitch.tv/settings/security) settings).
+            The user sending the whisper must have a verified phone number (see the `Phone Number setting in your Security and Privacy <https://www.twitch.tv/settings/security>`_ settings).
 
             The API may silently drop whispers that it suspects of violating Twitch policies. (The API does not indicate that it dropped the whisper).
 
