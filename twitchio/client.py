@@ -71,7 +71,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Client:
-    """Client.
+    """The TwitchIO Client.
+
+    The `Client` acts as an entry point to the Twitch API, EventSub and OAuth and serves as a base for chat-bots.
+
+    :class:`commands.Bot` inherits from this class and such should be treated as a `Client` with an in-built
+    commands extension.
+
+    You don't need to :meth:`~Client.start` or :meth:`~Client.run` the `Client` to use it soley as a HTTP Wrapper,
+    but you must still :meth:`~Client.login` with this use case.
 
     Parameters
     -----------
@@ -81,8 +89,28 @@ class Client:
         The client secret of the application you registered on the Twitch Developer Portal.
         This must be associated with the same `client_id`.
     bot_id: str | None
-        An optional `str` which should be the User ID associated with the Bot Account. It is highly recommended setting this
-        parameter.
+        An optional `str` which should be the User ID associated with the Bot Account.
+
+        It is highly recommended setting this parameter as it will allow TwitchIO to use the bot's own tokens where
+        appropriate and needed.
+    redirect_ur: str | None
+        An optional `str` to set as the redirect uri for anything relating to Twitch OAuth. You most often do not need to set
+        this.
+    scopes: twitchio.Scopes | None
+        An optional :class:`~twitchio.Scopes` object to use as defaults when using anything related to Twitch OAuth.
+
+        Useful when you want to set default scopes for users to authenticate with.
+    session: aiohttp.ClientSession | None
+        An optional :class:`aiohttp.ClientSession` to use for all HTTP requests including any requests made with
+        :class:`~twitchio.Asset`'s.
+    adapter:  twitchio.StarletteAdapter | twitchio.AiohttpAdapter | None
+        An optional  :class:`StarletteAdapter` or :class:`twitchio.AiohttpAdapter` to use as the clients web server adapter.
+
+        The adapter is a built-in webserver used for OAuth and when needed for EventSub over Webhooks.
+
+        When this is not provided, it will default to a :class:`twitchio.AiohttpAdapter` with default settings.
+
+        When requiring an adapter for use with EventSub, you must provide an adapter with the correct settings set.
     """
 
     def __init__(
@@ -96,7 +124,6 @@ class Client:
         redirect_uri: str | None = options.get("redirect_uri", None)
         scopes: Scopes | None = options.get("scopes", None)
         session: aiohttp.ClientSession | None = options.get("session", None)
-
         self._bot_id: str | None = bot_id
 
         self._http = ManagedHTTPClient(
@@ -106,8 +133,6 @@ class Client:
             scopes=scopes,
             session=session,
         )
-
-        # TODO: Note, adapter must be subclassed to use with ES...
         adapter: AdapterOT = options.get("adapter", AiohttpAdapter)
         if isinstance(adapter, BaseAdapter):
             adapter.client = self
@@ -129,9 +154,9 @@ class Client:
 
     @property
     def tokens(self) -> MappingProxyType[str, TokenMappingData]:
-        """Property which returns a read-only mapping of the tokens that are managed by the client.
+        """Property which returns a read-only mapping of the tokens that are managed by the `Client`.
 
-        **See:**
+        **For various methods of managing the tokens on the client, see:**
 
         :meth:`~Client.add_token`
 
@@ -144,9 +169,6 @@ class Client:
         :meth:`~Client.add_token`
 
 
-        For various methods of managing the tokens on the client.
-
-
         .. warning::
 
             This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
@@ -155,9 +177,13 @@ class Client:
 
     @property
     def bot_id(self) -> str | None:
-        """Property which returns the User-ID associated with this Client if set, or `None`.
+        """Property which returns the User-ID associated with this :class:`~twitchio.Client` if set, or `None`.
 
-        This can be set using the `bot_id` parameter on [`Client`][twitchio.Client]
+        This can be set using the `bot_id` parameter when initialising the :class:`~twitchio.Client`.
+
+        .. note::
+
+            It is highly recommended to set this parameter.
         """
         return self._bot_id
 
@@ -168,7 +194,8 @@ class Client:
         This event can be overriden to handle event errors differently.
         By default, this method logs the error and ignores it.
 
-        !!! warning
+        .. warning::
+
             If an error occurs in this event, it will be ignored and logged. It will **NOT** re-trigger this event.
 
         Parameters
@@ -209,10 +236,10 @@ class Client:
 
     async def setup_hook(self) -> None:
         """
-        Method called after [`.login`][twitchio.Client.login] has been called but before the client is started.
+        Method called after :meth:`~Client.login` has been called but before the client is ready.
 
-        [`.start`][twitchio.Client.start] calls [`.login`][twitchio.Client.login] internally for you, so when using
-        [`.start`][twitchio.Client.start] this method will be called after the client has generated and validated an
+        :meth:`~Client.start` calls :meth:`~Client.login` internally for you, so when using
+        :meth:`~Client.start` this method will be called after the client has generated and validated an
         app token. The client won't complete start up until this method has completed.
 
         This method is intended to be overriden to provide an async environment for any setup required.
@@ -222,16 +249,17 @@ class Client:
         ...
 
     async def login(self, *, token: str | None = None) -> None:
-        """
-        Method to login the client and generate or store an app token.
+        """Method to login the client and generate or store an app token.
 
-        This method is called automatically when using [`.start`][twitchio.Client.start].
-        You should not call this method if you are using [`.start`][twitchio.Client.start].
+        This method is called automatically when using :meth:`~Client.start`.
+        You should **NOT** call this method if you are using :meth:`~Client.start`.
 
-        This method calls [`.setup_hook`][twitchio.Client.setup_hook].
+        This method calls :meth:`~Client.setup_hook`.
 
-        !!! note
+        .. note::
+
             If no token is provided, the client will attempt to generate a new app token for you.
+            This is usually preferred as generating a token is inexpensive and does not have rate-limits associated with it.
 
         Parameters
         ----------
@@ -263,13 +291,13 @@ class Client:
         await self.close()
 
     async def start(self, token: str | None = None, *, with_adapter: bool = True) -> None:
-        """
-        Method to login the client and create a continuously running event loop.
+        """Method to login and run the `Client` asynchronously on an already running event loop.
 
-        You should not call [`.login`][twitchio.Client.login] if you are using this method as it is called internally
+        You should not call :meth:`~Client.login` if you are using this method as it is called internally
         for you.
 
-        !!! note
+        .. note::
+
             This method blocks asynchronously until the client is closed.
 
         Parameters
@@ -278,6 +306,23 @@ class Client:
             An optional app token to use instead of generating one automatically.
         with_adapter: bool
             Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            import asyncio
+
+            import twitchio
+
+
+            async def main() -> None:
+                client = twitchio.Client(...)
+
+                async with client:
+                    await client.start()
         """
         self.__waiter.clear()
         await self.login(token=token)
@@ -294,7 +339,39 @@ class Client:
             await self.close()
 
     def run(self, token: str | None = None, *, with_adapter: bool = True) -> None:
-        # TODO: Docs...
+        """Method to login the client and create a continuously running event loop.
+
+        The behaviour of this method is similar to :meth:`~Client.start` but instead of being used in an already running
+        async environment, this method will setup and create an async environment for you.
+
+        You should not call :meth:`~Client.login` if you are using this method as it is called internally
+        for you.
+
+        .. important::
+
+            You can not use this method in an already running async event loop. See: :meth:`~Client.start` for starting the
+            client in already running async environments.
+
+        .. note::
+
+            This method will block until the client is closed.
+
+        Parameters
+        ----------
+        token: str | None
+            An optional app token to use instead of generating one automatically.
+        with_adapter: bool
+            Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            client = twitchio.Client(...)
+            client.run()
+        """
 
         async def run() -> None:
             async with self:
@@ -306,7 +383,24 @@ class Client:
             pass
 
     async def close(self) -> None:
-        # TODO: Docs...
+        """Method which closes the :class:`~Client` gracefully.
+
+        This method is called for you automatically when using :meth:`~Client.run` or when using the client with the
+        async context-manager, E.g: `async with client:`
+
+        You can override this method to implement your own clean-up logic, however you should call `await super().close()`
+        when doing this.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            async def close(self) -> None:
+                # Own clenup logic...
+                ...
+                await super().close()
+        """
         if self._has_closed:
             return
 
@@ -330,8 +424,52 @@ class Client:
         self.__waiter.set()
 
     async def wait_for(self, event: str, *, timeout: float | None = None, predicate: WaitPredicateT | None = None) -> Any:
-        # TODO: Docs...
-        # TODO: Overloads...
+        """Method which waits for any known dispatched event and returns the payload associated with the event.
+
+        This method can be used with a predicate check to determine whether the `wait_for` should stop listening and return
+        the event payload.
+
+        Parameters
+        ----------
+        event: str
+            The name of the event/listener to wait for. This should be the name of the event minus the `event_` prefix.
+
+            E.g. `chat_message`
+        timeout: float | None
+            An optional `float` to pass that this method will wait for a valid event. If `None` `wait_for` won't timeout.
+            Defaults to `None`.
+
+            If this method does timeout, the `TimeoutError` will be raised and propagated back.
+        predicate: WaitPredicateT
+            An optional `coroutine` to use as a check to determine whether this method should stop listening and return the
+            event payload. This coroutine should always return a bool.
+
+            The predicate function should take in the same payload as the event you are waiting for.
+
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            async def predicate(payload: twitchio.ChatMessage) -> bool:
+                # Only wait for a message sent by "chillymosh"
+                return payload.chatter.name == "chillymosh"
+
+            payload: twitchio.ChatMessage = await client.wait_for("chat_message", predicate=predicate)
+            print(f"Chillymosh said: {payload.text}")
+
+
+        Raises
+        ------
+        TimeoutError
+            Raised when waiting for an event that meets the requirements and passes the predicate check exceeds the timeout.
+
+        Returns
+        -------
+        Any
+            The payload associated with the event being listened to.
+        """
         name: str = "event_" + event.lower()
 
         set_ = self._wait_fors[name]
@@ -343,18 +481,21 @@ class Client:
         return await waiter.wait()
 
     async def add_token(self, token: str, refresh: str) -> None:
-        """Adds a token/refresh pair to the client to be automatically managed.
+        """Adds a token and refresh-token pair to the client to be automatically managed.
 
-        After successfully adding a token to the client, the token will be automatically revalidated and refreshed when
-        required.
+        After successfully adding a token to the client, the token will be automatically revalidated and refreshed both when
+        required and periodically.
 
-        This method is automatically called in the [`event_oauth_authorized`][twitchio.events.event_oauth_authorized] event,
-        when a token is via the built-in OAuth.
+        This method is automatically called in the :func:`~twitchio.events.event_oauth_authorized` event,
+        when a token is authorized by a user via the built-in OAuth adapter.
 
-        You can override the [`event_oauth_authorized`][twitchio.events.event_oauth_authorized] or this method to
+        You can override the :func:`~twitchio.events.event_oauth_authorized` or this method to
         implement custom functionality such as storing the token in a database.
 
-        ??? note
+        Storing your tokens safely is highly recommended and required to prevent users needing to reauthorize
+        your application after restarts.
+
+        .. note::
 
             Both `token` and `refresh` are required parameters.
 
@@ -365,30 +506,31 @@ class Client:
         refresh: str
             The refresh token associated with the User-Access token to add.
 
-        Example
-        -------
+        Examples
+        --------
 
-        ```python
-        class Client(twitchio.Client):
+        .. code:: python3
 
-            async def add_token(self, token: str, refresh: str) -> None:
-                # Code to add token to database here...
-                ...
+            class Client(twitchio.Client):
 
-                # Adds the token to the client...
-                await super().add_token(token, refresh)
-        ```
+                async def add_token(self, token: str, refresh: str) -> None:
+                    # Code to add token to database here...
+                    ...
+
+                    # Adds the token to the client...
+                    await super().add_token(token, refresh)
+
         """
         await self._http.add_token(token, refresh)
 
     async def remove_token(self, user_id: str, /) -> TokenMappingData | None:
-        """Removes a token for the specified user-ID from the Client.
+        """Removes a token for the specified `user-ID` from the `Client`.
 
         Removing a token will ensure the client stops managing the token.
 
         This method has been made `async` for convenience when overriding the default functionality.
 
-        You can use override this method to implement custom logic, such as removing a token from your database.
+        You can override this method to implement custom logic, such as removing a token from your database.
 
         Parameters
         ----------
@@ -405,51 +547,57 @@ class Client:
         return self._http.remove_token(user_id)
 
     async def load_tokens(self, path: str | None = None, /) -> None:
-        """Method used to load tokens when the client starts.
+        """Method used to load tokens when the :class:`~Client` starts.
 
-        !!! info
-            This method is always called by the client during `login` but **before** `setup_hook`.
+        .. note::
+
+            This method is always called by the client during :meth:`~Client.login` but **before**
+            :meth:`~Client.setup_hook`.
 
         You can override this method to implement your own token loading logic into the client, such as from a database.
 
-        By default this method loads tokens from a file named `".tio.tokens.json"` if it is present; usually if you use
-        the default method of dumping tokens. **However**, it is preferred you would override this function to load your
-        tokens from a database, as this has far less chance of being corrupted, damaged or lost.
+        By default this method loads tokens from a file named `".tio.tokens.json"` if it is present;
+        always present if you use the default method of dumping tokens.
+
+        **However**, it is preferred you would override this function to load your tokens from a database,
+        as this has far less chance of being corrupted, damaged or lost.
 
         Parameters
         ----------
-        path: Optional[str | None]
+        path: str | None
             The path to load tokens from, if this is `None` and the method has not been overriden, this will default to
             `.tio.tokens.json`. Defaults to `None`.
 
-        Example
-        -------
+        Examples
+        --------
 
-        ```python
-        class Client(twitchio.Client):
+        .. code:: python3
 
-            async def load_tokens(self, path: str | None = None) -> None:
-                # Code to fetch all tokens from the database here...
-                ...
+            class Client(twitchio.Client):
 
-                for row in tokens:
-                    await self.add_token(row["token"], row["refresh"])
-        ```
+                async def load_tokens(self, path: str | None = None) -> None:
+                    # Code to fetch all tokens from the database here...
+                    ...
+
+                    for row in tokens:
+                        await self.add_token(row["token"], row["refresh"])
+
         """
         await self._http.load_tokens(name=path)
 
     async def dump_tokens(self, path: str | None = None, /) -> None:
-        """
-        Method which dumps all the added OAuth tokens currently managed by this Client.
+        """Method which dumps all the added OAuth tokens currently managed by this Client.
 
-        !!! info
+        .. note::
+
             This method is always called by the client when it is gracefully closed.
 
-        ??? note
+        .. note::
+
             By default this method dumps to a JSON file named `".tio.tokens.json"`.
 
         You can override this method to implement your own custom logic, such as saving tokens to a database, however
-        it is preferred to use [`.add_token`][twitchio.Client.add_token] to ensure the tokens are handled as they are added.
+        it is preferred to use :meth:`~Client.add_token` to ensure the tokens are handled as they are added.
 
         Parameters
         ----------
@@ -459,6 +607,7 @@ class Client:
         await self._http.dump(path)
 
     def add_listener(self, listener: Callable[..., Coroutine[Any, Any, None]], *, event: str | None = None) -> None:
+        # TODO: Docs...
         name: str = event or listener.__name__
 
         if not name.startswith("event_"):
@@ -473,69 +622,73 @@ class Client:
         self._listeners[name].add(listener)
 
     def remove_listener(self, listener: Callable[..., Coroutine[Any, Any, None]]) -> None:
+        # TODO: Docs...
         for listeners in self._listeners.values():
             if listener in listeners:
                 listeners.remove(listener)
 
     def create_partialuser(self, user_id: str | int, user_login: str | None = None) -> PartialUser:
-        """Helper method to create a PartialUser.
+        """Helper method used to create :class:`twitchio.PartialUser` objects.
 
-        !!! version "3.0.0"
+        :class:`~twitchio.PartialUser`'s are used to make HTTP requests regarding users on Twitch.
+
+        .. versionadded:: 3.0.0
+
             This has been renamed from `create_user` to `create_partialuser`.
 
         Parameters
         ----------
         user_id: str | int
-            ID of the user you wish to create a PartialUser for.
+            ID of the user you wish to create a :class:`~twitchio.PartialUser` for.
         user_login: str | None
-            Login name of the user you wish to create a PartialUser for, if available.
+            Login name of the user you wish to create a :class:`~twitchio.PartialUser` for, if available.
 
         Returns
         -------
         PartialUser
-            A PartialUser object.
+            A :class:`~twitchio.PartialUser` object.
         """
         return PartialUser(user_id, user_login, http=self._http)
 
     async def fetch_chat_badges(self) -> list[ChatBadge]:
-        """
-        Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
+        """Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
 
-        If you wish to fetch a specific broadcaster's chat badges use [`fetch_chat_badges`][twitchio.user.fetch_chat_badges]
+        To fetch a specific broadcaster's chat badges, see: :meth:`~twitchio.PartialUser.fetch_chat_badges`
 
         Returns
         --------
         list[twitchio.ChatBadge]
-            A list of ChatBadge objects
+            A list of :class:`~twitchio.ChatBadge` objects
         """
 
         data = await self._http.get_global_chat_badges()
         return [ChatBadge(x, http=self._http) for x in data["data"]]
 
     async def fetch_emote_sets(self, emote_set_ids: list[str], *, token_for: str | None = None) -> list[EmoteSet]:
-        """
-        Fetches emotes for one or more specified emote sets.
+        """Fetches emotes for one or more specified emote sets.
 
-        ??? tip
+        .. note::
+
             An emote set groups emotes that have a similar context.
-            For example, Twitch places all the subscriber emotes that a broadcaster uploads for their channel in the same emote set.
+            For example, Twitch places all the subscriber emotes that a broadcaster uploads for their channel
+            in the same emote set.
 
         Parameters
         ----------
         emote_set_ids: list[str]
-            List of IDs that identifies the emote set to get. You may specify a maximum of 25 IDs.
+            A list of the IDs that identifies the emote set to get. You may specify a maximum of **25** IDs.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
 
         Returns
         -------
-        list[EmoteSet]
-            A list of EmoteSet objects.
+        list[:class:`~twitchio.EmoteSet`]
+            A list of :class:`~twitchio.EmoteSet` objects.
 
         Raises
         ------
         ValueError
-            You can only specify a maximum of 25 emote set IDs.
+            You can only specify a maximum of **25** emote set IDs.
         """
 
         if len(emote_set_ids) > 25:
@@ -552,22 +705,23 @@ class Client:
         *,
         token_for: str | None = None,
     ) -> list[ChatterColor]:
-        """
-        Fetches the color of a chatter.
+        """Fetches the color of a chatter.
 
         .. versionchanged:: 3.0
+
             Removed the `token` parameter. Added the `token_for` parameter.
 
         Parameters
         -----------
         user_ids: list[str | int]
-            List of user ids to fetch the colors for.
+            A list of user ids to fetch the colours for.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
+
         Returns
         --------
-        list[twitchio.ChatterColor]
-            A list of ChatterColor objects for the requested users.
+        list[:class:`~twitchio.ChatterColor`]
+            A list of :class:`~twitchio.ChatterColor` objects associated with the passed user IDs.
         """
         if len(user_ids) > 100:
             raise ValueError("Maximum of 100 user_ids")
@@ -581,20 +735,20 @@ class Client:
         *,
         token_for: str | None = None,
     ) -> list[ChannelInfo]:
-        """
-        Retrieve channel information from the API.
+        """Retrieve channel information from the API.
 
         Parameters
-        -----------
+        ----------
         broadcaster_ids: list[str | int]
             A list of channel IDs to request from API.
-            You may specify a maximum of 100 IDs.
+            You may specify a maximum of **100** IDs.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
+
         Returns
         --------
-        list[twitchio.ChannelInfo]
-            A list of ChannelInfo objects.
+        list[:class:`~twitchio.ChannelInfo`]
+            A list of :class:`~twitchio.ChannelInfo` objects.
         """
         if len(broadcaster_ids) > 100:
             raise ValueError("Maximum of 100 broadcaster_ids")
@@ -608,22 +762,25 @@ class Client:
         broadcaster_id: int | str | None = None,
         token_for: str | None = None,
     ) -> list[Cheermote]:
-        """
-        Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room. Cheermotes are animated emotes that viewers can assign Bits to.
-        If a broadcaster_id is not specified then only global cheermotes will be returned.
-        If the broadcaster uploaded Cheermotes, the type attribute will be set to channel_custom.
+        """Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room.
+
+        Cheermotes are animated emotes that viewers can assign Bits to.
+        If a `broadcaster_id` is not specified then only global cheermotes will be returned.
+
+        If the broadcaster uploaded Cheermotes, the type attribute will be set to `channel_custom`.
 
         Parameters
         -----------
         broadcaster_id: str | int | None
-            The ID of the broadcaster whose custom Cheermotes you want to get. If not provided then you will fetch global Cheermotes.
+            The ID of the broadcaster whose custom Cheermotes you want to fetch.
+            If not provided or `None` then you will fetch global Cheermotes. Defaults to `None`
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
 
         Returns
         --------
-        list[twitchio.Cheermote]
-            A list of Cheermote objects.
+        list[:class:`~twitchio.Cheermote`]
+            A list of :class:`~twitchio.Cheermote` objects.
         """
         data = await self._http.get_cheermotes(str(broadcaster_id) if broadcaster_id else None, token_for)
         return [Cheermote(d, http=self._http) for d in data["data"]]
@@ -631,8 +788,8 @@ class Client:
     async def fetch_classifications(
         self, locale: str = "en-US", *, token_for: str | None = None
     ) -> list[ContentClassificationLabel]:
-        """
-        Fetches information about Twitch content classification labels.
+        # TODO: Docs need more info...
+        """Fetches information about Twitch content classification labels.
 
         Parameters
         -----------
@@ -641,8 +798,8 @@ class Client:
 
         Returns
         --------
-        list[twitchio.ContentClassificationLabel]
-            A list of Content Classification Labels objects.
+        list[:class:`~twitchio.ContentClassificationLabel`]
+            A list of :class:`~twitchio.ContentClassificationLabel` objects.
         """
         data = await self._http.get_content_classification_labels(locale, token_for)
         return [ContentClassificationLabel(d) for d in data["data"]]
@@ -659,8 +816,9 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
-        """
-        Fetches clips by clip id or game id.
+        """|aiter|
+
+        Fetches clips by the provided clip ids or game id.
 
         Parameters
         -----------
@@ -668,34 +826,35 @@ class Client:
             A game id to fetch clips from.
         clip_ids: list[str] | None
             A list of specific clip IDs to fetch.
-            Maximum amount you can request is 100.
+            The Maximum amount you can request is **100**.
         started_at: datetime.datetime
             The start date used to filter clips.
         ended_at: datetime.datetime
             The end date used to filter clips. If not specified, the time window is the start date plus one week.
-        featured: bool | None = None
-            If True, returns only clips that are featured.
-            If False, returns only clips that aren't featured.
-            All clips are returned if this parameter is not provided.
-        token_for: str | None
-            An optional user token to use instead of the default app token.
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
-        max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+        featured: bool | None
+            When this parameter is `True`, this method returns only clips that are featured.
+            When this parameter is `False`, this method returns only clips that are not featured.
 
+            Othwerise if this parameter is not provided or `None`, all clips will be returned. Defaults to `None`.
+        token_for: str | None
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.Clip]
+        HTTPAsyncIterator[:class:`~twitchio.Clip`]
 
         Raises
         ------
         ValueError
             Only one of `game_id` or `clip_ids` can be provided.
         ValueError
-            One of `game_id` or `clip_ids` must be provided.
+            You must provide either a `game_id` *or* `clip_ids`.
         """
 
         provided: int = len([v for v in (game_id, clip_ids) if v])
@@ -725,27 +884,31 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[ExtensionTransaction]:
-        """
-        Fetches global emotes from the twitch API
+        # TODO: Check docs?...
+        """|aiter|
 
-        !!! note
-            The ID in the extension_id query parameter must match the provided client ID.
+        Fetches global emotes from the Twitch API.
+
+        .. note::
+
+            The ID in the `extension_id` parameter must match the Client-ID provided to this :class:`~Client`.
 
         Parameters
         -----------
         extension_id: str
-            The ID of the extension whose list of transactions you want to get. You may specify a maximum of 100 IDs.
+            The ID of the extension whose list of transactions you want to fetch.
         ids: list[str] | None
             A transaction ID used to filter the list of transactions.
         first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
         max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.ExtensionTransaction]
+        HTTPAsyncIterator[:class:`~twitchio.ExtensionTransaction`]
         """
 
         first = max(1, min(100, first))
@@ -761,65 +924,75 @@ class Client:
         )
 
     async def fetch_extensions(self, *, token_for: str) -> list[Extension]:
-        """
-        Fetch a list of all extensions (both active and inactive) that the broadcaster has installed. The user ID in the access token identifies the broadcaster.
+        """Fetch a list of all extensions (both active and inactive) that the broadcaster has installed.
 
         The user ID in the access token identifies the broadcaster.
 
-        !!! info
+        .. note::
+
             Requires a user access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
             To include inactive extensions, you must include the `user:edit:broadcast` scope.
 
         Parameters
         ----------
         token_for: str
-            User access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
+            The User ID that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `user:read:broadcast` or `user:edit:broadcast` scope.
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
             To include inactive extensions, you must include the `user:edit:broadcast` scope.
 
         Returns
         -------
-        list[UserExtension]
-            List of UserExtension objects.
+        list[:class:`~twitchio.UserExtension`]
+            List of :class:`~twitchio.UserExtension` objects.
         """
         data = await self._http.get_user_extensions(token_for=token_for)
         return [Extension(d) for d in data["data"]]
 
     async def update_extensions(self, *, user_extensions: ActiveExtensions, token_for: str) -> ActiveExtensions:
-        """
-        Updates an installed extension's information. You can update the extension's activation state, ID, and version number.
+        """Update an installed extension's information for a specific broadcaster.
 
-        The user ID in the access token identifies the broadcaster whose extensions you're updating.
+        You can update the extension's activation `state`, `ID`, and `version number`.
+        The User-ID passed to `token_for` identifies the broadcaster whose extensions you are updating.
 
-        !!! tip
-            The best way to change an installed extension's configuration is to use [`fetch_active_extensions`][twitchio.user.fetch_active_extensions].
+        .. note::
+
+            The best way to change an installed extension's configuration is to use
+            :meth:`~twitchio.PartialUser.fetch_active_extensions` to fetch the extension.
+
             You can then edit the approperiate extension within the `ActiveExtensions` model and pass it to this method.
 
-        ??? info
+        .. note::
+
             Requires a user access token that includes the `user:edit:broadcast` scope.
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
 
         Parameters
         ----------
         token_for: str
-            User access token that includes the `user:edit:broadcast` scope.
+            The User ID that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `user:edit:broadcast` scope.
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
 
         Returns
         -------
         ActiveExtensions
-            ActiveExtensions object.
+            The :class:`~twitchio.ActiveExtensions` object.
         """
         data = await self._http.put_user_extensions(user_extensions=user_extensions, token_for=token_for)
         return ActiveExtensions(data["data"])
 
     async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
-        """
-        Fetches global emotes from the twitch API
+        """Fetches global emotes from the Twitch API.
 
-        If you wish to fetch a specific broadcaster's chat badges use [`fetch_channel_emotes`][twitchio.user.fetch_channel_emotes]
+        If you wish to fetch a specific broadcaster's chat badges use :meth:`~twitchio.PartialUser.fetch_channel_emotes`.
 
         Returns
         --------
-        list[twitchio.GlobalEmote]
-            A list of GlobalEmotes objects.
+        list[:class:`twitchio.GlobalEmote`]
+            A list of :class:`~twitchio.GlobalEmote` objects.
         """
         data = await self._http.get_global_emotes(token_for)
         template: str = data["template"]
@@ -838,32 +1011,36 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
-        """
-        Fetches live streams from the helix API
+        # TODO: Docs: Languages??
+        # TODO: Docs: type??? Needs more info. What does all mean and how does it differ from live...
+        """|aiter|
+
+        Fetches streams from the Twitch API.
 
         Parameters
         -----------
         user_ids: list[int | str] | None
-            user ids of people whose streams to fetch
+            An optional list of User-IDs to fetch live stream information for.
         game_ids: list[int | str] | None
-            game ids of streams to fetch
+            An optional list of Game-IDs to fetch live streams for.
         user_logins: list[str] | None
-            user login names of people whose streams to fetch
+            An optional list of User-Logins to fetch live stream information for.
         languages: list[str] | None
-            language for the stream(s). ISO 639-1 or two letter code for supported stream language
+            The language to fetch for the streams. Must be `ISO 639-1` or a supported two letter code of the stream language.
         type: Literal["all", "live"]
             One of `"all"` or `"live"`. Defaults to `"all"`. Specifies what type of stream to fetch.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
         first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
         max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.Stream]
+        HTTPAsyncIterator[:class:`twitchio.Stream`]
         """
 
         first = max(1, min(100, first))
@@ -886,21 +1063,28 @@ class Client:
         team_id: str | None = None,
         token_for: str | None = None,
     ) -> Team:
-        """
-        Fetches information about a specific Twitch team. You must provide one of either `team_name` or `team_id`.
+        """Fetches information about a specific Twitch team.
+
+        You must provide one of either `team_name` or `team_id`.
 
         Parameters
         -----------
-        team_name: str
+        team_name: str | None
             The team name.
-        team_id: str
+        team_id: str | None
             The team id.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
+
         Returns
         --------
-        twitchio.Team
-            A Team object.
+        Team
+            The :class:`twitchio.Team` object.
+
+        Raises
+        ------
+        ValueError
+            You can only provide either `team_name` or `team_id`, not both.
         """
 
         if team_name and team_id:
@@ -921,22 +1105,25 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
-        """
-        Fetches information about all broadcasts on Twitch.
+        # TODO: Docs??? More info...
+        """|aiter|
+
+        Fetches information about the current top games on Twitch.
 
         Parameters
         -----------
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
         first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
         max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.Game]
+        HTTPAsyncIterator[:class:`twitchio.Game`]
         """
 
         first = max(1, min(100, first))
@@ -951,18 +1138,24 @@ class Client:
         igdb_ids: list[str] | None = None,
         token_for: str | None = None,
     ) -> list[Game]:
-        """
-        Fetches information about all broadcasts on Twitch.
+        # TODO: Docs??? More info...
+        """Fetches information about multiple games on Twitch.
 
         Parameters
         -----------
+        names: list[str] | None
+            A list of game names to use to fetch information about. Defaults to `None`.
+        ids: list[str] | None
+            A list of game ids to use to fetch information about. Defaults to `None`.
+        igdb_ids: list[str] | None
+            A list of `igdb` ids to use to fetch information about. Defaults to `None`.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
 
         Returns
         --------
-        list[twitchio.Game]
-            A list of Game objects
+        list[:class:`twitchio.Game`]
+            A list of :class:`twitchio.Game` objects.
         """
 
         data = await self._http.get_games(
@@ -982,18 +1175,18 @@ class Client:
         igdb_id: str | None = None,
         token_for: str | None = None,
     ) -> Game | None:
-        """
-        Fetch a [`twitchio.Game`][twitchio.Game] object with the provided `name`, `id`, or `igdb_id`.
+        """Fetch a :class:`~twitchio.Game` object with the provided `name`, `id`, or `igdb_id`.
 
         One of `name`, `id`, or `igdb_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
 
         If no game is found, `None` will be returned.
 
-        ??? tip
-            See: [`Client.fetch_games`][twitchio.Client.fetch_games] to fetch multiple games at once.
+        .. note::
 
-            See: [`Client.fetch_top_games`][twitchio.Client.fetch_top_games] to fetch the top games currently being streamed.
+            See: :meth:`~Client.fetch_games` to fetch multiple games at once.
+
+            See: :meth:`~Client.fetch_top_games` to fetch the top games currently being streamed.
 
         Parameters
         ----------
@@ -1002,14 +1195,14 @@ class Client:
         id: str | None
             The id of the game to fetch.
         igdb_id: str | None
-            The igdb_id of the game to fetch.
+            The igdb id of the game to fetch.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
 
         Returns
         -------
         Game | None
-            The Game object if found, otherwise `None`.
+            The :class:`twitchio.Game` object if found, otherwise `None`.
 
         Raises
         ------
@@ -1037,16 +1230,21 @@ class Client:
     async def fetch_users(
         self, *, ids: list[str | int] | None = None, logins: list[str] | None = None, token_for: str | None = None
     ) -> list[User]:
-        """
-        Fetch information about one or more users.
+        """Fetch information about one or more users.
 
-        !!! info
-            You may look up users using their user ID, login name, or both but the sum total of the number of users you may look up is 100.
-            For example, you may specify 50 IDs and 50 names or 100 IDs or names, but you cannot specify 100 IDs and 100 names.
+        .. note::
 
-            If you don't specify IDs or login names but provide a user token, the request returns information about the user in the access token.
+            You may look up users using their user ID, login name, or both but the sum total
+            of the number of users you may look up is `100`.
 
-            To include the user's verified email address in the response, you must use a user access token that includes the `user:read:email` scope.
+            For example, you may specify `50` IDs and `50` names or `100` IDs or names,
+            but you cannot specify `100` IDs and `100` names.
+
+            If you don't specify IDs or login names but provide the `token_for` parameter,
+            the request returns information about the user associated with the access token.
+
+            To include the user's verified email address in the response,
+            you must have a user access token that includes the `user:read:email` scope.
 
         Parameters
         ----------
@@ -1055,17 +1253,20 @@ class Client:
         logins: list[str] | None
             The login names of the users to fetch information about.
         token_for: str | None
-            Optional token, with `user:read:email` scope, to request the user's verified email address.
+            |token_for|
+
+            If this parameter is provided, the token must have the `user:read:email` scope
+            in order to request the user's verified email address.
 
         Returns
         -------
-        list[User]
-            List of User objects.
+        list[:class:`twitchio.User`]
+            A list of :class:`twitchio.User` objects.
 
         Raises
         ------
         ValueError
-            The combined number of 'ids' and 'logins' must not exceed 100 elements.
+            The combined number of 'ids' and 'logins' must not exceed `100` elements.
         """
 
         if (len(ids or []) + len(logins or [])) > 100:
@@ -1082,23 +1283,26 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
-        """
-        Searches Twitch categories.
+        """|aiter|
+
+        Searches Twitch categories via the API.
 
         Parameters
         -----------
         query: str
             The query to search for.
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
-        max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.Game]
+        HTTPAsyncIterator[:class:`twitchio.Game`]
         """
 
         first = max(1, min(100, first))
@@ -1119,16 +1323,22 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[SearchChannel]:
-        """
-        Searches Twitch channels that match the specified query and have streamed content within the past 6 months.
+        """|aiter|
 
-        !!! info
-            If `live` is set to False (default) then the query will look to match broadcaster login names.
-            If `live` is set to True then the query will match on the broadcaster login names and category names.
+        Searches Twitch channels that match the specified query and have streamed content within the past `6` months.
+
+        .. note::
+
+            If the `live` parameter is set to `False` (default), the query will look to match broadcaster login names.
+            If the `live` parameter is set to `True`, the query will match on the broadcaster login names and category names.
 
             To match, the beginning of the broadcaster's name or category must match the query string.
-            The comparison is case insensitive. If the query string is angel_of_death, it matches all names that begin with angel_of_death.
-            However, if the query string is a phrase like angel of death, it matches to names starting with angelofdeath or names starting with angel_of_death.
+
+            The comparison is case insensitive. If the query string is `angel_of_death`,
+            it will matche all names that begin with `angel_of_death`.
+
+            However, if the query string is a phrase like `angel of death`, it will match
+            to names starting with `angelofdeath` *or* names starting with `angel_of_death`.
 
         Parameters
         -----------
@@ -1136,17 +1346,19 @@ class Client:
             The query to search for.
         live: bool
             Whether to return live channels only.
-            Default is False.
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
-        max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+            Defaults to `False`.
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.SearchChannel]
+        HTTPAsyncIterator[:class:`twitchio.SearchChannel`]
         """
 
         first = max(1, min(100, first))
@@ -1173,8 +1385,13 @@ class Client:
         max_results: int | None = None,
         token_for: str | None = None,
     ) -> HTTPAsyncIterator[Video]:
-        """
-        Fetch a list of [`twitchio.Video`][twitchio.Video] objects with the provided `ids`, `user_id` or `game_id`.
+        # TODO: Docs??? langauge...
+        # TODO: Docs??? period...
+        # TODO: Docs??? sort...
+        # TODO: Docs??? type...
+        """|aiter|
+
+        Fetch a list of :class:`~twitchio.Video` objects with the provided `ids`, `user_id` or `game_id`.
 
         One of `ids`, `user_id` or `game_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
@@ -1184,25 +1401,29 @@ class Client:
         ids: list[str | int] | None
             A list of video IDs to fetch.
         user_id: str | int | None
-            The ID of the user whose list of videos you want to get.
+            The ID of the user whose list of videos you want to fetch.
         game_id: str | int | None
-            The igdb_id of the game to fetch.
+            The igdb id of the game to fetch.
         language: str | None
+            ...
         period: Literal["all", "day", "month", "week"]
+            ...
         sort: Literal["time", "trending", "views"]
+            ...
         type: Literal["all", "archive", "highlight", "upload"]
-        first: int
-            Maximum number of items to return per page. Default is 20.
-            Min is 1 and Max is 100.
-        max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+            ...
         token_for: str | None
-            An optional user token to use instead of the default app token.
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         -------
-        list[Video]
-            A list of Video objects if found.
+        HTTPAsyncIterator[:class:`twitchio.Video`]
 
         Raises
         ------
@@ -1233,19 +1454,30 @@ class Client:
         )
 
     async def delete_videos(self, *, ids: list[str | int], token_for: str) -> list[str]:
-        """
-        Deletes one or more videos. You may delete past broadcasts, highlights, or uploads.
+        # TODO: DOCS: Chunks bit needs clarification, because currently that makes no sense...
+        """Deletes one or more videos for a specific broadcaster.
 
-        This requires a user token with the scope `channel:manage:videos`.
-        The limit is to delete 5 ids at a time, so if more than 5 ids are provided we will attempt to delete them in chunks.
-        If any of the videos fail to delete in the request then none will be deleted in that chunk.
+        .. note::
+
+            You may delete past broadcasts, highlights, or uploads.
+
+        .. note::
+            This requires a user token with the scope `channel:manage:videos`.
+
+        The limit is to delete `5` ids at a time. When more than 5 ids are provided,
+        an attempt to delete them in chunks is made.
+
+        If any of the videos fail to delete in a chunked request, no videos will be deleted in that chunk.
 
         Parameters
         ----------
         ids: list[str | int] | None
-            A list of video IDs to fetch.
+            A list of video IDs to delete.
         token_for: str
-            User token with the scope `channel:manage:videos`.
+            The User ID that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `channel:manage:videos` scope.
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
 
         Returns
         -------
@@ -1269,33 +1501,41 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[VideoMarkers]:
-        """
-        Fetches markers from the user's most recent stream or from the specified VOD/video.
-        A marker is an arbitrary point in a live stream that the broadcaster or editor marked, so they can return to that spot later to create video highlights
+        """|aiter|
 
-        !!! info
-            To fetch by user please use [`fetch_stream_markers`][twitchio.user.PartialUser.fetch_stream_markers]
+        Fetches markers from a specific user's most recent stream or from the specified VOD/video.
 
-        ??? note
-            Requires a user access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+        A marker is an arbitrary point in a live stream that the broadcaster or editor has marked,
+        so they can return to that spot later to create video highlights.
+
+        .. important::
+
+            See: :meth:`~twitchio.PartialUser.fetch_stream_markers` for a more streamlined version of this method.
+
+        .. note::
+
+            Requires a user access token that includes the `user:read:broadcast` *or* `channel:manage:broadcast` scope.
 
         Parameters
         ----------
         video_id: str
             A video on demand (VOD)/video ID. The request returns the markers from this VOD/video.
-            The user in the access token must own the video or the user must be one of the broadcaster's editors.
+            The User-ID provided to `token_for` must own the video or the user must be one of the broadcaster's editors.
         token_for: str
-            User access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+            The User-ID that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `user:read:broadcast` *or* `channel:manage:broadcast` scope
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
         first: int
-            The maximum number of items to return per page in the response.
-            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
         max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         -------
-        HTTPAsyncIterator[VideoMarkers]
-            HTTPAsyncIterator of VideoMarkers objects.
+        HTTPAsyncIterator[:class:`twitchio.VideoMarkers`]
         """
         first = max(1, min(100, first))
         return self._http.get_stream_markers(
@@ -1316,59 +1556,74 @@ class Client:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Entitlement]:
-        """
-        Fetches an organization's list of entitlements that have been granted to a game, a user, or both.
+        # TODO: Docs??? More info in parameters?
+        """|aiter|
 
-        !!! info
+        Fetches an organization's list of entitlements that have been granted to a `game`, a `user`, or `both`.
+
+        .. note::
+
             Entitlements returned in the response body data are not guaranteed to be sorted by any field returned by the API.
-            To retrieve `CLAIMED` or `FULFILLED` entitlements, use the fulfillment_status query parameter to filter results.
-            To retrieve entitlements for a specific game, use the game_id query parameter to filter results.
 
-        !!! note
-            Requires an app access token or user access token. The client ID in the access token must own the game.
+            To retrieve `CLAIMED` or `FULFILLED` entitlements, use the `fulfillment_status` query parameter to filter results.
+            To retrieve entitlements for a specific game, use the `game_id` query parameter to filter results.
 
-        | Access token type | Parameter          | Description                                                                                                           |
-        |-------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------|
-        | App               | None               | If you don't specify request parameters, the request returns all entitlements that your organization owns.             |
-        | App               | user_id            | The request returns all entitlements for any game that the organization granted to the specified user.                |
-        | App               | user_id, game_id   | The request returns all entitlements that the specified game granted to the specified user.                            |
-        | App               | game_id            | The request returns all entitlements that the specified game granted to all entitled users.                            |
-        | User              | None               | If you don't specify request parameters, the request returns all entitlements for any game that the organization granted to the user identified in the access token. |
-        | User              | user_id            | Invalid.                                                                                                              |
-        | User              | user_id, game_id   | Invalid.                                                                                                              |
-        | User              | game_id            | The request returns all entitlements that the specified game granted to the user identified in the access token.      |
+        .. note::
 
+            Requires an app access token or user access token. The Client-ID associated with the token must own the game.
+
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | Access token type  | Parameter        | Description                                                                                                                                                          |
+        +====================+==================+======================================================================================================================================================================+
+        | App                | None             | If you don't specify request parameters, the request returns all entitlements that your organization owns.                                                           |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | App                | user_id          | The request returns all entitlements for any game that the organization granted to the specified user.                                                               |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | App                | user_id, game_id | The request returns all entitlements that the specified game granted to the specified user.                                                                          |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | App                | game_id          | The request returns all entitlements that the specified game granted to all entitled users.                                                                          |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | None             | If you don't specify request parameters, the request returns all entitlements for any game that the organization granted to the user identified in the access token. |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | user_id          | Invalid.                                                                                                                                                             |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | user_id, game_id | Invalid.                                                                                                                                                             |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | game_id          | The request returns all entitlements that the specified game granted to the user identified in the access token.                                                     |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
         Parameters
         ----------
         token_for: str | None
-            User access token. The client ID in the access token must own the game.
-            If not provided then default app token is used.
-            `The client ID in the access token must own the game.`
+            An optional User-ID that will be used to find an appropriate managed user token for this request.
+            The Client-ID associated with the token must own the game.
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
         ids: list[str] | None
-            List of entitlement ids that identifies the entitlements to get.
+            A list of entitlement ids that identifies the entitlements to fetch.
         user_id: str | int | None
-            User that was granted entitlements.
+            An optional User-ID of the user that was granted entitlements.
         game_id: str | None
             An ID that identifies a game that offered entitlements.
         fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None
             The entitlement's fulfillment status. Used to filter the list to only those with the specified status.
             Possible values are: `CLAIMED` and `FULFILLED`.
         first: int
-            The maximum number of items to return per page in the response.
-            The minimum page size is 1 item per page and the maximum is 1000 items per page. The default is 20.
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
         max_results: int | None
-            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         -------
-        HTTPAsyncIterator[Entitlement]
-            HTTPAsyncIterator of Entitlement objects.
+        HTTPAsyncIterator[:class:`twitchio.Entitlement`]
 
         Raises
         ------
         ValueError
-            You may specifiy a maximum of 100 ids.
+            You may only specifiy a maximum of `100` ids.
         """
         first = max(1, min(1000, first))
 
@@ -1391,37 +1646,44 @@ class Client:
         fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
         token_for: str | None = None,
     ) -> list[EntitlementStatus]:
-        """
-        Updates the Drop entitlement's fulfillment status.
+        """Updates a Drop entitlement's fulfillment status.
 
-        !!! note
-            Requires an app access token or user access token. The client ID in the access token must own the game.
+        .. note::
 
-        | Access token type | Data that's updated                                                                                                            |
-        |-------------------|--------------------------------------------------------------------------------------------------------------------------------|
-        | App               | Updates all entitlements with benefits owned by the organization in the access token.                                          |
-        | User              | Updates all entitlements owned by the user in the access win the access token and where the benefits are owned by the organization in the access token. |
+            Requires an app access token or user access token.
+            The Client-ID associated with the token must own the game associated with this drop entitlment.
 
+        +--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | Access token type  | Updated Data                                                                                                                                            |
+        +====================+=========================================================================================================================================================+
+        | App                | Updates all entitlements with benefits owned by the organization in the access token.                                                                   |
+        +--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | Updates all entitlements owned by the user in the access win the access token and where the benefits are owned by the organization in the access token. |
+        +--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
 
         Parameters
         ----------
         ids: list[str] | None
-            A list of IDs that identify the entitlements to update. You may specify a maximum of 100 IDs.
+            A list of IDs that identify the entitlements to update. You may specify a maximum of **100** IDs.
         fulfillment_status: Literal[""CLAIMED", "FULFILLED"] | None
             The fulfillment status to set the entitlements to.
             Possible values are: `CLAIMED` and `FULFILLED`.
         token_for: str | None
-            User access token. The client ID in the access token must own the game.
+            An optional User-ID that will be used to find an appropriate managed user token for this request.
+            The Client-ID associated with the token must own the game associated with this drop entitlment.
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
 
         Returns
         -------
-        list[EntitlementStatus]
-            List of EntitlementStatus objects.
+        list[:class:`twitchio.EntitlementStatus`]
+            A list of :class:`twitchio.EntitlementStatus` objects.
 
         Raises
         ------
         ValueError
-            You may specifiy a maximum of 100 ids.
+            You may only specifiy a maximum of **100** ids.
         """
         if ids is not None and len(ids) > 100:
             raise ValueError("You may specifiy a maximum of 100 ids.")
@@ -1464,21 +1726,27 @@ class Client:
         # TODO: Complete docs...
         """Subscribe to an EventSub Event via Websockets.
 
-        !!! tip
+        .. note::
+
             See: ... for more information and recipes on using eventsub.
 
         Parameters
         ----------
-        payload: SubscriptionPayload
+        payload: :class:`twitchio.SubscriptionPayload`
             The payload which should include the required conditions to subscribe to.
         as_bot: bool
-            Whether to subscribe to this event using the token associated with the provided
-            [`bot_id`][twitchio.Client.bot_id]. If this is set to `True` and `bot_id` has not been set, this method will
-            raise `ValueError`. Defaults to `False` on [`Client`][twitchio.Client] but will default to `True` on
-            [`Bot`][twitchio.ext.commands.Bot].
+            Whether to subscribe to this event using the user token associated with the provided
+            :attr:`Client.bot_id`. If this is set to `True` and `bot_id` has not been set, this method will
+            raise `ValueError`. Defaults to `False` on :class:`Client` but will default to `True` on
+            :class:`~twitchio.ext.commands.Bot`
         token_for: str | None
-            An optional user ID to use to subscribe. If `as_bot` is passed, this is always the token associated with the
-            [`bot_id`][twitchio.Client.bot_id] account. Defaults to `None`.
+            An optional User-ID that will be used to find an appropriate managed user token for this request.
+
+            If `as_bot` is `True`, this is always the token associated with the
+            :attr:`~Client.bot_id` account. Defaults to `None`.
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
         socket_id: str | None
             An optional `str` corresponding to an exisiting and connected websocket session, to use for this subscription.
             You usually do not need to pass this parameter as TwitchIO delegates subscriptions to websockets as needed.
@@ -1487,7 +1755,6 @@ class Client:
         Returns
         -------
         SubscriptionResponse
-            ...
 
         Raises
         ------
@@ -1581,26 +1848,34 @@ class Client:
         # TODO: Complete docs...
         """Subscribe to an EventSub Event via Webhook.
 
-        !!! tip
+        .. note::
+
             For more information on how to setup your bot with webhooks, see: ...
 
-        ??? warning
+        .. important::
+
             Usually you wouldn't use webhooks to subscribe to the
-            [`Channel Chat Message`][twitchio.eventsub.ChatMessageSubscription] subscription.
-            Consider using [`.subscribe_websocket`][twitchio.Client.subscribe_websocket] for this subscription.
+            :class:`~twitchio.eventsub.ChatMessageSubscription` subscription.
+
+            Consider using :meth:`~Client.subscribe_websocket` for this subscription.
 
         Parameters
         ----------
-        payload: SubscriptionPayload
+        payload: :class:`~twitchio.SubscriptionPayload`
             The payload which should include the required conditions to subscribe to.
         as_bot: bool
-            Whether to subscribe to this event using the token associated with the provided
-            [`bot_id`][twitchio.Client.bot_id]. If this is set to `True` and `bot_id` has not been set, this method will
-            raise `ValueError`. Defaults to `False` on [`Client`][twitchio.Client] but will default to `True` on
-            [`Bot`][twitchio.ext.commands.Bot].
+            Whether to subscribe to this event using the user token associated with the provided
+            :attr:`Client.bot_id`. If this is set to `True` and `bot_id` has not been set, this method will
+            raise `ValueError`. Defaults to `False` on :class:`Client` but will default to `True` on
+            :class:`~twitchio.ext.commands.Bot`
         token_for: str | None
-            An optional user ID to use to subscribe. If `as_bot` is passed, this is always the token associated with the
-            [`bot_id`][twitchio.Client.bot_id] account. Defaults to `None`.
+            An optional User-ID that will be used to find an appropriate managed user token for this request.
+
+            If `as_bot` is `True`, this is always the token associated with the
+            :attr:`~Client.bot_id` account. Defaults to `None`.
+
+            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
         callback_url: str | None
             An optional url to use as the webhook `callback_url` for this subscription. If you are using one of the built-in
             web adapters, you should not need to set this. See: (web adapter docs link) for more info.
@@ -1611,7 +1886,6 @@ class Client:
         Returns
         -------
         SubscriptionResponse
-            ...
 
         Raises
         ------
@@ -1677,170 +1951,3 @@ class Client:
 
     async def event_oauth_authorized(self, payload: UserTokenPayload) -> None:
         await self.add_token(payload["access_token"], payload["refresh_token"])
-
-    def doc_test(self, thing: int = 1) -> int:
-        """
-        This is a test method to test and view certain elements of the mkdocs style documentation.
-
-        .. error::
-
-            I'm sorry, whe3454 eu. I'm afraid I can't do that.
-
-
-        .. code-block:: python3
-
-            print("Hello World!")
-            # Hi
-            ...
-
-        For more information see: [`Material Docs`](https://squidfunk.github.io/mkdocs-material/reference/)
-
-        **Linking to another method/object:** [`twitchio.Client.fetch_channels`][]
-
-        **Linking to another method/object with custom name:** [`fetch_channels`][twitchio.Client.fetch_channels]
-
-        !!! warning
-            This is a warning block.
-
-        !!! note
-            This is a note block.
-
-        !!! tip
-            This is a tip block.
-
-        !!! danger
-            This is a danger block.
-
-        !!! example
-            This is an example block.
-
-        !!! info
-            This is an info block.
-
-        !!! question
-            This is a question block.
-
-        !!! quote
-            This is a quote block.
-
-        !!! abstract
-            This is an abstract block.
-
-        !!! note "This is a block with a custom title xD"
-            This is a custom note block.
-
-        !!! warning "Don't need content!"
-
-        Pythonista also adds a version block:
-
-        !!! version "3.0.0"
-            **Added** the [`fetch_channels`][twitchio.Client.fetch_channels] method.
-
-        **Tables:**
-
-        | Example          | Some other col |
-        | -----------      | -------------- |
-        | This is a test   | 123            |
-        | This is a test   | 321            |
-
-        **Pythonista Tags:**
-        :fontawesome-solid-triangle-exclamation:{ .icon-warning .pythonista-tag title="Put a message here" }
-        :fontawesome-solid-check:{ .icon-check .pythonista-tag title="Put a message here" }
-        :fontawesome-solid-question:{ .icon-unknown .pythonista-tag title="Put a message here" }
-
-
-        **Code Blocks:**
-
-        ```python
-        # This is a python code block
-        print("Hello World!")
-        ```
-
-
-        **Content Blocks:**
-
-        === "Some Code"
-
-            ```python
-            # This is a python code block
-            print("Hello World!")
-            ```
-
-        === "Some Other Code"
-
-            ```python
-            import twitchio
-
-            client = twitchio.Client()
-            ```
-
-        === "Wow!"
-
-            Cool!
-
-
-        **Emojis:**
-
-        :sweat_smile: -  Mainly used if we need an icon for something.
-
-
-        **Images:**
-
-        ![Some Image](https://dummyimage.com/600x400/eee/aaa)
-
-
-        **Lists:**
-
-        - This is a list item 1
-        - This is a list item 2
-            * An inner list item
-            * Another inner list item
-        - This is a list item 3
-
-        **Checklists:**
-
-        - [x] This is a checked list item
-        - [ ] This is an unchecked list item
-            * [x] An inner checked list item
-            * [ ] An inner unchecked list item
-
-
-        **Tool Tips:**
-
-        [Some ToolTip](# "This is a tooltip")
-
-        :octicons-bug-24:{ title="This is a tooltip with an icon" } <-- Hover little bug guy
-
-
-        **Abbreviations:**
-
-        If TIO3 defined in the docstring like below, it will be linked to the abbreviation.
-
-        *[TIO3]: TwitchIO 3.0 - The latest version of TwitchIO.
-
-
-        **Annotations:**
-
-        These are supper annoying to add to the docstring (1), but they are useful sometimes I guess... (2)
-        { .annotate }
-
-        1. Directly after the block you want to annotate, add the annotation. These sometimes break in certain blocks.
-        2. If you don't add the { .annotate } to the end of the block, the annotation will not be added.
-
-        <p class="pythonista-docs-heading">Attributes</p>
-        Attributes
-        ----------
-        test: int
-            This should link to test attribute and attribute type. You wouldn't see this in a method signature.
-            Properties don't need to be included in this attributes section.
-
-            There is no heading for the attributes section, because mkdocs-strings adds it with summaries on the class.
-
-            If for some reason we need the Attributes heading, we can add it manually as seen above with HTML.
-
-        Returns
-        -------
-        int
-            The same as numpy.
-        """
-        ...
