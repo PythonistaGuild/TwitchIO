@@ -122,7 +122,7 @@ class PartialUser:
 
         Returns
         -------
-        :class:`~twitchio.CommercialStart`
+        CommercialStart
             A CommercialStart object.
         """
         data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=token_for)
@@ -146,7 +146,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.AdSchedule
+        AdSchedule
             An AdSchedule object.
         """
         data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
@@ -169,7 +169,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.SnoozeAd
+        SnoozeAd
             A SnoozeAd object.
         """
         data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
@@ -219,7 +219,7 @@ class PartialUser:
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.ExtensionAnalytics]
+        HTTPAsyncIterator[ExtensionAnalytics]
 
         Raises
         ------
@@ -286,7 +286,7 @@ class PartialUser:
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.GameAnalytics]
+        twitchio.HTTPAsyncIterator[GameAnalytics]
 
         Raises
         ------
@@ -369,7 +369,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.BitsLeaderboard
+        BitsLeaderboard
             BitsLeaderboard object for a user's channel.
 
         Raises
@@ -408,7 +408,7 @@ class PartialUser:
 
         Returns
         --------
-        twitchio.ChannelInfo
+        ChannelInfo
             ChannelInfo object representing the channel information.
         """
         from .models.channels import ChannelInfo
@@ -506,7 +506,7 @@ class PartialUser:
 
         Returns
         -------
-        list[twitchio.ChannelEditor]
+        list[ChannelEditor]
             A list of ChannelEditor objects.
         """
         from .models.channels import ChannelEditor
@@ -541,7 +541,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.ChannelsFollowed
+        ChannelsFollowed
             ChannelsFollowed object.
         """
 
@@ -579,7 +579,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.ChannelFollowers
+        ChannelFollowers
             A ChannelFollowers object.
         """
 
@@ -639,7 +639,7 @@ class PartialUser:
 
         Returns
         --------
-        twitchio.CustomReward
+        CustomReward
             Information regarding the custom reward.
 
         Raises
@@ -702,7 +702,7 @@ class PartialUser:
 
         Returns
         -------
-        list[twitchio.CustomReward]
+        list[CustomReward]
             _description_
         """
         from .models.channel_points import CustomReward
@@ -725,7 +725,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.CharityCampaign
+        CharityCampaign
             A CharityCampaign object.
         """
         from .models.charity import CharityCampaign
@@ -757,7 +757,7 @@ class PartialUser:
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.CharityDonation]
+        HTTPAsyncIterator[CharityDonation]
         """
 
         first = max(1, min(100, first))
@@ -792,7 +792,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.Chatters
+        Chatters
             A Chatters object containing the information of a broadcaster's connected chatters.
         """
         first = max(1, min(1000, first))
@@ -813,7 +813,7 @@ class PartialUser:
 
         Returns
         -------
-        list[twitchio.ChannelEmote]
+        list[ChannelEmote]
             A list of ChannelEmote objects
         """
 
@@ -848,7 +848,7 @@ class PartialUser:
 
         Returns
         -------
-        HTTPAsyncIterator[twitchio.UserEmote]
+        HTTPAsyncIterator[UserEmote]
         """
 
         return self._http.get_user_emotes(
@@ -870,7 +870,7 @@ class PartialUser:
 
         Returns
         --------
-        list[twitchio.ChatBadge]
+        list[ChatBadge]
             A list of ChatBadge objects belonging to the user.
         """
         from .models.chat import ChatBadge
@@ -903,7 +903,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.ChatSettings
+        ChatSettings
             ChatSettings object of the broadcaster's chat settings.
         """
         from .models.chat import ChatSettings
@@ -1263,7 +1263,7 @@ class PartialUser:
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.Clip]
+        HTTPAsyncIterator[Clip]
         """
 
         first = max(1, min(100, first))
@@ -1608,7 +1608,7 @@ class PartialUser:
         id: str
             The ID of the segment to remove.
         token_for: str
-            User access token that includes the `channel:manage:schedule` scope.
+            User access token that includes the ``channel:manage:schedule`` scope.
         """
         return await self._http.delete_channel_stream_schedule_segment(broadcaster_id=self.id, id=id, token_for=token_for)
 
