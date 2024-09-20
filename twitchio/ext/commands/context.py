@@ -27,7 +27,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
-from .core import Command, Group
 from .exceptions import *
 from .view import StringView
 
@@ -41,6 +40,7 @@ if TYPE_CHECKING:
     from user import PartialUser
 
     from .bot import Bot
+    from .core import Command
 
 
 class Context:
@@ -51,7 +51,9 @@ class Context:
 
         self._raw_content: str = self._message.text
         self._command: Command[Any, ...] | None = None
+        self._invoked_subcommand: Command[Any, ...] | None = None
         self._invoked_with: str | None = None
+        self._subcommand_trigger: str | None = None
         self._command_failed: bool = False
         self._error_dispatched: bool = False
 
@@ -64,6 +66,18 @@ class Context:
     @property
     def command(self) -> Command[Any, ...] | None:
         return self._command
+
+    @property
+    def invoked_subcommand(self) -> Command[Any, ...] | None:
+        return self._invoked_subcommand
+
+    @property
+    def subcommand_trigger(self) -> str | None:
+        return self._subcommand_trigger
+
+    @property
+    def invoked_with(self) -> str | None:
+        return self._invoked_with
 
     @property
     def chatter(self) -> PartialUser:
@@ -147,12 +161,8 @@ class Context:
         if not command:
             return
 
-        if isinstance(command, Group):
-            ...
-
-        else:
-            self._command = command
-            return
+        self._command = command
+        return
 
     async def _prepare(self) -> None:
         await self._get_prefix()

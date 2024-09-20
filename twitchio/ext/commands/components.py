@@ -51,7 +51,7 @@ class _MetaComponent:
     __all_checks__: list[Callable[..., Coroutine[Any, Any, None]]]
 
     @classmethod
-    def _component_special(cls, obj: Any) -> ...:
+    def _component_special(cls, obj: Any) -> Any:
         setattr(obj, "__component_special__", True)
         cls.__component_specials__.append(obj.__name__)
 
@@ -89,7 +89,8 @@ class _MetaComponent:
                     if not member.extras:
                         member._extras = self.__component_extras__
 
-                    commands[name] = member
+                    if not member.parent:  # type: ignore
+                        commands[name] = member
 
                 elif hasattr(member, "__listener_name__"):
                     if name.startswith("component_"):

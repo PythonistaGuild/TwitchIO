@@ -38,6 +38,7 @@ __all__ = (
     "Mixin",
     "Group",
     "command",
+    "group",
 )
 
 
@@ -75,13 +76,25 @@ class Command(Generic[Component_T, P]):
         self._injected: Component_T | None = None
         self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
         self._extras: dict[Any, Any] = kwargs.get("extras", {})
+        self._parent: Group[Component_T, P] | None = kwargs.get("parent", None)
+
+    def __repr__(self) -> str:
+        return f"Command(name={self._name}, parent={self.parent})"
 
     def __str__(self) -> str:
         return self._name
 
+    async def __call__(self, context: Context) -> None:
+        callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
+        await callback
+
     @property
     def component(self) -> Component_T | None:
         return self._injected
+
+    @property
+    def parent(self) -> Group[Component_T, P] | None:
+        return self._parent
 
     @property
     def name(self) -> str:
@@ -180,23 +193,109 @@ class Mixin(Generic[Component_T]):
         return command
 
 
-class Group(Mixin[Component_T], Command[Component_T, P]):
-    def walk_commands(self) -> ...: ...
-
-
-def command(name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None) -> Any:
+def command(
+    name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None, **kwargs: Any
+) -> Any:
     def wrapper(
-        func: Callable[Concatenate[Component_T, Context, P], Coro]
-        | Callable[Concatenate[Context, P], Coro]
-        | Command[Any, ...],
+        func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
     ) -> Command[Any, ...]:
         if isinstance(func, Command):
-            raise ValueError(f'Callback "{func._callback.__name__}" is already a Command.')
+            raise ValueError(f'Callback "{func._callback}" is already a Command.')  # type: ignore
 
         if not asyncio.iscoroutinefunction(func):
             raise TypeError(f'Command callback for "{func.__qualname__}" must be a coroutine function.')
 
-        name_ = name or func.__name__
-        return Command(name=name_, callback=func, aliases=aliases or [], extras=extras or {})
+        func_name = func.__name__
+        name_ = func_name if not name else name.strip().replace(" ", "") or func_name
+
+        return Command(name=name_, callback=func, aliases=aliases or [], extras=extras or {}, **kwargs)
 
     return wrapper
+
+
+def group(
+    name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None, **kwargs: Any
+) -> Any:
+    def wrapper(
+        func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+    ) -> Group[Any, ...]:
+        if isinstance(func, Command):
+            raise ValueError(f'Callback "{func._callback.__name__}" is already a Command.')  # type: ignore
+
+        if not asyncio.iscoroutinefunction(func):
+            raise TypeError(f'Group callback for "{func.__qualname__}" must be a coroutine function.')
+
+        func_name = func.__name__
+        name_ = func_name if not name else name.strip().replace(" ", "") or func_name
+
+        return Group(name=name_, callback=func, aliases=aliases or [], extras=extras or {}, **kwargs)
+
+    return wrapper
+
+
+class Group(Mixin[Component_T], Command[Component_T, P]):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._invoke_fallback: bool = kwargs.get("invoke_fallback", False)
+
+    def walk_commands(self) -> ...:
+        for command in self._commands.values():
+            yield command
+
+            if isinstance(command, Group):
+                yield from command.walk_commands()
+
+    async def _invoke(self, context: Context) -> None:
+        view = context._view
+        view.skip_ws()
+        trigger = view.get_word()
+
+        next_ = self._commands.get(trigger, None)
+        context._command = next_ or self
+        context._invoked_subcommand = next_
+        context._invoked_with = f"{context._invoked_with} {trigger}"
+        context._subcommand_trigger = trigger or None
+
+        if not trigger:
+            await super()._invoke(context=context)
+
+        elif trigger and next_:
+            await next_.invoke(context=context)
+
+        elif self._invoke_fallback:
+            await super()._invoke(context=context)
+
+        else:
+            raise CommandNotFound(f'The sub-command "{trigger}" for group "{self._name}" was not found.')
+
+    async def invoke(self, context: Context) -> None:
+        try:
+            await self._invoke(context)
+        except CommandError as e:
+            await self._dispatch_error(context, e)
+
+    def command(
+        self, name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None
+    ) -> Any:
+        def wrapper(
+            func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        ) -> Command[Any, ...]:
+            new = command(name=name, aliases=aliases, extras=extras, parent=self)(func)
+
+            self.add_command(new)
+            return new
+
+        return wrapper
+
+    def group(
+        self, name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None, **kwargs: Any
+    ) -> Any:
+        def wrapper(
+            func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        ) -> Command[Any, ...]:
+            new = group(name=name, aliases=aliases, extras=extras, parent=self)(func)
+
+            self.add_command(new)
+            return new
+
+        return wrapper
