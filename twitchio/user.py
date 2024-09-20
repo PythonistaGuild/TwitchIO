@@ -122,7 +122,7 @@ class PartialUser:
 
         Returns
         -------
-        twitchio.CommercialStart
+        :class:`~twitchio.CommercialStart`
             A CommercialStart object.
         """
         data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=token_for)
@@ -1553,7 +1553,7 @@ class PartialUser:
         duration: int | None
             he length of time, in minutes, that the broadcast is scheduled to run. The duration must be in the range 30 through 1380 (23 hours)
         category_id: str | None
-            The ID of the category that best represents the broadcast's content. To get the category ID, use the [Search Categories][twitchio.client.search_categories].
+            The ID of the category that best represents the broadcast's content. To get the category ID, use :meth:`~Client.search_categories`.
         title: str | None
             The broadcast's title. The title may contain a maximum of 140 characters.
         canceled: bool | None
@@ -1744,7 +1744,7 @@ class PartialUser:
 
         The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
 
-        Perform a fetch with [`fetch_automod_settings`][twitchio.user.PartialUser.fetch_automod_settings] to obtain the [`AutomodSettings`][twitchio.models.moderation.AutomodSettings] object to modify and pass to this method.
+        Perform a fetch with :meth:`~fetch_automod_settings` to obtain the :class:`~twitchio.models.moderation.AutomodSettings` object to modify and pass to this method.
 
         You may set either overall_level or the individual settings like aggression, but not both.
 
@@ -1769,7 +1769,7 @@ class PartialUser:
             This ID must match the user ID in the user access token.
         settings: AutomodSettings
             AutomodSettings object containing the new settings for the broadcaster's channel.
-            You can fetch this using [`fetch_automod_settings`][twitchio.user.PartialUser.fetch_automod_settings]
+            You can fetch this using :meth:`~fetch_automod_settings`
         token_for: str
             User access token that includes the `moderator:manage:automod_settings` scope.
 
@@ -2633,7 +2633,7 @@ class PartialUser:
         ----------
         id: str
             The ID of the poll to end.
-        status  Literal["ARCHIVED", "TERMINATED"]
+        status:  Literal["ARCHIVED", "TERMINATED"]
             The status to set the poll to. Possible case-sensitive values are: ``ARCHIVED`` and ``TERMINATED``.
         token_for: str
             User access token that includes the ``channel:manage:polls`` scope.

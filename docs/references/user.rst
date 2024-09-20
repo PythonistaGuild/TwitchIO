@@ -8,4 +8,3 @@ User Reference
 
 .. autoclass:: twitchio.PartialUser
     :members:
-
