@@ -65,12 +65,13 @@ __all__ = (
     "GlobalEmote",
     "UserEmote",
     "SentMessage",
+    "Emote",
+    "SharedChatSession",
 )
 
 
 class Chatters:
-    """
-    Represents a channel's chatters.
+    """Represents a channel's chatters.
 
     Returns
     -------
@@ -97,7 +98,7 @@ class ChatterColor:
     user: twitchio.PartialUser
         PartialUser of the chatter.
     colour: twitchio.Colour
-        The [`Colour`][twitchio.utils.Colour]. There is an alias to this named `color`.
+        The :class:`~twitchio.utils.Colour`. There is an alias to this named `color`.
     """
 
     __slots__ = ("user", "_colour")
@@ -120,8 +121,7 @@ class ChatterColor:
 
 
 class ChatBadge:
-    """
-    Represents chat badges.
+    """Represents chat badges.
 
     Attributes
     -----------
@@ -145,8 +145,7 @@ class ChatBadge:
 
 
 class ChatBadgeVersions:
-    """
-    Represents the different versions of the chat badge.
+    """Represents the different versions of the chat badge.
 
     Attributes
     -----------
@@ -195,8 +194,7 @@ class ChatBadgeVersions:
         return f"<ChatBadgeVersions id={self.id} title={self.title}>"
 
     def get_image(self, scale: Literal["1x", "2x", "4x"] = "2x") -> Asset:
-        """
-        Retrieves an Asset object for the chat badge image at the specified scale.
+        """Retrieves an Asset object for the chat badge image at the specified scale.
 
         Parameters
         ----------
@@ -210,21 +208,21 @@ class ChatBadgeVersions:
 
         Example
         --------
-        ```py
+        .. code:: python3
+
             chat_badges: list[twitchio.ChatBadge] = await client.fetch_global_chat_badges()
             chat_badge: twitchio.ChatBadge = chat_badges[0]
 
             # Get and save the chat badge asset as an image
             asset: twitchio.Asset = await emote.get_image()
             await asset.save()
-        ```
 
         Returns
         -------
-        twitchio.Asset
-            The [`Asset`][twitchio.Asset] for the chat badge.
-            You can use the asset to [`.read`][twitchio.Asset.read] or [`.save`][twitchio.Asset.save] the chat badge image or
-            return the generated URL with [`.url`][twitchio.Asset.url].
+        Asset
+            The :class:`~twitchio.Asset` for the chat badge.
+            You can use the asset to :meth:`~twitchio.Asset.read` or :meth:`~twitchio.Asset.save` the chat badge image or
+            return the generated URL with :attr:`~twitchio.Asset.url`.
         """
         if scale == "1x":
             return Asset(self.image_url_1x, http=self._http, dimensions=(18, 18))
@@ -237,8 +235,7 @@ class ChatBadgeVersions:
 
 
 class Emote:
-    """
-    Represents the basics of an Emote.
+    """Represents the basics of an Emote.
 
     Attributes
     ----------
@@ -277,8 +274,7 @@ class Emote:
         scale: str = "2.0",
         format: Literal["default", "static", "animated"] = "default",
     ) -> Asset:
-        """
-        Creates an [`Asset`][twitchio.Asset] for the emote, which can be used to download/save the emote image.
+        """Creates an :class:`~twitchio.Asset` for the emote, which can be used to download/save the emote image.
 
         Parameters
         ----------
@@ -299,21 +295,21 @@ class Emote:
 
         Examples
         --------
-        ```py
+        .. code:: python3
+
             emotes: list[twitchio.GlobalEmote] = await client.fetch_global_emotes()
             emote: twitchio.GlobalEmote = emotes[0]
 
             # Get and save the emote asset as an image
             asset: twitchio.Asset = await emote.get_image()
             await asset.save()
-        ```
 
         Returns
         -------
-        twitchio.Asset
-            The [`Asset`][twitchio.Asset] for the emote.
-            You can use the asset to [`.read`][twitchio.Asset.read] or [`.save`][twitchio.Asset.save] the emote image or
-            return the generated URL with [`.url`][twitchio.Asset.url].
+        Asset
+            The :class:`~twitchio.Asset` for the chat emote.
+            You can use the asset to :meth:`~twitchio.Asset.read` or :meth:`~twitchio.Asset.save` the chat emote image or
+            return the generated URL with :attr:`~twitchio.Asset.url`.
         """
         template: str = self.template.format()
         theme_: str = theme if theme in self.theme_mode else self.theme_mode[0]
@@ -325,8 +321,7 @@ class Emote:
 
 
 class GlobalEmote(Emote):
-    """
-    Represents a Global Emote
+    """Represents a Global Emote
 
     Attributes
     -----------
@@ -355,8 +350,7 @@ class GlobalEmote(Emote):
 
 
 class EmoteSet(Emote):
-    """
-    Represents an emote set.
+    """Represents an emote set.
 
     Attributes
     ----------
@@ -394,8 +388,7 @@ class EmoteSet(Emote):
 
 
 class ChannelEmote(Emote):
-    """
-    Represents an emote set.
+    """Represents an emote set.
 
     Attributes
     ----------
@@ -435,25 +428,40 @@ class ChannelEmote(Emote):
 
 
 class UserEmote(Emote):
-    """
-    Represents an emote set.
+    """Represents an emote set.
 
-    | Type              | Description |
-    | ----------------  | -------------- |
-    | none              | No emote type was assigned to this emote.  |
-    | bitstier          | A Bits tier emote.   |
-    | follower          |  A follower emote.   |
-    | subscriptions     | A subscriber emote.   |
-    | channelpoints     | An emote granted by using channel points.    |
-    | rewards           | An emote granted to the user through a special event.  |
-    | hypetrain         | An emote granted for participation in a Hype Train. |
-    | prime             |  An emote granted for linking an Amazon Prime account.  |
-    | turbo             | An emote granted for having Twitch Turbo.   |
-    | smilies           | Emoticons supported by Twitch.    |
-    | globals           | An emote accessible by everyone.  |
-    | owl2019           | Emotes related to Overwatch League 2019. |
-    | twofactor         |  Emotes granted by enabling two-factor authentication on an account.   |
-    | limitedtime       | Emotes that were granted for only a limited time.   |
+    +------------------+-----------------------------------------------------------------------+
+    | Type             | Description                                                           |
+    +==================+=======================================================================+
+    | none             | No emote type was assigned to this emote.                             |
+    +------------------+-----------------------------------------------------------------------+
+    | bitstier         | A Bits tier emote.                                                    |
+    +------------------+-----------------------------------------------------------------------+
+    | follower         | A follower emote.                                                     |
+    +------------------+-----------------------------------------------------------------------+
+    | subscriptions    | A subscriber emote.                                                   |
+    +------------------+-----------------------------------------------------------------------+
+    | channelpoints    | An emote granted by using channel points.                             |
+    +------------------+-----------------------------------------------------------------------+
+    | rewards          | An emote granted to the user through a special event.                 |
+    +------------------+-----------------------------------------------------------------------+
+    | hypetrain        | An emote granted for participation in a Hype Train.                   |
+    +------------------+-----------------------------------------------------------------------+
+    | prime            | An emote granted for linking an Amazon Prime account.                 |
+    +------------------+-----------------------------------------------------------------------+
+    | turbo            | An emote granted for having Twitch Turbo.                             |
+    +------------------+-----------------------------------------------------------------------+
+    | smilies          | Emoticons supported by Twitch.                                        |
+    +------------------+-----------------------------------------------------------------------+
+    | globals          | An emote accessible by everyone.                                      |
+    +------------------+-----------------------------------------------------------------------+
+    | owl2019          | Emotes related to Overwatch League 2019.                              |
+    +------------------+-----------------------------------------------------------------------+
+    | twofactor        | Emotes granted by enabling two-factor authentication on an account.   |
+    +------------------+-----------------------------------------------------------------------+
+    | limitedtime      | Emotes that were granted for only a limited time.                     |
+    +------------------+-----------------------------------------------------------------------+
+
 
     Attributes
     ----------
@@ -487,8 +495,7 @@ class UserEmote(Emote):
 
 
 class ChatSettings:
-    """
-    Represents the settings of a broadcaster's chat settings.
+    """Represents the settings of a broadcaster's chat settings.
 
     Attributes
     ----------
@@ -560,8 +567,7 @@ class ChatSettings:
 
 
 class SentMessage:
-    """
-    Represents the settings of a broadcaster's chat settings.
+    """Represents the settings of a broadcaster's chat settings.
 
     Attributes
     ----------
@@ -589,8 +595,7 @@ class SentMessage:
 
 
 class SharedChatSession:
-    """
-    Represents a shared chat session.
+    """Represents a shared chat session.
 
     Attributes
     ----------

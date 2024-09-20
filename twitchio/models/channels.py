@@ -55,12 +55,11 @@ __all__ = (
 
 
 class ChannelEditor:
-    """
-    Represents an editor of a channel.
+    """Represents an editor of a channel.
 
     Attributes
     -----------
-    user: twitchio.PartialUser
+    user: PartialUser
         PartialUser who has editor permissions.
     created_at: datetime.datetime
         The datetime of when the user became one of the broadcaster's editors.
@@ -77,12 +76,11 @@ class ChannelEditor:
 
 
 class FollowedChannelsEvent:
-    """
-    Represents a followed channel event.
+    """Represents a followed channel event.
 
     Attributes
     -----------
-    broadcaster: twitchio.PartialUser
+    broadcaster: PartialUser
         PartialUser that identifies the channel that this user is following.
         If no results are found it returns an empty list.
     followed_at: datetime.datetime
@@ -100,8 +98,7 @@ class FollowedChannelsEvent:
 
 
 class FollowedChannels:
-    """
-    Represents channels followed.
+    """Represents channels followed.
 
     Attributes
     -----------
@@ -123,12 +120,11 @@ class FollowedChannels:
 
 
 class ChannelFollowerEvent:
-    """
-    Represents a ChannelFollowerEvent
+    """Represents a ChannelFollowerEvent
 
     Attributes
     -----------
-    user: twitchio.PartialUser
+    user: PartialUser
         PartialUser that identifies a user that follows this channel.
     followed_at: datetime.datetime
         The datetime of when the user followed the channel.
@@ -145,8 +141,7 @@ class ChannelFollowerEvent:
 
 
 class ChannelFollowers:
-    """
-    Represents channel followers
+    """Represents channel followers
 
     Attributes
     -----------
@@ -167,12 +162,11 @@ class ChannelFollowers:
 
 
 class ChannelInfo:
-    """
-    Represents a channel's current information
+    """Represents a channel's current information
 
     Attributes
     -----------
-    user: twitchio.PartialUser
+    user: PartialUser
         The user whose channel information was requested.
     game_id: int
         Current game ID being played on the channel.
@@ -223,12 +217,11 @@ class ChannelInfo:
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
 
     async def fetch_game(self) -> Game:
-        """
-        Fetches the [`Game`][twitchio.Game] associated with this ChannelInfo.
+        """Fetches the :class:~twitchio.Game` associated with this ChannelInfo.
 
         Returns
         -------
-        twitchio.Game
+        Game
             The game associated with this ChannelInfo.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])

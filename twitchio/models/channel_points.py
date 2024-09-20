@@ -46,8 +46,7 @@ __all__ = ("CustomReward", "RewardLimitSettings", "RewardCooldown", "CustomRewar
 
 
 class RewardCooldown(NamedTuple):
-    """
-    NamedTuple that represents a custom reward's cooldown settings.
+    """NamedTuple that represents a custom reward's cooldown settings.
 
     Attributes
     -----------
@@ -63,8 +62,7 @@ class RewardCooldown(NamedTuple):
 
 
 class RewardLimitSettings(NamedTuple):
-    """
-    NamedTuple that represents a custom reward's stream limit settings.
+    """NamedTuple that represents a custom reward's stream limit settings.
 
     Attributes
     -----------
@@ -79,8 +77,7 @@ class RewardLimitSettings(NamedTuple):
 
 
 class CustomReward:
-    """
-    Represents a custom reward from a broadcaster's channel.
+    """Represents a custom reward from a broadcaster's channel.
 
     Attributes
     -----------
@@ -198,15 +195,15 @@ class CustomReward:
             return None
 
     def get_image(self, size: Literal["1x", "2x", "4x"] = "2x", use_default: bool = False) -> Asset:
-        """
-        Get an image Asset for the reward at a specified size.
+        """Get an image Asset for the reward at a specified size.
+
         Falls back to default images if no custom images have been uploaded.
 
         Parameters
         ----------
-        size : str
+        size: str
             The size key of the image. Options are "1x", "2x", "4x". Defaults to "2x".
-        use_default : bool
+        use_default: bool
             Use default images instead of user uploaded images.
 
         Returns
@@ -222,15 +219,13 @@ class CustomReward:
         return Asset(url, http=self._http)
 
     async def delete(self, *, token_for: str) -> None:
-        """
-        Delete the custom reward.
+        """Delete the custom reward.
 
-        !!! info
-            The app used to create the reward is the only app that may delete it.
-            If the reward's redemption status is UNFULFILLED at the time the reward is deleted, its redemption status is marked as FULFILLED.
+        The app used to create the reward is the only app that may delete it.
+        If the reward's redemption status is UNFULFILLED at the time the reward is deleted, its redemption status is marked as FULFILLED.
 
-        !!! note
-            Requires a user access token that includes the channel:manage:redemptions scope.
+        .. note::
+            Requires a user access token that includes the ``channel:manage:redemptions`` scope.
 
         Parameters
         -----------
@@ -254,14 +249,13 @@ class CustomReward:
         global_cooldown: int | None = None,
         skip_queue: bool | None = None,
     ) -> CustomReward:
-        """
-        Update the custom reward.
+        """Update the custom reward.
 
-        !!! info
-            The app used to create the reward is the only app that may update the reward.
+        .. important::
+            The app / client ID used to create the reward is the only app that may update the reward.
 
-        !!! note
-            Requires a user access token that includes the channel:manage:redemptions scope.
+        .. note::
+            Requires a user access token that includes the ``channel:manage:redemptions`` scope.
 
         Parameters
         -----------
@@ -296,7 +290,7 @@ class CustomReward:
 
         Returns
         --------
-        twitchio.CustomReward
+        CustomReward
 
         Raises
         ------
@@ -342,13 +336,11 @@ class CustomReward:
         sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
         first: int = 20,
     ) -> HTTPAsyncIterator[CustomRewardRedemption]:
-        """
-        Fetch redemptions from the CustomReward.
+        """Fetch redemptions from the CustomReward.
 
-        !!! info
-            Canceled and fulfilled redemptions are returned for only a few days after they're canceled or fulfilled.
+        Canceled and fulfilled redemptions are returned for only a few days after they're canceled or fulfilled.
 
-        !!! note
+        .. note::
             Requires a user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
         Parameters
@@ -367,7 +359,7 @@ class CustomReward:
 
         Returns
         --------
-        twitchio.HTTPAsyncIterator[twitchio.CustomRewardRedemption]
+        HTTPAsyncIterator[CustomRewardRedemption]
 
         Raises
         ------
@@ -429,10 +421,9 @@ class CustomRewardRedemption:
         return f"<CustomRewardRedemption id={self.id} status={self.status} redeemed_at={self.redeemed_at}>"
 
     async def fulfill(self, *, token_for: str) -> CustomRewardRedemption:
-        """
-        Updates a redemption's status to FULFILLED.
+        """Updates a redemption's status to FULFILLED.
 
-        !!! note
+        .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
 
         Parameters
@@ -454,10 +445,9 @@ class CustomRewardRedemption:
         return CustomRewardRedemption(data["data"][0], parent_reward=self.reward, http=self._http)
 
     async def refund(self, *, token_for: str) -> CustomRewardRedemption:
-        """
-        Updates a redemption's status to CANCELED.
+        """Updates a redemption's status to CANCELED.
 
-        !!! note
+        .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
 
         Parameters

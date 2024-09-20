@@ -35,8 +35,7 @@ __all__ = ("ContentClassificationLabel",)
 
 
 class ContentClassificationLabel:
-    """
-    Represents a Content Classification Label.
+    """Represents a Content Classification Label.
 
     Attributes
     -----------

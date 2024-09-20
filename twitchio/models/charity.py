@@ -46,8 +46,7 @@ __all__ = ("CharityCampaign", "CharityDonation", "CharityValues")
 
 
 class CharityCampaign:
-    """
-    Represents a charity campaign.
+    """Represents a charity campaign.
 
     Attributes
     -----------
@@ -83,8 +82,7 @@ class CharityCampaign:
 
 
 class CharityValues:
-    """
-    Represents the current/target funds of a charity campaign.
+    """Represents the current/target funds of a charity campaign.
 
     Attributes
     -----------
@@ -121,8 +119,7 @@ class CharityValues:
 
 
 class CharityDonation:
-    """
-    Represents a charity campaign donation.
+    """Represents a charity campaign donation.
 
     Attributes
     -----------
