@@ -189,12 +189,11 @@ class PartialUser:
         """Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
 
         .. important::
-            - Both `started_at` and `ended_at` must be provided when requesting a date range. They are UTC timezone by default.
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range. They are UTC timezone by default.
             If you omit both of these then the report includes all available data from January 31, 2018.
 
-            - Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
             If not, the API ignores your end date and uses an end date that is today minus one to two days.
-
 
         .. note::
             Requires user access token that includes the ``analytics:read:extensions`` scope.
@@ -257,12 +256,11 @@ class PartialUser:
         """Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
 
         .. important::
-            - Both `started_at` and `ended_at` must be provided when requesting a date range.
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
             If you omit both of these then the report includes all available data from January 31, 2018.
 
-            - Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
             If not, the API ignores your end date and uses an end date that is today minus one to two days.
-
 
         .. note::
             Requires user access token that includes the ``analytics:read:extensions`` scope.
@@ -3151,7 +3149,7 @@ class PartialUser:
         reason: Literal["harassment", "spam", "other"] | None = None,
     ) -> None:
         """Blocks the specified user in ``user_id`` from interacting with or having contact with the broadcaster.
-        
+
         The user ID in the OAuth token identifies the broadcaster who is blocking the user.
 
         Parameters
