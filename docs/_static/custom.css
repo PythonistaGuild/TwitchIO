@@ -70,6 +70,18 @@ code {
     font-size: 0.9em;
 }
 
+dl.field-list.simple > dt {
+    font-weight: 700;
+}
+
+dl.field-list.simple > dd {
+    padding: 0.5rem 0 0 2rem;
+}
+
+dl.field-list.simple > dd > ul {
+    margin-left: -2rem;
+}
+
 /* Colours Light */
 .input-group-text.bg-white {
     background-color: var(--color-background-dim--light) !important;
