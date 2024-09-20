@@ -58,17 +58,20 @@ class Asset:
     Assets can be used to save or read from images or other media from Twitch.
     You can also retrieve the URL of the asset via the provided properties and methods.
 
-    !!! version
-        **3.0.0** - Added the asset class which will replace all
+    .. versionadded:: 3.0.0
+        Added the asset class which will replace all
         previous properties of models with attached media URLs.
 
     Supported Operations
     --------------------
 
-    | Operation   | Usage(s)                                 | Description                                        |
-    |-----------  |------------------------------------------|----------------------------------------------------|
-    | `__str__`   | `str(asset)`, `f"{asset}"`               | Returns the asset's URL.                           |
-    | `__repr__`  | `repr(asset)`, `f"{asset!r}"`            | Returns the asset's official representation.       |
+    +-------------+-----------------------------------+-----------------------------------------------+
+    | Operation   | Usage(s)                          | Description                                   |
+    +=============+===================================+===============================================+
+    | __str__     | str(asset), f"{asset}"            | Returns the asset's URL.                      |
+    +-------------+-----------------------------------+-----------------------------------------------+
+    | __repr__    | repr(asset), f"{asset!r}"         | Returns the asset's official representation.  |
+    +-------------+-----------------------------------+-----------------------------------------------+
     """
 
     __slots__ = ("_http", "_ext", "_dimensions", "_original_url", "_url", "_name")
@@ -103,7 +106,7 @@ class Asset:
 
         If the asset supports custom dimensions, the URL will contain the dimensions set.
 
-        See: [`.set_dimensions`][twitchio.Asset.set_dimensions] for information on setting custom dimensions.
+        See :meth:`~Asset.set_dimensions` for information on setting custom dimensions.
         """
         return self._url
 
@@ -125,7 +128,7 @@ class Asset:
         """A property that returns the qualified name of the asset.
 
         This is the name of the asset with the file extension if one can be determined.
-        If the file extension has not been set, this method returns the same as [`.name`][twitchio.Asset.name].
+        If the file extension has not been set, this method returns the same as :attr:`~twitchio.Asset.name`.
         """
         name: str = self._name.split(".")[0]
         return name + self.ext if self.ext else self._name
@@ -134,9 +137,9 @@ class Asset:
     def ext(self) -> str | None:
         """A property that returns the file extension of the asset.
 
-        Could be `None` if the asset does not have a valid file extension or it has not been determined yet.
+        Could be ``None`` if the asset does not have a valid file extension or it has not been determined yet.
 
-        See: [`.fetch_ext`][twitchio.Asset.fetch_ext] to try and force setting the file extension by content type.
+        See: `:meth:`~Asset.fetch_ext` to try and force setting the file extension by content type.
         """
         return "." + self._ext.removeprefix(".") if self._ext else None
 
@@ -144,7 +147,7 @@ class Asset:
     def dimensions(self) -> tuple[int, int] | None:
         """A property that returns the dimensions of the asset if it supports custom dimensions or `None`.
 
-        See: [`.set_dimensions`][twitchio.Asset.set_dimensions] for more information.
+        See: :meth:`~Asset.set_dimensions` for more information.
         """
         return self._dimensions
 
@@ -154,13 +157,14 @@ class Asset:
         By default all assets that support custom dimensions already have pre-defined values set.
         If custom dimensions are **not** supported, a warning will be logged and the default dimensions will be used.
 
-        !!! warning
+        .. warning::
             If you need to custom dimensions for an asset that supports it you should use this method **before**
-            calling [`.save`][twitchio.Asset.save] or [`.read`][twitchio.Asset.read].
+            calling :meth:`~Asset.save` or :meth:`~Asset.read`.
 
         Examples
         --------
-        ```py
+        .. code:: python3
+
             # Fetch a game and set the box art dimensions to 720x960; which is a 3:4 aspect ratio.
 
             game: twitchio.Game = await client.fetch_game("League of Legends")
@@ -168,7 +172,7 @@ class Asset:
 
             # Call read or save...
             await game.box_art.save()
-        ```
+
 
         Parameters
         ----------
@@ -187,12 +191,12 @@ class Asset:
     def url_for(self, width: int, height: int) -> str:
         """Return a new URL for the asset with the specified dimensions.
 
-        !!! info
+        .. note::
             This method does not return new dimensions on assets that do not support it.
 
-        !!! warning
+        .. warning::
             This method does not set dimensions for saving or reading.
-            If you need custom dimensions for an asset that supports it see: [`.set_dimensions`][twitchio.Asset.set_dimensions].
+            If you need custom dimensions for an asset that supports it see: `:meth:`~Asset.set_dimensions`.
 
         Parameters
         ----------
@@ -231,13 +235,13 @@ class Asset:
 
         For the majority of cases you should not need to use this method.
 
-        !!! warning
+        .. warning::
             This method sets the file extension of the asset by content type.
 
         Returns
         -------
         str | None
-            The file extension of the asset determined by the content type or `None` if it could not be determined.
+            The file extension of the asset determined by the content type or ``None`` if it could not be determined.
         """
         try:
             headers: dict[str, str] = await self._http._request_asset_head(self.url)
@@ -254,52 +258,59 @@ class Asset:
     ) -> int:
         """Save this asset to a file or file-like object.
 
-        If `fp` is `None`, the asset will be saved to the current working directory with the
+        If `fp` is ``None``, the asset will be saved to the current working directory with the
         asset's default qualified name.
 
         Examples
         --------
-        === "Save with defaults"
-            ```py
+
+        **Save with defaults**
+
+            .. code:: python3
+
                 # Fetch a game and save the box art to the current working directory with the asset's default name.
 
                 game: twitchio.Game = await client.fetch_game("League of Legends")
                 await game.box_art.save()
-            ```
 
 
-        === "Save with a custom name"
-            ```py
+        **Save with a custom name**
+
+            .. code:: python3
+
                 # Fetch a game and save the box art to the current working directory with a custom name.
 
                 game: twitchio.Game = await client.fetch_game("League of Legends")
                 await game.box_art.save("custom_name.png")
-            ```
 
-        === "Save with a file-like object"
 
-            ```py
+        **Save with a file-like object**
+
+            .. code:: python3
+
                 # Fetch a game and save the box art to a file-like object.
 
                 game: twitchio.Game = await client.fetch_game("League of Legends")
                 with open("custom_name.png", "wb") as fp:
                     await game.box_art.save(fp)
-            ```
+
 
         Parameters
-        ----------
+        -----------
         fp: Union[str, os.PathLike, io.BufferedIOBase, None]
             The file path or file-like object to save the asset to.
-            If `None`, the asset will be saved to the current working directory with the asset's qualified name.
-            If `fp` is a directory, the asset will be saved to the directory with the asset's qualified name.
 
-            Defaults to `None`.
+            If ``None``, the asset will be saved to the current working directory with the asset's qualified name.
+
+            If ``fp`` is a directory, the asset will be saved to the directory with the asset's qualified name.
+
+            Defaults to ``None``.
         seek_start: bool
-            Whether to seek to the start of the file after successfully writing data. Defaults to `True`.
+            Whether to seek to the start of the file after successfully writing data. Defaults to ``True``.
         force_extension: bool
-            Whether to force the file extension of the asset to match the content type. Defaults to `True`.
+            Whether to force the file extension of the asset to match the content type. Defaults to ``True``.
 
-            If no file extension was provided with `fp` setting `force_extension` to `True`
+            If no file extension was provided with ``fp`` setting ``force_extension`` to ``True``
             will force the file extension to match the content type provided by Twitch.
 
         Returns
@@ -310,7 +321,7 @@ class Asset:
         Raises
         ------
         FileNotFoundError
-            Raised when `fp` is a directory or path to directory which can not be found or accessed.
+            Raised when ``fp`` is a directory or path to directory which can not be found or accessed.
         """
         data: io.BytesIO = await self.read()
         written: int = 0
@@ -330,7 +341,7 @@ class Asset:
             fp = pathlib.Path(fp) / (self.qualified_name if force_extension else self.name)
 
         elif isinstance(fp, str) and force_extension:
-            fp = f"{fp}{self.ext if self.ext else ''}"
+            fp = f"{fp}{self.ext or ''}"
 
         with open(fp, "wb") as new:
             written = new.write(data.read())
@@ -338,13 +349,14 @@ class Asset:
         return written
 
     async def read(self, *, seek_start: bool = True, chunk_size: int = 1024) -> io.BytesIO:
-        """Read from the asset and return a [`io.BytesIO`](https://docs.python.org/3/library/io.html#io.BytesIO) buffer.
+        """Read from the asset and return an `io.BytesIO <https://docs.python.org/3/library/io.html#io.BytesIO>`_ buffer.
 
         You can use this method to save the asset to memory and use it later.
 
         Examples
         --------
-        ```py
+        .. code:: python3
+
             # Fetch a game and read the box art to memory.
 
             game: twitchio.Game = await client.fetch_game("League of Legends")
@@ -352,14 +364,14 @@ class Asset:
 
             # Later...
             some_bytes = data.read()
-        ```
+
 
         Parameters
         ----------
         seek_start: bool
-            Whether to seek to the start of the buffer after successfully writing data. Defaults to `True`.
+            Whether to seek to the start of the buffer after successfully writing data. Defaults to ``True``.
         chunk_size: int
-            The size of the chunk to use when reading from the asset. Defaults to `1024`.
+            The size of the chunk to use when reading from the asset. Defaults to ``1024``.
 
         Returns
         -------

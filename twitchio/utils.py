@@ -79,7 +79,7 @@ def parse_timestamp(timestamp: str) -> datetime:
 
     Parameters
     ----------
-    timestamp : str
+    timestamp: str
         The ISO8601 timestamp to be parsed.
 
     Returns
@@ -184,20 +184,27 @@ def setup_logging(
 class Colour:
     """Helper class for working with colours in TwitchIO.
 
-    ??? tip
+    .. tip::
         There is an alias for this class called `Color`.
 
     Supported Operations
     --------------------
 
-    | Operation   | Usage(s)                                 | Description                                        |
-    |-----------  |------------------------------------------|----------------------------------------------------|
-    | `__str__`   | `str(colour)`, `f"{colour}"`             | Returns the colour as a hex string.                |
-    | `__repr__`  | `repr(colour)`, `f"{colour!r}"`          | Returns the colours official representation.       |
-    | `__eq__`    | `colour1 == colour2`                     | Checks if two colours are equal.                   |
-    | `__format__`| `f"{colour:html}"`, `f"{colour:rgb}"`    | Returns a colour str in the specified format.      |
-    |             | `f"{colour:hls}"`                        |                                                    |
-    | `__int__`   | `int(colour)`                            | Returns the colour code as an integer.             |
+    +-------------+----------------------------------------+----------------------------------------------------------+
+    | Operation   | Usage(s)                               | Description                                              |
+    +=============+========================================+==========================================================+
+    | __str__     | str(colour), f"{colour}"               | Returns the colour as a hex string.                      |
+    +-------------+----------------------------------------+----------------------------------------------------------+
+    | __repr__    | repr(colour), f"{colour!r}"            | Returns the colours official representation.             |
+    +-------------+----------------------------------------+----------------------------------------------------------+
+    | __eq__      | colour1 == colour2                     | Checks if two colours are equal.                         |
+    +-------------+----------------------------------------+----------------------------------------------------------+
+    | __format__  | f"{colour:html}", f"{colour:rgb}",     | Returns a colour str in the specified format.            |
+    |             | f"{colour:hls}"                        |                                                          |
+    +-------------+----------------------------------------+----------------------------------------------------------+
+    | __int__     | int(colour)                            | Returns the code as an integer.                          |
+    +-------------+----------------------------------------+----------------------------------------------------------+
+
     """
 
     __slots__ = (
@@ -265,7 +272,7 @@ class Colour:
     def hls(self) -> tuple[float, float, float]:
         """Property returning the colour as an HLS tuple of `float`.
 
-        This is not the same as [`.hls_coords`][twitchio.Colour.hls_coords].
+        This is not the same as :attr:`~twitchio.Colour.hls_coords`.
 
         E.g. `(52, 50, 100)`
         """
@@ -320,7 +327,7 @@ class Colour:
 
     @classmethod
     def from_hex(cls, hex_: str, /) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] object from a hex string.
+        """Class method to create a :class:`~twitchio.Colour` object from a hex string.
 
         A valid hex string can be in either one of the following formats:
 
@@ -332,20 +339,21 @@ class Colour:
 
         Example
         -------
-        ```py
+        .. code:: python3
+
             colour = twitchio.Colour.from_hex("#FFDD00")
             print(colour)
-        ```
+
 
         Parameters
         ----------
         hex_: str
-            Positional only. The hex string to convert to a [`Colour`][twitchio.Colour] object.
+            Positional only. The hex string to convert to a :class:`~twitchio.Colour` object.
 
         Returns
         -------
         twitchio.Colour
-            The [`Colour`][twitchio.Colour] object created from the hex string.
+            The :class:`~twitchio.Colour` object created from the hex string.
         """
         value: str = hex_.lstrip("#")
         value = value.removeprefix("0x")
@@ -374,31 +382,31 @@ class Colour:
 
     @classmethod
     def from_int(cls, code: int, /) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] object from a base-10 or base-16 integer.
+        """Class method to create a :class:`~twitchio.Colour` object from a base-10 or base-16 integer.
 
         A valid integer can be in either one of the following formats:
 
         - `16768256`
         - `0xFFDD00`
 
-        For hex strings see: [`.from_hex`][twitchio.Colour.from_hex].
+        For hex strings see: :meth:`Colour.from_hex`.
 
         Example
         -------
-        ```py
+        .. code:: python3
+
             colour = twitchio.Colour.from_int(0xffdd00)
             print(colour)
-        ```
 
         Parameters
         ----------
         code: int
-            Positional only. The integer to convert to a [`Colour`][twitchio.Colour] object.
+            Positional only. The integer to convert to a :class:`~twitchio.Colour` object.
 
         Returns
         -------
         twitchio.Colour
-            The [`Colour`][twitchio.Colour] object created from the integer.
+            The :class:`~twitchio.Colour` object created from the integer.
         """
         hex_: str = f"{code:X}"
 
@@ -406,211 +414,226 @@ class Colour:
 
     @classmethod
     def red(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `red` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `red` colour from the Twitch API.
 
         This corresponds to hex: `#FF0000`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             red_colour = twitchio.Colour.red()
-        ```
+
         """
         return cls.from_hex("FF0000")
 
     @classmethod
     def blue(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `blue` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `blue` colour from the Twitch API.
 
         This corresponds to hex: `#0000FF`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             blue_colour = twitchio.Colour.blue()
-        ```
+
         """
         return cls.from_hex("0000FF")
 
     @classmethod
     def green(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `green` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `green` colour from the Twitch API.
 
         This corresponds to hex: `#008000`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             green_colour = twitchio.Colour.green()
-        ```
+
         """
         return cls.from_hex("008000")
 
     @classmethod
     def firebrick(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `firebrick` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `firebrick` colour from the Twitch API.
 
         This corresponds to hex: `#B22222`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             firebrick_colour = twitchio.Colour.firebrick()
-        ```
+
         """
         return cls.from_hex("B22222")
 
     @classmethod
     def coral(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `coral` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `coral` colour from the Twitch API.
 
         This corresponds to hex: `#FF7F50`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             coral_colour = twitchio.Colour.coral()
-        ```
+
         """
         return cls.from_hex("FF7F50")
 
     @classmethod
     def yellow_green(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `yellow_green` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `yellow_green` colour from the Twitch API.
 
         This corresponds to hex: `#9ACD32`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             yellow_green_colour = twitchio.Colour.yellow_green()
-        ```
+
         """
         return cls.from_hex("9ACD32")
 
     @classmethod
     def orange_red(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `orange_red` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `orange_red` colour from the Twitch API.
 
         This corresponds to hex: `#FF4500`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             orange_red_colour = twitchio.Colour.orange_red()
-        ```
+
         """
         return cls.from_hex("FF4500")
 
     @classmethod
     def sea_green(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `sea_green` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `sea_green` colour from the Twitch API.
 
         This corresponds to hex: `#2E8B57`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             sea_green_colour = twitchio.Colour.sea_green()
-        ```
+
         """
         return cls.from_hex("2E8B57")
 
     @classmethod
     def golden_rod(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `golden_rod` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `golden_rod` colour from the Twitch API.
 
         This corresponds to hex: `#DAA520`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             golden_rod_colour = twitchio.Colour.golden_rod()
-        ```
+
         """
         return cls.from_hex("DAA520")
 
     @classmethod
     def chocolate(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `chocolate` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `chocolate` colour from the Twitch API.
 
         This corresponds to hex: `#D2691E`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             chocolate_colour = twitchio.Colour.chocolate()
-        ```
+
         """
         return cls.from_hex("D2691E")
 
     @classmethod
     def cadet_blue(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `cadet_blue` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `cadet_blue` colour from the Twitch API.
 
         This corresponds to hex: `#5F9EA0`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             cadet_blue_colour = twitchio.Colour.cadet_blue()
-        ```
+
         """
         return cls.from_hex("5F9EA0")
 
     @classmethod
     def dodger_blue(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `dodger_blue` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `dodger_blue` colour from the Twitch API.
 
         This corresponds to hex: `#1E90FF`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             dodger_blue_colour = twitchio.Colour.dodger_blue()
-        ```
+
         """
         return cls.from_hex("1E90FF")
 
     @classmethod
     def hot_pink(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `hot_pink` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `hot_pink` colour from the Twitch API.
 
         This corresponds to hex: `#FF69B4`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             hot_pink_colour = twitchio.Colour.hot_pink()
-        ```
+
         """
         return cls.from_hex("FF69B4")
 
     @classmethod
     def blue_violet(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `blue_violet` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `blue_violet` colour from the Twitch API.
 
         This corresponds to hex: `#8A2BE2`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             blue_violet_colour = twitchio.Colour.blue_violet()
-        ```
+
         """
         return cls.from_hex("8A2BE2")
 
     @classmethod
     def spring_green(cls) -> Self:
-        """Class method to create a [`Colour`][twitchio.Colour] with the default `spring_green` colour from the Twitch API.
+        """Class method to create a :class:`~twitchio.Colour` with the default `spring_green` colour from the Twitch API.
 
         This corresponds to hex: `#00FF7F`
 
         Example
         -------
-        ```python
+        .. code:: python3
+
             sping_green_colour = twitchio.Colour.spring_green()
-        ```
+
         """
         return cls.from_hex("00FF7F")
 

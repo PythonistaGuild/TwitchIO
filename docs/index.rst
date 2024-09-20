@@ -16,6 +16,17 @@ TwitchIO
    references/client
    references/user
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Models
+
+   references/models
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Utils
+
+   references/utils
 
 .. toctree::
    :maxdepth: 1
