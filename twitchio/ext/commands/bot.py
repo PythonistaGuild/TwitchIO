@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Any, Unpack
 from twitchio.client import Client
 
 from .context import Context
-from .core import Command, CommandErrorPayload, Mixin
+from .core import Command, CommandErrorPayload, Group, Mixin
 from .exceptions import *
 
 
@@ -82,6 +82,11 @@ class Bot(Mixin[None], Client):
     async def _add_component(self, component: Component, /) -> None:
         for command in component.__all_commands__.values():
             command._injected = component
+
+            if isinstance(command, Group):
+                for sub in command.walk_commands():
+                    sub._injected = component
+
             self.add_command(command)
 
         for name, listeners in component.__all_listeners__.items():
