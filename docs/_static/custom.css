@@ -63,6 +63,10 @@ body {
     scrollbar-color: var(--color-scrollbar--light) var(--color-background-dim--light);
 }
 
+strong {
+    font-weight: 700;
+}
+
 pre,
 code {
     font-family: var(--font-pre--mono);
