@@ -196,7 +196,7 @@ class Asset:
 
         .. warning::
             This method does not set dimensions for saving or reading.
-            If you need custom dimensions for an asset that supports it see: `:meth:`~Asset.set_dimensions`.
+            If you need custom dimensions for an asset that supports it see: :meth:`~Asset.set_dimensions`.
 
         Parameters
         ----------

@@ -95,9 +95,9 @@ class ChatterColor:
 
     Attributes
     -----------
-    user: twitchio.PartialUser
+    user: PartialUser
         PartialUser of the chatter.
-    colour: twitchio.Colour
+    colour: Colour
         The :class:`~twitchio.utils.Colour`. There is an alias to this named `color`.
     """
 
@@ -365,7 +365,7 @@ class EmoteSet(Emote):
     type: str
         The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
     owner: str
-        The [`PartialUser`][twitchio.PartialUser] who owns this emote set.
+        The :class:`~twitchio.PartialUser` who owns this emote set.
     format: list[str]
         The formats that the emote is available in.
     scale: list[str]
@@ -404,8 +404,8 @@ class ChannelEmote(Emote):
         An ID that identifies the emote set that the emote belongs to.
     type: str
         The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
-    owner: twitchio.PartialUser
-        The [`PartialUser`][twitchio.PartialUser] who owns this emote.
+    owner: PartialUser
+        The :class:`~twitchio.PartialUser` who owns this emote.
     format: list[str]
         The formats that the emote is available in.
     scale: list[str]
@@ -473,7 +473,7 @@ class UserEmote(Emote):
         The type of emote. Please see docs for full list of possible values.
     set_id: str
         An ID that identifies the emote set that the emote belongs to.
-    owner: twitchio.PartialUser
+    owner: PartialUser
         The ID of the broadcaster who owns the emote.
     format: list[str]
         The formats that the emote is available in.

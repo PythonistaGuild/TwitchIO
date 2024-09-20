@@ -177,7 +177,7 @@ class CheermoteTier:
 
         Returns
         -------
-        twitchio.Asset | None
+        Asset | None
             The :class:`~twitchio.Asset` for the cheermote.
             You can use the asset to :meth:`~twitchio.Asset.read` or :meth:`~twitchio.Asset.save` the cheermote image or
             return the generated URL with :attr:`~twitchio.Asset.url`.
@@ -262,7 +262,7 @@ class ExtensionTransaction:
         An ID that identifies the transaction.
     timestamp: datetime.datetime
         The UTC date and time of the transaction.
-    broadcaster: twitchio.PartialUser
+    broadcaster: PartialUser
         The broadcaster that owns the channel where the transaction occurred.
     user: PartialUser
         The user that purchased the digital product.
@@ -295,7 +295,7 @@ class ExtensionProductData:
         Set to twitch.ext. + <the extension's ID>.
     sku: str
         An ID that identifies the digital product.
-    cost: twitchio.ExtensionCost
+    cost: ExtensionCost
         Contains details about the digital product's cost.
     in_development: bool
         Whether the product is in development.
