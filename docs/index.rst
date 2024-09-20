@@ -1,5 +1,5 @@
 TwitchIO
-####
+#########
 
 .. toctree::
    :maxdepth: 1
@@ -14,6 +14,7 @@ TwitchIO
    :caption: API References
 
    references/client
+   references/user
 
 
 .. toctree::

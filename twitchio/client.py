@@ -314,7 +314,6 @@ class Client:
         .. code:: python3
 
             import asyncio
-
             import twitchio
 
 
