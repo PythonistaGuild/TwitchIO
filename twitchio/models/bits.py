@@ -83,10 +83,22 @@ class BitsLeaderboard:
 
 
 class BitLeaderboardUser:
+    """A user's details within the Bit Leaderboard.
+
+    Attributes
+    ------------
+    user: PartialUser
+        The user.
+    rank: int
+        The user's position on the leaderboard.
+    score: int
+        The number of Bits the user has cheered.
+    """
+
     __slots__ = ("user", "rank", "score")
 
     def __init__(self, data: BitsLeaderboardResponseData, *, http: HTTPClient) -> None:
-        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
         self.rank: int = int(data["rank"])
         self.score: int = int(data["score"])
 
@@ -95,8 +107,7 @@ class BitLeaderboardUser:
 
 
 class CheermoteTier:
-    """
-    Represents a Cheermote tier.
+    """Represents a Cheermote tier.
 
     Attributes
     -----------
@@ -104,8 +115,8 @@ class CheermoteTier:
         The minimum bits for the tier
     id: str
         The ID of the tier
-    colour: twitchio.Colour
-        The [`Colour`][twitchio.utils.Colour] of the tier. There is an alias named `color`.
+    colour: Colour
+        The :class:`~twitchio.utils.Colour` of the tier. There is an alias named ``color``.
     images: dict[str, dict[str, dict[str, str]]]
         contains two dicts, ``light`` and ``dark``. Each item will have an ``animated`` and ``static`` item,
         which will contain yet another dict, with sizes ``1``, ``1.5``, ``2``, ``3``, and ``4``.
@@ -138,8 +149,7 @@ class CheermoteTier:
         scale: Literal["1", "1.5", "2", "3", "4"] = "2",
         format: Literal["default", "static", "animated"] = "default",
     ) -> Asset | None:
-        """
-        Creates an [`Asset`][twitchio.Asset] for the cheermote, which can be used to download/save the cheermote image.
+        """Creates an :class:`~twitchio.Asset` for the cheermote, which can be used to download/save the cheermote image.
 
         Parameters
         ----------
@@ -156,21 +166,21 @@ class CheermoteTier:
 
         Examples
         --------
-        ```py
+        .. code:: python3
+
             cheermotes: list[twitchio.Cheermote] = await client.fetch_cheermotes()
             cheermote: twitchio.Cheermote = cheermotes[0]
 
             # Get and save the emote asset as an image
             asset: twitchio.Asset = await cheeremote.tiers[0].get_image()
             await asset.save()
-        ```
 
         Returns
         -------
         twitchio.Asset | None
-            The [`Asset`][twitchio.Asset] for the cheermote.
-            You can use the asset to [`.read`][twitchio.Asset.read] or [`.save`][twitchio.Asset.save] the cheermote image or
-            return the generated URL with [`.url`][twitchio.Asset.url].
+            The :class:`~twitchio.Asset` for the cheermote.
+            You can use the asset to :meth:`~twitchio.Asset.read` or :meth:`~twitchio.Asset.save` the cheermote image or
+            return the generated URL with :attr:`~twitchio.Asset.url`.
         """
         theme_images = self.images.get(theme, self.images.get("light", {}))
         format_images = theme_images.get("animated" if format in ("animated", "default") else "static", {})
@@ -187,16 +197,23 @@ class CheermoteTier:
 
 
 class Cheermote:
-    """
-    Represents a Cheermote
+    """Represents a Cheermote
 
-    | Type               | Description |
-    | -----------        | -------------- |
-    | global_first_party | A Twitch-defined Cheermote that is shown in the Bits card.            |
-    | global_third_party | A Twitch-defined Cheermote that is not shown in the Bits card.          |
-    | channel_custom     | A broadcaster-defined Cheermote.            |
-    | display_only       | Do not use; for internal use only.           |
-    | sponsored          | A sponsor-defined Cheermote. When used, the sponsor adds additional Bits to the amount that the user cheered. For example, if the user cheered Terminator100, the broadcaster might receive 110 Bits, which includes the sponsor's 10 Bits contribution.        |
+    +---------------------+------------------------------------------------------------------------------------------------------------------------+
+    | Type                | Description                                                                                                            |
+    +=====================+========================================================================================================================+
+    | global_first_party  | A Twitch-defined Cheermote that is shown in the Bits card.                                                             |
+    +---------------------+------------------------------------------------------------------------------------------------------------------------+
+    | global_third_party  | A Twitch-defined Cheermote that is not shown in the Bits card.                                                         |
+    +---------------------+------------------------------------------------------------------------------------------------------------------------+
+    | channel_custom      | A broadcaster-defined Cheermote.                                                                                       |
+    +---------------------+------------------------------------------------------------------------------------------------------------------------+
+    | display_only        | Do not use; for internal use only.                                                                                     |
+    +---------------------+------------------------------------------------------------------------------------------------------------------------+
+    | sponsored           | A sponsor-defined Cheermote. When used, the sponsor adds additional Bits to the amount that the user cheered. For      |
+    |                     | example, if the user cheered Terminator100, the broadcaster might receive 110 Bits, which includes the sponsor's 10    |
+    |                     | Bits contribution.                                                                                                     |
+    +---------------------+------------------------------------------------------------------------------------------------------------------------+
 
     Attributes
     -----------
@@ -237,8 +254,7 @@ class Cheermote:
 
 
 class ExtensionTransaction:
-    """
-    Represents an Extension Transaction.
+    """Represents an Extension Transaction.
 
     Attributes
     -----------
@@ -248,11 +264,11 @@ class ExtensionTransaction:
         The UTC date and time of the transaction.
     broadcaster: twitchio.PartialUser
         The broadcaster that owns the channel where the transaction occurred.
-    user: twitchio.PartialUser
+    user: PartialUser
         The user that purchased the digital product.
     product_type: str
         The type of transaction. Currently only ``BITS_IN_EXTENSION``
-    product_data: twitchio.ExtensionProductData
+    product_data: ExtensionProductData
         Details about the digital product.
     """
 
@@ -271,8 +287,7 @@ class ExtensionTransaction:
 
 
 class ExtensionProductData:
-    """
-    Represents Product Data of an Extension Transaction.
+    """Represents Product Data of an Extension Transaction.
 
     Attributes
     -----------
@@ -311,8 +326,7 @@ class ExtensionProductData:
 
 
 class ExtensionCost:
-    """
-    Represents Cost of an Extension Transaction.
+    """Represents Cost of an Extension Transaction.
 
     Attributes
     -----------
