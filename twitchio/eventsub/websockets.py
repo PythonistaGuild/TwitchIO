@@ -66,6 +66,7 @@ WSS: str = "wss://eventsub.wss.twitch.tv/ws"
 class Websocket:
     __slots__ = (
         "_keep_alive_timeout",
+        "_heartbeat",
         "_last_keepalive",
         "_keep_alive_task",
         "_session_id",
@@ -88,13 +89,14 @@ class Websocket:
     def __init__(
         self,
         *,
-        keep_alive_timeout: float = 60,
+        keep_alive_timeout: float = 10,
         reconnect_attempts: int | None = MISSING,
         client: Client | None = None,
         token_for: str,
         http: HTTPClient,
     ) -> None:
         self._keep_alive_timeout: int = max(10, min(int(keep_alive_timeout), 600))
+        self._heartbeat: int = min(self._keep_alive_timeout, 25) + 5
         self._last_keepalive: datetime.datetime | None = None
         self._keep_alive_task: asyncio.Task[None] | None = None
 
@@ -110,7 +112,7 @@ class Websocket:
         )
         self._original_attempts = reconnect_attempts
         self._reconnect_attempts = attempts
-        self._backoff: Backoff = Backoff()
+        self._backoff: Backoff = Backoff(base=3, maximum_time=90)
 
         self.__subscription_count: int = 0
 
@@ -177,7 +179,7 @@ class Websocket:
         while True:
             try:
                 async with aiohttp.ClientSession() as session:
-                    new = await session.ws_connect(url_, heartbeat=15.0)
+                    new = await session.ws_connect(url_, heartbeat=self._heartbeat)
                     session.detach()
             except Exception as e:
                 logger.debug("Failed to connect to eventsub websocket <%s>: %s.", self, e)
