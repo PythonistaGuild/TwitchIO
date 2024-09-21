@@ -386,6 +386,11 @@ Models
 .. autoclass:: twitchio.ChannelTeam
     :members:
 
+.. attributetable:: twitchio.Video
+
+.. autoclass:: twitchio.Video
+    :members:
+
 
 
 
