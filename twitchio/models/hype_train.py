@@ -36,12 +36,11 @@ if TYPE_CHECKING:
     from twitchio.http import HTTPClient
     from twitchio.types_.responses import HypeTrainEventsResponseContributions, HypeTrainEventsResponseData
 
-__all__ = ("HypeTrainEvent",)
+__all__ = ("HypeTrainEvent", "HypeTrainContribution")
 
 
 class HypeTrainEvent:
-    """
-    Represents a Hype Train Event.
+    """Represents a Hype Train Event.
 
     Attributes
     -----------
@@ -53,7 +52,7 @@ class HypeTrainEvent:
         The type of the event, in the form, hypetrain.{event_name} (i.e. `hypetrain.progression`).
     version: str
         The version of the endpoint.
-    broadcaster: twitchio.PartialUser
+    broadcaster: PartialUser
         The user whose channel the Hype Train is occurring on.
     timestamp: datetime.datetime
         The time the event happened at.
@@ -113,17 +112,16 @@ class HypeTrainEvent:
 
 
 class HypeTrainContribution:
-    """
-    A Contribution to a Hype Train
+    """A Contribution to a Hype Train
 
     Attributes
     -----------
     total: int
-        The total amount contributed. If type is `BITS`, total represents the amount of Bits used.
-        If type is `SUBS`, total is 500, 1000, or 2500 to represent tier 1, 2, or 3 subscriptions, respectively.
+        The total amount contributed. If type is ``BITS``, total represents the amount of Bits used.
+        If type is ``SUBS``, total is 500, 1000, or 2500 to represent tier 1, 2, or 3 subscriptions, respectively.
     type: Literal["BITS", "SUBS", "OTHER"]
         Identifies the contribution method, either BITS, SUBS or OTHER.
-    user: twitchio.PartialUser
+    user: PartialUser
         The user making the contribution.
     """
 

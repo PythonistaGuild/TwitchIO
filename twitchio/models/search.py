@@ -44,8 +44,7 @@ __all__ = ("SearchChannel",)
 
 
 class SearchChannel:
-    """
-    Represents a channel via a search.
+    """Represents a channel via a search.
 
     Attributes
     -----------
@@ -64,7 +63,7 @@ class SearchChannel:
     thumbnail: Asset
         An Asset for the thumbnail of the broadcaster's profile image.
     language: str
-        The ISO 639-1 two-letter language code of the language used by the broadcaster. For example, en for English. If the broadcaster uses a language not in the list of [supported stream languages](https://help.twitch.tv/s/article/languages-on-twitch#streamlang), the value is other.
+        The ISO 639-1 two-letter language code of the language used by the broadcaster. For example, en for English. If the broadcaster uses a language not in the list of `supported stream languages <https://help.twitch.tv/s/article/languages-on-twitch#streamlang>`_, the value is other.
     started_at: datetime.datetime | None
         Datetime of when the broadcaster started streaming. Is None if the broadcaster is not streaming live.
 
@@ -98,17 +97,15 @@ class SearchChannel:
         return f"<SearchChannel broadcaster={self.broadcaster} title={self.title} live={self.live} game_id={self.game_id}>"
 
     async def fetch_game(self) -> Game:
-        """
-        Fetches the [`Game`][twitchio.Game] associated with this channel.
+        """Fetches the :class:`~twitchio.Game` associated with this channel.
 
-        !!! note
-            The [`Game`][twitchio.Game] returned is current from the time the [`SearchChannel`][twitchio.SearchChannel]
-            instance was created.
+        The :class:`~twitchio.Game` returned is current from the time the :class:`~twitchio.SearchChannel`
+        instance was created.
 
         Returns
         -------
         twitchio.Game
-            The game associated with this [`SearchChannel`][twitchio.SearchChannel] instance.
+            The game associated with this :class:`~twitchio.SearchChannel` instance.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)

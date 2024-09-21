@@ -524,10 +524,14 @@ class ChatSettings:
     non_moderator_chat_delay: bool
         A Boolean value that determines whether the broadcaster adds a short delay before chat messages appear in the chat room.
         This gives chat moderators and bots a chance to remove them before viewers can see the message.
-        See the non_moderator_chat_delay_duration field for the length of the delay. Is True if the broadcaster applies a delay; otherwise, False.
+        See the ``non_moderator_chat_delay_duration`` field for the length of the delay.
+
+        Is True if the broadcaster applies a delay; otherwise, False.
+
         The response includes this field only if the request specifies a user access token that includes the ``moderator:read:chat_settings`` scope and the user in the moderator_id query parameter is one of the broadcaster's moderators.
     non_moderator_chat_delay_duration: int | None
         The amount of time, in seconds, that messages are delayed before appearing in chat. Is None if non_moderator_chat_delay is False.
+
         The response includes this field only if the request specifies a user access token that includes the ``moderator:read:chat_settings scope`` and the user in the moderator_id query parameter is one of the broadcaster's moderators.
     """
 

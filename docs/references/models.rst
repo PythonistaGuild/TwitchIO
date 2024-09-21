@@ -203,5 +203,189 @@ Models
     :members:
 
 
+.. attributetable:: twitchio.Clip
+
+.. autoclass:: twitchio.Clip
+    :members:
+
+
+.. attributetable:: twitchio.Entitlement
+
+.. autoclass:: twitchio.Entitlement
+    :members:
+
+
+.. attributetable:: twitchio.EntitlementStatus
+
+.. autoclass:: twitchio.EntitlementStatus
+    :members:
+
+.. attributetable:: twitchio.Game
+
+.. autoclass:: twitchio.Game
+    :members:
+
+.. attributetable:: twitchio.Goal
+
+.. autoclass:: twitchio.Goal
+    :members:
+
+.. attributetable:: twitchio.HypeTrainEvent
+
+.. autoclass:: twitchio.HypeTrainEvent
+    :members:
+
+.. attributetable:: twitchio.HypeTrainContribution
+
+.. autoclass:: twitchio.HypeTrainContribution
+    :members:
+
+.. attributetable:: twitchio.AutoModStatus
+
+.. autoclass:: twitchio.AutoModStatus
+    :members:
+
+.. attributetable:: twitchio.AutomodCheckMessage
+
+.. autoclass:: twitchio.AutomodCheckMessage
+    :members:
+
+.. attributetable:: twitchio.AutomodSettings
+
+.. autoclass:: twitchio.AutomodSettings
+    :members:
+
+.. attributetable:: twitchio.BannedUser
+
+.. autoclass:: twitchio.BannedUser
+    :members:
+
+.. attributetable:: twitchio.Ban
+
+.. autoclass:: twitchio.Ban
+    :members:
+
+.. attributetable:: twitchio.Timeout
+
+.. autoclass:: twitchio.Timeout
+    :members:
+
+.. attributetable:: twitchio.UnbanRequest
+
+.. autoclass:: twitchio.UnbanRequest
+    :members:
+
+.. attributetable:: twitchio.BlockedTerm
+
+.. autoclass:: twitchio.BlockedTerm
+    :members:
+
+.. attributetable:: twitchio.ShieldModeStatus
+
+.. autoclass:: twitchio.ShieldModeStatus
+    :members:
+
+.. attributetable:: twitchio.Warning
+
+.. autoclass:: twitchio.Warning
+    :members:
+
+.. attributetable:: twitchio.Poll
+
+.. autoclass:: twitchio.Poll
+    :members:
+
+.. attributetable:: twitchio.PollChoice
+
+.. autoclass:: twitchio.PollChoice
+    :members:
+
+.. attributetable:: twitchio.Prediction
+
+.. autoclass:: twitchio.Prediction
+    :members:
+
+.. attributetable:: twitchio.PredictionOutcome
+
+.. autoclass:: twitchio.PredictionOutcome
+    :members:
+
+.. attributetable:: twitchio.Predictor
+
+.. autoclass:: twitchio.Predictor
+    :members:
+
+
+.. attributetable:: twitchio.Raid
+
+.. autoclass:: twitchio.Raid
+    :members:
+
+.. attributetable:: twitchio.Schedule
+
+.. autoclass:: twitchio.Schedule
+    :members:
+
+.. attributetable:: twitchio.ScheduleSegment
+
+.. autoclass:: twitchio.ScheduleSegment
+    :members:
+
+.. attributetable:: twitchio.ScheduleCategory
+
+.. autoclass:: twitchio.ScheduleCategory
+    :members:
+
+.. attributetable:: twitchio.ScheduleVacation
+
+.. autoclass:: twitchio.ScheduleVacation
+    :members:
+
+.. attributetable:: twitchio.SearchChannel
+
+.. autoclass:: twitchio.SearchChannel
+    :members:
+
+.. attributetable:: twitchio.Stream
+
+.. autoclass:: twitchio.Stream
+    :members:
+
+.. attributetable:: twitchio.StreamMarker
+
+.. autoclass:: twitchio.StreamMarker
+    :members:
+
+.. attributetable:: twitchio.VideoMarkers
+
+.. autoclass:: twitchio.VideoMarkers
+    :members:
+
+.. attributetable:: twitchio.UserSubscription
+
+.. autoclass:: twitchio.UserSubscription
+    :members:
+
+.. attributetable:: twitchio.BroadcasterSubscription
+
+.. autoclass:: twitchio.BroadcasterSubscription
+    :members:
+
+.. attributetable:: twitchio.BroadcasterSubscriptions
+
+.. autoclass:: twitchio.BroadcasterSubscriptions
+    :members:
+
+.. attributetable:: twitchio.Team
+
+.. autoclass:: twitchio.Team
+    :members:
+
+.. attributetable:: twitchio.ChannelTeam
+
+.. autoclass:: twitchio.ChannelTeam
+    :members:
+
+
 
 

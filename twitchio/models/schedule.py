@@ -46,8 +46,7 @@ __all__ = ("Schedule", "ScheduleSegment", "ScheduleCategory", "ScheduleVacation"
 
 
 class Schedule:
-    """
-    Represents a channel's stream schedule
+    """Represents a channel's stream schedule
 
     Attributes
     -----------
@@ -73,8 +72,7 @@ class Schedule:
 
 
 class ScheduleSegment:
-    """
-    Represents a segment of a channel's stream schedule
+    """Represents a segment of a channel's stream schedule
 
     Attributes
     -----------
@@ -134,16 +132,15 @@ class ScheduleSegment:
         canceled: bool | None = None,
         timezone: str | None = None,
     ) -> Schedule:
-        """
-        Updates a scheduled broadcast segment.
+        """Updates a scheduled broadcast segment.
 
-        ??? Note
-            Requires a user access token that includes the `channel:manage:schedule` scope.
+        .. note::
+            Requires a user access token that includes the ``channel:manage:schedule`` scope.
 
         Parameters
         ----------
         token_for: str
-            User access token that includes the `channel:manage:schedule` scope.
+            User access token that includes the ``channel:manage:schedule`` scope.
         start_time: datetime.datetime | None
             The datetime that the broadcast segment starts. This can be timezone aware.
         duration: int | None
@@ -155,7 +152,7 @@ class ScheduleSegment:
         canceled: bool | None
             A Boolean value that indicates whether the broadcast is canceled. Set to True to cancel the segment.
         timezone: str | None
-            The time zone where the broadcast takes place. Specify the time zone using [IANA time zone database](https://www.iana.org/time-zones) format (for example, America/New_York).
+            The time zone where the broadcast takes place. Specify the time zone using `IANA time zone database <https://www.iana.org/time-zones>`_ format (for example, America/New_York).
 
         Returns
         -------
@@ -189,19 +186,17 @@ class ScheduleSegment:
         return Schedule(data["data"], http=self._http)
 
     async def delete(self, *, token_for: str) -> None:
-        """
-        Removes a broadcast segment from the broadcaster's streaming schedule.
+        """Removes a broadcast segment from the broadcaster's streaming schedule.
 
-        !!! info
-            For recurring segments, removing a segment removes all segments in the recurring schedule.
+        For recurring segments, removing a segment removes all segments in the recurring schedule.
 
-        ??? Note
-            Requires a user access token that includes the `channel:manage:schedule` scope.
+        .. note::
+            Requires a user access token that includes the ``channel:manage:schedule`` scope.
 
         Parameters
         ----------
         token_for: str
-            User access token that includes the `channel:manage:schedule` scope.
+            User access token that includes the ``channel:manage:schedule`` scope.
         """
         return await self._http.delete_channel_stream_schedule_segment(
             broadcaster_id=self._broadcaster_id, id=self.id, token_for=token_for
@@ -209,8 +204,7 @@ class ScheduleSegment:
 
 
 class ScheduleCategory:
-    """
-    Game or category details of a stream's schedule
+    """Game or category details of a stream's schedule
 
     Attributes
     -----------
@@ -231,8 +225,7 @@ class ScheduleCategory:
 
 
 class ScheduleVacation:
-    """
-    A schedule's vacation details
+    """A schedule's vacation details
 
     Attributes
     -----------

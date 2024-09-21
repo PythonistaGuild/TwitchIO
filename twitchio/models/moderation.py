@@ -56,12 +56,12 @@ __all__ = (
     "ShieldModeStatus",
     "Timeout",
     "Warning",
+    "UnbanRequest",
 )
 
 
 class AutoModStatus:
-    """
-    Represents a raid for a broadcaster / channel
+    """Represents the Automod status of a message.
 
     Attributes
     -----------
@@ -83,8 +83,7 @@ class AutoModStatus:
 
 
 class AutomodCheckMessage:
-    """
-    Represents the message to check with automod
+    """Represents the message to check with automod
 
     Attributes
     -----------
@@ -108,8 +107,7 @@ class AutomodCheckMessage:
 
 
 class AutomodSettings:
-    """
-    Represents the AutoModSettings of a broadcaster's chat room.
+    """Represents the AutoModSettings of a broadcaster's chat room.
 
     Attributes
     -----------
@@ -135,7 +133,6 @@ class AutomodSettings:
         The Automod level for racial discrimination.
     sex_based_terms: int
         The Automod level for sexual content.
-
     """
 
     __slots__ = (
@@ -171,8 +168,7 @@ class AutomodSettings:
         )
 
     def to_dict(self, use_ids: bool = False) -> dict[str, str | int | None]:
-        """
-        Returns the AutomodSettings as a dictionary. This is the equivalent of the raw payload returned by Twitch.
+        """Returns the AutomodSettings as a dictionary. This is the equivalent of the raw payload returned by Twitch.
 
         Parameters
         ----------
@@ -205,8 +201,7 @@ class AutomodSettings:
 
 
 class BannedUser:
-    """
-    Represents a BannedUser.
+    """Represents a BannedUser.
 
     Attributes
     ----------
@@ -236,8 +231,7 @@ class BannedUser:
 
 
 class Ban:
-    """
-    Represents a Ban.
+    """Represents a Ban.
 
     Attributes
     ----------
@@ -264,8 +258,7 @@ class Ban:
 
 
 class Timeout:
-    """
-    Represents a Timeout.
+    """Represents a Timeout.
 
     Attributes
     ----------
@@ -295,8 +288,7 @@ class Timeout:
 
 
 class UnbanRequest:
-    """
-    Represents an unban request.
+    """Represents an unban request.
 
     Attributes
     ----------
@@ -383,6 +375,18 @@ class BlockedTerm:
 
 
 class ShieldModeStatus:
+    """Represents a shield mode status..
+
+    Attributes
+    ----------
+    active: bool
+        Whether Shield Mode is active. Is true if Shield Mode is active;
+    moderator: PartialUser
+        The moderator that last activated Shield Mode.
+    last_activated_at: datetime.datetime
+        When Shield Mode was last activated.
+    """
+
     __slots__ = ("active", "moderator", "last_activated_at")
 
     def __init__(self, data: ShieldModeStatusResponseData, *, http: HTTPClient) -> None:
@@ -397,8 +401,7 @@ class ShieldModeStatus:
 
 
 class Warning:
-    """
-    Represents a warning to a user.
+    """Represents a warning to a user.
 
     Attributes
     ----------

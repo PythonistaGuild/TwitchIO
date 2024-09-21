@@ -40,18 +40,23 @@ __all__ = ("Poll", "PollChoice")
 
 
 class Poll:
-    """
-    Represents a Poll
+    """Represents a Poll
 
-
-    | Status      | Description |
-    | ----------- | ----------- |
-    | ACTIVE      | The poll is running.   |
-    | COMPLETED   | The poll ended on schedule.    |
-    | TERMINATED  | The poll was terminated before its scheduled end.    |
-    | ARCHIVED    | The poll has been archived and is no longer visible on the channel.   |
-    | MODERATED   | The poll was deleted.   |
-    | INVALID     | Something went wrong while determining the state.   |
+    +-------------+--------------------------------------------------------------------+
+    | Status      | Description                                                        |
+    +=============+====================================================================+
+    | ACTIVE      | The poll is running.                                               |
+    +-------------+--------------------------------------------------------------------+
+    | COMPLETED   | The poll ended on schedule.                                        |
+    +-------------+--------------------------------------------------------------------+
+    | TERMINATED  | The poll was terminated before its scheduled end.                  |
+    +-------------+--------------------------------------------------------------------+
+    | ARCHIVED    | The poll has been archived and is no longer visible on the channel.|
+    +-------------+--------------------------------------------------------------------+
+    | MODERATED   | The poll was deleted.                                              |
+    +-------------+--------------------------------------------------------------------+
+    | INVALID     | Something went wrong while determining the state.                  |
+    +-------------+--------------------------------------------------------------------+
 
     Attributes
     ----------
@@ -74,7 +79,7 @@ class Poll:
     started_at: datetime.datetime
         The datetime of when the poll began.
     ended_at: datetime.datetime | None
-        The datetime of when the poll ended. This is None if status is `ACTIVE`.
+        The datetime of when the poll ended. This is None if status is ``ACTIVE``.
     """
 
     __slots__ = (
@@ -109,8 +114,7 @@ class Poll:
         return f"<Poll id={self.id} title={self.title} status={self.status} started_at={self.started_at}>"
 
     async def end_poll(self, *, status: Literal["ARCHIVED", "TERMINATED"], token_for: str) -> Poll:
-        """
-        End an active poll.
+        """End an active poll.
 
         Parameters
         ----------
@@ -131,8 +135,7 @@ class Poll:
 
 
 class PollChoice:
-    """
-    Represents a poll choice.
+    """Represents a poll choice.
 
     Attributes
     ----------

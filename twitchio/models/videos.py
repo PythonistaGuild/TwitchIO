@@ -40,14 +40,13 @@ __all__ = ("Video",)
 
 
 class Video:
-    """
-    Represents video information
+    """Represents video information
 
     Attributes
     -----------
     id: int
         The ID of the video.
-    user: twitchio.PartialUser
+    user: PartialUser
         User who owns the video.
     title: str
         Title of the video
@@ -110,12 +109,11 @@ class Video:
         return f"<Video id={self.id} title={self.title} url={self.url}>"
 
     async def delete(self, token_for: str) -> None:
-        """
-        Deletes the video. For bulk deletion see :func:`Client.delete_videos`
+        """Deletes the video. For bulk deletion see :meth:`~twitchio.Client.delete_videos`
 
         Parameters
         -----------
         token_for: str
-            A user oauth token with the channel:manage:videos
+            A user oauth token with the ``channel:manage:videos`` scope.
         """
         await self._http.delete_videos(ids=[self.id], token_for=token_for)

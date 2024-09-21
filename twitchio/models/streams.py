@@ -50,8 +50,7 @@ __all__ = ("Stream", "StreamMarker", "VideoMarkers")
 
 
 class Stream:
-    """
-    Represents a Stream
+    """Represents a Stream
 
     Attributes
     -----------
@@ -74,7 +73,7 @@ class Stream:
     language: str
         Language of the channel.
     thumbnail: Asset
-        The [`Asset`][twitchio.assets.Asset] which can be used to read or save the thumbnail associated with this stream.
+        The :class:`~twitchio.Asset` which can be used to read or save the thumbnail associated with this stream.
     is_mature: bool
         Indicates whether the stream is intended for mature audience.
     tags: list[str]
@@ -117,24 +116,22 @@ class Stream:
         return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
 
     async def fetch_game(self) -> Game:
-        """Fetches the [`Game`][twitchio.Game] associated with this stream.
+        """Fetches the :class:`~twitchio.Game` associated with this stream.
 
-        !!! note
-            The [`Game`][twitchio.Game] returned is current from the time the [`Stream`][twitchio.Stream]
-            instance was created.
+        The :class:`~twitchio.Game` returned is current from the time the :class:`~twitchio.Stream`
+        instance was created.
 
         Returns
         -------
         twitchio.Game
-            The game associated with this [`Stream`][twitchio.Stream] instance.
+            The game associated with this :class:`~twitchio.Stream` instance.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)
 
 
 class StreamMarker:
-    """
-    Represents a stream marker.
+    """Represents a stream marker.
 
     Attributes
     ----------
@@ -162,8 +159,7 @@ class StreamMarker:
 
 
 class VideoMarkers:
-    """
-    Represents stream markers for the latest stream.
+    """Represents stream markers for the latest stream.
 
     Attributes
     ----------

@@ -38,22 +38,25 @@ __all__ = ("Game",)
 
 
 class Game:
-    """
-    Represents a Game on Twitch.
+    """Represents a Game on Twitch.
 
-    You can retrieve a game by its ID, name or IGDB ID using the [`Client.fetch_game`][twitchio.Client.fetch_game]
-    method or the various `.fetch_game()` methods of other models.
+    You can retrieve a game by its ID, name or IGDB ID using the :meth:`~twitchio.Client.fetch_games`
+    method or the various ``.fetch_game()`` methods of other models.
 
-    To fetch a list of games, see: [`Client.fetch_games`][twitchio.Client.fetch_games]
+    To fetch a list of games, see: :meth:`~twitchio.Client.fetch_games`
 
     Supported Operations
     --------------------
 
-    | Operation   | Usage(s)                                 | Description                                        |
-    |-----------  |------------------------------------------|----------------------------------------------------|
-    | `__str__`   | `str(game)`, `f"{game}"`                 | Returns the games name.                            |
-    | `__repr__`  | `repr(game)`, `f"{game!r}"`              | Returns the games official representation.         |
-    | `__eq__`    | `game == game2`, `game != game2`         | Checks if two games are equal.                     |
+    +-------------+----------------------------------+----------------------------------------------------+
+    | Operation   | Usage(s)                        | Description                                         |
+    +=============+==================================+====================================================+
+    | __str__     | str(game), f"{game}"             | Returns the games name.                            |
+    +-------------+----------------------------------+----------------------------------------------------+
+    | __repr__    | repr(game), f"{game!r}"          | Returns the games official representation.         |
+    +-------------+----------------------------------+----------------------------------------------------+
+    | __eq__      | game == game2, game != game2     | Checks if two games are equal.                     |
+    +-------------+----------------------------------+----------------------------------------------------+
 
 
     Attributes
@@ -63,9 +66,9 @@ class Game:
     name: str
         The name of the game.
     box_art: Asset
-        The box art of the game as an [`Asset`][twitchio.Asset].
+        The box art of the game as an :class:`~twitchio.Assets`.
     igdb_id: str | None
-        The IGDB ID of the game. If this is not available to Twitch it will be `None`.
+        The IGDB ID of the game. If this is not available to Twitch it will be ``None``.
     """
 
     __slots__ = ("id", "name", "box_art", "igdb_id")

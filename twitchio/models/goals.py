@@ -40,29 +40,36 @@ __all__ = ("Goal",)
 
 
 class Goal:
-    """
-    Represents a broadcaster's goal.
+    """Represents a broadcaster's goal.
 
-    ??? info
-        The goal's `type` determines how the `current_target` is increased or decreased.
+    The goal's ``type`` determines how the ``current_target`` is increased or decreased.
 
-        - If type is `follower`, this field is set to the broadcaster's current number of followers. This number increases with new followers and decreases when users unfollow the broadcaster.
+    - If type is ``follower``, this field is set to the broadcaster's current number of followers. This number increases with new followers and decreases when users unfollow the broadcaster.
 
-        - If type is `subscription`, this field is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1.
+    - If type is ``subscription``, this field is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1.
 
-        - If type is `subscription_count`, this field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.
+    - If type is ``subscription_count``, this field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.
 
-        - If type is `new_subscription`, this field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1.
+    - If type is ``new_subscription``, this field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1.
 
-        - If type is `new_subscription_count`, this field is increased by 1 for each new subscription.
+    - If type is ``new_subscription_count``, this field is increased by 1 for each new subscription.
 
-    | Type                    | Description    |
-    | ---------               | -------------- |
-    | follower                | The goal is to increase followers.     |
-    | subscription            | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.       |
-    | subscription_count      | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.       |
-    | new_subscription        |  The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started).      |
-    | new_subscription_count  | The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).     |
+    +------------------------+-----------------------------------------------------------------------------------------------------------------------+
+    | Type                   | Description                                                                                                           |
+    +========================+=======================================================================================================================+
+    | follower               | The goal is to increase followers.                                                                                    |
+    +------------------------+-----------------------------------------------------------------------------------------------------------------------+
+    | subscription           | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with    |
+    |                        | the subscriptions.                                                                                                    |
+    +------------------------+-----------------------------------------------------------------------------------------------------------------------+
+    | subscription_count     | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.   |
+    +------------------------+-----------------------------------------------------------------------------------------------------------------------+
+    | new_subscription       | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the       |
+    |                        | subscriptions (it does not account for users that unsubscribed since the goal started).                               |
+    +------------------------+-----------------------------------------------------------------------------------------------------------------------+
+    | new_subscription_count | The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does  |
+    |                        | not account for users that unsubscribed since the goal started).                                                      |
+    +------------------------+-----------------------------------------------------------------------------------------------------------------------+
 
     Attributes
     -----------

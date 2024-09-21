@@ -45,23 +45,23 @@ __all__ = ("UserSubscription", "BroadcasterSubscription", "BroadcasterSubscripti
 
 
 class UserSubscription:
-    """
-    Represents a subscription of a user.
+    """Represents a subscription of a user.
 
     Attributes
     ----------
     broadcaster: PartialUser
         The broadcaster being subscribed to.
     gift: bool
-        A Boolean value that determines whether the subscription is a gift subscription. Is True if the subscription was gifted.
+        A Boolean value that determines whether the subscription is a gift subscription. Is ``True`` if the subscription was gifted.
     tier: int
         The type of subscription. Possible values are:
 
         - 1000: Tier 1
         - 2000: Tier 2
         - 3000: Tier 3
+
     gifter: PartialUser | None
-        The user who gifted the subscription. This is None if `gift` is False.
+        The user who gifted the subscription. This is None if ``gift`` is ``False``.
     """
 
     __slots__ = (
@@ -87,30 +87,28 @@ class UserSubscription:
 
     @property
     def rounded_tier(self) -> int:
-        """
-        Returns the tier as a single digit. e.g. Tier 1000 = 1.
-        """
+        """Returns the tier as a single digit. e.g. Tier 1000 = 1."""
         return round(self.tier / 1000)
 
 
 class BroadcasterSubscription(UserSubscription):
-    """
-    Represents a subscription of a user.
+    """Represents a subscription of a user.
 
     Attributes
     ----------
     broadcaster: PartialUser
         The broadcaster being subscribed to.
     gift: bool
-        A Boolean value that determines whether the subscription is a gift subscription. Is True if the subscription was gifted.
+        A Boolean value that determines whether the subscription is a gift subscription. Is ``True`` if the subscription was gifted.
     tier: int
         The type of subscription. Possible values are:
 
         - 1000: Tier 1
         - 2000: Tier 2
         - 3000: Tier 3
+
     gifter: PartialUser | None
-        The user who gifted the subscription. This is None if `gift` is False.
+        The user who gifted the subscription. This is ``None`` if ``gift`` is ``False``.
     plan_name: str
         The name of the subscription.
     user: PartialUser
@@ -129,8 +127,7 @@ class BroadcasterSubscription(UserSubscription):
 
 
 class BroadcasterSubscriptions:
-    """
-    Represents all the users that subscribe to a broadcaster.
+    """Represents all the users that subscribe to a broadcaster.
 
     Attributes
     ----------
@@ -143,7 +140,7 @@ class BroadcasterSubscriptions:
         Points are based on the subscription tier of each user that subscribes to this broadcaster.
 
         For example, a Tier 1 subscription is worth 1 point, Tier 2 is worth 2 points, and Tier 3 is worth 6 points.
-        The number of points determines the number of emote slots that are unlocked for the broadcaster (see [Subscriber Emote Slots](https://help.twitch.tv/s/article/subscriber-emote-guide#emoteslots)).
+        The number of points determines the number of emote slots that are unlocked for the broadcaster (see  `Subscriber Emote Slots <https://help.twitch.tv/s/article/subscriber-emote-guide#emoteslots>`_).
     """
 
     __slots__ = (

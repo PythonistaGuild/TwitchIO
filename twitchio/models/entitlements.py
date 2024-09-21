@@ -46,8 +46,7 @@ __all__ = ("Entitlement", "EntitlementStatus")
 
 
 class Entitlement:
-    """
-    Represents a drops entitlement.
+    """Represents a drops entitlement.
 
     Attributes
     -----------
@@ -57,7 +56,7 @@ class Entitlement:
         An ID that identifies the benefit (reward).
     timestamp: datetime.datetime
         Datetime of when the entitlement was granted.
-    user: twitchio.PartialUser
+    user: PartialUser
         PartialUser of who was granted the entitlement.
     game_id: str
         An ID that identifies the game the user was playing when the reward was entitled.
@@ -95,12 +94,11 @@ class Entitlement:
         return self.id
 
     async def fetch_game(self) -> Game:
-        """
-        Fetches the [`Game`][twitchio.Game] associated with this drop entitlement.
+        """Fetches the :class:`~twitchio.Game` associated with this drop entitlement.
 
         Returns
         -------
-        twitchio.Game
+        Game
             The game associated with this drop entitlement.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
@@ -108,6 +106,32 @@ class Entitlement:
 
 
 class EntitlementStatus:
+    """The status of entitlements after an update.
+
+    Attributes
+    -----------
+    status: Literal["INVALID_ID", "NOT_FOUND", "SUCCESS", "UNAUTHORIZED", "UPDATE_FAILED"]
+        Indicates whether the status of the entitlements in the ids field were successfully updated.
+
+        +----------------+----------------------------------------------------------------------------------------------------+
+        | Status         | Description                                                                                        |
+        +================+====================================================================================================+
+        | INVALID_ID     | The entitlement IDs in the ids field are not valid.                                                |
+        +----------------+----------------------------------------------------------------------------------------------------+
+        | NOT_FOUND      | The entitlement IDs in the ids field were not found.                                               |
+        +----------------+----------------------------------------------------------------------------------------------------+
+        | SUCCESS        | The status of the entitlements in the ids field were successfully updated.                         |
+        +----------------+----------------------------------------------------------------------------------------------------+
+        | UNAUTHORIZED   | The user or organization identified by the user access token is not authorized to update the       |
+        |                | entitlements.                                                                                      |
+        +----------------+----------------------------------------------------------------------------------------------------+
+        | UPDATE_FAILED  | The update failed. These are considered transient errors and the request should be retried later.  |
+        +----------------+----------------------------------------------------------------------------------------------------+
+
+    ids: list[str]
+        The list of entitlement ids that the status in the status field applies to.
+    """
+
     def __init__(self, data: UpdateDropsEntitlementsResponseData) -> None:
         self.status: Literal["INVALID_ID", "NOT_FOUND", "SUCCESS", "UNAUTHORIZED", "UPDATE_FAILED"] = data["status"]
         self.ids: list[str] = data["ids"]

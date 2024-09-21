@@ -42,12 +42,11 @@ __all__ = ("ChannelTeam", "Team")
 
 
 class Team:
-    """
-    Represents information for a specific Twitch Team
+    """Represents information for a specific Twitch Team
 
     Attributes
     -----------
-    users: list[twitchio.PartialUser]
+    users: list[PartialUser]
         List of users in the specified Team.
     background_image: Asset | None
         URL for the Team background image.
@@ -110,12 +109,11 @@ class Team:
 
 
 class ChannelTeam:
-    """
-    Represents the Twitch Teams of which the specified channel/broadcaster is a member
+    """Represents the Twitch Teams of which the specified channel/broadcaster is a member
 
     Attributes
     -----------
-    broadcaster: twitchio.PartialUser
+    broadcaster: PartialUser
         The broadcaster.
     background_image: Asset | None
         Asset for the team background image.

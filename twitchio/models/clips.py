@@ -50,8 +50,7 @@ __all__ = ("Clip", "CreatedClip")
 
 
 class Clip:
-    """
-    Represents a Twitch Clip
+    """Represents a Twitch Clip
 
     Attributes
     -----------
@@ -78,7 +77,7 @@ class Clip:
     created_at: datetime.datetime
         When the clip was created.
     thumbnail: twitchio.Asset
-        The [`Asset`][twitchio.assets.Asset] that can be used to read or save the thumbnail associated with this Clip.
+        The :class:`~twitchio.Asset` that can be used to read or save the thumbnail associated with this Clip.
     is_featured: bool
         Indicates if the clip is featured or not.
     """
@@ -123,22 +122,22 @@ class Clip:
         return self.id
 
     async def fetch_game(self) -> Game:
-        """Fetches the [`Game`][twitchio.Game] associated with this Clip.
+        """Fetches the :class:`~twitchio.Game` associated with this Clip.
 
         Returns
         -------
-        twitchio.Game
+        Game
             The game associated with this Clip.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http)
 
     async def fetch_video(self) -> Video | None:
-        """Fetches the [`Video`][twitchio.Video] associated with this clip, if it can be found.
+        """Fetches the :class:`~twitchio.Video` associated with this clip, if it can be found.
 
         Returns
         -------
-        twitchio.Video
+        Video
             The video associated with this Clip.
         None
             The video was not found.

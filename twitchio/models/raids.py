@@ -38,8 +38,7 @@ __all__ = ("Raid",)
 
 
 class Raid:
-    """
-    Represents a raid for a broadcaster / channel
+    """Represents a raid for a broadcaster / channel
 
     Attributes
     -----------
