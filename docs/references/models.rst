@@ -1,7 +1,7 @@
 .. currentmodule:: twitchio
 
 
-Models
+Helix
 #################
 
 .. attributetable:: twitchio.CommercialStart
@@ -390,7 +390,3 @@ Models
 
 .. autoclass:: twitchio.Video
     :members:
-
-
-
-

@@ -94,6 +94,9 @@ __all__ = (
     "UserAuthorizationRevokeSubscription",
     "UserUpdateSubscription",
     "WhisperReceivedSubscription",
+    "SharedChatSessionBeginSubscription",
+    "SharedChatSessionEndSubscription",
+    "SharedChatSessionUpdateSubscription",
 )
 
 
@@ -125,6 +128,31 @@ class SubscriptionPayload(abc.ABC):
 
 
 class AutomodMessageHoldSubscription(SubscriptionPayload):
+    """The ``automod.message.hold`` subscription type notifies a user if a message was caught by automod for review.
+
+    .. important::
+        Requires a user access token that includes the ``moderator:manage:automod scope``. The ID in the ``moderator_user_id`` condition parameter must match the user ID in the access token.
+
+        If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["automod.message.hold"]] = "automod.message.hold"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -141,6 +169,31 @@ class AutomodMessageHoldSubscription(SubscriptionPayload):
 
 
 class AutomodMessageUpdateSubscription(SubscriptionPayload):
+    """The ``automod.message.update`` subscription type sends notification when a message in the automod queue has its status changed.
+
+    .. important::
+        Requires a user access token that includes the ``moderator:manage:automod scope``. The ID in the ``moderator_user_id`` condition parameter must match the user ID in the access token.
+
+        If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["automod.message.update"]] = "automod.message.update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -157,6 +210,31 @@ class AutomodMessageUpdateSubscription(SubscriptionPayload):
 
 
 class AutomodSettingsUpdateSubscription(SubscriptionPayload):
+    """The ``automod.settings.update`` subscription type sends a notification when a broadcaster's automod settings are updated.
+
+    .. important::
+        Requires a user access token that includes the ``moderator:read:automod_settings`` scope. The ID in the ``moderator_user_id`` condition parameter must match the user ID in the access token.
+
+        If app access token used, then additionally requires the ``moderator:read:automod_settings`` scope for the moderator.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["automod.settings.update"]] = "automod.settings.update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -173,6 +251,31 @@ class AutomodSettingsUpdateSubscription(SubscriptionPayload):
 
 
 class AutomodTermsUpdateSubscription(SubscriptionPayload):
+    """The ``automod.terms.update`` subscription type sends a notification when a broadcaster's terms settings are updated. Changes to private terms are not sent.
+
+    .. important::
+        Requires a user access token that includes the ``moderator:manage:automod`` scope. The ID in the ``moderator_user_id`` condition parameter must match the user ID in the access token.
+
+        If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["automod.terms.update"]] = "automod.terms.update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -189,6 +292,24 @@ class AutomodTermsUpdateSubscription(SubscriptionPayload):
 
 
 class ChannelUpdateSubscription(SubscriptionPayload):
+    """The ``channel.update`` subscription type sends notifications when a broadcaster updates the category, title, content classification labels, or broadcast language for their channel.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.update"]] = "channel.update"
     version: ClassVar[Literal["2"]] = "2"
 
@@ -204,6 +325,29 @@ class ChannelUpdateSubscription(SubscriptionPayload):
 
 
 class ChannelFollowSubscription(SubscriptionPayload):
+    """The ``channel.follow`` subscription type sends a notification when a specified channel receives a follow.
+
+    .. important::
+        Must have ``moderator:read:followers`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.follow"]] = "channel.follow"
     version: ClassVar[Literal["2"]] = "2"
 
@@ -220,6 +364,27 @@ class ChannelFollowSubscription(SubscriptionPayload):
 
 
 class AdBreakBeginSubscription(SubscriptionPayload):
+    """The ``channel.ad_break.begin`` subscription type sends a notification when a user runs a midroll commercial break, either manually or automatically via ads manager.
+
+    .. important::
+        Must have ``channel:read:ads`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.ad_break.begin"]] = "channel.ad_break.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -235,6 +400,31 @@ class AdBreakBeginSubscription(SubscriptionPayload):
 
 
 class ChatClearSubscription(SubscriptionPayload):
+    """The ``channel.chat.clear`` subscription type sends a notification when a moderator or bot clears all messages from the chat room.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat.clear"]] = "channel.chat.clear"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -251,6 +441,31 @@ class ChatClearSubscription(SubscriptionPayload):
 
 
 class ChatClearUserMessagesSubscription(SubscriptionPayload):
+    """The ``channel.chat.clear_user_messages`` subscription type sends a notification when a moderator or bot clears all messages for a specific user.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat.clear_user_messages"]] = "channel.chat.clear_user_messages"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -267,6 +482,31 @@ class ChatClearUserMessagesSubscription(SubscriptionPayload):
 
 
 class ChatMessageSubscription(SubscriptionPayload):
+    """The ``channel.chat.message`` subscription type sends a notification when any user sends a message to a channel's chat room.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat.message"]] = "channel.chat.message"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -283,6 +523,31 @@ class ChatMessageSubscription(SubscriptionPayload):
 
 
 class ChatNotificationSubscription(SubscriptionPayload):
+    """The ``channel.chat.notification`` subscription type sends a notification when an event that appears in chat occurs, such as someone subscribing to the channel or a subscription is gifted.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat.notification"]] = "channel.chat.notification"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -299,6 +564,31 @@ class ChatNotificationSubscription(SubscriptionPayload):
 
 
 class ChatMessageDeleteSubscription(SubscriptionPayload):
+    """The ``channel.chat.message_delete`` subscription type sends a notification when a moderator removes a specific message.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat.message_delete"]] = "channel.chat.message_delete"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -315,6 +605,31 @@ class ChatMessageDeleteSubscription(SubscriptionPayload):
 
 
 class ChatSettingsUpdateSubscription(SubscriptionPayload):
+    """The ``channel.chat_settings.update`` subscription type sends a notification when a broadcaster's chat settings are updated.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat_settings.update"]] = "channel.chat_settings.update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -331,6 +646,31 @@ class ChatSettingsUpdateSubscription(SubscriptionPayload):
 
 
 class ChatUserMessageHoldSubscription(SubscriptionPayload):
+    """The ``channel.chat.user_message_hold`` subscription type notifies a user if their message is caught by automod.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat.user_message_hold"]] = "channel.chat.user_message_hold"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -347,6 +687,31 @@ class ChatUserMessageHoldSubscription(SubscriptionPayload):
 
 
 class ChatUserMessageUpdateSubscription(SubscriptionPayload):
+    """The ``channel.chat.user_message_update`` subscription type notifies a user if their message's automod status is updated.
+
+    .. important::
+        Requires ``user:read:chat`` scope from chatting user.
+
+        If app access token used, then additionally requires ``user:bot`` scope from chatting user.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    user_id: str
+        The chatting user ID that is reading chat.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.chat.user_message_update"]] = "channel.chat.user_message_update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -363,6 +728,24 @@ class ChatUserMessageUpdateSubscription(SubscriptionPayload):
 
 
 class SharedChatSessionBeginSubscription(SubscriptionPayload):
+    """The ``channel.shared_chat.begin`` subscription type sends a notification when a channel becomes active in an active shared chat session.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.shared_chat.begin"]] = "channel.shared_chat.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -378,6 +761,24 @@ class SharedChatSessionBeginSubscription(SubscriptionPayload):
 
 
 class SharedChatSessionUpdateSubscription(SubscriptionPayload):
+    """The ``channel.shared_chat.update`` subscription type sends a notification when the active shared chat session the channel is in changes.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.shared_chat.update"]] = "channel.shared_chat.update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -393,6 +794,24 @@ class SharedChatSessionUpdateSubscription(SubscriptionPayload):
 
 
 class SharedChatSessionEndSubscription(SubscriptionPayload):
+    """The ``channel.shared_chat.end`` subscription type sends a notification when a channel leaves a shared chat session or the session ends.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.shared_chat.end"]] = "channel.shared_chat.end"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -408,6 +827,27 @@ class SharedChatSessionEndSubscription(SubscriptionPayload):
 
 
 class ChannelSubscribeSubscription(SubscriptionPayload):
+    """The ``channel.subscribe`` subscription type sends a notification when a specified channel receives a subscriber. This does not include resubscribes.
+
+    .. important::
+        Must have ``channel:read:subscriptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.subscribe"]] = "channel.subscribe"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -423,6 +863,27 @@ class ChannelSubscribeSubscription(SubscriptionPayload):
 
 
 class ChannelSubscriptionEndSubscription(SubscriptionPayload):
+    """The ``channel.subscription.end`` subscription type sends a notification when a subscription to the specified channel expires.
+
+    .. important::
+        Must have ``channel:read:subscriptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.subscription.end"]] = "channel.subscription.end"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -438,6 +899,27 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
 
 
 class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
+    """The ``channel.subscription.gift`` subscription type sends a notification when a user gives one or more gifted subscriptions in a channel.
+
+    .. important::
+        Must have ``channel:read:subscriptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.subscription.gift"]] = "channel.subscription.gift"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -453,6 +935,27 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
 
 
 class ChannelSubscribeMessageSubscription(SubscriptionPayload):
+    """The ``channel.subscription.message`` subscription type sends a notification when a user sends a resubscription chat message in a specific channel.
+
+    .. important::
+        Must have ``channel:read:subscriptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.subscription.message"]] = "channel.subscription.message"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -468,6 +971,27 @@ class ChannelSubscribeMessageSubscription(SubscriptionPayload):
 
 
 class ChannelCheerSubscription(SubscriptionPayload):
+    """The ``channel.cheer`` subscription type sends a notification when a user cheers on the specified channel.
+
+    .. important::
+        Must have ``bits:read`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.cheer"]] = "channel.cheer"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -483,6 +1007,24 @@ class ChannelCheerSubscription(SubscriptionPayload):
 
 
 class ChannelRaidSubscription(SubscriptionPayload):
+    """The ``channel.raid`` subscription type sends a notification when a broadcaster raids another broadcaster's channel.
+
+    Parameters
+    ----------
+    to_broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "to_broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.raid"]] = "channel.raid"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -498,6 +1040,27 @@ class ChannelRaidSubscription(SubscriptionPayload):
 
 
 class ChannelBanSubscription(SubscriptionPayload):
+    """The ``channel.ban`` subscription type sends a notification when a viewer is timed out or banned from the specified channel.
+
+    .. important::
+        Must have ``channel:moderate`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.ban"]] = "channel.ban"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -513,6 +1076,27 @@ class ChannelBanSubscription(SubscriptionPayload):
 
 
 class ChannelUnbanSubscription(SubscriptionPayload):
+    """The ``channel.unban`` subscription type sends a notification when a viewer is unbanned from the specified channel.
+
+    .. important::
+        Must have ``channel:moderate`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.unban"]] = "channel.unban"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -528,6 +1112,29 @@ class ChannelUnbanSubscription(SubscriptionPayload):
 
 
 class ChannelUnbanRequestSubscription(SubscriptionPayload):
+    """The ``channel.unban_request.create`` subscription type sends a notification when a user creates an unban request.
+
+    .. important::
+        Must have ``moderator:read:unban_requests`` or ``moderator:manage:unban_requests`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.unban_request.create"]] = "channel.unban_request.create"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -544,6 +1151,33 @@ class ChannelUnbanRequestSubscription(SubscriptionPayload):
 
 
 class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
+    """The ``channel.unban_request.resolve`` subscription type sends a notification when an unban request has been resolved.
+
+    .. important::
+        Must have ``moderator:read:unban_requests`` or ``moderator:manage:unban_requests`` scope.
+
+        If you use webhooks, the user in moderator_user_id must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
+
+        If you use WebSockets, the ID in moderator_user_id must match the user ID in the user access token.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.unban_request.resolve"]] = "channel.unban_request.resolve"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -560,6 +1194,39 @@ class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
 
 
 class ChannelModerateSubscription(SubscriptionPayload):
+    """The ``channel.moderate subscription`` type sends a notification when a moderator performs a moderation action in a channel. Some of these actions affect chatters in other channels during Shared Chat.
+
+        This is Version 1 of the subscription.
+
+    .. important::
+        Must have all of the following scopes:
+
+        - ``moderator:read:blocked_terms`` OR ``moderator:manage:blocked_terms``
+        - ``moderator:read:chat_settings`` OR ``moderator:manage:chat_settings``
+        - ``moderator:read:unban_requests`` OR ``moderator:manage:unban_requests``
+        - ``moderator:read:banned_users`` OR ``moderator:manage:banned_users``
+        - ``moderator:read:chat_messages`` OR ``moderator:manage:chat_messages``
+        - ``moderator:read:moderators``
+        - ``moderator:read:vips``
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.moderate"]] = "channel.moderate"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -576,6 +1243,40 @@ class ChannelModerateSubscription(SubscriptionPayload):
 
 
 class ChannelModerateV2Subscription(SubscriptionPayload):
+    """The ``channel.moderate subscription`` type sends a notification when a moderator performs a moderation action in a channel. Some of these actions affect chatters in other channels during Shared Chat.
+
+        This is Version 2 of the subscription that includes warnings.
+
+    .. important::
+        Must have all of the following scopes:
+
+        - ``moderator:read:blocked_terms`` OR ``moderator:manage:blocked_terms``
+        - ``moderator:read:chat_settings`` OR ``moderator:manage:chat_settings``
+        - ``moderator:read:unban_requests`` OR ``moderator:manage:unban_requests``
+        - ``moderator:read:banned_users`` OR ``moderator:manage:banned_users``
+        - ``moderator:read:chat_messages`` OR ``moderator:manage:chat_messages``
+        - ``moderator:read:warnings`` OR ``moderator:manage:warnings``
+        - ``moderator:read:moderators``
+        - ``moderator:read:vips``
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.moderate"]] = "channel.moderate"
     version: ClassVar[Literal["2"]] = "2"
 
@@ -592,6 +1293,27 @@ class ChannelModerateV2Subscription(SubscriptionPayload):
 
 
 class ChannelModeratorAddSubscription(SubscriptionPayload):
+    """The ``channel.moderator.add`` subscription type sends a notification when a user is given moderator privileges on a specified channel.
+
+    .. important::
+        Must have ``moderation:read`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.moderator.add"]] = "channel.moderator.add"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -607,6 +1329,27 @@ class ChannelModeratorAddSubscription(SubscriptionPayload):
 
 
 class ChannelModeratorRemoveSubscription(SubscriptionPayload):
+    """The ``channel.moderator.remove`` subscription type sends a notification when a user has moderator privileges removed on a specified channel.
+
+    .. important::
+        Must have ``moderation:read`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.moderator.remove"]] = "channel.moderator.remove"
     version: ClassVar[Literal["1"]] = "1"
 
