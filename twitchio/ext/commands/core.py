@@ -356,7 +356,8 @@ class Command:
         limited = self._run_cooldowns(context)
 
         if limited:
-            context.bot.run_event("command_error", context, limited[0])
+            e = CommandOnCooldown(command=context.command, retry_after=limited)
+            context.bot.run_event("command_error", context, e)
             return
         instance = self._instance
         args = [instance, context] if instance else [context]
@@ -377,19 +378,16 @@ class Command:
             await try_run(self._after_invoke(*args), to_command=True)
         await try_run(context.bot.global_after_invoke(context))
 
-    def _run_cooldowns(self, context: Context) -> Optional[List[CommandOnCooldown]]:
-        try:
-            buckets = self._cooldowns[0].get_buckets(context)
-        except IndexError:
+    def _run_cooldowns(self, context: Context) -> Optional[int]:
+        if not self._cooldowns:
             return None
-        expired = []
 
-        try:
-            for bucket in buckets:
-                bucket.update_bucket(context)
-        except CommandOnCooldown as e:
-            expired.append(e)
-        return expired
+        retries = []
+        for c in self._cooldowns:
+            retry = c.on_cooldown(context)
+            retries.append(retry)
+        if all(retries):
+            return min(retries)
 
     async def handle_checks(self, context: Context) -> Union[Literal[True], Exception]:
         # TODO Docs
