@@ -130,7 +130,7 @@ class Cooldown:
 
         self._cache = {}
 
-    def update_cooldown(self, key, now) -> int | None:
+    def _update_cooldown(self, key, now) -> int | None:
         cooldown = self._cache[key]
 
         if cooldown["tokens"] == self._rate:
@@ -197,4 +197,4 @@ class Cooldown:
             if not key in self._cache:
                 self._cache[key] = {"tokens": 0, "start_time": now, "next_start_time": None}
 
-            return self.update_cooldown(key, now)
+            return self._update_cooldown(key, now)
