@@ -153,3 +153,143 @@ Eventsub Subsriptions
 
 .. autoclass:: ChannelModerateV2Subscription
     :members:
+
+.. attributetable:: ChannelModeratorAddSubscription
+
+.. autoclass:: ChannelModeratorAddSubscription
+    :members:
+
+.. attributetable:: ChannelModeratorRemoveSubscription
+
+.. autoclass:: ChannelModeratorRemoveSubscription
+    :members:
+
+.. attributetable:: ChannelPointsAutoRedeemSubscription
+
+.. autoclass:: ChannelPointsAutoRedeemSubscription
+    :members:
+
+.. attributetable:: ChannelPointsRewardAddSubscription
+
+.. autoclass:: ChannelPointsRewardAddSubscription
+    :members:
+
+.. attributetable:: ChannelPointsRewardUpdateSubscription
+
+.. autoclass:: ChannelPointsRewardUpdateSubscription
+    :members:
+
+.. attributetable:: ChannelPointsRewardRemoveSubscription
+
+.. autoclass:: ChannelPointsRewardRemoveSubscription
+    :members:
+
+.. attributetable:: ChannelPointsRedeemAddSubscription
+
+.. autoclass:: ChannelPointsRedeemAddSubscription
+    :members:
+
+.. attributetable:: ChannelPointsRedeemUpdateSubscription
+
+.. autoclass:: ChannelPointsRedeemUpdateSubscription
+    :members:
+
+.. attributetable:: ChannelPollBeginSubscription
+
+.. autoclass:: ChannelPollBeginSubscription
+    :members:
+
+.. attributetable:: ChannelPollProgressSubscription
+
+.. autoclass:: ChannelPollProgressSubscription
+    :members:
+
+.. attributetable:: ChannelPollEndSubscription
+
+.. autoclass:: ChannelPollEndSubscription
+    :members:
+
+.. attributetable:: ChannelPredictionBeginSubscription
+
+.. autoclass:: ChannelPredictionBeginSubscription
+    :members:
+
+.. attributetable:: ChannelPredictionLockSubscription
+
+.. autoclass:: ChannelPredictionLockSubscription
+    :members:
+
+.. attributetable:: ChannelPredictionProgressubscription
+
+.. autoclass:: ChannelPredictionProgressubscription
+    :members:
+
+.. attributetable:: ChannelPredictionEndSubscription
+
+.. autoclass:: ChannelPredictionEndSubscription
+    :members:
+
+.. attributetable:: SuspiciousUserUpdateSubscription
+
+.. autoclass:: SuspiciousUserUpdateSubscription
+    :members:
+
+.. attributetable:: SuspiciousUserMessageSubscription
+
+.. autoclass:: SuspiciousUserMessageSubscription
+    :members:
+
+.. attributetable:: ChannelVIPAddSubscription
+
+.. autoclass:: ChannelVIPAddSubscription
+    :members:
+
+.. attributetable:: ChannelVIPRemoveSubscription
+
+.. autoclass:: ChannelVIPRemoveSubscription
+    :members:
+
+.. attributetable:: ChannelWarningAcknowledgementSubscription
+
+.. autoclass:: ChannelWarningAcknowledgementSubscription
+    :members:
+
+.. attributetable:: ChannelWarningSendSubscription
+
+.. autoclass:: ChannelWarningSendSubscription
+    :members:
+
+.. attributetable:: CharityDonationSubscription
+
+.. autoclass:: CharityDonationSubscription
+    :members:
+
+.. attributetable:: CharityCampaignStartSubscription
+
+.. autoclass:: CharityCampaignStartSubscription
+    :members:
+
+.. attributetable:: CharityCampaignProgressSubscription
+
+.. autoclass:: CharityCampaignProgressSubscription
+    :members:
+
+.. attributetable:: CharityCampaignStopSubscription
+
+.. autoclass:: CharityCampaignStopSubscription
+    :members:
+
+.. attributetable:: GoalBeginSubscription
+
+.. autoclass:: GoalBeginSubscription
+    :members:
+
+.. attributetable:: GoalProgressSubscription
+
+.. autoclass:: GoalProgressSubscription
+    :members:
+
+.. attributetable:: GoalEndSubscription
+
+.. autoclass:: GoalEndSubscription
+    :members:

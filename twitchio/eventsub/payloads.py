@@ -94,6 +94,14 @@ __all__ = (
     "UserAuthorizationRevokeSubscription",
     "UserUpdateSubscription",
     "WhisperReceivedSubscription",
+    "CharityDonationSubscription",
+    "CharityCampaignStartSubscription",
+    "CharityCampaignProgressSubscription",
+    "CharityCampaignStopSubscription",
+    "ChannelPredictionBeginSubscription",
+    "ChannelPredictionLockSubscription",
+    "ChannelPredictionProgressubscription",
+    "ChannelPredictionEndSubscription",
     "SharedChatSessionBeginSubscription",
     "SharedChatSessionEndSubscription",
     "SharedChatSessionUpdateSubscription",
@@ -1365,6 +1373,27 @@ class ChannelModeratorRemoveSubscription(SubscriptionPayload):
 
 
 class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
+    """The ``channel.channel_points_automatic_reward_redemption.add`` subscription type sends a notification when a viewer has redeemed an automatic channel points reward on the specified channel.
+
+    .. important::
+        Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.channel_points_automatic_reward_redemption.add"]] = (
         "channel.channel_points_automatic_reward_redemption.add"
     )
@@ -1382,6 +1411,27 @@ class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
 
 
 class ChannelPointsRewardAddSubscription(SubscriptionPayload):
+    """The ``channel.channel_points_custom_reward.add`` subscription type sends a notification when a custom channel points reward has been created for the specified channel.
+
+    .. important::
+        Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.channel_points_custom_reward.add"]] = "channel.channel_points_custom_reward.add"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1397,36 +1447,107 @@ class ChannelPointsRewardAddSubscription(SubscriptionPayload):
 
 
 class ChannelPointsRewardUpdateSubscription(SubscriptionPayload):
+    """The ``channel.channel_points_custom_reward.update`` subscription type sends a notification when a custom channel points reward has been updated for the specified channel.
+
+    .. important::
+        Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    reward_id: str
+        Optional to only get notifications for a specific reward.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.channel_points_custom_reward.update"]] = "channel.channel_points_custom_reward.update"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.reward_id: str = condition.get("reward_id", "")
 
         if not self.broadcaster_user_id:
             raise ValueError('The parameter "broadcaster_user_id" must be passed.')
 
     @property
     def condition(self) -> Condition:
-        return {"broadcaster_user_id": self.broadcaster_user_id}
+        return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
 
 
 class ChannelPointsRewardRemoveSubscription(SubscriptionPayload):
+    """The ``channel.channel_points_custom_reward.remove`` subscription type sends a notification when a custom channel points reward has been removed from the specified channel.
+
+    .. important::
+        Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    reward_id: str
+        Optional to only get notifications for a specific reward.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.channel_points_custom_reward.remove"]] = "channel.channel_points_custom_reward.remove"
     version: ClassVar[Literal["1"]] = "1"
 
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.reward_id: str = condition.get("reward_id", "")
 
         if not self.broadcaster_user_id:
             raise ValueError('The parameter "broadcaster_user_id" must be passed.')
 
     @property
     def condition(self) -> Condition:
-        return {"broadcaster_user_id": self.broadcaster_user_id}
+        return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
 
 
 class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
+    """The ``channel.channel_points_custom_reward_redemption.add`` subscription type sends a notification when a viewer has redeemed a custom channel points reward on the specified channel.
+
+    .. important::
+        Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    reward_id: str
+        Optional to only get notifications for a specific reward.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.channel_points_custom_reward_redemption.add"]] = (
         "channel.channel_points_custom_reward_redemption.add"
     )
@@ -1445,6 +1566,29 @@ class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
 
 
 class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
+    """The ``channel.channel_points_custom_reward_redemption.update`` subscription type sends a notification when a redemption of a channel points custom reward has been updated for the specified channel.
+
+    .. important::
+        Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    reward_id: str
+        Optional to only get notifications for a specific reward.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.channel_points_custom_reward_redemption.update"]] = (
         "channel.channel_points_custom_reward_redemption.update"
     )
@@ -1463,6 +1607,27 @@ class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
 
 
 class ChannelPollBeginSubscription(SubscriptionPayload):
+    """The ``channel.poll.begin`` subscription type sends a notification when a poll begins on the specified channel.
+
+    .. important::
+        Must have ``channel:read:polls`` or ``channel:manage:polls`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.poll.begin"]] = "channel.poll.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1478,6 +1643,27 @@ class ChannelPollBeginSubscription(SubscriptionPayload):
 
 
 class ChannelPollProgressSubscription(SubscriptionPayload):
+    """The ``channel.poll.progress`` subscription type sends a notification when users respond to a poll on the specified channel.
+
+    .. important::
+        Must have ``channel:read:polls`` or ``channel:manage:polls`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.poll.progress"]] = "channel.poll.progress"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1493,6 +1679,27 @@ class ChannelPollProgressSubscription(SubscriptionPayload):
 
 
 class ChannelPollEndSubscription(SubscriptionPayload):
+    """The ``channel.poll.end`` subscription type sends a notification when a poll ends on the specified channel.
+
+    .. important::
+        Must have ``channel:read:polls`` or ``channel:manage:polls`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.poll.end"]] = "channel.poll.end"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1508,6 +1715,27 @@ class ChannelPollEndSubscription(SubscriptionPayload):
 
 
 class ChannelPredictionBeginSubscription(SubscriptionPayload):
+    """The ``channel.prediction.begin`` subscription type sends a notification when a Prediction begins on the specified channel.
+
+    .. important::
+        Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.prediction.begin"]] = "channel.prediction.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1523,6 +1751,27 @@ class ChannelPredictionBeginSubscription(SubscriptionPayload):
 
 
 class ChannelPredictionLockSubscription(SubscriptionPayload):
+    """The ``channel.prediction.lock`` subscription type sends a notification when a Prediction is locked on the specified channel.
+
+    .. important::
+        Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.prediction.lock"]] = "channel.prediction.lock"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1538,6 +1787,27 @@ class ChannelPredictionLockSubscription(SubscriptionPayload):
 
 
 class ChannelPredictionProgressubscription(SubscriptionPayload):
+    """The ``channel.prediction.progress`` subscription type sends a notification when users participate in a Prediction on the specified channel.
+
+    .. important::
+        Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.prediction.progress"]] = "channel.prediction.progress"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1553,6 +1823,27 @@ class ChannelPredictionProgressubscription(SubscriptionPayload):
 
 
 class ChannelPredictionEndSubscription(SubscriptionPayload):
+    """The ``channel.prediction.end`` subscription type sends a notification when a Prediction ends on the specified channel.
+
+    .. important::
+        Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.prediction.end"]] = "channel.prediction.end"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1568,6 +1859,33 @@ class ChannelPredictionEndSubscription(SubscriptionPayload):
 
 
 class SuspiciousUserUpdateSubscription(SubscriptionPayload):
+    """The ``channel.suspicious_user.update`` subscription type sends a notification when a suspicious user has been updated.
+
+    .. important::
+        Requires the ``moderator:read:suspicious_users scope``.
+
+        If you use webhooks, the user in moderator_user_id must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
+
+        If you use WebSockets, the ID in moderator_user_id must match the user ID in the user access token.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.suspicious_user.update"]] = "channel.suspicious_user.update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1584,6 +1902,33 @@ class SuspiciousUserUpdateSubscription(SubscriptionPayload):
 
 
 class SuspiciousUserMessageSubscription(SubscriptionPayload):
+    """The ``channel.suspicious_user.message`` subscription type sends a notification when a chat message has been sent from a suspicious user.
+
+    .. important::
+        Requires the ``moderator:read:suspicious_users scope``.
+
+        If you use webhooks, the user in moderator_user_id must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
+
+        If you use WebSockets, the ID in moderator_user_id must match the user ID in the user access token.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.suspicious_user.message"]] = "channel.suspicious_user.message"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1600,6 +1945,27 @@ class SuspiciousUserMessageSubscription(SubscriptionPayload):
 
 
 class ChannelVIPAddSubscription(SubscriptionPayload):
+    """The ``channel.vip.add`` subscription type sends a notification when a VIP is added to the channel.
+
+    .. important::
+        Must have ``channel:read:vips`` or ``channel:manage:vips`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.vip.add"]] = "channel.vip.add"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1615,6 +1981,27 @@ class ChannelVIPAddSubscription(SubscriptionPayload):
 
 
 class ChannelVIPRemoveSubscription(SubscriptionPayload):
+    """The ``channel.vip.remove`` subscription type sends a notification when a VIP is removed from the channel.
+
+    .. important::
+        Must have ``channel:read:vips`` or ``channel:manage:vips`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.vip.remove"]] = "channel.vip.remove"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1630,6 +2017,29 @@ class ChannelVIPRemoveSubscription(SubscriptionPayload):
 
 
 class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
+    """The ``channel.warning.acknowledge`` subscription type sends a notification when a warning is acknowledged by a user. Broadcasters and moderators can see the warning's details.
+
+    .. important::
+        Must have the ``moderator:read:warnings`` or ``moderator:manage:warnings`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.warning.acknowledge"]] = "channel.warning.acknowledge"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1646,6 +2056,29 @@ class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
 
 
 class ChannelWarningSendSubscription(SubscriptionPayload):
+    """The ``channel.warning.send`` subscription type sends a notification when a warning is sent to a user. Broadcasters and moderators can see the warning's details.
+
+    .. important::
+        Must have the ``moderator:read:warnings`` or ``moderator:manage:warnings`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+    moderator_user_id: str
+        A moderator ID or the broadcaster ID for the specified broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.warning.send"]] = "channel.warning.send"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1662,6 +2095,27 @@ class ChannelWarningSendSubscription(SubscriptionPayload):
 
 
 class CharityDonationSubscription(SubscriptionPayload):
+    """The ``channel.charity_campaign.donate`` subscription type sends a notification when a user donates to the broadcaster's charity campaign.
+
+    .. important::
+        Must have ``channel:read:charity`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.charity_campaign.donate"]] = "channel.charity_campaign.donate"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1677,6 +2131,30 @@ class CharityDonationSubscription(SubscriptionPayload):
 
 
 class CharityCampaignStartSubscription(SubscriptionPayload):
+    """The ``channel.charity_campaign.start`` subscription type sends a notification when the broadcaster starts a charity campaign.
+
+    .. note::
+        It's possible to receive this event after the Progress event.
+
+    .. important::
+        Must have ``channel:read:charity`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.charity_campaign.start"]] = "channel.charity_campaign.start"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1692,6 +2170,32 @@ class CharityCampaignStartSubscription(SubscriptionPayload):
 
 
 class CharityCampaignProgressSubscription(SubscriptionPayload):
+    """The ``channel.charity_campaign.progress`` subscription type sends a notification when progress is made towards the campaign's goal or when the broadcaster changes the fundraising goal.
+
+    .. note::
+        It's possible to receive this event before the Start event.
+
+        To get donation information, subscribe to :meth:`CharityDonationSubscription` event.
+
+    .. important::
+        Must have ``channel:read:charity`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.charity_campaign.progress"]] = "channel.charity_campaign.progress"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1707,6 +2211,27 @@ class CharityCampaignProgressSubscription(SubscriptionPayload):
 
 
 class CharityCampaignStopSubscription(SubscriptionPayload):
+    """The ``channel.charity_campaign.stop`` subscription type sends a notification when the broadcaster stops a charity campaign.
+
+    .. important::
+        Must have ``channel:read:charity`` scope.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.charity_campaign.stop"]] = "channel.charity_campaign.stop"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1722,6 +2247,30 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
 
 
 class GoalBeginSubscription(SubscriptionPayload):
+    """The ``channel.goal.begin`` subscription type sends a notification when the specified broadcaster begins a goal.
+
+    .. note::
+        It's possible to receive the Begin event after receiving Progress events.
+
+    .. important::
+        Requires a user OAuth access token with scope ``channel:read:goals``.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.goal.begin"]] = "channel.goal.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1737,6 +2286,30 @@ class GoalBeginSubscription(SubscriptionPayload):
 
 
 class GoalProgressSubscription(SubscriptionPayload):
+    """The ``channel.goal.progress`` subscription type sends a notification when progress is made towards the specified broadcaster's goal. Progress could be positive (added followers) or negative (lost followers).
+
+    .. note::
+        It's possible to receive the Progress events before receiving the Begin event.
+
+    .. important::
+        Requires a user OAuth access token with scope ``channel:read:goals``.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.goal.progress"]] = "channel.goal.progress"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1752,6 +2325,27 @@ class GoalProgressSubscription(SubscriptionPayload):
 
 
 class GoalEndSubscription(SubscriptionPayload):
+    """The ``channel.goal.end`` subscription type sends a notification when the specified broadcaster ends a goal.
+
+    .. important::
+        Requires a user OAuth access token with scope ``channel:read:goals``.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str
+        The broadcaster ID to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.goal.end"]] = "channel.goal.end"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -1767,6 +2361,7 @@ class GoalEndSubscription(SubscriptionPayload):
 
 
 class HypeTrainBeginSubscription(SubscriptionPayload):
+
     type: ClassVar[Literal["channel.hype_train.begin"]] = "channel.hype_train.begin"
     version: ClassVar[Literal["1"]] = "1"
 
