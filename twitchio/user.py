@@ -541,8 +541,8 @@ class PartialUser:
 
         Returns
         -------
-        ChannelsFollowed
-            ChannelsFollowed object.
+        FollowedChannels
+            FollowedChannels object.
         """
 
         return await self._http.get_followed_channels(

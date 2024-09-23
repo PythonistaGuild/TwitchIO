@@ -46,6 +46,7 @@ from .models.charity import CharityDonation
 from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.entitlements import Entitlement
+from .models.eventsub_ import EventsubSubscription, EventsubSubscriptions
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
 from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
@@ -111,6 +112,7 @@ if TYPE_CHECKING:
         DeleteVideosResponse,
         DropsEntitlementsResponseData,
         EmoteSetsResponse,
+        EventsubSubscriptionResponseData,
         ExtensionAnalyticsResponseData,
         ExtensionTransactionsResponseData,
         FollowedChannelsResponseData,
@@ -1313,7 +1315,7 @@ class HTTPClient:
         # TODO: Token?
         token: str | None = None
 
-        type: SubscriptionType = kwargs["type"]
+        _type: SubscriptionType = kwargs["type"]
         version: str = kwargs["version"]
         condition: Condition = kwargs["condition"]
         transport: SubscriptionCreateTransport = kwargs["transport"]
@@ -1328,13 +1330,66 @@ class HTTPClient:
             raise ValueError("A valid User Access token must be passed for websocket subscriptions.")
 
         data: SubscriptionCreateRequest = {
-            "type": type.value,
+            "type": _type.value,
             "version": version,
             "condition": condition,
             "transport": transport,
         }
 
         route: Route = Route("POST", "eventsub/subscriptions", token_for=token_for, json=data)
+        return await self.request_json(route)
+
+    async def get_eventsub_subscription(
+        self,
+        *,
+        status: Literal[
+            "enabled",
+            "webhook_callback_verification_pending",
+            "webhook_callback_verification_failed",
+            "notification_failures_exceeded",
+            "authorization_revoked",
+            "moderator_removed",
+            "user_removed",
+            "version_removed",
+            "beta_maintenance",
+            "websocket_disconnected",
+            "websocket_failed_ping_pong",
+            "websocket_received_inbound_traffic",
+            "websocket_connection_unused",
+            "websocket_internal_error",
+            "websocket_network_timeout",
+            "websocket_network_error",
+        ]
+        | None = None,
+        user_id: str | None = None,
+        type: str | None = None,
+        max_results: int | None = None,
+        token_for: str | None = None,
+    ) -> EventsubSubscriptions:
+        params: dict[str, str] = {}
+
+        if type is not None:
+            params["type"] = type
+        if status is not None:
+            params["status"] = status
+        if user_id is not None:
+            params["user_id"] = user_id
+
+        route: Route = Route("GET", "eventsub/subscriptions", params=params, token_for=token_for)
+
+        async def converter(data: EventsubSubscriptionResponseData, *, raw: Any) -> EventsubSubscription:
+            return EventsubSubscription(data, http=self)
+
+        iterator: HTTPAsyncIterator[EventsubSubscription] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+        data = await self.request_json(route)
+
+        return EventsubSubscriptions(data, iterator)
+
+    async def delete_eventsub_subscription(self, id: str, *, token_for: str | None = None) -> None:
+        params = {"id": id}
+        route: Route = Route("DELETE", "eventsub/subscriptions", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Games ###
