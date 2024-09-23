@@ -130,27 +130,19 @@ class Cooldown:
 
         self._cache = {}
 
-    def _update_cooldown(self, key, now) -> int | None:
-        cooldown = self._cache[key]
+    def _update_cooldown(self, bucket_key, now) -> int | None:
+        tokens = self._cache[bucket_key]
 
-        if cooldown["tokens"] == self._rate:
-            retry = self._per - (now - cooldown["start_time"])
+        if len(tokens) == self._rate:
+            retry = self._per - (now - tokens[0])
             return retry
 
-        if cooldown["tokens"] == 1 and self._rate > 1:
-            cooldown["next_start_time"] = now
-
-        cooldown["tokens"] += 1
-
-        if cooldown["tokens"] == self._rate and not self._rate == 1:
-            cooldown["start_time"] = cooldown["next_start_time"]
-
-        self._cache[key] = cooldown
+        tokens.append(now)
 
     def reset(self) -> None:
         self._cache = {}
 
-    def _key(self, ctx):
+    def _bucket_key(self, ctx):
         key = None
 
         if self.bucket == Bucket.default:
@@ -175,26 +167,32 @@ class Cooldown:
         return key
 
     def _update_cache(self, now) -> None:
-        expired = []
-        for key, cooldown in self._cache.items():
-            if now > cooldown["start_time"] + self._per:
-                if cooldown["tokens"] > 1:
-                    cooldown["tokens"] -= 1
-                    cooldown["start_time"] = cooldown["next_start_time"]
-                    cooldown["next_start_time"] = now
-                else:
-                    expired.append(key)
-        for key in expired:
-            del self._cache[key]
+        expired_bucket_keys = []
 
-    def on_cooldown(self, ctx) -> None:
+        for bucket_key, tokens in self._cache.items():
+            expired_tokens = []
+
+            for token in tokens:
+                if now - token > self._per:
+                    expired_tokens.append(token)
+
+            for expired_token in expired_tokens:
+                tokens.remove(expired_token)
+
+            if not tokens:
+                expired_bucket_keys.append(bucket_key)
+
+        for expired_bucket_key in expired_bucket_keys:
+            del self._cache[expired_bucket_key]
+
+    def on_cooldown(self, ctx) -> int | None:
         now = time.time()
 
         self._update_cache(now)
 
-        key = self._key(ctx)
-        if key:
-            if not key in self._cache:
-                self._cache[key] = {"tokens": 0, "start_time": now, "next_start_time": None}
+        bucket_key = self._bucket_key(ctx)
+        if bucket_key:
+            if not bucket_key in self._cache:
+                self._cache[bucket_key] = []
 
-            return self._update_cooldown(key, now)
+            return self._update_cooldown(bucket_key, now)
