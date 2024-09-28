@@ -22,9 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import Any, Generic, Literal, TypeAlias, TypedDict, TypeVar
+from typing import Any, Generic, Literal, NotRequired, TypeAlias, TypedDict, TypeVar
 
-from .conduits import ConduitData, ShardData
+from .conduits import Condition, ConduitData, ShardData
 
 
 __all__ = (
@@ -84,6 +84,8 @@ __all__ = (
     "VideosResponseData",
     "WarnChatUserResponseData",
     "WarnChatUserResponse",
+    "EventsubSubscriptionResponse",
+    "EventsubSubscriptionResponseData",
 )
 
 T = TypeVar("T")
@@ -949,7 +951,48 @@ class UpdateExtensionBitsProductResponse(TypedDict):
     data: list[UpdateExtensionBitsProductResponseData]
 
 
-# TODO Leaving Eventsub Subs Types for now
+class EventsubTransportData(TypedDict):
+    method: Literal["websocket", "webhook"]
+    callback: NotRequired[str]
+    session_id: NotRequired[str]
+    connected_at: NotRequired[str]
+    disconnected_at: NotRequired[str]
+
+
+class EventsubSubscriptionResponseData(TypedDict):
+    id: str
+    status: Literal[
+        "enabled",
+        "webhook_callback_verification_pending",
+        "webhook_callback_verification_failed",
+        "notification_failures_exceeded",
+        "authorization_revoked",
+        "moderator_removed",
+        "user_removed",
+        "version_removed",
+        "beta_maintenance",
+        "websocket_disconnected",
+        "websocket_failed_ping_pong",
+        "websocket_received_inbound_traffic",
+        "websocket_connection_unused",
+        "websocket_internal_error",
+        "websocket_network_timeout",
+        "websocket_network_error",
+    ]
+    type: str
+    version: str
+    condition: Condition
+    created_at: str
+    cost: int
+    transport: EventsubTransportData
+
+
+class EventsubSubscriptionResponse(TypedDict):
+    data: list[EventsubSubscriptionResponseData]
+    total: int
+    total_cost: int
+    max_total_cost: int
+    pagination: Pagination
 
 
 class TopGamesResponseData(TypedDict):

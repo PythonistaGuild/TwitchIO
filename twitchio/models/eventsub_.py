@@ -38,10 +38,15 @@ from twitchio.utils import Colour, parse_timestamp
 if TYPE_CHECKING:
     import datetime
 
-    from twitchio.http import HTTPClient
+    from twitchio.http import HTTPAsyncIterator, HTTPClient
     from twitchio.models.channel_points import CustomRewardRedemption
-    from twitchio.types_.conduits import RevocationSubscription, RevocationTransport
+    from twitchio.types_.conduits import Condition, RevocationSubscription, RevocationTransport
     from twitchio.types_.eventsub import *
+    from twitchio.types_.responses import (
+        EventsubSubscriptionResponse,
+        EventsubSubscriptionResponseData,
+        EventsubTransportData,
+    )
 
 
 class BaseEvent:
@@ -2395,6 +2400,7 @@ class ChannelModerate(BaseEvent):
 
     __slots__ = (
         "broadcaster",
+        "source_broadcaster",
         "moderator",
         "action",
         "followers",
@@ -2422,6 +2428,9 @@ class ChannelModerate(BaseEvent):
     def __init__(self, payload: ChannelModerateEvent | ChannelModerateEventV2, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.source_broadcaster: PartialUser = PartialUser(
+            payload["source_broadcaster_user_id"], payload["source_broadcaster_user_login"], http=http
         )
         self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
         self.followers: ModerateFollowers | None = (
@@ -4208,8 +4217,7 @@ class UserUpdate(BaseEvent):
 
 
 class Whisper(BaseEvent):
-    """
-    Represents a whisper event.
+    """Represents a whisper event.
 
     Attributes
     ----------
@@ -4262,3 +4270,184 @@ class SubscriptionRevoked:
         self.transport_method: TransportMethod = TransportMethod(data["transport"]["method"])
         self.transport_data: RevocationTransport = data["transport"]
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+
+
+class EventsubTransport:
+    """Represents an eventsub subscription.
+
+    Attributes
+    ----------
+    method: Literal["websocket", "webhook"]
+        The transport method. This can be either ``websocket`` or ``webhook``.
+    callback: str | None
+        The callback URL where the notifications are sent. This will only be populated if the method is set to ``webhook``.
+    session_id: str | None
+        An ID that identifies the WebSocket that notifications are sent to. This will only be populated if the method is set to ``websocket``.
+    connected_at: str | None
+        The UTC datetime that the WebSocket connection was established. This will only be populated if the method is set to ``websocket``.
+    disconnected_at: str | None
+        The UTC datetime that the WebSocket connection was lost. This will only be populated if the method is set to ``websocket``.
+    """
+
+    __slots__ = ("method", "callback", "session_id", "connected_at", "disconnected_at")
+
+    def __init__(self, data: EventsubTransportData) -> None:
+        self.method: Literal["websocket", "webhook"] = data["method"]
+        self.callback: str | None = data.get("callback")
+        self.session_id: str | None = data.get("session_id")
+        self.connected_at: str | None = data.get("connected_at")
+        self.disconnected_at: str | None = data.get("disconnected_at")
+
+    def __repr__(self) -> str:
+        return f"<EventsubTransport method={self.method} callback={self.callback} session_id={self.session_id}>"
+
+
+class EventsubSubscription:
+    """Represents an eventsub subscription.
+
+    Attributes
+    ----------
+    id: str
+        An ID that identifies the subscription.
+    status: Literal[
+            "enabled",
+            "webhook_callback_verification_pending",
+            "webhook_callback_verification_failed",
+            "notification_failures_exceeded",
+            "authorization_revoked",
+            "moderator_removed",
+            "user_removed",
+            "version_removed",
+            "beta_maintenance",
+            "websocket_disconnected",
+            "websocket_failed_ping_pong",
+            "websocket_received_inbound_traffic",
+            "websocket_connection_unused",
+            "websocket_internal_error",
+            "websocket_network_timeout",
+            "websocket_network_error",
+        ]
+        The subscription's status. The subscriber receives events only for enabled subscriptions.
+
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | Status                                 | Description                                                                                                       |
+        +========================================+===================================================================================================================+
+        | enabled                                | The subscription is enabled.                                                                                      |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | webhook_callback_verification_pending  | The subscription is pending verification of the specified callback URL.                                           |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | webhook_callback_verification_failed   | The specified callback URL failed verification.                                                                   |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | notification_failures_exceeded         | The notification delivery failure rate was too high.                                                              |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | authorization_revoked                  | The authorization was revoked for one or more users specified in the Condition object.                            |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | moderator_removed                      | The moderator that authorized the subscription is no longer one of the broadcaster's moderators.                  |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | user_removed                           | One of the users specified in the Condition object was removed.                                                   |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | chat_user_banned                       | The user specified in the Condition object was banned from the broadcaster's chat.                                |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | version_removed                        | The subscription to subscription type and version is no longer supported.                                         |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | beta_maintenance                       | The subscription to the beta subscription type was removed due to maintenance.                                    |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_disconnected                 | The client closed the connection.                                                                                 |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_failed_ping_pong             | The client failed to respond to a ping message.                                                                   |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_received_inbound_traffic     | The client sent a non-pong message. Clients may only send pong messages (and only in response to a ping message). |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_connection_unused            | The client failed to subscribe to events within the required time.                                                |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_internal_error               | The Twitch WebSocket server experienced an unexpected error.                                                      |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_network_timeout              | The Twitch WebSocket server timed out writing the message to the client.                                          |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_network_error                | The Twitch WebSocket server experienced a network error writing the message to the client.                        |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_failed_to_reconnect          | The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message. |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+
+    type: str
+        The subscription's type. e.g. ``channel.follow`` For a list of subscription types, see `Subscription Types <https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#subscription-types>`_.
+    version: str
+        The version number that identifies this definition of the subscription's data.
+    condition: Condition
+        The subscription's parameter values. This is a dictionary mapping of parameters used to subscribe.
+        e.g. {"broadcaster_user_id": "123456789"}
+    created_at: datetime.datetime
+        The datetime of when the subscription was created.
+    cost: int
+        The amount that the subscription counts against your limit. Learn More
+    transport: EventsubTransport
+        The transport details used to send the notifications.
+    """
+
+    def __init__(self, data: EventsubSubscriptionResponseData, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
+        self.id: str = data["id"]
+        self.status: Literal[
+            "enabled",
+            "webhook_callback_verification_pending",
+            "webhook_callback_verification_failed",
+            "notification_failures_exceeded",
+            "authorization_revoked",
+            "moderator_removed",
+            "user_removed",
+            "version_removed",
+            "beta_maintenance",
+            "websocket_disconnected",
+            "websocket_failed_ping_pong",
+            "websocket_received_inbound_traffic",
+            "websocket_connection_unused",
+            "websocket_internal_error",
+            "websocket_network_timeout",
+            "websocket_network_error",
+        ] = data["status"]
+        self.type: str = data["type"]
+        self.version: str = data["version"]
+        self.condition: Condition = data["condition"]
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
+        self.cost: int = int(data["cost"])
+        self.transport: EventsubTransport = EventsubTransport(data["transport"])
+
+    def __repr__(self) -> str:
+        return f"<EventsubSubscription id={self.id} status={self.status} transport={self.transport} type={self.type} version={self.version} condition={self.condition} created_at={self.created_at} cost={self.cost}>"
+
+    async def delete(self, *, token_for: str | None = None) -> None:
+        """Delete the eventsub subscription.
+
+        Parameters
+        ----------
+        token_for : str | None
+            For websocket subscriptions, provide the user ID associated with the subscription.
+        """
+        await self._http.delete_eventsub_subscription(self.id, token_for=token_for)
+
+
+class EventsubSubscriptions:
+    """Represents eventsub subscriptions.
+
+    Attributes
+    ----------
+    subscriptions: HTTPAsyncIterator[EventsubSubscription]
+        Async iterable of the actual subscriptions.
+    total: int
+        The total number of subscriptions that you've created.
+    total_cost: int
+        The sum of all of your subscription costs. `Learn more <https://dev.twitch.tv/docs/eventsub/manage-subscriptions/#subscription-limits>_`
+    max_total_cost: int
+        The maximum total cost that you're allowed to incur for all subscriptions that you create.
+    """
+
+    def __init__(self, data: EventsubSubscriptionResponse, iterator: HTTPAsyncIterator[EventsubSubscription]) -> None:
+        self.subscriptions: HTTPAsyncIterator[EventsubSubscription] = iterator
+        self.total: int = int(data["total"])
+        self.total_cost: int = int(data["total_cost"])
+        self.max_total_cost: int = int(data["max_total_cost"])
+
+    def __repr__(self) -> str:
+        return (
+            f"<EventsubSubscriptions total={self.total} total_cost={self.total_cost} max_total_cost={self.max_total_cost}>"
+        )

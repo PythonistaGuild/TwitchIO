@@ -59,6 +59,7 @@ if TYPE_CHECKING:
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.entitlements import Entitlement, EntitlementStatus
+    from .models.eventsub_ import EventsubSubscriptions
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
@@ -1947,6 +1948,139 @@ class Client:
 
             raise e
         return resp
+
+    async def fetch_eventsub_subscriptions(
+        self,
+        *,
+        token_for: str | None = None,
+        type: str | None = None,
+        user_id: str | None = None,
+        status: Literal[
+            "enabled",
+            "webhook_callback_verification_pending",
+            "webhook_callback_verification_failed",
+            "notification_failures_exceeded",
+            "authorization_revoked",
+            "moderator_removed",
+            "user_removed",
+            "version_removed",
+            "beta_maintenance",
+            "websocket_disconnected",
+            "websocket_failed_ping_pong",
+            "websocket_received_inbound_traffic",
+            "websocket_connection_unused",
+            "websocket_internal_error",
+            "websocket_network_timeout",
+            "websocket_network_error",
+        ]
+        | None = None,
+        max_results: int | None = None,
+    ) -> EventsubSubscriptions:
+        """Fetches Eventsub Subscriptions for either webhook or websocket.
+
+        .. note::
+            type, status and user_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
+
+        Parameters
+        -----------
+        token_for: str | None
+            By default, if this is ignored or set to None then the App Token is used. This is the case when you want to fetch webhook events.
+
+            Provide a user ID here for when you want to fetch websocket events tied to a user.
+        type: str | None
+            Filter subscriptions by subscription type. e.g. ``channel.follow`` For a list of subscription types, see `Subscription Types <https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#subscription-types>`_.
+        user_id: str | None
+            Filter subscriptions by user ID. The response contains subscriptions where this ID matches a user ID that you specified in the Condition object when you created the subscription.
+        status: str | None = None
+            Filter subscriptions by its status. Possible values are:
+
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | Status                                 | Description                                                                                                       |
+        +========================================+===================================================================================================================+
+        | enabled                                | The subscription is enabled.                                                                                      |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | webhook_callback_verification_pending  | The subscription is pending verification of the specified callback URL.                                           |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | webhook_callback_verification_failed   | The specified callback URL failed verification.                                                                   |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | notification_failures_exceeded         | The notification delivery failure rate was too high.                                                              |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | authorization_revoked                  | The authorization was revoked for one or more users specified in the Condition object.                            |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | moderator_removed                      | The moderator that authorized the subscription is no longer one of the broadcaster's moderators.                  |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | user_removed                           | One of the users specified in the Condition object was removed.                                                   |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | chat_user_banned                       | The user specified in the Condition object was banned from the broadcaster's chat.                                |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | version_removed                        | The subscription to subscription type and version is no longer supported.                                         |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | beta_maintenance                       | The subscription to the beta subscription type was removed due to maintenance.                                    |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_disconnected                 | The client closed the connection.                                                                                 |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_failed_ping_pong             | The client failed to respond to a ping message.                                                                   |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_received_inbound_traffic     | The client sent a non-pong message. Clients may only send pong messages (and only in response to a ping message). |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_connection_unused            | The client failed to subscribe to events within the required time.                                                |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_internal_error               | The Twitch WebSocket server experienced an unexpected error.                                                      |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_network_timeout              | The Twitch WebSocket server timed out writing the message to the client.                                          |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_network_error                | The Twitch WebSocket server experienced a network error writing the message to the client.                        |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | websocket_failed_to_reconnect          | The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message. |
+        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to ``None``, all results are returned.
+            Defaults to ``None``.
+
+        Returns
+        --------
+        EventsubSubscriptions
+
+        Raises
+        ------
+        ValueError
+            Only one of 'status', 'user_id', or 'type' can be provided.
+        """
+
+        provided: int = len([v for v in (type, user_id, status) if v])
+        if provided > 1:
+            raise ValueError("Only one of 'status', 'user_id', or 'type' can be provided.")
+
+        return await self._http.get_eventsub_subscription(
+            type=type,
+            max_results=max_results,
+            token_for=token_for,
+        )
+
+    async def delete_eventsub_subscription(self, id: str, *, token_for: str | None = None) -> None:
+        """Delete an eventsub subscription.
+
+        Parameters
+        ----------
+        id: str
+            The ID of the eventsub subscription to delete.
+        token_for: str | None
+            For websocket subscriptions, provide the user ID associated with the subscription.
+        """
+        await self._http.delete_eventsub_subscription(id, token_for=token_for)
+
+    async def delete_all_eventsub_subscriptions(self, *, token_for: str) -> None:
+        """Delete all eventsub subscriptions.
+
+        Parameters
+        ----------
+        token_for: str | None
+            For websocket subscriptions, provide the user ID associated with the subscription.
+        """
+        events = await self.fetch_eventsub_subscriptions(token_for=token_for)
+        async for sub in events.subscriptions:
+            await sub.delete()
 
     async def event_oauth_authorized(self, payload: UserTokenPayload) -> None:
         await self.add_token(payload["access_token"], payload["refresh_token"])
