@@ -3302,7 +3302,7 @@ class User(PartialUser):
     )
 
     def __init__(self, data: UsersResponseData, *, http: HTTPClient) -> None:
-        super().__init__(data["id"], data["id"], http=http)
+        super().__init__(data["id"], data["login"], http=http)
         self.display_name: str = data["display_name"]
         self.type: Literal["admin", "global_mod", "staff", ""] = data["type"]
         self.broadcaster_type: Literal["affiliate", "partner", ""] = data["broadcaster_type"]
