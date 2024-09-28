@@ -35,4 +35,5 @@ from .client import Client as Client
 from .exceptions import *
 from .models import *
 from .payloads import *
+from .user import *
 from .utils import Color as Color, Colour as Colour

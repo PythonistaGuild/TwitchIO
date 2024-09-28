@@ -25,8 +25,12 @@ SOFTWARE.
 from __future__ import annotations
 
 import asyncio
+import inspect
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Unpack
+from types import UnionType
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Union, Unpack
+
+from twitchio.utils import MISSING
 
 from .exceptions import *
 from .types_ import CommandOptions, Component_T
@@ -112,10 +116,134 @@ class Command(Generic[Component_T, P]):
     def has_error(self) -> bool:
         return self._error is not None
 
+    async def _do_conversion(self, context: Context, param: inspect.Parameter, *, annotation: Any, raw: str | None) -> Any:
+        name: str = param.name
+
+        if isinstance(annotation, UnionType) or getattr(annotation, "__origin__", None) is Union:
+            converters = list(annotation.__args__)
+            converters.remove(type(None))
+
+            result: Any = MISSING
+
+            for c in converters:
+                try:
+                    result = await self._do_conversion(context, param=param, annotation=c, raw=raw)
+                except Exception:
+                    continue
+
+            if result is MISSING:
+                raise BadArgument(
+                    f'Failed to convert argument "{name}" with any converter from Union: {converters}. No default value was provided.',
+                    name=name,
+                    value=raw,
+                )
+
+            return result
+
+        base = context.bot._base_converter._DEFAULTS.get(annotation, None if annotation != param.empty else str)
+        if base:
+            try:
+                result = base(raw)
+            except Exception as e:
+                raise BadArgument(f'Failed to convert "{name}" to {base}', name=name, value=raw) from e
+
+            return result
+
+        converter = context.bot._base_converter._MAPPING.get(annotation, annotation)
+
+        try:
+            result = converter(context, raw)
+        except Exception as e:
+            raise BadArgument(f'Failed to convert "{name}" to {type(converter)}', name=name, value=raw) from e
+
+        if not asyncio.iscoroutine(result):
+            return result
+
+        try:
+            result = await result
+        except Exception as e:
+            raise BadArgument(f'Failed to convert "{name}" to {type(converter)}', name=name, value=raw) from e
+
+        return result
+
+    async def _parse_arguments(self, context: Context) -> ...:
+        context._view.skip_ws()
+        signature: inspect.Signature = inspect.signature(self._callback)
+
+        # We expect context always and self with commands in components...
+        skip: int = 1 if not self._injected else 2
+        params: list[inspect.Parameter] = list(signature.parameters.values())[skip:]
+
+        args: list[Any] = []
+        kwargs = {}
+
+        for param in params:
+            if param.kind == param.KEYWORD_ONLY:
+                raw = context._view.read_rest()
+
+                if not raw:
+                    if param.default == param.empty:
+                        raise MissingRequiredArgument(param=param)
+
+                    kwargs[param.name] = param.default
+                    continue
+
+                result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
+                kwargs[param.name] = result
+                break
+
+            elif param.kind == param.VAR_POSITIONAL:
+                packed: list[Any] = []
+
+                while True:
+                    context._view.skip_ws()
+                    raw = context._view.get_quoted_word()
+                    if not raw:
+                        break
+
+                    result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
+                    packed.append(result)
+
+                args.extend(packed)
+                break
+
+            elif param.kind == param.POSITIONAL_OR_KEYWORD:
+                raw = context._view.get_quoted_word()
+                context._view.skip_ws()
+
+                if not raw:
+                    if param.default == param.empty:
+                        raise MissingRequiredArgument(param=param)
+
+                    args.append(param.default)
+                    continue
+
+                result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
+                args.append(result)
+
+        return args, kwargs
+
+    async def _do_checks(self, context: Context) -> ...:
+        # Bot
+        # Component
+        # Command
+        ...
+
     async def _invoke(self, context: Context) -> None:
-        # TODO: Argument parsing...
-        # TODO: Checks... Including cooldowns...
-        callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
+        try:
+            args, kwargs = await self._parse_arguments(context)
+        except (ConversionError, MissingRequiredArgument):
+            raise
+        except Exception as e:
+            raise ConversionError("An unknown error occurred converting arguments.") from e
+
+        context._args = args
+        context._kwargs = kwargs
+
+        args: list[Any] = [context, *args]
+        args.insert(0, self._injected) if self._injected else None
+
+        callback = self._callback(*args, **kwargs)  # type: ignore
 
         try:
             await callback
@@ -127,6 +255,9 @@ class Command(Generic[Component_T, P]):
             await self._invoke(context)
         except CommandError as e:
             await self._dispatch_error(context, e)
+        except Exception as e:
+            error = CommandInvokeError(str(e), original=e)
+            await self._dispatch_error(context, error)
 
     async def _dispatch_error(self, context: Context, exception: CommandError) -> None:
         payload = CommandErrorPayload(context=context, exception=exception)

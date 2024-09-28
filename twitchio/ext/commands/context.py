@@ -59,6 +59,9 @@ class Context:
 
         self._view: StringView = StringView(self._raw_content)
 
+        self._args: list[Any] = []
+        self._kwargs: dict[str, Any] = {}
+
     @property
     def message(self) -> ChatMessage:
         return self._message
@@ -110,6 +113,14 @@ class Context:
     @error_dispatched.setter
     def error_dispatched(self, value: bool, /) -> None:
         self._error_dispatched = value
+
+    @property
+    def args(self) -> list[Any]:
+        return self._args
+
+    @property
+    def kwargs(self) -> dict[str, Any]:
+        return self._kwargs
 
     def is_valid(self) -> bool:
         return self._prefix is not None

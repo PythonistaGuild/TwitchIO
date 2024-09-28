@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Any, Unpack
 from twitchio.client import Client
 
 from .context import Context
+from .converters import _BaseConverter
 from .core import Command, CommandErrorPayload, Group, Mixin
 from .exceptions import *
 
@@ -65,6 +66,7 @@ class Bot(Mixin[None], Client):
 
         self._get_prefix: Prefix_T = prefix
         self._components: dict[str, Component] = {}
+        self._base_converter: _BaseConverter = _BaseConverter(self)
 
     @property
     def bot_id(self) -> str:
@@ -135,3 +137,5 @@ class Bot(Mixin[None], Client):
     async def before_invoke(self, ctx: Context) -> None: ...
 
     async def after_invoke(self, ctx: Context) -> None: ...
+
+    async def check(self, ctx: Context) -> None: ...

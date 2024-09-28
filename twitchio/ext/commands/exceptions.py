@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import inspect
+
 from twitchio.exceptions import TwitchioException
 
 
@@ -35,6 +37,10 @@ __all__ = (
     "PrefixError",
     "InputError",
     "ArgumentError",
+    "CheckFailure",
+    "ConversionError",
+    "BadArgument",
+    "MissingRequiredArgument",
 )
 
 
@@ -84,3 +90,22 @@ class ExpectedClosingQuoteError(ArgumentError):
     def __init__(self, close_quote: str) -> None:
         self.close_quote: str = close_quote
         super().__init__(f"Expected closing {close_quote}.")
+
+
+class CheckFailure(CommandError): ...
+
+
+class ConversionError(ArgumentError): ...
+
+
+class BadArgument(ConversionError):
+    def __init__(self, msg: str, *, name: str | None = None, value: str | None) -> None:
+        self.name: str | None = name
+        self.value: str | None = value
+        super().__init__(msg)
+
+
+class MissingRequiredArgument(ArgumentError):
+    def __init__(self, param: inspect.Parameter) -> None:
+        self.param: inspect.Parameter = param
+        super().__init__(f'"{param.name}" is a required argument which is missing.')
