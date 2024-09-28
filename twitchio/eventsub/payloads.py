@@ -2361,7 +2361,6 @@ class GoalEndSubscription(SubscriptionPayload):
 
 
 class HypeTrainBeginSubscription(SubscriptionPayload):
-
     type: ClassVar[Literal["channel.hype_train.begin"]] = "channel.hype_train.begin"
     version: ClassVar[Literal["1"]] = "1"
 

@@ -4240,15 +4240,25 @@ class Whisper(BaseEvent):
 class SubscriptionRevoked:
     __slots__ = (
         "raw",
+        "id",
         "status",
         "reason",
+        "type",
+        "version",
+        "cost",
         "transport_method",
         "transport_data",
+        "created_at",
     )
 
     def __init__(self, data: RevocationSubscription) -> None:
+        self.id: str = data["id"]
         self.raw: RevocationSubscription = data
         self.status: RevocationReason = RevocationReason(data["status"])
         self.reason: RevocationReason = self.status
+        self.type: str = data["type"]
+        self.version: str = data["version"]
+        self.cost: int = data["cost"]
         self.transport_method: TransportMethod = TransportMethod(data["transport"]["method"])
         self.transport_data: RevocationTransport = data["transport"]
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])

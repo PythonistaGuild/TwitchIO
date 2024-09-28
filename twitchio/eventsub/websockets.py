@@ -75,7 +75,7 @@ class Websocket:
         "_ready",
         "_reconnect_attempts",
         "_backoff",
-        "__subscription_count",
+        "__subscription_cost",
         "_client",
         "_token_for",
         "_http",
@@ -114,7 +114,7 @@ class Websocket:
         self._reconnect_attempts = attempts
         self._backoff: Backoff = Backoff(base=3, maximum_time=90)
 
-        self.__subscription_count: int = 0
+        self.__subscription_cost: int = 0
 
         self._client: Client | None = client
         self._token_for: str = token_for
@@ -150,13 +150,11 @@ class Websocket:
 
     @property
     def can_subscribe(self) -> bool:
-        # TODO: Track subscriptions on this websocket...
-        return True
+        return self.subscription_count < 300
 
     @property
     def subscription_count(self) -> int:
-        # TODO: Track subscriptions on this websocket...
-        return self.__subscription_count
+        return len(self._subscriptions)
 
     async def connect(self, *, url: str | None = None, reconnect: bool = False, fail_once: bool = False) -> None:
         if self._closed or self._connecting:
@@ -401,6 +399,8 @@ class Websocket:
 
         if self._client:
             self._client.dispatch(event="subscription_revoked", payload=payload)
+
+        self._subscriptions.pop(payload.id, None)
 
     async def _process_notification(self, data: NotificationMessage) -> None:
         subscription_type = data["metadata"]["subscription_type"]
