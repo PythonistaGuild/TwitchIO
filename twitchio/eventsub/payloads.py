@@ -100,7 +100,7 @@ __all__ = (
     "CharityCampaignStopSubscription",
     "ChannelPredictionBeginSubscription",
     "ChannelPredictionLockSubscription",
-    "ChannelPredictionProgressubscription",
+    "ChannelPredictionProgressSubscription",
     "ChannelPredictionEndSubscription",
     "SharedChatSessionBeginSubscription",
     "SharedChatSessionEndSubscription",
@@ -1786,7 +1786,7 @@ class ChannelPredictionLockSubscription(SubscriptionPayload):
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
 
-class ChannelPredictionProgressubscription(SubscriptionPayload):
+class ChannelPredictionProgressSubscription(SubscriptionPayload):
     """The ``channel.prediction.progress`` subscription type sends a notification when users participate in a Prediction on the specified channel.
 
     .. important::

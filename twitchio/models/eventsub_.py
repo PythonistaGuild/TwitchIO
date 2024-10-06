@@ -31,6 +31,7 @@ from twitchio.eventsub import RevocationReason, TransportMethod
 from twitchio.models.channel_points import CustomReward
 from twitchio.models.charity import CharityValues
 from twitchio.models.chat import EmoteSet
+from twitchio.models.predictions import PredictionOutcome
 from twitchio.user import PartialUser
 from twitchio.utils import Colour, parse_timestamp
 
@@ -3141,6 +3142,56 @@ class ChannelPollEnd(BaseChannelPoll):
 
     def __repr__(self) -> str:
         return f"<ChannelPollEnd broadcaster={self.broadcaster} id={self.id} title={self.title} started_at={self.started_at} ended_at={self.ended_at}>"
+
+
+class BaseChannelPrediction(BaseEvent):
+    def __init__(
+        self,
+        payload: ChannelPredictionBeginEvent
+        | ChannelPredictionProgressEvent
+        | ChannelPredictionLockEvent
+        | ChannelPredictionEndEvent,
+        *,
+        http: HTTPClient,
+    ) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+        )
+        self.title: str = payload["title"]
+        self.outcomes: list[PredictionOutcome] = [PredictionOutcome(c, http=http) for c in payload["outcomes"]]
+        self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+
+    def __repr__(self) -> str:
+        return f"<BaseChannelPrediction id={self.id} title={self.title} started_at={self.started_at}>"
+
+
+class ChannelPredictionBegin(BaseChannelPrediction):
+    subscription_type = "channel.prediction.begin"
+
+    def __init__(self, data: ChannelPredictionBeginEvent, *, http: HTTPClient) -> None:
+        super().__init__(data, http=http)
+
+
+class ChannelPredictionProgress(BaseChannelPrediction):
+    subscription_type = "channel.prediction.progress"
+
+    def __init__(self, data: ChannelPredictionProgressEvent, *, http: HTTPClient) -> None:
+        super().__init__(data, http=http)
+
+
+class ChannelPredictionLock(BaseChannelPrediction):
+    subscription_type = "channel.prediction.lock"
+
+    def __init__(self, data: ChannelPredictionLockEvent, *, http: HTTPClient) -> None:
+        super().__init__(data, http=http)
+
+
+class ChannelPredictionEnd(BaseChannelPrediction):
+    subscription_type = "channel.prediction.end"
+
+    def __init__(self, data: ChannelPredictionEndEvent, *, http: HTTPClient) -> None:
+        super().__init__(data, http=http)
 
 
 class SuspiciousUserUpdate(BaseEvent):

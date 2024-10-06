@@ -34,6 +34,10 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPClient
+    from twitchio.types_.eventsub import (
+        PredictionOutcomeData,
+        PredictorData,
+    )
     from twitchio.types_.responses import (
         PredictionsResponseData,
         PredictionsResponseOutcomes,
@@ -44,16 +48,20 @@ __all__ = ("Prediction", "PredictionOutcome", "Predictor")
 
 
 class Prediction:
-    """
-    Represents a Prediction
+    """Represents a Prediction
 
-    | Status      | Description |
-    | ----------- | ----------- |
-    | ACTIVE      | The Prediction is running and viewers can make predictions.   |
-    | CANCELED    | The broadcaster canceled the Prediction and refunded the Channel Points to the participants.  |
-    | LOCKED      | The broadcaster locked the Prediction, which means viewers can no longer make predictions.    |
-    | RESOLVED    | The winning outcome was determined and the Channel Points were distributed to the viewers who predicted the correct outcome.   |
-
+    +-----------+----------------------------------------------------------------------------------------------------------------+
+    | Status    | Description                                                                                                    |
+    +===========+================================================================================================================+
+    | ACTIVE    | The Prediction is running and viewers can make predictions.                                                    |
+    +-----------+----------------------------------------------------------------------------------------------------------------+
+    | CANCELED  | The broadcaster canceled the Prediction and refunded the Channel Points to the participants.                   |
+    +-----------+----------------------------------------------------------------------------------------------------------------+
+    | LOCKED    | The broadcaster locked the Prediction, which means viewers can no longer make predictions.                     |
+    +-----------+----------------------------------------------------------------------------------------------------------------+
+    | RESOLVED  | The winning outcome was determined and the Channel Points were distributed to the viewers who predicted the    |
+    |           | correct outcome.                                                                                               |
+    +-----------+----------------------------------------------------------------------------------------------------------------+
 
     Attributes
     ----------
@@ -72,9 +80,9 @@ class Prediction:
     created_at: datetime.datetime
         The datetime of when the prediction began.
     ended_at: datetime.datetime | None
-        The datetime of when the prediction ended. This is None if status is `ACTIVE`.
+        The datetime of when the prediction ended. This is None if status is ``ACTIVE``.
     locked_at: datetime.datetime | None
-        The datetime of when the prediction locked. If status is not `LOCKED`, this is set to None.
+        The datetime of when the prediction locked. If status is not ``LOCKED``, this is set to ``None``.
     """
 
     __slots__ = (
@@ -91,7 +99,12 @@ class Prediction:
         "locked_at",
     )
 
-    def __init__(self, data: PredictionsResponseData, *, http: HTTPClient) -> None:
+    def __init__(
+        self,
+        data: PredictionsResponseData,
+        *,
+        http: HTTPClient,
+    ) -> None:
         self._http = http
         self.id: str = data["id"]
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
@@ -116,12 +129,11 @@ class Prediction:
         token_for: str,
         winning_outcome_id: str | None = None,
     ) -> Prediction:
-        """
-        End an active prediction.
+        """End an active prediction.
 
         Parameters
         ----------
-        status  Literal["RESOLVED", "CANCELED", "LOCKED"]
+        status: Literal["RESOLVED", "CANCELED", "LOCKED"]
             The status to set the prediction to. Possible case-sensitive values are: `RESOLVED`, `CANCELED`, `LOCKED`
         token_for: str
             User access token that includes the `channel:manage:predictions` scope.
@@ -142,8 +154,7 @@ class Prediction:
 
 
 class PredictionOutcome:
-    """
-    Represents a prediction outcome.
+    """Represents a prediction outcome.
 
     Attributes
     ----------
@@ -151,40 +162,44 @@ class PredictionOutcome:
         An ID that identifies the choice.
     title: str
         The choice's title.
-    users: int
+    users: int | None
         The number of unique viewers that chose this outcome.
-    channel_points: int
+    channel_points: int | None
         The number of Channel Points spent by viewers on this outcome.
-    top_predictors: int
+    top_predictors: list[Predictor]
         A list of viewers who were the top predictors; otherwise, None if none.
-    colour: Literal["BLUE", "PINK"]
+    colour: Literal["BLUE", "PINK", "blue", "pink"]
         The number of votes cast using Channel Points.
     """
 
     __slots__ = ("id", "title", "colour", "channel_points", "users", "top_predictors")
 
-    def __init__(self, data: PredictionsResponseOutcomes, *, http: HTTPClient) -> None:
+    def __init__(
+        self,
+        data: PredictionsResponseOutcomes | PredictionOutcomeData,
+        *,
+        http: HTTPClient,
+    ) -> None:
         self.id: str = data["id"]
         self.title: str = data["title"]
-        self.users: int = int(data["users"])
-        self.channel_points: int = int(data["channel_points"])
-        self.colour: str = data["color"]
-        self.top_predictors: list[Predictor] | None = (
-            [Predictor(d, http=http) for d in data["top_predictors"]] if data["top_predictors"] else None
-        )
+        self.colour: Literal["BLUE", "PINK", "blue", "pink"] = data["color"]
+        users = data.get("users")
+        self.users: int | None = int(users) if users is not None else None
+        channel_points = data.get("channel_points")
+        self.channel_points: int | None = int(channel_points) if channel_points is not None else None
+        self.top_predictors: list[Predictor] = [Predictor(d, http=http) for d in data.get("top_predictors", [])]
 
     @property
     def color(self) -> str:
         """The color of the prediction. Alias to colour."""
-        return self.color
+        return self.colour
 
     def __repr__(self) -> str:
         return f"<PredictionOutcome id={self.id} title={self.title} channel_points={self.channel_points}>"
 
 
 class Predictor:
-    """
-    Represents a predictor
+    """Represents a predictor
 
     Attributes
     -----------
@@ -192,15 +207,16 @@ class Predictor:
         The viewer.
     channel_points_used: int
         Number of Channel Points used by the user.
-    channel_points_won: int
+    channel_points_won: int | None
         Number of Channel Points won by the user.
     """
 
     __slots__ = ("channel_points_used", "channel_points_won", "user")
 
-    def __init__(self, data: PredictionsResponseTopPredictors, *, http: HTTPClient) -> None:
+    def __init__(self, data: PredictionsResponseTopPredictors | PredictorData, *, http: HTTPClient) -> None:
         self.channel_points_used: int = data["channel_points_used"]
-        self.channel_points_won: int = data["channel_points_won"]
+        channel_points_won = data.get("channel_points_won")
+        self.channel_points_won: int | None = int(channel_points_won) if channel_points_won is not None else None
         self.user = PartialUser(data["user_id"], data["user_login"], http=http)
 
     def __repr__(self) -> str:

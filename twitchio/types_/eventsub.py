@@ -999,8 +999,8 @@ class PredictorData(BaseUserEvent):
 class PredictionOutcomeData(TypedDict):
     id: str
     title: str
-    color: str
-    users: int
+    color: Literal["blue", "pink"]
+    users: NotRequired[int]
     channel_points: NotRequired[int]
     top_predictors: NotRequired[list[PredictorData]]
 
@@ -1008,7 +1008,7 @@ class PredictionOutcomeData(TypedDict):
 class BaseChannelPredictionData(BaseBroadcasterEvent):
     id: str
     title: str
-    outcomes: list[PredictorData]
+    outcomes: list[PredictionOutcomeData]
     started_at: str
 
 
