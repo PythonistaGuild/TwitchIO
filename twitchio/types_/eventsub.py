@@ -1025,6 +1025,7 @@ class ChannelPredictionLockEvent(BaseChannelPredictionData):
 
 
 class ChannelPredictionEndEvent(BaseChannelPredictionData):
+    winning_outcome_id: str
     status: Literal["resolved", "canceled"]
     ended_at: str
 

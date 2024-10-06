@@ -3167,31 +3167,140 @@ class BaseChannelPrediction(BaseEvent):
 
 
 class ChannelPredictionBegin(BaseChannelPrediction):
+    """
+    Represents a channel points prediction begin event.
+
+    Attributes
+    ----------
+    id: str
+        ID of the prediction.
+    broadcaster: PartialUser
+        The broadcaster whose channel started a prediction.
+    title: str
+        Title for the channel points Prediction.
+    outcomes: list[PredictionOutcome]
+        A list of outcomes for the predictions. Only `id`, `title` and `colour` will be populated.
+    started_at: datetime.datetime
+        The time the prediction started.
+    locks_at: datetime.datetime
+        The time the prediction will automatically lock.
+    """
+
     subscription_type = "channel.prediction.begin"
+
+    __slots__ = ("locks_at",)
 
     def __init__(self, data: ChannelPredictionBeginEvent, *, http: HTTPClient) -> None:
         super().__init__(data, http=http)
+        self.locks_at: datetime.datetime = parse_timestamp(data["locks_at"])
+
+    def __repr__(self) -> str:
+        return (
+            f"<ChannelPredictionBegin id={self.id} title={self.title} started_at={self.started_at} locks_at={self.locks_at}>"
+        )
 
 
 class ChannelPredictionProgress(BaseChannelPrediction):
+    """
+    Represents a channel points prediction progress event.
+
+    Attributes
+    ----------
+    id: str
+        ID of the prediction.
+    broadcaster: PartialUser
+        The broadcaster whose channel started a prediction.
+    title: str
+        Title for the channel points Prediction.
+    outcomes: list[PredictionOutcome]
+        A list of outcomes for the predictions.
+    started_at: datetime.datetime
+        The time the prediction started.
+    locks_at: datetime.datetime
+        The time the prediction will automatically lock.
+    """
+
     subscription_type = "channel.prediction.progress"
+
+    __slots__ = ("locks_at",)
 
     def __init__(self, data: ChannelPredictionProgressEvent, *, http: HTTPClient) -> None:
         super().__init__(data, http=http)
+        self.locks_at: datetime.datetime = parse_timestamp(data["locks_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelPredictionProgress id={self.id} title={self.title} started_at={self.started_at} locks_at={self.locks_at}>"
 
 
 class ChannelPredictionLock(BaseChannelPrediction):
+    """
+    Represents a channel points prediction progress event.
+
+    Attributes
+    ----------
+    id: str
+        ID of the prediction.
+    broadcaster: PartialUser
+        The broadcaster whose channel started a prediction.
+    title: str
+        Title for the channel points Prediction.
+    outcomes: list[PredictionOutcome]
+        A list of outcomes for the predictions.
+    started_at: datetime.datetime
+        The time the prediction started.
+    locked_at: datetime.datetime
+        The time the prediction was locked.
+    """
+
     subscription_type = "channel.prediction.lock"
+
+    __slots__ = ("locked_at",)
 
     def __init__(self, data: ChannelPredictionLockEvent, *, http: HTTPClient) -> None:
         super().__init__(data, http=http)
+        self.locked_at: datetime.datetime = parse_timestamp(data["locked_at"])
+
+    def __repr__(self) -> str:
+        return f"<ChannelPredictionLock id={self.id} title={self.title} started_at={self.started_at} locked_at={self.locked_at}>"
 
 
 class ChannelPredictionEnd(BaseChannelPrediction):
+    """
+    Represents a channel points prediction progress event.
+
+    Attributes
+    ----------
+    id: str
+        ID of the prediction.
+    broadcaster: PartialUser
+        The broadcaster whose channel started a prediction.
+    title: str
+        Title for the channel points Prediction.
+    outcomes: list[PredictionOutcome]
+        A list of outcomes for the predictions.
+    winning_outcome: PredictionOutcome | None
+        The winning outcome. This can be None if the prediction is deleted.
+    started_at: datetime.datetime
+        The time the prediction started.
+    ended_at: datetime.datetime
+        The time the prediction ended.
+    status: Literal["resolved", "canceled"]
+        The status of the Channel Points Prediction. Valid values are ``resolved`` and ``canceled``.
+    """
+
     subscription_type = "channel.prediction.end"
+
+    __slots__ = ("winning_outcome_id", "ended_at", "status")
 
     def __init__(self, data: ChannelPredictionEndEvent, *, http: HTTPClient) -> None:
         super().__init__(data, http=http)
+        self.ended_at: datetime.datetime = parse_timestamp(data["ended_at"])
+        self.status: Literal["resolved", "canceled"] = data["status"]
+        winning_outcome_id = data.get("winning_outcome_id")
+        self.winning_outcome = next((outcome for outcome in self.outcomes if outcome.id == winning_outcome_id), None)
+
+    def __repr__(self) -> str:
+        return f"<ChannelPredictionEnd id={self.id} title={self.title} started_at={self.started_at} ended_at={self.ended_at} status={self.status} winning_outcome={self.winning_outcome}>"
 
 
 class SuspiciousUserUpdate(BaseEvent):
