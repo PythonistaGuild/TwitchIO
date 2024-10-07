@@ -387,14 +387,11 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         context._invoked_with = f"{context._invoked_with} {trigger}"
         context._subcommand_trigger = trigger or None
 
-        if not trigger:
+        if not trigger or not next_ and self._invoke_fallback:
             await super()._invoke(context=context)
 
-        elif trigger and next_:
+        elif next_:
             await next_.invoke(context=context)
-
-        elif self._invoke_fallback:
-            await super()._invoke(context=context)
 
         else:
             raise CommandNotFound(f'The sub-command "{trigger}" for group "{self._name}" was not found.')
