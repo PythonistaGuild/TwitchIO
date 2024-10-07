@@ -171,7 +171,7 @@ class Command(Generic[Component_T, P]):
         signature: inspect.Signature = inspect.signature(self._callback)
 
         # We expect context always and self with commands in components...
-        skip: int = 1 if not self._injected else 2
+        skip: int = 2 if self._injected else 1
         params: list[inspect.Parameter] = list(signature.parameters.values())[skip:]
 
         args: list[Any] = []
@@ -337,7 +337,7 @@ def command(
             raise TypeError(f'Command callback for "{func.__qualname__}" must be a coroutine function.')
 
         func_name = func.__name__
-        name_ = func_name if not name else name.strip().replace(" ", "") or func_name
+        name_ = name.strip().replace(" ", "") or func_name if name else func_name
 
         return Command(name=name_, callback=func, aliases=aliases or [], extras=extras or {}, **kwargs)
 
@@ -357,7 +357,7 @@ def group(
             raise TypeError(f'Group callback for "{func.__qualname__}" must be a coroutine function.')
 
         func_name = func.__name__
-        name_ = func_name if not name else name.strip().replace(" ", "") or func_name
+        name_ = name.strip().replace(" ", "") or func_name if name else func_name
 
         return Group(name=name_, callback=func, aliases=aliases or [], extras=extras or {}, **kwargs)
 
