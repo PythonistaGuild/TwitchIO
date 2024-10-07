@@ -30,7 +30,7 @@ from .assets import Asset
 from .exceptions import HTTPException
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
-from .utils import handle_user_ids, parse_timestamp
+from .utils import parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -309,7 +309,6 @@ class PartialUser:
             max_results=max_results,
         )
 
-    @handle_user_ids(is_self=True)
     async def fetch_bits_leaderboard(
         self,
         token_for: str | PartialUser,

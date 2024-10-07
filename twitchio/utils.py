@@ -741,7 +741,7 @@ def handle_user_ids(is_self: bool = False) -> Callable[..., Any]:
             from .user import PartialUser
 
             new_args = [
-                (str(arg.id) if isinstance(arg, PartialUser) else arg)
+                str(arg.id) if isinstance(arg, PartialUser) else arg
                 for i, arg in enumerate(args)
                 if not (is_self and i == 0)
             ]

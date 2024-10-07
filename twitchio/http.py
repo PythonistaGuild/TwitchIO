@@ -58,7 +58,7 @@ from .models.streams import Stream, VideoMarkers
 from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
 from .models.videos import Video
 from .user import ActiveExtensions, PartialUser
-from .utils import Colour, _from_json, url_encode_datetime  # type: ignore
+from .utils import Colour, _from_json, url_encode_datetime, handle_user_ids  # type: ignore
 
 
 if TYPE_CHECKING:
@@ -586,16 +586,16 @@ class HTTPClient:
         return iterator
 
     ### Bits ###
-
+    @handle_user_ids()
     async def get_bits_leaderboard(
         self,
         *,
         broadcaster_id: str | int,
-        token_for: str,
+        token_for: str | PartialUser,
         count: int = 10,
         period: Literal["day", "week", "month", "year", "all"] = "all",
         started_at: datetime.datetime | None = None,
-        user_id: str | int | None = None,
+        user_id: str | int | PartialUser | None = None,
     ) -> BitsLeaderboardResponse:
         params: dict[str, str | int | datetime.datetime] = {
             "broadcaster_id": broadcaster_id,
@@ -605,10 +605,10 @@ class HTTPClient:
 
         if started_at is not None:
             params["started_at"] = url_encode_datetime(started_at)
-        if user_id:
-            params["user_id"] = user_id
+        if user_id is not None:
+            params["user_id"] = str(user_id)
 
-        route: Route = Route("GET", "bits/leaderboard", params=params, token_for=token_for)
+        route: Route = Route("GET", "bits/leaderboard", params=params, token_for=str(token_for))
         return await self.request_json(route)
 
     async def get_cheermotes(
