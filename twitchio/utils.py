@@ -740,10 +740,17 @@ def handle_user_ids(is_self: bool = False) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             from .user import PartialUser
 
-            new_args = [(arg.id if isinstance(arg, PartialUser) else arg) for arg in (args[1:] if is_self else args)]
-            if is_self:
-                new_args = [args[0], *new_args]
-            new_kwargs = {k: (v.id if isinstance(v, PartialUser) else v) for k, v in kwargs.items()}
+            new_args = [
+                (str(arg.id) if isinstance(arg, PartialUser) else arg)
+                for i, arg in enumerate(args)
+                if not (is_self and i == 0)
+            ]
+
+            if is_self and args:
+                new_args.insert(0, args[0])
+
+            new_kwargs = {k: (str(v.id) if isinstance(v, PartialUser) else v) for k, v in kwargs.items()}
+
             return func(*new_args, **new_kwargs)
 
         return cast(F, wrapper)
