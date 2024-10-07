@@ -122,9 +122,9 @@ class Client:
         bot_id: str | None = None,
         **options: Unpack[ClientOptions],
     ) -> None:
-        redirect_uri: str | None = options.get("redirect_uri", None)
-        scopes: Scopes | None = options.get("scopes", None)
-        session: aiohttp.ClientSession | None = options.get("session", None)
+        redirect_uri: str | None = options.get("redirect_uri")
+        scopes: Scopes | None = options.get("scopes")
+        session: aiohttp.ClientSession | None = options.get("session")
         self._bot_id: str | None = bot_id
 
         self._http = ManagedHTTPClient(

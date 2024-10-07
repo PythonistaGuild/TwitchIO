@@ -58,7 +58,7 @@ class _MetaComponent:
         return obj
 
     def __init_subclass__(cls, **kwargs: Unpack[ComponentOptions]) -> None:
-        name: str | None = kwargs.get("name", None)
+        name: str | None = kwargs.get("name")
         if name:
             cls.__component_name__ = name
 

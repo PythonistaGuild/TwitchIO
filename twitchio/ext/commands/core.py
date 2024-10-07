@@ -80,7 +80,7 @@ class Command(Generic[Component_T, P]):
         self._injected: Component_T | None = None
         self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
         self._extras: dict[Any, Any] = kwargs.get("extras", {})
-        self._parent: Group[Component_T, P] | None = kwargs.get("parent", None)
+        self._parent: Group[Component_T, P] | None = kwargs.get("parent")
 
     def __repr__(self) -> str:
         return f"Command(name={self._name}, parent={self.parent})"
