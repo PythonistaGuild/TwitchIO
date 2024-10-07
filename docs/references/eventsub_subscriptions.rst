@@ -219,9 +219,9 @@ Eventsub Subsriptions
 .. autoclass:: ChannelPredictionLockSubscription
     :members:
 
-.. attributetable:: ChannelPredictionProgressubscription
+.. attributetable:: ChannelPredictionProgressSubscription
 
-.. autoclass:: ChannelPredictionProgressubscription
+.. autoclass:: ChannelPredictionProgressSubscription
     :members:
 
 .. attributetable:: ChannelPredictionEndSubscription
