@@ -58,7 +58,7 @@ from .models.streams import Stream, VideoMarkers
 from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
 from .models.videos import Video
 from .user import ActiveExtensions, PartialUser
-from .utils import Colour, _from_json, url_encode_datetime, handle_user_ids  # type: ignore
+from .utils import Colour, _from_json, handle_user_ids, url_encode_datetime  # type: ignore
 
 
 if TYPE_CHECKING:
