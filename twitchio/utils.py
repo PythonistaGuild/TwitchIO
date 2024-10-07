@@ -8,8 +8,10 @@ import os
 import pathlib
 import struct
 import sys
+from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, Self
+from functools import wraps
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 from urllib.parse import quote
 
 
@@ -36,6 +38,7 @@ __all__ = (
     "parse_timestamp",
     "url_encode_datetime",
     "MISSING",
+    "handle_user_ids",
 )
 
 
@@ -726,3 +729,23 @@ class EventWaiter:
 
     async def predicate(self, *args: Any) -> bool:
         return True
+
+
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def handle_user_ids(is_self: bool = False) -> Callable[..., Any]:
+    def decorator(func: F) -> F:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            from .user import PartialUser
+
+            new_args = [(arg.id if isinstance(arg, PartialUser) else arg) for arg in (args[1:] if is_self else args)]
+            if is_self:
+                new_args = [args[0], *new_args]
+            new_kwargs = {k: (v.id if isinstance(v, PartialUser) else v) for k, v in kwargs.items()}
+            return func(*new_args, **new_kwargs)
+
+        return cast(F, wrapper)
+
+    return decorator
