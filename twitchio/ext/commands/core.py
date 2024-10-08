@@ -36,14 +36,7 @@ from .exceptions import *
 from .types_ import CommandOptions, Component_T
 
 
-__all__ = (
-    "CommandErrorPayload",
-    "Command",
-    "Mixin",
-    "Group",
-    "command",
-    "group",
-)
+__all__ = ("CommandErrorPayload", "Command", "Mixin", "Group", "command", "group", "is_broadcaster")
 
 
 if TYPE_CHECKING:
@@ -55,6 +48,7 @@ else:
 
 
 Coro: TypeAlias = Coroutine[Any, Any, None]
+CoroC: TypeAlias = Coroutine[Any, Any, bool]
 
 
 class CommandErrorPayload:
@@ -76,6 +70,7 @@ class Command(Generic[Component_T, P]):
         self._name: str = name
         self._callback = callback
         self._aliases: list[str] = kwargs.get("aliases", [])
+        self._guards: list[Callable[..., bool] | Callable[..., CoroC]] = getattr(self._callback, "__command_guards__", [])
 
         self._injected: Component_T | None = None
         self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
@@ -115,6 +110,13 @@ class Command(Generic[Component_T, P]):
     @property
     def has_error(self) -> bool:
         return self._error is not None
+
+    @property
+    def guards(self) -> ...: ...
+
+    @property
+    def callback(self) -> Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro]:
+        return self._callback
 
     async def _do_conversion(self, context: Context, param: inspect.Parameter, *, annotation: Any, raw: str | None) -> Any:
         name: str = param.name
@@ -181,16 +183,15 @@ class Command(Generic[Component_T, P]):
             if param.kind == param.KEYWORD_ONLY:
                 raw = context._view.read_rest()
 
-                if not raw:
-                    if param.default == param.empty:
-                        raise MissingRequiredArgument(param=param)
+                if raw:
+                    result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
+                    kwargs[param.name] = result
+                    break
 
-                    kwargs[param.name] = param.default
-                    continue
+                if param.default == param.empty:
+                    raise MissingRequiredArgument(param=param)
 
-                result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
-                kwargs[param.name] = result
-                break
+                kwargs[param.name] = param.default
 
             elif param.kind == param.VAR_POSITIONAL:
                 packed: list[Any] = []
@@ -211,23 +212,25 @@ class Command(Generic[Component_T, P]):
                 raw = context._view.get_quoted_word()
                 context._view.skip_ws()
 
-                if not raw:
-                    if param.default == param.empty:
-                        raise MissingRequiredArgument(param=param)
-
-                    args.append(param.default)
+                if raw:
+                    result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
+                    args.append(result)
                     continue
 
-                result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
-                args.append(result)
+                if param.default == param.empty:
+                    raise MissingRequiredArgument(param=param)
+
+                args.append(param.default)
 
         return args, kwargs
 
-    async def _do_checks(self, context: Context) -> ...:
-        # Bot
-        # Component
-        # Command
-        ...
+    async def _run_guards(self, context: Context) -> ...:
+        # TODO ...
+        for guard in self._guards:
+            result = guard(context)
+
+            if not result:
+                raise CheckFailure
 
     async def _invoke(self, context: Context) -> None:
         try:
@@ -242,6 +245,8 @@ class Command(Generic[Component_T, P]):
 
         args: list[Any] = [context, *args]
         args.insert(0, self._injected) if self._injected else None
+
+        await self._run_guards(context)
 
         callback = self._callback(*args, **kwargs)  # type: ignore
 
@@ -283,6 +288,16 @@ class Command(Generic[Component_T, P]):
 
         self._error = func
         return func
+
+    def add_guard(self) -> None: ...
+
+    def remove_guard(
+        self,
+    ) -> None: ...
+
+    def before_invoke(self) -> None: ...
+
+    def after_invoke(self) -> None: ...
 
 
 class Mixin(Generic[Component_T]):
@@ -427,3 +442,26 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
             return new
 
         return wrapper
+
+
+def guard(predicate: Callable[..., bool] | Callable[..., CoroC]) -> Any:
+    def wrapper(func: Any) -> Any:
+        if isinstance(func, Command):
+            func._guards.append(predicate)
+
+        else:
+            try:
+                func.__command_guards__.append(predicate)
+            except AttributeError:
+                func.__command_guards__ = [predicate]
+
+        return func  # type: ignore
+
+    return wrapper
+
+
+def is_broadcaster() -> Any:
+    def predicate(context: Context) -> bool:
+        return context.chatter.id == context.broadcaster.id
+
+    return guard(predicate)
