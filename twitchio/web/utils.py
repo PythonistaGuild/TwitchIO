@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import abc
 import hashlib
 import hmac
@@ -29,10 +31,11 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
-from starlette.requests import Request
 
 
 if TYPE_CHECKING:
+    from starlette.requests import Request
+
     from ..types_.eventsub import EventSubHeaders
 
 
