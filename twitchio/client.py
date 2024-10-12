@@ -292,7 +292,9 @@ class Client:
         await self.close()
 
     async def start(self, token: str | None = None, *, with_adapter: bool = True) -> None:
-        """Method to login and run the `Client` asynchronously on an already running event loop.
+        """|coro|
+
+        Method to login and run the `Client` asynchronously on an already running event loop.
 
         You should not call :meth:`~Client.login` if you are using this method as it is called internally
         for you.
@@ -481,7 +483,9 @@ class Client:
         return await waiter.wait()
 
     async def add_token(self, token: str, refresh: str) -> None:
-        """Adds a token and refresh-token pair to the client to be automatically managed.
+        """|coro|
+
+        Adds a token and refresh-token pair to the client to be automatically managed.
 
         After successfully adding a token to the client, the token will be automatically revalidated and refreshed both when
         required and periodically.
@@ -524,7 +528,9 @@ class Client:
         await self._http.add_token(token, refresh)
 
     async def remove_token(self, user_id: str, /) -> TokenMappingData | None:
-        """Removes a token for the specified `user-ID` from the `Client`.
+        """|coro|
+
+        Removes a token for the specified `user-ID` from the `Client`.
 
         Removing a token will ensure the client stops managing the token.
 
@@ -547,7 +553,9 @@ class Client:
         return self._http.remove_token(user_id)
 
     async def load_tokens(self, path: str | None = None, /) -> None:
-        """Method used to load tokens when the :class:`~Client` starts.
+        """|coro|
+
+        Method used to load tokens when the :class:`~Client` starts.
 
         .. note::
 
@@ -586,7 +594,9 @@ class Client:
         await self._http.load_tokens(name=path)
 
     async def dump_tokens(self, path: str | None = None, /) -> None:
-        """Method which dumps all the added OAuth tokens currently managed by this Client.
+        """|coro|
+
+        Method which dumps all the added OAuth tokens currently managed by this Client.
 
         .. note::
 
@@ -651,7 +661,9 @@ class Client:
         return PartialUser(user_id, user_login, http=self._http)
 
     async def fetch_badges(self, *, token_for: str | PartialUser | None = None) -> list[ChatBadge]:
-        """Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
+        """|coro|
+
+        Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
 
         Parameters
         ----------
@@ -672,7 +684,9 @@ class Client:
     async def fetch_emote_sets(
         self, emote_set_ids: list[str], *, token_for: str | PartialUser | None = None
     ) -> list[EmoteSet]:
-        """Fetches emotes for one or more specified emote sets.
+        """|coro|
+
+        Fetches emotes for one or more specified emote sets.
 
         .. note::
 
@@ -712,7 +726,9 @@ class Client:
         *,
         token_for: str | PartialUser | None = None,
     ) -> list[ChatterColor]:
-        """Fetches the color of a chatter.
+        """|coro|
+
+        Fetches the color of a chatter.
 
         .. versionchanged:: 3.0
 
@@ -742,7 +758,9 @@ class Client:
         *,
         token_for: str | PartialUser | None = None,
     ) -> list[ChannelInfo]:
-        """Retrieve channel information from the API.
+        """|coro|
+
+        Retrieve channel information from the API.
 
         Parameters
         ----------
@@ -769,7 +787,9 @@ class Client:
         broadcaster_id: int | str | None = None,
         token_for: str | PartialUser | None = None,
     ) -> list[Cheermote]:
-        """Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room.
+        """|coro|
+
+        Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room.
 
         Cheermotes are animated emotes that viewers can assign Bits to.
         If a `broadcaster_id` is not specified then only global cheermotes will be returned.
@@ -796,7 +816,9 @@ class Client:
         self, locale: str = "en-US", *, token_for: str | PartialUser | None = None
     ) -> list[ContentClassificationLabel]:
         # TODO: Docs need more info...
-        """Fetches information about Twitch content classification labels.
+        """|coro|
+
+        Fetches information about Twitch content classification labels.
 
         Parameters
         -----------
@@ -933,7 +955,9 @@ class Client:
         )
 
     async def fetch_extensions(self, *, token_for: str | PartialUser) -> list[Extension]:
-        """Fetch a list of all extensions (both active and inactive) that the broadcaster has installed.
+        """|coro|
+
+        Fetch a list of all extensions (both active and inactive) that the broadcaster has installed.
 
         The user ID in the access token identifies the broadcaster.
 
@@ -962,7 +986,9 @@ class Client:
     async def update_extensions(
         self, *, user_extensions: ActiveExtensions, token_for: str | PartialUser
     ) -> ActiveExtensions:
-        """Update an installed extension's information for a specific broadcaster.
+        """|coro|
+
+        Update an installed extension's information for a specific broadcaster.
 
         You can update the extension's activation `state`, `ID`, and `version number`.
         The User-ID passed to `token_for` identifies the broadcaster whose extensions you are updating.
@@ -996,7 +1022,9 @@ class Client:
         return ActiveExtensions(data["data"])
 
     async def fetch_emotes(self, *, token_for: str | PartialUser | None = None) -> list[GlobalEmote]:
-        """Fetches global emotes from the Twitch API.
+        """|coro|
+
+        Fetches global emotes from the Twitch API.
 
         .. note::
             If you wish to fetch a specific broadcaster's chat emotes use :meth:`~twitchio.PartialUser.fetch_channel_emotes`.
@@ -1085,7 +1113,9 @@ class Client:
         team_id: str | None = None,
         token_for: str | PartialUser | None = None,
     ) -> Team:
-        """Fetches information about a specific Twitch team.
+        """|coro|
+
+        Fetches information about a specific Twitch team.
 
         You must provide one of either `team_name` or `team_id`.
 
@@ -1161,7 +1191,9 @@ class Client:
         token_for: str | PartialUser | None = None,
     ) -> list[Game]:
         # TODO: Docs??? More info...
-        """Fetches information about multiple games on Twitch.
+        """|coro|
+
+        Fetches information about multiple games on Twitch.
 
         Parameters
         -----------
@@ -1197,7 +1229,9 @@ class Client:
         igdb_id: str | None = None,
         token_for: str | PartialUser | None = None,
     ) -> Game | None:
-        """Fetch a :class:`~twitchio.Game` object with the provided `name`, `id`, or `igdb_id`.
+        """|coro|
+
+        Fetch a :class:`~twitchio.Game` object with the provided `name`, `id`, or `igdb_id`.
 
         One of `name`, `id`, or `igdb_id` must be provided.
         If more than one is provided or no parameters are provided, a `ValueError` will be raised.
@@ -1253,7 +1287,9 @@ class Client:
         logins: list[str] | None = None,
         token_for: str | PartialUser | None = None,
     ) -> list[User]:
-        """Fetch information about one or more users.
+        """|coro|
+
+        Fetch information about one or more users.
 
         .. note::
 
@@ -1408,10 +1444,6 @@ class Client:
         max_results: int | None = None,
         token_for: str | PartialUser | None = None,
     ) -> HTTPAsyncIterator[Video]:
-        # TODO: Docs??? langauge...
-        # TODO: Docs??? period...
-        # TODO: Docs??? sort...
-        # TODO: Docs??? type...
         """|aiter|
 
         Fetch a list of :class:`~twitchio.Video` objects with the provided `ids`, `user_id` or `game_id`.
@@ -1534,7 +1566,9 @@ class Client:
         )
 
     async def delete_videos(self, *, ids: list[str | int], token_for: str | PartialUser) -> list[str]:
-        """Deletes one or more videos for a specific broadcaster.
+        """|coro|
+
+        Deletes one or more videos for a specific broadcaster.
 
         .. note::
 
@@ -1725,7 +1759,9 @@ class Client:
         fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
         token_for: str | PartialUser | None = None,
     ) -> list[EntitlementStatus]:
-        """Updates a Drop entitlement's fulfillment status.
+        """|coro|
+
+        Updates a Drop entitlement's fulfillment status.
 
         .. note::
 
@@ -1803,7 +1839,9 @@ class Client:
         socket_id: str | None = None,
     ) -> SubscriptionResponse | None:
         # TODO: Complete docs...
-        """Subscribe to an EventSub Event via Websockets.
+        """|coro|
+
+        Subscribe to an EventSub Event via Websockets.
 
         .. note::
 
@@ -1925,7 +1963,9 @@ class Client:
         eventsub_secret: str | None = None,
     ) -> SubscriptionResponse | None:
         # TODO: Complete docs...
-        """Subscribe to an EventSub Event via Webhook.
+        """|coro|
+
+        Subscribe to an EventSub Event via Webhook.
 
         .. note::
 
@@ -2055,7 +2095,9 @@ class Client:
         | None = None,
         max_results: int | None = None,
     ) -> EventsubSubscriptions:
-        """Fetches Eventsub Subscriptions for either webhook or websocket.
+        """|coro|
+
+        Fetches Eventsub Subscriptions for either webhook or websocket.
 
         .. note::
             type, status and user_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
@@ -2138,7 +2180,9 @@ class Client:
         )
 
     async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
-        """Delete an eventsub subscription.
+        """|coro|
+
+        Delete an eventsub subscription.
 
         Parameters
         ----------
@@ -2151,7 +2195,9 @@ class Client:
         await self._http.delete_eventsub_subscription(id, token_for=token_for)
 
     async def delete_all_eventsub_subscriptions(self, *, token_for: str | PartialUser | None = None) -> None:
-        """Delete all eventsub subscriptions.
+        """|coro|
+
+        Delete all eventsub subscriptions.
 
         Parameters
         ----------
