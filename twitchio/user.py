@@ -190,7 +190,7 @@ class PartialUser:
         SnoozeAd
             A SnoozeAd object.
         """
-        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
+        data = await self._http.post_snooze_ad(broadcaster_id=self.id, token_for=token_for)
         return SnoozeAd(data["data"][0])
 
     def fetch_extension_analytics(
