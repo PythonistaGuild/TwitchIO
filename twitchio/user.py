@@ -114,7 +114,9 @@ class PartialUser:
         return f"@{self}"
 
     async def start_commercial(self, *, length: int, token_for: str) -> CommercialStart:
-        """Starts a commercial on the specified channel.
+        """|coro|
+
+        Starts a commercial on the specified channel.
 
         .. important::
             Only partners and affiliates may run commercials and they must be streaming live at the time.
@@ -141,7 +143,9 @@ class PartialUser:
         return CommercialStart(data["data"][0])
 
     async def fetch_ad_schedule(self, token_for: str | PartialUser) -> AdSchedule:
-        """Fetch ad schedule related information, including snooze, when the last ad was run, when the next ad is scheduled, and if the channel is currently in pre-roll free time.
+        """|coro|
+
+        Fetch ad schedule related information, including snooze, when the last ad was run, when the next ad is scheduled, and if the channel is currently in pre-roll free time.
 
         .. important::
             A new ad cannot be run until 8 minutes after running a previous ad.
@@ -165,7 +169,9 @@ class PartialUser:
         return AdSchedule(data["data"][0])
 
     async def snooze_next_ad(self, token_for: str | PartialUser) -> SnoozeAd:
-        """If available, pushes back the timestamp of the upcoming automatic mid-roll ad by 5 minutes.
+        """|coro|
+
+        If available, pushes back the timestamp of the upcoming automatic mid-roll ad by 5 minutes.
         This endpoint duplicates the snooze functionality in the creator dashboard's Ads Manager.
 
         .. important::
@@ -198,7 +204,9 @@ class PartialUser:
         ended_at: datetime.date | None = None,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[ExtensionAnalytics]:
-        """Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
+        """|aiter|
+
+        Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
 
         .. important::
             Both ``started_at`` and ``ended_at`` must be provided when requesting a date range. They are UTC timezone by default.
@@ -265,7 +273,9 @@ class PartialUser:
         ended_at: datetime.date | None = None,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[GameAnalytics]:
-        """Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
+        """|aiter|
+
+        Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
 
         .. important::
             Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
@@ -329,7 +339,9 @@ class PartialUser:
         started_at: datetime.datetime | None = None,
         user_id: str | int | PartialUser | None = None,
     ) -> BitsLeaderboard:
-        """Fetches the Bits leaderboard for this user.
+        """|coro|
+
+        Fetches the Bits leaderboard for this user.
 
         .. important::
             ``started_at`` is converted to PST before being used, so if you set the start time to 2022-01-01T00:00:00.0Z and period to month, the actual reporting period is December 2021, not January 2022.
@@ -411,7 +423,9 @@ class PartialUser:
         return BitsLeaderboard(data, http=self._http)
 
     async def fetch_channel_info(self, *, token_for: str | PartialUser | None = None) -> ChannelInfo:
-        """Retrieve channel information for this user.
+        """|coro|
+
+        Retrieve channel information for this user.
 
         Parameters
         -----------
@@ -443,7 +457,9 @@ class PartialUser:
         | None = None,
         branded: bool | None = None,
     ) -> None:
-        """Updates this user's channel properties.
+        """|coro|
+
+        Updates this user's channel properties.
 
         .. important::
             A channel may specify a maximum of 10 tags. Each tag is limited to a maximum of 25 characters and may not be an empty string or contain spaces or special characters.
@@ -506,7 +522,9 @@ class PartialUser:
         )
 
     async def fetch_editors(self, token_for: str) -> list[ChannelEditor]:
-        """Fetches a list of the user's editors for their channel.
+        """|coro|
+
+        Fetches a list of the user's editors for their channel.
 
         .. note::
             Requires user access token that includes the ``channel:manage:broadcast`` scope.
@@ -533,7 +551,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> FollowedChannels | None:
-        """Fetches information of who and when this user followed other channels.
+        """|coro|
+
+        Fetches information of who and when this user followed other channels.
 
         .. note::
             Requires user access token that includes the ``user:read:follows`` scope.
@@ -572,7 +592,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> ChannelFollowers:
-        """Fetches information of who and when users followed this channel.
+        """|coro|
+
+        Fetches information of who and when users followed this channel.
 
         .. important::
             The user ID in the token must match that of the broadcaster or a moderator.
@@ -621,7 +643,9 @@ class PartialUser:
         global_cooldown: int | None = None,
         redemptions_skip_queue: bool = False,
     ) -> CustomReward:
-        """Creates a Custom Reward in the broadcaster's channel.
+        """|coro|
+
+        Creates a Custom Reward in the broadcaster's channel.
 
         .. note::
             The maximum number of custom rewards per channel is 50, which includes both enabled and disabled rewards.
@@ -701,7 +725,9 @@ class PartialUser:
     async def fetch_custom_rewards(
         self, *, token_for: str | PartialUser, ids: list[str] | None = None, manageable: bool = False
     ) -> list[CustomReward]:
-        """Fetches list of custom rewards that the specified broadcaster created.
+        """|coro|
+
+        Fetches list of custom rewards that the specified broadcaster created.
 
         .. note::
             Requires user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
@@ -729,7 +755,9 @@ class PartialUser:
         return [CustomReward(d, http=self._http) for d in data["data"]]
 
     async def fetch_charity_campaign(self, *, token_for: str | PartialUser) -> CharityCampaign:
-        """Fetch the active charity campaign of a broadcaster.
+        """|coro|
+
+        Fetch the active charity campaign of a broadcaster.
 
         .. note::
             Requires user access token that includes the `channel:read:charity` scope.
@@ -756,7 +784,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[CharityDonation]:
-        """Fetches information about all broadcasts on Twitch.
+        """|aiter|
+
+        Fetches information about all broadcasts on Twitch.
 
         .. note::
             Requires user access token that includes the ``channel:read:charity`` scope.
@@ -793,7 +823,9 @@ class PartialUser:
         first: int = 100,
         max_results: int | None = None,
     ) -> Chatters:
-        """Fetches users that are connected to the broadcaster's chat session.
+        """|coro|
+
+        Fetches users that are connected to the broadcaster's chat session.
 
         .. note::
             Requires user access token that includes the ``moderator:read:chatters`` scope.
@@ -823,7 +855,9 @@ class PartialUser:
         )
 
     async def fetch_channel_emotes(self, token_for: str | PartialUser | None = None) -> list[ChannelEmote]:
-        """Fetches the broadcaster's list of custom emotes.
+        """|coro|
+
+        Fetches the broadcaster's list of custom emotes.
 
         Broadcasters create these custom emotes for users who subscribe to or follow the channel or cheer Bits in the channel's chat window.
 
@@ -851,7 +885,9 @@ class PartialUser:
         broadcaster_id: str | int | PartialUser | None = None,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[UserEmote]:
-        """Fetches the broadcaster's list of custom emotes.
+        """|aiter|
+
+        Fetches the broadcaster's list of custom emotes.
 
         Broadcasters create these custom emotes for users who subscribe to or follow the channel or cheer Bits in the channel's chat window.
 
@@ -880,7 +916,9 @@ class PartialUser:
         )
 
     async def fetch_badges(self, token_for: str | PartialUser | None = None) -> list[ChatBadge]:
-        """Fetches the broadcaster's list of custom chat badges.
+        """|coro|
+
+        Fetches the broadcaster's list of custom chat badges.
 
         If you wish to fetch globally available chat badges use If you wish to fetch a specific broadcaster's chat badges use [`client.fetch_badges`][twitchio.client.fetch_badges]
 
@@ -902,7 +940,8 @@ class PartialUser:
     async def fetch_chat_settings(
         self, *, moderator_id: str | int | PartialUser | None = None, token_for: str | PartialUser | None = None
     ) -> ChatSettings:
-        """
+        """|coro|
+
         Fetches the broadcaster's chat settings.
 
         .. note::
@@ -948,7 +987,9 @@ class PartialUser:
         non_moderator_chat_delay: bool | None = None,
         non_moderator_chat_delay_duration: Literal[2, 4, 6] | None = None,
     ) -> ChatSettings:
-        """Update the user's chat settings.
+        """|coro|
+
+        Update the user's chat settings.
 
         .. note::
             - To set the ``slow_mode_wait_time`` or ``follower_mode_duration`` field to its default value, set the corresponding ``slow_mode`` or ``follower_mode`` field to True (and don't include the ``slow_mode_wait_time`` or ``follower_mode_duration`` field).
@@ -1033,7 +1074,9 @@ class PartialUser:
         return ChatSettings(data["data"][0], http=self._http)
 
     async def fetch_shared_chat_session(self, token_for: str | PartialUser | None = None) -> SharedChatSession:
-        """Fetches the active shared chat session for a channel.
+        """|coro|
+
+        Fetches the active shared chat session for a channel.
 
         Parameters
         ----------
@@ -1058,7 +1101,9 @@ class PartialUser:
         message: str,
         color: Literal["blue", "green", "orange", "purple", "primary"] = "primary",
     ) -> None:
-        """Sends an announcement to the broadcaster's chat room.
+        """|coro|
+
+        Sends an announcement to the broadcaster's chat room.
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:announcements`` scope.
@@ -1093,7 +1138,9 @@ class PartialUser:
         moderator_id: str | int | PartialUser,
         token_for: str | PartialUser,
     ) -> None:
-        """Sends a Shoutout to the specified broadcaster.
+        """|coro|
+
+        Sends a Shoutout to the specified broadcaster.
 
         .. note::
             The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
@@ -1122,7 +1169,9 @@ class PartialUser:
         token_for: str | PartialUser | None = None,
         reply_to_message_id: str | None = None,
     ) -> SentMessage:
-        """Send a message to the broadcaster's chat room.
+        """|coro|
+
+        Send a message to the broadcaster's chat room.
 
         .. important::
             Requires an app access token or user access token that includes the ``user:write:chat`` scope.
@@ -1180,7 +1229,9 @@ class PartialUser:
         return SentMessage(data["data"][0])
 
     async def update_chatter_color(self, *, color: str, token_for: str) -> None:
-        """Updates the color used for the user's name in chat.
+        """|coro|
+
+        Updates the color used for the user's name in chat.
 
         **Available Colors**
             - blue
@@ -1213,7 +1264,9 @@ class PartialUser:
         return await self._http.put_user_chat_color(user_id=self.id, color=color, token_for=token_for)
 
     async def create_clip(self, *, token_for: str | PartialUser, has_delay: bool = False) -> CreatedClip:
-        """Creates a clip from the broadcaster's stream.
+        """|coro|
+
+        Creates a clip from the broadcaster's stream.
 
         This API captures up to 90 seconds of the broadcaster's stream. The 90 seconds spans the point in the stream from when you called the API.
         For example, if you call the API at the 4:00 minute mark, the API captures from approximately the 3:35 mark to approximately the 4:05 minute mark.
@@ -1260,7 +1313,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
-        """Fetches clips from the broadcaster's streams.
+        """|aiter|
+
+        Fetches clips from the broadcaster's streams.
 
         Parameters
         -----------
@@ -1300,7 +1355,9 @@ class PartialUser:
         )
 
     async def fetch_goals(self, *, token_for: str | PartialUser) -> list[Goal]:
-        """Fetches a list of the creator's goals.
+        """|coro|
+
+        Fetches a list of the creator's goals.
 
         .. note::
             Requires a user access token that includes the ``channel:read:goals`` scope.
@@ -1327,7 +1384,9 @@ class PartialUser:
         first: int = 1,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[HypeTrainEvent]:
-        """Fetches information about the broadcaster's current or most recent Hype Train event.
+        """|aiter|
+
+        Fetches information about the broadcaster's current or most recent Hype Train event.
 
         Parameters
         ----------
@@ -1354,7 +1413,9 @@ class PartialUser:
         )
 
     async def start_raid(self, *, to_broadcaster_id: str | int | PartialUser, token_for: str) -> Raid:
-        """Starts a raid to another channel.
+        """|coro|
+
+        Starts a raid to another channel.
 
         .. note::
             The limit is 10 requests within a 10-minute window.
@@ -1399,7 +1460,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Schedule]:
-        """Fetches stream schedule information for a broadcaster.
+        """|aiter|
+
+        Fetches stream schedule information for a broadcaster.
 
         Parameters
         ----------
@@ -1448,7 +1511,9 @@ class PartialUser:
         vacation_end_time: datetime.datetime | None = None,
         timezone: str | None = None,
     ) -> None:
-        """Updates the broadcaster's schedule settings, such as scheduling a vacation.
+        """|coro|
+
+        Updates the broadcaster's schedule settings, such as scheduling a vacation.
 
         .. note::
             Requires a user access token that includes the ``channel:manage:schedule`` scope.
@@ -1497,7 +1562,9 @@ class PartialUser:
         category_id: str | None = None,
         title: str | None = None,
     ) -> Schedule:
-        """Adds a single or recurring broadcast to the broadcaster's streaming schedule.
+        """|coro|
+
+        Adds a single or recurring broadcast to the broadcaster's streaming schedule.
 
         For information about scheduling broadcasts, see `Stream Schedule <https://help.twitch.tv/s/article/channel-page-setup#Schedule>`_.
 
@@ -1561,7 +1628,9 @@ class PartialUser:
         canceled: bool | None = None,
         timezone: str | None = None,
     ) -> Schedule:
-        """Updates a scheduled broadcast segment.
+        """|coro|
+
+        Updates a scheduled broadcast segment.
 
         Parameters
         ----------
@@ -1616,7 +1685,9 @@ class PartialUser:
         return Schedule(data["data"], http=self._http)
 
     async def delete_schedule_segment(self, *, id: str, token_for: str | PartialUser) -> None:
-        """Removes a broadcast segment from the broadcaster's streaming schedule.
+        """|coro|
+
+        Removes a broadcast segment from the broadcaster's streaming schedule.
 
         .. note::
             For recurring segments, removing a segment removes all segments in the recurring schedule.
@@ -1634,7 +1705,9 @@ class PartialUser:
         return await self._http.delete_channel_stream_schedule_segment(broadcaster_id=self.id, id=id, token_for=token_for)
 
     async def fetch_channel_teams(self, *, token_for: str | PartialUser | None = None) -> list[ChannelTeam]:
-        """Fetches the list of Twitch teams that the broadcaster is a member of.
+        """|coro|
+
+        Fetches the list of Twitch teams that the broadcaster is a member of.
 
         Parameters
         ----------
@@ -1655,7 +1728,9 @@ class PartialUser:
     async def check_automod_status(
         self, *, messages: list[AutomodCheckMessage], token_for: str | PartialUser
     ) -> list[AutoModStatus]:
-        """Checks whether AutoMod would flag the specified message for review.
+        """|coro|
+
+        Checks whether AutoMod would flag the specified message for review.
 
         Rates are limited per channel based on the account type rather than per access token.
 
@@ -1697,7 +1772,9 @@ class PartialUser:
         return [AutoModStatus(d) for d in data["data"]]
 
     async def approve_automod_messages(self, *, msg_id: str, token_for: str | PartialUser) -> None:
-        """Allow the message that AutoMod flagged for review.
+        """|coro|
+
+        Allow the message that AutoMod flagged for review.
 
         The PartialUser / User object to perform this task is the moderator.
 
@@ -1716,7 +1793,9 @@ class PartialUser:
         )
 
     async def deny_automod_messages(self, *, msg_id: str, token_for: str | PartialUser) -> None:
-        """Deny the message that AutoMod flagged for review.
+        """|coro|
+
+        Deny the message that AutoMod flagged for review.
 
         The PartialUser / User object to perform this task is the moderator.
 
@@ -1737,7 +1816,9 @@ class PartialUser:
     async def fetch_automod_settings(
         self, *, moderator_id: str | int | PartialUser, token_for: str | PartialUser
     ) -> AutomodSettings:
-        """Fetches the broadcaster's AutoMod settings.
+        """|coro|
+
+        Fetches the broadcaster's AutoMod settings.
 
         The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
 
@@ -1765,7 +1846,9 @@ class PartialUser:
     async def update_automod_settings(
         self, *, moderator_id: str | int | PartialUser, settings: AutomodSettings, token_for: str | PartialUser
     ) -> AutomodSettings:
-        """Updates the broadcaster's AutoMod settings.
+        """|coro|
+
+        Updates the broadcaster's AutoMod settings.
 
         The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
 
@@ -1818,7 +1901,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[BannedUser]:
-        """Fetch all users that the broadcaster has banned or put in a timeout.
+        """|aiter|
+
+        Fetch all users that the broadcaster has banned or put in a timeout.
 
         .. note::
             Requires a user access token that includes the ``moderation:read`` or ``moderator:manage:banned_users`` scope.
@@ -1868,7 +1953,9 @@ class PartialUser:
         token_for: str | PartialUser,
         reason: str | None = None,
     ) -> Ban:
-        """Ban a user from the broadcaster's channel.
+        """|coro|
+
+        Ban a user from the broadcaster's channel.
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
@@ -1911,7 +1998,9 @@ class PartialUser:
         duration: int,
         reason: str | None = None,
     ) -> Timeout:
-        """Ban a user from the broadcaster's channel.
+        """|coro|
+
+        Ban a user from the broadcaster's channel.
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
@@ -1956,7 +2045,9 @@ class PartialUser:
         user_id: str | int | PartialUser,
         token_for: str,
     ) -> None:
-        """Unban a user from the broadcaster's channel.
+        """|coro|
+
+        Unban a user from the broadcaster's channel.
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
@@ -1989,7 +2080,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[UnbanRequest]:
-        """Fetches the unban requests of a broadcaster's channel.
+        """|aiter|
+
+        Fetches the unban requests of a broadcaster's channel.
 
         .. note::
             Requires a user access token that includes the ``moderator:read:unban_requests`` or ``moderator:manage:unban_requests`` scope.
@@ -2042,7 +2135,9 @@ class PartialUser:
         unban_request_id: str,
         resolution_text: str | None = None,
     ) -> UnbanRequest:
-        """Resolves an unban request by approving or denying it.
+        """|coro|
+
+        Resolves an unban request by approving or denying it.
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:unban_requests`` scope.
@@ -2093,7 +2188,8 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[BlockedTerm]:
-        """
+        """|aiter|
+
         Fetches the broadcaster's list of non-private, blocked words or phrases.
         These are the terms that the broadcaster or moderator added manually or that were denied by AutoMod.
 
@@ -2134,7 +2230,9 @@ class PartialUser:
         token_for: str | PartialUser,
         text: str,
     ) -> BlockedTerm:
-        """Adds a word or phrase to the broadcaster's list of blocked terms.
+        """|coro|
+
+        Adds a word or phrase to the broadcaster's list of blocked terms.
 
         These are the terms that the broadcaster doesn't want used in their chat room.
 
@@ -2190,7 +2288,9 @@ class PartialUser:
         token_for: str | PartialUser,
         id: str,
     ) -> None:
-        """Removes the word or phrase from the broadcaster's list of blocked terms.
+        """|coro|
+
+        Removes the word or phrase from the broadcaster's list of blocked terms.
 
         .. note::
            Requires a user access token that includes the ``oderator:manage:blocked_terms`` scope.
@@ -2215,7 +2315,9 @@ class PartialUser:
     async def delete_chat_messages(
         self, *, moderator_id: str | int | PartialUser, token_for: str | PartialUser, message_id: str | None = None
     ) -> None:
-        """Removes a single chat message or all chat messages from the broadcaster's chat room.
+        """|coro|
+
+        Removes a single chat message or all chat messages from the broadcaster's chat room.
 
         .. important::
             Restrictions:
@@ -2250,7 +2352,9 @@ class PartialUser:
     def fetch_moderated_channels(
         self, *, token_for: str | PartialUser, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[PartialUser]:
-        """Fetches channels that the specified user has moderator privileges in.
+        """|aiter|
+
+        Fetches channels that the specified user has moderator privileges in.
 
         .. note::
            Requires a user access token that includes the ``user:read:moderated_channels`` scope.
@@ -2287,7 +2391,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
-        """Fetches users allowed to moderate the broadcaster's chat room.
+        """|aiter|
+
+        Fetches users allowed to moderate the broadcaster's chat room.
 
         .. note::
            Requires a user access token that includes the ``moderation:read`` scope.
@@ -2333,7 +2439,8 @@ class PartialUser:
         )
 
     async def add_moderator(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
-        """
+        """|coro|
+
         Adds a moderator to the broadcaster's chat room.
 
         The broadcaster may add a maximum of 10 moderators within a 10-second window.
@@ -2353,7 +2460,8 @@ class PartialUser:
         return await self._http.post_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
 
     async def remove_moderator(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
-        """
+        """|coro|
+
         Removes a moderator to the broadcaster's chat room.
 
         The broadcaster may remove a maximum of 10 moderators within a 10-second window.
@@ -2381,7 +2489,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
-        """Fetches the broadcaster's VIPs.
+        """|aiter|
+
+        Fetches the broadcaster's VIPs.
 
         .. note::
            Requires a user access token that includes the ``channel:read:vips`` scope.
@@ -2426,7 +2536,9 @@ class PartialUser:
         )
 
     async def add_vip(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
-        """Adds a VIP to the broadcaster's chat room.
+        """|coro|
+
+        Adds a VIP to the broadcaster's chat room.
 
         The broadcaster may add a maximum of 10 VIPs within a 10-second window.
 
@@ -2446,7 +2558,9 @@ class PartialUser:
         return await self._http.add_vip(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
 
     async def remove_vip(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
-        """Removes a VIP to the broadcaster's chat room.
+        """|coro|
+
+        Removes a VIP to the broadcaster's chat room.
 
         The broadcaster may remove a maximum of 10 VIPs within a 10-second window.
 
@@ -2468,7 +2582,8 @@ class PartialUser:
     async def update_shield_mode_status(
         self, *, moderator_id: str | int | PartialUser, active: bool, token_for: str | PartialUser
     ) -> ShieldModeStatus:
-        """
+        """|coro|
+
         Activates or deactivates  the broadcaster's Shield Mode.
 
         .. note::
@@ -2499,7 +2614,9 @@ class PartialUser:
     async def fetch_shield_mode_status(
         self, *, moderator_id: str | int | PartialUser, token_for: str | PartialUser
     ) -> ShieldModeStatus:
-        """Fetches the broadcaster's Shield Mode activation status.
+        """|coro|
+
+        Fetches the broadcaster's Shield Mode activation status.
 
         .. note::
            Requires a user access token that includes the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
@@ -2528,7 +2645,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Poll]:
-        """Fetches polls that the broadcaster created.
+        """|aiter|
+
+        Fetches polls that the broadcaster created.
 
         Polls are available for 90 days after they're created.
 
@@ -2582,7 +2701,9 @@ class PartialUser:
         channel_points_voting_enabled: bool = False,
         channel_points_per_vote: int | None = None,
     ) -> Poll:
-        """Creates a poll that viewers in the broadcaster's channel can vote on.
+        """|coro|
+
+        Creates a poll that viewers in the broadcaster's channel can vote on.
 
         The poll begins as soon as it's created. You may run only one poll at a time.
 
@@ -2654,7 +2775,9 @@ class PartialUser:
         return Poll(data["data"][0], http=self._http)
 
     async def end_poll(self, *, id: str, token_for: str | PartialUser, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
-        """End an active poll. You have the option to end it or end it and archive it.
+        """|coro|
+
+        End an active poll. You have the option to end it or end it and archive it.
 
         Status must be set to one of the below.
 
@@ -2691,7 +2814,9 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Prediction]:
-        """Fetches predictions that the broadcaster created.
+        """|aiter|
+
+        Fetches predictions that the broadcaster created.
 
         If the number of outcomes is two, the color is BLUE for the first outcome and PINK for the second outcome.
         If there are more than two outcomes, the color is BLUE for all outcomes.
@@ -2744,7 +2869,9 @@ class PartialUser:
         prediction_window: int,
         token_for: str | PartialUser,
     ) -> Prediction:
-        """Creates a prediction that viewers in the broadcaster's channel can vote on.
+        """|coro|
+
+        Creates a prediction that viewers in the broadcaster's channel can vote on.
 
         The prediction begins as soon as it's created. You may run only one prediction at a time.
 
@@ -2809,7 +2936,9 @@ class PartialUser:
         status: Literal["RESOLVED", "CANCELED", "LOCKED"],
         winning_outcome_id: str | None = None,
     ) -> Prediction:
-        """End an active prediction.
+        """|coro|
+
+        End an active prediction.
 
         The status to set the prediction to. Possible case-sensitive values are:
 
@@ -2850,7 +2979,9 @@ class PartialUser:
         return Prediction(data["data"][0], http=self._http)
 
     async def fetch_stream_key(self, *, token_for: str | PartialUser) -> str:
-        """Fetches the channel's stream key.
+        """|coro|
+
+        Fetches the channel's stream key.
 
         .. note::
             Requires a user access token that includes the ``channel:read:stream_key`` scope
@@ -2876,7 +3007,8 @@ class PartialUser:
         first: int = 100,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
-        """
+        """|aiter|
+
         Fetches the broadcasters that the user follows and that are streaming live.
 
         .. note::
@@ -2905,7 +3037,9 @@ class PartialUser:
         )
 
     async def create_stream_marker(self, *, token_for: str | PartialUser, description: str | None = None) -> StreamMarker:
-        """Adds a marker to a live stream.
+        """|coro|
+
+        Adds a marker to a live stream.
 
         A marker is an arbitrary point in a live stream that the broadcaster or editor wants to mark, so they can return to that spot later to create video highlights.
 
@@ -2949,7 +3083,9 @@ class PartialUser:
     def fetch_stream_markers(
         self, *, token_for: str | PartialUser, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[VideoMarkers]:
-        """Fetches markers from the user's most recent stream or from the specified VOD/video.
+        """|aiter|
+
+        Fetches markers from the user's most recent stream or from the specified VOD/video.
 
         A marker is an arbitrary point in a live stream that the broadcaster or editor marked, so they can return to that spot later to create video highlights
 
@@ -2985,7 +3121,9 @@ class PartialUser:
     async def fetch_subscription(
         self, *, broadcaster_id: str | int, token_for: str | PartialUser
     ) -> UserSubscription | None:
-        """Checks whether the user subscribes to the broadcaster's channel.
+        """|coro|
+
+        Checks whether the user subscribes to the broadcaster's channel.
 
         .. note::
             Requires a user access token that includes the ``user:read:subscriptions`` scope.
@@ -3029,7 +3167,8 @@ class PartialUser:
         first: int = 20,
         max_results: int | None = None,
     ) -> BroadcasterSubscriptions:
-        """
+        """|coro|
+
         Fetches all subscriptions for the broadcaster.
 
         .. note::
@@ -3066,7 +3205,9 @@ class PartialUser:
         )
 
     async def send_whisper(self, *, to_user_id: str | int | PartialUser, token_for: str, message: str) -> None:
-        """Send a whisper to a user.
+        """|coro|
+
+        Send a whisper to a user.
 
         You may whisper to a maximum of 40 unique recipients per day. Within the per day limit, you may whisper a maximum of 3 whispers per second and a maximum of 100 whispers per minute.
 
@@ -3109,7 +3250,8 @@ class PartialUser:
         )
 
     async def user(self) -> User:
-        """
+        """|coro|
+
         Fetch the full User information for the PartialUser.
 
         Returns
@@ -3121,7 +3263,9 @@ class PartialUser:
         return User(data["data"][0], http=self._http)
 
     async def update(self, *, token_for: str | PartialUser, description: str | None = None) -> User:
-        """Update the user's information.
+        """|coro|
+
+        Update the user's information.
 
         .. note::
             Requires a user access token that includes the ``user:edit`` scope.
@@ -3154,7 +3298,9 @@ class PartialUser:
     def fetch_block_list(
         self, *, token_for: str | PartialUser, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[PartialUser]:
-        """Fetches a list of users that the broadcaster has blocked.
+        """|aiter|
+
+        Fetches a list of users that the broadcaster has blocked.
 
         .. note::
             Requires a user access token that includes the ``user:read:blocked_users`` scope.
@@ -3186,7 +3332,9 @@ class PartialUser:
         source: Literal["chat", "whisper"] | None = None,
         reason: Literal["harassment", "spam", "other"] | None = None,
     ) -> None:
-        """Blocks the specified user in ``user_id`` from interacting with or having contact with the broadcaster.
+        """|coro|
+
+        Blocks the specified user in ``user_id`` from interacting with or having contact with the broadcaster.
 
         The user ID in the OAuth token identifies the broadcaster who is blocking the user.
 
@@ -3221,7 +3369,9 @@ class PartialUser:
         user_id: str | int | PartialUser,
         token_for: str | PartialUser,
     ) -> None:
-        """Removes the user from the broadcaster's list of blocked users.
+        """|coro|
+
+        Removes the user from the broadcaster's list of blocked users.
 
         Parameters
         ----------
@@ -3237,7 +3387,8 @@ class PartialUser:
         return await self._http.delete_block_user(user_id=user_id, token_for=token_for)
 
     async def fetch_active_extensions(self, token_for: str | PartialUser | None = None) -> ActiveExtensions:
-        """
+        """|coro|
+
         Fetches a user's active extensions.
 
         .. tip::
@@ -3264,7 +3415,8 @@ class PartialUser:
         reason: str,
         token_for: str | PartialUser,
     ) -> Warning:
-        """
+        """|coro|
+
         Warns a user in the specified broadcaster's chat room, preventing them from chat interaction until the warning is acknowledged.
         New warnings can be issued to a user when they already have a warning in the channel (new warning will replace old warning).
 
