@@ -113,14 +113,14 @@ class Poll:
     def __repr__(self) -> str:
         return f"<Poll id={self.id} title={self.title} status={self.status} started_at={self.started_at}>"
 
-    async def end_poll(self, *, status: Literal["ARCHIVED", "TERMINATED"], token_for: str) -> Poll:
+    async def end_poll(self, *, status: Literal["ARCHIVED", "TERMINATED"], token_for: str | PartialUser) -> Poll:
         """End an active poll.
 
         Parameters
         ----------
         status  Literal["ARCHIVED", "TERMINATED"]
             The status to set the poll to. Possible case-sensitive values are: "ARCHIVED" and "TERMINATED".
-        token_for: str
+        token_for: str | PartialUser
             User access token that includes the `channel:manage:polls` scope.
 
         Returns

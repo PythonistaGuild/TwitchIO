@@ -144,10 +144,7 @@ class Clip:
         """
         data: list[Video] = await self._http.get_videos(ids=[self.video_id], period="all", sort="time", type="all", first=1)
 
-        if not data:
-            return None
-
-        return data[0]
+        return data[0] if data else None
 
 
 class CreatedClip:

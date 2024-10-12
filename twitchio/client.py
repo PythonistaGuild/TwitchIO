@@ -94,7 +94,7 @@ class Client:
 
         It is highly recommended setting this parameter as it will allow TwitchIO to use the bot's own tokens where
         appropriate and needed.
-    redirect_ur: str | None
+    redirect_uri: str | None
         An optional `str` to set as the redirect uri for anything relating to Twitch OAuth. You most often do not need to set
         this.
     scopes: twitchio.Scopes | None
@@ -650,8 +650,13 @@ class Client:
         """
         return PartialUser(user_id, user_login, http=self._http)
 
-    async def fetch_badges(self) -> list[ChatBadge]:
+    async def fetch_badges(self, *, token_for: str | PartialUser | None = None) -> list[ChatBadge]:
         """Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            |token_for|
 
         To fetch a specific broadcaster's chat badges, see: :meth:`~twitchio.PartialUser.fetch_badges`
 
@@ -661,10 +666,12 @@ class Client:
             A list of :class:`~twitchio.ChatBadge` objects
         """
 
-        data = await self._http.get_global_chat_badges()
+        data = await self._http.get_global_chat_badges(token_for=token_for)
         return [ChatBadge(x, http=self._http) for x in data["data"]]
 
-    async def fetch_emote_sets(self, emote_set_ids: list[str], *, token_for: str | None = None) -> list[EmoteSet]:
+    async def fetch_emote_sets(
+        self, emote_set_ids: list[str], *, token_for: str | PartialUser | None = None
+    ) -> list[EmoteSet]:
         """Fetches emotes for one or more specified emote sets.
 
         .. note::
@@ -677,7 +684,7 @@ class Client:
         ----------
         emote_set_ids: list[str]
             A list of the IDs that identifies the emote set to get. You may specify a maximum of **25** IDs.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
         Returns
@@ -703,7 +710,7 @@ class Client:
         self,
         user_ids: list[str | int],
         *,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> list[ChatterColor]:
         """Fetches the color of a chatter.
 
@@ -715,7 +722,7 @@ class Client:
         -----------
         user_ids: list[str | int]
             A list of user ids to fetch the colours for.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
         Returns
@@ -733,7 +740,7 @@ class Client:
         self,
         broadcaster_ids: list[str | int],
         *,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> list[ChannelInfo]:
         """Retrieve channel information from the API.
 
@@ -742,7 +749,7 @@ class Client:
         broadcaster_ids: list[str | int]
             A list of channel IDs to request from API.
             You may specify a maximum of **100** IDs.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
         Returns
@@ -760,7 +767,7 @@ class Client:
         self,
         *,
         broadcaster_id: int | str | None = None,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> list[Cheermote]:
         """Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room.
 
@@ -774,7 +781,7 @@ class Client:
         broadcaster_id: str | int | None
             The ID of the broadcaster whose custom Cheermotes you want to fetch.
             If not provided or `None` then you will fetch global Cheermotes. Defaults to `None`
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
         Returns
@@ -786,7 +793,7 @@ class Client:
         return [Cheermote(d, http=self._http) for d in data["data"]]
 
     async def fetch_classifications(
-        self, locale: str = "en-US", *, token_for: str | None = None
+        self, locale: str = "en-US", *, token_for: str | PartialUser | None = None
     ) -> list[ContentClassificationLabel]:
         # TODO: Docs need more info...
         """Fetches information about Twitch content classification labels.
@@ -795,6 +802,8 @@ class Client:
         -----------
         locale: str
             Locale for the Content Classification Labels.
+        token_for: str | PartialUser | None
+            |token_for|
 
         Returns
         --------
@@ -812,7 +821,7 @@ class Client:
         started_at: datetime.datetime | None = None,
         ended_at: datetime.datetime | None = None,
         featured: bool | None = None,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Clip]:
@@ -836,7 +845,7 @@ class Client:
             When this parameter is `False`, this method returns only clips that are not featured.
 
             Othwerise if this parameter is not provided or `None`, all clips will be returned. Defaults to `None`.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
         first: int
             The maximum number of items to return per page. Defaults to **20**.
@@ -923,7 +932,7 @@ class Client:
             max_results=max_results,
         )
 
-    async def fetch_extensions(self, *, token_for: str) -> list[Extension]:
+    async def fetch_extensions(self, *, token_for: str | PartialUser) -> list[Extension]:
         """Fetch a list of all extensions (both active and inactive) that the broadcaster has installed.
 
         The user ID in the access token identifies the broadcaster.
@@ -935,8 +944,8 @@ class Client:
 
         Parameters
         ----------
-        token_for: str
-            The User ID that will be used to find an appropriate managed user token for this request.
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `user:read:broadcast` or `user:edit:broadcast` scope.
 
             See: :meth:`~Client.add_token` to add managed tokens to the client.
@@ -950,7 +959,9 @@ class Client:
         data = await self._http.get_user_extensions(token_for=token_for)
         return [Extension(d) for d in data["data"]]
 
-    async def update_extensions(self, *, user_extensions: ActiveExtensions, token_for: str) -> ActiveExtensions:
+    async def update_extensions(
+        self, *, user_extensions: ActiveExtensions, token_for: str | PartialUser
+    ) -> ActiveExtensions:
         """Update an installed extension's information for a specific broadcaster.
 
         You can update the extension's activation `state`, `ID`, and `version number`.
@@ -970,8 +981,8 @@ class Client:
 
         Parameters
         ----------
-        token_for: str
-            The User ID that will be used to find an appropriate managed user token for this request.
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `user:edit:broadcast` scope.
 
             See: :meth:`~Client.add_token` to add managed tokens to the client.
@@ -984,10 +995,16 @@ class Client:
         data = await self._http.put_user_extensions(user_extensions=user_extensions, token_for=token_for)
         return ActiveExtensions(data["data"])
 
-    async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
+    async def fetch_emotes(self, *, token_for: str | PartialUser | None = None) -> list[GlobalEmote]:
         """Fetches global emotes from the Twitch API.
 
-        If you wish to fetch a specific broadcaster's chat emotes use :meth:`~twitchio.PartialUser.fetch_channel_emotes`.
+        .. note::
+            If you wish to fetch a specific broadcaster's chat emotes use :meth:`~twitchio.PartialUser.fetch_channel_emotes`.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            |token_for|
 
         Returns
         --------
@@ -1007,12 +1024,10 @@ class Client:
         user_logins: list[int | str] | None = None,
         languages: list[str] | None = None,
         type: Literal["all", "live"] = "all",
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
-        # TODO: Docs: Languages??
-        # TODO: Docs: type??? Needs more info. What does all mean and how does it differ from live...
         """|aiter|
 
         Fetches streams from the Twitch API.
@@ -1026,10 +1041,17 @@ class Client:
         user_logins: list[str] | None
             An optional list of User-Logins to fetch live stream information for.
         languages: list[str] | None
-            The language to fetch for the streams. Must be `ISO 639-1` or a supported two letter code of the stream language.
+            A language code used to filter the list of streams. Returns only streams that broadcast in the specified language.
+            Specify the language using an ISO 639-1 two-letter language code or other if the broadcast uses a language not in the list of `supported stream languages <https://help.twitch.tv/s/article/languages-on-twitch#streamlang>`_.
+            You may specify a maximum of `100` language codes.
         type: Literal["all", "live"]
             One of `"all"` or `"live"`. Defaults to `"all"`. Specifies what type of stream to fetch.
-        token_for: str | None
+
+            .. important::
+                Twitch deprecated filtering streams by type. `all` and `live` both return the same data.
+                This is being kept in the library in case of future additions.
+
+        token_for: str | PartialUser | None
             |token_for|
         first: int
             The maximum number of items to return per page. Defaults to **20**.
@@ -1061,7 +1083,7 @@ class Client:
         *,
         team_name: str | None = None,
         team_id: str | None = None,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> Team:
         """Fetches information about a specific Twitch team.
 
@@ -1073,7 +1095,7 @@ class Client:
             The team name.
         team_id: str | None
             The team id.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
         Returns
@@ -1101,7 +1123,7 @@ class Client:
     def fetch_top_games(
         self,
         *,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
@@ -1112,7 +1134,7 @@ class Client:
 
         Parameters
         -----------
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
         first: int
             The maximum number of items to return per page. Defaults to **20**.
@@ -1136,7 +1158,7 @@ class Client:
         names: list[str] | None = None,
         ids: list[str] | None = None,
         igdb_ids: list[str] | None = None,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> list[Game]:
         # TODO: Docs??? More info...
         """Fetches information about multiple games on Twitch.
@@ -1149,7 +1171,7 @@ class Client:
             A list of game ids to use to fetch information about. Defaults to `None`.
         igdb_ids: list[str] | None
             A list of `igdb` ids to use to fetch information about. Defaults to `None`.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
         Returns
@@ -1173,7 +1195,7 @@ class Client:
         name: str | None = None,
         id: str | None = None,
         igdb_id: str | None = None,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> Game | None:
         """Fetch a :class:`~twitchio.Game` object with the provided `name`, `id`, or `igdb_id`.
 
@@ -1196,7 +1218,7 @@ class Client:
             The id of the game to fetch.
         igdb_id: str | None
             The igdb id of the game to fetch.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
         Returns
@@ -1222,13 +1244,14 @@ class Client:
         igdb_ids: list[str] | None = [igdb_id] if igdb_id else None
 
         data = await self._http.get_games(names=names, ids=id_, igdb_ids=igdb_ids, token_for=token_for)
-        if not data["data"]:
-            return None
-
-        return Game(data["data"][0], http=self._http)
+        return Game(data["data"][0], http=self._http) if data["data"] else None
 
     async def fetch_users(
-        self, *, ids: list[str | int] | None = None, logins: list[str] | None = None, token_for: str | None = None
+        self,
+        *,
+        ids: list[str | int] | None = None,
+        logins: list[str] | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> list[User]:
         """Fetch information about one or more users.
 
@@ -1252,7 +1275,7 @@ class Client:
             The ids of the users to fetch information about.
         logins: list[str] | None
             The login names of the users to fetch information about.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
 
             If this parameter is provided, the token must have the `user:read:email` scope
@@ -1279,7 +1302,7 @@ class Client:
         self,
         query: str,
         *,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Game]:
@@ -1291,7 +1314,7 @@ class Client:
         -----------
         query: str
             The query to search for.
-        token_for: str | None
+        token_for: str | PartialUser | None
             |token_for|
         first: int
             The maximum number of items to return per page. Defaults to **20**.
@@ -1319,7 +1342,7 @@ class Client:
         query: str,
         *,
         live: bool = False,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[SearchChannel]:
@@ -1347,7 +1370,7 @@ class Client:
         live: bool
             Whether to return live channels only.
             Defaults to `False`.
-        token_for: str | None
+        token_for: str | PartialUser  | None
             |token_for|
         first: int
             The maximum number of items to return per page. Defaults to **20**.
@@ -1375,7 +1398,7 @@ class Client:
         self,
         *,
         ids: list[str | int] | None = None,
-        user_id: str | int | None = None,
+        user_id: str | int | PartialUser | None = None,
         game_id: str | int | None = None,
         language: str | None = None,
         period: Literal["all", "day", "month", "week"] = "all",
@@ -1383,7 +1406,7 @@ class Client:
         type: Literal["all", "archive", "highlight", "upload"] = "all",
         first: int = 20,
         max_results: int | None = None,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> HTTPAsyncIterator[Video]:
         # TODO: Docs??? langauge...
         # TODO: Docs??? period...
@@ -1400,19 +1423,76 @@ class Client:
         ----------
         ids: list[str | int] | None
             A list of video IDs to fetch.
-        user_id: str | int | None
+        user_id: str | int | PartialUser | None
             The ID of the user whose list of videos you want to fetch.
         game_id: str | int | None
             The igdb id of the game to fetch.
         language: str | None
-            ...
+            A filter used to filter the list of videos by the language that the video owner broadcasts in.
+
+            For example, to get videos that were broadcast in German, set this parameter to the ISO 639-1 two-letter code for German (i.e., DE).
+
+            For a list of supported languages, see `Supported Stream Language <https://help.twitch.tv/s/article/languages-on-twitch#streamlang>`_. If the language is not supported, use `other`.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id query parameter.
+
         period: Literal["all", "day", "month", "week"]
-            ...
+            A filter used to filter the list of videos by when they were published. For example, videos published in the last week.
+            Possible values are: `all`, `day`, `month`, `week`.
+
+            The default is `all`, which returns videos published in all periods.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id or user_id query parameter.
+
         sort: Literal["time", "trending", "views"]
-            ...
+            The order to sort the returned videos in.
+
+            +------------+---------------------------------------------------------------+
+            | Sort Key   | Description                                                   |
+            +============+===============================================================+
+            | time       | Sort the results in descending order by when they were        |
+            |            | created (i.e., latest video first).                           |
+            +------------+---------------------------------------------------------------+
+            | trending   | Sort the results in descending order by biggest gains in      |
+            |            | viewership (i.e., highest trending video first).              |
+            +------------+---------------------------------------------------------------+
+            | views      | Sort the results in descending order by most views (i.e.,     |
+            |            | highest number of views first).                               |
+            +------------+---------------------------------------------------------------+
+
+            The default is `time`.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id or user_id query parameter.
+
         type: Literal["all", "archive", "highlight", "upload"]
-            ...
-        token_for: str | None
+            A filter used to filter the list of videos by the video's type.
+
+            +-----------+-------------------------------------------------------------+
+            | Type      | Description                                                 |
+            +===========+=============================================================+
+            | all       | Include all video types.                                    |
+            +-----------+-------------------------------------------------------------+
+            | archive   | On-demand videos (VODs) of past streams.                    |
+            +-----------+-------------------------------------------------------------+
+            | highlight | Highlight reels of past streams.                            |
+            +-----------+-------------------------------------------------------------+
+            | upload    | External videos that the broadcaster uploaded using the     |
+            |           | Video Producer.                                             |
+            +-----------+-------------------------------------------------------------+
+
+            The default is `all`, which returns all video types.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id or user_id query parameter.
+
+        token_for: str | PartialUser | None
             |token_for|
         first: int
             The maximum number of items to return per page. Defaults to **20**.
@@ -1453,8 +1533,7 @@ class Client:
             token_for=token_for,
         )
 
-    async def delete_videos(self, *, ids: list[str | int], token_for: str) -> list[str]:
-        # TODO: DOCS: Chunks bit needs clarification, because currently that makes no sense...
+    async def delete_videos(self, *, ids: list[str | int], token_for: str | PartialUser) -> list[str]:
         """Deletes one or more videos for a specific broadcaster.
 
         .. note::
@@ -1473,8 +1552,8 @@ class Client:
         ----------
         ids: list[str | int] | None
             A list of video IDs to delete.
-        token_for: str
-            The User ID that will be used to find an appropriate managed user token for this request.
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `channel:manage:videos` scope.
 
             See: :meth:`~Client.add_token` to add managed tokens to the client.
@@ -1497,7 +1576,7 @@ class Client:
         self,
         *,
         video_id: str,
-        token_for: str,
+        token_for: str | PartialUser,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[VideoMarkers]:
@@ -1520,9 +1599,9 @@ class Client:
         ----------
         video_id: str
             A video on demand (VOD)/video ID. The request returns the markers from this VOD/video.
-            The User-ID provided to `token_for` must own the video or the user must be one of the broadcaster's editors.
-        token_for: str
-            The User-ID that will be used to find an appropriate managed user token for this request.
+            The User ID provided to `token_for` must own the video or the user must be one of the broadcaster's editors.
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `user:read:broadcast` *or* `channel:manage:broadcast` scope
 
             See: :meth:`~Client.add_token` to add managed tokens to the client.
@@ -1548,9 +1627,9 @@ class Client:
     def fetch_drop_entitlements(
         self,
         *,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         ids: list[str] | None = None,
-        user_id: str | int | None = None,
+        user_id: str | int | PartialUser | None = None,
         game_id: str | None = None,
         fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
         first: int = 20,
@@ -1594,7 +1673,7 @@ class Client:
 
         Parameters
         ----------
-        token_for: str | None
+        token_for: str | PartialUser | None
             An optional User-ID that will be used to find an appropriate managed user token for this request.
             The Client-ID associated with the token must own the game.
 
@@ -1602,8 +1681,8 @@ class Client:
             If this paramter is not provided or `None`, the default app token is used.
         ids: list[str] | None
             A list of entitlement ids that identifies the entitlements to fetch.
-        user_id: str | int | None
-            An optional User-ID of the user that was granted entitlements.
+        user_id: str | int | PartialUser | None
+            An optional User ID of the user that was granted entitlements.
         game_id: str | None
             An ID that identifies a game that offered entitlements.
         fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None
@@ -1644,7 +1723,7 @@ class Client:
         *,
         ids: list[str] | None = None,
         fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> list[EntitlementStatus]:
         """Updates a Drop entitlement's fulfillment status.
 
@@ -1668,8 +1747,8 @@ class Client:
         fulfillment_status: Literal[""CLAIMED", "FULFILLED"] | None
             The fulfillment status to set the entitlements to.
             Possible values are: `CLAIMED` and `FULFILLED`.
-        token_for: str | None
-            An optional User-ID that will be used to find an appropriate managed user token for this request.
+        token_for: str | PartialUser | None
+            An optional User ID that will be used to find an appropriate managed user token for this request.
             The Client-ID associated with the token must own the game associated with this drop entitlment.
 
             See: :meth:`~Client.add_token` to add managed tokens to the client.
@@ -1952,9 +2031,9 @@ class Client:
     async def fetch_eventsub_subscriptions(
         self,
         *,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         type: str | None = None,
-        user_id: str | None = None,
+        user_id: str | PartialUser | None = None,
         status: Literal[
             "enabled",
             "webhook_callback_verification_pending",
@@ -1983,56 +2062,56 @@ class Client:
 
         Parameters
         -----------
-        token_for: str | None
+        token_for: str | PartialUser | None
             By default, if this is ignored or set to None then the App Token is used. This is the case when you want to fetch webhook events.
 
             Provide a user ID here for when you want to fetch websocket events tied to a user.
         type: str | None
             Filter subscriptions by subscription type. e.g. ``channel.follow`` For a list of subscription types, see `Subscription Types <https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#subscription-types>`_.
-        user_id: str | None
-            Filter subscriptions by user ID. The response contains subscriptions where this ID matches a user ID that you specified in the Condition object when you created the subscription.
+        user_id: str | PartialUser | None
+            Filter subscriptions by user ID, or PartialUser. The response contains subscriptions where this ID matches a user ID that you specified in the Condition object when you created the subscription.
         status: str | None = None
             Filter subscriptions by its status. Possible values are:
 
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | Status                                 | Description                                                                                                       |
-        +========================================+===================================================================================================================+
-        | enabled                                | The subscription is enabled.                                                                                      |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | webhook_callback_verification_pending  | The subscription is pending verification of the specified callback URL.                                           |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | webhook_callback_verification_failed   | The specified callback URL failed verification.                                                                   |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | notification_failures_exceeded         | The notification delivery failure rate was too high.                                                              |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | authorization_revoked                  | The authorization was revoked for one or more users specified in the Condition object.                            |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | moderator_removed                      | The moderator that authorized the subscription is no longer one of the broadcaster's moderators.                  |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | user_removed                           | One of the users specified in the Condition object was removed.                                                   |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | chat_user_banned                       | The user specified in the Condition object was banned from the broadcaster's chat.                                |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | version_removed                        | The subscription to subscription type and version is no longer supported.                                         |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | beta_maintenance                       | The subscription to the beta subscription type was removed due to maintenance.                                    |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_disconnected                 | The client closed the connection.                                                                                 |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_failed_ping_pong             | The client failed to respond to a ping message.                                                                   |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_received_inbound_traffic     | The client sent a non-pong message. Clients may only send pong messages (and only in response to a ping message). |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_connection_unused            | The client failed to subscribe to events within the required time.                                                |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_internal_error               | The Twitch WebSocket server experienced an unexpected error.                                                      |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_network_timeout              | The Twitch WebSocket server timed out writing the message to the client.                                          |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_network_error                | The Twitch WebSocket server experienced a network error writing the message to the client.                        |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | websocket_failed_to_reconnect          | The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message. |
-        +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | Status                                 | Description                                                                                                       |
+            +========================================+===================================================================================================================+
+            | enabled                                | The subscription is enabled.                                                                                      |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | webhook_callback_verification_pending  | The subscription is pending verification of the specified callback URL.                                           |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | webhook_callback_verification_failed   | The specified callback URL failed verification.                                                                   |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | notification_failures_exceeded         | The notification delivery failure rate was too high.                                                              |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | authorization_revoked                  | The authorization was revoked for one or more users specified in the Condition object.                            |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | moderator_removed                      | The moderator that authorized the subscription is no longer one of the broadcaster's moderators.                  |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | user_removed                           | One of the users specified in the Condition object was removed.                                                   |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | chat_user_banned                       | The user specified in the Condition object was banned from the broadcaster's chat.                                |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | version_removed                        | The subscription to subscription type and version is no longer supported.                                         |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | beta_maintenance                       | The subscription to the beta subscription type was removed due to maintenance.                                    |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_disconnected                 | The client closed the connection.                                                                                 |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_failed_ping_pong             | The client failed to respond to a ping message.                                                                   |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_received_inbound_traffic     | The client sent a non-pong message. Clients may only send pong messages (and only in response to a ping message). |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_connection_unused            | The client failed to subscribe to events within the required time.                                                |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_internal_error               | The Twitch WebSocket server experienced an unexpected error.                                                      |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_network_timeout              | The Twitch WebSocket server timed out writing the message to the client.                                          |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_network_error                | The Twitch WebSocket server experienced a network error writing the message to the client.                        |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_failed_to_reconnect          | The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message. |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
 
         max_results: int | None
             The maximum number of total results to return. When this parameter is set to ``None``, all results are returned.
@@ -2058,25 +2137,27 @@ class Client:
             token_for=token_for,
         )
 
-    async def delete_eventsub_subscription(self, id: str, *, token_for: str | None = None) -> None:
+    async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
         """Delete an eventsub subscription.
 
         Parameters
         ----------
         id: str
             The ID of the eventsub subscription to delete.
-        token_for: str | None
-            For websocket subscriptions, provide the user ID associated with the subscription.
+        token_for: str | PartialUser | None
+            For websocket subscriptions, provide the user ID, or PartialUser, associated with the subscription.
+
         """
         await self._http.delete_eventsub_subscription(id, token_for=token_for)
 
-    async def delete_all_eventsub_subscriptions(self, *, token_for: str) -> None:
+    async def delete_all_eventsub_subscriptions(self, *, token_for: str | PartialUser | None = None) -> None:
         """Delete all eventsub subscriptions.
 
         Parameters
         ----------
-        token_for: str | None
-            For websocket subscriptions, provide the user ID associated with the subscription.
+        token_for: str | PartialUser | None
+            For websocket subscriptions, provide the user ID, or PartialUser, associated with the subscription.
+
         """
         events = await self.fetch_eventsub_subscriptions(token_for=token_for)
         async for sub in events.subscriptions:

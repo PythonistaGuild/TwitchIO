@@ -25,6 +25,8 @@ SOFTWARE.
 from collections.abc import MutableMapping
 from typing import Any, Literal, TypeAlias, TypedDict
 
+from twitchio.user import PartialUser
+
 
 __all__ = ("HTTPMethod", "APIRequestKwargs", "APIRequest", "ParamMapping")
 
@@ -38,7 +40,7 @@ class APIRequestKwargs(TypedDict, total=False):
     data: dict[str, Any]
     params: ParamMapping
     json: Any
-    token_for: str | None
+    token_for: str | PartialUser | None
 
 
 class APIRequest(TypedDict, total=False):

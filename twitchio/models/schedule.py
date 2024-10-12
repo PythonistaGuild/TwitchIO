@@ -124,7 +124,7 @@ class ScheduleSegment:
     async def update_segment(
         self,
         *,
-        token_for: str,
+        token_for: str | PartialUser,
         start_time: datetime.datetime | None = None,
         duration: int | None = None,
         category_id: str | None = None,
@@ -139,7 +139,7 @@ class ScheduleSegment:
 
         Parameters
         ----------
-        token_for: str
+        token_for: str | PartialUser
             User access token that includes the ``channel:manage:schedule`` scope.
         start_time: datetime.datetime | None
             The datetime that the broadcast segment starts. This can be timezone aware.
@@ -185,7 +185,7 @@ class ScheduleSegment:
 
         return Schedule(data["data"], http=self._http)
 
-    async def delete(self, *, token_for: str) -> None:
+    async def delete(self, *, token_for: str | PartialUser) -> None:
         """Removes a broadcast segment from the broadcaster's streaming schedule.
 
         For recurring segments, removing a segment removes all segments in the recurring schedule.
@@ -195,7 +195,7 @@ class ScheduleSegment:
 
         Parameters
         ----------
-        token_for: str
+        token_for: str | PartialUser
             User access token that includes the ``channel:manage:schedule`` scope.
         """
         return await self._http.delete_channel_stream_schedule_segment(
