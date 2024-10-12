@@ -32,7 +32,7 @@ from twitchio.models.channel_points import CustomReward
 from twitchio.models.charity import CharityValues
 from twitchio.models.chat import EmoteSet
 from twitchio.models.predictions import PredictionOutcome
-from twitchio.user import PartialUser
+from twitchio.user import Chatter, PartialUser
 from twitchio.utils import Colour, parse_timestamp
 
 
@@ -773,7 +773,7 @@ class ChatMessage(BaseChatMessage):
 
     def __init__(self, payload: ChannelChatMessageEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
-        self.chatter: PartialUser = PartialUser(payload["chatter_user_id"], payload["chatter_user_login"], http=http)
+
         self.colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self.channel_points_id: str | None = payload["channel_points_custom_reward_id"]
         self.channel_points_animation_id: str | None = payload["channel_points_animation_id"]
@@ -800,6 +800,8 @@ class ChatMessage(BaseChatMessage):
         self.source_badges: list[ChatMessageBadge] = [
             ChatMessageBadge(badge) for badge in (payload.get("source_badges") or [])
         ]
+
+        self.chatter: Chatter = Chatter(payload, broadcaster=self.broadcaster, badges=self.badges, http=http)
 
     def __repr__(self) -> str:
         return f"<ChatMessage broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"

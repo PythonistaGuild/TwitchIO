@@ -37,7 +37,7 @@ __all__ = ("Context",)
 if TYPE_CHECKING:
     from models.eventsub_ import ChatMessage
     from types_.options import Prefix_T
-    from user import PartialUser
+    from user import Chatter, PartialUser
 
     from .bot import Bot
     from .core import Command
@@ -83,7 +83,7 @@ class Context:
         return self._invoked_with
 
     @property
-    def chatter(self) -> PartialUser:
+    def chatter(self) -> Chatter:
         return self._message.chatter
 
     @property

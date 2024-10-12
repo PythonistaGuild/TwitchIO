@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from .models.charity import CharityCampaign, CharityDonation
     from .models.chat import ChannelEmote, ChatBadge, ChatSettings, Chatters, SentMessage, SharedChatSession, UserEmote
     from .models.clips import Clip, CreatedClip
+    from .models.eventsub_ import ChannelChatMessageEvent, ChatMessageBadge
     from .models.goals import Goal
     from .models.hype_train import HypeTrainEvent
     from .models.moderation import (
@@ -100,6 +101,17 @@ class PartialUser:
 
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
+
+    def __str__(self) -> str:
+        return self.name or "..."
+
+    @property
+    def mention(self) -> str:
+        """Property returning the users name formatted to mention them in chat.
+
+        E.g. "@kappa"
+        """
+        return f"@{self}"
 
     async def start_commercial(self, *, length: int, token_for: str) -> CommercialStart:
         """Starts a commercial on the specified channel.
@@ -858,10 +870,10 @@ class PartialUser:
             max_results=max_results,
         )
 
-    async def fetch_chat_badges(self, token_for: str | None = None) -> list[ChatBadge]:
+    async def fetch_badges(self, token_for: str | None = None) -> list[ChatBadge]:
         """Fetches the broadcaster's list of custom chat badges.
 
-        If you wish to fetch globally available chat badges use If you wish to fetch a specific broadcaster's chat badges use [`client.fetch_chat_badges`][twitchio.client.fetch_chat_badges]
+        If you wish to fetch globally available chat badges use If you wish to fetch a specific broadcaster's chat badges use [`client.fetch_badges`][twitchio.client.fetch_badges]
 
         Parameters
         ----------
@@ -3480,3 +3492,97 @@ class ActiveExtensions:
             "overlay": {str(i + 1): overlay._to_dict() for i, overlay in enumerate(self.overlays)},
             "component": {str(i + 1): component._to_dict() for i, component in enumerate(self.components)},
         }
+
+
+class Chatter(PartialUser):
+    __slots__ = (
+        "__dict__",
+        "_is_staff",
+        "_is_admin",
+        "_is_broadcaster",
+        "_is_moderator",
+        "_is_verified",
+        "_is_vip",
+        "_is_artist_badge",
+        "_is_founder",
+        "_is_subscriber",
+        "_is_no_audio",
+        "_is_no_video",
+        "_is_turbo",
+        "_is_premium",
+        "channel",
+    )
+
+    def __init__(
+        self,
+        payload: ChannelChatMessageEvent,
+        *,
+        http: HTTPClient,
+        broadcaster: PartialUser,
+        badges: list[ChatMessageBadge],
+    ) -> None:
+        super().__init__(id=payload["chatter_user_id"], name=payload["chatter_user_login"], http=http)
+
+        slots = [s for s in self.__slots__ if not s.startswith("__")]
+        for badge in badges:
+            name = f"_is_{badge.set_id}".replace("-", "_")
+
+            if name in slots:
+                setattr(self, name, True)
+
+        self.channel: PartialUser = broadcaster
+
+    def __repr__(self) -> str:
+        return f"<Chatter id={self.id}, name={self.name}, channel={self.channel}>"
+
+    @property
+    def staff(self) -> bool:
+        return getattr(self, "_is_staff", False)
+
+    @property
+    def admin(self) -> bool:
+        return getattr(self, "_is_admin", False)
+
+    @property
+    def broadcaster(self) -> bool:
+        return getattr(self, "_is_broadcaster", False)
+
+    @property
+    def moderator(self) -> bool:
+        return getattr(self, "_is_moderator", False) or self.broadcaster
+
+    @property
+    def vip(self) -> bool:
+        return getattr(self, "_is_vip", False)
+
+    @property
+    def artist(self) -> bool:
+        return getattr(self, "_is_artist_badge", False)
+
+    @property
+    def founder(self) -> bool:
+        return getattr(self, "_is_founder", False)
+
+    @property
+    def subscriber(self) -> bool:
+        return getattr(self, "_is_subscriber", False)
+
+    @property
+    def no_audio(self) -> bool:
+        return getattr(self, "_is_no_audio", False)
+
+    @property
+    def no_video(self) -> bool:
+        return getattr(self, "_is_no_video", False)
+
+    @property
+    def partner(self) -> bool:
+        return getattr(self, "_is_partner", False)
+
+    @property
+    def turbo(self) -> bool:
+        return getattr(self, "_is_turbo", False)
+
+    @property
+    def prime(self) -> bool:
+        return getattr(self, "_is_premium", False)
