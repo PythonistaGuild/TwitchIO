@@ -123,6 +123,17 @@ class Context:
         return self._kwargs
 
     def is_owner(self) -> bool:
+        """Method which returns whether the chatter associated with this context is the owner of the bot.
+
+        .. warning::
+
+            You must have set the :attr:`~twitchio.Bot.owner_id` first, otherwise this method will always return `False`.
+
+        Returns
+        -------
+        bool
+            Whether the chatter that this context is associated with is the owner of this bot.
+        """
         return self.chatter.id == self.bot.owner_id
 
     def is_valid(self) -> bool:

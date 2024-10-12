@@ -77,6 +77,17 @@ class Bot(Mixin[None], Client):
 
     @property
     def owner_id(self) -> str | None:
+        """Property returning the ID of the user who owns this bot.
+
+        This can be set via the keyword argument `owner_id="..."` in the constructor of this class.
+
+        Returns
+        -------
+        str
+            The owner ID that has been set.
+        None
+            No owner ID has been set.
+        """
         return self._owner_id
 
     def _cleanup_component(self, component: Component, /) -> None:
