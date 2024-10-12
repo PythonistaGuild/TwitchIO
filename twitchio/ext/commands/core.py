@@ -233,6 +233,8 @@ class Command(Generic[Component_T, P]):
                 raise CheckFailure
 
     async def _invoke(self, context: Context) -> None:
+        context._component = self._injected
+
         try:
             args, kwargs = await self._parse_arguments(context)
         except (ConversionError, MissingRequiredArgument):
@@ -247,6 +249,14 @@ class Command(Generic[Component_T, P]):
         args.insert(0, self._injected) if self._injected else None
 
         await self._run_guards(context)
+        context._passed_guards = True
+
+        try:
+            await context.bot.before_invoke(context)
+            if self._injected is not None:
+                await self._injected.component_before_invoke(context)
+        except Exception as e:
+            raise CommandHookError(str(e), e) from e
 
         callback = self._callback(*args, **kwargs)  # type: ignore
 

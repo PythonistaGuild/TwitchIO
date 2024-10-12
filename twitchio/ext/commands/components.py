@@ -48,7 +48,7 @@ class _MetaComponent:
     __component_specials__: ClassVar[list[str]] = []
     __all_commands__: dict[str, Command[Any, ...]]
     __all_listeners__: dict[str, list[Callable[..., Coroutine[Any, Any, None]]]]
-    __all_checks__: list[Callable[..., Coroutine[Any, Any, None]]]
+    __all_guards__: list[Callable[..., Coroutine[Any, Any, None]]]
 
     @classmethod
     def _component_special(cls, obj: Any) -> Any:
@@ -72,9 +72,9 @@ class _MetaComponent:
 
         commands: dict[str, Command[Any, ...]] = {}
         listeners: dict[str, list[Callable[..., Coroutine[Any, Any, None]]]] = {}
-        checks: list[Callable[..., Coroutine[Any, Any, None]]] = []
+        guards: list[Callable[..., Coroutine[Any, Any, None]]] = []
 
-        no_special: str = 'Commands, listeners and checks must not start with special name "component_" in components:'
+        no_special: str = 'Commands, listeners and guards must not start with special name "component_" in components:'
         no_over: str = 'The special method "{}" can not be overriden in components.'
 
         for base in reversed(cls.__mro__):
@@ -104,30 +104,65 @@ class _MetaComponent:
                     except KeyError:
                         listeners[member.__listener_name__] = [injected]
 
-                elif hasattr(member, "__component_check__"):
-                    if not member.__component_check__:
+                elif hasattr(member, "__component_guard__"):
+                    if not member.__component_guard__:
                         continue
 
                     if name.startswith("component_"):
                         raise TypeError(f'{no_special} "{member.__qualname__}" is invalid.')
 
-                    checks.append(member)
+                    guards.append(member)
 
         cls.__all_commands__ = commands
         cls.__all_listeners__ = listeners
-        cls.__all_checks__ = checks
+        cls.__all_guards__ = guards
 
         return self
 
 
 class Component(_MetaComponent):
-    async def component_command_error(self, payload: CommandErrorPayload) -> None: ...
+    async def component_command_error(self, payload: CommandErrorPayload) -> None:
+        """Event called when an error occurs in a command in this Component.
 
-    async def component_load(self) -> None: ...
+        Similar to :meth:`~.commands.Bot.event_command_error` except only catches errors from commands within this Component.
 
-    async def component_before_invoke(self, ctx: Context) -> None: ...
+        This method is intended to be overwritten, by default it does nothing.
+        """
 
-    async def component_after_invoke(self, ctx: Context) -> None: ...
+    async def component_load(self) -> None:
+        """Hook called when the component is about to be loaded into the bot.
+
+        You should use this hook to do any async setup required when loading a component.
+        See: :meth:`.component_teardown` for a hook called when a Component is unloaded from the bot.
+
+        This method is intended to be overwritten, by default it does nothing.
+
+        .. important::
+
+            If this method raises or fails, the Component will **NOT** be loaded. Instead it will be cleaned up and removed
+            and the error will propagate.
+        """
+
+    async def component_teardown(self) -> None:
+        """Hook called when the component is about to be unloaded from the bot.
+
+        You should use this hook to do any async teardown/cleanup required on the component.
+        See: :meth:`.component_load` for a hook called when a Component is loaded into the bot.
+
+        This method is intended to be overwritten, by default it does nothing.
+        """
+
+    async def component_before_invoke(self, ctx: Context) -> None:
+        """Hook called before a :class:`~.commands.Command` in this Component is invoked.
+
+        Similar to :meth:`~.commands.Bot.before_invoke` but only applies to commands in this Component.
+        """
+
+    async def component_after_invoke(self, ctx: Context) -> None:
+        """Hook called after a :class:`~.commands.Command` has successfully invoked in this Component.
+
+        Similar to :meth:`~.commands.Bot.after_invoke` but only applies to commands in this Component.
+        """
 
     @_MetaComponent._component_special
     def extras(self) -> dict[Any, Any]:
@@ -135,6 +170,12 @@ class Component(_MetaComponent):
 
     @classmethod
     def listener(cls, name: str | None = None) -> Any:
+        # TODO: Docs...
+        """|deco|
+
+        A decorator which adds a an event listener to this component.
+        """
+
         def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
             if not asyncio.iscoroutinefunction(func):
                 raise TypeError(f'Component listener func "{func.__qualname__}" must be a coroutine function.')
@@ -149,12 +190,18 @@ class Component(_MetaComponent):
         return wrapper
 
     @classmethod
-    def check(cls) -> Any:
+    def guard(cls) -> Any:
+        # TODO: Docs...
+        """|deco|
+
+        A decorator which adds a guard to every :class:`~.commands.Command` in this Component.
+        """
+
         def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
             if not asyncio.iscoroutinefunction(func):
-                raise TypeError(f'Component check func "{func.__qualname__}" must be a coroutine function.')
+                raise TypeError(f'Component guard func "{func.__qualname__}" must be a coroutine function.')
 
-            setattr(func, "__component_check__", True)
+            setattr(func, "__component_guard__", True)
 
             return func
 

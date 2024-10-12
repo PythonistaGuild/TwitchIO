@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     from user import Chatter, PartialUser
 
     from .bot import Bot
+    from .components import Component
     from .core import Command
 
 
@@ -47,6 +48,7 @@ class Context:
     def __init__(self, message: ChatMessage, bot: Bot) -> None:
         self._message: ChatMessage = message
         self._bot: Bot = bot
+        self._component: Component | None = None
         self._prefix: str | None = None
 
         self._raw_content: str = self._message.text
@@ -57,6 +59,9 @@ class Context:
         self._command_failed: bool = False
         self._error_dispatched: bool = False
 
+        self._failed: bool = False
+        self._passed_guards = False
+
         self._view: StringView = StringView(self._raw_content)
 
         self._args: list[Any] = []
@@ -65,6 +70,10 @@ class Context:
     @property
     def message(self) -> ChatMessage:
         return self._message
+
+    @property
+    def component(self) -> Component | None:
+        return self._component
 
     @property
     def command(self) -> Command[Any, ...] | None:
@@ -121,6 +130,10 @@ class Context:
     @property
     def kwargs(self) -> dict[str, Any]:
         return self._kwargs
+
+    @property
+    def failed(self) -> bool:
+        return self._failed
 
     def is_owner(self) -> bool:
         """Method which returns whether the chatter associated with this context is the owner of the bot.
@@ -205,27 +218,26 @@ class Context:
         if not self._command:
             raise CommandNotFound(f'The command "{self._invoked_with}" was not found.')
 
-        try:
-            await self._bot.before_invoke(self)
-        except Exception as e:
-            raise CommandHookError(str(e), e) from e
-
         # TODO: Payload...
         self.bot.dispatch("command_invoked")
 
         try:
             await self._command.invoke(self)
         except CommandError as e:
+            self._failed = True
             await self._command._dispatch_error(self, e)
-            return
 
-        try:
-            await self._bot.after_invoke(self)
-        except Exception as e:
-            raise CommandHookError(str(e), e) from e
+        if self._passed_guards:
+            try:
+                await self._bot.after_invoke(self)
+                if self._component:
+                    await self._component.component_after_invoke(self)
+            except Exception as e:
+                raise CommandHookError(str(e), e) from e
 
         # TODO: Payload...
-        self.bot.dispatch("command_completed")
+        if not self._failed:
+            self.bot.dispatch("command_completed")
 
     async def send(self, content: str) -> None:
         await self.channel.send_message(sender_id=self.bot.bot_id, message=content)
