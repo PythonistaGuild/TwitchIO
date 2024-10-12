@@ -481,10 +481,6 @@ main .py-attribute-table-column > ul {
 	content: "\f121" !important;
 }
 
-.admonition {
-	background-color: var(--color-dim-line) !important;
-}
-
 .admonition.codeW {
 	overflow-x: auto;
 }
