@@ -7,3 +7,4 @@ Bot
 
 .. autoclass:: twitchio.ext.commands.Bot
     :members:
+    :inherited-members:
