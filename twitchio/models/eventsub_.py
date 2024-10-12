@@ -560,13 +560,13 @@ class ChatMessageEmote:
     def __repr__(self) -> str:
         return f"<ChatMessageEmote set_id={self.set_id} id={self.id} owner={self.owner} format={self.format}>"
 
-    async def fetch_emote_set(self, *, token_for: str | None = None) -> EmoteSet:
+    async def fetch_emote_set(self, *, token_for: str | PartialUser | None = None) -> EmoteSet:
         """
         Fetches emotes for this emote set.
 
         Parameters
         ----------
-        token_for : str | None
+        token_for : str | PartialUser | None
             An optional user token to use instead of the default app token.
 
         Returns
@@ -2871,7 +2871,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
     def __repr__(self) -> str:
         return f"<ChannelPointsRedemptionAdd broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
-    async def fulfill(self, *, token_for: str) -> CustomRewardRedemption:
+    async def fulfill(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
         """
         Updates the redemption's status to FULFILLED.
 
@@ -2880,7 +2880,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
 
         Parameters
         -----------
-        token_for: str
+        token_for: str | PartialUser
             The user's token that has permission manage the broadcaster's reward redemptions.
 
         Returns
@@ -2899,7 +2899,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         reward = cast(CustomReward, self.reward)
         return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
-    async def refund(self, *, token_for: str) -> CustomRewardRedemption:
+    async def refund(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
         """
         Updates the redemption's status to CANCELED.
 
@@ -2908,7 +2908,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
 
         Parameters
         -----------
-        token_for: str
+        token_for: str | PartialUser
             The user's token that has permission manage the broadcaster's reward redemptions.
 
         Returns
@@ -4582,7 +4582,7 @@ class EventsubSubscription:
 
         Parameters
         ----------
-        token_for : str | None
+        token_for: str | None
             For websocket subscriptions, provide the user ID associated with the subscription.
         """
         await self._http.delete_eventsub_subscription(self.id, token_for=token_for)

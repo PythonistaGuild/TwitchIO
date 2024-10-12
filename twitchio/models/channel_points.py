@@ -237,7 +237,7 @@ class CustomReward:
     async def update(
         self,
         *,
-        token_for: str,
+        token_for: str | PartialUser,
         title: str | None = None,
         cost: int | None = None,
         prompt: str | None = None,
@@ -259,7 +259,7 @@ class CustomReward:
 
         Parameters
         -----------
-        token_for: str
+        token_for: str | PartialUser
             The user's token that has permission manage the reward.
         title: str | None
             The user's token that has permission manage the reward.
@@ -330,7 +330,7 @@ class CustomReward:
     def fetch_redemptions(
         self,
         *,
-        token_for: str,
+        token_for: str | PartialUser,
         status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"],
         ids: list[str] | None = None,
         sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
@@ -345,7 +345,7 @@ class CustomReward:
 
         Parameters
         -----------
-        token_for: str
+        token_for: str | PartialUser
             The user's token that has permission manage or read the broadcaster's reward redemptions.
         status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
             The state of the redemption. This can be one of the following: "CANCELED", "FULFILLED", "UNFULFILLED"
@@ -420,7 +420,7 @@ class CustomRewardRedemption:
     def __repr__(self) -> str:
         return f"<CustomRewardRedemption id={self.id} status={self.status} redeemed_at={self.redeemed_at}>"
 
-    async def fulfill(self, *, token_for: str) -> CustomRewardRedemption:
+    async def fulfill(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
         """Updates a redemption's status to FULFILLED.
 
         .. note::
@@ -428,7 +428,7 @@ class CustomRewardRedemption:
 
         Parameters
         -----------
-        token_for: str
+        token_for: str | PartialUser
             The user's token that has permission manage the broadcaster's reward redemptions.
 
         Returns
@@ -444,7 +444,7 @@ class CustomRewardRedemption:
         )
         return CustomRewardRedemption(data["data"][0], parent_reward=self.reward, http=self._http)
 
-    async def refund(self, *, token_for: str) -> CustomRewardRedemption:
+    async def refund(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
         """Updates a redemption's status to CANCELED.
 
         .. note::
@@ -452,7 +452,7 @@ class CustomRewardRedemption:
 
         Parameters
         -----------
-        token_for: str
+        token_for: str | PartialUser
             The user's token that has permission manage the broadcaster's reward redemptions.
 
         Returns
