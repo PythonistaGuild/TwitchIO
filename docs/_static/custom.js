@@ -13,9 +13,20 @@ for (const table of tables) {
 
 const pres = document.querySelectorAll("pre");
 for (const pre_ of pres) {
-	pre_.classList.add("admonition");
-	pre_.insertAdjacentHTML(
-		"afterbegin",
-		`<span class="admonition-title codeB">Code</span>`,
-	);
+	pre_.classList.add("admonition", "codeW");
 }
+
+document.addEventListener("DOMContentLoaded", (e) => {
+	const search = document.getElementById("search-form");
+	search.id = "search-form_";
+
+	const button = search.querySelector(".input-group>.input-group-prepend");
+	button.addEventListener("click", (e) => {
+		const inp = document.getElementById("searchinput");
+		if (!inp.textContent) {
+			return;
+		}
+
+		search.submit();
+	});
+});

@@ -15,6 +15,8 @@
 	--color-error: rgb(221, 46, 46);
 	--color-success: rgb(32, 158, 105);
 	--color-warn: #ebcc00;
+	--color-dim-line: #ededf060;
+	--color-search-border: #ededf02d;
 
 	/* Light Theme */
 	--color-primary--light: rgba(21, 21, 28, 0.8);
@@ -60,6 +62,7 @@ body {
 	background-color: var(--color-background--light);
 	scrollbar-color: var(--color-scrollbar--light)
 		var(--color-background-dim--light);
+	word-wrap: break-word;
 }
 
 strong {
@@ -71,6 +74,15 @@ code {
 	font-family: var(--font-pre--mono);
 	font-weight: 300;
 	font-size: 0.9em;
+}
+
+.form-control {
+	border-left: none !important;
+	border-color: transparent !important;
+}
+
+.input-group-text.bg-white {
+	border-color: transparent !important;
 }
 
 dl.field-list.simple > dt {
@@ -88,7 +100,6 @@ dl.field-list.simple > dd > ul {
 /* Colours Light */
 .input-group-text.bg-white {
 	background-color: var(--color-background-dim--light) !important;
-	border-color: var(--color-links--light) !important;
 }
 
 .sidebar-container {
@@ -200,7 +211,6 @@ a > code {
 
 .form-control {
 	background-color: var(--color-background-dim--light) !important;
-	border-color: var(--color-links--light) !important;
 }
 
 .toc > ul:not(:last-child) {
@@ -220,7 +230,6 @@ body.theme-dark {
 body.theme-dark {
 	.input-group-text.bg-white {
 		background-color: var(--color-background-dim--dark) !important;
-		border-color: var(--color-links--dark) !important;
 	}
 
 	.sidebar-container {
@@ -293,7 +302,6 @@ body.theme-dark {
 
 	.form-control {
 		background-color: var(--color-background-dim--dark) !important;
-		border-color: var(--color-links--dark) !important;
 	}
 
 	.toc > ul:not(:last-child) {
@@ -302,7 +310,7 @@ body.theme-dark {
 
 	pre {
 		color: var(--color-pre-primary--dark) !important;
-		background-color: var(--color-pre-background--dark)!important;
+		background-color: var(--color-pre-background--dark) !important;
 	}
 
 	scrollbar-color: var(--color-scrollbar--dark)
@@ -319,6 +327,7 @@ body.theme-dark {
 }
 
 .error-tio::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
 	font-family: "Font Awesome 5 Free";
 	font-weight: 900;
 	content: "\f06a";
@@ -331,6 +340,7 @@ body.theme-dark {
 }
 
 .success-tio::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
 	font-family: "Font Awesome 5 Free";
 	font-weight: 900;
 	content: "\f00c";
@@ -343,6 +353,7 @@ body.theme-dark {
 }
 
 .warn-tio::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
 	font-family: "Font Awesome 5 Free";
 	font-weight: 900;
 	content: "\f059";
@@ -439,6 +450,67 @@ main .py-attribute-table-column > ul {
 	margin: 0 2em;
 }
 
+/* Fix code block admonitions */
 .codeB {
-	background-color: #a071bbb0;
+	background-color: var(--color-dim-line);
+}
+
+.codeW {
+	border: 1px solid #a071bb31;
+}
+
+.admonition-title.codeB {
+	padding: 0.25rem 1rem;
+	font-weight: 400;
+	width: 100%;
+}
+
+.admonition-title.codeB::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
+	font-family: "Font Awesome 5 Free";
+	content: "\f121" !important;
+}
+
+.admonition {
+	background-color: var(--color-dim-line) !important;
+}
+
+.admonition.codeW {
+	overflow-x: auto;
+}
+
+/* Fix padding on meth/prop dd */
+dl.py > dd {
+	padding: 0.5rem 0;
+}
+
+/* Fix Search Box and Outline */
+.input-group {
+	border: 1px solid var(--color-search-border) !important;
+	border-radius: .25rem;
+}
+
+.input-group:focus-within {
+	outline: 1px solid var(--color-dim-line) !important;
+	border-radius: .25rem;
+}
+
+.form-control:focus {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.input-group > .input-group-prepend:hover {
+	cursor: pointer;
+}
+
+[type="search"]::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	appearance: none;
+	background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZGVkZjA4MCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNxdWFyZS14Ij48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxwYXRoIGQ9Im0xNSA5LTYgNiIvPjxwYXRoIGQ9Im05IDkgNiA2Ii8+PC9zdmc+);
+	color: var(--color-accent--light) !important;
+	height: 20px;
+	width: 20px;
+	background-repeat: no-repeat;
+	cursor: pointer;
 }
