@@ -122,6 +122,9 @@ class Context:
     def kwargs(self) -> dict[str, Any]:
         return self._kwargs
 
+    def is_owner(self) -> bool:
+        return self.chatter.id == self.bot.owner_id
+
     def is_valid(self) -> bool:
         return self._prefix is not None
 

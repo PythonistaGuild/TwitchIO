@@ -54,6 +54,7 @@ class Bot(Mixin[None], Client):
         client_id: str,
         client_secret: str,
         bot_id: str,
+        owner_id: str | None = None,
         prefix: Prefix_T,
         **options: Unpack[ClientOptions],
     ) -> None:
@@ -64,6 +65,7 @@ class Bot(Mixin[None], Client):
             **options,
         )
 
+        self._owner_id: str | None = owner_id
         self._get_prefix: Prefix_T = prefix
         self._components: dict[str, Component] = {}
         self._base_converter: _BaseConverter = _BaseConverter(self)
@@ -72,6 +74,10 @@ class Bot(Mixin[None], Client):
     def bot_id(self) -> str:
         assert self._bot_id
         return self._bot_id
+
+    @property
+    def owner_id(self) -> str | None:
+        return self._owner_id
 
     def _cleanup_component(self, component: Component, /) -> None:
         for command in component.__all_commands__.values():
