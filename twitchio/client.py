@@ -79,8 +79,8 @@ class Client:
     :class:`commands.Bot` inherits from this class and such should be treated as a `Client` with an in-built
     commands extension.
 
-    You don't need to :meth:`~Client.start` or :meth:`~Client.run` the `Client` to use it soley as a HTTP Wrapper,
-    but you must still :meth:`~Client.login` with this use case.
+    You don't need to :meth:`~.start` or :meth:`~.run` the `Client` to use it soley as a HTTP Wrapper,
+    but you must still :meth:`~.login` with this use case.
 
     Parameters
     -----------
@@ -159,15 +159,15 @@ class Client:
 
         **For various methods of managing the tokens on the client, see:**
 
-        :meth:`~Client.add_token`
+        :meth:`~.add_token`
 
-        :meth:`~Client.remove_token`
+        :meth:`~.remove_token`
 
-        :meth:`~Client.load_tokens`
+        :meth:`~.load_tokens`
 
-        :meth:`~Client.dump_tokens`
+        :meth:`~.dump_tokens`
 
-        :meth:`~Client.add_token`
+        :meth:`~.add_token`
 
 
         .. warning::
@@ -237,10 +237,10 @@ class Client:
 
     async def setup_hook(self) -> None:
         """
-        Method called after :meth:`~Client.login` has been called but before the client is ready.
+        Method called after :meth:`~.login` has been called but before the client is ready.
 
-        :meth:`~Client.start` calls :meth:`~Client.login` internally for you, so when using
-        :meth:`~Client.start` this method will be called after the client has generated and validated an
+        :meth:`~.start` calls :meth:`~.login` internally for you, so when using
+        :meth:`~.start` this method will be called after the client has generated and validated an
         app token. The client won't complete start up until this method has completed.
 
         This method is intended to be overriden to provide an async environment for any setup required.
@@ -252,10 +252,10 @@ class Client:
     async def login(self, *, token: str | None = None) -> None:
         """Method to login the client and generate or store an app token.
 
-        This method is called automatically when using :meth:`~Client.start`.
-        You should **NOT** call this method if you are using :meth:`~Client.start`.
+        This method is called automatically when using :meth:`~.start`.
+        You should **NOT** call this method if you are using :meth:`~.start`.
 
-        This method calls :meth:`~Client.setup_hook`.
+        This method calls :meth:`~.setup_hook`.
 
         .. note::
 
@@ -296,7 +296,7 @@ class Client:
 
         Method to login and run the `Client` asynchronously on an already running event loop.
 
-        You should not call :meth:`~Client.login` if you are using this method as it is called internally
+        You should not call :meth:`~.login` if you are using this method as it is called internally
         for you.
 
         .. note::
@@ -343,15 +343,15 @@ class Client:
     def run(self, token: str | None = None, *, with_adapter: bool = True) -> None:
         """Method to login the client and create a continuously running event loop.
 
-        The behaviour of this method is similar to :meth:`~Client.start` but instead of being used in an already running
+        The behaviour of this method is similar to :meth:`~.start` but instead of being used in an already running
         async environment, this method will setup and create an async environment for you.
 
-        You should not call :meth:`~Client.login` if you are using this method as it is called internally
+        You should not call :meth:`~.login` if you are using this method as it is called internally
         for you.
 
         .. important::
 
-            You can not use this method in an already running async event loop. See: :meth:`~Client.start` for starting the
+            You can not use this method in an already running async event loop. See: :meth:`~.start` for starting the
             client in already running async environments.
 
         .. note::
@@ -387,7 +387,7 @@ class Client:
     async def close(self) -> None:
         """Method which closes the :class:`~Client` gracefully.
 
-        This method is called for you automatically when using :meth:`~Client.run` or when using the client with the
+        This method is called for you automatically when using :meth:`~.run` or when using the client with the
         async context-manager, E.g: `async with client:`
 
         You can override this method to implement your own clean-up logic, however you should call `await super().close()`
@@ -559,8 +559,8 @@ class Client:
 
         .. note::
 
-            This method is always called by the client during :meth:`~Client.login` but **before**
-            :meth:`~Client.setup_hook`.
+            This method is always called by the client during :meth:`~.login` but **before**
+            :meth:`~.setup_hook`.
 
         You can override this method to implement your own token loading logic into the client, such as from a database.
 
@@ -607,7 +607,7 @@ class Client:
             By default this method dumps to a JSON file named `".tio.tokens.json"`.
 
         You can override this method to implement your own custom logic, such as saving tokens to a database, however
-        it is preferred to use :meth:`~Client.add_token` to ensure the tokens are handled as they are added.
+        it is preferred to use :meth:`~.add_token` to ensure the tokens are handled as they are added.
 
         Parameters
         ----------
@@ -972,7 +972,7 @@ class Client:
             The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `user:read:broadcast` or `user:edit:broadcast` scope.
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
             To include inactive extensions, you must include the `user:edit:broadcast` scope.
 
         Returns
@@ -1003,7 +1003,7 @@ class Client:
         .. note::
 
             Requires a user access token that includes the `user:edit:broadcast` scope.
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
 
         Parameters
         ----------
@@ -1011,7 +1011,7 @@ class Client:
             The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `user:edit:broadcast` scope.
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
 
         Returns
         -------
@@ -1240,9 +1240,9 @@ class Client:
 
         .. note::
 
-            See: :meth:`~Client.fetch_games` to fetch multiple games at once.
+            See: :meth:`~.fetch_games` to fetch multiple games at once.
 
-            See: :meth:`~Client.fetch_top_games` to fetch the top games currently being streamed.
+            See: :meth:`~.fetch_top_games` to fetch the top games currently being streamed.
 
         Parameters
         ----------
@@ -1590,7 +1590,7 @@ class Client:
             The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `channel:manage:videos` scope.
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
 
         Returns
         -------
@@ -1638,7 +1638,7 @@ class Client:
             The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
             The token must inlcude the `user:read:broadcast` *or* `channel:manage:broadcast` scope
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
         first: int
             The maximum number of items to return per page. Defaults to **20**.
             The maximum number of items per page is **100**.
@@ -1711,7 +1711,7 @@ class Client:
             An optional User-ID that will be used to find an appropriate managed user token for this request.
             The Client-ID associated with the token must own the game.
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
             If this paramter is not provided or `None`, the default app token is used.
         ids: list[str] | None
             A list of entitlement ids that identifies the entitlements to fetch.
@@ -1787,7 +1787,7 @@ class Client:
             An optional User ID that will be used to find an appropriate managed user token for this request.
             The Client-ID associated with the token must own the game associated with this drop entitlment.
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
             If this paramter is not provided or `None`, the default app token is used.
 
         Returns
@@ -1860,9 +1860,9 @@ class Client:
             An optional User-ID that will be used to find an appropriate managed user token for this request.
 
             If `as_bot` is `True`, this is always the token associated with the
-            :attr:`~Client.bot_id` account. Defaults to `None`.
+            :attr:`~.bot_id` account. Defaults to `None`.
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
             If this paramter is not provided or `None`, the default app token is used.
         socket_id: str | None
             An optional `str` corresponding to an exisiting and connected websocket session, to use for this subscription.
@@ -1976,7 +1976,7 @@ class Client:
             Usually you wouldn't use webhooks to subscribe to the
             :class:`~twitchio.eventsub.ChatMessageSubscription` subscription.
 
-            Consider using :meth:`~Client.subscribe_websocket` for this subscription.
+            Consider using :meth:`~.subscribe_websocket` for this subscription.
 
         Parameters
         ----------
@@ -1991,9 +1991,9 @@ class Client:
             An optional User-ID that will be used to find an appropriate managed user token for this request.
 
             If `as_bot` is `True`, this is always the token associated with the
-            :attr:`~Client.bot_id` account. Defaults to `None`.
+            :attr:`~.bot_id` account. Defaults to `None`.
 
-            See: :meth:`~Client.add_token` to add managed tokens to the client.
+            See: :meth:`~.add_token` to add managed tokens to the client.
             If this paramter is not provided or `None`, the default app token is used.
         callback_url: str | None
             An optional url to use as the webhook `callback_url` for this subscription. If you are using one of the built-in
