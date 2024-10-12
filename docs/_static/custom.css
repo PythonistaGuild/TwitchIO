@@ -497,6 +497,7 @@ main .py-attribute-table-column > ul {
 
 .admonition.codeW {
 	overflow-x: auto;
+	margin-bottom: 2rem;
 }
 
 /* Fix padding on meth/prop dd */
