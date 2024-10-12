@@ -248,12 +248,12 @@ def get_class_results(
                 badge = attributetablebadge("cls", "cls")
                 badge["badge-type"] = _("classmethod")
             elif inspect.isfunction(value):
-                if doc.startswith(("A decorator", "A shortcut decorator")):
+                if doc.startswith(("A decorator", "A shortcut decorator", "|deco|")):
                     # finicky but surprisingly consistent
                     key = _("Methods")
                     badge = attributetablebadge("@", "@")
                     badge["badge-type"] = _("decorator")
-                elif inspect.isasyncgenfunction(value):
+                elif inspect.isasyncgenfunction(value) or doc.startswith("|aiter|"):
                     key = _("Methods")
                     badge = attributetablebadge("async for", "async for")
                     badge["badge-type"] = _("async iterable")
