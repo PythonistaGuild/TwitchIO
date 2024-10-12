@@ -286,6 +286,20 @@ body.theme-dark {
 }
 
 .theme-dark {
+	/* HOVERXREF (TOOLTIP STYLES */
+	.tooltipster-content {
+		background-color: var(--color-background--dark);
+		color: var(--color-primary--dark) !important;
+	}
+
+	.tooltipster-content > p {
+		color: var(--color-primary--dark) !important;
+	}
+
+	.tooltipster-box {
+		border-bottom: 2px solid var(--color-accent--dark) !important;
+	}
+
 	a {
 		color: var(--color-links--dark) !important;
 	}
@@ -519,4 +533,18 @@ dl.py > dd {
 	width: 20px;
 	background-repeat: no-repeat;
 	cursor: pointer;
+}
+
+/* HOVERXREF (TOOLTIP STYLES */
+.tooltipster-content {
+	background-color: var(--color-background--light);
+	color: var(--color-primary--light) !important;
+}
+
+.tooltipster-content > p {
+	color: var(--color-primary--light) !important;
+}
+
+.tooltipster-box {
+	border-bottom: 2px solid var(--color-accent--dark) !important;
 }
