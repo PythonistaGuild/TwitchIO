@@ -48,6 +48,8 @@
 	--color-versionadd-background: #5aa56915;
 	--color-versionchange-background--title: #616faf;
 	--color-versionchange-background: #616faf15;
+	--color-tip-background: #9f6fb515;
+	--color-tip-background--title: #9f6fb5;
 }
 
 * {
@@ -167,6 +169,14 @@ th {
 
 .note > .admonition-title {
 	background-color: var(--color-note-background--title) !important;
+}
+
+.admonition.tip {
+	background-color: var(--color-tip-background) !important;
+}
+
+.tip > .admonition-title {
+	background-color: var(--color-tip-background--title) !important;
 }
 
 .versionadded {
