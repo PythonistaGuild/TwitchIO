@@ -1,8 +1,8 @@
 .. currentmodule:: twitchio.eventsub
 
 
-Eventsub Subsriptions
-######################
+Eventsub Subscriptions
+#######################
 
 .. attributetable:: AutomodMessageHoldSubscription
 
