@@ -650,10 +650,10 @@ class Client:
         """
         return PartialUser(user_id, user_login, http=self._http)
 
-    async def fetch_chat_badges(self) -> list[ChatBadge]:
+    async def fetch_badges(self) -> list[ChatBadge]:
         """Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
 
-        To fetch a specific broadcaster's chat badges, see: :meth:`~twitchio.PartialUser.fetch_chat_badges`
+        To fetch a specific broadcaster's chat badges, see: :meth:`~twitchio.PartialUser.fetch_badges`
 
         Returns
         --------
@@ -987,7 +987,7 @@ class Client:
     async def fetch_emotes(self, *, token_for: str | None = None) -> list[GlobalEmote]:
         """Fetches global emotes from the Twitch API.
 
-        If you wish to fetch a specific broadcaster's chat badges use :meth:`~twitchio.PartialUser.fetch_channel_emotes`.
+        If you wish to fetch a specific broadcaster's chat emotes use :meth:`~twitchio.PartialUser.fetch_channel_emotes`.
 
         Returns
         --------
