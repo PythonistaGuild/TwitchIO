@@ -21,6 +21,9 @@ TwitchIO is a powerful, asynchronous Python library for `twitch.tv <https://twit
 TwitchIO aims to be intuitive and easy to use, using modern async Python and following strict typing with stateful objects
 and plug-and-play extensions.
 
+TwitchIO is more than a simple wrapper, providing ease of use when accessing the Twitch API with powerful extensions
+to help create and manage applications and Twitch Chat Bots. TwitchIO is inspired by `discord.py <https://github.com/Rapptz/discord.py>`_.
+
 
 **Features:**
 
@@ -29,7 +32,7 @@ and plug-and-play extensions.
 - Intuitive with ease of use, using modern object orientated design
 - Feature full including extensions for ``chat bots``, running ``routine tasks`` and ``playing sounds`` on stream (Conduits support soon...)
 - Easily manage ``OAuth Tokens`` and data
-- Built-in ``EventSub`` support via ``Webhook`` and ``Websockets``
+- Built-in ``EventSub`` support via both ``Webhook`` and ``Websockets``
 
 
 Help and support
@@ -81,4 +84,4 @@ References
    :maxdepth: 1
    :caption: Extension References
 
-   exts/commands/api
+   exts/commands/index

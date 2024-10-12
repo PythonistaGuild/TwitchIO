@@ -112,6 +112,7 @@ rst_prolog = """
 .. |deco| replace:: This function is a **decorator**.
 .. |aiter| replace:: **This function returns a** :class:`~twitchio.HTTPAsyncIterator`
 .. |token_for| replace:: An optional User-ID, or PartialUser object, that will be used to find an appropriate managed user token for this request. See: :meth:`~twitchio.Client.add_token` to add managed tokens to the client.
+.. |extmodule| replace:: ...
 """
 
 # The suffix(es) of source filenames.
