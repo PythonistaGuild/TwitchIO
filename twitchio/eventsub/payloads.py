@@ -2429,6 +2429,30 @@ class GoalEndSubscription(SubscriptionPayload):
 
 
 class HypeTrainBeginSubscription(SubscriptionPayload):
+    """The ``channel.hype_train.begin`` subscription type sends a notification when a Hype Train begins on the specified channel.
+
+    .. important::
+        Requires a user OAuth access token with scope ``channel:read:hype_train``.
+
+    .. note::
+        EventSub does not make strong assurances about the order of message delivery, so it is possible to receive `channel.hype_train.progress` notifications before you receive the corresponding `channel.hype_train.begin` notification.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.hype_train.begin"]] = "channel.hype_train.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2445,6 +2469,30 @@ class HypeTrainBeginSubscription(SubscriptionPayload):
 
 
 class HypeTrainProgressSubscription(SubscriptionPayload):
+    """The ``channel.hype_train.progress`` subscription type sends a notification when a Hype Train makes progress on the specified channel.
+
+    .. important::
+        Requires a user OAuth access token with scope ``channel:read:hype_train``.
+
+    .. note::
+        EventSub does not make strong assurances about the order of message delivery, so it is possible to receive `channel.hype_train.progress` notifications before you receive the corresponding `channel.hype_train.begin` notification.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.hype_train.progress"]] = "channel.hype_train.progress"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2461,6 +2509,27 @@ class HypeTrainProgressSubscription(SubscriptionPayload):
 
 
 class HypeTrainEndSubscription(SubscriptionPayload):
+    """The ``channel.hype_train.end`` subscription type sends a notification when a Hype Train ends on the specified channel.
+
+    .. important::
+        Requires a user OAuth access token with scope ``channel:read:hype_train``.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.hype_train.end"]] = "channel.hype_train.end"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2545,6 +2614,24 @@ class ShoutoutReceiveSubscription(SubscriptionPayload):
 
 
 class StreamOnlineSubscription(SubscriptionPayload):
+    """The ``stream.online`` subscription type sends a notification when the specified broadcaster starts a stream.
+
+    Parameters
+    ----------
+    broadcaster_user_id : str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["stream.online"]] = "stream.online"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2561,6 +2648,24 @@ class StreamOnlineSubscription(SubscriptionPayload):
 
 
 class StreamOfflineSubscription(SubscriptionPayload):
+    """The ``stream.offline`` subscription type sends a notification when the specified broadcaster stops a stream.
+
+    Parameters
+    ----------
+    broadcaster_user_id : str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["stream.offline"]] = "stream.offline"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2577,6 +2682,27 @@ class StreamOfflineSubscription(SubscriptionPayload):
 
 
 class UserAuthorizationGrantSubscription(SubscriptionPayload):
+    """The ``user.authorization.grant`` subscription type sends a notification when a user's authorization has been granted to your client id.
+
+    .. important::
+        This subscription type is **only** supported by **webhooks**, and cannot be used with WebSockets.
+
+    Parameters
+    ----------
+    client_id : str
+        Provided client_id must match the client id in the application access token.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "client_id" must be passed.
+    """
+
     type: ClassVar[Literal["user.authorization.grant"]] = "user.authorization.grant"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2592,6 +2718,28 @@ class UserAuthorizationGrantSubscription(SubscriptionPayload):
 
 
 class UserAuthorizationRevokeSubscription(SubscriptionPayload):
+    """The ``user.authorization.revoke`` subscription type sends a notification when a user's authorization has been revoked for your client id.
+    Use this `webhook` to meet government requirements for handling user data, such as GDPR, LGPD, or CCPA.
+
+    .. important::
+        This subscription type is **only** supported by **webhooks**, and cannot be used with WebSockets.
+
+    Parameters
+    ----------
+    client_id : str
+        Provided client_id must match the client id in the application access token.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "client_id" must be passed.
+    """
+
     type: ClassVar[Literal["user.authorization.revoke"]] = "user.authorization.revoke"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2607,6 +2755,29 @@ class UserAuthorizationRevokeSubscription(SubscriptionPayload):
 
 
 class UserUpdateSubscription(SubscriptionPayload):
+    """The ``user.update`` subscription type sends a notification when user updates their account.
+
+    .. note::
+        No authorization required. If you have the ``user:read:email`` scope, the notification will include email field.
+
+        If the user no longer exists then the login attribute will be None.
+
+    Parameters
+    ----------
+    user_id: str | PartialUser
+        The ID, or PartialUser, of the user receiving the whispers you wish to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["user.update"]] = "user.update"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2622,6 +2793,27 @@ class UserUpdateSubscription(SubscriptionPayload):
 
 
 class WhisperReceivedSubscription(SubscriptionPayload):
+    """The ``user.whisper.message`` subscription type sends a notification when a user receives a whisper.
+
+    .. important::
+        Must have oauth scope ``user:read:whispers`` or ``user:manage:whispers``.
+
+    Parameters
+    ----------
+    user_id: str | PartialUser
+        The ID, or PartialUser, of the user receiving the whispers you wish to subscribe to.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "user_id" must be passed.
+    """
+
     type: ClassVar[Literal["user.whisper.message"]] = "user.whisper.message"
     version: ClassVar[Literal["1"]] = "1"
 

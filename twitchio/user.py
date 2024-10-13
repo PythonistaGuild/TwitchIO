@@ -113,7 +113,7 @@ class PartialUser:
         """
         return f"@{self}"
 
-    async def start_commercial(self, *, length: int, token_for: str) -> CommercialStart:
+    async def start_commercial(self, *, length: int, token_for: str | PartialUser) -> CommercialStart:
         """|coro|
 
         Starts a commercial on the specified channel.
@@ -131,7 +131,7 @@ class PartialUser:
         length: int
             The length of the commercial to run, in seconds. Max length is 180.
             If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
-        token_for: str
+        token_for: str | PartialUser
             User token to use that includes the ``channel:edit:commercial`` scope.
 
         Returns
