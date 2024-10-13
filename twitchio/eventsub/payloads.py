@@ -1069,11 +1069,16 @@ class ChannelRaidSubscription(SubscriptionPayload):
         self.from_broadcaster_user_id: str = condition.get("from_broadcaster_user_id", "")
 
         if bool(self.to_broadcaster_user_id) == bool(self.from_broadcaster_user_id):
-                raise ValueError('Exactly one of the parameters "to_broadcaster_user_id" or "from_broadcaster_user_id" must be passed.')
+            raise ValueError(
+                'Exactly one of the parameters "to_broadcaster_user_id" or "from_broadcaster_user_id" must be passed.'
+            )
 
     @property
     def condition(self) -> Condition:
-        return {"to_broadcaster_user_id": self.to_broadcaster_user_id, "from_broadcaster_user_id": self.from_broadcaster_user_id}
+        return {
+            "to_broadcaster_user_id": self.to_broadcaster_user_id,
+            "from_broadcaster_user_id": self.from_broadcaster_user_id,
+        }
 
 
 class ChannelBanSubscription(SubscriptionPayload):
