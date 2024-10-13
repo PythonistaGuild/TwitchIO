@@ -1835,7 +1835,7 @@ class Client:
         *,
         payload: SubscriptionPayload,
         as_bot: bool = False,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
         socket_id: str | None = None,
     ) -> SubscriptionResponse | None:
         # TODO: Complete docs...
@@ -1856,8 +1856,8 @@ class Client:
             :attr:`Client.bot_id`. If this is set to `True` and `bot_id` has not been set, this method will
             raise `ValueError`. Defaults to `False` on :class:`Client` but will default to `True` on
             :class:`~twitchio.ext.commands.Bot`
-        token_for: str | None
-            An optional User-ID that will be used to find an appropriate managed user token for this request.
+        token_for: str | PartialUser | None
+            An optional User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
 
             If `as_bot` is `True`, this is always the token associated with the
             :attr:`~.bot_id` account. Defaults to `None`.
@@ -1888,6 +1888,9 @@ class Client:
 
         if not token_for:
             raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
+
+        if isinstance(token_for, PartialUser):
+            token_for = token_for.id
 
         sockets: dict[str, Websocket] = self._websockets[token_for]
         websocket: Websocket
@@ -1958,7 +1961,7 @@ class Client:
         *,
         payload: SubscriptionPayload,
         as_bot: bool = False,
-        token_for: str | None = None,
+        token_for: str | PartialUser | None,
         callback_url: str | None = None,
         eventsub_secret: str | None = None,
     ) -> SubscriptionResponse | None:
@@ -1987,8 +1990,8 @@ class Client:
             :attr:`Client.bot_id`. If this is set to `True` and `bot_id` has not been set, this method will
             raise `ValueError`. Defaults to `False` on :class:`Client` but will default to `True` on
             :class:`~twitchio.ext.commands.Bot`
-        token_for: str | None
-            An optional User-ID that will be used to find an appropriate managed user token for this request.
+        token_for: str | PartialUser | None
+            An optional User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
 
             If `as_bot` is `True`, this is always the token associated with the
             :attr:`~.bot_id` account. Defaults to `None`.
@@ -2040,6 +2043,9 @@ class Client:
 
         if not 10 <= len(secret) <= 100:
             raise ValueError("The 'eventsub_secret' must be between 10 and 100 characters long.")
+
+        if isinstance(token_for, PartialUser):
+            token_for = token_for.id
 
         type_ = SubscriptionType(payload.type)
         version: str = payload.version
