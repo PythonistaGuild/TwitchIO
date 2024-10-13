@@ -148,9 +148,9 @@ class AutomodMessageHoldSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -190,9 +190,9 @@ class AutomodMessageUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -232,9 +232,9 @@ class AutomodSettingsUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -274,9 +274,9 @@ class AutomodTermsUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -311,7 +311,7 @@ class ChannelUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -348,9 +348,9 @@ class ChannelFollowSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -388,7 +388,7 @@ class AdBreakBeginSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -427,9 +427,9 @@ class ChatClearSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -469,9 +469,9 @@ class ChatClearUserMessagesSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -511,9 +511,9 @@ class ChatMessageSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -553,9 +553,9 @@ class ChatNotificationSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -595,9 +595,9 @@ class ChatMessageDeleteSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -637,9 +637,9 @@ class ChatSettingsUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -679,9 +679,9 @@ class ChatUserMessageHoldSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -721,9 +721,9 @@ class ChatUserMessageUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
-        The chatting user ID that is reading chat.
+        The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
 
     Attributes
     ----------
@@ -758,7 +758,7 @@ class SharedChatSessionBeginSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -792,7 +792,7 @@ class SharedChatSessionUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -826,7 +826,7 @@ class SharedChatSessionEndSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -863,7 +863,7 @@ class ChannelSubscribeSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -900,7 +900,7 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -937,7 +937,7 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -974,7 +974,7 @@ class ChannelSubscribeMessageSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1011,7 +1011,7 @@ class ChannelCheerSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1045,7 +1045,9 @@ class ChannelRaidSubscription(SubscriptionPayload):
     Parameters
     ----------
     to_broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to. This listens to the raid events to a specific broadcaster.
+    from_broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to. This listens to the raid events from a specific broadcaster.
 
     Attributes
     ----------
@@ -1064,13 +1066,14 @@ class ChannelRaidSubscription(SubscriptionPayload):
     @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.to_broadcaster_user_id: str = condition.get("to_broadcaster_user_id", "")
+        self.from_broadcaster_user_id: str = condition.get("from_broadcaster_user_id", "")
 
-        if not self.to_broadcaster_user_id:
-            raise ValueError('The parameter "to_broadcaster_user_id" must be passed.')
+        if bool(self.to_broadcaster_user_id) == bool(self.from_broadcaster_user_id):
+                raise ValueError('Exactly one of the parameters "to_broadcaster_user_id" or "from_broadcaster_user_id" must be passed.')
 
     @property
     def condition(self) -> Condition:
-        return {"to_broadcaster_user_id": self.to_broadcaster_user_id}
+        return {"to_broadcaster_user_id": self.to_broadcaster_user_id, "from_broadcaster_user_id": self.from_broadcaster_user_id}
 
 
 class ChannelBanSubscription(SubscriptionPayload):
@@ -1082,7 +1085,7 @@ class ChannelBanSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1119,7 +1122,7 @@ class ChannelUnbanSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1156,9 +1159,9 @@ class ChannelUnbanRequestSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -1200,9 +1203,9 @@ class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -1250,9 +1253,9 @@ class ChannelModerateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -1301,9 +1304,9 @@ class ChannelModerateV2Subscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -1341,7 +1344,7 @@ class ChannelModeratorAddSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1378,7 +1381,7 @@ class ChannelModeratorRemoveSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1415,7 +1418,7 @@ class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1454,7 +1457,7 @@ class ChannelPointsRewardAddSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1491,7 +1494,7 @@ class ChannelPointsRewardUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
 
@@ -1531,7 +1534,7 @@ class ChannelPointsRewardRemoveSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
 
@@ -1571,7 +1574,7 @@ class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
 
@@ -1613,7 +1616,7 @@ class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
 
@@ -1655,7 +1658,7 @@ class ChannelPollBeginSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1692,7 +1695,7 @@ class ChannelPollProgressSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1729,7 +1732,7 @@ class ChannelPollEndSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1766,7 +1769,7 @@ class ChannelPredictionBeginSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1803,7 +1806,7 @@ class ChannelPredictionLockSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1840,7 +1843,7 @@ class ChannelPredictionProgressSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1877,7 +1880,7 @@ class ChannelPredictionEndSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -1918,9 +1921,9 @@ class SuspiciousUserUpdateSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -1962,9 +1965,9 @@ class SuspiciousUserMessageSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -2002,7 +2005,7 @@ class ChannelVIPAddSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2039,7 +2042,7 @@ class ChannelVIPRemoveSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2076,9 +2079,9 @@ class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -2116,9 +2119,9 @@ class ChannelWarningSendSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
-        A moderator ID or the broadcaster ID for the specified broadcaster.
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -2156,7 +2159,7 @@ class CharityDonationSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2196,7 +2199,7 @@ class CharityCampaignStartSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2238,7 +2241,7 @@ class CharityCampaignProgressSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2275,7 +2278,7 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2315,7 +2318,7 @@ class GoalBeginSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2355,7 +2358,7 @@ class GoalProgressSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
@@ -2392,7 +2395,7 @@ class GoalEndSubscription(SubscriptionPayload):
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
-        The broadcaster ID to subscribe to.
+        The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
     ----------
