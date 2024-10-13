@@ -1492,8 +1492,6 @@ class ChatSettingsUpdate(BaseEvent):
 class ChatUserMessageHold(BaseChatMessage):
     subscription_type = "channel.chat.user_message_hold"
 
-    # TODO text is the caught text. Maybe we shouldn't inherit here after all.
-
     __slots__ = ("user",)
 
     def __init__(self, payload: ChatUserMessageHoldEvent, *, http: HTTPClient) -> None:
@@ -1510,8 +1508,6 @@ class ChatUserMessageHold(BaseChatMessage):
 
 class ChatUserMessageUpdate(BaseChatMessage):
     subscription_type = "channel.chat.user_message_update"
-
-    # TODO text is the caught text. Maybe we shouldn't inherit here after all.
 
     __slots__ = ("user", "status")
 

@@ -27,6 +27,8 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Unpack
 
+from twitchio.utils import handle_user_ids
+
 
 if TYPE_CHECKING:
     from ..types_.conduits import Condition
@@ -145,9 +147,9 @@ class AutomodMessageHoldSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -164,6 +166,7 @@ class AutomodMessageHoldSubscription(SubscriptionPayload):
     type: ClassVar[Literal["automod.message.hold"]] = "automod.message.hold"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -186,9 +189,9 @@ class AutomodMessageUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -205,6 +208,7 @@ class AutomodMessageUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["automod.message.update"]] = "automod.message.update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -227,9 +231,9 @@ class AutomodSettingsUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -246,6 +250,7 @@ class AutomodSettingsUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["automod.settings.update"]] = "automod.settings.update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -268,9 +273,9 @@ class AutomodTermsUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -287,6 +292,7 @@ class AutomodTermsUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["automod.terms.update"]] = "automod.terms.update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -304,7 +310,7 @@ class ChannelUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -321,6 +327,7 @@ class ChannelUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.update"]] = "channel.update"
     version: ClassVar[Literal["2"]] = "2"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -340,9 +347,9 @@ class ChannelFollowSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -359,6 +366,7 @@ class ChannelFollowSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.follow"]] = "channel.follow"
     version: ClassVar[Literal["2"]] = "2"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -379,7 +387,7 @@ class AdBreakBeginSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -396,6 +404,7 @@ class AdBreakBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.ad_break.begin"]] = "channel.ad_break.begin"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -417,9 +426,9 @@ class ChatClearSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -436,6 +445,7 @@ class ChatClearSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.clear"]] = "channel.chat.clear"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -458,9 +468,9 @@ class ChatClearUserMessagesSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -477,6 +487,7 @@ class ChatClearUserMessagesSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.clear_user_messages"]] = "channel.chat.clear_user_messages"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -499,9 +510,9 @@ class ChatMessageSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -518,6 +529,7 @@ class ChatMessageSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.message"]] = "channel.chat.message"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -540,9 +552,9 @@ class ChatNotificationSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -559,6 +571,7 @@ class ChatNotificationSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.notification"]] = "channel.chat.notification"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -581,9 +594,9 @@ class ChatMessageDeleteSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -600,6 +613,7 @@ class ChatMessageDeleteSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.message_delete"]] = "channel.chat.message_delete"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -622,9 +636,9 @@ class ChatSettingsUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -641,6 +655,7 @@ class ChatSettingsUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat_settings.update"]] = "channel.chat_settings.update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -663,9 +678,9 @@ class ChatUserMessageHoldSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -682,6 +697,7 @@ class ChatUserMessageHoldSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.user_message_hold"]] = "channel.chat.user_message_hold"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -704,9 +720,9 @@ class ChatUserMessageUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    user_id: str
+    user_id: str | PartialUser
         The chatting user ID that is reading chat.
 
     Attributes
@@ -723,6 +739,7 @@ class ChatUserMessageUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.chat.user_message_update"]] = "channel.chat.user_message_update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.user_id: str = condition.get("user_id", "")
@@ -740,7 +757,7 @@ class SharedChatSessionBeginSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -757,6 +774,7 @@ class SharedChatSessionBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.shared_chat.begin"]] = "channel.shared_chat.begin"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -773,7 +791,7 @@ class SharedChatSessionUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -790,6 +808,7 @@ class SharedChatSessionUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.shared_chat.update"]] = "channel.shared_chat.update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -806,7 +825,7 @@ class SharedChatSessionEndSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -823,6 +842,7 @@ class SharedChatSessionEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.shared_chat.end"]] = "channel.shared_chat.end"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -842,7 +862,7 @@ class ChannelSubscribeSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -859,6 +879,7 @@ class ChannelSubscribeSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscribe"]] = "channel.subscribe"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -878,7 +899,7 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -895,6 +916,7 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscription.end"]] = "channel.subscription.end"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -914,7 +936,7 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -931,6 +953,7 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscription.gift"]] = "channel.subscription.gift"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -950,7 +973,7 @@ class ChannelSubscribeMessageSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -967,6 +990,7 @@ class ChannelSubscribeMessageSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.subscription.message"]] = "channel.subscription.message"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -986,7 +1010,7 @@ class ChannelCheerSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1003,6 +1027,7 @@ class ChannelCheerSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.cheer"]] = "channel.cheer"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1019,7 +1044,7 @@ class ChannelRaidSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    to_broadcaster_user_id: str
+    to_broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1036,6 +1061,7 @@ class ChannelRaidSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.raid"]] = "channel.raid"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.to_broadcaster_user_id: str = condition.get("to_broadcaster_user_id", "")
 
@@ -1055,7 +1081,7 @@ class ChannelBanSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1072,6 +1098,7 @@ class ChannelBanSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.ban"]] = "channel.ban"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1091,7 +1118,7 @@ class ChannelUnbanSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1108,6 +1135,7 @@ class ChannelUnbanSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.unban"]] = "channel.unban"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1127,9 +1155,9 @@ class ChannelUnbanRequestSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -1146,6 +1174,7 @@ class ChannelUnbanRequestSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.unban_request.create"]] = "channel.unban_request.create"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -1170,9 +1199,9 @@ class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -1189,6 +1218,7 @@ class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.unban_request.resolve"]] = "channel.unban_request.resolve"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -1219,9 +1249,9 @@ class ChannelModerateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -1238,6 +1268,7 @@ class ChannelModerateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.moderate"]] = "channel.moderate"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -1269,9 +1300,9 @@ class ChannelModerateV2Subscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -1288,6 +1319,7 @@ class ChannelModerateV2Subscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.moderate"]] = "channel.moderate"
     version: ClassVar[Literal["2"]] = "2"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -1308,7 +1340,7 @@ class ChannelModeratorAddSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1325,6 +1357,7 @@ class ChannelModeratorAddSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.moderator.add"]] = "channel.moderator.add"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1344,7 +1377,7 @@ class ChannelModeratorRemoveSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1361,6 +1394,7 @@ class ChannelModeratorRemoveSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.moderator.remove"]] = "channel.moderator.remove"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1380,7 +1414,7 @@ class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1399,6 +1433,7 @@ class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
     )
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1418,7 +1453,7 @@ class ChannelPointsRewardAddSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1435,6 +1470,7 @@ class ChannelPointsRewardAddSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.channel_points_custom_reward.add"]] = "channel.channel_points_custom_reward.add"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1454,7 +1490,7 @@ class ChannelPointsRewardUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
@@ -1473,6 +1509,7 @@ class ChannelPointsRewardUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.channel_points_custom_reward.update"]] = "channel.channel_points_custom_reward.update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.reward_id: str = condition.get("reward_id", "")
@@ -1493,7 +1530,7 @@ class ChannelPointsRewardRemoveSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
@@ -1512,6 +1549,7 @@ class ChannelPointsRewardRemoveSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.channel_points_custom_reward.remove"]] = "channel.channel_points_custom_reward.remove"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.reward_id: str = condition.get("reward_id", "")
@@ -1532,7 +1570,7 @@ class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
@@ -1553,6 +1591,7 @@ class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
     )
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.reward_id: str = condition.get("reward_id", "")
@@ -1573,7 +1612,7 @@ class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
@@ -1594,6 +1633,7 @@ class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
     )
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.reward_id: str = condition.get("reward_id", "")
@@ -1614,7 +1654,7 @@ class ChannelPollBeginSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1631,6 +1671,7 @@ class ChannelPollBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.poll.begin"]] = "channel.poll.begin"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1650,7 +1691,7 @@ class ChannelPollProgressSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1667,6 +1708,7 @@ class ChannelPollProgressSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.poll.progress"]] = "channel.poll.progress"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1686,7 +1728,7 @@ class ChannelPollEndSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1703,6 +1745,7 @@ class ChannelPollEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.poll.end"]] = "channel.poll.end"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1722,7 +1765,7 @@ class ChannelPredictionBeginSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1739,6 +1782,7 @@ class ChannelPredictionBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.prediction.begin"]] = "channel.prediction.begin"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1758,7 +1802,7 @@ class ChannelPredictionLockSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1775,6 +1819,7 @@ class ChannelPredictionLockSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.prediction.lock"]] = "channel.prediction.lock"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1794,7 +1839,7 @@ class ChannelPredictionProgressSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1811,6 +1856,7 @@ class ChannelPredictionProgressSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.prediction.progress"]] = "channel.prediction.progress"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1830,7 +1876,7 @@ class ChannelPredictionEndSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1847,6 +1893,7 @@ class ChannelPredictionEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.prediction.end"]] = "channel.prediction.end"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1870,9 +1917,9 @@ class SuspiciousUserUpdateSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -1889,6 +1936,7 @@ class SuspiciousUserUpdateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.suspicious_user.update"]] = "channel.suspicious_user.update"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -1913,9 +1961,9 @@ class SuspiciousUserMessageSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -1932,6 +1980,7 @@ class SuspiciousUserMessageSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.suspicious_user.message"]] = "channel.suspicious_user.message"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -1952,7 +2001,7 @@ class ChannelVIPAddSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -1969,6 +2018,7 @@ class ChannelVIPAddSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.vip.add"]] = "channel.vip.add"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -1988,7 +2038,7 @@ class ChannelVIPRemoveSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2005,6 +2055,7 @@ class ChannelVIPRemoveSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.vip.remove"]] = "channel.vip.remove"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2024,9 +2075,9 @@ class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -2043,6 +2094,7 @@ class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.warning.acknowledge"]] = "channel.warning.acknowledge"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -2063,9 +2115,9 @@ class ChannelWarningSendSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
-    moderator_user_id: str
+    moderator_user_id: str | PartialUser
         A moderator ID or the broadcaster ID for the specified broadcaster.
 
     Attributes
@@ -2082,6 +2134,7 @@ class ChannelWarningSendSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.warning.send"]] = "channel.warning.send"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -2102,7 +2155,7 @@ class CharityDonationSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2119,6 +2172,7 @@ class CharityDonationSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.charity_campaign.donate"]] = "channel.charity_campaign.donate"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2141,7 +2195,7 @@ class CharityCampaignStartSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2158,6 +2212,7 @@ class CharityCampaignStartSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.charity_campaign.start"]] = "channel.charity_campaign.start"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2182,7 +2237,7 @@ class CharityCampaignProgressSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2199,6 +2254,7 @@ class CharityCampaignProgressSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.charity_campaign.progress"]] = "channel.charity_campaign.progress"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2218,7 +2274,7 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2235,6 +2291,7 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.charity_campaign.stop"]] = "channel.charity_campaign.stop"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2257,7 +2314,7 @@ class GoalBeginSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2274,6 +2331,7 @@ class GoalBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.goal.begin"]] = "channel.goal.begin"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2296,7 +2354,7 @@ class GoalProgressSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2313,6 +2371,7 @@ class GoalProgressSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.goal.progress"]] = "channel.goal.progress"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2332,7 +2391,7 @@ class GoalEndSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id: str
+    broadcaster_user_id: str | PartialUser
         The broadcaster ID to subscribe to.
 
     Attributes
@@ -2349,6 +2408,7 @@ class GoalEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.goal.end"]] = "channel.goal.end"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2364,6 +2424,7 @@ class HypeTrainBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.hype_train.begin"]] = "channel.hype_train.begin"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2379,6 +2440,7 @@ class HypeTrainProgressSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.hype_train.progress"]] = "channel.hype_train.progress"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2394,6 +2456,7 @@ class HypeTrainEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.hype_train.end"]] = "channel.hype_train.end"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2409,6 +2472,7 @@ class ShieldModeBeginSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.shield_mode.begin"]] = "channel.shield_mode.begin"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -2425,6 +2489,7 @@ class ShieldModeEndSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.shield_mode.end"]] = "channel.shield_mode.end"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -2441,6 +2506,7 @@ class ShoutoutCreateSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.shoutout.create"]] = "channel.shoutout.create"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -2457,6 +2523,7 @@ class ShoutoutReceiveSubscription(SubscriptionPayload):
     type: ClassVar[Literal["channel.shoutout.receive"]] = "channel.shoutout.receive"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
@@ -2473,6 +2540,7 @@ class StreamOnlineSubscription(SubscriptionPayload):
     type: ClassVar[Literal["stream.online"]] = "stream.online"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2488,6 +2556,7 @@ class StreamOfflineSubscription(SubscriptionPayload):
     type: ClassVar[Literal["stream.offline"]] = "stream.offline"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
 
@@ -2548,6 +2617,7 @@ class WhisperReceivedSubscription(SubscriptionPayload):
     type: ClassVar[Literal["user.whisper.message"]] = "user.whisper.message"
     version: ClassVar[Literal["1"]] = "1"
 
+    @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
         self.user_id: str = condition.get("user_id", "")
 
