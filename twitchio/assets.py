@@ -65,13 +65,13 @@ class Asset:
     Supported Operations
     --------------------
 
-    +-------------+-----------------------------------+-----------------------------------------------+
-    | Operation   | Usage(s)                          | Description                                   |
-    +=============+===================================+===============================================+
-    | __str__     | str(asset), f"{asset}"            | Returns the asset's URL.                      |
-    +-------------+-----------------------------------+-----------------------------------------------+
-    | __repr__    | repr(asset), f"{asset!r}"         | Returns the asset's official representation.  |
-    +-------------+-----------------------------------+-----------------------------------------------+
+    +-------------+-------------------------------------------+-----------------------------------------------+
+    | Operation   | Usage(s)                                  | Description                                   |
+    +=============+===========================================+===============================================+
+    | __str__     | ``str(asset)``, ``f"{asset}"``            | Returns the asset's URL.                      |
+    +-------------+-------------------------------------------+-----------------------------------------------+
+    | __repr__    | ``repr(asset)``, ``f"{asset!r}"``         | Returns the asset's official representation.  |
+    +-------------+-------------------------------------------+-----------------------------------------------+
     """
 
     __slots__ = ("_http", "_ext", "_dimensions", "_original_url", "_url", "_name")
@@ -106,7 +106,7 @@ class Asset:
 
         If the asset supports custom dimensions, the URL will contain the dimensions set.
 
-        See :meth:`~Asset.set_dimensions` for information on setting custom dimensions.
+        See :meth:`.set_dimensions` for information on setting custom dimensions.
         """
         return self._url
 
@@ -128,7 +128,7 @@ class Asset:
         """A property that returns the qualified name of the asset.
 
         This is the name of the asset with the file extension if one can be determined.
-        If the file extension has not been set, this method returns the same as :attr:`~twitchio.Asset.name`.
+        If the file extension has not been set, this method returns the same as :attr:`.name`.
         """
         name: str = self._name.split(".")[0]
         return name + self.ext if self.ext else self._name
@@ -139,15 +139,15 @@ class Asset:
 
         Could be ``None`` if the asset does not have a valid file extension or it has not been determined yet.
 
-        See: `:meth:`~Asset.fetch_ext` to try and force setting the file extension by content type.
+        See: `:meth:`.fetch_ext` to try and force setting the file extension by content type.
         """
         return "." + self._ext.removeprefix(".") if self._ext else None
 
     @property
     def dimensions(self) -> tuple[int, int] | None:
-        """A property that returns the dimensions of the asset if it supports custom dimensions or `None`.
+        """A property that returns the dimensions of the asset if it supports custom dimensions or ``None``.
 
-        See: :meth:`~Asset.set_dimensions` for more information.
+        See: :meth:`.set_dimensions` for more information.
         """
         return self._dimensions
 
@@ -159,7 +159,7 @@ class Asset:
 
         .. warning::
             If you need to custom dimensions for an asset that supports it you should use this method **before**
-            calling :meth:`~Asset.save` or :meth:`~Asset.read`.
+            calling :meth:`.save` or :meth:`.read`.
 
         Examples
         --------
@@ -196,7 +196,7 @@ class Asset:
 
         .. warning::
             This method does not set dimensions for saving or reading.
-            If you need custom dimensions for an asset that supports it see: :meth:`~Asset.set_dimensions`.
+            If you need custom dimensions for an asset that supports it see: :meth:`.set_dimensions`.
 
         Parameters
         ----------
@@ -258,7 +258,7 @@ class Asset:
     ) -> int:
         """Save this asset to a file or file-like object.
 
-        If `fp` is ``None``, the asset will be saved to the current working directory with the
+        If ``fp`` is ``None``, the asset will be saved to the current working directory with the
         asset's default qualified name.
 
         Examples
@@ -297,7 +297,7 @@ class Asset:
 
         Parameters
         -----------
-        fp: Union[str, os.PathLike, io.BufferedIOBase, None]
+        fp: str | os.PathLike | io.BufferedIOBase | None
             The file path or file-like object to save the asset to.
 
             If ``None``, the asset will be saved to the current working directory with the asset's qualified name.
@@ -349,7 +349,7 @@ class Asset:
         return written
 
     async def read(self, *, seek_start: bool = True, chunk_size: int = 1024) -> io.BytesIO:
-        """Read from the asset and return an `io.BytesIO <https://docs.python.org/3/library/io.html#io.BytesIO>`_ buffer.
+        """Read from the asset and return an :class:`io.BytesIO` buffer.
 
         You can use this method to save the asset to memory and use it later.
 

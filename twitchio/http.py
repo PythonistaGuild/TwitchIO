@@ -36,7 +36,6 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Self, TypeAli
 import aiohttp
 
 from . import __version__
-from .conduits import Shard
 from .exceptions import HTTPException
 from .models.analytics import ExtensionAnalytics, GameAnalytics
 from .models.bits import ExtensionTransaction
@@ -68,7 +67,7 @@ if TYPE_CHECKING:
     from .eventsub.enums import SubscriptionType
     from .models.channel_points import CustomReward
     from .models.moderation import AutomodCheckMessage, AutomodSettings
-    from .types_.conduits import Condition, ShardData, ShardUpdateRequest
+    from .types_.conduits import Condition
     from .types_.eventsub import (
         SubscriptionCreateRequest,
         SubscriptionCreateTransport,
@@ -100,7 +99,6 @@ if TYPE_CHECKING:
         CheckUserSubscriptionResponse,
         CheermotesResponse,
         ClipsResponseData,
-        ConduitPayload,
         ContentClassificationLabelsResponse,
         CreateChannelStreamScheduleSegmentResponse,
         CreateClipResponse,
@@ -1247,43 +1245,43 @@ class HTTPClient:
 
     ### Conduits ###
 
-    async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
-        # TODO: Type for return...
+    # async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
+    #     # TODO: Type for return...
 
-        params = {"conduit_id": conduit_id}
-        body = {"shards": shards}
+    #     params = {"conduit_id": conduit_id}
+    #     body = {"shards": shards}
 
-        route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
-        return await self.request_json(route)
+    #     route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
+    #     return await self.request_json(route)
 
-    async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
-        params = {"shard_count": shard_count}
+    # async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
+    #     params = {"shard_count": shard_count}
 
-        route: Route = Route("POST", "eventsub/conduits", params=params)
-        return await self.request_json(route)
+    #     route: Route = Route("POST", "eventsub/conduits", params=params)
+    #     return await self.request_json(route)
 
-    async def get_conduits(self) -> ConduitPayload:
-        route = Route("GET", "eventsub/conduits")
-        return await self.request_json(route)
+    # async def get_conduits(self) -> ConduitPayload:
+    #     route = Route("GET", "eventsub/conduits")
+    #     return await self.request_json(route)
 
-    def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[Shard]:
-        params = {"conduit_id": conduit_id}
-        if status:
-            params["status"] = status
+    # def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[Shard]:
+    #     params = {"conduit_id": conduit_id}
+    #     if status:
+    #         params["status"] = status
 
-        async def converter(data: ShardData, *, raw: Any) -> Shard:
-            return Shard(data=data)
+    #     async def converter(data: ShardData, *, raw: Any) -> Shard:
+    #         return Shard(data=data)
 
-        route: Route = Route("GET", "eventsub/conduits/shards", params=params)
-        iterator = self.request_paginated(route, converter=converter)
+    #     route: Route = Route("GET", "eventsub/conduits/shards", params=params)
+    #     iterator = self.request_paginated(route, converter=converter)
 
-        return iterator
+    #     return iterator
 
-    async def update_conduits(self, id: str, /, shard_count: int) -> ConduitPayload:
-        params = {"id": id, "shard_count": shard_count}
+    # async def update_conduits(self, id: str, /, shard_count: int) -> ConduitPayload:
+    #     params = {"id": id, "shard_count": shard_count}
 
-        route: Route = Route("PATCH", "eventsub/conduits", params=params)
-        return await self.request_json(route)
+    #     route: Route = Route("PATCH", "eventsub/conduits", params=params)
+    #     return await self.request_json(route)
 
     ### CCLs ###
 

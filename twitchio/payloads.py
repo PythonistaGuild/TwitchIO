@@ -30,7 +30,7 @@ __all__ = ("EventErrorPayload",)
 
 
 class EventErrorPayload:
-    """Payload received in the [`Client.event_error`][twitchio.Client.event_error] event when an error
+    """Payload received in the :class:`Client.event_error` event when an error
     occurs during an event listener.
 
     Attributes
