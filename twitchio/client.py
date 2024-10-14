@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     import aiohttp
 
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
-    from .eventsub.payloads import SubscriptionPayload
+    from .eventsub.subscriptions import SubscriptionPayload
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.entitlements import Entitlement, EntitlementStatus
