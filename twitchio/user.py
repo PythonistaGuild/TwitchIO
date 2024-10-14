@@ -30,7 +30,7 @@ from .assets import Asset
 from .exceptions import HTTPException
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
-from .utils import parse_timestamp
+from .utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -74,7 +74,6 @@ if TYPE_CHECKING:
     from .models.streams import Stream, StreamMarker, VideoMarkers
     from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
     from .models.teams import ChannelTeam
-    from .utils import Colour
 
 __all__ = ("PartialUser", "User", "Extension", "ActiveExtensions")
 
@@ -1948,45 +1947,56 @@ class PartialUser:
     async def ban_user(
         self,
         *,
-        moderator_id: str | int | PartialUser,
-        user_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        moderator: str | PartialUser | None = None,
+        user: str | PartialUser,
         reason: str | None = None,
     ) -> Ban:
         """|coro|
 
-        Ban a user from the broadcaster's channel.
+        Ban the provided user from the channel tied with this :class:`~twitchio.PartialUser`.
 
         .. note::
+
             Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
-            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
-            This ID must match the user ID in the user access token.
-        user_id: str | int | PartialUser
-            The ID, or PartialUser, of the user to ban or put in a timeout.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:banned_users`` scope.
+        moderator: str | PartialUser | None
+            An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
+            You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+
+            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
+        user: str | PartialUser
+            The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
         reason: str | None
-            The reason the you're banning the user or putting them in a timeout.
-            The text is user defined and is limited to a maximum of 500 characters.
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+
+        Raises
+        ------
+        ValueError
+            The length of the reason parameter exceeds 500 characters.
+        HTTPException
+            The request to ban the chatter failed.
 
         Returns
         -------
         Ban
-            Ban object.
+            The :class:`~twitchio.Ban` object for this ban.
         """
-        from .models import Ban
+        from .models import Ban  # fixes: circular import
+
+        if reason and len(reason) > 500:
+            raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
 
         data = await self._http.post_ban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
-            user_id=user_id,
-            token_for=token_for,
+            moderator_id=moderator,
+            user_id=user,
+            token_for=moderator,
             reason=reason,
         )
+
         return Ban(data["data"][0], http=self._http)
 
     async def timeout_user(
@@ -3679,6 +3689,12 @@ class ActiveExtensions:
 
 
 class Chatter(PartialUser):
+    """Class which represents a User in a chat room.
+
+    This class inherits from :class:`~twitchio.PartialUser` and contains additional information about the chatting user.
+    Most of the additional information is received in the form of the badges sent by Twitch.
+    """
+
     __slots__ = (
         "__dict__",
         "_is_staff",
@@ -3714,59 +3730,158 @@ class Chatter(PartialUser):
             if name in slots:
                 setattr(self, name, True)
 
-        self.channel: PartialUser = broadcaster
+        self._channel: PartialUser = broadcaster
+        self._colour: Colour = Colour.from_hex(payload["color"])
+        self._badges: list[ChatMessageBadge] = badges
 
     def __repr__(self) -> str:
         return f"<Chatter id={self.id}, name={self.name}, channel={self.channel}>"
 
     @property
+    def channel(self) -> PartialUser:
+        """Property returning the channel in the form of a :class:`~twitchio.PartialUser` this chatter belongs to."""
+        return self._channel
+
+    @property
     def staff(self) -> bool:
+        """A property returning a bool indicating whether the chatter is Twitch Staff.
+
+        This bool should always be ``True`` when the chatter is a Twitch Staff.
+        """
         return getattr(self, "_is_staff", False)
 
     @property
     def admin(self) -> bool:
+        """A property returning a bool indicating whether the chatter is Twitch Admin.
+
+        This bool should always be ``True`` when the chatter is a Twitch Admin.
+        """
         return getattr(self, "_is_admin", False)
 
     @property
     def broadcaster(self) -> bool:
+        """A property returning a bool indicating whether the chatter is the broadcaster.
+
+        This bool should always be ``True`` when the chatter is the broadcaster.
+        """
         return getattr(self, "_is_broadcaster", False)
 
     @property
     def moderator(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a moderator.
+
+        This bool should always be ``True`` when the chatter is a moderator.
+        """
         return getattr(self, "_is_moderator", False) or self.broadcaster
 
     @property
     def vip(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a VIP."""
         return getattr(self, "_is_vip", False)
 
     @property
     def artist(self) -> bool:
+        """A property returning a bool indicating whether the chatter is an artist for the channel."""
         return getattr(self, "_is_artist_badge", False)
 
     @property
     def founder(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a founder of the channel."""
         return getattr(self, "_is_founder", False)
 
     @property
     def subscriber(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a subscriber of the channel."""
         return getattr(self, "_is_subscriber", False)
 
     @property
     def no_audio(self) -> bool:
+        """A property returning a bool indicating whether the chatter is watching without audio."""
         return getattr(self, "_is_no_audio", False)
 
     @property
     def no_video(self) -> bool:
+        """A property returning a bool indicating whether the chatter is watching without video."""
         return getattr(self, "_is_no_video", False)
 
     @property
     def partner(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a Twitch partner."""
         return getattr(self, "_is_partner", False)
 
     @property
     def turbo(self) -> bool:
+        """A property returning a bool indicating whether the chatter has Twitch Turbo."""
         return getattr(self, "_is_turbo", False)
 
     @property
     def prime(self) -> bool:
+        """A property returning a bool indicating whether the chatter has Twitch Prime."""
         return getattr(self, "_is_premium", False)
+
+    @property
+    def colour(self) -> Colour:
+        """Property returning the colour of the chatter as a :class:`~twitchio.Colour`.
+
+        There is an alias for this property named :attr:`.color`.
+        """
+        return self._colour
+
+    @property
+    def color(self) -> Colour:
+        """Property returning the color of the chatter as a :class:`~twitchio.Colour`.
+
+        There is an alias for this property named :attr:`.colour`.
+        """
+        return self._colour
+
+    @property
+    def badges(self) -> list[ChatMessageBadge]:
+        """Property returning a list of :class:`~twitchio.ChatMessageBadge` associated with the chatter in this channel."""
+        return self._badges
+
+    async def ban(self, moderator: str | PartialUser, reason: str | None = None) -> ...:
+        """|coro|
+
+        Ban the chatter from the associated channel/broadcaster.
+
+        .. note::
+
+            You must have a user access token that includes the ``moderator:manage:banned_users`` scope to do this.
+
+        Parameters
+        ----------
+        moderator: str | PartialUser
+            The ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action. You must have a
+            token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+        reason: str | None
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+
+        Raises
+        ------
+        ValueError
+            The length of the reason parameter exceeds 500 characters.
+        TypeError
+            You can not ban the broadcaster.
+        HTTPException
+            The request to ban the chatter failed.
+
+        Returns
+        -------
+        Ban
+            The :class:`~twitchio.Ban` object for this ban.
+        """
+        if reason and len(reason) > 500:
+            raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
+
+        if self.broadcaster:
+            raise TypeError("Banning the broadcaster of a channel is not a possible action.")
+
+        await self._channel.ban_user(moderator=moderator, user=self, reason=reason)
+
+    async def timeout(self) -> ...: ...
+
+    async def warn(self) -> ...: ...
+
+    async def block(self) -> ...: ...

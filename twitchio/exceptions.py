@@ -36,28 +36,29 @@ if TYPE_CHECKING:
 
 class TwitchioException(Exception):
     """Base exception for TwitchIO.
-    
+
     All custom TwitchIO exceptions inherit from this class.
     """
 
 
 class HTTPException(TwitchioException):
     """Exception raised when an HTTP request fails.
-    
-    This exception can be raised anywhere the :class:`twitchio.Client` or :class:`twitchio.commands.ext.Bot` 
+
+    This exception can be raised anywhere the :class:`twitchio.Client` or :class:`twitchio.commands.ext.Bot`
     is used to make a HTTP request to the Twitch API.
-    
+
     Attributes
     ----------
     route: :class:`twitchio.Route` | None
-        An optional :class:`twitchio.Route` supplied to this exception, which contains various information about the 
+        An optional :class:`twitchio.Route` supplied to this exception, which contains various information about the
         request.
     status: int
         The HTTP response code received from Twitch. E.g. ``404`` or ``409``.
     extra: dict[Literal["message"], str]
-        A dict with a single key named "message", which may contain additional information from Twitch 
+        A dict with a single key named "message", which may contain additional information from Twitch
         about why the request failed.
     """
+
     def __init__(
         self,
         msg: str = "",
@@ -76,13 +77,13 @@ class HTTPException(TwitchioException):
 
 class InvalidTokenException(HTTPException):
     """Exception raised when an token can not be validated or refreshed.
-    
+
     This exception inherits from :exc:`~twitchio.HTTPException` and contains additional information.
-    
+
     .. warning::
-    
+
         This exception may contain sensitive information.
-    
+
     Attributes
     ----------
     token: str | None
@@ -90,12 +91,12 @@ class InvalidTokenException(HTTPException):
     refresh: str | None
         The refresh token used to attempt refreshing the token. Could be ``None``.
     route: :class:`twitchio.Route` | None
-        An optional :class:`twitchio.Route` supplied to this exception, which contains various information about the 
+        An optional :class:`twitchio.Route` supplied to this exception, which contains various information about the
         request.
     status: int
         The HTTP response code received from Twitch. E.g. ``404`` or ``409``.
     extra: dict[Literal["message"], str]
-        A dict with a single key named "message", which may contain additional information from Twitch 
+        A dict with a single key named "message", which may contain additional information from Twitch
         about why the request failed.
     """
 
