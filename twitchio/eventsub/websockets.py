@@ -160,10 +160,6 @@ class Websocket:
         if self._closed or self._connecting:
             return
 
-        if self.connected:
-            logger.warning("Trying to connect to an already running eventsub websocket: <%s>.", self)
-            return
-
         self._connecting = True
         url_: str = url or f"{WSS}?keepalive_timeout_seconds={self._keep_alive_timeout}"
 
@@ -355,9 +351,13 @@ class Websocket:
 
             elif message_type == "notification":
                 logger.debug('Received "notification" message from eventsub websocket: <%s>. %s', self, data)
-
                 notification_data: NotificationMessage = cast(NotificationMessage, data)
-                await self._process_notification(notification_data)
+
+                try:
+                    await self._process_notification(notification_data)
+                except Exception as e:
+                    msg = "Caught an unknown exception while proccessing a websocket 'notification' event:\n%s\n"
+                    logger.critical(msg, str(e), exc_info=e)
 
             else:
                 logger.warning("Received an unknown message type in eventsub websocket: <%s>", self)
