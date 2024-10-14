@@ -3712,7 +3712,7 @@ class Chatter(PartialUser):
         "_is_premium",
         "_channel",
         "_colour",
-        "_badges"
+        "_badges",
     )
 
     def __init__(
@@ -3733,7 +3733,7 @@ class Chatter(PartialUser):
                 setattr(self, name, True)
 
         self._channel: PartialUser = broadcaster
-        self._colour: Colour = Colour.from_hex(payload["color"])
+        self._colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self._badges: list[ChatMessageBadge] = badges
 
     def __repr__(self) -> str:
@@ -3822,18 +3822,22 @@ class Chatter(PartialUser):
         return getattr(self, "_is_premium", False)
 
     @property
-    def colour(self) -> Colour:
+    def colour(self) -> Colour | None:
         """Property returning the colour of the chatter as a :class:`~twitchio.Colour`.
 
         There is an alias for this property named :attr:`.color`.
+
+        Could be ``None`` if the chatter has not set a colour.
         """
         return self._colour
 
     @property
-    def color(self) -> Colour:
+    def color(self) -> Colour | None:
         """Property returning the color of the chatter as a :class:`~twitchio.Colour`.
 
         There is an alias for this property named :attr:`.colour`.
+
+        Could be ``None`` if the chatter has not set a color.
         """
         return self._colour
 
