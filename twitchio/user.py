@@ -3710,7 +3710,9 @@ class Chatter(PartialUser):
         "_is_no_video",
         "_is_turbo",
         "_is_premium",
-        "channel",
+        "_channel",
+        "_colour",
+        "_badges"
     )
 
     def __init__(
