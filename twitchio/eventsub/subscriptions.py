@@ -2546,6 +2546,35 @@ class HypeTrainEndSubscription(SubscriptionPayload):
 
 
 class ShieldModeBeginSubscription(SubscriptionPayload):
+    """The ``channel.shield_mode.begin`` subscription type sends a notification when the broadcaster activates Shield Mode.
+
+    This event informs the subscriber that the broadcaster's moderation settings were changed  based on the broadcaster's Shield Mode configuration settings.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
+
+    .. important::
+        Requires the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+
+        - If you use webhooks, the moderator must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
+
+        - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.shield_mode.begin"]] = "channel.shield_mode.begin"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2563,6 +2592,35 @@ class ShieldModeBeginSubscription(SubscriptionPayload):
 
 
 class ShieldModeEndSubscription(SubscriptionPayload):
+    """The ``channel.shield_mode.end`` subscription type sends a notification when the broadcaster deactivates Shield Mode.
+
+    This event informs the subscriber that the broadcaster's moderation settings were changed back to the broadcaster's previous moderation settings.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
+
+    .. important::
+        Requires the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+
+        - If you use webhooks, the moderator must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
+
+        - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.shield_mode.end"]] = "channel.shield_mode.end"
     version: ClassVar[Literal["1"]] = "1"
 
