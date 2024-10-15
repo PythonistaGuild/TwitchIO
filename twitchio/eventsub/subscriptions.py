@@ -2580,6 +2580,36 @@ class ShieldModeEndSubscription(SubscriptionPayload):
 
 
 class ShoutoutCreateSubscription(SubscriptionPayload):
+    """The ``channel.shoutout.create`` subscription type sends a notification when the specified broadcaster sends a shoutout.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
+
+    .. important::
+        Requires the ``moderator:read:shoutouts`` or ``moderator:manage:shoutouts`` scope.
+
+        - If you use webhooks, the moderator must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
+
+        - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
+
+    .. note::
+        This is only sent if Twitch posts the Shoutout to the broadcaster's activity feed.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.shoutout.create"]] = "channel.shoutout.create"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2597,6 +2627,36 @@ class ShoutoutCreateSubscription(SubscriptionPayload):
 
 
 class ShoutoutReceiveSubscription(SubscriptionPayload):
+    """The ``channel.shoutout.receive`` subscription type sends a notification when the specified broadcaster receives a shoutout.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
+
+    .. important::
+        Requires the ``moderator:read:shoutouts`` or ``moderator:manage:shoutouts`` scope.
+
+        - If you use webhooks, the moderator must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
+
+        - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
+
+    .. note::
+        This is only sent if Twitch posts the Shoutout to the broadcaster's activity feed.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
     type: ClassVar[Literal["channel.shoutout.receive"]] = "channel.shoutout.receive"
     version: ClassVar[Literal["1"]] = "1"
 
@@ -2606,7 +2666,7 @@ class ShoutoutReceiveSubscription(SubscriptionPayload):
         self.moderator_user_id: str = condition.get("moderator_user_id", "")
 
         if not self.broadcaster_user_id or not self.moderator_user_id:
-            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+            raise ValueError('The parameters "broadcaster" and "moderator" must be passed.')
 
     @property
     def condition(self) -> Condition:
@@ -2618,7 +2678,7 @@ class StreamOnlineSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id : str | PartialUser
+    broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
@@ -2652,7 +2712,7 @@ class StreamOfflineSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    broadcaster_user_id : str | PartialUser
+    broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
 
     Attributes
@@ -2689,7 +2749,7 @@ class UserAuthorizationGrantSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    client_id : str
+    client_id: str
         Provided client_id must match the client id in the application access token.
 
     Attributes
@@ -2726,7 +2786,7 @@ class UserAuthorizationRevokeSubscription(SubscriptionPayload):
 
     Parameters
     ----------
-    client_id : str
+    client_id: str
         Provided client_id must match the client id in the application access token.
 
     Attributes
