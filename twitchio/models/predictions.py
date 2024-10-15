@@ -126,17 +126,17 @@ class Prediction:
         self,
         *,
         status: Literal["RESOLVED", "CANCELED", "LOCKED"],
-        token_for: str | PartialUser,
         winning_outcome_id: str | None = None,
     ) -> Prediction:
         """End an active prediction.
+
+        .. note::
+            Requires user access token that includes the `channel:manage:predictions` scope.
 
         Parameters
         ----------
         status: Literal["RESOLVED", "CANCELED", "LOCKED"]
             The status to set the prediction to. Possible case-sensitive values are: `RESOLVED`, `CANCELED`, `LOCKED`
-        token_for: str | PartialUser
-            User access token that includes the `channel:manage:predictions` scope.
 
         Returns
         -------
@@ -147,7 +147,7 @@ class Prediction:
             broadcaster_id=self.broadcaster.id,
             id=self.id,
             status=status,
-            token_for=token_for,
+            token_for=self.broadcaster.id,
             winning_outcome_id=winning_outcome_id,
         )
         return Prediction(data["data"][0], http=self._http)

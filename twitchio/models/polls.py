@@ -113,15 +113,16 @@ class Poll:
     def __repr__(self) -> str:
         return f"<Poll id={self.id} title={self.title} status={self.status} started_at={self.started_at}>"
 
-    async def end_poll(self, *, status: Literal["ARCHIVED", "TERMINATED"], token_for: str | PartialUser) -> Poll:
+    async def end_poll(self, *, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
         """End an active poll.
+
+        .. note::
+            Requires user access token that includes the `channel:manage:polls` scope.
 
         Parameters
         ----------
         status  Literal["ARCHIVED", "TERMINATED"]
             The status to set the poll to. Possible case-sensitive values are: "ARCHIVED" and "TERMINATED".
-        token_for: str | PartialUser
-            User access token that includes the `channel:manage:polls` scope.
 
         Returns
         -------
@@ -129,7 +130,7 @@ class Poll:
             A Poll object.
         """
         data = await self._http.patch_poll(
-            broadcaster_id=self.broadcaster.id, id=self.id, status=status, token_for=token_for
+            broadcaster_id=self.broadcaster.id, id=self.id, status=status, token_for=self.broadcaster.id
         )
         return Poll(data["data"][0], http=self._http)
 

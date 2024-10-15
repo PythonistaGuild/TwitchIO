@@ -240,4 +240,4 @@ class Context:
             self.bot.dispatch("command_completed")
 
     async def send(self, content: str) -> None:
-        await self.channel.send_message(sender_id=self.bot.bot_id, message=content)
+        await self.channel.send_message(sender=self.bot.bot_id, message=content)

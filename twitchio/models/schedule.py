@@ -180,7 +180,7 @@ class ScheduleSegment:
             title=title,
             canceled=canceled,
             timezone=timezone,
-            token_for=token_for,
+            token_for=self._broadcaster_id,
         )
 
         return Schedule(data["data"], http=self._http)
@@ -199,7 +199,7 @@ class ScheduleSegment:
             User access token that includes the ``channel:manage:schedule`` scope.
         """
         return await self._http.delete_channel_stream_schedule_segment(
-            broadcaster_id=self._broadcaster_id, id=self.id, token_for=token_for
+            broadcaster_id=self._broadcaster_id, id=self.id, token_for=self._broadcaster_id
         )
 
 

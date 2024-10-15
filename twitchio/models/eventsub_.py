@@ -2776,7 +2776,7 @@ class ChannelPointsReward(BaseEvent):
         return Asset(url, http=self._http)
 
     async def fetch_reward(self, *, token_for: str) -> CustomReward:
-        reward = await self.broadcaster.fetch_custom_rewards(ids=[self.id], token_for=token_for)
+        reward = await self.broadcaster.fetch_custom_rewards(ids=[self.id])
         return reward[0]
 
 
