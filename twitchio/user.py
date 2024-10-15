@@ -1411,7 +1411,7 @@ class PartialUser:
             max_results=max_results,
         )
 
-    async def start_raid(self, *, to_broadcaster_id: str | int | PartialUser, token_for: str) -> Raid:
+    async def start_raid(self, *, to_broadcaster_id: str | int | PartialUser) -> Raid:
         """|coro|
 
         Starts a raid to another channel.
@@ -1442,13 +1442,31 @@ class PartialUser:
             Raid object.
         """
         data = await self._http.post_raid(
-            from_broadcaster_id=self.id, to_broadcaster_id=to_broadcaster_id, token_for=token_for
+            from_broadcaster_id=self.id, to_broadcaster_id=to_broadcaster_id, token_for=self.id
         )
 
         return Raid(data["data"][0])
 
-    async def cancel_raid(self, *, token_for: str) -> None:
-        return await self._http.delete_raid(broadcaster_id=self.id, token_for=token_for)
+    async def cancel_raid(self) -> None:
+        """|coro|
+
+        Cancel a pending raid.
+
+        You can cancel a raid at any point up until the broadcaster clicks `Raid Now` in the Twitch UX or the 90-second countdown expires.
+
+        .. note::
+            The limit is 10 requests within a 10-minute window.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:raids`` scope.
+
+        Returns
+        -------
+        Raid
+            Raid object.
+        """
+
+        return await self._http.delete_raid(broadcaster_id=self.id, token_for=self.id)
 
     def fetch_stream_schedule(
         self,

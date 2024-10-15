@@ -2030,7 +2030,7 @@ class HTTPClient:
         self,
         from_broadcaster_id: str | int,
         to_broadcaster_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str,
     ) -> StartARaidResponse:
         params = {"from_broadcaster_id": from_broadcaster_id, "to_broadcaster_id": to_broadcaster_id}
         route: Route = Route("POST", "raids", params=params, token_for=token_for)
