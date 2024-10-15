@@ -501,24 +501,19 @@ class HTTPClient:
 
     ### Ads ###
 
-    @handle_user_ids()
-    async def start_commercial(
-        self, broadcaster_id: str | int, length: int, token_for: str | PartialUser
-    ) -> StartCommercialResponse:
+    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
         data = {"broadcaster_id": broadcaster_id, "length": length}
 
         route: Route = Route("POST", "channels/commercial", json=data, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
-    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str | PartialUser) -> AdScheduleResponse:
+    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdScheduleResponse:
         params = {"broadcaster_id": broadcaster_id}
 
         route: Route = Route("GET", "channels/ads", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
-    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str | PartialUser) -> SnoozeNextAdResponse:
+    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeNextAdResponse:
         params = {"broadcaster_id": broadcaster_id}
 
         route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
@@ -663,12 +658,11 @@ class HTTPClient:
         route: Route = Route("GET", "channels", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     async def patch_channel_info(
         self,
         *,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         game_id: str | int | None = None,
         language: str | None = None,
         title: str | None = None,
@@ -715,7 +709,7 @@ class HTTPClient:
         self,
         *,
         user_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         broadcaster_id: str | int | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -741,7 +735,7 @@ class HTTPClient:
         self,
         *,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         user_id: str | int | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -764,12 +758,11 @@ class HTTPClient:
 
     ### Channel Points ###
 
-    @handle_user_ids()
     async def post_custom_reward(
         self,
         *,
         broadcaster_id: str,
-        token_for: str | PartialUser,
+        token_for: str,
         title: str,
         cost: int,
         prompt: str | None = None,
@@ -818,12 +811,11 @@ class HTTPClient:
         route: Route = Route("DELETE", "channel_points/custom_rewards", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     async def get_custom_reward(
         self,
         *,
         broadcaster_id: str,
-        token_for: str | PartialUser,
+        token_for: str,
         reward_ids: list[str] | None = None,
         manageable: bool = False,
     ) -> CustomRewardsResponse:
@@ -962,18 +954,16 @@ class HTTPClient:
 
     ### Charity ###
 
-    @handle_user_ids()
-    async def get_charity_campaign(self, broadcaster_id: str, token_for: str | PartialUser) -> CharityCampaignResponse:
+    async def get_charity_campaign(self, broadcaster_id: str, token_for: str) -> CharityCampaignResponse:
         params = {"broadcaster_id": broadcaster_id}
 
         route: Route = Route("GET", "charity/campaigns", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     def get_charity_donations(
         self,
         broadcaster_id: str,
-        token_for: str | PartialUser,
+        token_for: str,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[CharityDonation]:
@@ -1078,7 +1068,7 @@ class HTTPClient:
     def get_user_emotes(
         self,
         user_id: str,
-        token_for: str | PartialUser,
+        token_for: str,
         broadcaster_id: str | int | PartialUser | None = None,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[UserEmote]:
@@ -1474,8 +1464,7 @@ class HTTPClient:
 
     ### Goals ###
 
-    @handle_user_ids()
-    async def get_creator_goals(self, broadcaster_id: str | int, token_for: str | PartialUser) -> CreatorGoalsResponse:
+    async def get_creator_goals(self, broadcaster_id: str | int, token_for: str) -> CreatorGoalsResponse:
         params = {"broadcaster_id": broadcaster_id}
 
         route: Route = Route("GET", "goals", params=params, token_for=token_for)
@@ -1485,11 +1474,10 @@ class HTTPClient:
 
     ### Hype Train ###
 
-    @handle_user_ids()
     def get_hype_train_events(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         first: int = 1,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[HypeTrainEvent]:
@@ -1522,13 +1510,12 @@ class HTTPClient:
         route: Route = Route("POST", "moderation/enforcements/status", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     async def post_manage_automod_messages(
         self,
-        user_id: str | int | PartialUser,
+        user_id: str | int,
         msg_id: str,
         action: Literal["ALLOW", "DENY"],
-        token_for: str | PartialUser,
+        token_for: str,
     ) -> None:
         data = {"user_id": user_id, "msg_id": msg_id, "action": action}
 
@@ -1561,11 +1548,10 @@ class HTTPClient:
         route: Route = Route("PUT", "moderation/automod/settings", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     def get_banned_users(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser | PartialUser,
+        token_for: str,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -1729,11 +1715,10 @@ class HTTPClient:
         route: Route = Route("DELETE", "moderation/chat", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     def get_moderated_channels(
         self,
         user_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
@@ -1750,11 +1735,10 @@ class HTTPClient:
 
         return iterator
 
-    @handle_user_ids()
     def get_moderators(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -1779,7 +1763,7 @@ class HTTPClient:
     async def post_channel_moderator(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         user_id: str | int | PartialUser,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
@@ -1799,11 +1783,10 @@ class HTTPClient:
         route: Route = Route("DELETE", "moderation/moderators", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     def get_vips(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -1828,7 +1811,7 @@ class HTTPClient:
     async def add_vip(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         user_id: str | int | PartialUser,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
@@ -1840,7 +1823,7 @@ class HTTPClient:
     async def delete_vip(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         user_id: str | int | PartialUser,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
@@ -1891,11 +1874,10 @@ class HTTPClient:
 
     ### Polls ###
 
-    @handle_user_ids()
     def get_polls(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         ids: list[str] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -1913,14 +1895,13 @@ class HTTPClient:
         iterator: HTTPAsyncIterator[Poll] = self.request_paginated(route, converter=converter, max_results=max_results)
         return iterator
 
-    @handle_user_ids()
     async def post_poll(
         self,
         broadcaster_id: str | int,
         title: str,
         choices: list[str],
         duration: int,
-        token_for: str | PartialUser,
+        token_for: str,
         channel_points_voting_enabled: bool = False,
         channel_points_per_vote: int | None = None,
     ) -> PollsResponse:
@@ -1939,13 +1920,12 @@ class HTTPClient:
         route: Route = Route("POST", "polls", json=data, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     async def patch_poll(
         self,
         broadcaster_id: str | int,
         id: str,
         status: Literal["ARCHIVED", "TERMINATED"],
-        token_for: str | PartialUser,
+        token_for: str,
     ) -> PollsResponse:
         data = {
             "broadcaster_id": broadcaster_id,
@@ -1958,11 +1938,10 @@ class HTTPClient:
 
     ### Predictions ###
 
-    @handle_user_ids()
     def get_predictions(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         ids: list[str] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -1981,14 +1960,13 @@ class HTTPClient:
 
         return iterator
 
-    @handle_user_ids()
     async def post_prediction(
         self,
         broadcaster_id: str | int,
         title: str,
         outcomes: list[str],
         prediction_window: int,
-        token_for: str | PartialUser,
+        token_for: str,
     ) -> PredictionsResponse:
         _outcomes = [{"title": t} for t in outcomes]
 
@@ -2002,13 +1980,12 @@ class HTTPClient:
         route: Route = Route("POST", "predictions", json=data, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     async def patch_prediction(
         self,
         broadcaster_id: str | int,
         id: str,
         status: Literal["RESOLVED", "CANCELED", "LOCKED"],
-        token_for: str | PartialUser,
+        token_for: str,
         winning_outcome_id: str | None = None,
     ) -> PredictionsResponse:
         data = {
@@ -2076,12 +2053,11 @@ class HTTPClient:
         )
         return iterator
 
-    @handle_user_ids()
     async def patch_channel_stream_schedule(
         self,
         broadcaster_id: str | int,
         vacation: bool,
-        token_for: str | PartialUser,
+        token_for: str,
         vacation_start_time: datetime.datetime | None = None,
         vacation_end_time: datetime.datetime | None = None,
         timezone: str | None = None,
@@ -2132,11 +2108,10 @@ class HTTPClient:
         route: Route = Route("POST", "schedule/segment", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     async def patch_channel_stream_schedule_segment(
         self,
         broadcaster_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         id: str,
         start_time: datetime.datetime | None = None,
         timezone: str | None = None,
@@ -2170,10 +2145,7 @@ class HTTPClient:
         route: Route = Route("PATCH", "schedule/segment", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
-    async def delete_channel_stream_schedule_segment(
-        self, broadcaster_id: str | int, id: str, token_for: str | PartialUser
-    ) -> None:
+    async def delete_channel_stream_schedule_segment(self, broadcaster_id: str | int, id: str, token_for: str) -> None:
         params = {"broadcaster_id": broadcaster_id, "id": id}
         route: Route = Route("DELETE", "schedule/segment", params=params, token_for=token_for)
         return await self.request_json(route)
@@ -2261,19 +2233,17 @@ class HTTPClient:
 
         return iterator
 
-    @handle_user_ids()
     async def get_stream_key(self, broadcaster_id: str | int, token_for: str | PartialUser) -> StreamKeyResponse:
         params = {"broadcaster_id": broadcaster_id}
 
         route: Route = Route("GET", "streams/key", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     def get_followed_streams(
         self,
         *,
         user_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
         first: int = 100,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
@@ -2340,17 +2310,16 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         user_id: str | int,
-        token_for: str | PartialUser,
+        token_for: str,
     ) -> CheckUserSubscriptionResponse:
         params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
 
         route: Route = Route("GET", "subscriptions/user", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     async def get_broadcaster_subscriptions(
         self,
-        token_for: str | PartialUser,
+        token_for: str,
         broadcaster_id: str | int,
         user_ids: list[str | int] | None = None,
         first: int = 20,
@@ -2414,15 +2383,13 @@ class HTTPClient:
         route: Route = Route("GET", "users", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
-    async def put_user(self, token_for: str | PartialUser, description: str | None) -> UpdateUserResponse:
+    async def put_user(self, token_for: str, description: str | None) -> UpdateUserResponse:
         params = {"description": description} if description is not None else {"description": ""}
         route: Route = Route("PUT", "users", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    @handle_user_ids()
     def get_user_block_list(
-        self, broadcaster_id: str | int, token_for: str | PartialUser, first: int = 20, max_results: int | None = None
+        self, broadcaster_id: str | int, token_for: str, first: int = 20, max_results: int | None = None
     ) -> HTTPAsyncIterator[PartialUser]:
         params = {"broadcaster_id": broadcaster_id, "first": first}
 
@@ -2441,7 +2408,7 @@ class HTTPClient:
     async def put_block_user(
         self,
         user_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str,
         source: Literal["chat", "whisper"] | None = None,
         reason: Literal["harassment", "spam", "other"] | None = None,
     ) -> None:
@@ -2457,7 +2424,7 @@ class HTTPClient:
     async def delete_block_user(
         self,
         user_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str,
     ) -> None:
         params = {"target_user_id": user_id}
         route: Route = Route("DELETE", "users/blocks", params=params, token_for=token_for)

@@ -112,7 +112,7 @@ class PartialUser:
         """
         return f"@{self}"
 
-    async def start_commercial(self, *, length: int, token_for: str | PartialUser) -> CommercialStart:
+    async def start_commercial(self, *, length: int) -> CommercialStart:
         """|coro|
 
         Starts a commercial on the specified channel.
@@ -130,18 +130,16 @@ class PartialUser:
         length: int
             The length of the commercial to run, in seconds. Max length is 180.
             If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
-        token_for: str | PartialUser
-            User token to use that includes the ``channel:edit:commercial`` scope.
 
         Returns
         -------
         CommercialStart
             A CommercialStart object.
         """
-        data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=token_for)
+        data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=self.id)
         return CommercialStart(data["data"][0])
 
-    async def fetch_ad_schedule(self, token_for: str | PartialUser) -> AdSchedule:
+    async def fetch_ad_schedule(self) -> AdSchedule:
         """|coro|
 
         Fetch ad schedule related information, including snooze, when the last ad was run, when the next ad is scheduled, and if the channel is currently in pre-roll free time.
@@ -154,20 +152,15 @@ class PartialUser:
         .. note::
             Requires user access token that includes the ``channel:read:ads`` scope.
 
-        Parameters
-        ----------
-        token_for: str | PartialUser
-            User token to use that includes the ``channel:read:ads`` scope.
-
         Returns
         -------
         AdSchedule
             An AdSchedule object.
         """
-        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=token_for)
+        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=self.id)
         return AdSchedule(data["data"][0])
 
-    async def snooze_next_ad(self, token_for: str | PartialUser) -> SnoozeAd:
+    async def snooze_next_ad(self) -> SnoozeAd:
         """|coro|
 
         If available, pushes back the timestamp of the upcoming automatic mid-roll ad by 5 minutes.
@@ -179,17 +172,12 @@ class PartialUser:
         .. note::
             Requires user access token that includes the ``channel:manage:ads`` scope.
 
-        Parameters
-        ----------
-        token_for: str | PartialUser
-            User token to use that includes the ``channel:manage:ads`` scope.
-
         Returns
         -------
         SnoozeAd
             A SnoozeAd object.
         """
-        data = await self._http.post_snooze_ad(broadcaster_id=self.id, token_for=token_for)
+        data = await self._http.post_snooze_ad(broadcaster_id=self.id, token_for=self.id)
         return SnoozeAd(data["data"][0])
 
     def fetch_extension_analytics(
@@ -336,7 +324,7 @@ class PartialUser:
         count: int = 10,
         period: Literal["all", "day", "week", "month", "year"] = "all",
         started_at: datetime.datetime | None = None,
-        user_id: str | int | PartialUser | None = None,
+        user: str | int | PartialUser | None = None,
     ) -> BitsLeaderboard:
         """|coro|
 
@@ -383,8 +371,8 @@ class PartialUser:
         started_at: datetime.datetime | None
             The start date, used for determining the aggregation period. Specify this parameter only if you specify the period query parameter.
             The start date is ignored if period is all. This can be timezone aware.
-        user_id: str | int | PartialUser | None
-            An ID that identifies a user that cheered bits in the channel.
+        user: str | int | PartialUser | None
+            A User ID that identifies a user that cheered bits in the channel.
             If count is greater than 1, the response may include users ranked above and below the specified user.
             To get the leaderboard's top leaders, don't specify a user ID.
         token_for: str | PartialUser
@@ -417,7 +405,7 @@ class PartialUser:
             count=count,
             period=period,
             started_at=started_at,
-            user_id=user_id,
+            user_id=user,
         )
         return BitsLeaderboard(data, http=self._http)
 
@@ -444,7 +432,6 @@ class PartialUser:
     async def modify_channel(
         self,
         *,
-        token_for: str | PartialUser,
         game_id: str | None = None,
         language: str | None = None,
         title: str | None = None,
@@ -504,13 +491,11 @@ class PartialUser:
             List of labels that should be set as the Channel's CCLs.
         branded: bool | None
             Boolean flag indicating if the channel has branded content.
-        token_for: str | PartialUser
-            User token to use that includes the ``channel:manage:broadcast`` scope.
         """
 
         return await self._http.patch_channel_info(
             broadcaster_id=self.id,
-            token_for=token_for,
+            token_for=self.id,
             game_id=game_id,
             language=language,
             title=title,
@@ -520,18 +505,13 @@ class PartialUser:
             branded_content=branded,
         )
 
-    async def fetch_editors(self, token_for: str) -> list[ChannelEditor]:
+    async def fetch_editors(self) -> list[ChannelEditor]:
         """|coro|
 
         Fetches a list of the user's editors for their channel.
 
         .. note::
             Requires user access token that includes the ``channel:manage:broadcast`` scope.
-
-        Parameters
-        -----------
-        token_for: str
-            User token to use that includes the ``channel:manage:broadcast`` scope.
 
         Returns
         -------
@@ -540,13 +520,12 @@ class PartialUser:
         """
         from .models.channels import ChannelEditor
 
-        data = await self._http.get_channel_editors(broadcaster_id=self.id, token_for=token_for)
+        data = await self._http.get_channel_editors(broadcaster_id=self.id, token_for=self.id)
         return [ChannelEditor(d, http=self._http) for d in data["data"]]
 
     async def fetch_followed_channels(
         self,
-        token_for: str,
-        broadcaster_id: str | int | None = None,
+        broadcaster: str | int | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> FollowedChannels | None:
@@ -559,16 +538,13 @@ class PartialUser:
 
         Parameters
         -----------
-        broadcaster_id: str | int | PartialUser | None
+        broadcaster: str | int | PartialUser | None
             Provide a User ID, or PartialUser, to check whether the user follows this broadcaster.
-        token_for: str | PartialUser
-            User token to use that includes the ``user:read:follows`` scope.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
-
 
         Returns
         -------
@@ -578,16 +554,15 @@ class PartialUser:
 
         return await self._http.get_followed_channels(
             user_id=self.id,
-            token_for=token_for,
-            broadcaster_id=broadcaster_id,
+            token_for=self.id,
+            broadcaster_id=broadcaster,
             first=first,
             max_results=max_results,
         )
 
     async def fetch_followers(
         self,
-        token_for: str | PartialUser,
-        user_id: str | int | PartialUser | None = None,
+        user: str | int | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> ChannelFollowers:
@@ -603,10 +578,8 @@ class PartialUser:
 
         Parameters
         -----------
-        user_id: str | int | PartialUser | None
+        user: str | int | PartialUser | None
             Provide a User ID, or PartialUser, to check whether the user follows this broadcaster.
-        token_for: str | PartialUser
-            User token to use that includes the ``moderator:read:followers`` scope.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -622,8 +595,8 @@ class PartialUser:
 
         return await self._http.get_channel_followers(
             broadcaster_id=self.id,
-            token_for=token_for,
-            user_id=user_id,
+            token_for=self.id,
+            user_id=user,
             first=first,
             max_results=max_results,
         )
@@ -631,7 +604,6 @@ class PartialUser:
     async def create_custom_reward(
         self,
         *,
-        token_for: str | PartialUser,
         title: str,
         cost: int,
         prompt: str | None = None,
@@ -673,8 +645,6 @@ class PartialUser:
             The cooldown period, in seconds. The minimum value is 1; however, the minimum value is 60 for it to be shown in the Twitch UX.
         redemptions_skip_queue: bool
             A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If False, status is set to UNFULFILLED and follows the normal request queue process. The default is False.
-        token_for: str | PartialUser
-            User token to use that includes the ``channel:manage:redemptions`` scope.
 
         Returns
         --------
@@ -708,7 +678,7 @@ class PartialUser:
 
         data = await self._http.post_custom_reward(
             broadcaster_id=self.id,
-            token_for=token_for,
+            token_for=self.id,
             title=title,
             cost=cost,
             prompt=prompt,
@@ -721,9 +691,7 @@ class PartialUser:
         )
         return CustomReward(data["data"][0], http=self._http)
 
-    async def fetch_custom_rewards(
-        self, *, token_for: str | PartialUser, ids: list[str] | None = None, manageable: bool = False
-    ) -> list[CustomReward]:
+    async def fetch_custom_rewards(self, *, ids: list[str] | None = None, manageable: bool = False) -> list[CustomReward]:
         """|coro|
 
         Fetches list of custom rewards that the specified broadcaster created.
@@ -733,8 +701,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            A user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
         ids: list[str] | None
             A list of IDs to filter the rewards by. You may request a maximum of 50.
         manageable: bool | None
@@ -749,22 +715,17 @@ class PartialUser:
         from .models.channel_points import CustomReward
 
         data = await self._http.get_custom_reward(
-            broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=token_for
+            broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=self.id
         )
         return [CustomReward(d, http=self._http) for d in data["data"]]
 
-    async def fetch_charity_campaign(self, *, token_for: str | PartialUser) -> CharityCampaign:
+    async def fetch_charity_campaign(self) -> CharityCampaign:
         """|coro|
 
         Fetch the active charity campaign of a broadcaster.
 
         .. note::
             Requires user access token that includes the `channel:read:charity` scope.
-
-        Parameters
-        ----------
-        token_for: str | PartialUser
-            A user access token that includes the ``channel:read:charity`` scope.
 
         Returns
         -------
@@ -773,13 +734,12 @@ class PartialUser:
         """
         from .models.charity import CharityCampaign
 
-        data = await self._http.get_charity_campaign(broadcaster_id=self.id, token_for=token_for)
+        data = await self._http.get_charity_campaign(broadcaster_id=self.id, token_for=self.id)
         return CharityCampaign(data["data"][0], http=self._http)
 
     def fetch_charity_donations(
         self,
         *,
-        token_for: str | PartialUser,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[CharityDonation]:
@@ -792,8 +752,6 @@ class PartialUser:
 
         Parameters
         -----------
-        token_for: str | PartialUser
-            A user access token that includes the ``channel:read:charity`` scope.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -810,14 +768,14 @@ class PartialUser:
         return self._http.get_charity_donations(
             broadcaster_id=self.id,
             first=first,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
     async def fetch_chatters(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator_id: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         first: int = 100,
         max_results: int | None = None,
@@ -880,8 +838,7 @@ class PartialUser:
     def fetch_user_emotes(
         self,
         *,
-        token_for: str | PartialUser,
-        broadcaster_id: str | int | PartialUser | None = None,
+        broadcaster: str | int | PartialUser | None = None,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[UserEmote]:
         """|aiter|
@@ -895,9 +852,7 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            Requires a user access token that includes the ``user:read:emotes`` scope.
-        broadcaster_id: str | int | PartialUser | None
+        broadcaster: str | int | PartialUser | None
             The User ID, or PartialUser, of a broadcaster you wish to get follower emotes of. Using this query parameter will guarantee inclusion of the broadcaster's follower emotes in the response body.
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
@@ -909,8 +864,8 @@ class PartialUser:
 
         return self._http.get_user_emotes(
             user_id=self.id,
-            token_for=token_for,
-            broadcaster_id=broadcaster_id,
+            token_for=self.id,
+            broadcaster_id=broadcaster,
             max_results=max_results,
         )
 
@@ -937,7 +892,7 @@ class PartialUser:
         return [ChatBadge(d, http=self._http) for d in data["data"]]
 
     async def fetch_chat_settings(
-        self, *, moderator_id: str | int | PartialUser | None = None, token_for: str | PartialUser | None = None
+        self, *, moderator: str | int | PartialUser | None = None, token_for: str | PartialUser | None = None
     ) -> ChatSettings:
         """|coro|
 
@@ -950,9 +905,9 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser | None
+        moderator: str | int | PartialUser | None
             The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
-            This field is required only if you want to include the ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` settings in the response.
+            This field is only required if you want to include the ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` settings in the response.
             If you specify this field, this ID must match the user ID in the user access token.
 
         token_for: str | PartialUser | None
@@ -968,14 +923,14 @@ class PartialUser:
         from .models.chat import ChatSettings
 
         data = await self._http.get_channel_chat_settings(
-            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
+            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for
         )
         return ChatSettings(data["data"][0], http=self._http)
 
     async def update_chat_settings(
         self,
-        moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
+        token_for: str | PartialUser,  # TODO Default to bot_id or self.id? same for token_for.
         emote_mode: bool | None = None,
         follower_mode: bool | None = None,
         follower_mode_duration: int | None = None,
@@ -1002,7 +957,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of a user that has permission to moderate the broadcaster's chat room, or the broadcaster's ID if they're making the update.
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
@@ -1057,7 +1012,7 @@ class PartialUser:
 
         data = await self._http.patch_chat_settings(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             emote_mode=emote_mode,
             follower_mode=follower_mode,
@@ -1095,7 +1050,7 @@ class PartialUser:
     async def send_announcement(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         message: str,
         color: Literal["blue", "green", "orange", "purple", "primary"] = "primary",
@@ -1109,7 +1064,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of a user who has permission to moderate the broadcaster's chat room, or the broadcaster''s ID if they're sending the announcement.
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
@@ -1127,14 +1082,14 @@ class PartialUser:
 
         """
         return await self._http.post_chat_announcement(
-            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, message=message, color=color
+            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, message=message, color=color
         )
 
     async def send_shoutout(
         self,
         *,
-        to_broadcaster_id: str | int | PartialUser,
-        moderator_id: str | int | PartialUser,
+        to_broadcaster: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
     ) -> None:
         """|coro|
@@ -1149,21 +1104,21 @@ class PartialUser:
 
         Parameters
         ----------
-        to_broadcaster_id: str | int | PartialUser
+        to_broadcaster: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster that's receiving the Shoutout.
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
         token_for: str | PartialUser
             User access token that includes the ``moderator:manage:shoutouts`` scope.
         """
         return await self._http.post_chat_shoutout(
-            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for, to_broadcaster_id=to_broadcaster_id
+            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, to_broadcaster_id=to_broadcaster
         )
 
     async def send_message(
         self,
         *,
-        sender_id: str | int | PartialUser,
+        sender: str | int | PartialUser,
         message: str,
         token_for: str | PartialUser | None = None,
         reply_to_message_id: str | None = None,
@@ -1188,7 +1143,7 @@ class PartialUser:
 
         Parameters
         ----------
-        sender_id: str | int | PartialUser
+        sender: str | int | PartialUser
             The ID, or PartialUser, of the user sending the message. This ID must match the user ID in the user access token.
         message: str
             The message to send. The message is limited to a maximum of 500 characters.
@@ -1219,7 +1174,7 @@ class PartialUser:
 
         data = await self._http.post_chat_message(
             broadcaster_id=self.id,
-            sender_id=sender_id,
+            sender_id=sender,
             message=message,
             reply_to_message_id=reply_to_message_id,
             token_for=token_for,
@@ -1227,7 +1182,7 @@ class PartialUser:
 
         return SentMessage(data["data"][0])
 
-    async def update_chatter_color(self, *, color: str, token_for: str) -> None:
+    async def update_chatter_color(self, color: str) -> None:
         """|coro|
 
         Updates the color used for the user's name in chat.
@@ -1249,7 +1204,7 @@ class PartialUser:
             - spring_green
             - yellow_green
 
-        ??? note
+        .. note::
             Requires a user access token that includes the ``user:manage:chat_color`` scope.
 
         Parameters
@@ -1257,12 +1212,12 @@ class PartialUser:
         color: str
             The color to use, to see the list of colors available please refer to the docs.
             If the user is a Turbo or Prime member then you may specify a Hex color code e.g. ``#9146FF``
-        token_for: str
-            User access token that includes the ``user:manage:chat_color`` scope.
         """
-        return await self._http.put_user_chat_color(user_id=self.id, color=color, token_for=token_for)
+        return await self._http.put_user_chat_color(user_id=self.id, color=color, token_for=self.id)
 
-    async def create_clip(self, *, token_for: str | PartialUser, has_delay: bool = False) -> CreatedClip:
+    async def create_clip(
+        self, *, token_for: str | PartialUser, has_delay: bool = False
+    ) -> CreatedClip:  # TODO Test this with non broadcaster token
         """|coro|
 
         Creates a clip from the broadcaster's stream.
@@ -1353,18 +1308,13 @@ class PartialUser:
             max_results=max_results,
         )
 
-    async def fetch_goals(self, *, token_for: str | PartialUser) -> list[Goal]:
+    async def fetch_goals(self) -> list[Goal]:
         """|coro|
 
         Fetches a list of the creator's goals.
 
         .. note::
             Requires a user access token that includes the ``channel:read:goals`` scope.
-
-        Parameters
-        ----------
-        token_for: str | PartialUser
-            User access token that includes the ``channel:read:goals`` scope.
 
         Returns
         -------
@@ -1373,13 +1323,12 @@ class PartialUser:
         """
         from .models.goals import Goal
 
-        data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=token_for)
+        data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=self.id)
         return [Goal(d, http=self._http) for d in data["data"]]
 
     def fetch_hype_train_events(
         self,
         *,
-        token_for: str | PartialUser,
         first: int = 1,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[HypeTrainEvent]:
@@ -1389,8 +1338,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the channel:read:hype_train scope.
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 1.
@@ -1407,11 +1354,11 @@ class PartialUser:
         return self._http.get_hype_train_events(
             broadcaster_id=self.id,
             first=first,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
-    async def start_raid(self, *, to_broadcaster_id: str | int | PartialUser) -> Raid:
+    async def start_raid(self, to_broadcaster: str | int | PartialUser) -> Raid:
         """|coro|
 
         Starts a raid to another channel.
@@ -1431,19 +1378,15 @@ class PartialUser:
 
         Parameters
         ----------
-        to_broadcaster_id: str | int | PartialUser
+        to_broadcaster: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster to raid.
-        token_for: str
-            User access token that includes the `channel:manage:raids` scope.
 
         Returns
         -------
         Raid
             Raid object.
         """
-        data = await self._http.post_raid(
-            from_broadcaster_id=self.id, to_broadcaster_id=to_broadcaster_id, token_for=self.id
-        )
+        data = await self._http.post_raid(from_broadcaster_id=self.id, to_broadcaster_id=to_broadcaster, token_for=self.id)
 
         return Raid(data["data"][0])
 
@@ -1523,7 +1466,6 @@ class PartialUser:
         self,
         *,
         vacation: bool,
-        token_for: str | PartialUser,
         vacation_start_time: datetime.datetime | None = None,
         vacation_end_time: datetime.datetime | None = None,
         timezone: str | None = None,
@@ -1539,8 +1481,6 @@ class PartialUser:
         ----------
         vacation: bool
             A Boolean value that indicates whether the broadcaster has scheduled a vacation. Set to True to enable Vacation Mode and add vacation dates, or False to cancel a previously scheduled vacation.
-        token_for: str | PartialUser
-            User access token that includes the `channel:manage:schedule` scope.
         vacation_start_time: datetime.datetime | None
             Datetime of when the broadcaster's vacation starts. Required if `vacation` is True. This can be timezone aware.
         vacation_end_time: datetime.datetime | None
@@ -1562,7 +1502,7 @@ class PartialUser:
         return await self._http.patch_channel_stream_schedule(
             broadcaster_id=self.id,
             vacation=vacation,
-            token_for=token_for,
+            token_for=self.id,
             vacation_start_time=vacation_start_time,
             vacation_end_time=vacation_end_time,
             timezone=timezone,
@@ -1571,7 +1511,6 @@ class PartialUser:
     async def create_schedule_segment(
         self,
         *,
-        token_for: str | PartialUser,
         start_time: datetime.datetime,
         timezone: str,
         duration: int,
@@ -1590,8 +1529,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the `channel:manage:schedule` scope.
         start_time: datetime.datetime
             Datetime that the broadcast segment starts. This can be timezone aware.
         timezone: str | None
@@ -1624,7 +1561,7 @@ class PartialUser:
         data = await self._http.post_channel_stream_schedule_segment(
             broadcaster_id=self.id,
             start_time=start_time,
-            token_for=token_for,
+            token_for=self.id,
             duration=duration,
             recurring=recurring,
             timezone=timezone,
@@ -1637,7 +1574,6 @@ class PartialUser:
         self,
         *,
         id: str,
-        token_for: str | PartialUser,
         start_time: datetime.datetime | None = None,
         duration: int | None = None,
         category_id: str | None = None,
@@ -1653,8 +1589,6 @@ class PartialUser:
         ----------
         id: str
             The ID of the broadcast segment to update.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:schedule`` scope.
         start_time: datetime.datetime | None
             The datetime that the broadcast segment starts. This can be timezone aware.
         duration: int | None
@@ -1696,12 +1630,12 @@ class PartialUser:
             title=title,
             canceled=canceled,
             timezone=timezone,
-            token_for=token_for,
+            token_for=self.id,
         )
 
         return Schedule(data["data"], http=self._http)
 
-    async def delete_schedule_segment(self, *, id: str, token_for: str | PartialUser) -> None:
+    async def delete_schedule_segment(self, id: str) -> None:
         """|coro|
 
         Removes a broadcast segment from the broadcaster's streaming schedule.
@@ -1716,10 +1650,8 @@ class PartialUser:
         ----------
         id: str
             The ID of the segment to remove.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:schedule`` scope.
         """
-        return await self._http.delete_channel_stream_schedule_segment(broadcaster_id=self.id, id=id, token_for=token_for)
+        return await self._http.delete_channel_stream_schedule_segment(broadcaster_id=self.id, id=id, token_for=self.id)
 
     async def fetch_channel_teams(self, *, token_for: str | PartialUser | None = None) -> list[ChannelTeam]:
         """|coro|
@@ -1742,10 +1674,8 @@ class PartialUser:
 
         return [ChannelTeam(d, http=self._http) for d in data["data"]]
 
-    async def check_automod_status(
-        self, *, messages: list[AutomodCheckMessage], token_for: str | PartialUser
-    ) -> list[AutoModStatus]:
-        """|coro|
+    async def check_automod_status(self, *messages: list[AutomodCheckMessage]) -> list[AutoModStatus]:
+        r"""|coro|
 
         Checks whether AutoMod would flag the specified message for review.
 
@@ -1773,10 +1703,8 @@ class PartialUser:
 
         Parameters
         ----------
-        messages: list[dict[str, str]]]
-
-        token_for: str | PartialUser
-            User access token that includes the `moderation:read` scope.
+        \*messages: :class:`twitchio.AutomodCheckMessage`
+            An argument list of AutomodCheckMessage objects.
 
         Returns
         -------
@@ -1785,10 +1713,10 @@ class PartialUser:
         """
         from .models.moderation import AutoModStatus
 
-        data = await self._http.post_check_automod_status(broadcaster_id=self.id, messages=messages, token_for=token_for)
+        data = await self._http.post_check_automod_status(broadcaster_id=self.id, messages=messages, token_for=self.id)
         return [AutoModStatus(d) for d in data["data"]]
 
-    async def approve_automod_messages(self, *, msg_id: str, token_for: str | PartialUser) -> None:
+    async def approve_automod_messages(self, msg_id: str) -> None:
         """|coro|
 
         Allow the message that AutoMod flagged for review.
@@ -1802,14 +1730,12 @@ class PartialUser:
         ----------
         msg_id: str
             The ID of the message to allow.
-        token_for: str | PartialUser
-            User access token that includes the `moderator:manage:automod` scope.
         """
         return await self._http.post_manage_automod_messages(
-            user_id=self.id, msg_id=msg_id, action="ALLOW", token_for=token_for
+            user_id=self.id, msg_id=msg_id, action="ALLOW", token_for=self.id
         )
 
-    async def deny_automod_messages(self, *, msg_id: str, token_for: str | PartialUser) -> None:
+    async def deny_automod_messages(self, msg_id: str) -> None:
         """|coro|
 
         Deny the message that AutoMod flagged for review.
@@ -1823,15 +1749,16 @@ class PartialUser:
         ----------
         msg_id: str
             The ID of the message to deny.
-        token_for: str | PartialUser
-            User access token that includes the `moderator:manage:automod` scope.
         """
         return await self._http.post_manage_automod_messages(
-            user_id=self.id, msg_id=msg_id, action="DENY", token_for=token_for
+            user_id=self.id, msg_id=msg_id, action="DENY", token_for=self.id
         )
 
     async def fetch_automod_settings(
-        self, *, moderator_id: str | int | PartialUser, token_for: str | PartialUser
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
     ) -> AutomodSettings:
         """|coro|
 
@@ -1844,7 +1771,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
@@ -1857,11 +1784,15 @@ class PartialUser:
         """
         from .models import AutomodSettings
 
-        data = await self._http.get_automod_settings(broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for)
+        data = await self._http.get_automod_settings(broadcaster_id=self.id, moderator_id=moderator, token_for=token_for)
         return AutomodSettings(data["data"][0], http=self._http)
 
     async def update_automod_settings(
-        self, *, moderator_id: str | int | PartialUser, settings: AutomodSettings, token_for: str | PartialUser
+        self,
+        *,
+        moderator_id: str | int | PartialUser,
+        settings: AutomodSettings,
+        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> AutomodSettings:
         """|coro|
 
@@ -1913,7 +1844,6 @@ class PartialUser:
     def fetch_banned_user(
         self,
         *,
-        token_for: str | PartialUser,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -1927,8 +1857,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the `moderation:read` or ``moderator:manage:banned_users`` scope.
         user_ids: list[str | int] | None
             A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each user you want to get.
             You may specify a maximum of 100 IDs.
@@ -1958,14 +1886,14 @@ class PartialUser:
         return self._http.get_banned_users(
             broadcaster_id=self.id,
             user_ids=user_ids,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
     async def ban_user(
         self,
         *,
-        moderator: str | PartialUser | None = None,
+        moderator: str | PartialUser | None = None,  # TODO Default to bot_id, same for token_for.
         user: str | PartialUser,
         reason: str | None = None,
     ) -> Ban:
@@ -2020,7 +1948,7 @@ class PartialUser:
     async def timeout_user(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         user_id: str | int,
         token_for: str,
         duration: int,
@@ -2035,7 +1963,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
         user_id: str | int | PartialUser
@@ -2058,7 +1986,7 @@ class PartialUser:
 
         data = await self._http.post_ban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             user_id=user_id,
             token_for=token_for,
             duration=duration,
@@ -2069,7 +1997,7 @@ class PartialUser:
     async def unban_user(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator_id: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         user_id: str | int | PartialUser,
         token_for: str,
     ) -> None:
@@ -2101,10 +2029,10 @@ class PartialUser:
     def fetch_unban_requests(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
-        user_id: str | int | PartialUser | None = None,
+        user: str | int | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[UnbanRequest]:
@@ -2117,7 +2045,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
         token_for: str | PartialUser
             User access token that includes the ``moderator:read:unban_requests` or ``moderator:manage:unban_requests`` scope.
@@ -2130,7 +2058,7 @@ class PartialUser:
             - acknowledged
             - canceled
 
-        user_id: str | int | PartialUser | None
+        user: str | int | PartialUser | None
             An ID, or PartialUser, used to filter what unban requests are returned.
         first: int
             The maximum number of items to return per page in response. Default 20.
@@ -2146,10 +2074,10 @@ class PartialUser:
 
         return self._http.get_unban_requests(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             status=status,
-            user_id=user_id,
+            user_id=user,
             first=first,
             max_results=max_results,
         )
@@ -2157,7 +2085,7 @@ class PartialUser:
     async def resolve_unban_request(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         status: Literal["approved", "denied"],
         unban_request_id: str,
@@ -2172,7 +2100,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
         token_for: str | PartialUser
             User access token that includes the ``moderator:manage:unban_requests`` scope.
@@ -2201,7 +2129,7 @@ class PartialUser:
 
         data = await self._http.patch_unban_requests(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             unban_request_id=unban_request_id,
             status=status,
@@ -2211,7 +2139,7 @@ class PartialUser:
 
     def fetch_blocked_terms(
         self,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         first: int = 20,
         max_results: int | None = None,
@@ -2226,7 +2154,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
@@ -2245,7 +2173,7 @@ class PartialUser:
 
         return self._http.get_blocked_terms(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             first=first,
             max_results=max_results,
@@ -2254,7 +2182,7 @@ class PartialUser:
     async def add_blocked_term(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         text: str,
     ) -> BlockedTerm:
@@ -2274,7 +2202,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
         token_for: str | PartialUser
             User access token that includes the ``moderator:manage:blocked_terms`` scope.
@@ -2303,7 +2231,7 @@ class PartialUser:
 
         data = await self._http.post_blocked_term(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             text=text,
         )
@@ -2312,7 +2240,7 @@ class PartialUser:
     async def remove_blocked_term(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         id: str,
     ) -> None:
@@ -2325,7 +2253,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
         token_for: str | PartialUser
             User access token that includes the ``moderator:manage:blocked_terms`` scope.
@@ -2335,13 +2263,17 @@ class PartialUser:
 
         return await self._http.delete_blocked_term(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             id=id,
         )
 
     async def delete_chat_messages(
-        self, *, moderator_id: str | int | PartialUser, token_for: str | PartialUser, message_id: str | None = None
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        token_for: str | PartialUser,
+        message_id: str | None = None,  # TODO Default to bot_id, same for token_for.
     ) -> None:
         """|coro|
 
@@ -2361,7 +2293,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
@@ -2372,14 +2304,12 @@ class PartialUser:
 
         return await self._http.delete_chat_message(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             message_id=message_id,
         )
 
-    def fetch_moderated_channels(
-        self, *, token_for: str | PartialUser, first: int = 20, max_results: int | None = None
-    ) -> HTTPAsyncIterator[PartialUser]:
+    def fetch_moderated_channels(self, *, first: int = 20, max_results: int | None = None) -> HTTPAsyncIterator[PartialUser]:
         """|aiter|
 
         Fetches channels that the specified user has moderator privileges in.
@@ -2390,9 +2320,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the ``user:read:moderated_channels`` scope.
-            The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
@@ -2407,14 +2334,13 @@ class PartialUser:
         return self._http.get_moderated_channels(
             user_id=self.id,
             first=first,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
     def fetch_moderators(
         self,
         *,
-        token_for: str | PartialUser,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -2462,11 +2388,11 @@ class PartialUser:
             broadcaster_id=self.id,
             user_ids=user_ids,
             first=first,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
-    async def add_moderator(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
+    async def add_moderator(self, user: str | int | PartialUser) -> None:
         """|coro|
 
         Adds a moderator to the broadcaster's chat room.
@@ -2478,16 +2404,13 @@ class PartialUser:
 
         Parameters
         ----------
-        user_id: str | int | PartialUser
+        user: str | int | PartialUser
             The ID of the user to add as a moderator in the broadcaster's chat room.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:moderators`` scope.
-            The user ID in the access token must match the broadcaster's ID.
         """
 
-        return await self._http.post_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
+        return await self._http.post_channel_moderator(broadcaster_id=self.id, user_id=user, token_for=self.id)
 
-    async def remove_moderator(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
+    async def remove_moderator(self, user: str | int | PartialUser) -> None:
         """|coro|
 
         Removes a moderator to the broadcaster's chat room.
@@ -2500,19 +2423,15 @@ class PartialUser:
 
         Parameters
         ----------
-        user_id: str | int | PartialUser
+        user: str | int | PartialUser
             The ID of the user to remove as a moderator in the broadcaster's chat room.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:moderators`` scope.
-            The user ID in the access token must match the broadcaster's ID.
         """
 
-        return await self._http.delete_channel_moderator(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
+        return await self._http.delete_channel_moderator(broadcaster_id=self.id, user_id=user, token_for=self.id)
 
     def fetch_vips(
         self,
         *,
-        token_for: str | PartialUser,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -2530,10 +2449,6 @@ class PartialUser:
         ----------
         user_ids: list[str | int] | None
             Filters the list for specific VIPs. You may specify a maximum of 100 IDs.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:read:vips`` scope.
-            If your app also adds and removes moderators, you can use the ``channel:manage:vips`` scope instead.
-            The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
@@ -2559,11 +2474,11 @@ class PartialUser:
             broadcaster_id=self.id,
             user_ids=user_ids,
             first=first,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
-    async def add_vip(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
+    async def add_vip(self, user: str | int | PartialUser) -> None:
         """|coro|
 
         Adds a VIP to the broadcaster's chat room.
@@ -2576,16 +2491,13 @@ class PartialUser:
 
         Parameters
         ----------
-        user_id: str | int
+        user: str | int
             The ID, or PartialUser, of the user to add as a VIP in the broadcaster's chat room.
-        token_for: str
-            User access token that includes the ``channel:manage:vips`` scope.
-            The user ID in the access token must match the broadcaster's ID.
         """
 
-        return await self._http.add_vip(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
+        return await self._http.add_vip(broadcaster_id=self.id, user_id=user, token_for=self.id)
 
-    async def remove_vip(self, *, token_for: str | PartialUser, user_id: str | int | PartialUser) -> None:
+    async def remove_vip(self, user: str | int | PartialUser) -> None:
         """|coro|
 
         Removes a VIP to the broadcaster's chat room.
@@ -2598,17 +2510,18 @@ class PartialUser:
 
         Parameters
         ----------
-        user_id: str | int | PartialUser
+        user: str | int | PartialUser
             The ID, or PartialUser, of the user to remove as a VIP in the broadcaster's chat room.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:vips`` scope.
-            The user ID in the access token must match the broadcaster's ID.
         """
 
-        return await self._http.delete_vip(broadcaster_id=self.id, user_id=user_id, token_for=token_for)
+        return await self._http.delete_vip(broadcaster_id=self.id, user_id=user, token_for=self.id)
 
     async def update_shield_mode_status(
-        self, *, moderator_id: str | int | PartialUser, active: bool, token_for: str | PartialUser
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        active: bool,
+        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> ShieldModeStatus:
         """|coro|
 
@@ -2619,7 +2532,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
             This ID must match the user ID in the access token.
         active: bool
@@ -2633,14 +2546,17 @@ class PartialUser:
 
         data = await self._http.put_shield_mode_status(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             token_for=token_for,
             active=active,
         )
         return ShieldModeStatus(data["data"][0], http=self._http)
 
     async def fetch_shield_mode_status(
-        self, *, moderator_id: str | int | PartialUser, token_for: str | PartialUser
+        self,
+        *,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> ShieldModeStatus:
         """|coro|
 
@@ -2668,7 +2584,6 @@ class PartialUser:
     def fetch_polls(
         self,
         *,
-        token_for: str | PartialUser,
         ids: list[str] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -2687,9 +2602,6 @@ class PartialUser:
         ----------
         ids: list[str] | None
             A list of IDs that identify the polls to return. You may specify a maximum of 20 IDs.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:read:polls`` or ``channel:manage:polls`` scope.
-            The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 20 items per page. The default is 20.
         max_results: int | None
@@ -2715,7 +2627,7 @@ class PartialUser:
             broadcaster_id=self.id,
             ids=ids,
             first=first,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
@@ -2725,7 +2637,6 @@ class PartialUser:
         title: str,
         choices: list[str],
         duration: int,
-        token_for: str | PartialUser,
         channel_points_voting_enabled: bool = False,
         channel_points_per_vote: int | None = None,
     ) -> Poll:
@@ -2750,8 +2661,6 @@ class PartialUser:
         duration: int
             The length of time (in seconds) that the poll will run for.
             The minimum is 15 seconds and the maximum is 1800 seconds (30 minutes).
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:polls`` scope.
         channel_points_voting_enabled: bool
             A Boolean value that indicates whether viewers may cast additional votes using Channel Points.
             If True, the viewer may cast more than one vote but each additional vote costs the number of Channel Points specified in ``channel_points_per_vote``. The default is False
@@ -2782,7 +2691,7 @@ class PartialUser:
             title=title,
             choices=choices,
             duration=duration,
-            token_for=token_for,
+            token_for=self.id,
             channel_points_voting_enabled=channel_points_voting_enabled,
             channel_points_per_vote=channel_points_per_vote,
         )
@@ -2802,7 +2711,7 @@ class PartialUser:
 
         return Poll(data["data"][0], http=self._http)
 
-    async def end_poll(self, *, id: str, token_for: str | PartialUser, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
+    async def end_poll(self, *, id: str, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
         """|coro|
 
         End an active poll. You have the option to end it or end it and archive it.
@@ -2821,8 +2730,6 @@ class PartialUser:
             The ID of the poll to end.
         status:  Literal["ARCHIVED", "TERMINATED"]
             The status to set the poll to. Possible case-sensitive values are: ``ARCHIVED`` and ``TERMINATED``.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:polls`` scope.
 
         Returns
         -------
@@ -2831,13 +2738,12 @@ class PartialUser:
         """
         from .models.polls import Poll
 
-        data = await self._http.patch_poll(broadcaster_id=self.id, id=id, status=status, token_for=token_for)
+        data = await self._http.patch_poll(broadcaster_id=self.id, id=id, status=status, token_for=self.id)
         return Poll(data["data"][0], http=self._http)
 
     def fetch_predictions(
         self,
         *,
-        token_for: str | PartialUser,
         ids: list[str] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -2857,9 +2763,6 @@ class PartialUser:
         ----------
         ids: list[str] | None
             A list of IDs that identify the predictions to return. You may specify a maximum of 20 IDs.
-        token_for: str | PartialUser
-            User access token that includes the `channel:read:predictions` or `channel:manage:predictions` scope.
-            The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 25 items per page. The default is 20.
         max_results: int | None
@@ -2885,7 +2788,7 @@ class PartialUser:
             broadcaster_id=self.id,
             ids=ids,
             first=first,
-            token_for=token_for,
+            token_for=self.id,
             max_results=max_results,
         )
 
@@ -2895,7 +2798,6 @@ class PartialUser:
         title: str,
         outcomes: list[str],
         prediction_window: int,
-        token_for: str | PartialUser,
     ) -> Prediction:
         """|coro|
 
@@ -2918,8 +2820,6 @@ class PartialUser:
         prediction_window: int
             The length of time (in seconds) that the prediction will run for.
             The minimum is 30 seconds and the maximum is 1800 seconds (30 minutes).
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:predictions`` scope.
 
         Returns
         -------
@@ -2942,7 +2842,7 @@ class PartialUser:
             title=title,
             outcomes=outcomes,
             prediction_window=prediction_window,
-            token_for=token_for,
+            token_for=self.id,
         )
 
         if len(outcomes) < 2 or len(outcomes) > 10:
@@ -2960,7 +2860,6 @@ class PartialUser:
         self,
         *,
         id: str,
-        token_for: str | PartialUser,
         status: Literal["RESOLVED", "CANCELED", "LOCKED"],
         winning_outcome_id: str | None = None,
     ) -> Prediction:
@@ -2991,8 +2890,6 @@ class PartialUser:
             The status to set the prediction to. Possible case-sensitive values are: ``RESOLVED`` , ``CANCELED`` and ``LOCKED``.
         winning_outcome_id: str
             The ID of the winning outcome. You must set this parameter if you set status to ``RESOLVED``.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:prediction`` scope.
 
         Returns
         -------
@@ -3002,11 +2899,11 @@ class PartialUser:
         from .models.predictions import Prediction
 
         data = await self._http.patch_prediction(
-            broadcaster_id=self.id, id=id, status=status, token_for=token_for, winning_outcome_id=winning_outcome_id
+            broadcaster_id=self.id, id=id, status=status, token_for=self.id, winning_outcome_id=winning_outcome_id
         )
         return Prediction(data["data"][0], http=self._http)
 
-    async def fetch_stream_key(self, *, token_for: str | PartialUser) -> str:
+    async def fetch_stream_key(self) -> str:
         """|coro|
 
         Fetches the channel's stream key.
@@ -3014,24 +2911,17 @@ class PartialUser:
         .. note::
             Requires a user access token that includes the ``channel:read:stream_key`` scope
 
-        Parameters
-        ----------
-        token_for: str | PartialUser
-            User access token that includes the ``channel:read:stream_key`` scope.
-            The user ID must match the user ID in the access token.
-
         Returns
         -------
         str
             The channel's stream key.
         """
-        data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=token_for)
+        data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=self.id)
         return data["data"][0]["stream_key"]
 
     def fetch_followed_streams(
         self,
         *,
-        token_for: str | PartialUser,
         first: int = 100,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[Stream]:
@@ -3044,8 +2934,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the ``user:read:follows`` scope.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 100.
         max_results: int | None
@@ -3059,7 +2947,7 @@ class PartialUser:
         first = max(1, min(100, first))
         return self._http.get_followed_streams(
             user_id=self.id,
-            token_for=token_for,
+            token_for=self.id,
             first=first,
             max_results=max_results,
         )
@@ -3085,7 +2973,7 @@ class PartialUser:
         Parameters
         ----------
         token_for: str | PartialUser
-            User access token that includes the ``channel:manage:broadcast`` scope.
+            This must be the user ID, or PartialUser, of the broadcaster or one of the broadcaster's editors.
         description: str | None
             A short description of the marker to help the user remember why they marked the location.
             The maximum length of the description is 140 characters.
@@ -3126,7 +3014,7 @@ class PartialUser:
         Parameters
         ----------
         token_for: str | PartialUser
-            User access token that includes the `user:read:broadcast` or `channel:manage:broadcast scope`.
+            This must be the user ID, or PartialUser, of the broadcaster or one of the broadcaster's editors.
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
@@ -3146,9 +3034,7 @@ class PartialUser:
             max_results=max_results,
         )
 
-    async def fetch_subscription(
-        self, *, broadcaster_id: str | int, token_for: str | PartialUser
-    ) -> UserSubscription | None:
+    async def fetch_subscription(self, broadcaster: str | int | PartialUser) -> UserSubscription | None:
         """|coro|
 
         Checks whether the user subscribes to the broadcaster's channel.
@@ -3158,11 +3044,8 @@ class PartialUser:
 
         Parameters
         ----------
-        broadcaster_id: str | int
-            The ID of a partner or affiliate broadcaster.
-        token_for: str | PartialUser
-            User access token that includes the ``user:read:subscriptions`` scope.
-            The user id in the user access token must match the id of this PartialUser object.
+        broadcaster: str | int | PartialUser
+            The ID, or PartialUser, of a partner or affiliate broadcaster.
 
         Returns
         -------
@@ -3176,9 +3059,7 @@ class PartialUser:
         from .models.subscriptions import UserSubscription
 
         try:
-            data = await self._http.get_user_subscription(
-                user_id=self.id, broadcaster_id=broadcaster_id, token_for=token_for
-            )
+            data = await self._http.get_user_subscription(user_id=self.id, broadcaster_id=broadcaster, token_for=self.id)
         except HTTPException as e:
             if e.status == 404:
                 return None
@@ -3190,7 +3071,6 @@ class PartialUser:
     async def fetch_broadcaster_subscriptions(
         self,
         *,
-        token_for: str | PartialUser,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -3206,8 +3086,6 @@ class PartialUser:
         ----------
         user_ids: list[str | int] | None
             Filters the list to include only the specified subscribers. You may specify a maximum of 100 subscribers.
-        token_for: str | PartialUser
-            User access token that includes the ``channel:read:subscriptions`` scope
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
@@ -3229,10 +3107,10 @@ class PartialUser:
             raise ValueError("You may only provide a maximum of 100 user IDs.")
 
         return await self._http.get_broadcaster_subscriptions(
-            token_for=token_for, broadcaster_id=self.id, user_ids=user_ids, first=first, max_results=max_results
+            token_for=self.id, broadcaster_id=self.id, user_ids=user_ids, first=first, max_results=max_results
         )
 
-    async def send_whisper(self, *, to_user_id: str | int | PartialUser, token_for: str, message: str) -> None:
+    async def send_whisper(self, *, to_user: str | int | PartialUser, message: str) -> None:
         """|coro|
 
         Send a whisper to a user.
@@ -3258,10 +3136,8 @@ class PartialUser:
 
         Parameters
         ----------
-        to_user_id: str | int | PartialUser
+        to_user: str | int | PartialUser
             The ID or the PartialUser of the user to receive the whisper.
-        token_for: str | PartialUser
-            User access token that includes the ``user:manage:whispers`` scope.
         message: str
             The whisper message to send. The message must not be empty.
 
@@ -3273,9 +3149,7 @@ class PartialUser:
             Messages that exceed the maximum length are truncated.
         """
 
-        return await self._http.post_whisper(
-            from_user_id=self.id, to_user_id=to_user_id, token_for=token_for, message=message
-        )
+        return await self._http.post_whisper(from_user_id=self.id, to_user_id=to_user, token_for=self.id, message=message)
 
     async def user(self) -> User:
         """|coro|
@@ -3290,7 +3164,7 @@ class PartialUser:
         data = await self._http.get_users(ids=[self.id])
         return User(data["data"][0], http=self._http)
 
-    async def update(self, *, token_for: str | PartialUser, description: str | None = None) -> User:
+    async def update(self, description: str | None = None) -> User:
         """|coro|
 
         Update the user's information.
@@ -3300,8 +3174,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the ``user:edit`` scope.
         description: str | None
             The string to update the channel's description to. The description is limited to a maximum of 300 characters.
             To remove the description then do not pass this kwarg.
@@ -3320,12 +3192,10 @@ class PartialUser:
         if description is not None and len(description) > 300:
             raise ValueError("The description must be a maximum of 300 characters.")
 
-        data = await self._http.put_user(token_for=token_for, description=description)
+        data = await self._http.put_user(token_for=self.id, description=description)
         return User(data["data"][0], http=self._http)
 
-    def fetch_block_list(
-        self, *, token_for: str | PartialUser, first: int = 20, max_results: int | None = None
-    ) -> HTTPAsyncIterator[PartialUser]:
+    def fetch_block_list(self, *, first: int = 20, max_results: int | None = None) -> HTTPAsyncIterator[PartialUser]:
         """|aiter|
 
         Fetches a list of users that the broadcaster has blocked.
@@ -3335,8 +3205,6 @@ class PartialUser:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the ``user:read:blocked_users`` scope.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -3349,29 +3217,26 @@ class PartialUser:
             HTTPAsyncIterator of PartialUser objects.
         """
         return self._http.get_user_block_list(
-            broadcaster_id=self.id, token_for=token_for, first=first, max_results=max_results
+            broadcaster_id=self.id, token_for=self.id, first=first, max_results=max_results
         )
 
     async def block_user(
         self,
         *,
-        user_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        user: str | int | PartialUser,
         source: Literal["chat", "whisper"] | None = None,
         reason: Literal["harassment", "spam", "other"] | None = None,
     ) -> None:
         """|coro|
 
-        Blocks the specified user in ``user_id`` from interacting with or having contact with the broadcaster.
+        Blocks the specified user from interacting with or having contact with the broadcaster.
 
         The user ID in the OAuth token identifies the broadcaster who is blocking the user.
 
         Parameters
         ----------
-        user_id: str | int
+        user: str | int | PartialUser
             The ID, or PartialUser, of the user to block.
-        token_for: str
-            User access token that includes the ``user:manage:blocked_users`` scope.
         source: Literal["chat", "whisper"] | None
             The location where the harassment took place that is causing the brodcaster to block the user. Possible values are:
 
@@ -3389,13 +3254,12 @@ class PartialUser:
         -------
         None
         """
-        return await self._http.put_block_user(user_id=user_id, source=source, reason=reason, token_for=token_for)
+        return await self._http.put_block_user(user_id=user, source=source, reason=reason, token_for=self.id)
 
     async def unblock_user(
         self,
         *,
-        user_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        user: str | int | PartialUser,
     ) -> None:
         """|coro|
 
@@ -3403,16 +3267,14 @@ class PartialUser:
 
         Parameters
         ----------
-        user_id: str | int | PartialUser
+        user: str | int | PartialUser
             The ID, or PartialUser, of the user to unblock.
-        token_for: str | PartialUser
-            User access token that includes the ``user:manage:blocked_users`` scope.
 
         Returns
         -------
         None
         """
-        return await self._http.delete_block_user(user_id=user_id, token_for=token_for)
+        return await self._http.delete_block_user(user_id=user, token_for=self.id)
 
     async def fetch_active_extensions(self, token_for: str | PartialUser | None = None) -> ActiveExtensions:
         """|coro|
