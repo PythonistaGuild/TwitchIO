@@ -1594,12 +1594,12 @@ class HTTPClient:
         reason: str | None = None,
     ) -> BanUserResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
-        data = {"user_id": user_id}
+        data = {"data": {"user_id": user_id}}
 
         if duration is not None:
-            data["duration"] = duration
+            data["data"]["duration"] = duration
         if reason is not None:
-            data["reason"] = reason
+            data["data"]["reason"] = reason
 
         route: Route = Route("POST", "moderation/bans", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
