@@ -241,3 +241,8 @@ class Context:
 
     async def send(self, content: str) -> None:
         await self.channel.send_message(sender=self.bot.bot_id, message=content)
+
+
+    async def reply(self, content: str) -> None:
+        await self.channel.send_message(sender=self.bot.bot_id, message=content, reply_to_message_id=self.message.id)
+

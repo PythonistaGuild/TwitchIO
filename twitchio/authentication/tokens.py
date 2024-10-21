@@ -33,6 +33,7 @@ import aiohttp
 from twitchio.http import Route
 from twitchio.types_.responses import RawResponse
 
+from ..backoff import Backoff
 from ..exceptions import HTTPException, InvalidTokenException
 from ..http import HTTPAsyncIterator, PaginatedConverter
 from ..types_.tokens import TokenMappingData
@@ -85,6 +86,8 @@ class ManagedHTTPClient(OAuth):
 
         self._token_lock: asyncio.Lock = asyncio.Lock()
         self._has_loaded: bool = False
+        self._backoff: Backoff = Backoff(base=3, maximum_time=90)
+        self._validated_event: asyncio.Event = asyncio.Event()
 
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
         logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
@@ -224,51 +227,61 @@ class ManagedHTTPClient(OAuth):
         )
         return iterator
 
+    async def _revalidate_all(self) -> None:
+        logger.debug("Attempting to revalidate all tokens that have passed the timeout on %s.", self.__class__.__qualname__)
+
+        for data in self._tokens.copy().values():
+            last_validated: datetime.datetime = datetime.datetime.fromisoformat(data["last_validated"])
+            if last_validated + datetime.timedelta(minutes=60) > datetime.datetime.now():
+                continue
+
+            try:
+                await self.__isolated.validate_token(data["token"])
+            except HTTPException as e:
+                if e.status >= 500:
+                    raise
+
+                logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', data["user_id"])
+
+                try:
+                    refresh: RefreshTokenPayload = await self.__isolated.refresh_token(data["refresh"])
+                except HTTPException as e:
+                    if e.status >= 500:
+                        raise
+
+                    self._tokens.pop(data["user_id"], None)
+                    logger.warning('Token for "%s" was invalid and could not be refreshed.', data["user_id"])
+                    continue
+
+                logger.debug('Token for "%s" was successfully refreshed.', data["user_id"])
+
+                self._tokens[data["user_id"]] = {
+                    "user_id": data["user_id"],
+                    "token": refresh.access_token,
+                    "refresh": refresh.refresh_token,
+                    "last_validated": datetime.datetime.now().isoformat(),
+                }
+
     async def __validate_loop(self) -> None:
         logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
 
         if not self._session:
             await self._init_session()
 
-        while self._session and not self._session.closed:
-            for data in self._tokens.copy().values():
-                last_validated: datetime.datetime = datetime.datetime.fromisoformat(data["last_validated"])
-                if last_validated + datetime.timedelta(minutes=60) > datetime.datetime.now():
-                    continue
+        while True:
+            self._validated_event.clear()
 
-                try:
-                    await self.__isolated.validate_token(data["token"])
-                    # logger.debug('Token for "%s" was successfully re-validated.', data["user_id"])
-                except HTTPException as e:
-                    if e.status >= 500:
-                        logger.warning("Received invalid response from Twitch when re-validating token.")
+            try:
+                await self._revalidate_all()
+            except (ConnectionError, aiohttp.ClientConnectorError, HTTPException) as e:
+                wait: float = self._backoff.calculate()
+                logger.debug("Unable to reach Twitch to revalidate tokens: %s. Retrying in %s's", e, wait)
 
-                        # backoff for 60 seconds to and try again...
-                        # There's really not much else we can do here...
-                        await asyncio.sleep(60)
-                        continue
+                await asyncio.sleep(wait)
+                continue
 
-                    logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', data["user_id"])
-
-                    try:
-                        refresh: RefreshTokenPayload = await self.__isolated.refresh_token(data["refresh"])
-                    except HTTPException as e:
-                        self._tokens.pop(data["user_id"], None)
-                        logger.warning('Token for "%s" was invalid and could not be refreshed.', data["user_id"])
-                        continue
-
-                    logger.debug('Token for "%s" was successfully refreshed.', data["user_id"])
-
-                    self._tokens[data["user_id"]] = {
-                        "user_id": data["user_id"],
-                        "token": refresh.access_token,
-                        "refresh": refresh.refresh_token,
-                        "last_validated": datetime.datetime.now().isoformat(),
-                    }
-
-                    continue
-
-            await asyncio.sleep(60)
+            self._validated_event.set()
+            await asyncio.sleep(30)
 
     async def _init_session(self) -> None:
         await super()._init_session()

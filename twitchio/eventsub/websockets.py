@@ -51,8 +51,8 @@ from ..utils import (
 
 
 if TYPE_CHECKING:
+    from ..authentication.tokens import ManagedHTTPClient
     from ..client import Client
-    from ..http import HTTPClient
     from ..types_.conduits import Condition
     from ..types_.eventsub import SubscriptionResponse, _SubscriptionData
 
@@ -93,7 +93,7 @@ class Websocket:
         reconnect_attempts: int | None = MISSING,
         client: Client | None = None,
         token_for: str,
-        http: HTTPClient,
+        http: ManagedHTTPClient,
     ) -> None:
         self._keep_alive_timeout: int = max(10, min(int(keep_alive_timeout), 600))
         self._heartbeat: int = min(self._keep_alive_timeout, 25) + 5
@@ -118,7 +118,7 @@ class Websocket:
 
         self._client: Client | None = client
         self._token_for: str = token_for
-        self._http: HTTPClient = http
+        self._http: ManagedHTTPClient = http
         self._subscriptions: dict[str, _SubscriptionData] = {}
 
         self._connecting: bool = False
@@ -169,6 +169,11 @@ class Websocket:
         if retries == 0 and reconnect:
             logger.info("Websocket <%s> was closed unexepectedly, but is flagged as 'should not reconnect'.", self)
             return await self.close()
+
+        if reconnect:
+            # We have to ensure that the tokens we need for resubscribing have been recently refreshed as
+            # we only have 10 seconds to subscribe after we receive the welcome message...
+            await self._http._validated_event.wait()
 
         while True:
             try:
