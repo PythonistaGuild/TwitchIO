@@ -281,7 +281,7 @@ class ManagedHTTPClient(OAuth):
                 continue
 
             self._validated_event.set()
-            await asyncio.sleep(30)
+            await asyncio.sleep(60)
 
     async def _init_session(self) -> None:
         await super()._init_session()
