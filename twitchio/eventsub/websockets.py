@@ -48,6 +48,7 @@ from ..utils import (
     MISSING,
     _from_json,  # type: ignore
 )
+from .subscriptions import _SUB_MAPPING
 
 
 if TYPE_CHECKING:
@@ -408,11 +409,11 @@ class Websocket:
         self._subscriptions.pop(payload.id, None)
 
     async def _process_notification(self, data: NotificationMessage) -> None:
-        subscription_type = data["metadata"]["subscription_type"]
-        event: str = subscription_type.replace("channel.channel_", "channel.").replace(".", "_")
+        sub_type = data["metadata"]["subscription_type"]
+        event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel."))
 
         try:
-            payload_class = create_event_instance(subscription_type, data["payload"]["event"], http=self._http)
+            payload_class = create_event_instance(sub_type, data["payload"]["event"], http=self._http)
         except ValueError:
             logger.warning("Websocket '%s' received an unhandled eventsub event: '%s'.", self, event)
             return

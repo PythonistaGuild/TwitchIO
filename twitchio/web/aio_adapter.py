@@ -34,6 +34,7 @@ from urllib.parse import unquote_plus
 from aiohttp import web
 
 from ..authentication import Scopes
+from ..eventsub.subscriptions import _SUB_MAPPING
 from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
@@ -176,11 +177,11 @@ class AiohttpAdapter(BaseAdapter, web.Application):
             return web.Response(text=data["challenge"], status=200, headers={"Content-Type": "text/plain"})
 
         elif msg_type == "notification":
-            subscription_type: str = data["subscription"]["type"]
-            event: str = subscription_type.replace("channel.channel_", "channel.").replace(".", "_")
+            sub_type: str = data["subscription"]["type"]
+            event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel."))
 
             try:
-                payload_class = create_event_instance(subscription_type, data["event"], http=self.client._http)
+                payload_class = create_event_instance(sub_type, data["event"], http=self.client._http)
             except ValueError:
                 logger.warning("Webhook '%s' received an unhandled eventsub event: '%s'.", self, event)
                 return web.Response(status=200)
