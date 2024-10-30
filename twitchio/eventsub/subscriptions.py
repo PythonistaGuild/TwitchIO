@@ -110,6 +110,26 @@ __all__ = (
 )
 
 
+# Short names: Only map names that require shortening...
+_SUB_MAPPING: dict[str, str] = {
+    "channel.ad_break.begin": "ad_break",
+    "channel.chat.clear_user_messages": "chat_clear_user",
+    "channel.chat.message": "message",  # Sub events?
+    "channel.chat.message_delete": "message_delete",
+    "channel.unban_request.create": "unban_request",
+    "channel.channel_points_automatic_reward_redemption.add": "automatic_redemption_add",
+    "channel.channel_points_custom_reward.add": "custom_reward_add",
+    "channel.channel_points_custom_reward.update": "custom_reward_update",
+    "channel.channel_points_custom_reward.remove": "custom_reward_remove",
+    "channel.channel_points_custom_reward_redemption.add": "custom_redemption_add",
+    "channel.channel_points_custom_reward_redemption.update": "custom_redemption_update",
+    "user.whisper.message": "message_whisper",
+    "channel.subscribe": "subscription",
+    "channel.moderate": "mod_action",  # Sub events?
+    "channel.hype_train.begin": "hype_train",
+}
+
+
 class SubscriptionPayload(abc.ABC):
     type: ClassVar[Any]
     version: ClassVar[Any]
@@ -1240,7 +1260,8 @@ class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
 
 
 class ChannelModerateSubscription(SubscriptionPayload):
-    """The ``channel.moderate subscription`` type sends a notification when a moderator performs a moderation action in a channel. Some of these actions affect chatters in other channels during Shared Chat.
+    """The ``channel.moderate`` subscription type sends a notification when a moderator performs a moderation action in a channel.
+    Some of these actions affect chatters in other channels during Shared Chat.
 
         This is Version 1 of the subscription.
 
@@ -1290,7 +1311,8 @@ class ChannelModerateSubscription(SubscriptionPayload):
 
 
 class ChannelModerateV2Subscription(SubscriptionPayload):
-    """The ``channel.moderate subscription`` type sends a notification when a moderator performs a moderation action in a channel. Some of these actions affect chatters in other channels during Shared Chat.
+    """The ``channel.moderate`` subscription type sends a notification when a moderator performs a moderation action in a channel.
+    Some of these actions affect chatters in other channels during Shared Chat.
 
         This is Version 2 of the subscription that includes warnings.
 
@@ -2076,7 +2098,8 @@ class ChannelVIPRemoveSubscription(SubscriptionPayload):
 
 
 class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
-    """The ``channel.warning.acknowledge`` subscription type sends a notification when a warning is acknowledged by a user. Broadcasters and moderators can see the warning's details.
+    """The ``channel.warning.acknowledge`` subscription type sends a notification when a warning is acknowledged by a user.
+    Broadcasters and moderators can see the warning's details.
 
     .. important::
         Must have the ``moderator:read:warnings`` or ``moderator:manage:warnings`` scope.
@@ -2116,7 +2139,8 @@ class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
 
 
 class ChannelWarningSendSubscription(SubscriptionPayload):
-    """The ``channel.warning.send`` subscription type sends a notification when a warning is sent to a user. Broadcasters and moderators can see the warning's details.
+    """The ``channel.warning.send`` subscription type sends a notification when a warning is sent to a user.
+    Broadcasters and moderators can see the warning's details.
 
     .. important::
         Must have the ``moderator:read:warnings`` or ``moderator:manage:warnings`` scope.
@@ -2352,7 +2376,8 @@ class GoalBeginSubscription(SubscriptionPayload):
 
 
 class GoalProgressSubscription(SubscriptionPayload):
-    """The ``channel.goal.progress`` subscription type sends a notification when progress is made towards the specified broadcaster's goal. Progress could be positive (added followers) or negative (lost followers).
+    """The ``channel.goal.progress`` subscription type sends a notification when progress is made towards the specified broadcaster's goal.
+    Progress could be positive (added followers) or negative (lost followers).
 
     .. note::
         It's possible to receive the Progress events before receiving the Begin event.
