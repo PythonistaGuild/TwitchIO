@@ -6,4 +6,5 @@ Commands
 
    bot
    components
+   core
    exceptions

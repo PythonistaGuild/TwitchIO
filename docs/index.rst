@@ -6,16 +6,6 @@ TwitchIO
    This is an alpha release. Please do not use this release in production ready applications.
 
 
-.. important::
-
-   The information in this documentation is subject to change before an official production ready release.
-
-
-.. important::
-
-   TwitchIO 3 has removed support for IRC and instead uses EventSub by default. Find more on the reasons here: ...
-
-
 TwitchIO is a powerful, asynchronous Python library for `twitch.tv <https://twitch.tv>`_.
 
 TwitchIO aims to be intuitive and easy to use, using modern async Python and following strict typing with stateful objects
@@ -43,6 +33,11 @@ Help and support
 - Visit our `Discord <https://discord.gg/RAKc3HF>`_ for help using TwitchIO
 
 
+.. important::
+
+   The information in this documentation is subject to change before an official production ready release.
+
+
 Getting Started
 ---------------
 
@@ -56,6 +51,14 @@ Getting Started
    getting-started/faq
 
 
+Authenticating and Scopes
+-------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   references/authenticating
+
 
 References
 ----------
@@ -65,8 +68,17 @@ References
    :caption: API References
 
    references/client
+   references/events
    references/user
    references/eventsub_subscriptions
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Extension References
+
+   exts/commands/index
+   exts/routines/index
+   exts/sounds/index
 
 .. toctree::
    :maxdepth: 1
@@ -79,9 +91,3 @@ References
    :caption: Utils
 
    references/utils
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Extension References
-
-   exts/commands/index

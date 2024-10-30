@@ -8,3 +8,8 @@ User Reference
 
 .. autoclass:: twitchio.PartialUser
     :members:
+
+.. attributetable:: twitchio.Chatter
+
+.. autoclass:: twitchio.Chatter
+    :members:

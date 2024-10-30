@@ -3,6 +3,18 @@
 Exceptions
 ##########
 
+Payloads
+--------
+
+.. attributetable:: twitchio.ext.commands.CommandErrorPayload
+
+.. autoclass:: twitchio.ext.commands.CommandErrorPayload
+    :members:
+
+
+Exceptions
+----------
+
 .. autoexception:: twitchio.ext.commands.CommandError
 
 .. autoexception:: twitchio.ext.commands.ComponentLoadError
@@ -21,7 +33,7 @@ Exceptions
 
 .. autoexception:: twitchio.ext.commands.ArgumentError
 
-.. autoexception:: twitchio.ext.commands.CheckFailure
+.. autoexception:: twitchio.ext.commands.GuardFailure
 
 .. autoexception:: twitchio.ext.commands.ConversionError
 
