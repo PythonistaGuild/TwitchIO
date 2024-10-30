@@ -11,7 +11,7 @@ import sys
 from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
 from urllib.parse import quote
 
 
@@ -40,6 +40,19 @@ __all__ = (
     "MISSING",
     "handle_user_ids",
 )
+
+T_co = TypeVar("T_co", covariant=True)
+
+
+class classproperty(Generic[T_co]):
+    def __init__(self, fget: Callable[[Any], T_co]) -> None:
+        self.fget = fget
+
+    def __get__(self, instance: Any | None, owner: type[Any]) -> T_co:
+        return self.fget(owner)
+
+    def __set__(self, instance: Any | None, value: Any) -> None:
+        raise AttributeError("cannot set attribute")
 
 
 def is_docker() -> bool:
@@ -639,6 +652,76 @@ class Colour:
 
         """
         return cls.from_hex("00FF7F")
+
+    @classmethod
+    def announcement_blue(cls) -> str:
+        """A helper class method returning the string "blue", which can be used when sending an announcement.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            await ctx.send_announcement("Hello", colour=Colour.announcement_blue())
+        """
+        return "blue"
+
+    @classmethod
+    def announcement_green(cls) -> str:
+        """A helper class method returning the string "green", which can be used when sending an announcement.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            await ctx.send_announcement("Hello", colour=Colour.announcement_green())
+        """
+        return "green"
+
+    @classmethod
+    def announcement_orange(cls) -> str:
+        """A helper class method returning the string "orange", which can be used when sending an announcement.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            await ctx.send_announcement("Hello", colour=Colour.announcement_orange())
+        """
+        return "orange"
+
+    @classmethod
+    def announcement_purple(cls) -> str:
+        """A helper class method returning the string "purple", which can be used when sending an announcement.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            await ctx.send_announcement("Hello", colour=Colour.announcement_purple())
+        """
+        return "purple"
+
+    @classmethod
+    def announcement_primary(cls) -> str:
+        """A helper class method returning the string "primary", which can be used when sending an announcement.
+
+        .. note::
+
+            "primary" is the default value used by Twitch and isn't required to be sent.
+            The channel's accent color is used to highlight the announcement instead.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            await ctx.send_announcement("Hello", colour=Colour.announcement_primary())
+        """
+        return "primary"
 
 
 Color = Colour
