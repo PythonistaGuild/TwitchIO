@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from .assets import Asset
-from .exceptions import HTTPException
+from .exceptions import HTTPException, MessageRejectedError
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
 from .utils import Colour, parse_timestamp
@@ -1053,7 +1053,7 @@ class PartialUser:
         moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         message: str,
-        color: Literal["blue", "green", "orange", "purple", "primary"] = "primary",
+        color: Literal["blue", "green", "orange", "purple", "primary"] | None = None,
     ) -> None:
         """|coro|
 
@@ -1065,21 +1065,18 @@ class PartialUser:
         Parameters
         ----------
         moderator: str | int | PartialUser
-            The ID, or PartialUser, of a user who has permission to moderate the broadcaster's chat room, or the broadcaster''s ID if they're sending the announcement.
+            The ID, or PartialUser, of a user who has permission to moderate the broadcaster's chat room,
+            or the broadcaster''s ID if they're sending the announcement.
+
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
             User access token that includes the ``moderator:manage:announcements`` scope.
         message: str
-            The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters; announcements longer than 500 characters are truncated.
-        color: Literal["blue", "green", "orange", "purple", "primary"]
-            The color used to highlight the announcement. Possible case-sensitive values are (default is "primary"):
-
-            - blue
-            - green
-            - orange
-            - purple
-            - primary
-
+            The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters;
+            announcements longer than 500 characters are truncated.
+        color: Literal["blue", "green", "orange", "purple", "primary"] | None
+            An optional colour to use for the announcement. If set to ``"primary``" or `None`
+            the channels accent colour will be used instead. Defaults to ``None``.
         """
         return await self._http.post_chat_announcement(
             broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, message=message, color=color
@@ -1179,6 +1176,11 @@ class PartialUser:
             reply_to_message_id=reply_to_message_id,
             token_for=token_for,
         )
+
+        sent: SentMessage = SentMessage(data["data"][0])
+        if sent.dropped_code:
+            msg = f"Twitch rejected your message to '{self}': '{sent.dropped_message}' ({sent.dropped_code})"
+            raise MessageRejectedError(msg, message=sent, channel=self, content=_message)
 
         return SentMessage(data["data"][0])
 
@@ -1937,7 +1939,7 @@ class PartialUser:
 
         data = await self._http.post_ban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator,
+            moderator_id=moderator or self.id,
             user_id=user,
             token_for=moderator,
             reason=reason,
@@ -1948,47 +1950,52 @@ class PartialUser:
     async def timeout_user(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        user_id: str | int,
-        token_for: str,
+        moderator: str | int | PartialUser | None,  # TODO Default to bot_id, same for token_for.
+        user: str | PartialUser | None,
         duration: int,
         reason: str | None = None,
     ) -> Timeout:
         """|coro|
 
-        Ban a user from the broadcaster's channel.
+        Timeout the provided user from the channel tied with this :class:`~twitchio.PartialUser`.
 
         .. note::
+
             Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
 
         Parameters
         ----------
-        moderator: str | int | PartialUser
-            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
-            This ID must match the user ID in the user access token.
-        user_id: str | int | PartialUser
-            The ID, or PartialUser, of the user to ban or put in a timeout.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:banned_users`` scope.
-        duration: int
-            The minimum timeout is 1 second and the maximum is 1,209,600 seconds (2 weeks).
-            To end a user's timeout early, set this field to 1, or use the [`unban_user`][twitchio.user.PartialUser.unban_user] endpoint.
+        moderator: str | PartialUser | None
+            An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
+            You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+
+            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
+        user: str | PartialUser
+            The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
         reason: str | None
-            The reason the you're banning the user or putting them in a timeout.
-            The text is user defined and is limited to a maximum of 500 characters.
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+        duration: int
+            The duration of the timeout in seconds. The minimum duration is ``1`` second and the
+            maximum is ``1_209_600`` seconds (2 weeks).
+
+            To end the chatters timeout early, set this field to ``1``,
+            or use the :meth:`~twitchio.user.PartialUser.unban_user` endpoint.
+
+            The default is ``600`` which is ten minutes.
 
         Returns
         -------
         Timeout
-            Timeout object.
+            The :class:`~twitchio.Timeout` object.
         """
         from .models import Timeout
 
         data = await self._http.post_ban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator,
-            user_id=user_id,
-            token_for=token_for,
+            moderator_id=moderator or self.id,
+            user_id=user,
+            token_for=moderator,
             duration=duration,
             reason=reason,
         )
@@ -2006,6 +2013,7 @@ class PartialUser:
         Unban a user from the broadcaster's channel.
 
         .. note::
+
             Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
 
         Parameters
@@ -2254,7 +2262,8 @@ class PartialUser:
         Parameters
         ----------
         moderator: str | int | PartialUser
-            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests.
+            This ID must match the user ID in the user access token.
         token_for: str | PartialUser
             User access token that includes the ``moderator:manage:blocked_terms`` scope.
         id: str
@@ -3569,10 +3578,15 @@ class ActiveExtensions:
 
 
 class Chatter(PartialUser):
-    """Class which represents a User in a chat room.
+    """Class which represents a User in a chat room and has sent a message.
 
     This class inherits from :class:`~twitchio.PartialUser` and contains additional information about the chatting user.
     Most of the additional information is received in the form of the badges sent by Twitch.
+
+    .. note::
+
+        You usually wouldn't construct this class yourself. You will receive it in :class:`~.commands.Command` callbacks,
+        via :class:`~.commands.Context` and in the ``event_message`` event.
     """
 
     __slots__ = (
@@ -3726,7 +3740,7 @@ class Chatter(PartialUser):
         """Property returning a list of :class:`~twitchio.ChatMessageBadge` associated with the chatter in this channel."""
         return self._badges
 
-    async def ban(self, moderator: str | PartialUser, reason: str | None = None) -> ...:
+    async def ban(self, moderator: str | PartialUser, reason: str | None = None) -> Ban:
         """|coro|
 
         Ban the chatter from the associated channel/broadcaster.
@@ -3764,9 +3778,43 @@ class Chatter(PartialUser):
         if self.broadcaster:
             raise TypeError("Banning the broadcaster of a channel is not a possible action.")
 
-        await self._channel.ban_user(moderator=moderator, user=self, reason=reason)
+        return await self._channel.ban_user(moderator=moderator, user=self, reason=reason)
 
-    async def timeout(self) -> ...: ...
+    async def timeout(
+        self, moderator: str | PartialUser | None = None, duration: int = 600, reason: str | None = None
+    ) -> Timeout:
+        """|coro|
+
+        Timeout the chatter from the associated channel/broadcaster.
+
+        .. note::
+
+            You must have a user access token that includes the ``moderator:manage:banned_users`` scope to do this.
+
+        Parameters
+        ----------
+        moderator: str | PartialUser | None
+            The ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action. You must have a
+            token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+        duration: int
+            The duration of the timeout in seconds. The minimum duration is ``1`` second and the
+            maximum is ``1_209_600`` seconds (2 weeks).
+
+            To end the chatters timeout early, set this field to ``1``,
+            or use the :meth:`~twitchio.user.PartialUser.unban_user` endpoint.
+
+            The default is ``600`` which is ten minutes.
+        reason: str | None
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+        """
+        if reason and len(reason) > 500:
+            raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
+
+        if self.broadcaster:
+            raise TypeError("Banning the broadcaster of a channel is not a possible action.")
+
+        return await self._channel.timeout_user(moderator=moderator, user=self, duration=duration, reason=reason)
 
     async def warn(self) -> ...: ...
 
