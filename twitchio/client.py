@@ -637,6 +637,53 @@ class Client:
             if listener in listeners:
                 listeners.remove(listener)
 
+    def listen(self, name: str | None = None) -> Any:
+        """|deco|
+
+        A decorator that adds a coroutine as an event listener.
+
+        Listeners listen for dispatched events on the :class:`.Client` or :class:`~.commands.Bot` and can come from multiple
+        sources, such as internally, or via EventSub. Unlike the overridable events built into bot
+        :class:`~Client` and :class:`~.commands.Bot`, listeners do not change the default functionality of the event,
+        and can be used as many times as required.
+
+        By default, listeners use the name of the function wrapped for the event name. This can be changed by passing the
+        name parameter.
+
+        For a list of events and their documentation, see: :ref:`Events Reference <Event Ref>`.
+
+        For adding listeners to components, see: :meth:`~.commands.Component.listener`
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            @bot.listen()
+            async def event_message(message: twitchio.ChatMessage) -> None:
+                ...
+
+            # You can have multiple of the same event...
+            @bot.listen("event_message")
+            async def event_message_two(message: twitchio.ChatMessage) -> None:
+                ...
+
+        Parameters
+        ----------
+        name: str
+            The name of the event to listen to, E.g. ``"event_message"`` or simply ``"message"``.
+        """
+
+        def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
+            name_ = name or func.__name__
+            qual = f"event_{name_.removeprefix('event_')}"
+
+            self.add_listener(func, event=qual)
+
+            return func
+
+        return wrapper
+
     def create_partialuser(self, user_id: str | int, user_login: str | None = None) -> PartialUser:
         """Helper method used to create :class:`twitchio.PartialUser` objects.
 
