@@ -47,4 +47,4 @@ class ClientOptions(TypedDict, total=False):
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]
-Prefix_T: TypeAlias = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
+Prefix_T = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
