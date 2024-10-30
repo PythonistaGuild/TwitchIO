@@ -84,171 +84,168 @@ class Scopes(metaclass=_ScopeMeta):
 
     The Scopes class can be initialised and used a few different ways:
 
-    - Passing a `list[str]` of scopes to the constructor which can be in the same format as seen on Twitch.
-    E.g. `["user:read:email", ...]`.
+    - Passing a ``list[str]`` of scopes to the constructor which can be in the same format as seen on Twitch. E.g. ``["user:read:email", ...]``.
 
-    - Passing `Keyword-Arguments` to the constructor. E.g. `user_read_email=True`
+    - Passing ``Keyword-Arguments`` to the constructor. E.g. ``user_read_email=True``
 
-    - Constructing the class without passing anything and giving each required scope a bool when needed. E.g.
-    ```python
-    scopes: twitchio.Scopes = twitchio.Scopes()
-    scopes.user_read_email = True
-    ```
+    - Or Constructing the class without passing anything and giving each required scope a bool when needed.
 
-    - There is also a classmethod [`.all`][twitchio.Scopes.all] which selects all scopes for you.
+    - There is also a classmethod :meth:`.all` which selects all scopes for you.
+
+
 
     All scopes on this class are special descriptors.
 
     Attributes
     ----------
     analytics_read_extensions
-        Equivalent to the `analytics:read:extensions` scope on Twitch.
+        Equivalent to the ``analytics:read:extensions`` scope on Twitch.
     analytics_read_games
-        Equivalent to the `analytics:read:games` scope on Twitch.
+        Equivalent to the ``analytics:read:games`` scope on Twitch.
     bits_read
-        Equivalent to the `bits:read` scope on Twitch.
+        Equivalent to the ``bits:read`` scope on Twitch.
     channel_manage_ads
-        Equivalent to the `channel:manage:ads` scope on Twitch.
+        Equivalent to the ``channel:manage:ads`` scope on Twitch.
     channel_read_ads
-        Equivalent to the `channel:read:ads` scope on Twitch.
+        Equivalent to the ``channel:read:ads`` scope on Twitch.
     channel_manage_broadcast
-        Equivalent to the `channel:manage:broadcast` scope on Twitch.
+        Equivalent to the ``channel:manage:broadcast`` scope on Twitch.
     channel_read_charity
-        Equivalent to the `channel:read:charity` scope on Twitch.
+        Equivalent to the ``channel:read:charity`` scope on Twitch.
     channel_edit_commercial
-        Equivalent to the `channel:edit:commercial` scope on Twitch.
+        Equivalent to the ``channel:edit:commercial`` scope on Twitch.
     channel_read_editors
-        Equivalent to the `channel:read:editors` scope on Twitch.
+        Equivalent to the ``channel:read:editors`` scope on Twitch.
     channel_manage_extensions
-        Equivalent to the `channel:manage:extensions` scope on Twitch.
+        Equivalent to the ``channel:manage:extensions`` scope on Twitch.
     channel_read_goals
-        Equivalent to the `channel:read:goals` scope on Twitch.
+        Equivalent to the ``channel:read:goals`` scope on Twitch.
     channel_read_guest_star
-        Equivalent to the `channel:read:guest:star` scope on Twitch.
+        Equivalent to the ``channel:read:guest:star`` scope on Twitch.
     channel_manage_guest_star
-        Equivalent to the `channel:manage:guest:star` scope on Twitch.
+        Equivalent to the ``channel:manage:guest:star`` scope on Twitch.
     channel_read_hype_train
-        Equivalent to the `channel:read:hype:train` scope on Twitch.
+        Equivalent to the ``channel:read:hype:train`` scope on Twitch.
     channel_manage_moderators
-        Equivalent to the `channel:manage:moderators` scope on Twitch.
+        Equivalent to the ``channel:manage:moderators`` scope on Twitch.
     channel_read_polls
-        Equivalent to the `channel:read:polls` scope on Twitch.
+        Equivalent to the ``channel:read:polls`` scope on Twitch.
     channel_manage_polls
-        Equivalent to the `channel:manage:polls` scope on Twitch.
+        Equivalent to the ``channel:manage:polls`` scope on Twitch.
     channel_read_predictions
-        Equivalent to the `channel:read:predictions` scope on Twitch.
+        Equivalent to the ``channel:read:predictions`` scope on Twitch.
     channel_manage_predictions
-        Equivalent to the `channel:manage:predictions` scope on Twitch.
+        Equivalent to the ``channel:manage:predictions`` scope on Twitch.
     channel_manage_raids
-        Equivalent to the `channel:manage:raids` scope on Twitch.
+        Equivalent to the ``channel:manage:raids`` scope on Twitch.
     channel_read_redemptions
-        Equivalent to the `channel:read:redemptions` scope on Twitch.
+        Equivalent to the ``channel:read:redemptions`` scope on Twitch.
     channel_manage_redemptions
-        Equivalent to the `channel:manage:redemptions` scope on Twitch.
+        Equivalent to the ``channel:manage:redemptions`` scope on Twitch.
     channel_manage_schedule
-        Equivalent to the `channel:manage:schedule` scope on Twitch.
+        Equivalent to the ``channel:manage:schedule`` scope on Twitch.
     channel_read_stream_key
-        Equivalent to the `channel:read:stream:key` scope on Twitch.
+        Equivalent to the ``channel:read:stream:key`` scope on Twitch.
     channel_read_subscriptions
-        Equivalent to the `channel:read:subscriptions` scope on Twitch.
+        Equivalent to the ``channel:read:subscriptions`` scope on Twitch.
     channel_manage_videos
-        Equivalent to the `channel:manage:videos` scope on Twitch.
+        Equivalent to the ``channel:manage:videos`` scope on Twitch.
     channel_read_vips
-        Equivalent to the `channel:read:vips` scope on Twitch.
+        Equivalent to the ``channel:read:vips`` scope on Twitch.
     channel_manage_vips
-        Equivalent to the `channel:manage:vips` scope on Twitch.
+        Equivalent to the ``channel:manage:vips`` scope on Twitch.
     clips_edit
-        Equivalent to the `clips:edit` scope on Twitch.
+        Equivalent to the ``clips:edit`` scope on Twitch.
     moderation_read
-        Equivalent to the `moderation:read` scope on Twitch.
+        Equivalent to the ``moderation:read`` scope on Twitch.
     moderator_manage_announcements
-        Equivalent to the `moderator:manage:announcements` scope on Twitch.
+        Equivalent to the ``moderator:manage:announcements`` scope on Twitch.
     moderator_manage_automod
-        Equivalent to the `moderator:manage:automod` scope on Twitch.
+        Equivalent to the ``moderator:manage:automod`` scope on Twitch.
     moderator_read_automod_settings
-        Equivalent to the `moderator:read:automod:settings` scope on Twitch.
+        Equivalent to the ``moderator:read:automod:settings`` scope on Twitch.
     moderator_manage_automod_settings
-        Equivalent to the `moderator:manage:automod:settings` scope on Twitch.
+        Equivalent to the ``moderator:manage:automod:settings`` scope on Twitch.
     moderator_manage_banned_users
-        Equivalent to the `moderator:manage:banned:users` scope on Twitch.
+        Equivalent to the ``moderator:manage:banned:users`` scope on Twitch.
     moderator_read_blocked_terms
-        Equivalent to the `moderator:read:blocked:terms` scope on Twitch.
+        Equivalent to the ``moderator:read:blocked:terms`` scope on Twitch.
     moderator_manage_blocked_terms
-        Equivalent to the `moderator:manage:blocked:terms` scope on Twitch.
+        Equivalent to the ``moderator:manage:blocked:terms`` scope on Twitch.
     moderator_manage_chat_messages
-        Equivalent to the `moderator:manage:chat:messages` scope on Twitch.
+        Equivalent to the ``moderator:manage:chat:messages`` scope on Twitch.
     moderator_read_chat_settings
-        Equivalent to the `moderator:read:chat:settings` scope on Twitch.
+        Equivalent to the ``moderator:read:chat:settings`` scope on Twitch.
     moderator_manage_chat_settings
-        Equivalent to the `moderator:manage:chat:settings` scope on Twitch.
+        Equivalent to the ``moderator:manage:chat:settings`` scope on Twitch.
     moderator_read_chatters
-        Equivalent to the `moderator:read:chatters` scope on Twitch.
+        Equivalent to the ``moderator:read:chatters`` scope on Twitch.
     moderator_read_followers
-        Equivalent to the `moderator:read:followers` scope on Twitch.
+        Equivalent to the ``moderator:read:followers`` scope on Twitch.
     moderator_read_guest_star
-        Equivalent to the `moderator:read:guest:star` scope on Twitch.
+        Equivalent to the ``moderator:read:guest:star`` scope on Twitch.
     moderator_manage_guest_star
-        Equivalent to the `moderator:manage:guest:star` scope on Twitch.
+        Equivalent to the ``moderator:manage:guest:star`` scope on Twitch.
     moderator_read_shield_mode
-        Equivalent to the `moderator:read:shield:mode` scope on Twitch.
+        Equivalent to the ``moderator:read:shield:mode`` scope on Twitch.
     moderator_manage_shield_mode
-        Equivalent to the `moderator:manage:shield:mode` scope on Twitch.
+        Equivalent to the ``moderator:manage:shield:mode`` scope on Twitch.
     moderator_read_shoutouts
-        Equivalent to the `moderator:read:shoutouts` scope on Twitch.
+        Equivalent to the ``moderator:read:shoutouts`` scope on Twitch.
     moderator_manage_shoutouts
-        Equivalent to the `moderator:manage:shoutouts` scope on Twitch.
+        Equivalent to the ``moderator:manage:shoutouts`` scope on Twitch.
     moderator_read_unban_requests
-        Equivalent to the `moderator:read:unban:requests` scope on Twitch.
+        Equivalent to the ``moderator:read:unban:requests`` scope on Twitch.
     moderator_manage_unban_requests
-        Equivalent to the `moderator:manage:unban:requests` scope on Twitch.
+        Equivalent to the ``moderator:manage:unban:requests`` scope on Twitch.
     moderator_read_warnings
-        Equivalent to the `moderator:read:warnings` scope on Twitch.
+        Equivalent to the ``moderator:read:warnings`` scope on Twitch.
     moderator_manage_warnings
-        Equivalent to the `moderator:manage:warnings` scope on Twitch.
+        Equivalent to the ``moderator:manage:warnings`` scope on Twitch.
     user_edit
-        Equivalent to the `user:edit` scope on Twitch.
+        Equivalent to the ``user:edit`` scope on Twitch.
     user_edit_follows
-        Equivalent to the `user:edit:follows` scope on Twitch.
+        Equivalent to the ``user:edit:follows`` scope on Twitch.
     user_read_blocked_users
-        Equivalent to the `user:read:blocked:users` scope on Twitch.
+        Equivalent to the ``user:read:blocked:users`` scope on Twitch.
     user_manage_blocked_users
-        Equivalent to the `user:manage:blocked:users` scope on Twitch.
+        Equivalent to the ``user:manage:blocked:users`` scope on Twitch.
     user_read_broadcast
-        Equivalent to the `user:read:broadcast` scope on Twitch.
+        Equivalent to the ``user:read:broadcast`` scope on Twitch.
     user_manage_chat_color
-        Equivalent to the `user:manage:chat:color` scope on Twitch.
+        Equivalent to the ``user:manage:chat:color`` scope on Twitch.
     user_read_email
-        Equivalent to the `user:read:email` scope on Twitch.
+        Equivalent to the ``user:read:email`` scope on Twitch.
     user_read_follows
-        Equivalent to the `user:read:follows` scope on Twitch.
+        Equivalent to the ``user:read:follows`` scope on Twitch.
     user_read_moderated_channels
-        Equivalent to the `user:read:moderated:channels` scope on Twitch.
+        Equivalent to the ``user:read:moderated:channels`` scope on Twitch.
     user_read_subscriptions
-        Equivalent to the `user:read:subscriptions` scope on Twitch.
+        Equivalent to the ``user:read:subscriptions`` scope on Twitch.
     user_read_emotes
-        Equivalent to the `user:read:emotes` scope on Twitch.
+        Equivalent to the ``user:read:emotes`` scope on Twitch.
     user_manage_whispers
-        Equivalent to the `user:manage:whispers` scope on Twitch.
+        Equivalent to the ``user:manage:whispers`` scope on Twitch.
     user_read_whispers
-        Equivalent to the `user:read:whispers` scope on Twitch.
+        Equivalent to the ``user:read:whispers`` scope on Twitch.
     channel_bot
-        Equivalent to the `channel:bot` scope on Twitch.
+        Equivalent to the ``channel:bot`` scope on Twitch.
     channel_moderate
-        Equivalent to the `channel:moderate` scope on Twitch.
+        Equivalent to the ``channel:moderate`` scope on Twitch.
     chat_edit
-        Equivalent to the `chat:edit` scope on Twitch.
+        Equivalent to the ``chat:edit`` scope on Twitch.
     chat_read
-        Equivalent to the `chat:read` scope on Twitch.
+        Equivalent to the ``chat:read`` scope on Twitch.
     user_bot
-        Equivalent to the `user:bot` scope on Twitch.
+        Equivalent to the ``user:bot`` scope on Twitch.
     user_read_chat
-        Equivalent to the `user:read:chat` scope on Twitch.
+        Equivalent to the ``user:read:chat`` scope on Twitch.
     user_write_chat
-        Equivalent to the `user:write:chat` scope on Twitch.
+        Equivalent to the ``user:write:chat`` scope on Twitch.
     whispers_read
-        Equivalent to the `whispers:read` scope on Twitch.
+        Equivalent to the ``whispers:read`` scope on Twitch.
     whispers_edit
-        Equivalent to the `whispers:edit` scope on Twitch.
+        Equivalent to the ``whispers:edit`` scope on Twitch.
     """
 
     __slots__ = ("_selected",)
@@ -371,27 +368,27 @@ class Scopes(metaclass=_ScopeMeta):
         return scope in self._selected
 
     def urlsafe(self, *, unquote: bool = False) -> str:
-        """Method which returns a URL-Safe formatted `str` of selected scopes.
+        """Method which returns a URL-Safe formatted ``str`` of selected scopes.
 
         The string returned by this method is safe to use in browsers etc.
 
         Parameters
         ----------
         unqoute: bool
-            If this is `True`, this will return scopes without URL quoting, E.g. as `user:read:email+channel:bot` compared to
-            `user%3Aread%3Aemail+channel%3Abot`. Defaults to `False`.
+            If this is ``True``, this will return scopes without URL quoting, E.g. as ``user:read:email+channel:bot``
+            compared to ``user%3Aread%3Aemail+channel%3Abot``. Defaults to ``False``.
         """
         return "+".join([scope.value if unquote else scope.quoted() for scope in self._selected])
 
     @property
     def selected(self) -> list[str]:
-        """Property that returns a `list[str]` of selected scopes.
+        """Property that returns a ``list[str]`` of selected scopes.
 
-        This is not URL-Safe. See: [`.urlsafe`][twitchio.Scopes.urlsafe] for a method which returns a URL-Safe string.
+        This is not URL-Safe. See: :meth:`.urlsafe` for a method which returns a URL-Safe string.
         """
         return list(self)
 
     @classmethod
     def all(cls) -> Scopes:
-        """Classmethod which creates this [`Scopes`][twitchio.Scopes] object with all scopes selected."""
+        """Classmethod which creates this :class:`.Scopes` object with all scopes selected."""
         return cls([scope for scope in cls.__dict__.values() if isinstance(scope, _scope_property)])
