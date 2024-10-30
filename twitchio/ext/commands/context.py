@@ -25,7 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from twitchio.ext.commands.core import CommandErrorPayload
 
@@ -37,14 +37,17 @@ __all__ = ("Context",)
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
     from models import SentMessage
     from models.eventsub_ import ChatMessage
-    from types_.options import Prefix_T
     from user import Chatter, PartialUser
 
     from .bot import Bot
     from .components import Component
     from .core import Command
+
+    PrefixT: TypeAlias = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
 
 
 class Context:
@@ -241,7 +244,7 @@ class Context:
                 return
 
     async def _get_prefix(self) -> None:
-        assigned: Prefix_T = self._bot._get_prefix
+        assigned: PrefixT = self._bot._get_prefix
         potential: str | Iterable[str]
 
         if callable(assigned):

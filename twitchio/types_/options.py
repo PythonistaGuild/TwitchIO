@@ -22,18 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine
 from typing import Any, NotRequired, TypeAlias, TypedDict
 
 import aiohttp
 
 from ..authentication import Scopes
-from ..ext.commands import Bot
-from ..models import ChatMessage
 from ..web import *
-
-
-__all__ = ("AdapterOT", "ClientOptions", "WaitPredicateT", "Prefix_T")
 
 
 AdapterOT: TypeAlias = type[StarletteAdapter | AiohttpAdapter] | StarletteAdapter | AiohttpAdapter
@@ -47,4 +42,3 @@ class ClientOptions(TypedDict, total=False):
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]
-Prefix_T = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]

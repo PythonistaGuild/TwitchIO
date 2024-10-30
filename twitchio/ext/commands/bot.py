@@ -25,7 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Unpack
+from typing import TYPE_CHECKING, Any, TypeAlias, Unpack
 
 from twitchio.client import Client
 
@@ -36,8 +36,9 @@ from .exceptions import *
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Iterable
+
     from models.eventsub_ import ChatMessage
-    from types_.options import Prefix_T
 
     from twitchio.eventsub.subscriptions import SubscriptionPayload
     from twitchio.types_.eventsub import SubscriptionResponse
@@ -45,6 +46,8 @@ if TYPE_CHECKING:
     from twitchio.user import PartialUser
 
     from .components import Component
+
+    PrefixT: TypeAlias = str | Iterable[str] | Callable[["Bot", ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -154,7 +157,7 @@ class Bot(Mixin[None], Client):
         client_secret: str,
         bot_id: str,
         owner_id: str | None = None,
-        prefix: Prefix_T,
+        prefix: PrefixT,
         **options: Unpack[ClientOptions],
     ) -> None:
         super().__init__(
@@ -165,7 +168,7 @@ class Bot(Mixin[None], Client):
         )
 
         self._owner_id: str | None = owner_id
-        self._get_prefix: Prefix_T = prefix
+        self._get_prefix: PrefixT = prefix
         self._components: dict[str, Component] = {}
         self._base_converter: _BaseConverter = _BaseConverter(self)
 
