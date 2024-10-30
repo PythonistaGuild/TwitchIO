@@ -39,7 +39,10 @@ if TYPE_CHECKING:
     from models.eventsub_ import ChatMessage
     from types_.options import Prefix_T
 
+    from twitchio.eventsub.subscriptions import SubscriptionPayload
+    from twitchio.types_.eventsub import SubscriptionResponse
     from twitchio.types_.options import ClientOptions
+    from twitchio.user import PartialUser
 
     from .components import Component
 
@@ -48,6 +51,102 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Bot(Mixin[None], Client):
+    """The TwitchIO ``commands.Bot`` class.
+
+    The Bot is an extension of and inherits from :class:`twitchio.Client` and comes with additonal powerful features for
+    creating and managing bots on Twitch.
+
+    Unlike :class:`twitchio.Client`, the :class:`~.Bot` class allows you to easily make use of built-in the commands ext.
+
+    The easiest way of creating and using a bot is via subclassing, some examples are provided below.
+
+    .. note::
+
+        Any examples contained in this class which use ``twitchio.Client`` can be changed to ``commands.Bot``.
+
+
+    Parameters
+    ----------
+    client_id: str
+        The client ID of the application you registered on the Twitch Developer Portal.
+    client_secret: str
+        The client secret of the application you registered on the Twitch Developer Portal.
+        This must be associated with the same ``client_id``.
+    bot_id: str
+        The User ID associated with the Bot Account.
+        Unlike on :class:`~twitchio.Client` this is a required argument on :class:`~.Bot`.
+    owner_id: str | None
+        An optional ``str`` which is the User ID associated with the owner of this bot. This should be set to your own user
+        accounts ID, but is not required. Defaults to ``None``.
+    prefix: str | Iterabale[str] | Coroutine[Any, Any, str | Iterable[str]]
+        The prefix(es) to listen to, to determine whether a message should be treated as a possible command.
+
+        This can be a ``str``, an iterable of ``str`` or a coroutine which returns either.
+
+        This is a required argument, common prefixes include: ``"!"`` or ``"?"``.
+
+    Example
+    -------
+
+        .. code:: python3
+
+            import asyncio
+            import logging
+
+            import twitchio
+            from twitchio import eventsub
+            from twitchio.ext import commands
+
+            LOGGER: logging.Logger = logging.getLogger("Bot")
+
+            class Bot(commands.Bot):
+
+                def __init__(self) -> None:
+                    super().__init__(client_id="...", client_secret="...", bot_id="...", owner_id="...", prefix="!")
+
+                # Do some async setup, as an example we will load a component and subscribe to some events...
+                # Passing the bot to the component is completely optional...
+                async def setup_hook(self) -> None:
+
+                    # Listen for messages on our channel...
+                    # You need appropriate scopes, see the docs on authenticating for more info...
+                    payload = eventsub.ChatMessageSubscription(broadcaster_user_id=self.owner_id, user_id=self.bot_id)
+                    await self.subscribe_websocket(payload=payload)
+
+                    await self.add_component(SimpleCommands(self))
+                    LOGGER.info("Finished setup hook!")
+
+            class SimpleCommands(commands.Component):
+
+                def __init__(self, bot: Bot) -> None:
+                    self.bot = bot
+
+                @commands.command()
+                async def hi(self, ctx: commands.Context) -> None:
+                    '''Command which sends you a hello.'''
+                    await ctx.reply(f"Hello {ctx.chatter}!")
+
+                @commands.command()
+                async def say(self, ctx: commands.Context, *, message: str) -> None:
+                    '''Command which repeats what you say: !say I am an apple...'''
+                    await ctx.send(message)
+
+            def main() -> None:
+                # Setup logging, this is optional, however a nice to have...
+                twitchio.utils.setup_logging(level=logging.INFO)
+
+                async def runner() -> None:
+                    async with Bot() as bot:
+                        await bot.start()
+
+                try:
+                    asyncio.run(runner())
+                except KeyboardInterrupt:
+                    LOGGER.warning("Shutting down due to Keyboard Interrupt...")
+
+            main()
+    """
+
     def __init__(
         self,
         *,
@@ -74,7 +173,7 @@ class Bot(Mixin[None], Client):
     def bot_id(self) -> str:
         """Property returning the ID of the bot.
 
-        This **MUST** be set via the keyword argument ``bot_id="..."`` in the constructor of this class.
+        You must ensure you set this via the keyword argument ``bot_id="..."`` in the constructor of this class.
 
         Returns
         -------
@@ -199,7 +298,7 @@ class Bot(Mixin[None], Client):
             payload = CommandErrorPayload(context=ctx, exception=e)
             self.dispatch("command_error", payload=payload)
 
-    async def event_channel_chat_message(self, payload: ChatMessage) -> None:
+    async def event_message(self, payload: ChatMessage) -> None:
         if payload.chatter.id == self.bot_id:
             return
 
@@ -286,4 +385,67 @@ class Bot(Mixin[None], Client):
             The context associated with command invocation, after being passed through the command.
         """
 
-    async def guard(self, ctx: Context) -> None: ...
+    async def global_guard(self, ctx: Context, /) -> bool:
+        """|coro|
+
+        A global guard applied to all commmands added to the bot.
+
+        This coroutine function should take in one parameter :class:`~.commands.Context` the context surrounding
+        command invocation, and return a bool indicating whether a command should be allowed to run.
+
+        If this function returns ``False``, the chatter will not be able to invoke the command and an error will be
+        raised. If this function returns ``True`` the chatter will be able to invoke the command,
+        assuming all the other guards also pass their predicate checks.
+
+        See: :func:`~.commands.guard` for more information on guards, what they do and how to use them.
+
+        .. note::
+
+            This is the first guard to run, and is applied to every command.
+
+        .. important::
+
+            Unlike command specific guards or :meth:`.commands.Component.guard`, this function must
+            be always be a coroutine.
+
+
+        This coroutine is intended to be overriden when needed and by default always returns ``True``.
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            The context associated with command invocation.
+
+        Raises
+        ------
+        GuardFailure
+            The guard predicate returned ``False`` and prevented the chatter from using the command.
+        """
+        return True
+
+    async def subscribe_webhook(
+        self,
+        *,
+        payload: SubscriptionPayload,
+        as_bot: bool = True,
+        token_for: str | PartialUser | None,
+        callback_url: str | None = None,
+        eventsub_secret: str | None = None,
+    ) -> SubscriptionResponse | None:
+        return await super().subscribe_webhook(
+            payload=payload,
+            as_bot=as_bot,
+            token_for=token_for,
+            callback_url=callback_url,
+            eventsub_secret=eventsub_secret,
+        )
+
+    async def subscribe_websocket(
+        self,
+        *,
+        payload: SubscriptionPayload,
+        as_bot: bool = True,
+        token_for: str | PartialUser | None = None,
+        socket_id: str | None = None,
+    ) -> SubscriptionResponse | None:
+        return await super().subscribe_websocket(payload=payload, as_bot=as_bot, token_for=token_for, socket_id=socket_id)

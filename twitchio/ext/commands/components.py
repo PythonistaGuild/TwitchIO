@@ -25,14 +25,16 @@ SOFTWARE.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from functools import partial
-from typing import TYPE_CHECKING, Any, ClassVar, Self, Unpack
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeAlias, Unpack
 
 from .core import Command, CommandErrorPayload
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Coroutine
+    from collections.abc import Callable
 
     from types_ import ComponentOptions
 
@@ -42,13 +44,16 @@ if TYPE_CHECKING:
 __all__ = ("Component",)
 
 
+CoroC: TypeAlias = Coroutine[Any, Any, bool]
+
+
 class _MetaComponent:
     __component_name__: str
     __component_extras__: dict[Any, Any]
     __component_specials__: ClassVar[list[str]] = []
     __all_commands__: dict[str, Command[Any, ...]]
     __all_listeners__: dict[str, list[Callable[..., Coroutine[Any, Any, None]]]]
-    __all_guards__: list[Callable[..., Coroutine[Any, Any, None]]]
+    __all_guards__: list[Callable[..., bool] | Callable[..., CoroC]]
 
     @classmethod
     def _component_special(cls, obj: Any) -> Any:
@@ -72,7 +77,7 @@ class _MetaComponent:
 
         commands: dict[str, Command[Any, ...]] = {}
         listeners: dict[str, list[Callable[..., Coroutine[Any, Any, None]]]] = {}
-        guards: list[Callable[..., Coroutine[Any, Any, None]]] = []
+        guards: list[Callable[..., bool] | Callable[..., CoroC]] = []
 
         no_special: str = 'Commands, listeners and guards must not start with special name "component_" in components:'
         no_over: str = 'The special method "{}" can not be overriden in components.'
@@ -121,12 +126,118 @@ class _MetaComponent:
 
 
 class Component(_MetaComponent):
-    async def component_command_error(self, payload: CommandErrorPayload) -> None:
+    """TwitchIO Component class.
+
+    Components are a powerful class used to help organize and manage commands, events, guards and errors.
+
+    This class inherits from a special metaclass which implements logic to help manage other parts of the TwitchIO
+    commands extension together.
+
+    The Component must be added to your bot via :meth:`.commands.Bot.add_component`. After this class has been added, all
+    commands and event listeners contained within the component will also be added to your bot.
+
+    You can remove this Component and all the commands and event listeners associated with it via
+    :meth:`.commands.Bot.remove_component`.
+
+    There are two built-in methods of components that aid in doing any setup or teardown, when they are added and removed
+    respectfully.
+
+    - :meth:`~.component_load`
+
+    - :meth:`~.component_teardown`
+
+
+    Below are some special methods of Components which are designed to be overriden when needed:
+
+    - :meth:`~.component_load`
+
+    - :meth:`~.component_teardown`
+
+    - :meth:`~.component_command_error`
+
+    - :meth:`~.component_before_invoke`
+
+    - :meth:`~.component_after_invoke`
+
+
+    Components also implement some special decorators which can only be used inside of Components. The decorators are
+    class method decorators and won't need an instance of a Component to use.
+
+    - :meth:`~.listener`
+
+    - :meth:`~.guard`
+
+
+    Commands can beed added to Components with their respected decorators, and don't need to be added to the bot, as they
+    will be added when you add the component.
+
+    - ``@commands.command()``
+
+    - ``@commands.group()``
+
+
+    .. note::
+
+        This version of TwitchIO has not yet implemented the ``modules`` implementation of ``commands.ext``.
+        This part of ``commands.ext`` will allow you to easily load and unload separate python files that could contain
+        components.
+
+    .. important::
+
+        Due to the implementation of Components, you shouldn't make a call to ``super().__init__()`` if you implement an
+        ``__init__`` on this component.
+
+    Examples
+    --------
+
+    .. code:: python3
+
+        class Bot(commands.Bot):
+            # Do your required __init__ etc first...
+
+            # You can use setup_hook to add components...
+            async def setup_hook(self) -> None:
+                await self.add_component(MyComponent())
+
+
+        class MyComponent(commands.Component):
+
+            # Some simple commands...
+            @commands.command()
+            async def hi(self, ctx: commands.Command) -> None:
+                await ctx.send(f"Hello {ctx.chatter.mention}!")
+
+            @commands.command()
+            async def apple(self, ctx: commands.Command, *, count: int) -> None:
+                await ctx.send(f"You have {count} apples?!")
+
+            # An example of using an event listener in a component...
+            @commands.Component.listener()
+            async def event_message(self, message: twitchio.ChatMessage) -> None:
+                print(f"Received Message in component: {message.content}")
+
+            # An example of a before invoke hook that is executed directly before any command in this component...
+            async def component_before_invoke(self, ctx: commands.Command) -> None:
+                print(f"Processing command in component '{self.name}'.")
+    """
+
+    @property
+    def name(self) -> str:
+        """Property returning the name of this component, this is either the qualified name of the class or
+        the custom provided name if set.
+        """
+        return self.__component_name__
+
+    async def component_command_error(self, payload: CommandErrorPayload) -> bool | None:
         """Event called when an error occurs in a command in this Component.
 
         Similar to :meth:`~.commands.Bot.event_command_error` except only catches errors from commands within this Component.
 
         This method is intended to be overwritten, by default it does nothing.
+
+        .. note::
+
+            Explicitly returning ``False`` in this function will stop it being dispatched to any other error handler.
         """
 
     async def component_load(self) -> None:
@@ -165,15 +276,70 @@ class Component(_MetaComponent):
         """
 
     @_MetaComponent._component_special
-    def extras(self) -> dict[Any, Any]:
-        return self.__component_extras__
+    def extras(self) -> MappingProxyType[Any, Any]:
+        """Property returning a :class:`types.MappingProxyType` of the extras applied to every command in this Component.
+
+        See: :attr:`~.commands.Command.extras` for more information on :class:`~.commands.Command` extras.
+        """
+        return MappingProxyType(self.__component_extras__)
+
+    @_MetaComponent._component_special
+    def guards(self) -> list[Callable[..., bool] | Callable[..., CoroC]]:
+        """Property returning the guards applied to every command in this Component.
+
+        See: :func:`.commands.guard` for more information on guards and how to use them.
+
+        See: :meth:`.guard` for a way to apply guards to every command in this Component.
+        """
+        return self.__all_guards__
 
     @classmethod
     def listener(cls, name: str | None = None) -> Any:
-        # TODO: Docs...
         """|deco|
 
-        A decorator which adds a an event listener to this component.
+        A decorator which adds an event listener similar to :meth:`~.commands.Bot.listener` but contained within this
+        component.
+
+        Event listeners in components can listen to any dispatched event, and don't interfere with their base implementation.
+        See: :meth:`~.commands.Bot.listener` for more information on event listeners.
+
+        By default, listeners use the name of the function wrapped for the event name. This can be changed by passing the
+        name parameter.
+
+        .. note::
+
+            You can have multiple of the same event listener per component, see below for an example.
+
+        Examples
+        --------
+
+            .. code:: python3
+                # By default if no name parameter is passed, the name of the event listened to is the same as the function...
+
+                class MyComponent(commands.Component):
+
+                    @commands.Component.listener()
+                    async def event_message(self, payload: twitchio.ChatMessage) -> None:
+                        ...
+
+            .. code:: python3
+                # You can listen to two or more of the same event in a single component...
+                # The name parameter should have the "event_" prefix removed...
+
+                class MyComponent(commands.Component):
+
+                    @commands.Component.listener("message")
+                    async def event_message_one(self, payload: twitchio.ChatMessage) -> None:
+                        ...
+
+                    @commands.Component.listener("message")
+                    async def event_message_two(self, payload: twitchio.ChatMessage) -> None:
+                        ...
+
+        Parameters
+        ----------
+        name: str
+            The name of the event to listen to, E.g. ``"event_message"`` or simply ``"message"``.
         """
 
         def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
@@ -184,25 +350,70 @@ class Component(_MetaComponent):
             qual = f"event_{name_.removeprefix('event_')}"
 
             setattr(func, "__listener_name__", qual)
-
             return func
 
         return wrapper
 
     @classmethod
     def guard(cls) -> Any:
-        # TODO: Docs...
         """|deco|
 
-        A decorator which adds a guard to every :class:`~.commands.Command` in this Component.
+        A decorator which wraps a standard function *or* coroutine function which should
+        return either ``True`` or ``False``, and applies a guard to every :class:`~.commands.Command` in this component.
+
+        The wrapped function should take in one parameter :class:`~.commands.Context` the context surrounding
+        command invocation, and return a bool indicating whether a command should be allowed to run.
+
+        If the wrapped function returns ``False``, the chatter will not be able to invoke the command and an error will be
+        raised. If the wrapped function returns ``True`` the chatter will be able to invoke the command,
+        assuming all the other guards also pass their predicate checks.
+
+        See: :func:`~.commands.guard` for more information on guards, what they do and how to use them.
+
+        See: :meth:`~.commands.Bot.global_guard` for a global guard, applied to every command the bot has added.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            class NotModeratorError(commands.GuardFailure):
+                ...
+
+            class MyComponent(commands.Component):
+
+                # The guard below will be applied to every command contained in your component...
+                # This guard raises our custom exception for easily identifying the error in our handler...
+
+                @commands.Component.guard()
+                def is_moderator(self, ctx: commands.Context) -> bool:
+                    if not ctx.chatter.moderator:
+                        raise NotModeratorError
+
+                    return True
+
+                @commands.command()
+                async def test(self, ctx: commands.Context) -> None:
+                    await ctx.reply(f"You are a moderator of {ctx.channel}")
+
+                async def component_command_error(self, payload: commands.CommandErrorPayload) -> bool | None:
+                    error = payload.exception
+                    ctx = payload.context
+
+                    if isinstance(error, NotModeratorError):
+                        await ctx.reply("Only moderators can use this command!")
+
+                        # This explicit False return stops the error from being dispatched anywhere else...
+                        return False
+
+        Raises
+        ------
+        GuardFailure
+            The guard predicate returned ``False`` and prevented the chatter from using the command.
         """
 
-        def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
-            if not asyncio.iscoroutinefunction(func):
-                raise TypeError(f'Component guard func "{func.__qualname__}" must be a coroutine function.')
-
+        def wrapper(func: Callable[..., bool] | Callable[..., CoroC]) -> Callable[..., bool] | Callable[..., CoroC]:
             setattr(func, "__component_guard__", True)
-
             return func
 
         return wrapper

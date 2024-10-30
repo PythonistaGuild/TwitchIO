@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 import inspect
+from typing import Any
 
 from twitchio.exceptions import TwitchioException
 
@@ -37,17 +38,22 @@ __all__ = (
     "PrefixError",
     "InputError",
     "ArgumentError",
-    "CheckFailure",
+    "GuardFailure",
     "ConversionError",
     "BadArgument",
     "MissingRequiredArgument",
 )
 
 
-class CommandError(TwitchioException): ...
+class CommandError(TwitchioException):
+    """Base exception for command related errors.
+
+    All commands.ext related exceptions inherit from this class.
+    """
 
 
-class ComponentLoadError(TwitchioException): ...
+class ComponentLoadError(CommandError):
+    """Exception raised when a :class:`.commands.Component` fails to load."""
 
 
 class CommandInvokeError(CommandError):
@@ -92,7 +98,12 @@ class ExpectedClosingQuoteError(ArgumentError):
         super().__init__(f"Expected closing {close_quote}.")
 
 
-class CheckFailure(CommandError): ...
+class GuardFailure(CommandError):
+    """Exception raised when a :func:`~.commands.guard` fails or blocks a command from executing."""
+
+    def __init__(self, msg: str | None = None, *, guard: Any | None = None) -> None:
+        self.guard: Any | None = guard
+        super().__init__(msg or "")
 
 
 class ConversionError(ArgumentError): ...
