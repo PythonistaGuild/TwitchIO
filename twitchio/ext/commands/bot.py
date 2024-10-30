@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 
     from .components import Component
 
-    PrefixT: TypeAlias = str | Iterable[str] | Callable[["Bot", ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
+    PrefixT: TypeAlias = str | Iterable[str] | Callable[["Bot", "ChatMessage"], Coroutine[Any, Any, str | Iterable[str]]]
 
 
 logger: logging.Logger = logging.getLogger(__name__)
