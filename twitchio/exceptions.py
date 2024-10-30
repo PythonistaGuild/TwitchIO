@@ -27,11 +27,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 
-__all__ = ("TwitchioException", "HTTPException", "WebsocketConnectionException")
+__all__ = ("TwitchioException", "HTTPException", "WebsocketConnectionException", "MessageRejectedError")
 
 
 if TYPE_CHECKING:
     from .http import Route
+    from .models import SentMessage
+    from .user import PartialUser
 
 
 class TwitchioException(Exception):
@@ -122,3 +124,12 @@ class WebsocketConnectionException(TwitchioException):
 
 
 class EventsubVerifyException(TwitchioException): ...
+
+
+class MessageRejectedError(TwitchioException):
+    def __init__(self, msg: str, *, message: SentMessage, channel: PartialUser, content: str) -> None:
+        self.channel: PartialUser = channel
+        self.code: str | None = message.dropped_code
+        self.message: str | None = message.dropped_message
+        self.content: str = content
+        super().__init__(msg)
