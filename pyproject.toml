@@ -26,7 +26,7 @@ classifiers = [
 "Homepage" = "https://github.com/PythonistaGuild/TwitchIO"
 
 [tool.setuptools]
-packages = ["twitchio", "twitchio.authentication", "twitchio.web", "twitchio.types_"]
+packages = ["twitchio", "twitchio.authentication", "twitchio.web", "twitchio.ext.commands", "twitchio.types_"]
 
 [tool.setuptools.package-data]
 twitchio = ["py.typed"]
