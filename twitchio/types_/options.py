@@ -33,6 +33,9 @@ from ..models import ChatMessage
 from ..web import *
 
 
+__all__ = ("AdapterOT", "ClientOptions", "WaitPredicateT", "Prefix_T")
+
+
 AdapterOT: TypeAlias = type[StarletteAdapter | AiohttpAdapter] | StarletteAdapter | AiohttpAdapter
 
 
