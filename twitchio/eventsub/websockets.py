@@ -410,7 +410,7 @@ class Websocket:
 
     async def _process_notification(self, data: NotificationMessage) -> None:
         sub_type = data["metadata"]["subscription_type"]
-        event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel."))
+        event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel.")).replace(".", "_")
 
         try:
             payload_class = create_event_instance(sub_type, data["payload"]["event"], http=self._http)

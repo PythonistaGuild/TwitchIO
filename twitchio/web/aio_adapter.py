@@ -178,7 +178,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
 
         elif msg_type == "notification":
             sub_type: str = data["subscription"]["type"]
-            event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel."))
+            event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel.")).replace(".", "_")
 
             try:
                 payload_class = create_event_instance(sub_type, data["event"], http=self.client._http)
