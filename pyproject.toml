@@ -61,7 +61,7 @@ dev = ["ruff", "pyright", "isort"]
 [tool.ruff]
 line-length = 125
 indent-width = 4
-exclude = ["venv", "docs"]
+exclude = ["venv", "docs", "examples"]
 
 
 [tool.ruff.lint]
@@ -117,7 +117,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-exclude = ["venv", "docs"]
+exclude = ["venv", "docs", "examples"]
 useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false
