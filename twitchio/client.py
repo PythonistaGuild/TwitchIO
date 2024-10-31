@@ -279,11 +279,11 @@ class Client:
 
             logger.info("Generated App Token for Client-ID: %s", validated.client_id)
 
-        async with self._http._token_lock:
-            await self.load_tokens()
-
         self._http._app_token = token
         await self.setup_hook()
+
+        async with self._http._token_lock:
+            await self.load_tokens()
 
     async def __aenter__(self) -> Self:
         return self
