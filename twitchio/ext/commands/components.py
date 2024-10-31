@@ -36,9 +36,8 @@ from .core import Command, CommandErrorPayload
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from types_ import ComponentOptions
-
     from .context import Context
+    from .types_ import ComponentOptions
 
 
 __all__ = ("Component",)

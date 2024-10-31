@@ -27,8 +27,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from twitchio.ext.commands.core import CommandErrorPayload
-
+from .core import CommandErrorPayload
 from .exceptions import *
 from .view import StringView
 
@@ -39,9 +38,9 @@ __all__ = ("Context",)
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
 
-    from models import SentMessage
-    from models.eventsub_ import ChatMessage
-    from user import Chatter, PartialUser
+    from twitchio.models import SentMessage
+    from twitchio.models.eventsub_ import ChatMessage
+    from twitchio.user import Chatter, PartialUser
 
     from .bot import Bot
     from .components import Component

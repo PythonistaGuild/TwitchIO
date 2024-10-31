@@ -25,7 +25,7 @@ SOFTWARE.
 from collections.abc import MutableMapping
 from typing import Any, Literal, TypeAlias, TypedDict
 
-from twitchio.user import PartialUser
+from ..user import PartialUser
 
 
 __all__ = ("HTTPMethod", "APIRequestKwargs", "APIRequest", "ParamMapping")

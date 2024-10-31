@@ -55,7 +55,7 @@ __all__ = (
 
 
 if TYPE_CHECKING:
-    from user import Chatter
+    from twitchio.user import Chatter
 
     from .context import Context
 

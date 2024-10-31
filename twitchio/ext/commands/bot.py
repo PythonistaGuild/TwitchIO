@@ -38,9 +38,8 @@ from .exceptions import *
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Iterable
 
-    from models.eventsub_ import ChatMessage
-
     from twitchio.eventsub.subscriptions import SubscriptionPayload
+    from twitchio.models.eventsub_ import ChatMessage
     from twitchio.types_.eventsub import SubscriptionResponse
     from twitchio.types_.options import ClientOptions
     from twitchio.user import PartialUser
