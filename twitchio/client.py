@@ -483,7 +483,7 @@ class Client:
 
         return await waiter.wait()
 
-    async def add_token(self, token: str, refresh: str) -> None:
+    async def add_token(self, token: str, refresh: str) -> ValidateTokenPayload:
         """|coro|
 
         Adds a token and refresh-token pair to the client to be automatically managed.
@@ -526,7 +526,7 @@ class Client:
                     await super().add_token(token, refresh)
 
         """
-        await self._http.add_token(token, refresh)
+        return await self._http.add_token(token, refresh)
 
     async def remove_token(self, user_id: str, /) -> TokenMappingData | None:
         """|coro|
