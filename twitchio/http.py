@@ -670,7 +670,18 @@ class HTTPClient:
         tags: list[str] | None = None,
         branded_content: bool | None = None,
         classification_labels: list[
-            dict[Literal["DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]
+            dict[
+                Literal[
+                    "DebatedSocialIssuesAndPolitics",
+                    "MatureGame",
+                    "DrugsIntoxication",
+                    "SexualThemes",
+                    "ViolentGraphic",
+                    "Gambling",
+                    "ProfanityVulgarity",
+                ],
+                bool,
+            ]
         ]
         | None = None,
     ) -> None:

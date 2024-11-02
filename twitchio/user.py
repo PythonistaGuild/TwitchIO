@@ -438,7 +438,18 @@ class PartialUser:
         delay: int | None = None,
         tags: list[str] | None = None,
         classification_labels: list[
-            dict[Literal["DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]
+            dict[
+                Literal[
+                    "DebatedSocialIssuesAndPolitics",
+                    "MatureGame",
+                    "DrugsIntoxication",
+                    "SexualThemes",
+                    "ViolentGraphic",
+                    "Gambling",
+                    "ProfanityVulgarity",
+                ],
+                bool,
+            ]
         ]
         | None = None,
         branded: bool | None = None,
@@ -487,7 +498,7 @@ class PartialUser:
             You may set a maximum of 10 tags, each limited to 25 characters. They can not be empty strings, contain spaces or special characters.
 
             See `here for more information <https://help.twitch.tv/s/article/guide-to-tags>`_
-        classification_labels: list[dict[Literal["DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]] | None
+        classification_labels: list[dict[Literal["DebatedSocialIssuesAndPolitics", "MatureGame", "DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]] | None
             List of labels that should be set as the Channel's CCLs.
         branded: bool | None
             Boolean flag indicating if the channel has branded content.
