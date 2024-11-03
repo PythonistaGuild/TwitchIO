@@ -24,11 +24,16 @@ SOFTWARE.
 
 from __future__ import annotations
 
+import asyncio
+import importlib.util
 import logging
+import sys
+import types
 from typing import TYPE_CHECKING, Any, TypeAlias, Unpack
 
 from twitchio.client import Client
 
+from ...utils import _is_submodule
 from .context import Context
 from .converters import _BaseConverter
 from .core import Command, CommandErrorPayload, Group, Mixin
@@ -36,7 +41,7 @@ from .exceptions import *
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Coroutine, Iterable
+    from collections.abc import Callable, Coroutine, Iterable, Mapping
 
     from twitchio.eventsub.subscriptions import SubscriptionPayload
     from twitchio.models.eventsub_ import ChatMessage
@@ -170,6 +175,7 @@ class Bot(Mixin[None], Client):
         self._get_prefix: PrefixT = prefix
         self._components: dict[str, Component] = {}
         self._base_converter: _BaseConverter = _BaseConverter(self)
+        self.__modules: dict[str, types.ModuleType] = {}
 
     @property
     def bot_id(self) -> str:
@@ -451,3 +457,203 @@ class Bot(Mixin[None], Client):
         socket_id: str | None = None,
     ) -> SubscriptionResponse | None:
         return await super().subscribe_websocket(payload=payload, as_bot=as_bot, token_for=token_for, socket_id=socket_id)
+
+    def _get_module_name(self, name: str, package: str | None) -> str:
+        try:
+            return importlib.util.resolve_name(name, package)
+        except ImportError as e:
+            raise ModuleNotFoundError(f'The module "{name}" was not found.') from e
+
+    async def _remove_module_remnants(self, name: str) -> None:
+        for component_name, component in self._components.copy().items():
+            if component.__module__ == name or component.__module__.startswith(f"{name}."):
+                await self.remove_component(component_name)
+
+    async def _module_finalizers(self, name: str, module: types.ModuleType) -> None:
+        try:
+            func = getattr(module, "teardown")
+        except AttributeError:
+            pass
+        else:
+            try:
+                await func(self)
+            except Exception:
+                pass
+        finally:
+            self.__modules.pop(name, None)
+            sys.modules.pop(name, None)
+
+            name = module.__name__
+            for m in list(sys.modules.keys()):
+                if _is_submodule(name, m):
+                    del sys.modules[m]
+
+    async def load_module(self, name: str, *, package: str | None = None) -> None:
+        """|coro|
+
+        Loads a module.
+
+        A module is a python module that contains commands, cogs, or listeners.
+
+        A module must have a global coroutine, ``setup`` defined as the entry point on what to do when the module is loaded.
+        The coroutine takes a single argument, the ``bot``.
+
+        .. versionchanged:: 3.0
+            This method is now a :term:`coroutine`.
+
+        Parameters
+        ----------
+        name: str
+            The module to load. It must be dot separated like regular Python imports accessing a sub-module.
+            e.g. ``foo.bar`` if you want to import ``foo/bar.py``.
+        package: str | None
+            The package name to resolve relative imports with.
+            This is required when loading an extension using a relative path.
+            e.g. ``.foo.bar``. Defaults to ``None``.
+
+        Raises
+        ------
+        ModuleAlreadyLoadedError
+            The module is already loaded.
+        ModuleNotFoundError
+            The module could not be imported. Also raised if module could not be resolved using the `package` parameter.
+        ModuleLoadFailure
+            There was an error loading the module.
+        NoModuleEntryPoint
+            The module does not have a setup coroutine.
+        TypeError
+            The module's setup function is not a coroutine.
+        """
+
+        name = self._get_module_name(name, package)
+
+        if name in self.__modules:
+            raise ModuleAlreadyLoadedError(f"The module {name} has already been loaded.")
+
+        spec = importlib.util.find_spec(name)
+        if spec is None:
+            raise ModuleNotFoundError(name)
+
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+
+        try:
+            spec.loader.exec_module(module)  # type: ignore
+        except Exception as e:
+            del sys.modules[name]
+            raise ModuleLoadFailure(e) from e
+
+        try:
+            entry = getattr(module, "setup")
+        except AttributeError as exc:
+            del sys.modules[name]
+            raise NoEntryPointError(f'The module "{module}" has no setup coroutine.') from exc
+
+        if not asyncio.iscoroutinefunction(entry):
+            del sys.modules[name]
+            raise TypeError(f'The module "{module}"\'s setup function is not a coroutine.')
+
+        try:
+            await entry(self)
+        except Exception as e:
+            del sys.modules[name]
+            await self._remove_module_remnants(module.__name__)
+            raise ModuleLoadFailure(e) from e
+
+        self.__modules[name] = module
+
+    async def unload_module(self, name: str, *, package: str | None = None) -> None:
+        """|coro|
+
+        Unloads a module.
+
+        When the module is unloaded, all commands, listeners and components are removed from the bot, and the module is un-imported.
+
+        You can add an optional global coroutine of ``teardown`` to the module to do miscellaneous clean-up if necessary.
+        This also takes a single paramter of the ``bot``, similar to ``setup``.
+
+        .. versionchanged:: 3.0
+            This method is now a :term:`coroutine`.
+
+        Parameters
+        ----------
+        name: str
+            The module to unload. It must be dot separated like regular Python imports accessing a sub-module.
+            e.g. ``foo.bar`` if you want to import ``foo/bar.py``.
+        package: str | None
+            The package name to resolve relative imports with.
+            This is required when unloading an extension using a relative path.
+            e.g. ``.foo.bar``. Defaults to ``None``.
+
+        Raises
+        ------
+        ModuleNotLoaded
+            The module was not loaded.
+        """
+
+        name = self._get_module_name(name, package)
+        module = self.__modules.get(name)
+
+        if module is None:
+            raise ModuleNotLoadedError(name)
+
+        await self._remove_module_remnants(module.__name__)
+        await self._module_finalizers(name, module)
+
+    async def reload_module(self, name: str, *, package: str | None = None) -> None:
+        """|coro|
+
+        Atomically reloads a module.
+
+        This attempts to unload and then load the module again, in an atomic way.
+        If an operation fails mid reload then the bot will revert back to the prior working state.
+
+        .. versionchanged:: 3.0
+            This method is now a :term:`coroutine`.
+
+        Parameters
+        ----------
+        name: str
+            The module to unload. It must be dot separated like regular Python imports accessing a sub-module.
+            e.g. ``foo.bar`` if you want to import ``foo/bar.py``.
+        package: str | None
+            The package name to resolve relative imports with.
+            This is required when unloading an extension using a relative path.
+            e.g. ``.foo.bar``. Defaults to ``None``.
+
+        Raises
+        ------
+        ModuleNotLoaded
+            The module was not loaded.
+        ModuleNotFoundError
+            The module could not be imported. Also raised if module could not be resolved using the `package` parameter.
+        ModuleLoadFailure
+            There was an error loading the module.
+        NoModuleEntryPoint
+            The module does not have a setup coroutine.
+        TypeError
+            The module's setup function is not a coroutine.
+        """
+
+        name = self._get_module_name(name, package)
+        module = self.__modules.get(name)
+
+        if module is None:
+            raise ModuleNotLoadedError(name)
+
+        modules = {name: module for name, module in sys.modules.items() if _is_submodule(module.__name__, name)}
+
+        try:
+            await self._remove_module_remnants(module.__name__)
+            await self._module_finalizers(name, module)
+            await self.load_module(name)
+        except Exception as e:
+            await module.setup(self)
+            self.__modules[name] = module
+            sys.modules.update(modules)
+            raise e
+
+    @property
+    def modules(self) -> Mapping[str, types.ModuleType]:
+        """Mapping[:class:`str`, :class:`py:types.ModuleType`]: A read-only mapping of extension name to extension."""
+        return types.MappingProxyType(self.__modules)

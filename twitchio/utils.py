@@ -39,6 +39,7 @@ __all__ = (
     "url_encode_datetime",
     "MISSING",
     "handle_user_ids",
+    "_is_submodule",
 )
 
 T_co = TypeVar("T_co", covariant=True)
@@ -837,3 +838,7 @@ def handle_user_ids(is_self: bool = False) -> Callable[..., Any]:
         return cast(F, wrapper)
 
     return decorator
+
+
+def _is_submodule(parent: str, child: str) -> bool:
+    return parent == child or child.startswith(parent + ".")
