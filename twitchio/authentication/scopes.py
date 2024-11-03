@@ -202,6 +202,10 @@ class Scopes(metaclass=_ScopeMeta):
         Equivalent to the ``moderator:read:warnings`` scope on Twitch.
     moderator_manage_warnings
         Equivalent to the ``moderator:manage:warnings`` scope on Twitch.
+    moderator_read_moderators
+        Equivalent to the ``moderator:read:moderators`` scope on Twitch.
+    moderator_read_vips
+        Equivalent to the ``moderator:read:vips`` scope on Twitch.
     user_edit
         Equivalent to the ``user:edit`` scope on Twitch.
     user_edit_follows
@@ -302,6 +306,8 @@ class Scopes(metaclass=_ScopeMeta):
     moderator_manage_unban_requests = _scope_property()
     moderator_read_warnings = _scope_property()
     moderator_manage_warnings = _scope_property()
+    moderator_read_moderators = _scope_property()
+    moderator_read_vips = _scope_property()
     user_edit = _scope_property()
     user_edit_follows = _scope_property()
     user_read_blocked_users = _scope_property()
