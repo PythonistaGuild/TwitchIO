@@ -516,10 +516,11 @@ class Bot(Mixin[None], Client):
         ModuleAlreadyLoadedError
             The module is already loaded.
         ModuleNotFoundError
-            The module could not be imported. Also raised if module could not be resolved using the `package` parameter.
+            The module could not be imported.
+            Also raised if module could not be resolved using the `package` parameter.
         ModuleLoadFailure
             There was an error loading the module.
-        NoModuleEntryPoint
+        NoEntryPointError
             The module does not have a setup coroutine.
         TypeError
             The module's setup function is not a coroutine.
@@ -626,10 +627,11 @@ class Bot(Mixin[None], Client):
         ModuleNotLoaded
             The module was not loaded.
         ModuleNotFoundError
-            The module could not be imported. Also raised if module could not be resolved using the `package` parameter.
+            The module could not be imported.
+            Also raised if module could not be resolved using the `package` parameter.
         ModuleLoadFailure
             There was an error loading the module.
-        NoModuleEntryPoint
+        NoEntryPointError
             The module does not have a setup coroutine.
         TypeError
             The module's setup function is not a coroutine.
