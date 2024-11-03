@@ -759,7 +759,7 @@ class HTTPClient:
 
         route = Route("GET", "channels/followers", params=params, token_for=token_for)
 
-        async def converter(data: ChannelFollowersResponseData) -> ChannelFollowerEvent:
+        async def converter(data: ChannelFollowersResponseData, *, raw: Any) -> ChannelFollowerEvent:
             return ChannelFollowerEvent(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
@@ -1001,7 +1001,7 @@ class HTTPClient:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "first": first}
         route: Route = Route("GET", "chat/chatters", params=params, token_for=token_for)
 
-        async def converter(data: ChattersResponseData) -> PartialUser:
+        async def converter(data: ChattersResponseData, *, raw: Any) -> PartialUser:
             return PartialUser(data["user_id"], data["user_login"], http=self)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
@@ -2342,7 +2342,7 @@ class HTTPClient:
 
         route: Route = Route("GET", "subscriptions", params=params, token_for=token_for)
 
-        async def converter(data: BroadcasterSubscriptionsResponseData) -> BroadcasterSubscription:
+        async def converter(data: BroadcasterSubscriptionsResponseData, *, raw: Any) -> BroadcasterSubscription:
             return BroadcasterSubscription(data, http=self)
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
