@@ -45,8 +45,8 @@ __all__ = (
     "ModuleNotFoundError",
     "ModuleAlreadyLoadedError",
     "ModuleLoadFailure",
-    "ModuleNotLoaded",
-    "NoModuleEntryPoint",
+    "ModuleNotLoadedError",
+    "NoEntryPointError",
 )
 
 
@@ -137,7 +137,7 @@ class ModuleLoadFailure(TwitchioException):
         super().__init__(exc)
 
 
-class NoModuleEntryPoint(TwitchioException):
+class NoEntryPointError(TwitchioException):
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
@@ -147,6 +147,6 @@ class ModuleAlreadyLoadedError(TwitchioException):
         super().__init__(msg)
 
 
-class ModuleNotLoaded(TwitchioException):
+class ModuleNotLoadedError(TwitchioException):
     def __init__(self, msg: str) -> None:
         super().__init__(msg)

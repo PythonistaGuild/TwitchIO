@@ -547,7 +547,7 @@ class Bot(Mixin[None], Client):
             entry = getattr(module, "setup")
         except AttributeError as exc:
             del sys.modules[name]
-            raise NoModuleEntryPoint(f'The module "{module}" has no setup coroutine.') from exc
+            raise NoEntryPointError(f'The module "{module}" has no setup coroutine.') from exc
 
         if not asyncio.iscoroutinefunction(entry):
             del sys.modules[name]
@@ -595,7 +595,7 @@ class Bot(Mixin[None], Client):
         module = self.__modules.get(name)
 
         if module is None:
-            raise ModuleNotLoaded(name)
+            raise ModuleNotLoadedError(name)
 
         await self._remove_module_remnants(module.__name__)
         await self._module_finalizers(name, module)
@@ -639,7 +639,7 @@ class Bot(Mixin[None], Client):
         module = self.__modules.get(name)
 
         if module is None:
-            raise ModuleNotLoaded(name)
+            raise ModuleNotLoadedError(name)
 
         modules = {name: module for name, module in sys.modules.items() if _is_submodule(module.__name__, name)}
 
