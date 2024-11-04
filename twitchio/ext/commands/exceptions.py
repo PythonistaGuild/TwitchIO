@@ -126,21 +126,33 @@ class MissingRequiredArgument(ArgumentError):
         super().__init__(f'"{param.name}" is a required argument which is missing.')
 
 
-class ModuleLoadFailure(TwitchioException):
-    def __init__(self, exc: Exception) -> None:
-        super().__init__(exc)
+class ModuleError(TwitchioException):
+    """Base exception for module related errors."""
 
 
-class NoEntryPointError(TwitchioException):
+class ModuleLoadFailure(ModuleError):
+    """An exception raised when a module failed to load during execution or `setup` entry point."""
+
+    def __init__(self, name: str, exc: Exception) -> None:
+        super().__init__(name, exc)
+
+
+class NoEntryPointError(ModuleError):
+    """Exception raised when the module does not have a `setup` entry point coroutine."""
+
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
-class ModuleAlreadyLoadedError(TwitchioException):
+class ModuleAlreadyLoadedError(ModuleError):
+    """Exception raised when a module has already been loaded."""
+
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
 
-class ModuleNotLoadedError(TwitchioException):
+class ModuleNotLoadedError(ModuleError):
+    """An exception raised when a module was not loaded."""
+
     def __init__(self, msg: str) -> None:
         super().__init__(msg)

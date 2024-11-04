@@ -542,7 +542,7 @@ class Bot(Mixin[None], Client):
             spec.loader.exec_module(module)  # type: ignore
         except Exception as e:
             del sys.modules[name]
-            raise ModuleLoadFailure(e) from e
+            raise ModuleLoadFailure(name, e) from e
 
         try:
             entry = getattr(module, "setup")
@@ -559,7 +559,7 @@ class Bot(Mixin[None], Client):
         except Exception as e:
             del sys.modules[name]
             await self._remove_module_remnants(module.__name__)
-            raise ModuleLoadFailure(e) from e
+            raise ModuleLoadFailure(name, e) from e
 
         self.__modules[name] = module
 
