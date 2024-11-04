@@ -42,7 +42,6 @@ __all__ = (
     "ConversionError",
     "BadArgument",
     "MissingRequiredArgument",
-    "ModuleNotFoundError",
     "ModuleAlreadyLoadedError",
     "ModuleLoadFailure",
     "ModuleNotLoadedError",
@@ -125,11 +124,6 @@ class MissingRequiredArgument(ArgumentError):
     def __init__(self, param: inspect.Parameter) -> None:
         self.param: inspect.Parameter = param
         super().__init__(f'"{param.name}" is a required argument which is missing.')
-
-
-class ModuleNotFoundError(TwitchioException):
-    def __init__(self, msg: str) -> None:
-        super().__init__(msg)
 
 
 class ModuleLoadFailure(TwitchioException):

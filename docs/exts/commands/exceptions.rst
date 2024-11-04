@@ -41,8 +41,6 @@ Exceptions
 
 .. autoexception:: twitchio.ext.commands.MissingRequiredArgument
 
-.. autoexception:: twitchio.ext.commands.ModuleNotFoundError
-
 .. autoexception:: twitchio.ext.commands.ModuleAlreadyLoadedError
 
 .. autoexception:: twitchio.ext.commands.ModuleLoadFailure
