@@ -107,7 +107,9 @@ class Prediction:
     ) -> None:
         self._http = http
         self.id: str = data["id"]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.title: str = data["title"]
         self.winning_outcome_id: str | None = data["winning_outcome_id"] or None
         self.outcomes: list[PredictionOutcome] = [PredictionOutcome(c, http=self._http) for c in data["outcomes"]]
@@ -217,7 +219,7 @@ class Predictor:
         self.channel_points_used: int = data["channel_points_used"]
         channel_points_won = data.get("channel_points_won")
         self.channel_points_won: int | None = int(channel_points_won) if channel_points_won is not None else None
-        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<Predictor user={self.user} channel_points_used={self.channel_points_used} channel_points_won={self.channel_points_won}>"

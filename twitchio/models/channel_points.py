@@ -144,7 +144,9 @@ class CustomReward:
 
     def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=self._http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=self._http
+        )
         self._image: CustomRewardsResponseImage | None = data.get("image")
         self.id: str = data["id"]
         self.title: str = data["title"]
@@ -415,7 +417,7 @@ class CustomRewardRedemption:
         self.redeemed_at: datetime.datetime = parse_timestamp(data["redeemed_at"])
         self.reward: CustomReward = parent_reward
         self._http: HTTPClient = http
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=self._http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["broadcaster_name"], http=self._http)
 
     def __repr__(self) -> str:
         return f"<CustomRewardRedemption id={self.id} status={self.status} redeemed_at={self.redeemed_at}>"

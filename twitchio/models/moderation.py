@@ -220,8 +220,10 @@ class BannedUser:
     __slots__ = ("user", "expires_at", "created_at", "moderator", "reason")
 
     def __init__(self, data: BannedUsersResponseData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
-        self.moderator: PartialUser = PartialUser(data["moderator_id"], data["moderator_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            data["moderator_id"], data["moderator_login"], data["moderator_name"], http=http
+        )
         self.expires_at: datetime.datetime | None = parse_timestamp(data["expires_at"]) if data["expires_at"] else None
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
         self.reason: str = data["reason"]
@@ -326,8 +328,12 @@ class UnbanRequest:
 
     def __init__(self, data: UnbanRequestsResponseData | ResolveUnbanRequestsResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
-        self.moderator: PartialUser = PartialUser(data["moderator_id"], data["moderator_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
+        self.moderator: PartialUser = PartialUser(
+            data["moderator_id"], data["moderator_login"], data["moderator_name"], http=http
+        )
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
         self.text: str = data["text"]
         self.status: Literal["pending", "approved", "denied", "acknowledged", "canceled"] = data["status"]
@@ -391,7 +397,9 @@ class ShieldModeStatus:
 
     def __init__(self, data: ShieldModeStatusResponseData, *, http: HTTPClient) -> None:
         self.active: bool = bool(data["is_active"])
-        self.moderator: PartialUser = PartialUser(data["moderator_id"], data["moderator_login"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            data["moderator_id"], data["moderator_login"], data["moderator_name"], http=http
+        )
         self.last_activated_at: datetime.datetime = parse_timestamp(data["last_activated_at"])
 
     def __repr__(self) -> str:

@@ -89,14 +89,17 @@ class PartialUser:
         The user's ID.
     name: str | None
         The user's name. In most cases, this is provided. There are however, rare cases where it is not.
+    display_name: str | None
+        The user's display name in chat. In most cases, this is provided otherwise fallsback to `name`. There are however, rare cases where it is not.
     """
 
-    __slots__ = "id", "name", "_http", "_cached_rewards"
+    __slots__ = "id", "name", "_http", "display_name", "_cached_rewards"
 
-    def __init__(self, id: str | int, name: str | None = None, *, http: HTTPClient) -> None:
+    def __init__(self, id: str | int, name: str | None = None, display_name: str | None = None, *, http: HTTPClient) -> None:
         self._http = http
         self.id = str(id)
         self.name = name
+        self.display_name = display_name or name
 
     def __repr__(self) -> str:
         return f"<PartialUser id={self.id}, name={self.name}>"
@@ -106,11 +109,11 @@ class PartialUser:
 
     @property
     def mention(self) -> str:
-        """Property returning the users name formatted to mention them in chat.
+        """Property returning the users display_name formatted to mention them in chat.
 
         E.g. "@kappa"
         """
-        return f"@{self}"
+        return f"@{self.display_name or '...'}"
 
     async def start_commercial(self, *, length: int) -> CommercialStart:
         """|coro|
@@ -3408,8 +3411,7 @@ class User(PartialUser):
     )
 
     def __init__(self, data: UsersResponseData, *, http: HTTPClient) -> None:
-        super().__init__(data["id"], data["login"], http=http)
-        self.display_name: str = data["display_name"]
+        super().__init__(data["id"], data["login"], data["display_name"], http=http)
         self.type: Literal["admin", "global_mod", "staff", ""] = data["type"]
         self.broadcaster_type: Literal["affiliate", "partner", ""] = data["broadcaster_type"]
         self.description: str = data["description"]
@@ -3628,7 +3630,12 @@ class Chatter(PartialUser):
         broadcaster: PartialUser,
         badges: list[ChatMessageBadge],
     ) -> None:
-        super().__init__(id=payload["chatter_user_id"], name=payload["chatter_user_login"], http=http)
+        super().__init__(
+            id=payload["chatter_user_id"],
+            name=payload["chatter_user_login"],
+            display_name=payload["chatter_user_name"],
+            http=http,
+        )
 
         slots = [s for s in self.__slots__ if not s.startswith("__")]
         for badge in badges:

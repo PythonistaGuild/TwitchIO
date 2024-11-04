@@ -92,7 +92,7 @@ class Video:
     def __init__(self, data: VideosResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.title: str = data["title"]
         self.description: str = data["description"]
         self.created_at = parse_timestamp(data["created_at"])

@@ -99,7 +99,9 @@ class Poll:
     def __init__(self, data: PollsResponseData, *, http: HTTPClient) -> None:
         self._http = http
         self.id: str = data["id"]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.title: str = data["title"]
         self.choices: list[PollChoice] = [PollChoice(c) for c in data["choices"]]
         self.channel_points_voting_enabled: bool = bool(data["channel_points_voting_enabled"])

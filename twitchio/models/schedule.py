@@ -64,7 +64,9 @@ class Schedule:
         self.segments: list[ScheduleSegment] = [
             ScheduleSegment(d, http=http, broadcaster_id=data["broadcaster_id"]) for d in data["segments"]
         ]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.vacation: ScheduleVacation | None = ScheduleVacation(data["vacation"]) if data["vacation"] else None
 
     def __repr__(self) -> str:

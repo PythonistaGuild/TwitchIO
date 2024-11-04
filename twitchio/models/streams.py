@@ -100,7 +100,7 @@ class Stream:
         self._http: HTTPClient = http
 
         self.id: str = data["id"]
-        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.type: str = data["type"]
@@ -174,7 +174,7 @@ class VideoMarkers:
     __slots__ = ("user", "video_id", "markers")
 
     def __init__(self, data: StreamMarkersResponseData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.video_id: str = data["videos"][0]["video_id"]
         self.markers: list[StreamMarker] = [StreamMarker(d) for d in data["videos"][0]["markers"]]
 

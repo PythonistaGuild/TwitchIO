@@ -74,12 +74,20 @@ class UserSubscription:
     def __init__(
         self, data: BroadcasterSubscriptionsResponseData | CheckUserSubscriptionResponseData, *, http: HTTPClient
     ) -> None:
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.gift: bool = bool(data["is_gift"])
         self.tier: int = int(data["tier"])
-        _gifter_id, _gifter_login = data.get("gifter_id"), data.get("gifter_login")
+        _gifter_id, _gifter_login, _gifter_display_name = (
+            data.get("gifter_id"),
+            data.get("gifter_login"),
+            data.get("gifter_name"),
+        )
         self.gifter: PartialUser | None = (
-            PartialUser(_gifter_id, _gifter_login, http=http) if self.gift and _gifter_id is not None else None
+            PartialUser(_gifter_id, _gifter_login, _gifter_display_name, http=http)
+            if self.gift and _gifter_id is not None
+            else None
         )
 
     def __repr__(self) -> str:
@@ -120,7 +128,7 @@ class BroadcasterSubscription(UserSubscription):
     def __init__(self, data: BroadcasterSubscriptionsResponseData, *, http: HTTPClient) -> None:
         super().__init__(data, http=http)
         self.plan_name: str = data["plan_name"]
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<BroadcasterSubscription broadcaster={self.broadcaster} tier={self.tier} gift={self.gift} plan_name={self.plan_name}>"

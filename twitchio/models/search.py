@@ -84,7 +84,7 @@ class SearchChannel:
 
     def __init__(self, data: SearchChannelsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
-        self.broadcaster: PartialUser = PartialUser(data["id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(data["id"], data["broadcaster_login"], data["display_name"], http=http)
         self.game_id: str = data["game_id"]
         self.title: str = data["title"]
         self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)

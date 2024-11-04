@@ -100,8 +100,10 @@ class AutomodMessageHold(BaseEvent):
     __slots__ = ("broadcaster", "user", "message_id", "text", "level", "category", "held_at")
 
     def __init__(self, payload: AutomodMessageHoldEvent, *, http: HTTPClient) -> None:
-        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
-        self.user = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.broadcaster = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
+        )
+        self.user = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.message_id: str = payload["message_id"]
         self.text: str = payload["message"]["text"]
         self.level: int = int(payload["level"])
@@ -183,7 +185,9 @@ class AutomodMessageUpdate(AutomodMessageHold):
 
     def __init__(self, payload: AutomodMessageUpdateEvent, *, http: HTTPClient) -> None:
         super().__init__(payload=payload, http=http)
-        self.moderator = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.moderator = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.status: Literal["Approved", "Denied", "Expired"] = payload["status"]
 
     def __repr__(self) -> str:
@@ -237,8 +241,12 @@ class AutomodSettingsUpdate(BaseEvent):
     )
 
     def __init__(self, payload: AutomodSettingsUpdateEvent, *, http: HTTPClient) -> None:
-        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
-        self.moderator = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.broadcaster = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
+        )
+        self.moderator = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.overall_level: int | None = int(payload["overall_level"]) if payload["overall_level"] is not None else None
         self.disability: int = int(payload["disability"])
         self.aggression: int = int(payload["aggression"])
@@ -282,8 +290,12 @@ class AutomodTermsUpdate(BaseEvent):
     __slots__ = ("broadcaster", "moderator", "action", "automod", "terms")
 
     def __init__(self, payload: AutomodTermsUpdateEvent, *, http: HTTPClient) -> None:
-        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
-        self.moderator = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.broadcaster = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
+        )
+        self.moderator = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.action: Literal["add_permitted", "remove_permitted", "add_blocked", "remove_blocked"] = payload["action"]
         self.automod: bool = bool(payload["from_automod"])
         self.terms: list[str] = payload["terms"]
@@ -317,7 +329,9 @@ class ChannelUpdate(BaseEvent):
     __slots__ = ("broadcaster", "title", "category_id", "category_name", "content_classification_labels")
 
     def __init__(self, payload: ChannelUpdateEvent, *, http: HTTPClient) -> None:
-        self.broadcaster = PartialUser(payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http)
+        self.broadcaster = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
+        )
         self.title: str = payload["title"]
         self.language: str = payload["language"]
         self.category_id: str = payload["category_id"]
@@ -348,9 +362,9 @@ class ChannelFollow(BaseEvent):
 
     def __init__(self, payload: ChannelFollowEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.followed_at: datetime.datetime = parse_timestamp(payload["followed_at"])
 
     def __repr__(self) -> str:
@@ -381,9 +395,11 @@ class ChannelAdBreakBegin(BaseEvent):
 
     def __init__(self, payload: ChannelAdBreakBeginEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.requester: PartialUser = PartialUser(payload["requester_user_id"], payload["requester_user_login"], http=http)
+        self.requester: PartialUser = PartialUser(
+            payload["requester_user_id"], payload["requester_user_login"], payload["requester_user_name"], http=http
+        )
         self.duration: int = int(payload["duration_seconds"])
         self.automatic: bool = bool(payload["is_automatic"])
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
@@ -410,7 +426,7 @@ class ChannelChatClear(BaseEvent):
 
     def __init__(self, payload: ChannelChatClearEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
 
     def __repr__(self) -> str:
@@ -435,9 +451,11 @@ class ChannelChatClearUserMessages(BaseEvent):
 
     def __init__(self, payload: ChannelChatClearUserMessagesEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["target_user_id"], payload["target_user_login"], http=http)
+        self.user: PartialUser = PartialUser(
+            payload["target_user_id"], payload["target_user_login"], payload["target_user_name"], http=http
+        )
 
     def __repr__(self) -> str:
         return f"<ChannelChatClearUserMessages broadcaster={self.broadcaster} user={self.user}>"
@@ -472,9 +490,13 @@ class ChatMessageReply:
     def __init__(self, data: ChatMessageReplyData, *, http: HTTPClient) -> None:
         self.parent_message_id: str = data["parent_message_id"]
         self.parent_message_body: str = data["parent_message_body"]
-        self.parent_user: PartialUser = PartialUser(data["parent_user_id"], data["parent_user_login"], http=http)
+        self.parent_user: PartialUser = PartialUser(
+            data["parent_user_id"], data["parent_user_login"], data["parent_user_name"], http=http
+        )
         self.thread_message_id: str = data["thread_message_id"]
-        self.thread_user: PartialUser = PartialUser(data["thread_user_id"], data["thread_user_login"], http=http)
+        self.thread_user: PartialUser = PartialUser(
+            data["thread_user_id"], data["thread_user_login"], data["thread_user_name"], http=http
+        )
 
     def __repr__(self) -> str:
         return f"<ChatMessageReply parent_message_id={self.parent_message_id} parent_user={self.parent_user}>"
@@ -636,7 +658,7 @@ class ChatMessageFragment:
         self.type: Literal["text", "cheermote", "emote", "mention"] = data["type"]
         user = data.get("mention")
         self.mention: PartialUser | None = (
-            PartialUser(user["user_id"], user["user_login"], http=http) if user is not None else None
+            PartialUser(user["user_id"], user["user_login"], user["user_name"], http=http) if user is not None else None
         )
         self.cheermote: ChatMessageCheermote | None = (
             ChatMessageCheermote(data["cheermote"]) if data["cheermote"] is not None else None
@@ -665,7 +687,7 @@ class BaseChatMessage(BaseEvent):
         http: HTTPClient,
     ) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.text: str = payload["message"]["text"]
         self.id = payload.get("message_id") or payload["message"].get("message_id")
@@ -792,7 +814,12 @@ class ChatMessage(BaseChatMessage):
         self.cheer: ChatMessageCheer | None = ChatMessageCheer(payload["cheer"]) if payload["cheer"] is not None else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
         self.source_broadcaster: PartialUser | None = (
-            PartialUser(payload["source_broadcaster_user_id"], payload["source_broadcaster_user_login"], http=http)
+            PartialUser(
+                payload["source_broadcaster_user_id"],
+                payload["source_broadcaster_user_login"],
+                payload["source_broadcaster_user_name"],
+                http=http,
+            )
             if payload["source_broadcaster_user_id"] is not None
             else None
         )
@@ -904,7 +931,9 @@ class ChatResub:
         )
         gifter = data.get("gifter_user_id")
         self.gifter: PartialUser | None = (
-            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http) if gifter is not None else None
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], data["gifter_user_name"], http=http)
+            if gifter is not None
+            else None
         )
 
     def __repr__(self) -> str:
@@ -943,7 +972,9 @@ class ChatSubGift:
         self.months: int = int(data["duration_months"])
         self.cumulative_total: int | None = int(data["cumulative_total"]) if data["cumulative_total"] is not None else None
         self.community_gift_id: str | None = data.get("community_gift_id")
-        self.recipient: PartialUser = PartialUser(data["recipient_user_id"], data["recipient_user_login"], http=http)
+        self.recipient: PartialUser = PartialUser(
+            data["recipient_user_id"], data["recipient_user_login"], data["recipient_user_name"], http=http
+        )
 
     def __repr__(self) -> str:
         return f"<ChatSubGift tier={self.tier} months={self.months} recipient={self.recipient}>"
@@ -1002,7 +1033,9 @@ class ChatGiftPaidUpgrade:
         self.anonymous: bool = bool(data["gifter_is_anonymous"])
         gifter = data.get("gifter_user_id")
         self.gifter: PartialUser | None = (
-            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http) if gifter is not None else None
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], data["gifter_user_name"], http=http)
+            if gifter is not None
+            else None
         )
 
     def __repr__(self) -> str:
@@ -1051,7 +1084,7 @@ class ChatRaid:
     __slots__ = ("user", "viewer_count", "profile_image")
 
     def __init__(self, data: ChatRaidData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.viewer_count = int(data["viewer_count"])
         self.profile_image: Asset = Asset(data["profile_image_url"], http=http)
 
@@ -1077,7 +1110,9 @@ class ChatPayItForward:
         self.anonymous: bool = bool(data["gifter_is_anonymous"])
         gifter = data.get("gifter_user_id")
         self.gifter: PartialUser | None = (
-            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], http=http) if gifter is not None else None
+            PartialUser(str(data["gifter_user_id"]), data["gifter_user_login"], data["gifter_user_name"], http=http)
+            if gifter is not None
+            else None
         )
 
     def __repr__(self) -> str:
@@ -1294,9 +1329,11 @@ class ChatNotification(BaseEvent):
 
     def __init__(self, payload: ChannelChatNotificationEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.chatter: PartialUser = PartialUser(payload["chatter_user_id"], payload["chatter_user_login"], http=http)
+        self.chatter: PartialUser = PartialUser(
+            payload["chatter_user_id"], payload["chatter_user_login"], payload["chatter_user_name"], http=http
+        )
         self.anonymous: bool = bool(payload["chatter_is_anonymous"])
         self.colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self.badges: list[ChatMessageBadge] = [ChatMessageBadge(badge) for badge in payload["badges"]]
@@ -1426,9 +1463,11 @@ class ChatMessageDelete(BaseEvent):
 
     def __init__(self, payload: ChannelChatMessageDeleteEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["target_user_id"], payload["target_user_login"], http=http)
+        self.user: PartialUser = PartialUser(
+            payload["target_user_id"], payload["target_user_login"], payload["target_user_name"], http=http
+        )
         self.message_id: str = payload["message_id"]
 
     def __repr__(self) -> str:
@@ -1475,7 +1514,7 @@ class ChatSettingsUpdate(BaseEvent):
 
     def __init__(self, payload: ChannelChatSettingsUpdateEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.emote_mode: bool = bool(payload["emote_mode"])
         self.follower_mode: bool = bool(payload["follower_mode"])
@@ -1496,7 +1535,7 @@ class ChatUserMessageHold(BaseChatMessage):
 
     def __init__(self, payload: ChatUserMessageHoldEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChatUserMessageHold broadcaster={self.broadcaster} user={self.user} id={self.id} text={self.text}>"
@@ -1513,7 +1552,7 @@ class ChatUserMessageUpdate(BaseChatMessage):
 
     def __init__(self, payload: ChatUserMessageUpdateEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.status: Literal["approved", "denied", "invalid"] = payload["status"]
 
     def __repr__(self) -> str:
@@ -1539,10 +1578,13 @@ class BaseSharedChatSession(BaseEvent):
     ) -> None:
         self.session_id: str = payload["session_id"]
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.host: PartialUser = PartialUser(
-            payload["host_broadcaster_user_id"], payload["host_broadcaster_user_login"], http=http
+            payload["host_broadcaster_user_id"],
+            payload["host_broadcaster_user_login"],
+            payload["host_broadcaster_user_name"],
+            http=http,
         )
 
     def __repr__(self) -> str:
@@ -1572,7 +1614,8 @@ class SharedChatSessionBegin(BaseSharedChatSession):
     def __init__(self, payload: ChannelSharedChatSessionBeginEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
         self.participants: list[PartialUser] = [
-            PartialUser(p["broadcaster_user_id"], p["broadcaster_user_login"], http=http) for p in payload["participants"]
+            PartialUser(p["broadcaster_user_id"], p["broadcaster_user_login"], payload["broadcaster_user_name"], http=http)
+            for p in payload["participants"]
         ]
 
     def __repr__(self) -> str:
@@ -1602,7 +1645,8 @@ class SharedChatSessionUpdate(BaseSharedChatSession):
     def __init__(self, payload: ChannelSharedChatSessionUpdateEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
         self.participants: list[PartialUser] = [
-            PartialUser(p["broadcaster_user_id"], p["broadcaster_user_login"], http=http) for p in payload["participants"]
+            PartialUser(p["broadcaster_user_id"], p["broadcaster_user_login"], payload["broadcaster_user_name"], http=http)
+            for p in payload["participants"]
         ]
 
     def __repr__(self) -> str:
@@ -1659,9 +1703,9 @@ class ChannelSubscribe(BaseEvent):
 
     def __init__(self, payload: ChannelSubscribeEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.tier: Literal["1000", "2000", "3000"] = payload["tier"]
         self.gift: bool = bool(payload["is_gift"])
 
@@ -1696,9 +1740,9 @@ class ChannelSubscriptionEnd(BaseEvent):
 
     def __init__(self, payload: ChannelSubscriptionEndEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.tier: str = payload["tier"]
         self.gift: bool = bool(payload["is_gift"])
 
@@ -1733,10 +1777,12 @@ class ChannelSubscriptionGift(BaseEvent):
 
     def __init__(self, payload: ChannelSubscriptionGiftEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.user: PartialUser | None = (
-            PartialUser(payload["user_id"], payload["user_login"], http=http) if payload["user_id"] is not None else None
+            PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+            if payload["user_id"] is not None
+            else None
         )
         self.tier: str = payload["tier"]
         self.total: int = int(payload["total"])
@@ -1812,9 +1858,9 @@ class ChannelSubscriptionMessage(BaseEvent):
 
     def __init__(self, payload: ChannelSubscribeMessageEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.tier: str = payload["tier"]
         self.months: int = int(payload["duration_months"])
         self.cumulative_months: int = int(payload["cumulative_months"])
@@ -1850,13 +1896,15 @@ class ChannelCheer(BaseEvent):
 
     def __init__(self, payload: ChannelCheerEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.anonymous: bool = bool(payload["is_anonymous"])
         self.bits: int = int(payload["bits"])
         self.message: str = payload["message"]
         self.user: PartialUser | None = (
-            PartialUser(payload["user_id"], payload["user_login"], http=http) if payload["user_id"] is not None else None
+            PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+            if payload["user_id"] is not None
+            else None
         )
 
     def __repr__(self) -> str:
@@ -1883,10 +1931,16 @@ class ChannelRaid(BaseEvent):
 
     def __init__(self, payload: ChannelRaidEvent, *, http: HTTPClient) -> None:
         self.from_broadcaster: PartialUser = PartialUser(
-            payload["from_broadcaster_user_id"], payload["from_broadcaster_user_login"], http=http
+            payload["from_broadcaster_user_id"],
+            payload["from_broadcaster_user_login"],
+            payload["from_broadcaster_user_name"],
+            http=http,
         )
         self.to_broadcaster: PartialUser = PartialUser(
-            payload["to_broadcaster_user_id"], payload["to_broadcaster_user_login"], http=http
+            payload["to_broadcaster_user_id"],
+            payload["to_broadcaster_user_login"],
+            payload["to_broadcaster_user_name"],
+            http=http,
         )
         self.viewer_count: int = int(payload["viewers"])
 
@@ -1922,10 +1976,12 @@ class ChannelBan(BaseEvent):
 
     def __init__(self, payload: ChannelBanEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.reason: str = payload["reason"]
         self.banned_at: datetime.datetime = parse_timestamp(payload["banned_at"])
         self.ends_at: datetime.datetime | None = (
@@ -1957,10 +2013,12 @@ class ChannelUnban(BaseEvent):
 
     def __init__(self, payload: ChannelUnbanEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
 
     def __repr__(self) -> str:
         return f"<ChannelUnban broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
@@ -1990,9 +2048,9 @@ class ChannelUnbanRequest(BaseEvent):
 
     def __init__(self, payload: ChannelUnbanRequestEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.id: str = payload["id"]
         self.text: str = payload["text"]
         self.created_at: datetime.datetime = parse_timestamp(payload["created_at"])
@@ -2031,11 +2089,13 @@ class ChannelUnbanRequestResolve(BaseEvent):
 
     def __init__(self, payload: ChannelUnbanRequestResolveEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.moderator: PartialUser | None = (
-            PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+            PartialUser(
+                payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+            )
             if payload["moderator_user_id"] is not None
             else None
         )
@@ -2083,7 +2143,7 @@ class ModerateBan:
     __slots__ = ("user", "reason")
 
     def __init__(self, data: ModerateBanData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.reason: str | None = data.get("reason")
 
     def __repr__(self) -> str:
@@ -2107,7 +2167,7 @@ class ModerateTimeout:
     __slots__ = ("user", "reason", "expires_at")
 
     def __init__(self, data: ModerateTimeoutData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.reason: str | None = data.get("reason")
         self.expires_at: datetime.datetime = parse_timestamp(data["expires_at"])
 
@@ -2149,7 +2209,7 @@ class ModerateRaid:
     __slots__ = ("user", "viewer_count")
 
     def __init__(self, data: ModerateRaidData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.viewer_count: int = int(data["viewer_count"])
 
     def __repr__(self) -> str:
@@ -2173,7 +2233,7 @@ class ModerateDelete:
     __slots__ = ("user", "message_id", "text")
 
     def __init__(self, data: ModerateDeleteData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.message_id: str = data["message_id"]
         self.text: str = data["message_body"]
 
@@ -2227,7 +2287,7 @@ class ModerateUnbanRequest:
 
     def __init__(self, data: ModerateUnbanRequestData, *, http: HTTPClient) -> None:
         self.approved: bool = bool(data["is_approved"])
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.text: str = data["moderator_message"]
 
     def __repr__(self) -> str:
@@ -2251,7 +2311,7 @@ class ModerateWarn:
     __slots__ = ("user", "reason", "chat_rules")
 
     def __init__(self, data: ModerateWarnData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.reason: str | None = data.get("reason")
         self.chat_rules: list[str] | None = data.get("chat_rules_cited")
 
@@ -2426,39 +2486,50 @@ class ChannelModerate(BaseEvent):
 
     def __init__(self, payload: ChannelModerateEvent | ChannelModerateEventV2, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.source_broadcaster: PartialUser = PartialUser(
-            payload["source_broadcaster_user_id"], payload["source_broadcaster_user_login"], http=http
+            payload["source_broadcaster_user_id"],
+            payload["source_broadcaster_user_login"],
+            payload["source_broadcaster_user_name"],
+            http=http,
         )
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.followers: ModerateFollowers | None = (
             ModerateFollowers(payload["followers"]) if payload["followers"] is not None else None
         )
         self.slow: ModerateSlow | None = ModerateSlow(payload["slow"]) if payload["slow"] is not None else None
         self.vip: PartialUser | None = (
-            PartialUser(payload["vip"]["user_id"], payload["vip"]["user_login"], http=http)
+            PartialUser(payload["vip"]["user_id"], payload["vip"]["user_login"], payload["vip"]["user_name"], http=http)
             if payload["vip"] is not None
             else None
         )
         self.unvip: PartialUser | None = (
-            PartialUser(payload["unvip"]["user_id"], payload["unvip"]["user_login"], http=http)
+            PartialUser(
+                payload["unvip"]["user_id"], payload["unvip"]["user_login"], payload["unvip"]["user_name"], http=http
+            )
             if payload["unvip"] is not None
             else None
         )
         self.mod: PartialUser | None = (
-            PartialUser(payload["mod"]["user_id"], payload["mod"]["user_login"], http=http)
+            PartialUser(payload["mod"]["user_id"], payload["mod"]["user_login"], payload["mod"]["user_name"], http=http)
             if payload["mod"] is not None
             else None
         )
         self.unmod: PartialUser | None = (
-            PartialUser(payload["unmod"]["user_id"], payload["unmod"]["user_login"], http=http)
+            PartialUser(
+                payload["unmod"]["user_id"], payload["unmod"]["user_login"], payload["unmod"]["user_name"], http=http
+            )
             if payload["unmod"] is not None
             else None
         )
         self.ban: ModerateBan | None = ModerateBan(payload["ban"], http=http) if payload["ban"] is not None else None
         self.unban: PartialUser | None = (
-            PartialUser(payload["unban"]["user_id"], payload["unban"]["user_login"], http=http)
+            PartialUser(
+                payload["unban"]["user_id"], payload["unban"]["user_login"], payload["unban"]["user_name"], http=http
+            )
             if payload["unban"] is not None
             else None
         )
@@ -2466,13 +2537,20 @@ class ChannelModerate(BaseEvent):
             ModerateTimeout(payload["timeout"], http=http) if payload["timeout"] is not None else None
         )
         self.untimeout: PartialUser | None = (
-            PartialUser(payload["untimeout"]["user_id"], payload["untimeout"]["user_login"], http=http)
+            PartialUser(
+                payload["untimeout"]["user_id"],
+                payload["untimeout"]["user_login"],
+                payload["untimeout"]["user_name"],
+                http=http,
+            )
             if payload["untimeout"] is not None
             else None
         )
         self.raid: ModerateRaid | None = ModerateRaid(payload["raid"], http=http) if payload["raid"] is not None else None
         self.unraid: PartialUser | None = (
-            PartialUser(payload["unraid"]["user_id"], payload["unraid"]["user_login"], http=http)
+            PartialUser(
+                payload["unraid"]["user_id"], payload["unraid"]["user_login"], payload["unraid"]["user_name"], http=http
+            )
             if payload["unraid"] is not None
             else None
         )
@@ -2487,7 +2565,12 @@ class ChannelModerate(BaseEvent):
             ModerateBan(payload["shared_chat_ban"], http=http) if payload["shared_chat_ban"] is not None else None
         )
         self.shared_unban: PartialUser | None = (
-            PartialUser(payload["shared_chat_unban"]["user_id"], payload["shared_chat_unban"]["user_login"], http=http)
+            PartialUser(
+                payload["shared_chat_unban"]["user_id"],
+                payload["shared_chat_unban"]["user_login"],
+                payload["shared_chat_unban"]["user_name"],
+                http=http,
+            )
             if payload["shared_chat_unban"] is not None
             else None
         )
@@ -2498,7 +2581,10 @@ class ChannelModerate(BaseEvent):
         )
         self.shared_untimeout: PartialUser | None = (
             PartialUser(
-                payload["shared_chat_untimeout"]["user_id"], payload["shared_chat_untimeout"]["user_login"], http=http
+                payload["shared_chat_untimeout"]["user_id"],
+                payload["shared_chat_untimeout"]["user_login"],
+                payload["shared_chat_untimeout"]["user_name"],
+                http=http,
             )
             if payload["shared_chat_untimeout"] is not None
             else None
@@ -2565,9 +2651,9 @@ class ChannelModeratorAdd(BaseEvent):
 
     def __init__(self, payload: ChannelModeratorAddEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelModeratorAdd broadcaster={self.broadcaster} user={self.user}>"
@@ -2591,9 +2677,9 @@ class ChannelModeratorRemove(BaseEvent):
 
     def __init__(self, payload: ChannelModeratorRemoveEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelModeratorRemove broadcaster={self.broadcaster} user={self.user}>"
@@ -2614,9 +2700,9 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
 
     def __init__(self, payload: ChannelPointsAutoRewardRedemptionEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.id: str = payload["id"]
         self.text: str = payload["message"]["text"]
         self.emotes: list[ChannelPointsEmote] = [ChannelPointsEmote(emote) for emote in payload["message"]["emotes"]]
@@ -2694,7 +2780,12 @@ class ChannelPointsReward(BaseEvent):
         self.cost: int = int(payload["cost"])
         self.prompt: str = payload["prompt"]
         self.broadcaster: PartialUser = broadcaster or (
-            PartialUser(payload.get("broadcaster_user_id", ""), payload.get("broadcaster_user_login"), http=self._http)
+            PartialUser(
+                payload.get("broadcaster_user_id", ""),
+                payload.get("broadcaster_user_login"),
+                payload.get("broadcaster_user_name"),
+                http=self._http,
+            )
         )
         self.enabled: bool | None = payload.get("is_enabled")
         self.paused: bool | None = payload.get("is_paused")
@@ -2818,9 +2909,9 @@ class BaseChannelPointsRedemption(BaseEvent):
     ) -> None:
         self.id: str = payload["id"]
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"] = payload["status"]
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
         self.reward: ChannelPointsReward = ChannelPointsReward(payload["reward"], http=http, broadcaster=self.broadcaster)
@@ -3016,7 +3107,7 @@ class BaseChannelPoll(BaseEvent):
     ) -> None:
         self.id: str = payload["id"]
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.title: str = payload["title"]
         self.choices: list[PollChoice] = [PollChoice(choice) for choice in payload["choices"]]
@@ -3154,7 +3245,7 @@ class BaseChannelPrediction(BaseEvent):
     ) -> None:
         self.id: str = payload["id"]
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.title: str = payload["title"]
         self.outcomes: list[PredictionOutcome] = [PredictionOutcome(c, http=http) for c in payload["outcomes"]]
@@ -3327,10 +3418,12 @@ class SuspiciousUserUpdate(BaseEvent):
 
     def __init__(self, payload: ChannelSuspiciousUserUpdateEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.low_trust_status: Literal["none", "active_monitoring", "restricted"] = payload["low_trust_status"]
 
     def __repr__(self) -> str:
@@ -3380,9 +3473,9 @@ class SuspiciousUserMessage(BaseEvent):
 
     def __init__(self, payload: ChannelSuspiciousUserMessageEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.low_trust_status: Literal["none", "active_monitoring", "restricted"] = payload["low_trust_status"]
         self.banned_channels: list[str] = payload["shared_ban_channel_ids"]
         self.types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]] = payload["types"]
@@ -3411,9 +3504,9 @@ class ChannelVIPAdd(BaseEvent):
 
     def __init__(self, payload: ChannelVIPAddEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelVIPAdd broadcaster={self.broadcaster} user={self.user}>"
@@ -3437,9 +3530,9 @@ class ChannelVIPRemove(BaseEvent):
 
     def __init__(self, payload: ChannelVIPRemoveEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelVIPRemove broadcaster={self.broadcaster} user={self.user}>"
@@ -3463,9 +3556,9 @@ class ChannelWarningAcknowledge(BaseEvent):
 
     def __init__(self, payload: ChannelWarningAcknowledgeEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<ChannelWarningAcknowledge broadcaster={self.broadcaster} user={self.user}>"
@@ -3495,10 +3588,12 @@ class ChannelWarningSend(BaseEvent):
 
     def __init__(self, payload: ChannelWarningSendEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.reason: str | None = payload.get("reason")
         self.chat_rules: list[str] | None = payload.get("chat_rules_cited")
 
@@ -3538,9 +3633,9 @@ class CharityDonation(BaseEvent):
 
     def __init__(self, payload: CharityCampaignDonationEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.id: str = payload["id"]
         self.campaign_id: str = payload["campaign_id"]
         self.name: str = payload["charity_name"]
@@ -3563,7 +3658,7 @@ class BaseCharityCampaign(BaseEvent):
         http: HTTPClient,
     ) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.id: str = payload["id"]
         self.name: str = payload["charity_name"]
@@ -3692,7 +3787,7 @@ class BaseGoal(BaseEvent):
     def __init__(self, payload: GoalBeginEvent | GoalProgressEvent | GoalEndEvent, *, http: HTTPClient) -> None:
         self.id: str = payload["id"]
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.type: Literal[
             "follow",
@@ -3898,7 +3993,7 @@ class HypeTrainContribution:
     __slots__ = ("user", "type", "total")
 
     def __init__(self, data: HypeTrainContributionData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.type: Literal["bits", "subscription", "other"] = data["type"]
         self.total: int = int(data["total"])
 
@@ -3920,7 +4015,7 @@ class BaseHypeTrain(BaseEvent):
         self, payload: HypeTrainBeginEvent | HypeTrainProgressEvent | HypeTrainEndEvent, *, http: HTTPClient
     ) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.id: str = payload["id"]
         self.level: int = int(payload["level"])
@@ -4094,9 +4189,11 @@ class ShieldModeBegin(BaseEvent):
 
     def __init__(self, payload: ShieldModeBeginEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
 
     def __repr__(self) -> str:
@@ -4127,9 +4224,11 @@ class ShieldModeEnd(BaseEvent):
 
     def __init__(self, payload: ShieldModeEndEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.ended_at: datetime.datetime = parse_timestamp(payload["ended_at"])
 
     def __repr__(self) -> str:
@@ -4172,11 +4271,16 @@ class ShoutoutCreate(BaseEvent):
 
     def __init__(self, payload: ShoutoutCreateEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.moderator: PartialUser = PartialUser(payload["moderator_user_id"], payload["moderator_user_login"], http=http)
+        self.moderator: PartialUser = PartialUser(
+            payload["moderator_user_id"], payload["moderator_user_login"], payload["moderator_user_name"], http=http
+        )
         self.to_broadcaster: PartialUser = PartialUser(
-            payload["to_broadcaster_user_id"], payload["to_broadcaster_user_login"], http=http
+            payload["to_broadcaster_user_id"],
+            payload["to_broadcaster_user_login"],
+            payload["to_broadcaster_user_name"],
+            http=http,
         )
         self.viewer_count: int = int(payload["viewer_count"])
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
@@ -4209,10 +4313,13 @@ class ShoutoutReceive(BaseEvent):
 
     def __init__(self, payload: ShoutoutReceiveEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.from_broadcaster: PartialUser = PartialUser(
-            payload["from_broadcaster_user_id"], payload["from_broadcaster_user_login"], http=http
+            payload["from_broadcaster_user_id"],
+            payload["from_broadcaster_user_login"],
+            payload["from_broadcaster_user_name"],
+            http=http,
         )
         self.viewer_count: int = int(payload["viewer_count"])
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
@@ -4250,7 +4357,7 @@ class StreamOnline(BaseEvent):
 
     def __init__(self, payload: StreamOnlineEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.id: str = payload["id"]
         self.type: Literal["live", "playlist", "watch_party", "premiere", "rerun"] = payload["type"]
@@ -4276,7 +4383,7 @@ class StreamOffline(BaseEvent):
 
     def __init__(self, payload: StreamOfflineEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], http=http
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
 
     def __repr__(self) -> str:
@@ -4304,7 +4411,7 @@ class UserAuthorizationGrant(BaseEvent):
 
     def __init__(self, payload: UserAuthorizationGrantEvent, *, http: HTTPClient) -> None:
         self.client_id: str = payload["client_id"]
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
 
     def __repr__(self) -> str:
         return f"<UserAuthorizationGrant client_id={self.client_id} user={self.user}>"
@@ -4334,7 +4441,9 @@ class UserAuthorizationRevoke(BaseEvent):
     def __init__(self, payload: UserAuthorizationRevokeEvent, *, http: HTTPClient) -> None:
         self.client_id: str = payload["client_id"]
         self.user: PartialUser | None = (
-            PartialUser(payload["user_id"], payload["user_login"], http=http) if payload.get("user_id") else None
+            PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+            if payload.get("user_id")
+            else None
         )
 
     def __repr__(self) -> str:
@@ -4365,7 +4474,7 @@ class UserUpdate(BaseEvent):
     __slots__ = ("user", "email", "verified", "description")
 
     def __init__(self, payload: UserUpdateEvent, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], http=http)
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.verified: bool = bool(payload["email_verified"])
         self.description: str = payload["description"]
         self.email: str | None = payload.get("email", None)
@@ -4394,8 +4503,12 @@ class Whisper(BaseEvent):
     __slots__ = ("sender", "recipient", "id", "text")
 
     def __init__(self, payload: UserWhisperEvent, *, http: HTTPClient) -> None:
-        self.sender: PartialUser = PartialUser(payload["from_user_id"], payload["from_user_login"], http=http)
-        self.recipient: PartialUser = PartialUser(payload["to_user_id"], payload["to_user_login"], http=http)
+        self.sender: PartialUser = PartialUser(
+            payload["from_user_id"], payload["from_user_login"], payload["from_user_name"], http=http
+        )
+        self.recipient: PartialUser = PartialUser(
+            payload["to_user_id"], payload["to_user_login"], payload["to_user_name"], http=http
+        )
         self.id: str = payload["whisper_id"]
         self.text: str = payload["whisper"]["text"]
 

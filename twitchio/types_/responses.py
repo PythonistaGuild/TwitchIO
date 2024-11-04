@@ -1166,6 +1166,7 @@ class UnbanRequestsResponseData(TypedDict):
     id: str
     broadcaster_id: str
     broadcaster_login: str
+    broadcaster_name: str
     moderator_id: str
     moderator_login: str
     moderator_name: str

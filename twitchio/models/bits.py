@@ -98,7 +98,7 @@ class BitLeaderboardUser:
     __slots__ = ("user", "rank", "score")
 
     def __init__(self, data: BitsLeaderboardResponseData, *, http: HTTPClient) -> None:
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.rank: int = int(data["rank"])
         self.score: int = int(data["score"])
 
@@ -277,7 +277,9 @@ class ExtensionTransaction:
     def __init__(self, data: ExtensionTransactionsResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
         self.timestamp: datetime.datetime = parse_timestamp(data["timestamp"])
-        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.user = PartialUser(data["user_id"], data["user_login"], http=http)
         self.product_type: str = data["product_type"]
         self.product_data: ExtensionProductData = ExtensionProductData(data["product_data"])

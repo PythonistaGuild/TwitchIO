@@ -82,7 +82,9 @@ class Team:
     )
 
     def __init__(self, data: TeamsResponseData, *, http: HTTPClient) -> None:
-        self.users: list[PartialUser] = [PartialUser(x["user_id"], x["user_login"], http=http) for x in data["users"]]
+        self.users: list[PartialUser] = [
+            PartialUser(x["user_id"], x["user_login"], x["user_name"], http=http) for x in data["users"]
+        ]
         self.background_image: Asset | None = (
             Asset(data["background_image_url"], http=http) if data["background_image_url"] else None
         )
@@ -149,7 +151,9 @@ class ChannelTeam:
     )
 
     def __init__(self, data: ChannelTeamsResponseData, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.background_image: Asset | None = (
             Asset(data["background_image_url"], http=http) if data["background_image_url"] else None
         )

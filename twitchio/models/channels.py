@@ -68,7 +68,7 @@ class ChannelEditor:
     __slots__ = ("user", "created_at")
 
     def __init__(self, data: ChannelEditorsResponseData, *, http: HTTPClient) -> None:
-        self.user = PartialUser(data["user_id"], data["user_name"], http=http)
+        self.user = PartialUser(data["user_id"], data["user_name"].lower(), data["user_name"], http=http)
         self.created_at = parse_timestamp(data["created_at"])
 
     def __repr__(self) -> str:
@@ -90,7 +90,9 @@ class FollowedChannelsEvent:
     __slots__ = ("broadcaster", "followed_at")
 
     def __init__(self, data: FollowedChannelsResponseData, *, http: HTTPClient) -> None:
-        self.broadcaster = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.followed_at = parse_timestamp(data["followed_at"])
 
     def __repr__(self) -> str:
@@ -133,7 +135,7 @@ class ChannelFollowerEvent:
     __slots__ = ("user", "followed_at")
 
     def __init__(self, data: ChannelFollowersResponseData, *, http: HTTPClient) -> None:
-        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.followed_at = parse_timestamp(data["followed_at"])
 
     def __repr__(self) -> str:
@@ -201,7 +203,7 @@ class ChannelInfo:
     )
 
     def __init__(self, data: ChannelInformationResponseData, *, http: HTTPClient) -> None:
-        self.user = PartialUser(data["broadcaster_id"], data["broadcaster_name"], http=http)
+        self.user = PartialUser(data["broadcaster_id"], data["broadcaster_name"], data["broadcaster_name"], http=http)
         self.game_id: str = data["game_id"]
         self.game_name: str = data["game_name"]
         self.title: str = data["title"]

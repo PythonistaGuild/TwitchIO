@@ -104,7 +104,7 @@ class ChatterColor:
     __slots__ = ("user", "_colour")
 
     def __init__(self, data: UserChatColorResponseData, *, http: HTTPClient) -> None:
-        self.user = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self._colour: Colour = Colour.from_hex(data["color"])
 
     def __repr__(self) -> str:

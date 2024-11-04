@@ -95,7 +95,9 @@ class Goal:
 
     def __init__(self, data: CreatorGoalsResponseData, http: HTTPClient) -> None:
         self.id: str = data["id"]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.type: Literal[
             "follower", "subscription", "subscription_count", "new_subscription", "new_subscription_count"
         ] = data["type"]

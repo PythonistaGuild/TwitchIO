@@ -326,7 +326,7 @@ class ChannelChatClearEvent(BaseBroadcasterEvent): ...
 class ChannelChatClearUserMessagesEvent(BaseBroadcasterEvent):
     target_user_id: str
     target_user_login: str
-    target_user_user_name: str
+    target_user_name: str
 
 
 class ChatMessageEmoteData(TypedDict):
@@ -550,7 +550,7 @@ class ChannelChatNotificationEvent(BaseBroadcasterEvent):
 class ChannelChatMessageDeleteEvent(BaseBroadcasterEvent):
     target_user_id: str
     target_user_login: str
-    target_user_user_name: str
+    target_user_name: str
     message_id: str
 
 

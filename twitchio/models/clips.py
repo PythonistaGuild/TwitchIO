@@ -103,8 +103,12 @@ class Clip:
         self.id: str = data["id"]
         self.url: str = data["url"]
         self.embed_url: str = data["embed_url"]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_name"], http=http)
-        self.creator: PartialUser = PartialUser(data["creator_id"], data["creator_name"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_name"].lower(), data["broadcaster_name"], http=http
+        )
+        self.creator: PartialUser = PartialUser(
+            data["creator_id"], data["creator_name"].lower(), data["creator_name"], http=http
+        )
         self.video_id: str = data["video_id"]
         self.game_id: str = data["game_id"]
         self.language: str = data["language"]

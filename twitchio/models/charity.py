@@ -72,7 +72,9 @@ class CharityCampaign:
 
     def __init__(self, data: CharityCampaignResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
-        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=http)
+        self.broadcaster: PartialUser = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
         self.name: str = data["charity_name"]
         self.description: str = data["charity_description"]
         self.logo: Asset = Asset(data["charity_logo"], http=http, dimensions=(100, 100))
@@ -138,6 +140,6 @@ class CharityDonation:
     def __init__(self, data: CharityCampaignDonationsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self.id: str = data["id"]
-        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], http=http)
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
         self.campaign_id: str = data["campaign_id"]
         self.amount: CharityValues = CharityValues(data["amount"])
