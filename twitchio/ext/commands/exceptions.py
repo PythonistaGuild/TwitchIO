@@ -110,10 +110,13 @@ class GuardFailure(CommandError):
         super().__init__(msg or "")
 
 
-class ConversionError(ArgumentError): ...
+class ConversionError(ArgumentError):
+    """Base exception for conversion errors."""
 
 
 class BadArgument(ConversionError):
+    """Exception raised when a parsing or conversion failure is encountered on an argument to pass into a command."""
+
     def __init__(self, msg: str, *, name: str | None = None, value: str | None) -> None:
         self.name: str | None = name
         self.value: str | None = value
@@ -121,6 +124,8 @@ class BadArgument(ConversionError):
 
 
 class MissingRequiredArgument(ArgumentError):
+    """Exception raised when parsing a command and a parameter that is required is not encountered."""
+
     def __init__(self, param: inspect.Parameter) -> None:
         self.param: inspect.Parameter = param
         super().__init__(f'"{param.name}" is a required argument which is missing.')
@@ -131,7 +136,7 @@ class ModuleError(TwitchioException):
 
 
 class ModuleLoadFailure(ModuleError):
-    """An exception raised when a module failed to load during execution or `setup` entry point."""
+    """Exception raised when a module failed to load during execution or `setup` entry point."""
 
     def __init__(self, name: str, exc: Exception) -> None:
         super().__init__(name, exc)
@@ -152,7 +157,7 @@ class ModuleAlreadyLoadedError(ModuleError):
 
 
 class ModuleNotLoadedError(ModuleError):
-    """An exception raised when a module was not loaded."""
+    """Exception raised when a module was not loaded."""
 
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
