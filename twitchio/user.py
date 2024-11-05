@@ -3364,6 +3364,8 @@ class PartialUser:
 class User(PartialUser):
     """Represents a User.
 
+    This class inherits from PartialUser and contains additional information about the user.
+
     Attributes
     ----------
     id: str
