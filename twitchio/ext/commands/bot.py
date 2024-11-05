@@ -292,8 +292,12 @@ class Bot(Mixin[None], Client):
 
         return component
 
+    def get_context(self, message: ChatMessage, *, cls: Any = None) -> Any:
+        cls = cls or Context
+        return cls(message, bot=self)
+
     async def _process_commands(self, message: ChatMessage) -> None:
-        ctx: Context = Context(message, bot=self)
+        ctx: Context = self.get_context(message)
         await self.invoke(ctx)
 
     async def process_commands(self, message: ChatMessage) -> None:
