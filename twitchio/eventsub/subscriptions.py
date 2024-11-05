@@ -124,6 +124,7 @@ _SUB_MAPPING: dict[str, str] = {
     "channel.channel_points_custom_reward_redemption.add": "custom_redemption_add",
     "channel.channel_points_custom_reward_redemption.update": "custom_redemption_update",
     "user.whisper.message": "message_whisper",
+    "channel.update": "channel_update",
     "channel.subscribe": "subscription",
     "channel.moderate": "mod_action",  # Sub events?
     "channel.hype_train.begin": "hype_train",
