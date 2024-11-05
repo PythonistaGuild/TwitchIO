@@ -313,6 +313,7 @@ class Component(_MetaComponent):
         --------
 
             .. code:: python3
+
                 # By default if no name parameter is passed, the name of the event listened to is the same as the function...
 
                 class MyComponent(commands.Component):
@@ -322,6 +323,7 @@ class Component(_MetaComponent):
                         ...
 
             .. code:: python3
+
                 # You can listen to two or more of the same event in a single component...
                 # The name parameter should have the "event_" prefix removed...
 
