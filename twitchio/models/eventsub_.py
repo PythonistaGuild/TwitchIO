@@ -87,10 +87,6 @@ class AutomodMessageHold(BaseEvent):
         The category of the message.
     held_at: datetime.datetime
         The datetime of when automod saved the message.
-    emotes: list[ChatMessageEmote]
-        List of emotes in the message.
-    cheermotes: list[ChatMessageCheermote]
-        List of cheermotes in the message.
     fragments: list[ChatMessageFragment]
         List of chat message fragments.
     """
@@ -171,7 +167,7 @@ class AutomodMessageUpdate(AutomodMessageHold):
         List of cheermotes in the message.
     fragments: list[ChatMessageFragment]
         List of chat message fragments.
-    status: Literal["Approved", "Denied", "Expired"]
+    status: typing.Literal["Approved", "Denied", "Expired"]
         The message's status. Possible values are:
 
         - Approved
@@ -271,7 +267,7 @@ class AutomodTermsUpdate(BaseEvent):
         The broadcaster specified in the request.
     moderator: PartialUser
         The moderator who changed the channel settings.
-    action: Literal["add_permitted", "remove_permitted", "add_blocked", "remove_blocked"]
+    action: typing.Literal["add_permitted", "remove_permitted", "add_blocked", "remove_blocked"]
         The status change applied to the terms. Possible options are:
 
         - add_permitted
@@ -560,7 +556,7 @@ class ChatMessageEmote:
         An ID that uniquely identifies this emote.
     owner: PartialUser
         The broadcaster who owns the emote.
-    format: list[Literal["static", "animated"]]
+    format: list[typing.Literal["static", "animated"]]
         The formats that the emote is available in. For example, if the emote is available only as a static PNG, the array contains only static.
         But if the emote is available as a static PNG and an animated GIF, the array contains static and animated. The possible formats are:
 
@@ -635,13 +631,13 @@ class ChatMessageFragment:
     ----------
     text: str
         The chat message in plain text.
-    type: Literal["text", "cheermote", "emote", "mention"]
+    type: typing.Literal["text", "cheermote", "emote", "mention"]
         The type of message fragment. Possible values:
 
         - text
         - cheermote
         - emote
-         -mention
+        - mention
 
     mention: PartialUser | None
         The user that is mentioned, if one is mentioned.
@@ -741,7 +737,7 @@ class ChatMessage(BaseChatMessage):
         The chat message in plain text.
     reply: ChatMessageReply | None
         Data regarding parent message and thread, if this message is a reply.
-    type: Literal["text", "channel_points_highlighted", "channel_points_sub_only", "user_intro", "power_ups_message_effect", "power_ups_gigantified_emote"]
+    type: typing.Literal["text", "channel_points_highlighted", "channel_points_sub_only", "user_intro", "power_ups_message_effect", "power_ups_gigantified_emote"]
         The type of message. Possible values:
 
         - text
@@ -850,14 +846,18 @@ class ChatSub:
 
     Attributes
     ----------
-    tier: Literal["1000", "2000", "3000"]
+    tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
-        | Type | Description |
-        |------|-------------|
-        | 1000 | First level of paid or Prime subscription. |
-        | 2000 | Second level of paid subscription. |
-        | 3000 | Third level of paid subscription. |
+        +------+-----------------------------------------------+
+        | Type | Description                                   |
+        +======+===============================================+
+        | 1000 | First level of paid or Prime subscription.    |
+        +------+-----------------------------------------------+
+        | 2000 | Second level of paid subscription.            |
+        +------+-----------------------------------------------+
+        | 3000 | Third level of paid subscription.             |
+        +------+-----------------------------------------------+
 
     prime: bool
         Indicates if the subscription was obtained through Amazon Prime.
@@ -882,7 +882,7 @@ class ChatResub:
 
     Attributes
     ----------
-    tier: Literal["1000", "2000", "3000"]
+    tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
         | Type | Description |
@@ -946,7 +946,7 @@ class ChatSubGift:
 
     Attributes
     ----------
-    tier: Literal["1000", "2000", "3000"]
+    tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
         | Type | Description |
@@ -986,7 +986,7 @@ class ChatCommunitySubGift:
 
     Attributes
     ----------
-    tier: Literal["1000", "2000", "3000"]
+    tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
         | Type | Description |
@@ -1048,7 +1048,7 @@ class ChatPrimePaidUpgrade:
 
     Attributes
     ----------
-    tier: Literal["1000", "2000", "3000"]
+    tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
         | Type | Description |
@@ -1125,7 +1125,7 @@ class ChatAnnouncement:
 
     Attributes
     ----------
-    colour: Literal["BLUE", "PURPLE", "ORANGE", "GREEN", "PRIMARY"]
+    colour: typing.Literal["BLUE", "PURPLE", "ORANGE", "GREEN", "PRIMARY"]
         Colour of the announcement.
     """
 
@@ -1214,7 +1214,7 @@ class ChatNotification(BaseEvent):
             - emote
             - mention
 
-    notice_type: Literal["sub", "resub", "sub_gift", "community_sub_gift", "gift_paid_upgrade", "prime_paid_upgrade", "raid", "unraid", "pay_it_forward", "announcement", "bits_badge_tier", "charity_donation", "shared_chat_sub", "shared_chat_resub", "shared_chat_community_sub_gift", "shared_chat_gift_paid_upgrade", "shared_chat_prime_paid_upgrade", "shared_chat_raid", "shared_chat_pay_it_forward", "shared_chat_announcement"]
+    notice_type: typing.Literal["sub", "resub", "sub_gift", "community_sub_gift", "gift_paid_upgrade", "prime_paid_upgrade", "raid", "unraid", "pay_it_forward", "announcement", "bits_badge_tier", "charity_donation", "shared_chat_sub", "shared_chat_resub", "shared_chat_community_sub_gift", "shared_chat_gift_paid_upgrade", "shared_chat_prime_paid_upgrade", "shared_chat_raid", "shared_chat_pay_it_forward", "shared_chat_announcement"]
         The type of notice. Possible values are:
 
             - sub
@@ -2075,7 +2075,7 @@ class ChannelUnbanRequestResolve(BaseEvent):
         The ID of the unban request.
     text: str
         The message sent in the unban request.
-    status: Literal["approved", "canceled", "denied"]
+    status: typing.Literal["approved", "canceled", "denied"]
         Whether the unban request was approved or denied. Can be the following:
 
         - approved
@@ -2247,9 +2247,9 @@ class ModerateAutomodTerms:
 
     Attributes
     ----------
-    action: Literal["add", "remove"]
+    action: typing.Literal["add", "remove"]
         Either “add” or “remove”.
-    list: Literal["blocked", "permitted"]
+    list: typing.Literal["blocked", "permitted"]
         Either “blocked” or “permitted”.
     terms: list[str]
         Terms being added or removed.
@@ -2381,7 +2381,7 @@ class ChannelModerate(BaseEvent):
         Information about the shared_chat_delete event.
         Is `None` if action is not shared_chat_delete.
         This field has the same information as the delete field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
-    action: Literal[
+    action: typing.Literal[
             "ban",
             "timeout",
             "unban",
@@ -2935,7 +2935,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         The user input provided. Empty string if not provided.
     id: str
         The ID of the redemption.
-    status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"]
+    status: typing.Literal["unknown", "unfulfilled", "fulfilled", "canceled"]
         The status of the redemption. Defaults to unfulfilled.
 
         - unknown
@@ -3029,7 +3029,7 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
         The user input provided. Empty string if not provided.
     id: str
         The ID of the redemption.
-    status: Literal["unknown", "unfulfilled", "fulfilled", "canceled"]
+    status: typing.Literal["unknown", "unfulfilled", "fulfilled", "canceled"]
         The status of the redemption. Will be fulfilled or canceled.
 
         - unknown
@@ -3207,7 +3207,7 @@ class ChannelPollEnd(BaseChannelPoll):
         A list of choices for the poll.
     channel_points_voting: PollVoting
         The channel points voting settings.
-    status: Literal["completed", "terminated", "archived"]
+    status: typing.Literal["completed", "terminated", "archived"]
         The status of the poll. Valid values are:
 
         - completed
@@ -3373,7 +3373,7 @@ class ChannelPredictionEnd(BaseChannelPrediction):
         The time the prediction started.
     ended_at: datetime.datetime
         The time the prediction ended.
-    status: Literal["resolved", "canceled"]
+    status: typing.Literal["resolved", "canceled"]
         The status of the Channel Points Prediction. Valid values are ``resolved`` and ``canceled``.
     """
 
@@ -3404,7 +3404,7 @@ class SuspiciousUserUpdate(BaseEvent):
         The suspicious user whose treatment was updated.
     moderator: PartialUser
         The moderator that updated the treatment for a suspicious user.
-    low_trust_status: Literal["none", "active_monitoring", "restricted"]
+    low_trust_status: typing.Literal["none", "active_monitoring", "restricted"]
         The status set for the suspicious user. Can be the following:
 
         - none
@@ -3440,7 +3440,7 @@ class SuspiciousUserMessage(BaseEvent):
         The broadcaster whose channel had the treatment for a suspicious user was updated.
     user: PartialUser
         The user that sent the message.
-    low_trust_status: Literal["none", "active_monitoring", "restricted"]
+    low_trust_status: typing.Literal["none", "active_monitoring", "restricted"]
         The status set for the suspicious user. Can be the following:
 
         - none
@@ -3449,14 +3449,14 @@ class SuspiciousUserMessage(BaseEvent):
 
     banned_channels: list[str]
         A list of channel IDs where the suspicious user is also banned.
-    types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
+    types: list[typing.Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
         User types (if any) that apply to the suspicious user. Can be the following:
 
         - manual
         - ban_evader_detector
         - shared_channel_ban
 
-    evaluation: Literal["unknown", "possible", "likely"]
+    evaluation: typing.Literal["unknown", "possible", "likely"]
         A ban evasion likelihood value (if any) that as been applied to the user automatically by Twitch. Can be:
 
         - unknown
@@ -3817,7 +3817,7 @@ class GoalBegin(BaseGoal):
         The broadcaster who started a goal.
     id: str
         An ID that identifies this event.
-    type: Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
+    type: typing.Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
         The type of goal.
 
         | type                  | Description                                                                                                                                                              |
@@ -3868,7 +3868,7 @@ class GoalProgress(BaseGoal):
         The broadcaster whose goal progressed.
     id: str
         An ID that identifies this event.
-    type: Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
+    type: typing.Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
         The type of goal.
 
         | type                  | Description                                                                                                                                                              |
@@ -3919,7 +3919,7 @@ class GoalEnd(BaseGoal):
         The broadcaster whose goal ended.
     id: str
         An ID that identifies this event.
-    type: Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
+    type: typing.Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
         The type of goal.
 
         | type                  | Description                                                                                                                                                              |
@@ -3976,7 +3976,7 @@ class HypeTrainContribution:
     ----------
     user: PartialUser
         The user that made the contribution.
-    type: Literal["bits", "subscription", "other"]
+    type: typing.Literal["bits", "subscription", "other"]
         The contribution method used. Possible values are:
 
         | type          | Description                                                       |
@@ -4338,7 +4338,7 @@ class StreamOnline(BaseEvent):
         The user whose stream is now online.
     id: str
         The ID of the stream.
-    type: Literal["live", "playlist", "watch_party", "premiere", "rerun"]
+    type: typing.Literal["live", "playlist", "watch_party", "premiere", "rerun"]
         The stream type. Valid values are:
 
         - live
@@ -4548,7 +4548,7 @@ class EventsubTransport:
 
     Attributes
     ----------
-    method: Literal["websocket", "webhook"]
+    method: typing.Literal["websocket", "webhook"]
         The transport method. This can be either ``websocket`` or ``webhook``.
     callback: str | None
         The callback URL where the notifications are sent. This will only be populated if the method is set to ``webhook``.
@@ -4580,7 +4580,7 @@ class EventsubSubscription:
     ----------
     id: str
         An ID that identifies the subscription.
-    status: Literal[
+    status: typing.Literal[
             "enabled",
             "webhook_callback_verification_pending",
             "webhook_callback_verification_failed",
