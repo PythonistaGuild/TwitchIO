@@ -84,6 +84,7 @@ References
    :maxdepth: 1
    :caption: Models
 
+   references/eventsub_models
    references/helix_models
 
 .. toctree::
