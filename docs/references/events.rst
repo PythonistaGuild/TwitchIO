@@ -14,215 +14,215 @@ All events are prefixed with **event_**
      - Subscription
      - Event
    * - Automod Message Hold
-     - AutomodMessageHoldSubscription
+     - :meth:`~eventsub.AutomodMessageHoldSubscription`
      - automod_message_hold
    * - Automod Message Update
-     - AutomodMessageUpdateSubscription
+     - :meth:`~eventsub.AutomodMessageUpdateSubscription`
      - automod_message_update
    * - Automod Settings Update
-     - AutomodSettingsUpdateSubscription
+     - :meth:`~eventsub.AutomodSettingsUpdateSubscription`
      - automod_settings_update
    * - Automod Terms Update
-     - AutomodTermsUpdateSubscription
+     - :meth:`~eventsub.AutomodTermsUpdateSubscription`
      - automod_terms_update
    * - Channel Update
-     - ChannelUpdateSubscription
+     - :meth:`~eventsub.ChannelUpdateSubscription`
      - channel_update
    * - Channel Follow
-     - ChannelFollowSubscription
+     - :meth:`~eventsub.ChannelFollowSubscription`
      - follow
    * - Channel Ad Break Begin
-     - AdBreakBeginSubscription
+     - :meth:`~eventsub.AdBreakBeginSubscription`
      - ad_break
    * - Channel Chat Clear
-     - ChatClearSubscription
+     - :meth:`~eventsub.ChatClearSubscription`
      - chat_clear
    * - Channel Chat Clear User Messages
-     - ChatClearUserMessagesSubscription
+     - :meth:`~eventsub.ChatClearUserMessagesSubscription`
      - chat_clear_user
    * - Channel Chat Message
-     - ChatMessageSubscription
+     - :meth:`~eventsub.ChatMessageSubscription`
      - message
    * - Channel Chat Message Delete
-     - ChatNotificationSubscription
+     - :meth:`~eventsub.ChatNotificationSubscription`
      - message_delete
    * - Channel Chat Notification
-     - ChatMessageDeleteSubscription
+     - :meth:`~eventsub.ChatMessageDeleteSubscription`
      - chat_notification
    * - Channel Chat Settings Update
-     - ChatSettingsUpdateSubscription
+     - :meth:`~eventsub.ChatSettingsUpdateSubscription`
      - chat_settings_update
    * - Channel Chat User Message Hold
-     - ChatUserMessageHoldSubscription
+     - :meth:`~eventsub.ChatUserMessageHoldSubscription`
      - chat_user_message_hold
    * - Channel Chat User Message Update
-     - ChatUserMessageUpdateSubscription
+     - :meth:`~eventsub.ChatUserMessageUpdateSubscription`
      - chat_user_message_update
    * - Channel Shared Chat Session Begin
-     - SharedChatSessionBeginSubscription
+     - :meth:`~eventsub.SharedChatSessionBeginSubscription`
      - shared_chat_begin
    * - Channel Shared Chat Session Update
-     - SharedChatSessionUpdateSubscription
+     - :meth:`~eventsub.SharedChatSessionUpdateSubscription`
      - shared_chat_update
    * - Channel Shared Chat Session End
-     - SharedChatSessionEndSubscription
+     - :meth:`~eventsub.SharedChatSessionEndSubscription`
      - shared_chat_end
    * - Channel Subscribe
-     - ChannelSubscribeSubscription
+     - :meth:`~eventsub.ChannelSubscribeSubscription`
      - subscription
    * - Channel Subscription End
-     - ChannelSubscriptionEndSubscription
+     - :meth:`~eventsub.ChannelSubscriptionEndSubscription`
      - subscription_end
    * - Channel Subscription Gift
-     - ChannelSubscriptionGiftSubscription
+     - :meth:`~eventsub.ChannelSubscriptionGiftSubscription`
      - subscription_gift
    * - Channel Subscription Message
-     - ChannelSubscribeMessageSubscription
+     - :meth:`~eventsub.ChannelSubscribeMessageSubscription`
      - subscription_message
    * - Channel Cheer
-     - ChannelCheerSubscription
+     - :meth:`~eventsub.ChannelCheerSubscription`
      - cheer
    * - Channel Raid
-     - ChannelRaidSubscription
+     - :meth:`~eventsub.ChannelRaidSubscription`
      - raid
    * - Channel Ban
-     - ChannelBanSubscription
+     - :meth:`~eventsub.ChannelBanSubscription`
      - ban
    * - Channel Unban
-     - ChannelUnbanSubscription
+     - :meth:`~eventsub.ChannelUnbanSubscription`
      - unban
    * - Channel Unban Request Create
-     - ChannelUnbanRequestSubscription
+     - :meth:`~eventsub.ChannelUnbanRequestSubscription`
      - unban_request
    * - Channel Unban Request Resolve
-     - ChannelUnbanRequestResolveSubscription
+     - :meth:`~eventsub.ChannelUnbanRequestResolveSubscription`
      - unban_request_resolve
    * - Channel Moderate
-     - ChannelModerateSubscription
+     - :meth:`~eventsub.ChannelModerateSubscription`
      - mod_action
    * - Channel Moderate V2
-     - ChannelModerateV2Subscription
+     - :meth:`~eventsub.ChannelModerateV2Subscription`
      - mod_action
    * - Channel Moderator Add
-     - ChannelModeratorAddSubscription
+     - :meth:`~eventsub.ChannelModeratorAddSubscription`
      - moderator_add
    * - Channel Moderator Remove
-     - ChannelModeratorRemoveSubscription
+     - :meth:`~eventsub.ChannelModeratorRemoveSubscription`
      - moderator_remove
    * - Channel Points Automatic Reward Redemption
-     - ChannelPointsAutoRedeemSubscription
+     - :meth:`~eventsub.ChannelPointsAutoRedeemSubscription`
      - automatic_redemption_add
    * - Channel Points Custom Reward Add
-     - ChannelPointsRewardAddSubscription
+     - :meth:`~eventsub.ChannelPointsRewardAddSubscription`
      - custom_reward_add
    * - Channel Points Custom Reward Update
-     - ChannelPointsRewardUpdateSubscription
+     - :meth:`~eventsub.ChannelPointsRewardUpdateSubscription`
      - custom_reward_update
    * - Channel Points Custom Reward Remove
-     - ChannelPointsRewardRemoveSubscription
+     - :meth:`~eventsub.ChannelPointsRewardRemoveSubscription`
      - custom_reward_remove
    * - Channel Points Custom Reward Redemption Add
-     - ChannelPointsRedeemAddSubscription
+     - :meth:`~eventsub.ChannelPointsRedeemAddSubscription`
      - custom_redemption_add
    * - Channel Points Custom Reward Redemption Update
-     - ChannelPointsRedeemUpdateSubscription
+     - :meth:`~eventsub.ChannelPointsRedeemUpdateSubscription`
      - custom_redemption_update
    * - Channel Poll Begin
-     - ChannelPollBeginSubscription
+     - :meth:`~eventsub.ChannelPollBeginSubscription`
      - poll_begin
    * - Channel Poll Progress
-     - ChannelPollProgressSubscription
+     - :meth:`~eventsub.ChannelPollProgressSubscription`
      - poll_progress
    * - Channel Poll End
-     - ChannelPollEndSubscription
+     - :meth:`~eventsub.ChannelPollEndSubscription`
      - poll_end
    * - Channel Prediction Begin
-     - ChannelPredictionBeginSubscription
+     - :meth:`~eventsub.ChannelPredictionBeginSubscription`
      - prediction_begin
    * - Channel Prediction Progress
-     - ChannelPredictionProgressSubscription
+     - :meth:`~eventsub.ChannelPredictionProgressSubscription`
      - prediction_progress
    * - Channel Prediction Lock
-     - ChannelPredictionLockSubscription
+     - :meth:`~eventsub.ChannelPredictionLockSubscription`
      - prediction_lock
    * - Channel Prediction End
-     - ChannelPredictionEndSubscription
+     - :meth:`~eventsub.ChannelPredictionEndSubscription`
      - prediction_end
    * - Channel Suspicious User Message
-     - SuspiciousUserMessageSubscription
+     - :meth:`~eventsub.SuspiciousUserMessageSubscription`
      - suspicious_user_message
    * - Channel Suspicious User Update
-     - SuspiciousUserUpdateSubscription
+     - :meth:`~eventsub.SuspiciousUserUpdateSubscription`
      - suspicious_user_update
    * - Channel VIP Add
-     - ChannelVIPAddSubscription
+     - :meth:`~eventsub.ChannelVIPAddSubscription`
      - vip_add
    * - Channel VIP Remove
-     - ChannelVIPRemoveSubscription
+     - :meth:`~eventsub.ChannelVIPRemoveSubscription`
      - vip_remove
    * - Channel Warning Acknowledgement
-     - ChannelWarningAcknowledgementSubscription
+     - :meth:`~eventsub.ChannelWarningAcknowledgementSubscription`
      - warning_acknowledge
    * - Channel Warning Send
-     - ChannelWarningSendSubscription
+     - :meth:`~eventsub.ChannelWarningSendSubscription`
      - warning_send
    * - Charity Donation
-     - CharityDonationSubscription
+     - :meth:`~eventsub.CharityDonationSubscription`
      - charity_campaign_donate
    * - Charity Campaign Start
-     - CharityCampaignStartSubscription
+     - :meth:`~eventsub.CharityCampaignStartSubscription`
      - charity_campaign_start
    * - Charity Campaign Progress
-     - CharityCampaignProgressSubscription
+     - :meth:`~eventsub.CharityCampaignProgressSubscription`
      - charity_campaign_progress
    * - Charity Campaign Stop
-     - CharityCampaignStopSubscription
+     - :meth:`~eventsub.CharityCampaignStopSubscription`
      - charity_campaign_stop
    * - Goal Begin
-     - GoalBeginSubscription
+     - :meth:`~eventsub.GoalBeginSubscription`
      - goal_begin
    * - Goal Progress
-     - GoalProgressSubscription
+     - :meth:`~eventsub.GoalProgressSubscription`
      - goal_progress
    * - Goal End
-     - GoalEndSubscription
+     - :meth:`~eventsub.GoalEndSubscription`
      - goal_end
    * - Hype Train Begin
-     - HypeTrainBeginSubscription
+     - :meth:`~eventsub.HypeTrainBeginSubscription`
      - hype_train
    * - Hype Train Progress
-     - HypeTrainProgressSubscription
+     - :meth:`~eventsub.HypeTrainProgressSubscription`
      - hype_train_progress
    * - Hype Train End
-     - HypeTrainEndSubscription
+     - :meth:`~eventsub.HypeTrainEndSubscription`
      - hype_train_end
    * - Shield Mode Begin
-     - ShieldModeBeginSubscription
+     - :meth:`~eventsub.ShieldModeBeginSubscription`
      - shield_mode_begin
    * - Shield Mode End
-     - ShieldModeEndSubscription
+     - :meth:`~eventsub.ShieldModeEndSubscription`
      - shield_mode_end
    * - Shoutout Create
-     - ShoutoutCreateSubscription
+     - :meth:`~eventsub.ShoutoutCreateSubscription`
      - shoutout_create
    * - Shoutout Received
-     - ShoutoutReceiveSubscription
+     - :meth:`~eventsub.ShoutoutReceiveSubscription`
      - shoutout_receive
    * - Stream Online
-     - StreamOnlineSubscription
+     - :meth:`~eventsub.StreamOnlineSubscription`
      - stream_online
    * - Stream Offline
-     - StreamOfflineSubscription
+     - :meth:`~eventsub.StreamOfflineSubscription`
      - stream_offline
    * - User Authorization Grant
-     - UserAuthorizationGrantSubscription
+     - :meth:`~eventsub.UserAuthorizationGrantSubscription`
      - user_authorization_grant
    * - User Authorization Revoke
-     - UserAuthorizationRevokeSubscription
+     - :meth:`~eventsub.UserAuthorizationRevokeSubscription`
      - user_authorization_revoke
    * - User Update
-     - UserUpdateSubscription
+     - :meth:`~eventsub.UserUpdateSubscription`
      - user_update
    * - Whisper Received
-     - WhisperReceivedSubscription
+     - :meth:`~eventsub.WhisperReceivedSubscription`
      - message_whisper
