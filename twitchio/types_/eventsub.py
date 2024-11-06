@@ -264,7 +264,7 @@ class SubscriptionResponse(TypedDict):
 
 class AutomodMessageHoldEvent(BroadcasterUserEvent):
     message_id: str
-    message: ChatMessage
+    message: ChatMessageData
     level: int
     category: str
     held_at: str
@@ -272,7 +272,7 @@ class AutomodMessageHoldEvent(BroadcasterUserEvent):
 
 class AutomodMessageUpdateEvent(BroadcasterModUserEvent):
     message_id: str
-    message: ChatMessage
+    message: ChatMessageData
     level: int
     category: str
     held_at: str
@@ -371,7 +371,7 @@ class ChatMessageBadgeData(TypedDict):
     info: str
 
 
-class ChatMessage(TypedDict):
+class ChatMessageData(TypedDict):
     text: str
     fragments: list[ChatMessageFragmentsData]
 
@@ -385,7 +385,7 @@ class ChannelChatMessageEvent(BaseBroadcasterEvent):
     chatter_user_login: str
     chatter_user_name: str
     message_id: str
-    message: ChatMessage
+    message: ChatMessageData
     color: str
     message_type: Literal[
         "text",
@@ -500,7 +500,7 @@ class ChannelChatNotificationEvent(BaseBroadcasterEvent):
     badges: list[ChatMessageBadgeData]
     system_message: str
     message_id: str
-    message: ChatMessage
+    message: ChatMessageData
     notice_type: Literal[
         "sub",
         "resub",
@@ -567,7 +567,7 @@ class ChannelChatSettingsUpdateEvent(BaseBroadcasterEvent):
 
 class ChatUserMessageHoldEvent(BroadcasterUserEvent):
     message_id: str
-    message: ChatMessage
+    message: ChatMessageData
 
 
 class ChatUserMessageUpdateEvent(ChatUserMessageHoldEvent):
@@ -1034,7 +1034,7 @@ class ChannelSuspiciousUserUpdateEvent(BroadcasterModUserEvent):
     low_trust_status: Literal["none", "active_monitoring", "restricted"]
 
 
-class SuspiciousMessageData(ChatMessage):
+class SuspiciousMessageData(ChatMessageData):
     message_id: str
 
 
