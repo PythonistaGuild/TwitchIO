@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPClient
+    from twitchio.types_.eventsub import PollChoiceData
     from twitchio.types_.responses import PollsResponseChoices, PollsResponseData
 
 __all__ = ("Poll", "PollChoice")
@@ -140,25 +141,31 @@ class Poll:
 class PollChoice:
     """Represents a poll choice.
 
+    This model is shared between Helix and Eventsub.
+
+    .. note::
+        channel_points_votes and votes will both be None for a Channel Poll Begin event.
+
     Attributes
     ----------
     id: str
         An ID that identifies the choice.
     title: str
         The choice's title.
-    votes: int
-        The total number of votes cast for this choice.
-    channel_points_votes: int
-        The number of votes cast using Channel Points.
+    channel_points_votes: int | None
+        Number of votes received via channel points. This is `None` for a Channel Poll Begin event.
+    votes: int | None
+        Total number of votes received for the choice across all methods of voting. This is `None` for a Channel Poll Begin event.
+
     """
 
     __slots__ = ("id", "title", "votes", "channel_points_votes")
 
-    def __init__(self, data: PollsResponseChoices) -> None:
+    def __init__(self, data: PollsResponseChoices | PollChoiceData) -> None:
         self.id: str = data["id"]
         self.title: str = data["title"]
-        self.votes: int = int(data["votes"])
-        self.channel_points_votes: int = int(data["channel_points_votes"])
+        self.channel_points_votes: int | None = data.get("channel_points_votes")
+        self.votes: int | None = data.get("votes")
 
     def __repr__(self) -> str:
         return f"<PollChoice id={self.id} title={self.title} votes={self.votes} channel_points_votes={self.channel_points_votes}>"
