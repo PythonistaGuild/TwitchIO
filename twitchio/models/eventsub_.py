@@ -28,9 +28,10 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, cast
 
 from twitchio.assets import Asset
 from twitchio.eventsub import RevocationReason, TransportMethod
-from twitchio.models.channel_points import CustomReward
+from twitchio.models.channel_points import CustomReward, RewardLimitSettings
 from twitchio.models.charity import CharityValues
 from twitchio.models.chat import EmoteSet
+from twitchio.models.polls import PollChoice
 from twitchio.models.predictions import PredictionOutcome
 from twitchio.user import Chatter, PartialUser
 from twitchio.utils import Colour, parse_timestamp
@@ -885,11 +886,15 @@ class ChatResub:
     tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
-        | Type | Description |
-        |------|-------------|
-        | 1000 | First level of paid or Prime subscription. |
-        | 2000 | Second level of paid subscription. |
-        | 3000 | Third level of paid subscription. |
+        +------+-----------------------------------------------+
+        | Type | Description                                   |
+        +======+===============================================+
+        | 1000 | First level of paid or Prime subscription.    |
+        +------+-----------------------------------------------+
+        | 2000 | Second level of paid subscription.            |
+        +------+-----------------------------------------------+
+        | 3000 | Third level of paid subscription.             |
+        +------+-----------------------------------------------+
 
     prime: bool
         Indicates if the subscription was obtained through Amazon Prime.
@@ -949,11 +954,15 @@ class ChatSubGift:
     tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
-        | Type | Description |
-        |------|-------------|
-        | 1000 | First level of paid or Prime subscription. |
-        | 2000 | Second level of paid subscription. |
-        | 3000 | Third level of paid subscription. |
+        +------+-------------------------------------------+
+        | Type | Description                               |
+        +======+===========================================+
+        | 1000 | First level of paid or Prime subscription.|
+        +------+-------------------------------------------+
+        | 2000 | Second level of paid subscription.        |
+        +------+-------------------------------------------+
+        | 3000 | Third level of paid subscription.         |
+        +------+-------------------------------------------+
 
     months: int
         The number of months the subscription is for.
@@ -989,11 +998,15 @@ class ChatCommunitySubGift:
     tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
-        | Type | Description |
-        |------|-------------|
-        | 1000 | First level of paid or Prime subscription. |
-        | 2000 | Second level of paid subscription. |
-        | 3000 | Third level of paid subscription. |
+        +------+-------------------------------------------+
+        | Type | Description                               |
+        +======+===========================================+
+        | 1000 | First level of paid or Prime subscription.|
+        +------+-------------------------------------------+
+        | 2000 | Second level of paid subscription.        |
+        +------+-------------------------------------------+
+        | 3000 | Third level of paid subscription.         |
+        +------+-------------------------------------------+
 
     total: int
         Number of subscriptions being gifted.
@@ -1051,11 +1064,15 @@ class ChatPrimePaidUpgrade:
     tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription plan being used.
 
-        | Type | Description |
-        |------|-------------|
-        | 1000 | First level of paid or Prime subscription. |
-        | 2000 | Second level of paid subscription. |
-        | 3000 | Third level of paid subscription. |
+        +------+-----------------------------------------------+
+        | Type | Description                                   |
+        +======+===============================================+
+        | 1000 | First level of paid or Prime subscription.    |
+        +------+-----------------------------------------------+
+        | 2000 | Second level of paid subscription.            |
+        +------+-----------------------------------------------+
+        | 3000 | Third level of paid subscription.             |
+        +------+-----------------------------------------------+
     """
 
     __slots__ = ("tier",)
@@ -2381,78 +2398,43 @@ class ChannelModerate(BaseEvent):
         Information about the shared_chat_delete event.
         Is `None` if action is not shared_chat_delete.
         This field has the same information as the delete field but for a action that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
-    action: typing.Literal[
-            "ban",
-            "timeout",
-            "unban",
-            "untimeout",
-            "clear",
-            "emoteonly",
-            "emoteonlyoff",
-            "followers",
-            "followersoff",
-            "uniquechat",
-            "uniquechatoff",
-            "slow",
-            "slowoff",
-            "subscribers",
-            "subscribersoff",
-            "unraid",
-            "delete",
-            "unvip",
-            "vip",
-            "raid",
-            "add_blocked_term",
-            "add_permitted_term",
-            "remove_blocked_term",
-            "remove_permitted_term",
-            "mod",
-            "unmod",
-            "approve_unban_request",
-            "deny_unban_request",
-            "warn",
-            "shared_chat_ban",
-            "shared_chat_unban",
-            "shared_chat_timeout",
-            "shared_chat_untimeout",
-            "shared_chat_delete",
-        ]
+    action: typing.Literal["ban","timeout", "unban", "untimeout", "clear", "emoteonly", "emoteonlyoff", "followers", "followersoff", "uniquechat", "uniquechatoff", "slow", "slowoff", "subscribers", "subscribersoff", "unraid", "delete", "unvip", "vip", "raid", "add_blocked_term", "add_permitted_term", "remove_blocked_term", "remove_permitted_term", "mod", "unmod", "approve_unban_request", "deny_unban_request", "warn", "shared_chat_ban", "shared_chat_unban", "shared_chat_timeout", "shared_chat_untimeout", "shared_chat_delete"]
         The type of action. `warn` is only available with V2.
 
-            - ban
-            - timeout
-            - unban
-            - untimeout
-            - clear
-            - emoteonly
-            - emoteonlyoff
-            - followers
-            - followersoff
-            - uniquechat
-            - uniquechatoff
-            - slow
-            - slowoff
-            - subscribers
-            - subscribersoff
-            - unraid
-            - delete
-            - unvip
-            - vip
-            - raid
-            - add_blocked_term
-            - add_permitted_term
-            - remove_blocked_term
-            - remove_permitted_term
-            - mod
-            - unmod
-            - approve_unban_request
-            - deny_unban_request
-            - warn
-            - shared_chat_ban
-            - shared_chat_timeout
-            - shared_chat_unban
-            - shared_chat_untimeout
-            - shared_chat_delete
+        - ban
+        - timeout
+        - unban
+        - untimeout
+        - clear
+        - emoteonly
+        - emoteonlyoff
+        - followers
+        - followersoff
+        - uniquechat
+        - uniquechatoff
+        - slow
+        - slowoff
+        - subscribers
+        - subscribersoff
+        - unraid
+        - delete
+        - unvip
+        - vip
+        - raid
+        - add_blocked_term
+        - add_permitted_term
+        - remove_blocked_term
+        - remove_permitted_term
+        - mod
+        - unmod
+        - approve_unban_request
+        - deny_unban_request
+        - warn
+        - shared_chat_ban
+        - shared_chat_unban
+        - shared_chat_timeout
+        - shared_chat_untimeout
+        - shared_chat_delete
     """
 
     subscription_type = "channel.moderate"
@@ -2686,6 +2668,19 @@ class ChannelModeratorRemove(BaseEvent):
 
 
 class ChannelPointsEmote(BaseEmote):
+    """
+    Represents a channel points emote.
+
+    Attributes
+    ----------
+    begin: int
+        The index of where the emote starts in the text.
+    end: int
+        The index of where the emote ends in the text.
+    id: str
+        The emote ID.
+    """
+
     def __init__(self, data: ChannelPointsEmoteData) -> None:
         super().__init__(data)
 
@@ -2694,6 +2689,27 @@ class ChannelPointsEmote(BaseEmote):
 
 
 class ChannelPointsAutoRedeemAdd(BaseEvent):
+    """
+    Represents an automatic redemption of a channel points reward.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster / channel who had the reward redeemed.
+    user: PartialUser
+        The user who redeemed the reward.
+    id: str
+        The ID of the redemption.
+    text: str
+        The text of the chat message.
+    emotes: list[ChannelPointsEmote]
+        A list of ChannelPointsEmote objects that appear in the text.
+    user_input: str | None
+        The text input by the user if the reward requires input.
+    redeemed_at: datetime.datetime
+        The datetime object of when the reward was redeemed.
+    """
+
     subscription_type = "channel.channel_points_automatic_reward_redemption.add"
 
     __slots__ = ("broadcaster", "user", "id", "reward", "text", "emotes", "user_input", "redeemed_at")
@@ -2707,26 +2723,10 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
         self.text: str = payload["message"]["text"]
         self.emotes: list[ChannelPointsEmote] = [ChannelPointsEmote(emote) for emote in payload["message"]["emotes"]]
         self.user_input: str | None = payload.get("user_input")
-        self.redeemed_attributes: datetime.datetime = parse_timestamp(payload["redeemed_at"])
+        self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
 
     def __repr__(self) -> str:
         return f"<ChannelPointsAutoRedeemAdd broadcaster={self.broadcaster} user={self.user} id={self.id}>"
-
-
-class RewardLimitSettings(NamedTuple):
-    """
-    NamedTuple that represents a custom reward's stream limit settings.
-
-    Attributes
-    -----------
-    enabled: bool
-        Whether the stream setting is enabled or not.
-    value: int
-        The value of the limit setting.
-    """
-
-    enabled: bool
-    value: int
 
 
 class CooldownSettings(NamedTuple):
@@ -2746,6 +2746,48 @@ class CooldownSettings(NamedTuple):
 
 
 class ChannelPointsReward(BaseEvent):
+    """
+    Represents an Eventsub Custom Reward.
+
+    Attributes
+    -----------
+    broadcaster: Partialuser
+        The broadcaster / channel associated with the custom reward.
+    id: str
+        The reward identifier.
+    title: str
+        The reward title.
+    cost: int
+        The reward cost.
+    prompt: str
+        The reward description.
+    enabled: bool | None
+        Whether the reward currently enabled. If False, the reward won't show up to viewers.
+    paused: bool | None
+        Whether the reward currently paused. If True, viewers can't redeem.
+    in_stock: bool | None
+        Whether the reward currently in stock. If False, viewers can't redeem.
+    input_requred: bool | None
+        Whether the viewer needs to enter information when redeeming the reward.
+    skip_queue: bool | None
+        Should redemptions be set to fulfilled status immediately when redeemed and skip the request queue instead of the normal unfulfilled status.
+    colour: Colour
+        Custom background colour for the reward.
+    cooldown_until: datetime.datetime | None
+        The cooldown expiration datetime. Is `None` if the reward is not on cooldown.
+    max_per_stream: RewardLimitSettings | None
+        Whether a maximum per stream is enabled and what the maximum is.
+    max_per_user_per_stream: RewardLimitSettings | None
+        Whether a maximum per user per stream is enabled and what the maximum is.
+    global_cooldown: CooldownSettings | None
+        Whether a cooldown is enabled and what the cooldown is in seconds.
+    default_image: dict[str, str] | None
+        Dictionary of default images of varying sizes for the reward.
+    current_stream_redeems: int | None
+        The number of redemptions redeemed during the current live stream. Counts against the `max_per_stream` limit.
+        Is `None` if the broadcasters stream isn't live or max_per_stream isn't enabled.
+    """
+
     __slots__ = (
         "_http",
         "broadcaster",
@@ -2830,10 +2872,12 @@ class ChannelPointsReward(BaseEvent):
 
     @property
     def color(self) -> Colour | None:
+        """Alias for Colour."""
         return self.colour
 
     @property
     def image(self) -> dict[str, str] | None:
+        """Dictionary of custom images for the reward. Is `None` if no images have been uploaded."""
         if self._image is not None:
             return {k: str(v) for k, v in self._image.items()}
         else:
@@ -2846,9 +2890,9 @@ class ChannelPointsReward(BaseEvent):
 
         Parameters
         ----------
-        size : str
+        size: str
             The size key of the image. Options are "1x", "2x", "4x". Defaults to "2x".
-        use_default : bool
+        use_default: bool
             Use default images instead of user uploaded images.
 
         Returns
@@ -2872,6 +2916,48 @@ class ChannelPointsReward(BaseEvent):
 
 
 class ChannelPointsRewardAdd(ChannelPointsReward):
+    """
+    Represents an Eventsub Custom Reward that has been created for a channel.
+
+    Attributes
+    -----------
+    broadcaster: Partialuser
+        The broadcaster / channel associated with the custom reward.
+    id: str
+        The reward identifier.
+    title: str
+        The reward title.
+    cost: int
+        The reward cost.
+    prompt: str
+        The reward description.
+    enabled: bool
+        Whether the reward currently enabled. If False, the reward won't show up to viewers.
+    paused: bool
+        Whether the reward currently paused. If True, viewers can't redeem.
+    in_stock: bool
+        Whether the reward currently in stock. If False, viewers can't redeem.
+    input_requred: bool
+        Whether the viewer needs to enter information when redeeming the reward.
+    skip_queue: bool
+        Should redemptions be set to fulfilled status immediately when redeemed and skip the request queue instead of the normal unfulfilled status.
+    colour: Colour
+        Custom background colour for the reward.
+    cooldown_until: datetime.datetime | None
+        The cooldown expiration datetime. Is `None` if the reward is not on cooldown.
+    max_per_stream: RewardLimitSettings
+        Whether a maximum per stream is enabled and what the maximum is.
+    max_per_user_per_stream: RewardLimitSettings
+        Whether a maximum per user per stream is enabled and what the maximum is.
+    global_cooldown: CooldownSettings
+        Whether a cooldown is enabled and what the cooldown is in seconds.
+    default_image: dict[str, str]
+        Dictionary of default images of varying sizes for the reward.
+    current_stream_redeems: int
+        The number of redemptions redeemed during the current live stream. Counts against the `max_per_stream` limit.
+        Is `None` if the broadcasters stream isn't live or max_per_stream isn't enabled.
+    """
+
     subscription_type = "channel.channel_points_custom_reward.add"
 
     def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
@@ -2882,6 +2968,48 @@ class ChannelPointsRewardAdd(ChannelPointsReward):
 
 
 class ChannelPointsRewardUpdate(ChannelPointsReward):
+    """
+    Represents an Eventsub Custom Reward that has been updated for a channel.
+
+    Attributes
+    -----------
+    broadcaster: Partialuser
+        The broadcaster / channel associated with the custom reward.
+    id: str
+        The reward identifier.
+    title: str
+        The reward title.
+    cost: int
+        The reward cost.
+    prompt: str
+        The reward description.
+    enabled: bool
+        Whether the reward currently enabled. If False, the reward won't show up to viewers.
+    paused: bool
+        Whether the reward currently paused. If True, viewers can't redeem.
+    in_stock: bool
+        Whether the reward currently in stock. If False, viewers can't redeem.
+    input_requred: bool
+        Whether the viewer needs to enter information when redeeming the reward.
+    skip_queue: bool
+        Should redemptions be set to fulfilled status immediately when redeemed and skip the request queue instead of the normal unfulfilled status.
+    colour: Colour
+        Custom background colour for the reward.
+    cooldown_until: datetime.datetime | None
+        The cooldown expiration datetime. Is `None` if the reward is not on cooldown.
+    max_per_stream: RewardLimitSettings
+        Whether a maximum per stream is enabled and what the maximum is.
+    max_per_user_per_stream: RewardLimitSettings
+        Whether a maximum per user per stream is enabled and what the maximum is.
+    global_cooldown: CooldownSettings
+        Whether a cooldown is enabled and what the cooldown is in seconds.
+    default_image: dict[str, str]
+        Dictionary of default images of varying sizes for the reward.
+    current_stream_redeems: int
+        The number of redemptions redeemed during the current live stream. Counts against the `max_per_stream` limit.
+        Is `None` if the broadcasters stream isn't live or max_per_stream isn't enabled.
+    """
+
     subscription_type = "channel.channel_points_custom_reward.update"
 
     def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
@@ -2892,6 +3020,48 @@ class ChannelPointsRewardUpdate(ChannelPointsReward):
 
 
 class ChannelPointsRewardRemove(ChannelPointsReward):
+    """
+    Represents an Eventsub Custom Reward that has been removed from a channel.
+
+    Attributes
+    -----------
+    broadcaster: Partialuser
+        The broadcaster / channel associated with the custom reward.
+    id: str
+        The reward identifier.
+    title: str
+        The reward title.
+    cost: int
+        The reward cost.
+    prompt: str
+        The reward description.
+    enabled: bool
+        Whether the reward currently enabled. If False, the reward won't show up to viewers.
+    paused: bool
+        Whether the reward currently paused. If True, viewers can't redeem.
+    in_stock: bool
+        Whether the reward currently in stock. If False, viewers can't redeem.
+    input_requred: bool
+        Whether the viewer needs to enter information when redeeming the reward.
+    skip_queue: bool
+        Should redemptions be set to fulfilled status immediately when redeemed and skip the request queue instead of the normal unfulfilled status.
+    colour: Colour
+        Custom background colour for the reward.
+    cooldown_until: datetime.datetime | None
+        The cooldown expiration datetime. Is `None` if the reward is not on cooldown.
+    max_per_stream: RewardLimitSettings
+        Whether a maximum per stream is enabled and what the maximum is.
+    max_per_user_per_stream: RewardLimitSettings
+        Whether a maximum per user per stream is enabled and what the maximum is.
+    global_cooldown: CooldownSettings
+        Whether a cooldown is enabled and what the cooldown is in seconds.
+    default_image: dict[str, str]
+        Dictionary of default images of varying sizes for the reward.
+    current_stream_redeems: int
+        The number of redemptions redeemed during the current live stream. Counts against the `max_per_stream` limit.
+        Is `None` if the broadcasters stream isn't live or max_per_stream isn't enabled.
+    """
+
     subscription_type = "channel.channel_points_custom_reward.remove"
 
     def __init__(self, payload: ChannelPointsCustomRewardAddEvent, *, http: HTTPClient) -> None:
@@ -2962,7 +3132,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         """
         Updates the redemption's status to FULFILLED.
 
-        !!! note
+        .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
 
         Parameters
@@ -2990,7 +3160,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         """
         Updates the redemption's status to CANCELED.
 
-        !!! note
+        .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
 
         Parameters
@@ -3050,37 +3220,6 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
 
     def __repr__(self) -> str:
         return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
-
-
-class PollChoice:
-    """
-    Represents a poll choice.
-
-    !!! info
-        channel_points_votes and votes will both be None for a Channel Poll Begin event.
-
-    Attributes
-    ----------
-    id: str
-        ID for the choice.
-    title: str
-        Text displayed for the choice.
-    channel_points_votes: int | None
-        Number of votes received via channel points. This is None for a Channel Poll Begin event.
-    votes: int | None
-        Total number of votes received for the choice across all methods of voting. This is None for a Channel Poll Begin event.
-    """
-
-    __slots__ = ("id", "title", "channel_points_votes", "votes")
-
-    def __init__(self, data: PollChoiceData) -> None:
-        self.id: str = data["id"]
-        self.title: str = data["title"]
-        self.channel_points_votes: int | None = data.get("channel_points_votes")
-        self.votes: int | None = data.get("votes")
-
-    def __repr__(self) -> str:
-        return f"<PollChoice id={self.id} title={self.title}>"
 
 
 class PollVoting(NamedTuple):
@@ -3601,53 +3740,6 @@ class ChannelWarningSend(BaseEvent):
         return f"<ChannelWarningSend broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
 
 
-class CharityDonation(BaseEvent):
-    """
-    Represents a charity campaign start event.
-
-    Attributes
-    ----------
-    broadcaster: PartialUser
-        The broadcaster that's running the campaign.
-    user: PartialUser
-        The user that donated to the campaign.
-    id: str
-        An ID that identifies the donation. The ID is unique across campaigns.
-    campaign_id: str
-        An ID that identifies the charity campaign.
-    name: str
-        The name of the charity.
-    description: str
-        A description of the charity.
-    logo: Asset
-        The charity logo as an asset.
-    website: str
-        A URL to the charity's website.
-    amount: CharityValues
-        The amount of money that the user donated.
-    """
-
-    subscription_type = "channel.charity_campaign.donate"
-
-    __slots__ = ("broadcaster", "user", "id", "campaign_id", "name", "description", "logo", "website", "amount")
-
-    def __init__(self, payload: CharityCampaignDonationEvent, *, http: HTTPClient) -> None:
-        self.broadcaster: PartialUser = PartialUser(
-            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
-        )
-        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
-        self.id: str = payload["id"]
-        self.campaign_id: str = payload["campaign_id"]
-        self.name: str = payload["charity_name"]
-        self.description: str = payload["charity_description"]
-        self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
-        self.website: str = payload["charity_website"]
-        self.amount: CharityValues = CharityValues(payload["amount"])
-
-    def __repr__(self) -> str:
-        return f"<CharityDonation broadcaster={self.broadcaster} user={self.user} id={self.id} name={self.name}>"
-
-
 class BaseCharityCampaign(BaseEvent):
     __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target")
 
@@ -3820,28 +3912,42 @@ class GoalBegin(BaseGoal):
     type: typing.Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
         The type of goal.
 
-        | type                  | Description                                                                                                                                                              |
-        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-        | follow                | The goal is to increase followers.                                                                                                                                       |
-        | subscription          | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                     |
-        | subscription_count    | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                      |
-        | new_subscription      | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started). |
-        | new_subscription_count| The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                 |
-        | new_bit               | The goal is to increase the amount of Bits used on the channel.                                                                                                          |
-        | new_cheerer           | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                           |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | type                    | Description                                                                                                                                                                                              |
+        +=========================+==========================================================================================================================================================================================================+
+        | follow                  | The goal is to increase followers.                                                                                                                                                                       |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription            | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                                                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription_count      | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                                                      |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription        | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started).  |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription_count  | The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_bit                 | The goal is to increase the amount of Bits used on the channel.                                                                                                                                          |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_cheerer             | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                                                           |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
     description: str
         A description of the goal, if specified. The description may contain a maximum of 40 characters.
     current_amount: int
         The goal's current value. The goal's type determines how this value is increased or decreased.
 
-        | type                  | Description                                                                                                                                |
-        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-        | follow                | This number increases with new followers and decreases when users unfollow the broadcaster.                                                |
-        | subscription          | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
-        | subscription_count    | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                  |
-        | new_subscription      | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1. |
-        | new_subscription_count| This field is increased by 1 for each new subscription.                                                                                     |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | type                    | Description                                                                                                                                                                                                    |
+        +=========================+================================================================================================================================================================================================================+
+        | follow                  | This number increases with new followers and decreases when users unfollow the broadcaster.                                                                                                                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription            | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription_count      | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                                                                                     |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription        | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1.                             |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription_count  | This field is increased by 1 for each new subscription.                                                                                                                                                        |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
     target_amount: int
         The goal's target value. For example, if the broadcaster has 200 followers before creating the goal, and their goal is to double that number, this field is set to 400.
@@ -3871,28 +3977,42 @@ class GoalProgress(BaseGoal):
     type: typing.Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
         The type of goal.
 
-        | type                  | Description                                                                                                                                                              |
-        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-        | follow                | The goal is to increase followers.                                                                                                                                       |
-        | subscription          | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                     |
-        | subscription_count    | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                      |
-        | new_subscription      | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started). |
-        | new_subscription_count| The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                 |
-        | new_bit               | The goal is to increase the amount of Bits used on the channel.                                                                                                          |
-        | new_cheerer           | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                           |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | type                    | Description                                                                                                                                                                                              |
+        +=========================+==========================================================================================================================================================================================================+
+        | follow                  | The goal is to increase followers.                                                                                                                                                                       |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription            | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                                                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription_count      | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                                                      |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription        | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started).  |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription_count  | The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_bit                 | The goal is to increase the amount of Bits used on the channel.                                                                                                                                          |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_cheerer             | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                                                           |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
     description: str
         A description of the goal, if specified. The description may contain a maximum of 40 characters.
     current_amount: int
         The goal's current value. The goal's type determines how this value is increased or decreased.
 
-        | type                  | Description                                                                                                                                |
-        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-        | follow                | This number increases with new followers and decreases when users unfollow the broadcaster.                                                |
-        | subscription          | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
-        | subscription_count    | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                  |
-        | new_subscription      | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1. |
-        | new_subscription_count| This field is increased by 1 for each new subscription.                                                                                     |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | type                    | Description                                                                                                                                                                                                    |
+        +=========================+================================================================================================================================================================================================================+
+        | follow                  | This number increases with new followers and decreases when users unfollow the broadcaster.                                                                                                                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription            | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription_count      | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                                                                                     |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription        | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1.                             |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription_count  | This field is increased by 1 for each new subscription.                                                                                                                                                        |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
     target_amount: int
         The goal's target value. For example, if the broadcaster has 200 followers before creating the goal, and their goal is to double that number, this field is set to 400.
@@ -3922,28 +4042,42 @@ class GoalEnd(BaseGoal):
     type: typing.Literal["follow", "subscription", "subscription_count", "new_subscription", "new_subscription_count", "new_bit", "new_cheerer"]
         The type of goal.
 
-        | type                  | Description                                                                                                                                                              |
-        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-        | follow                | The goal is to increase followers.                                                                                                                                       |
-        | subscription          | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                     |
-        | subscription_count    | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                      |
-        | new_subscription      | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started). |
-        | new_subscription_count| The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                 |
-        | new_bit               | The goal is to increase the amount of Bits used on the channel.                                                                                                          |
-        | new_cheerer           | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                           |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | type                    | Description                                                                                                                                                                                              |
+        +=========================+==========================================================================================================================================================================================================+
+        | follow                  | The goal is to increase followers.                                                                                                                                                                       |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription            | The goal is to increase subscriptions. This type shows the net increase or decrease in tier points associated with the subscriptions.                                                                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription_count      | The goal is to increase subscriptions. This type shows the net increase or decrease in the number of subscriptions.                                                                                      |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription        | The goal is to increase subscriptions. This type shows only the net increase in tier points associated with the subscriptions (it does not account for users that unsubscribed since the goal started).  |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription_count  | The goal is to increase subscriptions. This type shows only the net increase in the number of subscriptions (it does not account for users that unsubscribed since the goal started).                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_bit                 | The goal is to increase the amount of Bits used on the channel.                                                                                                                                          |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_cheerer             | The goal is to increase the number of unique Cheerers to Cheer on the channel.                                                                                                                           |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
     description: str
         A description of the goal, if specified. The description may contain a maximum of 40 characters.
     current_amount: int
         The goal's current value. The goal's type determines how this value is increased or decreased.
 
-        | type                  | Description                                                                                                                                |
-        |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-        | follow                | This number increases with new followers and decreases when users unfollow the broadcaster.                                                |
-        | subscription          | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
-        | subscription_count    | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                  |
-        | new_subscription      | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1. |
-        | new_subscription_count| This field is increased by 1 for each new subscription.                                                                                     |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | type                    | Description                                                                                                                                                                                                    |
+        +=========================+================================================================================================================================================================================================================+
+        | follow                  | This number increases with new followers and decreases when users unfollow the broadcaster.                                                                                                                    |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription            | This number is increased and decreased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased or decreased by 2, not 1. |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | subscription_count      | This field is increased by 1 for each new subscription and decreased by 1 for each user that unsubscribes.                                                                                                     |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription        | This field is increased by the points value associated with the subscription tier. For example, if a tier-two subscription is worth 2 points, this field is increased by 2, not 1.                             |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | new_subscription_count  | This field is increased by 1 for each new subscription.                                                                                                                                                        |
+        +-------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
     target_amount: int
         The goal's target value. For example, if the broadcaster has 200 followers before creating the goal, and their goal is to double that number, this field is set to 400.
@@ -3979,11 +4113,15 @@ class HypeTrainContribution:
     type: typing.Literal["bits", "subscription", "other"]
         The contribution method used. Possible values are:
 
+        +---------------+-------------------------------------------------------------------+
         | type          | Description                                                       |
-        |---------------|-------------------------------------------------------------------|
+        +===============+===================================================================+
         | bits          | Cheering with Bits.                                               |
+        +---------------+-------------------------------------------------------------------+
         | subscription  | Subscription activity like subscribing or gifting subscriptions.  |
+        +---------------+-------------------------------------------------------------------+
         | other         | Covers other contribution methods not listed.                     |
+        +---------------+-------------------------------------------------------------------+
 
     total: int
         The total amount contributed. If type is bits, total represents the amount of Bits used.
@@ -4394,7 +4532,7 @@ class UserAuthorizationGrant(BaseEvent):
     """
     Represents a user authorisation grant event.
 
-    !!! info
+    .. note::
         This subscription type is only supported by webhooks, and cannot be used with WebSockets.
 
     Attributes
@@ -4421,7 +4559,7 @@ class UserAuthorizationRevoke(BaseEvent):
     """
     Represents a user authorisation reoke event.
 
-    !!! info
+    .. note::
         This subscription type is only supported by webhooks, and cannot be used with WebSockets.
 
         The `user.id` will always be populated but `user.name` can be `None` if the user no longer exists.
