@@ -84,7 +84,7 @@ References
    :maxdepth: 1
    :caption: Models
 
-   references/models
+   references/helix_models
 
 .. toctree::
    :maxdepth: 1
