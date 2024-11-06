@@ -293,3 +293,68 @@ Eventsub Subscriptions
 
 .. autoclass:: GoalEndSubscription
     :members:
+
+.. attributetable:: HypeTrainBeginSubscription
+
+.. autoclass:: HypeTrainBeginSubscription
+    :members:
+
+.. attributetable:: HypeTrainProgressSubscription
+
+.. autoclass:: HypeTrainProgressSubscription
+    :members:
+
+.. attributetable:: HypeTrainEndSubscription
+
+.. autoclass:: HypeTrainEndSubscription
+    :members:
+
+.. attributetable:: ShieldModeBeginSubscription
+
+.. autoclass:: ShieldModeBeginSubscription
+    :members:
+
+.. attributetable:: ShieldModeEndSubscription
+
+.. autoclass:: ShieldModeEndSubscription
+    :members:
+
+.. attributetable:: ShoutoutCreateSubscription
+
+.. autoclass:: ShoutoutCreateSubscription
+    :members:
+
+.. attributetable:: ShoutoutReceiveSubscription
+
+.. autoclass:: ShoutoutReceiveSubscription
+    :members:
+
+.. attributetable:: StreamOnlineSubscription
+
+.. autoclass:: StreamOnlineSubscription
+    :members:
+
+.. attributetable:: StreamOfflineSubscription
+
+.. autoclass:: StreamOfflineSubscription
+    :members:
+
+.. attributetable:: UserAuthorizationGrantSubscription
+
+.. autoclass:: UserAuthorizationGrantSubscription
+    :members:
+
+.. attributetable:: UserAuthorizationRevokeSubscription
+
+.. autoclass:: UserAuthorizationRevokeSubscription
+    :members:
+
+.. attributetable:: UserUpdateSubscription
+
+.. autoclass:: UserUpdateSubscription
+    :members:
+
+.. attributetable:: WhisperReceivedSubscription
+
+.. autoclass:: WhisperReceivedSubscription
+    :members:
