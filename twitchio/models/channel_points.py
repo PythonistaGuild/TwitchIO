@@ -349,11 +349,11 @@ class CustomReward:
         -----------
         token_for: str | PartialUser
             The user's token that has permission manage or read the broadcaster's reward redemptions.
-        status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
+        status: typing.Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
             The state of the redemption. This can be one of the following: "CANCELED", "FULFILLED", "UNFULFILLED"
         ids: list[str] | None
             A list of IDs to filter the redemptions by. You may specify up to 50.
-        sort: Literal["OLDEST", "NEWEST"]
+        sort: typing.Literal["OLDEST", "NEWEST"]
             The order to sort the redemptions by. The default is OLDEST.
         first: int
             Maximum number of items to return per page. Default is 20.
@@ -394,7 +394,7 @@ class CustomRewardRedemption:
     -----------
     id: str
         The ID that uniquely identifies this redemption.
-    status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
+    status: typing.Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
         The state of the redemption. This can be one of the following: "CANCELED", "FULFILLED", "UNFULFILLED"
     redeemed_at: datetime.datetime
         The prompt shown to the viewer when they redeem the reward if user input is required.

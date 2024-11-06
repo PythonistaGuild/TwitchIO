@@ -278,7 +278,7 @@ class Emote:
 
         Parameters
         ----------
-        theme: Literal["light", "dark"]
+        theme: typing.Literal["light", "dark"]
             The background theme of the emote. Defaults to "light".
         scale: str
             The scale (size) of the emote. Usually this will be one of:
@@ -287,7 +287,7 @@ class Emote:
             - "3.0" (Large)
 
             Defaults to "2.0".
-        format: Literal["default", "static", "animated"]
+        format: typing.Literal["default", "static", "animated"]
             The format of the image for the emote. E.g a static image (PNG) or animated (GIF).
 
             Use "default" to get the default format for the emote, which will be animated if available, otherwise static.

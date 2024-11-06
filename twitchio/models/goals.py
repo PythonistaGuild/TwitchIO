@@ -77,7 +77,7 @@ class Goal:
         An ID that identifies this goal.
     broadcaster: PartialUser
         The broadcaster that created the goal.
-    type: Literal["follower", "subscription", "subscription_count", "new_subscription", "new_subscription_count"]
+    type: typing.Literal["follower", "subscription", "subscription_count", "new_subscription", "new_subscription_count"]
         The type of goal. Possible values are: `follower`, `subscription`, `subscription_count`, `new_subscription`, `new_subscription_count`
         Please refer to the documentation for more details.
     description: str

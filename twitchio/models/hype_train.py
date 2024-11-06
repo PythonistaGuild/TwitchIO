@@ -119,7 +119,7 @@ class HypeTrainContribution:
     total: int
         The total amount contributed. If type is ``BITS``, total represents the amount of Bits used.
         If type is ``SUBS``, total is 500, 1000, or 2500 to represent tier 1, 2, or 3 subscriptions, respectively.
-    type: Literal["BITS", "SUBS", "OTHER"]
+    type: typing.Literal["BITS", "SUBS", "OTHER"]
         Identifies the contribution method, either BITS, SUBS or OTHER.
     user: PartialUser
         The user making the contribution.

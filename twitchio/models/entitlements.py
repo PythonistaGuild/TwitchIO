@@ -60,7 +60,7 @@ class Entitlement:
         PartialUser of who was granted the entitlement.
     game_id: str
         An ID that identifies the game the user was playing when the reward was entitled.
-    fulfillment_status: Literal["CLAIMED", "FULFILLED"]
+    fulfillment_status: typing.Literal["CLAIMED", "FULFILLED"]
         The entitlement's fulfillment status. Can be either `CLAIMED` or `FULFILLED`.
     last_updated: datetime.datetime
         Datetime of when the entitlement was last updated.
@@ -110,7 +110,7 @@ class EntitlementStatus:
 
     Attributes
     -----------
-    status: Literal["INVALID_ID", "NOT_FOUND", "SUCCESS", "UNAUTHORIZED", "UPDATE_FAILED"]
+    status: typing.Literal["INVALID_ID", "NOT_FOUND", "SUCCESS", "UNAUTHORIZED", "UPDATE_FAILED"]
         Indicates whether the status of the entitlements in the ids field were successfully updated.
 
         +----------------+----------------------------------------------------------------------------------------------------+

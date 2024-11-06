@@ -137,7 +137,7 @@ class Prediction:
 
         Parameters
         ----------
-        status: Literal["RESOLVED", "CANCELED", "LOCKED"]
+        status: typing.Literal["RESOLVED", "CANCELED", "LOCKED"]
             The status to set the prediction to. Possible case-sensitive values are: `RESOLVED`, `CANCELED`, `LOCKED`
 
         Returns
@@ -170,7 +170,7 @@ class PredictionOutcome:
         The number of Channel Points spent by viewers on this outcome.
     top_predictors: list[Predictor]
         A list of viewers who were the top predictors; otherwise, None if none.
-    colour: Literal["BLUE", "PINK", "blue", "pink"]
+    colour: typing.Literal["BLUE", "PINK", "blue", "pink"]
         The number of votes cast using Channel Points.
     """
 

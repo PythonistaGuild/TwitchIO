@@ -73,7 +73,7 @@ class Poll:
         A Boolean value that indicates whether viewers may cast additional votes using Channel Points.
     channel_points_per_vote: int
         The number of points the viewer must spend to cast one additional vote.
-    status: Literal["ACTIVE", "COMPLETED", "TERMINATED", "ARCHIVED", "MODERATED", "INVALID"]
+    status: typing.Literal["ACTIVE", "COMPLETED", "TERMINATED", "ARCHIVED", "MODERATED", "INVALID"]
         The poll's status. Valid values are `ACTIVE`, `COMPLETED`, `TERMINATED`, `ARCHIVED`, `MODERATED` and `INVALID`.
     duration: int
         The length of time (in seconds) that the poll will run for.
@@ -124,7 +124,7 @@ class Poll:
 
         Parameters
         ----------
-        status  Literal["ARCHIVED", "TERMINATED"]
+        status  typing.Literal["ARCHIVED", "TERMINATED"]
             The status to set the poll to. Possible case-sensitive values are: "ARCHIVED" and "TERMINATED".
 
         Returns

@@ -304,7 +304,7 @@ class UnbanRequest:
         The requestor who is asking for an unban.
     text: str
         Text of the request from requesting user.
-    status: Literal["pending", "approved", "denied", "acknowledged", "canceled"]
+    status: typing.Literal["pending", "approved", "denied", "acknowledged", "canceled"]
         Status of the request. One of: `pending`, `approved`, `denied`, `acknowledged`, `canceled`
     created_at: datetime.datetime
         Datetime of when the unban request was created.
