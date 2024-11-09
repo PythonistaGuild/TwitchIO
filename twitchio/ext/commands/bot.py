@@ -46,10 +46,10 @@ if TYPE_CHECKING:
     from twitchio.eventsub.subscriptions import SubscriptionPayload
     from twitchio.models.eventsub_ import ChatMessage
     from twitchio.types_.eventsub import SubscriptionResponse
-    from twitchio.types_.options import ClientOptions
     from twitchio.user import PartialUser
 
     from .components import Component
+    from .types_ import BotOptions
 
     PrefixT: TypeAlias = str | Iterable[str] | Callable[["Bot", "ChatMessage"], Coroutine[Any, Any, str | Iterable[str]]]
 
@@ -162,7 +162,7 @@ class Bot(Mixin[None], Client):
         bot_id: str,
         owner_id: str | None = None,
         prefix: PrefixT,
-        **options: Unpack[ClientOptions],
+        **options: Unpack[BotOptions],
     ) -> None:
         super().__init__(
             client_id=client_id,

@@ -24,6 +24,8 @@ SOFTWARE.
 
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
+from twitchio.types_.options import ClientOptions
+
 
 if TYPE_CHECKING:
     from .components import Component
@@ -40,3 +42,7 @@ class CommandOptions(TypedDict, total=False):
 class ComponentOptions(TypedDict, total=False):
     name: str | None
     extras: dict[Any, Any]
+
+
+class BotOptions(ClientOptions, total=False):
+    case_insensitive: bool

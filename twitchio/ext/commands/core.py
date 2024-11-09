@@ -29,7 +29,7 @@ import copy
 import inspect
 from collections.abc import Callable, Coroutine, Generator
 from types import MappingProxyType, UnionType
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Union, Unpack
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Union, Unpack, overload
 
 from twitchio.utils import MISSING
 
@@ -66,6 +66,9 @@ else:
 
 Coro: TypeAlias = Coroutine[Any, Any, None]
 CoroC: TypeAlias = Coroutine[Any, Any, bool]
+
+DT = TypeVar("DT")
+VT = TypeVar("VT")
 
 
 class CommandErrorPayload:
@@ -395,8 +398,16 @@ class Command(Generic[Component_T, P]):
 
 class Mixin(Generic[Component_T]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._commands: dict[str, Command[Component_T, ...]] = {}
+        case_: bool = kwargs.pop("case_insensitive", False)
+        self._case_insensitive: bool = case_
+        self._commands: dict[str, Command[Component_T, ...]] = {} if not case_ else _CaseInsensitiveDict()
+
         super().__init__(*args, **kwargs)
+
+    @property
+    def case_insensitive(self) -> bool:
+        """Property returning a bool indicating whether this Mixin is using case insensitive commands."""
+        return self._case_insensitive
 
     def add_command(self, command: Command[Component_T, ...], /) -> None:
         """Add a :class:`~.commands.Command` object to the mixin.
@@ -986,3 +997,44 @@ def is_elevated() -> Any:
         return chatter.moderator or chatter.vip
 
     return guard(predicate)
+
+
+class _CaseInsensitiveDict(dict[str, VT]):
+    def __contains__(self, key: object) -> bool:
+        return super().__contains__(key.casefold()) if isinstance(key, str) else False
+
+    def __delitem__(self, key: str) -> None:
+        return super().__delitem__(key.casefold())
+
+    def __getitem__(self, key: str) -> VT:
+        return super().__getitem__(key.casefold())
+
+    @overload
+    def get(self, key: str, /) -> VT | None: ...
+
+    @overload
+    def get(self, key: str, default: VT, /) -> VT: ...
+
+    @overload
+    def get(self, key: str, default: DT, /) -> VT | DT: ...
+
+    def get(self, key: str, default: DT = None) -> VT | DT:
+        return super().get(key.casefold(), default)
+
+    @overload
+    def pop(self, key: str, /) -> VT: ...
+
+    @overload
+    def pop(self, key: str, default: VT, /) -> VT: ...
+
+    @overload
+    def pop(self, key: str, default: DT, /) -> VT | DT: ...
+
+    def pop(self, key: str, default: DT = MISSING) -> VT | DT:
+        if default is MISSING:
+            return super().pop(key.casefold())
+
+        return super().pop(key.casefold(), default)
+
+    def __setitem__(self, key: str, value: VT) -> None:
+        super().__setitem__(key.casefold(), value)
