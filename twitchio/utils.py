@@ -40,6 +40,7 @@ __all__ = (
     "MISSING",
     "handle_user_ids",
     "_is_submodule",
+    "date_to_datetime_with_z",
 )
 
 T_co = TypeVar("T_co", covariant=True)
