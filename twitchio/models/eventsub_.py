@@ -1944,7 +1944,7 @@ class ChannelRaid(BaseEvent):
 
     subscription_type = "channel.raid"
 
-    __slots__ = ("from_broadcaster", "to_boradcaster", "viewer_count")
+    __slots__ = ("from_broadcaster", "to_broadcaster", "viewer_count")
 
     def __init__(self, payload: ChannelRaidEvent, *, http: HTTPClient) -> None:
         self.from_broadcaster: PartialUser = PartialUser(

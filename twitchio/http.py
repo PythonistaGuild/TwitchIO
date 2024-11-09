@@ -57,7 +57,7 @@ from .models.streams import Stream, VideoMarkers
 from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
 from .models.videos import Video
 from .user import ActiveExtensions, PartialUser
-from .utils import Colour, _from_json, handle_user_ids, url_encode_datetime  # type: ignore
+from .utils import Colour, _from_json, date_to_datetime_with_z, handle_user_ids, url_encode_datetime  # type: ignore
 
 
 if TYPE_CHECKING:
@@ -538,9 +538,6 @@ class HTTPClient:
         if extension_id:
             params["extension_id"] = extension_id
 
-        def date_to_datetime_with_z(date: datetime.date) -> str:
-            return datetime.datetime.combine(date, datetime.time(0, 0)).isoformat() + "Z"
-
         if started_at and ended_at:
             params["started_at"] = date_to_datetime_with_z(started_at)
             params["ended_at"] = date_to_datetime_with_z(ended_at)
@@ -569,9 +566,6 @@ class HTTPClient:
 
         if game_id:
             params["game_id"] = game_id
-
-        def date_to_datetime_with_z(date: datetime.date) -> str:
-            return datetime.datetime.combine(date, datetime.time(0, 0)).isoformat() + "Z"
 
         if started_at and ended_at:
             params["started_at"] = date_to_datetime_with_z(started_at)
@@ -1161,7 +1155,7 @@ class HTTPClient:
         token_for: str | PartialUser,
     ) -> None:
         params = {
-            "broadcaster_id": broadcaster_id,
+            "from_broadcaster_id": broadcaster_id,
             "moderator_id": moderator_id,
             "to_broadcaster_id": to_broadcaster_id,
         }

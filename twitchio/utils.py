@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import colorsys
+import datetime
 import json
 import logging
 import os
@@ -9,7 +10,6 @@ import pathlib
 import struct
 import sys
 from collections.abc import Callable
-from datetime import UTC, datetime
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
 from urllib.parse import quote
@@ -90,7 +90,7 @@ def stream_supports_rgb(stream: Any) -> bool:
     return False
 
 
-def parse_timestamp(timestamp: str) -> datetime:
+def parse_timestamp(timestamp: str) -> datetime.datetime:
     """
     Parses a timestamp in ISO8601 format to a datetime object.
 
@@ -104,7 +104,7 @@ def parse_timestamp(timestamp: str) -> datetime:
     datetime.datetime
         The parsed datetime object.
     """
-    return datetime.fromisoformat(timestamp)
+    return datetime.datetime.fromisoformat(timestamp)
 
 
 class ColourFormatter(logging.Formatter):
@@ -733,7 +733,7 @@ def chunk_list(sequence: list[Any], n: int) -> Generator[Any, Any, Any]:
         yield sequence[i : i + n]
 
 
-def url_encode_datetime(dt: datetime) -> str:
+def url_encode_datetime(dt: datetime.datetime) -> str:
     """
     Formats a datetime object to an RFC 3339 compliant string and URL-encodes it.
     If the datetime object does not have a timezone, it is converted to UTC first.
@@ -748,7 +748,7 @@ def url_encode_datetime(dt: datetime) -> str:
     str
         The URL encoded parsed datetime object.
     """
-    formatted_dt = dt.replace(tzinfo=UTC).isoformat() if dt.tzinfo is None else dt.isoformat()
+    formatted_dt = dt.replace(tzinfo=datetime.UTC).isoformat() if dt.tzinfo is None else dt.isoformat()
 
     return quote(formatted_dt)
 
@@ -841,4 +841,8 @@ def handle_user_ids(is_self: bool = False) -> Callable[..., Any]:
 
 
 def _is_submodule(parent: str, child: str) -> bool:
-    return parent == child or child.startswith(parent + ".")
+    return parent == child or child.startswith(f"{parent}.")
+
+
+def date_to_datetime_with_z(date: datetime.date) -> str:
+    return f"{datetime.datetime.combine(date, datetime.time(0, 0)).isoformat()}Z"
