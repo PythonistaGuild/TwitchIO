@@ -215,7 +215,9 @@ class Client:
                 payload: EventErrorPayload = EventErrorPayload(error=e, listener=listener, original=original)
                 await self.event_error(payload)
             except Exception as inner:
-                logger.error('Ignoring Exception in listener "%s.event_error":\n', self.__qualname__, exc_info=inner)
+                logger.error(
+                    'Ignoring Exception in listener "%s.event_error":\n', self.__class__.__qualname__, exc_info=inner
+                )
 
     def dispatch(self, event: str, payload: Any | None = None) -> None:
         name: str = "event_" + event.lower()
