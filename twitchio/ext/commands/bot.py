@@ -292,6 +292,22 @@ class Bot(Mixin[None], Client):
 
         return component
 
+    def get_component(self, name: str, /) -> Component | None:
+        """
+        Retrieve a Component from the bots loaded Component.
+        This will return `None` if the Component was not found.
+
+        Parameters
+        ----------
+        name: str
+            The name of the Component.
+
+        Returns
+        -------
+        Component | None
+        """
+        return self._components.get(name)
+
     def get_context(self, message: ChatMessage, *, cls: Any = None) -> Any:
         cls = cls or Context
         return cls(message, bot=self)
