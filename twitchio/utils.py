@@ -1,3 +1,28 @@
+"""
+MIT License
+
+Copyright (c) 2017 - Present PythonistaGuild
+Copyright (c) 2015-present Rapptz (https://github.com/Rapptz/discord.py/blob/master/discord/utils.py)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,9 +34,10 @@ import os
 import pathlib
 import struct
 import sys
-from collections.abc import Callable
+import typing
+from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, ForwardRef, Generic, Literal, Self, TypeVar, Union, cast
 from urllib.parse import quote
 
 
@@ -847,3 +873,118 @@ def _is_submodule(parent: str, child: str) -> bool:
 
 def date_to_datetime_with_z(date: datetime.date) -> str:
     return f"{datetime.datetime.combine(date, datetime.time(0, 0)).isoformat()}Z"
+
+
+def flatten_literal_params(parameters: Iterable[Any]) -> tuple[Any, ...]:
+    params: list[Any] = []
+    literal_cls = type(Literal[0])
+
+    for p in parameters:
+        if isinstance(p, literal_cls):
+            params.extend(p.__args__)  # type: ignore
+        else:
+            params.append(p)
+
+    return tuple(params)
+
+
+def normalise_optional_params(parameters: Iterable[Any]) -> tuple[Any, ...]:
+    none_cls = type(None)
+    return tuple(p for p in parameters if p is not none_cls) + (none_cls,)  # noqa: RUF005
+
+
+def evaluate_annotation(
+    tp: Any,
+    globals: dict[str, Any],
+    locals: dict[str, Any],
+    cache: dict[str, Any],
+    *,
+    implicit_str: bool = True,
+) -> Any:
+    if isinstance(tp, ForwardRef):
+        tp = tp.__forward_arg__
+        # ForwardRefs always evaluate their internals
+        implicit_str = True
+
+    if implicit_str and isinstance(tp, str):
+        if tp in cache:
+            return cache[tp]
+        evaluated = evaluate_annotation(eval(tp, globals, locals), globals, locals, cache)
+        cache[tp] = evaluated
+        return evaluated
+
+    if getattr(tp.__repr__, "__objclass__", None) is typing.TypeAliasType:  # type: ignore
+        temp_locals = dict(**locals, **{t.__name__: t for t in tp.__type_params__})  # type: ignore
+        annotation = evaluate_annotation(tp.__value__, globals, temp_locals, cache.copy())  # type: ignore
+        if hasattr(tp, "__args__"):
+            annotation = annotation[tp.__args__]
+        return annotation
+
+    if hasattr(tp, "__supertype__"):
+        return evaluate_annotation(tp.__supertype__, globals, locals, cache)
+
+    if hasattr(tp, "__metadata__"):
+        # Annotated[X, Y] can access Y via __metadata__
+        metadata = tp.__metadata__[0]
+        return evaluate_annotation(metadata, globals, locals, cache)
+
+    if hasattr(tp, "__args__"):
+        implicit_str = True
+        is_literal = False
+        args = tp.__args__
+        if not hasattr(tp, "__origin__"):
+            return tp
+        if tp.__origin__ is Union:
+            try:
+                if args.index(type(None)) != len(args) - 1:
+                    args = normalise_optional_params(tp.__args__)
+            except ValueError:
+                pass
+        if tp.__origin__ is Literal:
+            args = flatten_literal_params(tp.__args__)
+            implicit_str = False
+            is_literal = True
+
+        evaluated_args = tuple(evaluate_annotation(arg, globals, locals, cache, implicit_str=implicit_str) for arg in args)
+
+        if is_literal and not all(isinstance(x, (str, int, bool, type(None))) for x in evaluated_args):
+            raise TypeError("Literal arguments must be of type str, int, bool, or NoneType.")
+
+        try:
+            return tp.copy_with(evaluated_args)
+        except AttributeError:
+            return tp.__origin__[evaluated_args]  # type: ignore
+
+    return tp
+
+
+def resolve_annotation(
+    annotation: Any,
+    globalns: dict[str, Any],
+    localns: dict[str, Any] | None,
+    cache: dict[str, Any] | None,
+) -> Any:
+    if annotation is None:
+        return type(None)
+    if isinstance(annotation, str):
+        annotation = ForwardRef(annotation)
+
+    locals = globalns if localns is None else localns
+    if cache is None:
+        cache = {}
+    return evaluate_annotation(annotation, globalns, locals, cache)
+
+
+def is_inside_class(func: Callable[..., Any]) -> bool:
+    # For methods defined in a class, the qualname has a dotted path
+    # denoting which class it belongs to. So, e.g. for A.foo the qualname
+    # would be A.foo while a global foo() would just be foo.
+    #
+    # Unfortunately, for nested functions this breaks. So inside an outer
+    # function named outer, those two would end up having a qualname with
+    # outer.<locals>.A.foo and outer.<locals>.foo
+
+    if func.__qualname__ == func.__name__:
+        return False
+    (remaining, _, _) = func.__qualname__.rpartition(".")
+    return not remaining.endswith("<locals>")
