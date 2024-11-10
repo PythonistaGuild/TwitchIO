@@ -1018,7 +1018,7 @@ class _CaseInsensitiveDict(dict[str, VT]):
     @overload
     def get(self, key: str, default: DT, /) -> VT | DT: ...
 
-    def get(self, key: str, default: DT = None) -> VT | DT:
+    def get(self, key: str, default: DT = None, /) -> VT | DT:
         return super().get(key.casefold(), default)
 
     @overload
@@ -1030,7 +1030,7 @@ class _CaseInsensitiveDict(dict[str, VT]):
     @overload
     def pop(self, key: str, default: DT, /) -> VT | DT: ...
 
-    def pop(self, key: str, default: DT = MISSING) -> VT | DT:
+    def pop(self, key: str, default: DT = MISSING, /) -> VT | DT:
         if default is MISSING:
             return super().pop(key.casefold())
 
