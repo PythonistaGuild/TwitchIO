@@ -37,13 +37,35 @@ if TYPE_CHECKING:
 
 __all__ = ("_BaseConverter",)
 
+_BOOL_MAPPING: dict[str, bool] = {
+    "true": True,
+    "false": False,
+    "t": True,
+    "f": False,
+    "1": True,
+    "0": False,
+    "y": True,
+    "n": False,
+    "yes": True,
+    "no": False,
+}
+
 
 class _BaseConverter:
     def __init__(self, client: Bot) -> None:
         self.__client: Bot = client
 
         self._MAPPING: dict[Any, Any] = {User: self._user}
-        self._DEFAULTS: dict[type, type] = {str: str, int: int, float: float}
+        self._DEFAULTS: dict[type, Any] = {str: str, int: int, float: float, bool: self._bool, type(None): type(None)}
+
+    def _bool(self, arg: str) -> bool:
+        try:
+            result = _BOOL_MAPPING[arg.lower()]
+        except KeyError:
+            pretty: str = " | ".join(f'"{k}"' for k in _BOOL_MAPPING)
+            raise BadArgument(f'Failed to convert "{arg}" to type bool. Expected any: [{pretty}]', value=arg)
+
+        return result
 
     async def _user(self, context: Context, arg: str) -> User:
         arg = arg.lower()
