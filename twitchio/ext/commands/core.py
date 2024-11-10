@@ -26,11 +26,13 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import functools
 import inspect
 from collections.abc import Callable, Coroutine, Generator
 from types import MappingProxyType, UnionType
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeAlias, TypeVar, Union, Unpack, overload
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, Literal, ParamSpec, TypeAlias, TypeVar, Union, Unpack, overload
 
+import twitchio
 from twitchio.utils import MISSING
 
 from .exceptions import *
@@ -71,6 +73,52 @@ DT = TypeVar("DT")
 VT = TypeVar("VT")
 
 
+def unwrap_function(function: Callable[..., Any], /) -> Callable[..., Any]:
+    partial = functools.partial
+
+    while True:
+        if hasattr(function, "__wrapped__"):
+            function = function.__wrapped__  # type: ignore
+        elif isinstance(function, partial):
+            function = function.func
+        else:
+            return function
+
+
+def get_signature_parameters(
+    function: Callable[..., Any],
+    globalns: dict[str, Any],
+    /,
+    *,
+    skip_parameters: int | None = None,
+) -> dict[str, inspect.Parameter]:
+    signature = inspect.Signature.from_callable(function)
+    params: dict[str, inspect.Parameter] = {}
+
+    cache: dict[str, Any] = {}
+    eval_annotation = twitchio.utils.evaluate_annotation
+    required_params = twitchio.utils.is_inside_class(function) + 1 if skip_parameters is None else skip_parameters
+
+    if len(signature.parameters) < required_params:
+        raise TypeError(f"Command signature requires at least {required_params - 1} parameter(s)")
+
+    iterator = iter(signature.parameters.items())
+    for _ in range(0, required_params):
+        next(iterator)
+
+    for name, parameter in iterator:
+        annotation = parameter.annotation
+
+        if annotation is None:
+            params[name] = parameter.replace(annotation=type(None))
+            continue
+
+        annotation = eval_annotation(annotation, globalns, globalns, cache)
+        params[name] = parameter.replace(annotation=annotation)
+
+    return params
+
+
 class CommandErrorPayload:
     """Payload received in the :func:`~twitchio.event_command_error` event.
 
@@ -107,7 +155,7 @@ class Command(Generic[Component_T, P]):
         **kwargs: Unpack[CommandOptions],
     ) -> None:
         self._name: str = name
-        self._callback = callback
+        self.callback = callback
         self._aliases: list[str] = kwargs.get("aliases", [])
         self._guards: list[Callable[..., bool] | Callable[..., CoroC]] = getattr(self._callback, "__command_guards__", [])
 
@@ -178,16 +226,59 @@ class Command(Generic[Component_T, P]):
         """
         return self._callback
 
+    @callback.setter
+    def callback(
+        self, func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro]
+    ) -> None:
+        self._callback = func
+        unwrap = unwrap_function(func)
+        self.module: str = unwrap.__module__
+
+        try:
+            globalns = unwrap.__globals__
+        except AttributeError:
+            globalns = {}
+
+        self._params: dict[str, inspect.Parameter] = get_signature_parameters(func, globalns)
+
+    def _convert_literal_type(
+        self, context: Context, param: inspect.Parameter, args: tuple[Any, ...], *, raw: str | None
+    ) -> Any:
+        name: str = param.name
+        result: Any = MISSING
+
+        for arg in reversed(args):
+            type_: type = type(arg)
+            base = context.bot._base_converter._DEFAULTS.get(type_)
+
+            if base:
+                try:
+                    result = base(raw)
+                except Exception:
+                    continue
+
+                break
+
+        if result not in args:
+            pretty: str = " | ".join(str(a) for a in args)
+            raise BadArgument(f'Failed to convert Literal, expected any [{pretty}], got "{raw}".', name=name, value=raw)
+
+        return result
+
     async def _do_conversion(self, context: Context, param: inspect.Parameter, *, annotation: Any, raw: str | None) -> Any:
         name: str = param.name
 
         if isinstance(annotation, UnionType) or getattr(annotation, "__origin__", None) is Union:
             converters = list(annotation.__args__)
-            converters.remove(type(None))
+
+            try:
+                converters.remove(type(None))
+            except ValueError:
+                pass
 
             result: Any = MISSING
 
-            for c in converters:
+            for c in reversed(converters):
                 try:
                     result = await self._do_conversion(context, param=param, annotation=c, raw=raw)
                 except Exception:
@@ -195,7 +286,18 @@ class Command(Generic[Component_T, P]):
 
             if result is MISSING:
                 raise BadArgument(
-                    f'Failed to convert argument "{name}" with any converter from Union: {converters}. No default value was provided.',
+                    f'Failed to convert argument "{name}" with any converter from Union: {converters}.',
+                    name=name,
+                    value=raw,
+                )
+
+            return result
+
+        if getattr(annotation, "__origin__", None) is Literal:
+            result = self._convert_literal_type(context, param, annotation.__args__, raw=raw)
+            if result is MISSING:
+                raise BadArgument(
+                    f"Failed to convert Literal, no converter found for types in {annotation.__args__}",
                     name=name,
                     value=raw,
                 )
@@ -230,11 +332,7 @@ class Command(Generic[Component_T, P]):
 
     async def _parse_arguments(self, context: Context) -> ...:
         context._view.skip_ws()
-        signature: inspect.Signature = inspect.signature(self._callback)
-
-        # We expect context always and self with commands in components...
-        skip: int = 2 if self._injected else 1
-        params: list[inspect.Parameter] = list(signature.parameters.values())[skip:]
+        params: list[inspect.Parameter] = list(self._params.values())
 
         args: list[Any] = []
         kwargs = {}
