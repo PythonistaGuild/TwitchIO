@@ -28,6 +28,7 @@ from __future__ import annotations
 import asyncio
 import colorsys
 import datetime
+import functools
 import json
 import logging
 import os
@@ -988,3 +989,15 @@ def is_inside_class(func: Callable[..., Any]) -> bool:
         return False
     (remaining, _, _) = func.__qualname__.rpartition(".")
     return not remaining.endswith("<locals>")
+
+
+def unwrap_function(function: Callable[..., Any], /) -> Callable[..., Any]:
+    partial = functools.partial
+
+    while True:
+        if hasattr(function, "__wrapped__"):
+            function = function.__wrapped__  # type: ignore
+        elif isinstance(function, partial):
+            function = function.func
+        else:
+            return function

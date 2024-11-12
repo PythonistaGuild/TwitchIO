@@ -43,7 +43,7 @@ from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload
 from .user import ActiveExtensions, Extension, PartialUser, User
-from .utils import EventWaiter
+from .utils import EventWaiter, unwrap_function
 from .web import AiohttpAdapter
 from .web.utils import BaseAdapter
 
@@ -212,7 +212,9 @@ class Client:
             await called_
         except Exception as e:
             try:
-                payload: EventErrorPayload = EventErrorPayload(error=e, listener=listener, original=original)
+                payload: EventErrorPayload = EventErrorPayload(
+                    error=e, listener=unwrap_function(listener), original=original
+                )
                 await self.event_error(payload)
             except Exception as inner:
                 logger.error(
