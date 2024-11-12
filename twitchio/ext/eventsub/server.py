@@ -344,6 +344,9 @@ class EventSubClient(web.Application):
     def subscribe_channel_vip_remove(self, broadcaster: Union[PartialUser, str, int]):
         return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_remove, broadcaster)
 
+    def subscribe_channel_ad_break_begin(self, broadcaster: Union[PartialUser, str, int]):
+        return self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_ad_break_begin, broadcaster)
+
     async def subscribe_user_authorization_granted(self):
         return await self._http.create_webhook_subscription(
             models.SubscriptionTypes.user_authorization_grant, {"client_id": self.client._http.client_id}

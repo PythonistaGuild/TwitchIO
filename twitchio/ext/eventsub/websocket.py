@@ -578,3 +578,6 @@ class EventSubWSClient:
 
     async def subscribe_channel_vip_remove(self, broadcaster: Union[PartialUser, str, int], token: str):
         await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_vip_remove, broadcaster, token)
+
+    async def subscribe_channel_ad_break_begin(self, broadcaster: Union[PartialUser, str, int], token: str):
+        await self._subscribe_with_broadcaster(models.SubscriptionTypes.channel_ad_break_begin, broadcaster, token)

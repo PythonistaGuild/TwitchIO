@@ -2195,6 +2195,36 @@ class SuspiciousUserUpdateData(EventData):
         self.trust_status: Literal["active_monitoring", "restricted", "none"] = data["low_trust_status"]
 
 
+class ChannelAdBreakBeginData(EventData):
+    """
+    An ad begin event.
+
+    Attributes
+    -----------
+    is_automatic: :class:`bool`
+        Whether the ad was run manually or automatically via ads manager.
+    broadcaster: :class:`~twitchio.PartialUser`
+        The channel where a midroll commercial break has started running.
+    requester: Optional[:class:`twitchio.PartialUser`]
+        The user who started the ad break. Will be ``None`` if ``is_automatic`` is ``True``.
+    duration: :class:`int`
+        The ad duration in seconds.
+    started_at: :class:`datetime.datetime`
+        When the ad began.
+    """
+
+    __slots__ = ("is_automatic", "broadcaster", "requester", "duration", "started_at")
+
+    def __init__(self, client: EventSubClient, data: dict) -> None:
+        self.is_automatic: bool = data["is_automatic"]
+        self.broadcaster: PartialUser = _transform_user(client, data, "broadcaster_user")
+        self.requester: Optional[PartialUser] = (
+            None if self.is_automatic else _transform_user(client, data, "requester_user")
+        )
+        self.duration: int = data["duration_seconds"]
+        self.started_at: datetime.datetime = _parse_datetime(data["started_at"])
+
+
 class AutoCustomReward:
     """
     A reward object for an Auto Reward Redeem.
@@ -2318,6 +2348,7 @@ _DataType = Union[
     ChannelModerateData,
     AutoRewardRedeem,
     ChannelVIPAddRemove,
+    ChannelAdBreakBeginData,
 ]
 
 
@@ -2409,6 +2440,8 @@ class _SubscriptionTypes(metaclass=_SubTypesMeta):
     user_update = "user.update", 1, UserUpdateData
 
     suspicious_user_update = "channel.suspicious_user.update", 1, SuspiciousUserUpdateData
+
+    channel_ad_break_begin = "channel.ad_break.begin", 1, ChannelAdBreakBeginData
 
 
 SubscriptionTypes = _SubscriptionTypes()
