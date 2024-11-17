@@ -390,10 +390,9 @@ class Command(Generic[Component_T, P]):
                 result = guard(*args)
                 if asyncio.iscoroutine(result):
                     result = await result
+            except GuardFailure:
+                raise
             except Exception as e:
-                if isinstance(e, GuardFailure):
-                    raise
-
                 raise GuardFailure(exc_msg, guard=guard) from e
 
             if result is not True:
@@ -401,7 +400,7 @@ class Command(Generic[Component_T, P]):
 
     async def _run_guards(self, context: Context) -> None:
         # Run global guard first...
-        await context.bot.global_guard(context)
+        await self._guard_runner([context.bot.global_guard], context)
 
         # Run component guards next, if this command is in a component...
         if self._injected is not None and self._injected.__all_guards__:
