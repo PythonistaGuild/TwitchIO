@@ -108,7 +108,7 @@ class Stream:
         self.viewer_count: int = data["viewer_count"]
         self.started_at = parse_timestamp(data["started_at"])
         self.language: str = data["language"]
-        self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
+        self.thumbnail: Asset = Asset(data["thumbnail_url"], dimensions=(640, 360), http=http)
         self.is_mature: bool = data["is_mature"]
         self.tags: list[str] = data["tags"]
 
