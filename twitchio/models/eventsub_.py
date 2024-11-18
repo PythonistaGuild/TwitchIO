@@ -3088,7 +3088,7 @@ class BaseChannelPointsRedemption(BaseEvent):
         self.user_input: str = payload["user_input"]
 
     def __repr__(self) -> str:
-        return f"<BaseChannelPointsRedemption broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+        return f"<BaseChannelPointsRedemption broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
 class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
@@ -3126,7 +3126,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         super().__init__(payload, http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelPointsRedemptionAdd broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+        return f"<ChannelPointsRedemptionAdd broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
     async def fulfill(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
         """
@@ -3219,7 +3219,7 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
         super().__init__(payload, http=http)
 
     def __repr__(self) -> str:
-        return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user{self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+        return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
 class PollVoting(NamedTuple):
