@@ -57,6 +57,9 @@ except ImportError:
     _from_json = json.loads
 
 
+PY_312 = sys.version_info >= (3, 12)
+
+
 __all__ = (
     "_from_json",
     "setup_logging",
@@ -914,7 +917,7 @@ def evaluate_annotation(
         cache[tp] = evaluated
         return evaluated
 
-    if getattr(tp.__repr__, "__objclass__", None) is typing.TypeAliasType:  # type: ignore
+    if PY_312 and getattr(tp.__repr__, "__objclass__", None) is typing.TypeAliasType:  # type: ignore
         temp_locals = dict(**locals, **{t.__name__: t for t in tp.__type_params__})  # type: ignore
         annotation = evaluate_annotation(tp.__value__, globals, temp_locals, cache.copy())  # type: ignore
         if hasattr(tp, "__args__"):
