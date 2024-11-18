@@ -102,7 +102,7 @@ class PartialUser:
         self.display_name = display_name or name
 
     def __repr__(self) -> str:
-        return f"<PartialUser id={self.id}, name={self.name}>"
+        return f"<PartialUser id={self.id} name={self.name}>"
 
     def __str__(self) -> str:
         return self.name or "..."
@@ -3393,8 +3393,8 @@ class User(PartialUser):
         Description of the user.
     profile_image: Asset
         Profile image as an asset.
-    offline_image: Asset
-        Offline image as an asset.
+    offline_image: Asset | None
+        Offline image as an asset, otherwise None if broadcaster as not set one.
     email: str | None
         The user's verified email address. The object includes this field only if the user access token includes the ``user:read:email`` scope.
     created_at: datetime.datetime
@@ -3418,7 +3418,7 @@ class User(PartialUser):
         self.broadcaster_type: Literal["affiliate", "partner", ""] = data["broadcaster_type"]
         self.description: str = data["description"]
         self.profile_image: Asset = Asset(data["profile_image_url"], http=http)
-        self.offline_image: Asset = Asset(data["offline_image_url"], http=http)
+        self.offline_image: Asset | None = Asset(data["offline_image_url"], http=http) if data["offline_image_url"] else None
         self.email: str | None = data.get("email")
         self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
 
@@ -3651,7 +3651,7 @@ class Chatter(PartialUser):
         self._badges: list[ChatMessageBadge] = badges
 
     def __repr__(self) -> str:
-        return f"<Chatter id={self.id}, name={self.name}, channel={self.channel}>"
+        return f"<Chatter id={self.id} name={self.name}, channel={self.channel}>"
 
     @property
     def channel(self) -> PartialUser:
