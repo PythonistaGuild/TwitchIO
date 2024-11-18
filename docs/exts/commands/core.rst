@@ -26,6 +26,8 @@ Decorators
 
 .. autofunction:: twitchio.ext.commands.group
 
+.. autofunction:: twitchio.ext.commands.cooldown(*, base: BaseCooldown, rate: int, per: float, key: Callable[[Any], Hashable] | Callable[[Any], Coroutine[Any, Any, Hashable]] | BucketType, **kwargs: ~typing.Any)
+
 
 Guards
 ######
@@ -44,3 +46,16 @@ Guards
 
 .. autofunction:: twitchio.ext.commands.is_elevated
 
+
+Cooldowns
+#########
+
+.. autoclass:: twitchio.ext.commands.BaseCooldown
+    :members:
+
+.. autoclass:: twitchio.ext.commands.Cooldown
+
+.. autoclass:: twitchio.ext.commands.GCRACooldown
+
+.. attributetable:: twitchio.ext.commands.BucketType()
+.. autoclass:: twitchio.ext.commands.BucketType()

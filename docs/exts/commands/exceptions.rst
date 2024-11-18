@@ -48,3 +48,5 @@ Exceptions
 .. autoexception:: twitchio.ext.commands.ModuleNotLoadedError
 
 .. autoexception:: twitchio.ext.commands.NoEntryPointError
+
+.. autoexception:: twitchio.ext.commands.CommandOnCooldown
