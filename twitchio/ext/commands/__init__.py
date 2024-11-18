@@ -25,5 +25,6 @@ SOFTWARE.
 from .bot import Bot as Bot
 from .components import *
 from .context import *
+from .cooldowns import *
 from .core import *
 from .exceptions import *

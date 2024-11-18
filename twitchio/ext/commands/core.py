@@ -2,6 +2,7 @@
 MIT License
 
 Copyright (c) 2017 - Present PythonistaGuild
+Copyright (c) 2015 - present Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +27,15 @@ from __future__ import annotations
 
 import asyncio
 import copy
-import functools
 import inspect
 from collections.abc import Callable, Coroutine, Generator
 from types import MappingProxyType, UnionType
 from typing import TYPE_CHECKING, Any, Concatenate, Generic, Literal, ParamSpec, TypeAlias, TypeVar, Union, Unpack, overload
 
 import twitchio
-from twitchio.utils import MISSING
+from twitchio.utils import MISSING, unwrap_function
 
+from .cooldowns import BaseCooldown, Bucket, BucketType, Cooldown, KeyT
 from .exceptions import *
 from .types_ import CommandOptions, Component_T
 
@@ -53,6 +54,7 @@ __all__ = (
     "is_moderator",
     "is_vip",
     "is_elevated",
+    "cooldown",
 )
 
 
@@ -71,18 +73,6 @@ CoroC: TypeAlias = Coroutine[Any, Any, bool]
 
 DT = TypeVar("DT")
 VT = TypeVar("VT")
-
-
-def unwrap_function(function: Callable[..., Any], /) -> Callable[..., Any]:
-    partial = functools.partial
-
-    while True:
-        if hasattr(function, "__wrapped__"):
-            function = function.__wrapped__  # type: ignore
-        elif isinstance(function, partial):
-            function = function.func
-        else:
-            return function
 
 
 def get_signature_parameters(
@@ -158,6 +148,9 @@ class Command(Generic[Component_T, P]):
         self.callback = callback
         self._aliases: list[str] = kwargs.get("aliases", [])
         self._guards: list[Callable[..., bool] | Callable[..., CoroC]] = getattr(self._callback, "__command_guards__", [])
+        self._buckets: list[Bucket[Context]] = getattr(self._callback, "__command_cooldowns__", [])
+        self._guards_after_parsing = kwargs.get("guards_after_parsing", False)
+        self._cooldowns_first = kwargs.get("cooldowns_before_guards", False)
 
         self._injected: Component_T | None = None
         self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
@@ -398,7 +391,10 @@ class Command(Generic[Component_T, P]):
             if result is not True:
                 raise GuardFailure(exc_msg, guard=guard)
 
-    async def _run_guards(self, context: Context) -> None:
+    async def _run_guards(self, context: Context, *, with_cooldowns: bool = True) -> None:
+        if with_cooldowns and self._cooldowns_first:
+            await self._run_cooldowns(context)
+
         # Run global guard first...
         await self._guard_runner([context.bot.global_guard], context)
 
@@ -410,8 +406,33 @@ class Command(Generic[Component_T, P]):
         if self._guards:
             await self._guard_runner(self._guards, context)
 
+        if with_cooldowns and not self._cooldowns_first:
+            await self._run_cooldowns(context)
+
+    async def _run_cooldowns(self, context: Context) -> None:
+        type_ = "group" if isinstance(self, Group) else "command"
+
+        for bucket in self._buckets:
+            cooldown = await bucket.get_cooldown(context)
+            if cooldown is None:
+                continue
+
+            retry = cooldown.update()
+            if retry is None:
+                continue
+
+            raise CommandOnCooldown(
+                f'The {type_} "{self}" is on cooldown. Try again in {retry} seconds.',
+                remaining=retry,
+                cooldown=cooldown,
+            )
+
     async def _invoke(self, context: Context) -> None:
         context._component = self._injected
+
+        if not self._guards_after_parsing:
+            await self._run_guards(context)
+            context._passed_guards = True
 
         try:
             args, kwargs = await self._parse_arguments(context)
@@ -426,8 +447,12 @@ class Command(Generic[Component_T, P]):
         args: list[Any] = [context, *args]
         args.insert(0, self._injected) if self._injected else None
 
-        await self._run_guards(context)
-        context._passed_guards = True
+        if self._guards_after_parsing:
+            await self._run_guards(context)
+            context._passed_guards = True
+
+        if self._guards_after_parsing:
+            await self._run_cooldowns(context)
 
         try:
             await context.bot.before_invoke(context)
@@ -587,6 +612,12 @@ def command(
     extras: dict
         A dict of any data which is stored on this command object. Can be used anywhere you have access to the command object,
         E.g. in a ``before`` or ``after`` hook.
+    guards_after_parsing: bool
+        An optional bool, indicating whether to run guards after argument parsing has completed.
+        Defaults to ``False``, which means guards will be checked **before** command arguments are parsed and available.
+    cooldowns_before_guards: bool
+        An optional bool, indicating whether to run cooldown guards after all other guards succeed.
+        Defaults to ``False``, which means cooldowns will be checked **after** all guards have successfully completed.
 
     Examples
     --------
@@ -655,6 +686,12 @@ def group(
     invoke_fallback: bool
         An optional bool which tells the parent to be invoked as a fallback when no sub-command can be found.
         Defaults to ``False``.
+    apply_cooldowns: bool
+        An optional bool indicating whether the cooldowns on this group are checked before invoking any sub commands.
+        Defaults to ``True``.
+    apply_guards: bool
+        An optional bool indicating whether the guards on this group should be ran before invoking any sub commands.
+        Defaults to ``True``.
 
     Examples
     --------
@@ -716,6 +753,8 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._invoke_fallback: bool = kwargs.get("invoke_fallback", False)
+        self._apply_cooldowns: bool = kwargs.get("apply_cooldowns", True)
+        self._apply_guards: bool = kwargs.get("apply_guards", True)
 
     def walk_commands(self) -> Generator[Command[Component_T, P] | Group[Component_T, P]]:
         """A generator which recursively walks through the sub-commands and sub-groups of this group."""
@@ -737,9 +776,16 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         context._subcommand_trigger = trigger or None
 
         if not trigger or not next_ and self._invoke_fallback:
+            view.undo()
             await super()._invoke(context=context)
 
         elif next_:
+            if self._apply_cooldowns:
+                await super()._run_cooldowns(context)
+
+            if self._apply_guards:
+                await super()._run_guards(context, with_cooldowns=False)
+
             await next_.invoke(context=context)
 
         else:
@@ -752,7 +798,11 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
             await self._dispatch_error(context, e)
 
     def command(
-        self, name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None
+        self,
+        name: str | None = None,
+        aliases: list[str] | None = None,
+        extras: dict[Any, Any] | None = None,
+        **kwargs: Any,
     ) -> Any:
         """|deco|
 
@@ -792,12 +842,18 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         extras: dict
             A dict of any data which is stored on this command object. Can be used anywhere you have access to the command object,
             E.g. in a ``before`` or ``after`` hook.
+        guards_after_parsing: bool
+            An optional bool, indicating whether to run guards after argument parsing has completed.
+            Defaults to ``False``, which means guards will be checked **before** command arguments are parsed and available.
+        cooldowns_before_guards: bool
+            An optional bool, indicating whether to run cooldown guards after all other guards succeed.
+            Defaults to ``False``, which means cooldowns will be checked **after** all guards have successfully completed.
         """
 
         def wrapper(
             func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
         ) -> Command[Any, ...]:
-            new = command(name=name, aliases=aliases, extras=extras, parent=self)(func)
+            new = command(name=name, aliases=aliases, extras=extras, parent=self, **kwargs)(func)
 
             self.add_command(new)
             return new
@@ -856,12 +912,18 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         invoke_fallback: bool
             An optional bool which tells the parent to be invoked as a fallback when no sub-command can be found.
             Defaults to ``False``.
+        apply_cooldowns: bool
+            An optional bool indicating whether the cooldowns on this group are checked before invoking any sub commands.
+            Defaults to ``True``.
+        apply_guards: bool
+            An optional bool indicating whether the guards on this group should be ran before invoking any sub commands.
+            Defaults to ``True``.
         """
 
         def wrapper(
             func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
         ) -> Command[Any, ...]:
-            new = group(name=name, aliases=aliases, extras=extras, parent=self)(func)
+            new = group(name=name, aliases=aliases, extras=extras, parent=self, **kwargs)(func)
 
             self.add_command(new)
             return new
@@ -1094,6 +1156,117 @@ def is_elevated() -> Any:
         return chatter.moderator or chatter.vip
 
     return guard(predicate)
+
+
+def cooldown(*, base: type[BaseCooldown] = Cooldown, key: KeyT = BucketType.chatter, **kwargs: Any) -> Any:
+    """|deco|
+
+    A decorator which adds a :class:`~.commands.Cooldown` to a :class:`~.Command`.
+
+    The parameters of this decorator may change depending on the class passed to the ``base`` parameter.
+    The parameters needed for the default built-in classes are listed instead.
+
+    When a command is on cooldown or ratelimited, the :exc:`~.commands.CommandOnCooldown` exception is raised and propagated to all
+    error handlers.
+
+    Parameters
+    ----------
+    base: :class:`~.commands.BaseCooldown`
+        Optional base class to use to construct the cooldown. By default this is the :class:`~.commands.Cooldown` class, which
+        implements a ``Token Bucket Algorithm``. Another option is the :class:`~.commands.GCRACooldown` class which implements
+        the Generic Cell Rate Algorithm, which can be thought of as similar to a continuous state leaky-bucket algorithm, but
+        instead of updating internal state, calculates a Theoretical Arrival Time (TAT), making it more performant,
+        and dissallowing short bursts of requests. However before choosing a class, consider reading more information on the
+        differences between the ``Token Bucket`` and ``GCRA``.
+
+        A custom class which inherits from :class:`~.commands.BaseCooldown` could also be used. All ``keyword-arguments``
+        passed to this decorator, minus ``base`` and ``key`` will also be passed to the constructor of the cooldown base class.
+
+        Useful if you would like to implement your own ratelimiting algorithm.
+    key: Callable[[Any], Hashable] | Callable[[Any], Coroutine[Any, Any, Hashable]] | :class:`~.commands.BucketType`
+        A regular or coroutine function, or :class:`~.commands.BucketType` which must return a :class:`typing.Hashable`
+        used to determine the keys for the cooldown.
+
+        The :class:`~.commands.BucketType` implements some default strategies. If your function returns ``None`` the cooldown
+        will be bypassed. See below for some examples. By default the key is :attr:`~.commands.BucketType.chatter`.
+    rate: int
+        An ``int`` indicating how many times a command should be allowed ``per`` x amount of time. Note the relevance and
+        effects of both ``rate`` and ``per`` change slightly between algorithms.
+    per: float | datetime.timedelta
+        A ``float`` or :class:`datetime.timedelta` indicating the length of the time (as seconds) a cooldown window is open.
+
+        E.g. if ``rate`` is ``2`` and ``per`` is ``60.0``, using the default :class:`~.commands.Cooldown` class, you will only
+        be able to send ``two`` commands ``per 60 seconds``, with the window starting when you send the first command.
+
+    Examples
+    --------
+
+    Using the default :class:`~.commands.Cooldown` to allow the command to be ran twice by an individual chatter, every 10 seconds.
+
+    .. code:: python3
+
+        @commands.command()
+        @commands.cooldown(rate=2, per=10, key=commands.BucketType.chatter)
+        async def hello(ctx: commands.Context) -> None:
+            ...
+
+    Using a custom key to bypass cooldowns for certain users.
+
+    .. code:: python3
+
+        def bypass_cool(ctx: commands.Context) -> typing.Hashable | None:
+            # Returning None will bypass the cooldown
+
+            if ctx.chatter.name.startswith("cool"):
+                return None
+
+            # For everyone else, return and call the default chatter strategy
+            # This strategy returns a tuple of (channel/broadcaster.id, chatter.id) to use as the unique key
+            return commands.BucketType.chatter(ctx)
+
+        @commands.command()
+        @commands.cooldown(rate=2, per=10, key=bypass_cool)
+        async def hello(ctx: commands.Context) -> None:
+            ...
+
+    Using a custom function to implement dynamic keys.
+
+    .. code:: python3
+
+        async def custom_key(ctx: commands.Context) -> typing.Hashable | None:
+            # As an example, get some user info from a database with the chatter...
+            # This is just to showcase a use for an async version of a custom key...
+            ...
+
+            # Example column in database...
+            if row["should_bypass_cooldown"]:
+                return None
+
+            # Note: Returing chatter.id is equivalent to commands.BucketType.user NOT commands.BucketType.chatter
+            # which uses the channel ID and User ID together as the key...
+            return ctx.chatter.id
+
+        @commands.command()
+        @commands.cooldown(rate=1, per=300, key=custom_key)
+        async def hello(ctx: commands.Context) -> None:
+            ...
+    """
+    bucket_: Bucket[Context] = Bucket.from_cooldown(base=base, key=key, **kwargs)
+
+    def wrapper(func: Any) -> Any:
+        nonlocal bucket_
+
+        if isinstance(func, Command):
+            func._buckets.append(bucket_)
+        else:
+            try:
+                func.__command_cooldowns__.append(bucket_)
+            except AttributeError:
+                func.__command_cooldowns__ = [bucket_]
+
+        return func  # type: ignore
+
+    return wrapper
 
 
 class _CaseInsensitiveDict(dict[str, VT]):

@@ -27,6 +27,8 @@ from typing import Any
 
 from twitchio.exceptions import TwitchioException
 
+from .cooldowns import BaseCooldown
+
 
 __all__ = (
     "CommandError",
@@ -46,6 +48,7 @@ __all__ = (
     "ModuleLoadFailure",
     "ModuleNotLoadedError",
     "NoEntryPointError",
+    "CommandOnCooldown",
 )
 
 
@@ -161,3 +164,20 @@ class ModuleNotLoadedError(ModuleError):
 
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
+
+
+class CommandOnCooldown(GuardFailure):
+    """Exception raised when a command is invoked while on cooldown/ratelimited.
+
+    Attributes
+    ----------
+    cooldown: :class:`~.commands.BaseCooldown`
+        The specific cooldown instance used that raised this error.
+    remaining: :class:`float`
+        The time remaining for the cooldown as a :class:`float` of seconds.
+    """
+
+    def __init__(self, msg: str | None = None, *, cooldown: BaseCooldown, remaining: float) -> None:
+        self.cooldown: BaseCooldown = cooldown
+        self.remaining: float = remaining
+        super().__init__(msg or f"Cooldown is ratelimited. Try again in {remaining} seconds.")

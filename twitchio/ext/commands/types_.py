@@ -37,6 +37,8 @@ Component_T = TypeVar("Component_T", bound="Component | None")
 class CommandOptions(TypedDict, total=False):
     aliases: list[str]
     extras: dict[Any, Any]
+    guards_after_parsing: bool
+    cooldowns_before_guards: bool
 
 
 class ComponentOptions(TypedDict, total=False):
