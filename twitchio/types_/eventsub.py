@@ -1176,6 +1176,7 @@ class HypeTrainBeginEvent(BaseBroadcasterEvent):
     level: int
     started_at: str
     expires_at: str
+    is_golden_kappa_train: bool
 
 
 class HypeTrainProgressEvent(BaseBroadcasterEvent):
@@ -1188,6 +1189,7 @@ class HypeTrainProgressEvent(BaseBroadcasterEvent):
     level: int
     started_at: str
     expires_at: str
+    is_golden_kappa_train: bool
 
 
 class HypeTrainEndEvent(BaseBroadcasterEvent):
@@ -1198,6 +1200,7 @@ class HypeTrainEndEvent(BaseBroadcasterEvent):
     started_at: str
     ended_at: str
     cooldown_ends_at: str
+    is_golden_kappa_train: bool
 
 
 class ShieldModeBeginEvent(BroadcasterModeratorEvent):

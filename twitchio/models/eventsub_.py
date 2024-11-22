@@ -4140,14 +4140,7 @@ class HypeTrainContribution:
 
 
 class BaseHypeTrain(BaseEvent):
-    __slots__ = (
-        "broadcaster",
-        "id",
-        "level",
-        "total",
-        "top_contributions",
-        "started_at",
-    )
+    __slots__ = ("broadcaster", "id", "level", "total", "top_contributions", "started_at", "golden_kappa")
 
     def __init__(
         self, payload: HypeTrainBeginEvent | HypeTrainProgressEvent | HypeTrainEndEvent, *, http: HTTPClient
@@ -4162,6 +4155,7 @@ class BaseHypeTrain(BaseEvent):
             HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
         ]
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+        self.golden_kappa: bool = bool(payload["is_golden_kappa_train"])
 
     def __repr__(self) -> str:
         return f"<BaseHypeTrain id={self.id} broadcaster={self.broadcaster} started_at={self.started_at}>"
@@ -4193,6 +4187,8 @@ class HypeTrainBegin(BaseHypeTrain):
         The datetime of when the hype train started.
     expires_at: datetime.datetime
         The datetime when the hype train expires. The expiration is extended when the hype train reaches a new level.
+    golden_kappa: bool
+        Indicates if the hype train is a Golden Kappa Train.
     """
 
     subscription_type = "channel.hype_train.begin"
@@ -4241,6 +4237,8 @@ class HypeTrainProgress(BaseHypeTrain):
         The datetime of when the hype train started.
     expires_at: datetime.datetime
         The datetime when the hype train expires. The expiration is extended when the hype train reaches a new level.
+    golden_kappa: bool
+        Indicates if the hype train is a Golden Kappa Train.
     """
 
     subscription_type = "channel.hype_train.progress"
@@ -4285,6 +4283,8 @@ class HypeTrainEnd(BaseHypeTrain):
         The datetime of when the hype train ended.
     cooldown_until: datetime.datetime
         The datetime when the hype train cooldown ends so that the next hype train can start.
+    golden_kappa: bool
+        Indicates if the hype train is a Golden Kappa Train.
     """
 
     subscription_type = "channel.hype_train.end"
