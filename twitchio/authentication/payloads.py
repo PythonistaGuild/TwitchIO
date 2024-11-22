@@ -33,11 +33,11 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "RefreshTokenPayload",
-    "ValidateTokenPayload",
-    "ClientCredentialsPayload",
-    "UserTokenPayload",
     "AuthorizationURLPayload",
+    "ClientCredentialsPayload",
+    "RefreshTokenPayload",
+    "UserTokenPayload",
+    "ValidateTokenPayload",
 )
 
 
@@ -58,7 +58,7 @@ class BasePayload(Mapping[str, Any]):
 
 
 class RefreshTokenPayload(BasePayload):
-    __slots__ = ("access_token", "refresh_token", "expires_in", "scope", "token_type")
+    __slots__ = ("access_token", "expires_in", "refresh_token", "scope", "token_type")
 
     def __init__(self, raw: RefreshTokenResponse, /) -> None:
         super().__init__(raw)
@@ -71,7 +71,7 @@ class RefreshTokenPayload(BasePayload):
 
 
 class ValidateTokenPayload(BasePayload):
-    __slots__ = ("client_id", "login", "scopes", "user_id", "expires_in")
+    __slots__ = ("client_id", "expires_in", "login", "scopes", "user_id")
 
     def __init__(self, raw: ValidateTokenResponse, /) -> None:
         super().__init__(raw)
@@ -84,7 +84,7 @@ class ValidateTokenPayload(BasePayload):
 
 
 class UserTokenPayload(BasePayload):
-    __slots__ = ("access_token", "refresh_token", "expires_in", "scope", "token_type")
+    __slots__ = ("access_token", "expires_in", "refresh_token", "scope", "token_type")
 
     def __init__(self, raw: UserTokenResponse, /) -> None:
         super().__init__(raw)
@@ -108,7 +108,7 @@ class ClientCredentialsPayload(BasePayload):
 
 
 class AuthorizationURLPayload(BasePayload):
-    __slots__ = ("url", "client_id", "redirect_uri", "response_type", "scopes", "force_verify", "state")
+    __slots__ = ("client_id", "force_verify", "redirect_uri", "response_type", "scopes", "state", "url")
 
     def __init__(self, raw: AuthorizationURLResponse, /) -> None:
         super().__init__(raw)

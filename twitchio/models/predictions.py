@@ -87,16 +87,16 @@ class Prediction:
 
     __slots__ = (
         "_http",
-        "id",
         "broadcaster",
-        "title",
-        "winning_outcome_id",
+        "created_at",
+        "ended_at",
+        "id",
+        "locked_at",
         "outcomes",
         "prediction_window",
         "status",
-        "created_at",
-        "ended_at",
-        "locked_at",
+        "title",
+        "winning_outcome_id",
     )
 
     def __init__(
@@ -174,7 +174,7 @@ class PredictionOutcome:
         The number of votes cast using Channel Points.
     """
 
-    __slots__ = ("id", "title", "colour", "channel_points", "users", "top_predictors")
+    __slots__ = ("channel_points", "colour", "id", "title", "top_predictors", "users")
 
     def __init__(
         self,

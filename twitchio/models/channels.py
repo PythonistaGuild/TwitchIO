@@ -46,11 +46,11 @@ if TYPE_CHECKING:
 
 __all__ = (
     "ChannelEditor",
+    "ChannelFollowerEvent",
     "ChannelFollowers",
+    "ChannelInfo",
     "FollowedChannels",
     "FollowedChannelsEvent",
-    "ChannelFollowerEvent",
-    "ChannelInfo",
 )
 
 
@@ -65,7 +65,7 @@ class ChannelEditor:
         The datetime of when the user became one of the broadcaster's editors.
     """
 
-    __slots__ = ("user", "created_at")
+    __slots__ = ("created_at", "user")
 
     def __init__(self, data: ChannelEditorsResponseData, *, http: HTTPClient) -> None:
         self.user = PartialUser(data["user_id"], data["user_name"].lower(), data["user_name"], http=http)
@@ -132,7 +132,7 @@ class ChannelFollowerEvent:
         The datetime of when the user followed the channel.
     """
 
-    __slots__ = ("user", "followed_at")
+    __slots__ = ("followed_at", "user")
 
     def __init__(self, data: ChannelFollowersResponseData, *, http: HTTPClient) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -190,16 +190,16 @@ class ChannelInfo:
     """
 
     __slots__ = (
-        "user",
+        "_http",
+        "classification_labels",
+        "delay",
         "game_id",
         "game_name",
-        "title",
-        "language",
-        "delay",
-        "tags",
-        "classification_labels",
         "is_branded_content",
-        "_http",
+        "language",
+        "tags",
+        "title",
+        "user",
     )
 
     def __init__(self, data: ChannelInformationResponseData, *, http: HTTPClient) -> None:

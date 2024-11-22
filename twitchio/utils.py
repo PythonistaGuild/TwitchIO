@@ -61,16 +61,16 @@ PY_312 = sys.version_info >= (3, 12)
 
 
 __all__ = (
-    "_from_json",
-    "setup_logging",
-    "ColourFormatter",
-    "ColorFormatter",
-    "parse_timestamp",
-    "url_encode_datetime",
     "MISSING",
-    "handle_user_ids",
+    "ColorFormatter",
+    "ColourFormatter",
+    "_from_json",
     "_is_submodule",
     "date_to_datetime_with_z",
+    "handle_user_ids",
+    "parse_timestamp",
+    "setup_logging",
+    "url_encode_datetime",
 )
 
 T_co = TypeVar("T_co", covariant=True)
@@ -259,11 +259,11 @@ class Colour:
         "_code",
         "_hex",
         "_hex_clean",
+        "_hls",
+        "_hls_coords",
         "_html",
         "_rgb",
-        "_hls",
         "_rgb_coords",
-        "_hls_coords",
     )
 
     def __init__(self, data: Colours) -> None:

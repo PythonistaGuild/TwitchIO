@@ -94,7 +94,7 @@ class AutomodMessageHold(BaseEvent):
 
     subscription_type = "automod.message.hold"
 
-    __slots__ = ("broadcaster", "user", "message_id", "text", "level", "category", "held_at")
+    __slots__ = ("broadcaster", "category", "held_at", "level", "message_id", "text", "user")
 
     def __init__(self, payload: AutomodMessageHoldEvent, *, http: HTTPClient) -> None:
         self.broadcaster = PartialUser(
@@ -224,17 +224,17 @@ class AutomodSettingsUpdate(BaseEvent):
     subscription_type = "automod.settings.update"
 
     __slots__ = (
+        "aggression",
         "broadcaster",
+        "bullying",
+        "disability",
+        "misogyny",
         "moderator",
         "overall_level",
-        "disability",
-        "aggression",
-        "misogyny",
-        "bullying",
-        "swearing",
         "race_ethnicity_or_religion",
         "sex_based_terms",
         "sexuality_sex_or_gender",
+        "swearing",
     )
 
     def __init__(self, payload: AutomodSettingsUpdateEvent, *, http: HTTPClient) -> None:
@@ -284,7 +284,7 @@ class AutomodTermsUpdate(BaseEvent):
 
     subscription_type = "automod.terms.update"
 
-    __slots__ = ("broadcaster", "moderator", "action", "automod", "terms")
+    __slots__ = ("action", "automod", "broadcaster", "moderator", "terms")
 
     def __init__(self, payload: AutomodTermsUpdateEvent, *, http: HTTPClient) -> None:
         self.broadcaster = PartialUser(
@@ -323,7 +323,7 @@ class ChannelUpdate(BaseEvent):
 
     subscription_type = "channel.update"
 
-    __slots__ = ("broadcaster", "title", "category_id", "category_name", "content_classification_labels")
+    __slots__ = ("broadcaster", "category_id", "category_name", "content_classification_labels", "title")
 
     def __init__(self, payload: ChannelUpdateEvent, *, http: HTTPClient) -> None:
         self.broadcaster = PartialUser(
@@ -355,7 +355,7 @@ class ChannelFollow(BaseEvent):
 
     subscription_type = "channel.follow"
 
-    __slots__ = ("broadcaster", "user", "followed_at")
+    __slots__ = ("broadcaster", "followed_at", "user")
 
     def __init__(self, payload: ChannelFollowEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -388,7 +388,7 @@ class ChannelAdBreakBegin(BaseEvent):
 
     subscription_type = "channel.ad_break.begin"
 
-    __slots__ = ("broadcaster", "requester", "duration", "automatic", "started_at")
+    __slots__ = ("automatic", "broadcaster", "duration", "requester", "started_at")
 
     def __init__(self, payload: ChannelAdBreakBeginEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -477,8 +477,8 @@ class ChatMessageReply:
     """
 
     __slots__ = (
-        "parent_message_id",
         "parent_message_body",
+        "parent_message_id",
         "parent_user",
         "thread_message_id",
         "thread_user",
@@ -534,7 +534,7 @@ class ChatMessageBadge:
         Currently, this tag contains metadata only for subscriber badges, to indicate the number of months the user has been a subscriber.
     """
 
-    __slots__ = ("set_id", "id", "info")
+    __slots__ = ("id", "info", "set_id")
 
     def __init__(self, data: ChatMessageBadgeData) -> None:
         self.set_id: str = data["set_id"]
@@ -566,7 +566,7 @@ class ChatMessageEmote:
 
     """
 
-    __slots__ = ("set_id", "id", "owner", "format", "_http")
+    __slots__ = ("_http", "format", "id", "owner", "set_id")
 
     def __init__(self, data: ChatMessageEmoteData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
@@ -613,7 +613,7 @@ class ChatMessageCheermote:
         The tier level of the cheermote.
     """
 
-    __slots__ = ("prefix", "bits", "tier")
+    __slots__ = ("bits", "prefix", "tier")
 
     def __init__(self, data: ChatMessageCheermoteData) -> None:
         self.prefix: str = data["prefix"]
@@ -648,7 +648,7 @@ class ChatMessageFragment:
         Emote data if a cheermote is sent.
     """
 
-    __slots__ = ("text", "type", "cheermote", "emote", "mention")
+    __slots__ = ("cheermote", "emote", "mention", "text", "type")
 
     def __init__(self, data: ChatMessageFragmentsData, *, http: HTTPClient) -> None:
         self.text = data["text"]
@@ -669,9 +669,9 @@ class ChatMessageFragment:
 class BaseChatMessage(BaseEvent):
     __slots__ = (
         "broadcaster",
-        "text",
         "fragments",
         "id",
+        "text",
     )
 
     def __init__(
@@ -777,17 +777,17 @@ class ChatMessage(BaseChatMessage):
     subscription_type = "channel.chat.message"
 
     __slots__ = (
-        "chatter",
-        "colour",
         "badges",
-        "type",
-        "cheer",
-        "reply",
-        "channel_points_id",
         "channel_points_animation_id",
+        "channel_points_id",
+        "chatter",
+        "cheer",
+        "colour",
+        "reply",
+        "source_badges",
         "source_broadcaster",
         "source_id",
-        "source_badges",
+        "type",
     )
 
     def __init__(self, payload: ChannelChatMessageEvent, *, http: HTTPClient) -> None:
@@ -866,7 +866,7 @@ class ChatSub:
         The number of months the subscription is for.
     """
 
-    __slots__ = ("tier", "prime", "months")
+    __slots__ = ("months", "prime", "tier")
 
     def __init__(self, data: ChatSubData) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
@@ -914,14 +914,14 @@ class ChatResub:
     """
 
     __slots__ = (
-        "tier",
-        "prime",
-        "months",
-        "cumulative_months",
-        "streak_months",
-        "gift",
         "anonymous",
+        "cumulative_months",
+        "gift",
         "gifter",
+        "months",
+        "prime",
+        "streak_months",
+        "tier",
     )
 
     def __init__(self, data: ChatResubData, *, http: HTTPClient) -> None:
@@ -974,7 +974,7 @@ class ChatSubGift:
         The user who received the gift subscription.
     """
 
-    __slots__ = ("months", "tier", "cumulative_total", "recipient", "community_gift_id")
+    __slots__ = ("community_gift_id", "cumulative_total", "months", "recipient", "tier")
 
     def __init__(self, data: ChatSubGiftData, *, http: HTTPClient) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
@@ -1016,7 +1016,7 @@ class ChatCommunitySubGift:
         The ID of the associated community gift. `Mone` if not associated with a community gift.
     """
 
-    __slots__ = ("total", "tier", "cumulative_total", "id")
+    __slots__ = ("cumulative_total", "id", "tier", "total")
 
     def __init__(self, data: ChatCommunitySubGiftData) -> None:
         self.tier: Literal["1000", "2000", "3000"] = data["sub_tier"]
@@ -1098,7 +1098,7 @@ class ChatRaid:
         Profile image, as an Asset, of the user raiding this channel.
     """
 
-    __slots__ = ("user", "viewer_count", "profile_image")
+    __slots__ = ("profile_image", "user", "viewer_count")
 
     def __init__(self, data: ChatRaidData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -1191,7 +1191,7 @@ class ChatCharityDonation:
         The amount of money donation. This includes currency and decimal places.
     """
 
-    __slots__ = ("name", "amount")
+    __slots__ = ("amount", "name")
 
     def __init__(self, data: ChatCharityDonationData) -> None:
         self.name: str = data["charity_name"]
@@ -1311,37 +1311,37 @@ class ChatNotification(BaseEvent):
     subscription_type = "channel.chat.notification"
 
     __slots__ = (
-        "broadcaster",
-        "chatter",
+        "announcement",
         "anonymous",
-        "colour",
         "badges",
-        "system_message",
-        "id",
-        "text",
-        "fragments",
-        "notice_type",
-        "sub",
-        "resub",
-        "sub_gift",
+        "bits_badge_tier",
+        "broadcaster",
+        "charity_donation",
+        "chatter",
+        "colour",
         "community_sub_gift",
+        "fragments",
         "gift_paid_upgrade",
+        "id",
+        "notice_type",
+        "pay_it_forward",
         "prime_paid_upgrade",
         "raid",
-        "unraid",
-        "pay_it_forward",
-        "announcement",
-        "bits_badge_tier",
-        "charity_donation",
-        "shared_chat_sub",
-        "shared_chat_resub",
-        "shared_chat_sub_gift",
+        "resub",
+        "shared_chat_announcement",
         "shared_chat_community_sub_gift",
         "shared_chat_gift_paid_upgrade",
+        "shared_chat_pay_it_forward",
         "shared_chat_prime_paid_upgrade",
         "shared_chat_raid",
-        "shared_chat_pay_it_forward",
-        "shared_chat_announcement",
+        "shared_chat_resub",
+        "shared_chat_sub",
+        "shared_chat_sub_gift",
+        "sub",
+        "sub_gift",
+        "system_message",
+        "text",
+        "unraid",
     )
 
     def __init__(self, payload: ChannelChatNotificationEvent, *, http: HTTPClient) -> None:
@@ -1476,7 +1476,7 @@ class ChatMessageDelete(BaseEvent):
 
     subscription_type = "channel.chat.message_delete"
 
-    __slots__ = ("broadcaster", "user", "message_id")
+    __slots__ = ("broadcaster", "message_id", "user")
 
     def __init__(self, payload: ChannelChatMessageDeleteEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -1565,7 +1565,7 @@ class ChatUserMessageHold(BaseChatMessage):
 class ChatUserMessageUpdate(BaseChatMessage):
     subscription_type = "channel.chat.user_message_update"
 
-    __slots__ = ("user", "status")
+    __slots__ = ("status", "user")
 
     def __init__(self, payload: ChatUserMessageUpdateEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
@@ -1582,9 +1582,9 @@ class ChatUserMessageUpdate(BaseChatMessage):
 
 class BaseSharedChatSession(BaseEvent):
     __slots__ = (
-        "session_id",
         "broadcaster",
         "host",
+        "session_id",
     )
 
     def __init__(
@@ -1713,9 +1713,9 @@ class ChannelSubscribe(BaseEvent):
 
     __slots__ = (
         "broadcaster",
-        "user",
-        "tier",
         "gift",
+        "tier",
+        "user",
     )
 
     def __init__(self, payload: ChannelSubscribeEvent, *, http: HTTPClient) -> None:
@@ -1750,9 +1750,9 @@ class ChannelSubscriptionEnd(BaseEvent):
 
     __slots__ = (
         "broadcaster",
-        "user",
-        "tier",
         "gift",
+        "tier",
+        "user",
     )
 
     def __init__(self, payload: ChannelSubscriptionEndEvent, *, http: HTTPClient) -> None:
@@ -1790,7 +1790,7 @@ class ChannelSubscriptionGift(BaseEvent):
 
     subscription_type = "channel.subscription.gift"
 
-    __slots__ = ("broadcaster", "user", "tier", "total", "cumulative_total", "anonymous")
+    __slots__ = ("anonymous", "broadcaster", "cumulative_total", "tier", "total", "user")
 
     def __init__(self, payload: ChannelSubscriptionGiftEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -1871,7 +1871,7 @@ class ChannelSubscriptionMessage(BaseEvent):
 
     subscription_type = "channel.subscription.message"
 
-    __slots__ = ("broadcaster", "user", "tier", "message", "cumulative_months", "streak_months", "months")
+    __slots__ = ("broadcaster", "cumulative_months", "message", "months", "streak_months", "tier", "user")
 
     def __init__(self, payload: ChannelSubscribeMessageEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -1909,7 +1909,7 @@ class ChannelCheer(BaseEvent):
 
     subscription_type = "channel.cheer"
 
-    __slots__ = ("broadcaster", "user", "anonymous", "message", "bits")
+    __slots__ = ("anonymous", "bits", "broadcaster", "message", "user")
 
     def __init__(self, payload: ChannelCheerEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -1989,7 +1989,7 @@ class ChannelBan(BaseEvent):
 
     subscription_type = "channel.ban"
 
-    __slots__ = ("broadcaster", "user", "moderator", "reason", "banned_at", "ends_at", "permanent")
+    __slots__ = ("banned_at", "broadcaster", "ends_at", "moderator", "permanent", "reason", "user")
 
     def __init__(self, payload: ChannelBanEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -2026,7 +2026,7 @@ class ChannelUnban(BaseEvent):
 
     subscription_type = "channel.unban"
 
-    __slots__ = ("broadcaster", "user", "moderator")
+    __slots__ = ("broadcaster", "moderator", "user")
 
     def __init__(self, payload: ChannelUnbanEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -2061,7 +2061,7 @@ class ChannelUnbanRequest(BaseEvent):
 
     subscription_type = "channel.unban_request.create"
 
-    __slots__ = ("broadcaster", "user", "id", "text", "created_at")
+    __slots__ = ("broadcaster", "created_at", "id", "text", "user")
 
     def __init__(self, payload: ChannelUnbanRequestEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -2102,7 +2102,7 @@ class ChannelUnbanRequestResolve(BaseEvent):
 
     subscription_type = "channel.unban_request.resolve"
 
-    __slots__ = ("broadcaster", "user", "id", "text", "status")
+    __slots__ = ("broadcaster", "id", "status", "text", "user")
 
     def __init__(self, payload: ChannelUnbanRequestResolveEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -2157,7 +2157,7 @@ class ModerateBan:
         Reason given for the ban.
     """
 
-    __slots__ = ("user", "reason")
+    __slots__ = ("reason", "user")
 
     def __init__(self, data: ModerateBanData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -2181,7 +2181,7 @@ class ModerateTimeout:
         The time at which the timeout ends.
     """
 
-    __slots__ = ("user", "reason", "expires_at")
+    __slots__ = ("expires_at", "reason", "user")
 
     def __init__(self, data: ModerateTimeoutData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -2247,7 +2247,7 @@ class ModerateDelete:
         The text of the message being deleted.
     """
 
-    __slots__ = ("user", "message_id", "text")
+    __slots__ = ("message_id", "text", "user")
 
     def __init__(self, data: ModerateDeleteData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -2274,7 +2274,7 @@ class ModerateAutomodTerms:
         Whether the terms were added due to an Automod message approve/deny action.
     """
 
-    __slots__ = ("action", "list", "terms", "from_automod")
+    __slots__ = ("action", "from_automod", "list", "terms")
 
     def __init__(self, data: ModerateAutoModTermsData) -> None:
         self.action: Literal["add", "remove"] = data["action"]
@@ -2300,7 +2300,7 @@ class ModerateUnbanRequest:
         The message included by the moderator explaining their approval or denial.
     """
 
-    __slots__ = ("approved", "user", "text")
+    __slots__ = ("approved", "text", "user")
 
     def __init__(self, data: ModerateUnbanRequestData, *, http: HTTPClient) -> None:
         self.approved: bool = bool(data["is_approved"])
@@ -2325,7 +2325,7 @@ class ModerateWarn:
         Chat rules cited for the warning.
     """
 
-    __slots__ = ("user", "reason", "chat_rules")
+    __slots__ = ("chat_rules", "reason", "user")
 
     def __init__(self, data: ModerateWarnData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -2440,30 +2440,30 @@ class ChannelModerate(BaseEvent):
     subscription_type = "channel.moderate"
 
     __slots__ = (
-        "broadcaster",
-        "source_broadcaster",
-        "moderator",
         "action",
-        "followers",
-        "slow",
-        "vip",
-        "unvip",
-        "mod",
-        "unmod",
-        "ban",
-        "unban",
-        "timeout",
-        "untimeout",
-        "raid",
-        "unraid",
-        "delete",
         "automod_terms",
-        "unban_request",
+        "ban",
+        "broadcaster",
+        "delete",
+        "followers",
+        "mod",
+        "moderator",
+        "raid",
         "shared_ban",
-        "shared_unban",
-        "shared_timeout",
-        "shared_untimeout",
         "shared_delete",
+        "shared_timeout",
+        "shared_unban",
+        "shared_untimeout",
+        "slow",
+        "source_broadcaster",
+        "timeout",
+        "unban",
+        "unban_request",
+        "unmod",
+        "unraid",
+        "untimeout",
+        "unvip",
+        "vip",
     )
 
     def __init__(self, payload: ChannelModerateEvent | ChannelModerateEventV2, *, http: HTTPClient) -> None:
@@ -2712,7 +2712,7 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
 
     subscription_type = "channel.channel_points_automatic_reward_redemption.add"
 
-    __slots__ = ("broadcaster", "user", "id", "reward", "text", "emotes", "user_input", "redeemed_at")
+    __slots__ = ("broadcaster", "emotes", "id", "redeemed_at", "reward", "text", "user", "user_input")
 
     def __init__(self, payload: ChannelPointsAutoRewardRedemptionEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -2790,23 +2790,23 @@ class ChannelPointsReward(BaseEvent):
 
     __slots__ = (
         "_http",
+        "_image",
         "broadcaster",
-        "id",
-        "enabled",
-        "paused",
-        "in_stock",
-        "title",
-        "cost",
-        "prompt",
-        "input_required",
-        "skip_queue",
-        "cooldown_until",
         "colour",
+        "cooldown_until",
+        "cost",
+        "current_stream_redeems",
+        "default_image",
+        "enabled",
+        "id",
+        "in_stock",
+        "input_required",
         "max_per_stream",
         "max_per_user_per_stream",
-        "_image",
-        "default_image",
-        "current_stream_redeems",
+        "paused",
+        "prompt",
+        "skip_queue",
+        "title",
     )
 
     def __init__(
@@ -3072,7 +3072,7 @@ class ChannelPointsRewardRemove(ChannelPointsReward):
 
 
 class BaseChannelPointsRedemption(BaseEvent):
-    __slots__ = ("id", "broadcaster", "user", "status", "reward", "redeemed_at", "user_input")
+    __slots__ = ("broadcaster", "id", "redeemed_at", "reward", "status", "user", "user_input")
 
     def __init__(
         self, payload: ChannelPointsRewardRedemptionAddEvent | ChannelPointsRewardRedemptionUpdateEvent, *, http: HTTPClient
@@ -3239,7 +3239,7 @@ class PollVoting(NamedTuple):
 
 
 class BaseChannelPoll(BaseEvent):
-    __slots__ = ("broadcaster", "id", "title", "status", "choices", "channel_points_voting", "started_at")
+    __slots__ = ("broadcaster", "channel_points_voting", "choices", "id", "started_at", "status", "title")
 
     def __init__(
         self, payload: ChannelPollBeginEvent | ChannelPollProgressEvent | ChannelPollEndEvent, *, http: HTTPClient
@@ -3361,7 +3361,7 @@ class ChannelPollEnd(BaseChannelPoll):
 
     subscription_type = "channel.poll.end"
 
-    __slots__ = ("status", "ended_at")
+    __slots__ = ("ended_at", "status")
 
     def __init__(self, payload: ChannelPollEndEvent, *, http: HTTPClient) -> None:
         super().__init__(payload=payload, http=http)
@@ -3518,7 +3518,7 @@ class ChannelPredictionEnd(BaseChannelPrediction):
 
     subscription_type = "channel.prediction.end"
 
-    __slots__ = ("winning_outcome_id", "ended_at", "status")
+    __slots__ = ("ended_at", "status", "winning_outcome_id")
 
     def __init__(self, data: ChannelPredictionEndEvent, *, http: HTTPClient) -> None:
         super().__init__(data, http=http)
@@ -3553,7 +3553,7 @@ class SuspiciousUserUpdate(BaseEvent):
 
     subscription_type = "channel.suspicious_user.update"
 
-    __slots__ = ("broadcaster", "user", "moderator", "low_trust_status")
+    __slots__ = ("broadcaster", "low_trust_status", "moderator", "user")
 
     def __init__(self, payload: ChannelSuspiciousUserUpdateEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -3608,7 +3608,7 @@ class SuspiciousUserMessage(BaseEvent):
 
     subscription_type = "channel.suspicious_user.message"
 
-    __slots__ = ("broadcaster", "user", "low_trust_status", "banned_channels", "types", "evaluation")
+    __slots__ = ("banned_channels", "broadcaster", "evaluation", "low_trust_status", "types", "user")
 
     def __init__(self, payload: ChannelSuspiciousUserMessageEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -3723,7 +3723,7 @@ class ChannelWarningSend(BaseEvent):
 
     subscription_type = "channel.warning.send"
 
-    __slots__ = ("broadcaster", "user", "moderator", "reason", "chat_rules")
+    __slots__ = ("broadcaster", "chat_rules", "moderator", "reason", "user")
 
     def __init__(self, payload: ChannelWarningSendEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -3741,7 +3741,7 @@ class ChannelWarningSend(BaseEvent):
 
 
 class BaseCharityCampaign(BaseEvent):
-    __slots__ = ("broadcaster", "id", "name", "description", "logo", "website", "current", "target")
+    __slots__ = ("broadcaster", "current", "description", "id", "logo", "name", "target", "website")
 
     def __init__(
         self,
@@ -3874,7 +3874,7 @@ class CharityCampaignStop(BaseCharityCampaign):
 
 
 class BaseGoal(BaseEvent):
-    __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "started_at")
+    __slots__ = ("broadcaster", "current_amount", "description", "id", "started_at", "target_amount", "type")
 
     def __init__(self, payload: GoalBeginEvent | GoalProgressEvent | GoalEndEvent, *, http: HTTPClient) -> None:
         self.id: str = payload["id"]
@@ -4091,7 +4091,7 @@ class GoalEnd(BaseGoal):
 
     subscription_type = "channel.goal.end"
 
-    __slots__ = ("ended_at", "achieved")
+    __slots__ = ("achieved", "ended_at")
 
     def __init__(self, payload: GoalEndEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
@@ -4128,7 +4128,7 @@ class HypeTrainContribution:
         If type is subscription, total is 500, 1000, or 2500 to represent tier 1, 2, or 3 subscriptions, respectively.
     """
 
-    __slots__ = ("user", "type", "total")
+    __slots__ = ("total", "type", "user")
 
     def __init__(self, data: HypeTrainContributionData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -4140,7 +4140,7 @@ class HypeTrainContribution:
 
 
 class BaseHypeTrain(BaseEvent):
-    __slots__ = ("broadcaster", "id", "level", "total", "top_contributions", "started_at", "golden_kappa")
+    __slots__ = ("broadcaster", "golden_kappa", "id", "level", "started_at", "top_contributions", "total")
 
     def __init__(
         self, payload: HypeTrainBeginEvent | HypeTrainProgressEvent | HypeTrainEndEvent, *, http: HTTPClient
@@ -4194,10 +4194,10 @@ class HypeTrainBegin(BaseHypeTrain):
     subscription_type = "channel.hype_train.begin"
 
     __slots__ = (
-        "progress",
+        "expires_at",
         "goal",
         "last_contribution",
-        "expires_at",
+        "progress",
     )
 
     def __init__(self, payload: HypeTrainBeginEvent, *, http: HTTPClient) -> None:
@@ -4244,10 +4244,10 @@ class HypeTrainProgress(BaseHypeTrain):
     subscription_type = "channel.hype_train.progress"
 
     __slots__ = (
-        "progress",
+        "expires_at",
         "goal",
         "last_contribution",
-        "expires_at",
+        "progress",
     )
 
     def __init__(self, payload: HypeTrainProgressEvent, *, http: HTTPClient) -> None:
@@ -4356,8 +4356,8 @@ class ShieldModeEnd(BaseEvent):
 
     __slots__ = (
         "broadcaster",
-        "moderator",
         "ended_at",
+        "moderator",
     )
 
     def __init__(self, payload: ShieldModeEndEvent, *, http: HTTPClient) -> None:
@@ -4399,12 +4399,12 @@ class ShoutoutCreate(BaseEvent):
 
     __slots__ = (
         "broadcaster",
-        "to_broadcaster",
-        "moderator",
-        "viewer_count",
-        "started_at",
         "cooldown_until",
+        "moderator",
+        "started_at",
         "target_cooldown_until",
+        "to_broadcaster",
+        "viewer_count",
     )
 
     def __init__(self, payload: ShoutoutCreateEvent, *, http: HTTPClient) -> None:
@@ -4447,7 +4447,7 @@ class ShoutoutReceive(BaseEvent):
 
     subscription_type = "channel.shoutout.receive"
 
-    __slots__ = ("broadcaster", "from_broadcaster", "viewer_count", "started_at")
+    __slots__ = ("broadcaster", "from_broadcaster", "started_at", "viewer_count")
 
     def __init__(self, payload: ShoutoutReceiveEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -4491,7 +4491,7 @@ class StreamOnline(BaseEvent):
 
     subscription_type = "stream.online"
 
-    __slots__ = ("broadcaster", "id", "type", "started_at")
+    __slots__ = ("broadcaster", "id", "started_at", "type")
 
     def __init__(self, payload: StreamOnlineEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -4609,7 +4609,7 @@ class UserUpdate(BaseEvent):
 
     subscription_type = "user.update"
 
-    __slots__ = ("user", "email", "verified", "description")
+    __slots__ = ("description", "email", "user", "verified")
 
     def __init__(self, payload: UserUpdateEvent, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
@@ -4638,7 +4638,7 @@ class Whisper(BaseEvent):
 
     subscription_type = "user.whisper.message"
 
-    __slots__ = ("sender", "recipient", "id", "text")
+    __slots__ = ("id", "recipient", "sender", "text")
 
     def __init__(self, payload: UserWhisperEvent, *, http: HTTPClient) -> None:
         self.sender: PartialUser = PartialUser(
@@ -4656,16 +4656,16 @@ class Whisper(BaseEvent):
 
 class SubscriptionRevoked:
     __slots__ = (
-        "raw",
+        "cost",
+        "created_at",
         "id",
-        "status",
+        "raw",
         "reason",
+        "status",
+        "transport_data",
+        "transport_method",
         "type",
         "version",
-        "cost",
-        "transport_method",
-        "transport_data",
-        "created_at",
     )
 
     def __init__(self, data: RevocationSubscription) -> None:
@@ -4698,7 +4698,7 @@ class EventsubTransport:
         The UTC datetime that the WebSocket connection was lost. This will only be populated if the method is set to ``websocket``.
     """
 
-    __slots__ = ("method", "callback", "session_id", "connected_at", "disconnected_at")
+    __slots__ = ("callback", "connected_at", "disconnected_at", "method", "session_id")
 
     def __init__(self, data: EventsubTransportData) -> None:
         self.method: Literal["websocket", "webhook"] = data["method"]

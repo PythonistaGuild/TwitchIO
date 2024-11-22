@@ -31,24 +31,24 @@ from .cooldowns import BaseCooldown
 
 
 __all__ = (
-    "CommandError",
-    "ComponentLoadError",
-    "CommandInvokeError",
-    "CommandHookError",
-    "CommandNotFound",
-    "CommandExistsError",
-    "PrefixError",
-    "InputError",
     "ArgumentError",
-    "GuardFailure",
-    "ConversionError",
     "BadArgument",
+    "CommandError",
+    "CommandExistsError",
+    "CommandHookError",
+    "CommandInvokeError",
+    "CommandNotFound",
+    "CommandOnCooldown",
+    "ComponentLoadError",
+    "ConversionError",
+    "GuardFailure",
+    "InputError",
     "MissingRequiredArgument",
     "ModuleAlreadyLoadedError",
     "ModuleLoadFailure",
     "ModuleNotLoadedError",
     "NoEntryPointError",
-    "CommandOnCooldown",
+    "PrefixError",
 )
 
 

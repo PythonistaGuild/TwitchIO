@@ -177,17 +177,17 @@ async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
 
 class Route:
     __slots__ = (
-        "params",
-        "data",
-        "json",
-        "headers",
-        "use_id",
-        "method",
-        "path",
-        "packed",
         "_base_url",
         "_url",
+        "data",
+        "headers",
+        "json",
+        "method",
+        "packed",
+        "params",
+        "path",
         "token_for",
+        "use_id",
     )
 
     BASE: ClassVar[str] = "https://api.twitch.tv/helix/"
@@ -276,14 +276,14 @@ class Route:
 
 class HTTPAsyncIterator(Generic[T]):
     __slots__ = (
-        "_http",
-        "_route",
+        "_buffer",
+        "_converter",
         "_cursor",
         "_first",
+        "_http",
         "_max_results",
-        "_converter",
-        "_buffer",
         "_nested_key",
+        "_route",
     )
 
     def __init__(
@@ -377,7 +377,7 @@ class HTTPAsyncIterator(Generic[T]):
 
 
 class HTTPClient:
-    __slots__ = ("_session", "_client_id", "user_agent")
+    __slots__ = ("_client_id", "_session", "user_agent")
 
     def __init__(self, session: aiohttp.ClientSession | None = None, *, client_id: str) -> None:
         self._session: aiohttp.ClientSession | None = session  # should be set on the first request

@@ -68,7 +68,7 @@ class CharityCampaign:
         The campaign's fundraising goal. This is None if the broadcaster has not defined a fundraising goal.
     """
 
-    __slots__ = ("id", "broadcaster", "name", "description", "logo", "website", "current_amount", "target_amount")
+    __slots__ = ("broadcaster", "current_amount", "description", "id", "logo", "name", "target_amount", "website")
 
     def __init__(self, data: CharityCampaignResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
@@ -97,7 +97,7 @@ class CharityValues:
         The currency this charity is raising funds in. eg ``USD``, ``GBP``, ``EUR``.
     """
 
-    __slots__ = ("value", "decimal_places", "currency")
+    __slots__ = ("currency", "decimal_places", "value")
 
     def __init__(
         self,
@@ -135,7 +135,7 @@ class CharityDonation:
         The the amount of money that the user donated.
     """
 
-    __slots__ = ("id", "campaign_id", "user", "amount", "_http")
+    __slots__ = ("_http", "amount", "campaign_id", "id", "user")
 
     def __init__(self, data: CharityCampaignDonationsResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http

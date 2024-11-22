@@ -28,7 +28,7 @@ from typing import Any, Literal, TypeAlias, TypedDict
 from ..user import PartialUser
 
 
-__all__ = ("HTTPMethod", "APIRequestKwargs", "APIRequest", "ParamMapping")
+__all__ = ("APIRequest", "APIRequestKwargs", "HTTPMethod", "ParamMapping")
 
 
 HTTPMethod: TypeAlias = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "CONNECT", "TRACE"]

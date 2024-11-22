@@ -82,18 +82,18 @@ class Stream:
 
     __slots__ = (
         "_http",
-        "id",
-        "user",
         "game_id",
         "game_name",
-        "type",
-        "title",
-        "viewer_count",
-        "started_at",
-        "language",
-        "thumbnail",
+        "id",
         "is_mature",
+        "language",
+        "started_at",
         "tags",
+        "thumbnail",
+        "title",
+        "type",
+        "user",
+        "viewer_count",
     )
 
     def __init__(self, data: StreamsResponseData, *, http: HTTPClient) -> None:
@@ -145,7 +145,7 @@ class StreamMarker:
         A URL that opens the video in Twitch Highlighter. This is None on creation but populated when fetched.
     """
 
-    __slots__ = ("id", "created_at", "description", "position", "url")
+    __slots__ = ("created_at", "description", "id", "position", "url")
 
     def __init__(self, data: CreateStreamMarkerResponseData | StreamMarkersResponseMarkers) -> None:
         self.id: str = data["id"]
@@ -171,7 +171,7 @@ class VideoMarkers:
         The list of markers in this video. The list in ascending order by when the marker was created.
     """
 
-    __slots__ = ("user", "video_id", "markers")
+    __slots__ = ("markers", "user", "video_id")
 
     def __init__(self, data: StreamMarkersResponseData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)

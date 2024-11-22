@@ -74,7 +74,7 @@ class Asset:
     +-------------+-------------------------------------------+-----------------------------------------------+
     """
 
-    __slots__ = ("_http", "_ext", "_dimensions", "_original_url", "_url", "_name")
+    __slots__ = ("_dimensions", "_ext", "_http", "_name", "_original_url", "_url")
 
     def __init__(
         self,

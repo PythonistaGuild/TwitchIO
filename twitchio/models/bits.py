@@ -47,13 +47,13 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "BitsLeaderboard",
     "BitLeaderboardUser",
+    "BitsLeaderboard",
     "Cheermote",
     "CheermoteTier",
-    "ExtensionTransaction",
-    "ExtensionProductData",
     "ExtensionCost",
+    "ExtensionProductData",
+    "ExtensionTransaction",
 )
 
 
@@ -71,7 +71,7 @@ class BitsLeaderboard:
         The current leaders of the Leaderboard.
     """
 
-    __slots__ = ("leaders", "started_at", "ended_at")
+    __slots__ = ("ended_at", "leaders", "started_at")
 
     def __init__(self, data: BitsLeaderboardResponse, *, http: HTTPClient) -> None:
         self.started_at = parse_timestamp(data["date_range"]["started_at"]) if data["date_range"]["started_at"] else None
@@ -95,7 +95,7 @@ class BitLeaderboardUser:
         The number of Bits the user has cheered.
     """
 
-    __slots__ = ("user", "rank", "score")
+    __slots__ = ("rank", "score", "user")
 
     def __init__(self, data: BitsLeaderboardResponseData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -127,7 +127,7 @@ class CheermoteTier:
         Indicates whether twitch hides the emote from the bits card.
     """
 
-    __slots__ = ("min_bits", "id", "colour", "color", "images", "can_cheer", "show_in_bits_card", "_http")
+    __slots__ = ("_http", "can_cheer", "color", "colour", "id", "images", "min_bits", "show_in_bits_card")
 
     def __init__(self, data: CheermotesResponseTiers, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
@@ -233,12 +233,12 @@ class Cheermote:
 
     __slots__ = (
         "_http",
+        "charitable",
+        "last_updated",
+        "order",
         "prefix",
         "tiers",
         "type",
-        "order",
-        "last_updated",
-        "charitable",
     )
 
     def __init__(self, data: CheermotesResponseData, *, http: HTTPClient) -> None:
@@ -272,7 +272,7 @@ class ExtensionTransaction:
         Details about the digital product.
     """
 
-    __slots__ = ("id", "timestamp", "broadcaster", "user", "product_type", "product_data")
+    __slots__ = ("broadcaster", "id", "product_data", "product_type", "timestamp", "user")
 
     def __init__(self, data: ExtensionTransactionsResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]
@@ -309,7 +309,7 @@ class ExtensionProductData:
         Whether the data was broadcast to all instances of the extension.
     """
 
-    __slots__ = ("domain", "cost", "sku", "in_development", "display_name", "expiration", "broadcast")
+    __slots__ = ("broadcast", "cost", "display_name", "domain", "expiration", "in_development", "sku")
 
     def __init__(self, data: ExtensionTransactionsResponseProductData) -> None:
         self.domain: str = data["domain"]

@@ -47,7 +47,7 @@ class ContentClassificationLabel:
         Localized name of the CCL.
     """
 
-    __slots__ = ("id", "description", "name")
+    __slots__ = ("description", "id", "name")
 
     def __init__(self, data: ContentClassificationLabelData) -> None:
         self.id: str = data["id"]

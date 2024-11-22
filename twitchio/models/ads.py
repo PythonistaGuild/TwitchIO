@@ -82,7 +82,7 @@ class AdSchedule:
         The amount of pre-roll free time remaining for the channel in seconds. Returns 0 if they are currently not pre-roll free.
     """
 
-    __slots__ = ("snooze_count", "snooze_refresh_at", "duration", "next_ad_at", "last_ad_at", "preroll_free_time")
+    __slots__ = ("duration", "last_ad_at", "next_ad_at", "preroll_free_time", "snooze_count", "snooze_refresh_at")
 
     def __init__(self, data: AdScheduleResponseData) -> None:
         self.snooze_count: int = int(data["snooze_count"])
@@ -110,7 +110,7 @@ class SnoozeAd:
         The UTC datetime of the broadcaster's next scheduled ad. None if channel has no ad scheduled.
     """
 
-    __slots__ = ("snooze_count", "snooze_refresh_at", "next_ad_at")
+    __slots__ = ("next_ad_at", "snooze_count", "snooze_refresh_at")
 
     def __init__(self, data: SnoozeNextAdResponseData) -> None:
         self.snooze_count: int = int(data["snooze_count"])

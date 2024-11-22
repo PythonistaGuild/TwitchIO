@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from .context import Context
 
 
-__all__ = ("BaseCooldown", "Cooldown", "GCRACooldown", "BucketType", "Bucket")
+__all__ = ("BaseCooldown", "Bucket", "BucketType", "Cooldown", "GCRACooldown")
 
 
 PT = TypeVar("PT")

@@ -91,7 +91,7 @@ class Goal:
 
     """
 
-    __slots__ = ("id", "broadcaster", "type", "description", "current_amount", "target_amount", "created_at")
+    __slots__ = ("broadcaster", "created_at", "current_amount", "description", "id", "target_amount", "type")
 
     def __init__(self, data: CreatorGoalsResponseData, http: HTTPClient) -> None:
         self.id: str = data["id"]

@@ -25,7 +25,7 @@ SOFTWARE.
 from typing import TypeAlias, TypedDict
 
 
-__all__ = ("TokenMappingData", "TokenMapping")
+__all__ = ("TokenMapping", "TokenMappingData")
 
 
 class TokenMappingData(TypedDict):

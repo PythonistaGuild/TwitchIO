@@ -67,14 +67,14 @@ class Entitlement:
     """
 
     __slots__ = (
-        "id",
+        "_http",
         "benefit_id",
+        "fulfillment_status",
+        "game_id",
+        "id",
+        "last_updated",
         "timestamp",
         "user",
-        "game_id",
-        "fulfillment_status",
-        "last_updated",
-        "_http",
     )
 
     def __init__(self, data: DropsEntitlementsResponseData, *, http: HTTPClient) -> None:

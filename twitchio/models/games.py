@@ -71,7 +71,7 @@ class Game:
         The IGDB ID of the game. If this is not available to Twitch it will be ``None``.
     """
 
-    __slots__ = ("id", "name", "box_art", "igdb_id")
+    __slots__ = ("box_art", "id", "igdb_id", "name")
 
     def __init__(self, data: GamesResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["id"]

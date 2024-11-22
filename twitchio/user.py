@@ -75,7 +75,7 @@ if TYPE_CHECKING:
     from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
     from .models.teams import ChannelTeam
 
-__all__ = ("PartialUser", "User", "Extension", "ActiveExtensions")
+__all__ = ("ActiveExtensions", "Extension", "PartialUser", "User")
 
 
 class PartialUser:
@@ -93,7 +93,7 @@ class PartialUser:
         The user's display name in chat. In most cases, this is provided otherwise fallsback to `name`. There are however, rare cases where it is not.
     """
 
-    __slots__ = "id", "name", "_http", "display_name", "_cached_rewards"
+    __slots__ = "_cached_rewards", "_http", "display_name", "id", "name"
 
     def __init__(self, id: str | int, name: str | None = None, display_name: str | None = None, *, http: HTTPClient) -> None:
         self._http = http
@@ -3402,14 +3402,14 @@ class User(PartialUser):
     """
 
     __slots__ = (
-        "display_name",
-        "type",
-        "description",
         "broadcaster_type",
-        "profile_image",
-        "offline_image",
-        "email",
         "created_at",
+        "description",
+        "display_name",
+        "email",
+        "offline_image",
+        "profile_image",
+        "type",
     )
 
     def __init__(self, data: UsersResponseData, *, http: HTTPClient) -> None:
@@ -3449,7 +3449,7 @@ class Extension:
 
     """
 
-    __slots__ = ("id", "version", "name", "can_activate", "type")
+    __slots__ = ("can_activate", "id", "name", "type", "version")
 
     def __init__(self, data: UserExtensionsResponseData) -> None:
         self.id: str = data["id"]
@@ -3477,7 +3477,7 @@ class ExtensionItem:
         A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
     """
 
-    __slots__ = ("id", "active", "name", "version")
+    __slots__ = ("active", "id", "name", "version")
 
     def __init__(self, data: UserPanelItem | UserPanelOverlayItem | UserPanelComponentItem) -> None:
         self.id: str | None = data.get("id")
@@ -3570,7 +3570,7 @@ class ExtensionComponent(ExtensionItem):
 
 
 class ActiveExtensions:
-    __slots__ = ("panels", "overlays", "components")
+    __slots__ = ("components", "overlays", "panels")
 
     def __init__(self, data: UserActiveExtensionsResponseData) -> None:
         self.panels: list[ExtensionPanel] = [ExtensionPanel(d) for d in data["panel"].values()]
@@ -3606,22 +3606,22 @@ class Chatter(PartialUser):
 
     __slots__ = (
         "__dict__",
-        "_is_staff",
-        "_is_admin",
-        "_is_broadcaster",
-        "_is_moderator",
-        "_is_verified",
-        "_is_vip",
-        "_is_artist_badge",
-        "_is_founder",
-        "_is_subscriber",
-        "_is_no_audio",
-        "_is_no_video",
-        "_is_turbo",
-        "_is_premium",
+        "_badges",
         "_channel",
         "_colour",
-        "_badges",
+        "_is_admin",
+        "_is_artist_badge",
+        "_is_broadcaster",
+        "_is_founder",
+        "_is_moderator",
+        "_is_no_audio",
+        "_is_no_video",
+        "_is_premium",
+        "_is_staff",
+        "_is_subscriber",
+        "_is_turbo",
+        "_is_verified",
+        "_is_vip",
     )
 
     def __init__(

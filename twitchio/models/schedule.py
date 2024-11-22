@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("Schedule", "ScheduleSegment", "ScheduleCategory", "ScheduleVacation")
+__all__ = ("Schedule", "ScheduleCategory", "ScheduleSegment", "ScheduleVacation")
 
 
 class Schedule:
@@ -58,7 +58,7 @@ class Schedule:
         The dates when the broadcaster is on vacation and not streaming. Is set to None if vacation mode is not enabled.
     """
 
-    __slots__ = ("segments", "broadcaster", "vacation")
+    __slots__ = ("broadcaster", "segments", "vacation")
 
     def __init__(self, data: ChannelStreamScheduleResponseData, *, http: HTTPClient) -> None:
         self.segments: list[ScheduleSegment] = [
@@ -96,15 +96,15 @@ class ScheduleSegment:
     """
 
     __slots__ = (
-        "id",
-        "start_time",
-        "end_time",
-        "title",
-        "canceled_until",
-        "recurring",
-        "category",
-        "_http",
         "_broadcaster_id",
+        "_http",
+        "canceled_until",
+        "category",
+        "end_time",
+        "id",
+        "recurring",
+        "start_time",
+        "title",
     )
 
     def __init__(self, data: ChannelStreamScheduleResponseSegments, *, http: HTTPClient, broadcaster_id: str) -> None:
@@ -237,7 +237,7 @@ class ScheduleVacation:
         End date of stream schedule vaction.
     """
 
-    __slots__ = ("start_time", "end_time")
+    __slots__ = ("end_time", "start_time")
 
     def __init__(self, data: ChannelStreamScheduleResponseVacation) -> None:
         self.start_time = parse_timestamp(data["start_time"])

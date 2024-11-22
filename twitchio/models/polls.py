@@ -85,16 +85,16 @@ class Poll:
 
     __slots__ = (
         "_http",
-        "id",
         "broadcaster",
-        "title",
-        "choices",
-        "channel_points_voting_enabled",
         "channel_points_per_vote",
-        "status",
+        "channel_points_voting_enabled",
+        "choices",
         "duration",
-        "started_at",
         "ended_at",
+        "id",
+        "started_at",
+        "status",
+        "title",
     )
 
     def __init__(self, data: PollsResponseData, *, http: HTTPClient) -> None:
@@ -159,7 +159,7 @@ class PollChoice:
 
     """
 
-    __slots__ = ("id", "title", "votes", "channel_points_votes")
+    __slots__ = ("channel_points_votes", "id", "title", "votes")
 
     def __init__(self, data: PollsResponseChoices | PollChoiceData) -> None:
         self.id: str = data["id"]

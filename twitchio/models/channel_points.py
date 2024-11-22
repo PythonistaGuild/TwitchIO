@@ -42,7 +42,7 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("CustomReward", "RewardLimitSettings", "RewardCooldown", "CustomRewardRedemption")
+__all__ = ("CustomReward", "CustomRewardRedemption", "RewardCooldown", "RewardLimitSettings")
 
 
 class RewardCooldown(NamedTuple):
@@ -122,24 +122,24 @@ class CustomReward:
 
     __slots__ = (
         "_http",
-        "broadcaster",
-        "id",
-        "title",
-        "prompt",
-        "cost",
         "_image",
-        "default_image",
+        "broadcaster",
         "colour",
+        "cooldown",
+        "cooldown_until",
+        "cost",
+        "current_stream_redeems",
+        "default_image",
         "enabled",
+        "id",
+        "in_stock",
         "input_required",
         "max_per_stream",
         "max_per_user_stream",
-        "cooldown",
         "paused",
-        "in_stock",
+        "prompt",
         "skip_queue",
-        "current_stream_redeems",
-        "cooldown_until",
+        "title",
     )
 
     def __init__(self, data: CustomRewardsResponseData, *, http: HTTPClient) -> None:
@@ -404,7 +404,7 @@ class CustomRewardRedemption:
         The user that made the redemption.
     """
 
-    __slots__ = ("id", "user", "_http", "status", "redeemed_at", "reward")
+    __slots__ = ("_http", "id", "redeemed_at", "reward", "status", "user")
 
     def __init__(
         self,

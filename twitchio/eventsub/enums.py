@@ -26,12 +26,12 @@ import enum
 
 
 __all__ = (
-    "TransportMethod",
-    "ShardStatus",
     "CloseCode",
     "MessageType",
-    "SubscriptionType",
     "RevocationReason",
+    "ShardStatus",
+    "SubscriptionType",
+    "TransportMethod",
 )
 
 

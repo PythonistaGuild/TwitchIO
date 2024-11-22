@@ -69,16 +69,16 @@ class Team:
     """
 
     __slots__ = (
-        "users",
         "background_image",
         "banner",
         "created_at",
-        "updated_at",
-        "info",
-        "thumbnail",
-        "name",
         "display_name",
         "id",
+        "info",
+        "name",
+        "thumbnail",
+        "updated_at",
+        "users",
     )
 
     def __init__(self, data: TeamsResponseData, *, http: HTTPClient) -> None:
@@ -138,16 +138,16 @@ class ChannelTeam:
     """
 
     __slots__ = (
-        "broadcaster",
         "background_image",
         "banner",
+        "broadcaster",
         "created_at",
-        "updated_at",
-        "info",
-        "thumbnail",
-        "name",
         "display_name",
         "id",
+        "info",
+        "name",
+        "thumbnail",
+        "updated_at",
     )
 
     def __init__(self, data: ChannelTeamsResponseData, http: HTTPClient) -> None:

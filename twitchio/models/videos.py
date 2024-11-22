@@ -74,19 +74,19 @@ class Video:
 
     __slots__ = (
         "_http",
-        "id",
-        "user",
-        "title",
-        "description",
         "created_at",
-        "published_at",
-        "url",
-        "thumbnail",
-        "viewable",
-        "view_count",
-        "language",
-        "type",
+        "description",
         "duration",
+        "id",
+        "language",
+        "published_at",
+        "thumbnail",
+        "title",
+        "type",
+        "url",
+        "user",
+        "view_count",
+        "viewable",
     )
 
     def __init__(self, data: VideosResponseData, *, http: HTTPClient) -> None:

@@ -83,20 +83,20 @@ class Clip:
     """
 
     __slots__ = (
-        "id",
-        "url",
-        "embed_url",
-        "broadcaster",
-        "creator",
-        "video_id",
-        "game_id",
-        "language",
-        "title",
-        "views",
-        "created_at",
-        "thumbnail",
-        "is_featured",
         "_http",
+        "broadcaster",
+        "created_at",
+        "creator",
+        "embed_url",
+        "game_id",
+        "id",
+        "is_featured",
+        "language",
+        "thumbnail",
+        "title",
+        "url",
+        "video_id",
+        "views",
     )
 
     def __init__(self, data: ClipsResponseData, *, http: HTTPClient) -> None:

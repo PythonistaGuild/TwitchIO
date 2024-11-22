@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("UserSubscription", "BroadcasterSubscription", "BroadcasterSubscriptions")
+__all__ = ("BroadcasterSubscription", "BroadcasterSubscriptions", "UserSubscription")
 
 
 class UserSubscription:
@@ -66,8 +66,8 @@ class UserSubscription:
 
     __slots__ = (
         "broadcaster",
-        "gifter",
         "gift",
+        "gifter",
         "tier",
     )
 
@@ -152,9 +152,9 @@ class BroadcasterSubscriptions:
     """
 
     __slots__ = (
+        "points",
         "subscriptions",
         "total",
-        "points",
     )
 
     def __init__(self, data: BroadcasterSubscriptionsResponse, iterator: HTTPAsyncIterator[BroadcasterSubscription]) -> None:

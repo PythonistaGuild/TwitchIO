@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 
-__all__ = ("TwitchioException", "HTTPException", "WebsocketConnectionException", "MessageRejectedError")
+__all__ = ("HTTPException", "MessageRejectedError", "TwitchioException", "WebsocketConnectionException")
 
 
 if TYPE_CHECKING:

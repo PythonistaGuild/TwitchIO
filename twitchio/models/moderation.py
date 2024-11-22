@@ -47,16 +47,16 @@ if TYPE_CHECKING:
     )
 
 __all__ = (
-    "AutomodSettings",
     "AutoModStatus",
     "AutomodCheckMessage",
+    "AutomodSettings",
     "Ban",
     "BannedUser",
     "BlockedTerm",
     "ShieldModeStatus",
     "Timeout",
-    "Warning",
     "UnbanRequest",
+    "Warning",
 )
 
 
@@ -136,17 +136,17 @@ class AutomodSettings:
     """
 
     __slots__ = (
+        "aggression",
         "broadcaster",
+        "bullying",
+        "disability",
+        "misogyny",
         "moderator",
         "overall_level",
-        "disability",
-        "aggression",
-        "sexuality_sex_or_gender",
-        "misogyny",
-        "bullying",
-        "swearing",
         "race_ethnicity_or_religion",
         "sex_based_terms",
+        "sexuality_sex_or_gender",
+        "swearing",
     )
 
     def __init__(self, data: AutomodSettingsResponseData, *, http: HTTPClient) -> None:
@@ -217,7 +217,7 @@ class BannedUser:
         The reason the user was banned or put in a timeout if the moderator provided one.
     """
 
-    __slots__ = ("user", "expires_at", "created_at", "moderator", "reason")
+    __slots__ = ("created_at", "expires_at", "moderator", "reason", "user")
 
     def __init__(self, data: BannedUsersResponseData, *, http: HTTPClient) -> None:
         self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -247,7 +247,7 @@ class Ban:
         Datetime of when the user was banned.
     """
 
-    __slots__ = ("broadcaster", "user", "end_time", "created_at", "moderator")
+    __slots__ = ("broadcaster", "created_at", "end_time", "moderator", "user")
 
     def __init__(self, data: BanUserResponseData, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
@@ -276,7 +276,7 @@ class Timeout:
         Datetime of when the user was timed out.
     """
 
-    __slots__ = ("broadcaster", "user", "end_time", "created_at", "moderator")
+    __slots__ = ("broadcaster", "created_at", "end_time", "moderator", "user")
 
     def __init__(self, data: BanUserResponseData, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
@@ -315,15 +315,15 @@ class UnbanRequest:
     """
 
     __slots__ = (
-        "id",
         "broadcaster",
-        "moderator",
-        "user",
-        "text",
-        "status",
         "created_at",
-        "resolved_at",
+        "id",
+        "moderator",
         "resolution_text",
+        "resolved_at",
+        "status",
+        "text",
+        "user",
     )
 
     def __init__(self, data: UnbanRequestsResponseData | ResolveUnbanRequestsResponseData, *, http: HTTPClient) -> None:
@@ -368,7 +368,7 @@ class BlockedTerm:
         Is None if the term was added manually or was permanently blocked by AutoMod.
     """
 
-    __slots__ = ("broadcaster", "moderator", "id", "text", "created_at", "updated_at", "expires_at")
+    __slots__ = ("broadcaster", "created_at", "expires_at", "id", "moderator", "text", "updated_at")
 
     def __init__(self, data: BlockedTermsResponseData, http: HTTPClient) -> None:
         self.id: str = data["id"]
@@ -393,7 +393,7 @@ class ShieldModeStatus:
         When Shield Mode was last activated.
     """
 
-    __slots__ = ("active", "moderator", "last_activated_at")
+    __slots__ = ("active", "last_activated_at", "moderator")
 
     def __init__(self, data: ShieldModeStatusResponseData, *, http: HTTPClient) -> None:
         self.active: bool = bool(data["is_active"])
@@ -423,7 +423,7 @@ class Warning:
         The reason provided for warning.
     """
 
-    __slots__ = ("broadcaster", "user", "moderator", "reason")
+    __slots__ = ("broadcaster", "moderator", "reason", "user")
 
     def __init__(self, data: WarnChatUserResponseData, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)

@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from twitchio.http import HTTPClient
     from twitchio.types_.responses import HypeTrainEventsResponseContributions, HypeTrainEventsResponseData
 
-__all__ = ("HypeTrainEvent", "HypeTrainContribution")
+__all__ = ("HypeTrainContribution", "HypeTrainEvent")
 
 
 class HypeTrainEvent:
@@ -75,20 +75,20 @@ class HypeTrainEvent:
     """
 
     __slots__ = (
-        "id",
-        "type",
-        "timestamp",
-        "version",
         "broadcaster",
+        "cooldown_end_time",
         "expiry",
-        "hype_train_id",
         "goal",
+        "hype_train_id",
+        "id",
+        "last_contribution",
         "level",
         "started_at",
+        "timestamp",
         "top_contributions",
         "total_contributed",
-        "cooldown_end_time",
-        "last_contribution",
+        "type",
+        "version",
     )
 
     def __init__(self, data: HypeTrainEventsResponseData, *, http: HTTPClient) -> None:

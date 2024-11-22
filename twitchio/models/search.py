@@ -73,13 +73,13 @@ class SearchChannel:
         "_http",
         "broadcaster",
         "game_id",
-        "name",
         "language",
-        "title",
-        "thumbnail",
         "live",
+        "name",
         "started_at",
         "tags",
+        "thumbnail",
+        "title",
     )
 
     def __init__(self, data: SearchChannelsResponseData, *, http: HTTPClient) -> None:

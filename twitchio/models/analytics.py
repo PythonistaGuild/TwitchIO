@@ -54,7 +54,7 @@ class AnalyticsBase:
         The end date of the reporting window.
     """
 
-    __slots__ = ("id", "url", "type", "started_at", "ended_at")
+    __slots__ = ("ended_at", "id", "started_at", "type", "url")
 
     def __init__(self, data: ExtensionAnalyticsResponseData | GameAnalyticsResponseData, *, id_field: str) -> None:
         self.id: str = data[id_field]

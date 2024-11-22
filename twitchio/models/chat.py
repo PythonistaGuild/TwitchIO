@@ -56,17 +56,17 @@ if TYPE_CHECKING:
 
 __all__ = (
     "ChannelEmote",
-    "Chatters",
-    "ChatterColor",
     "ChatBadge",
-    "ChatSettings",
     "ChatBadgeVersions",
+    "ChatSettings",
+    "ChatterColor",
+    "Chatters",
+    "Emote",
     "EmoteSet",
     "GlobalEmote",
-    "UserEmote",
     "SentMessage",
-    "Emote",
     "SharedChatSession",
+    "UserEmote",
 )
 
 
@@ -101,7 +101,7 @@ class ChatterColor:
         The :class:`~twitchio.utils.Colour`. There is an alias to this named `color`.
     """
 
-    __slots__ = ("user", "_colour")
+    __slots__ = ("_colour", "user")
 
     def __init__(self, data: UserChatColorResponseData, *, http: HTTPClient) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
@@ -131,7 +131,7 @@ class ChatBadge:
         The list of chat badges in this set.
     """
 
-    __slots__ = ("set_id", "versions", "_http")
+    __slots__ = ("_http", "set_id", "versions")
 
     def __init__(self, data: GlobalChatBadgesResponseData | ChannelChatBadgesResponseData, http: HTTPClient) -> None:
         self._http: HTTPClient = http
@@ -168,15 +168,15 @@ class ChatBadgeVersions:
     """
 
     __slots__ = (
+        "_http",
+        "click_action",
+        "click_url",
+        "description",
         "id",
         "image_url_1x",
         "image_url_2x",
         "image_url_4x",
         "title",
-        "description",
-        "click_url",
-        "click_action",
-        "_http",
     )
 
     def __init__(self, data: ChannelChatBadgesResponseVersions | GlobalChatBadgesResponseVersions, http: HTTPClient) -> None:
@@ -251,7 +251,7 @@ class Emote:
         The background themes that the emote is available in.
     """
 
-    __slots__ = ("_http", "id", "name", "format", "scale", "theme_mode", "template")
+    __slots__ = ("_http", "format", "id", "name", "scale", "template", "theme_mode")
 
     def __init__(
         self,
@@ -374,7 +374,7 @@ class EmoteSet(Emote):
         The background themes that the emote is available in.
     """
 
-    __slots__ = ("type", "images", "set_id", "owner")
+    __slots__ = ("images", "owner", "set_id", "type")
 
     def __init__(self, data: EmoteSetsResponseData, *, template: str, http: HTTPClient) -> None:
         super().__init__(data, template=template, http=http)
@@ -414,7 +414,7 @@ class ChannelEmote(Emote):
         The background themes that the emote is available in.
     """
 
-    __slots__ = ("type", "images", "set_id", "owner_id", "tier")
+    __slots__ = ("images", "owner_id", "set_id", "tier", "type")
 
     def __init__(self, data: ChannelEmotesResponseData, *, template: str, http: HTTPClient) -> None:
         super().__init__(data, template=template, http=http)
@@ -483,7 +483,7 @@ class UserEmote(Emote):
         The background themes that the emote is available in.
     """
 
-    __slots__ = ("type", "images", "set_id", "owner_id", "tier")
+    __slots__ = ("images", "owner_id", "set_id", "tier", "type")
 
     def __init__(self, data: UserEmotesResponseData, *, template: str, http: HTTPClient) -> None:
         super().__init__(data, template=template, http=http)
@@ -537,16 +537,16 @@ class ChatSettings:
 
     __slots__ = (
         "broadcaster",
-        "moderator",
-        "slow_mode",
-        "slow_mode_wait_time",
+        "emote_mode",
         "follower_mode",
         "follower_mode_duration",
-        "subscriber_mode",
-        "emote_mode",
-        "unique_chat_mode",
+        "moderator",
         "non_moderator_chat_delay",
         "non_moderator_chat_delay_duration",
+        "slow_mode",
+        "slow_mode_wait_time",
+        "subscriber_mode",
+        "unique_chat_mode",
     )
 
     def __init__(self, data: ChatSettingsResponseData, *, http: HTTPClient) -> None:
@@ -585,7 +585,7 @@ class SentMessage:
         Message for why the message was dropped.
     """
 
-    __slots__ = ("id", "sent", "dropped_code", "dropped_message")
+    __slots__ = ("dropped_code", "dropped_message", "id", "sent")
 
     def __init__(self, data: SendChatMessageResponseData) -> None:
         self.id: str = data["message_id"]
@@ -615,7 +615,7 @@ class SharedChatSession:
         When the session was last updated.
     """
 
-    __slots__ = ("id", "host", "participants", "created_at", "updated_at")
+    __slots__ = ("created_at", "host", "id", "participants", "updated_at")
 
     def __init__(self, data: SharedChatSessionResponseData, *, http: HTTPClient) -> None:
         self.id: str = data["session_id"]

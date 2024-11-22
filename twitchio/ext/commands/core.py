@@ -41,20 +41,20 @@ from .types_ import CommandOptions, Component_T
 
 
 __all__ = (
-    "CommandErrorPayload",
     "Command",
-    "Mixin",
+    "CommandErrorPayload",
     "Group",
+    "Mixin",
     "command",
+    "cooldown",
     "group",
     "guard",
+    "is_broadcaster",
+    "is_elevated",
+    "is_moderator",
     "is_owner",
     "is_staff",
-    "is_broadcaster",
-    "is_moderator",
     "is_vip",
-    "is_elevated",
-    "cooldown",
 )
 
 
@@ -775,7 +775,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         context._invoked_with = f"{context._invoked_with} {trigger}"
         context._subcommand_trigger = trigger or None
 
-        if not trigger or not next_ and self._invoke_fallback:
+        if not trigger or (not next_ and self._invoke_fallback):
             view.undo()
             await super()._invoke(context=context)
 
