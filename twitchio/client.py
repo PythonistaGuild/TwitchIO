@@ -151,6 +151,9 @@ class Client:
         # Websockets for EventSub
         self._websockets: dict[str, dict[str, Websocket]] = defaultdict(dict)
 
+        self._ready_event: asyncio.Event = asyncio.Event()
+        self._ready_event.clear()
+
         self.__waiter: asyncio.Event = asyncio.Event()
 
     @property
@@ -339,10 +342,12 @@ class Client:
 
         # Dispatch ready event... May change places in the future.
         self.dispatch("ready")
+        self._ready_event.set()
 
         try:
             await self.__waiter.wait()
         finally:
+            self._ready_event.clear()
             await self.close()
 
     def run(self, token: str | None = None, *, with_adapter: bool = True) -> None:
@@ -429,6 +434,23 @@ class Client:
 
         self._http.cleanup()
         self.__waiter.set()
+
+    async def wait_until_ready(self) -> None:
+        """|coro|
+
+        Method which suspends the current coroutine and waits for "event_ready" to be dispatched.
+
+        If "event_ready" has previously been dispatched, this method returns immediately.
+
+        "event_ready" is dispatched after the HTTP Client has successfully logged in, tokens have sucessfully been loaded,
+        and :meth:`.setup_hook` has completed execution.
+
+        .. warning::
+
+            Since this method directly relies on :meth:`.setup_hook` completing, using it in :meth:`.setup_hook` or in any
+            call :meth:`.setup_hook` is waiting for execution to complete, will completely deadlock the Client.
+        """
+        await self._ready_event.wait()
 
     async def wait_for(self, event: str, *, timeout: float | None = None, predicate: WaitPredicateT | None = None) -> Any:
         """Method which waits for any known dispatched event and returns the payload associated with the event.
