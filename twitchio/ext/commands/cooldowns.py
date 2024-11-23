@@ -100,7 +100,7 @@ class BaseCooldown(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def update(self) -> float | None:
+    def update(self, *args: Any, **kwargs: Any) -> float | None:
         """Base method which should be implemented to update the cooldown/ratelimit.
 
         This is where your algorithm logic should be contained.
@@ -125,7 +125,7 @@ class BaseCooldown(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def is_ratelimited(self) -> bool:
+    def is_ratelimited(self, *args: Any, **kwargs: Any) -> bool:
         """Base method which should be implemented which returns a bool indicating whether the cooldown is ratelimited.
 
         Returns
@@ -136,7 +136,7 @@ class BaseCooldown(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def is_dead(self) -> bool:
+    def is_dead(self, *args: Any, **kwargs: Any) -> bool:
         """Base method which should be implemented to indicate whether the cooldown should be considered stale and allowed
         to be removed from the ``bucket: cooldown`` mapping.
 
@@ -154,12 +154,12 @@ class Cooldown(BaseCooldown):
     See: :func:`~.commands.cooldown` for more documentation.
     """
 
-    def __init__(self, *, rate: int, per: int | datetime.timedelta) -> None:
+    def __init__(self, *, rate: int, per: float | datetime.timedelta) -> None:
         if rate <= 0:
             raise ValueError(f'Cooldown rate must be equal to or greater than 1. Got "{rate}" expected >= 1.')
 
         self._rate: int = rate
-        self._per: datetime.timedelta = datetime.timedelta(seconds=per) if isinstance(per, int) else per
+        self._per: datetime.timedelta = datetime.timedelta(seconds=per) if not isinstance(per, datetime.timedelta) else per
 
         now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
         self._window: datetime.datetime = now + self._per
@@ -219,7 +219,71 @@ class Cooldown(BaseCooldown):
 
 
 class GCRACooldown(BaseCooldown):
-    """Not implemented yet."""
+    """GCRA cooldown algorithm for :func:`~.commands.cooldown`, which implements the ``GCRA`` ratelimiting algorithm.
+
+    See: :func:`~.commands.cooldown` for more documentation.
+    """
+
+    def __init__(self, *, rate: int, per: float | datetime.timedelta) -> None:
+        if rate <= 0:
+            raise ValueError(f'Cooldown rate must be equal to or greater than 1. Got "{rate}" expected >= 1.')
+
+        self._rate: int = rate
+        self._per: datetime.timedelta = datetime.timedelta(seconds=per) if not isinstance(per, datetime.timedelta) else per
+
+        now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+        self._tat: datetime.datetime | None = None
+
+        if (now + self._per) <= now:
+            raise ValueError("The provided per value for Cooldowns can not go into the past.")
+
+        self.last_updated: datetime.datetime | None = None
+
+    @property
+    def inverse(self) -> float:
+        return self._per.total_seconds() / self._rate
+
+    @property
+    def per(self) -> datetime.timedelta:
+        return self._per
+
+    def reset(self) -> None:
+        self.last_updated = None
+        self._tat = None
+
+    def is_ratelimited(self, *, now: datetime.datetime | None = None) -> bool:
+        now = datetime.datetime.now(tz=datetime.UTC) or now
+        tat: datetime.datetime = max(self._tat or now, now)
+
+        separation: float = (tat - now).total_seconds()
+        max_interval: float = self._per.total_seconds() - self.inverse
+
+        return separation > max_interval
+
+    def update(self) -> float | None:
+        now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+        tat: datetime.datetime = max(self._tat or now, now)
+
+        self.last_updated = now
+
+        separation: float = (tat - now).total_seconds()
+        max_interval: float = self._per.total_seconds() - self.inverse
+
+        if separation > max_interval:
+            return separation - max_interval
+
+        new = max(tat, now) + datetime.timedelta(seconds=self.inverse)
+        self._tat = new
+
+    def copy(self) -> Self:
+        return self.__class__(rate=self._rate, per=self._per)
+
+    def is_dead(self) -> bool:
+        if self.last_updated is None:
+            return False
+
+        now = datetime.datetime.now(tz=datetime.UTC)
+        return now > (self.last_updated + self.per)
 
 
 KeyT: TypeAlias = Callable[[Any], Hashable] | Callable[[Any], Coroutine[Any, Any, Hashable]] | BucketType
