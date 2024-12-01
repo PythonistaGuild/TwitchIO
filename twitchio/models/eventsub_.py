@@ -1883,7 +1883,7 @@ class ChannelSubscriptionMessage(BaseEvent):
         self.cumulative_months: int = int(payload["cumulative_months"])
         self.streak_months: int | None = int(payload["streak_months"]) if payload["streak_months"] is not None else None
         self.text: str = payload["message"]["text"]
-        self.emotes: list[SubscribeEmote] = [SubscribeEmote(emote) for emote in payload["message"]["emotes"]]
+        self.emotes: list[SubscribeEmote] = [SubscribeEmote(emote) for emote in payload.get("message", {}).get("emotes", [])]
 
     def __repr__(self) -> str:
         return f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} text={self.text}>"
