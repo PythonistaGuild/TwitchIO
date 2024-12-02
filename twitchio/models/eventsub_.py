@@ -1883,7 +1883,8 @@ class ChannelSubscriptionMessage(BaseEvent):
         self.cumulative_months: int = int(payload["cumulative_months"])
         self.streak_months: int | None = int(payload["streak_months"]) if payload["streak_months"] is not None else None
         self.text: str = payload["message"]["text"]
-        self.emotes: list[SubscribeEmote] = [SubscribeEmote(emote) for emote in payload.get("message", {}).get("emotes", [])]
+        emotes = payload.get("message", {}).get("emotes", [])
+        self.emotes: list[SubscribeEmote] = [SubscribeEmote(emote) for emote in emotes] if emotes is not None else []
 
     def __repr__(self) -> str:
         return f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} text={self.text}>"
@@ -2721,7 +2722,8 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.id: str = payload["id"]
         self.text: str = payload["message"]["text"]
-        self.emotes: list[ChannelPointsEmote] = [ChannelPointsEmote(emote) for emote in payload["message"]["emotes"]]
+        emotes = payload.get("message", {}).get("emotes", [])
+        self.emotes: list[ChannelPointsEmote] = [ChannelPointsEmote(emote) for emote in emotes] if emotes is not None else []
         self.user_input: str | None = payload.get("user_input")
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
 

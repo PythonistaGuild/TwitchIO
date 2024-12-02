@@ -620,7 +620,7 @@ class BaseEmoteData(TypedDict):
 
 class BaseMessageData(TypedDict):
     text: str
-    emotes: list[BaseEmoteData]
+    emotes: list[BaseEmoteData] | None
 
 
 class SubscribeEmoteData(BaseEmoteData): ...
