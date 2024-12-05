@@ -768,16 +768,20 @@ class TwitchHTTP:
         game_id: str = None,
         language: str = None,
         title: str = None,
+        delay: int = None,
+        tags: List[str] = None,
         content_classification_labels: List[Dict[str, Union[str, bool]]] = None,
         is_branded_content: bool = None,
     ):
-        assert any((game_id, language, title, content_classification_labels, is_branded_content))
+        assert any((game_id, language, title, delay, tags, content_classification_labels, is_branded_content))
         body = {
             k: v
             for k, v in {
                 "game_id": game_id,
                 "broadcaster_language": language,
                 "title": title,
+                "delay": delay,
+                "tags": tags,
                 "is_branded_content": is_branded_content,
             }.items()
             if v is not None
