@@ -67,7 +67,7 @@ class Routine:
 
         # This routine will run every minute until stopped or canceled.
 
-        @routines.routine(datetime.timedelta(minutes=1))
+        @routines.routine(delta=datetime.timedelta(minutes=1))
         async def my_routine() -> None:
             print("Hello World!")
 
@@ -77,7 +77,7 @@ class Routine:
 
         # Pass some arguments to a routine...
 
-        @routines.routine(datetime.timedelta(minutes=1))
+        @routines.routine(delta=datetime.timedelta(minutes=1))
         async def my_routine(hello: str) -> None:
             print(f"Hello {hello}")
 
@@ -87,7 +87,7 @@ class Routine:
 
         # Only run the routine three of times...
 
-        @routines.routine(datetime.timedelta(minutes=1), iterations=3)
+        @routines.routine(delta=datetime.timedelta(minutes=1), iterations=3)
         async def my_routine(hello: str) -> None:
             print(f"Hello {hello}")
 
