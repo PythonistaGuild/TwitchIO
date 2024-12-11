@@ -252,7 +252,7 @@ class Routine:
                 await asyncio.sleep(sleep)
 
         except Exception as e:
-            msg = "A fatal error occured during an iteration of Routine: %s. This return will now be canceled."
+            msg = "A fatal error occured during an iteration of Routine: %s. This routine will now be canceled."
             LOGGER.error(msg, self.__repr__(), exc_info=e)
 
         if self._after_routine:
