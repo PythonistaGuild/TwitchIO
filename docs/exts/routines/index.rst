@@ -1,6 +1,9 @@
 Routines
 ########
 
-.. important::
+.. attributetable:: twitchio.ext.routines.Routine
 
-    This feature has not yet been implemented.
+.. autoclass:: twitchio.ext.routines.Routine
+    :members:
+
+.. autofunction:: twitchio.ext.routines.routine
