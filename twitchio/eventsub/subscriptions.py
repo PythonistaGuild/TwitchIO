@@ -37,7 +37,9 @@ if TYPE_CHECKING:
 __all__ = (
     "AdBreakBeginSubscription",
     "AutomodMessageHoldSubscription",
+    "AutomodMessageHoldV2Subscription",
     "AutomodMessageUpdateSubscription",
+    "AutomodMessageUpdateV2Subscription",
     "AutomodSettingsUpdateSubscription",
     "AutomodTermsUpdateSubscription",
     "ChannelBanSubscription",
@@ -199,6 +201,49 @@ class AutomodMessageHoldSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
+class AutomodMessageHoldV2Subscription(SubscriptionPayload):
+    """The ``automod.message.hold`` V2 subscription type notifies a user if a message was caught by automod for review.
+
+    Version 2 of this endpoint provides additional information about the message, including the reason, the term used, and its position within the message.
+
+    .. important::
+        Requires a user access token that includes the ``moderator:manage:automod scope``. The ID in the ``moderator_user_id`` condition parameter must match the user ID in the access token.
+
+        If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
+    type: ClassVar[Literal["automod.message.hold"]] = "automod.message.hold"
+    version: ClassVar[Literal["2"]] = "2"
+
+    @handle_user_ids()
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
 
 class AutomodMessageUpdateSubscription(SubscriptionPayload):
     """The ``automod.message.update`` subscription type sends notification when a message in the automod queue has its status changed.
@@ -241,6 +286,48 @@ class AutomodMessageUpdateSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
+class AutomodMessageUpdateV2Subscription(SubscriptionPayload):
+    """The ``automod.message.update`` subscription type sends notification when a message in the automod queue has its status changed.
+
+    Version 2 of this endpoint provides additional information about the message, including the reason, the term used, and its position within the message.
+
+    .. important::
+        Requires a user access token that includes the ``moderator:manage:automod scope``. The ID in the ``moderator_user_id`` condition parameter must match the user ID in the access token.
+
+        If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
+
+    Attributes
+    ----------
+    condition: Condition
+        Mapping of the subscription parameters.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.
+    """
+
+    type: ClassVar[Literal["automod.message.update"]] = "automod.message.update"
+    version: ClassVar[Literal["2"]] = "2"
+
+    @handle_user_ids()
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.moderator_user_id: str = condition.get("moderator_user_id", "")
+
+        if not self.broadcaster_user_id or not self.moderator_user_id:
+            raise ValueError('The parameters "broadcaster_user_id" and "moderator_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
 class AutomodSettingsUpdateSubscription(SubscriptionPayload):
     """The ``automod.settings.update`` subscription type sends a notification when a broadcaster's automod settings are updated.
