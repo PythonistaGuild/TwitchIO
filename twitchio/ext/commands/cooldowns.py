@@ -252,7 +252,7 @@ class GCRACooldown(BaseCooldown):
         self._tat = None
 
     def is_ratelimited(self, *, now: datetime.datetime | None = None) -> bool:
-        now = datetime.datetime.now(tz=datetime.UTC) or now
+        now = now or datetime.datetime.now(tz=datetime.UTC)
         tat: datetime.datetime = max(self._tat or now, now)
 
         separation: float = (tat - now).total_seconds()
