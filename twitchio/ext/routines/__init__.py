@@ -202,7 +202,7 @@ class Routine:
         attempts: int | None = self._max_attempts
         try:
             while True:
-                self._last_start: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+                self._last_start: datetime.datetime | None = datetime.datetime.now(tz=datetime.UTC)
                 self._current_iteration += 1
 
                 try:
@@ -414,10 +414,7 @@ class Routine:
 
         If ``iterations`` was not set this returns ``None``.
         """
-        if self._iterations is None:
-            return None
-
-        return self._iterations - self._completed
+        return None if self._iterations is None else self._iterations - self._completed
 
     @property
     def current_iteration(self) -> int:
