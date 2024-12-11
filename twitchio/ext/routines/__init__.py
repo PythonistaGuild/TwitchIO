@@ -202,7 +202,7 @@ class Routine:
         attempts: int | None = self._max_attempts
         try:
             while True:
-                self._last_start = datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
+                self._last_start: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
                 self._current_iteration += 1
 
                 try:
