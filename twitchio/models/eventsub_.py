@@ -84,7 +84,7 @@ class Boundary(NamedTuple):
     end: int
 
 
-class BlockedTerm:
+class AutomodBlockedTerm:
     """
     Represents a blocked term from AutoMod.
 
@@ -100,7 +100,7 @@ class BlockedTerm:
 
     __slots__ = ("boundary", "id", "owner")
 
-    def __init__(self, payload: AutomodBlockedTerm, *, http: HTTPClient) -> None:
+    def __init__(self, payload: AutomodBlockedTermData, *, http: HTTPClient) -> None:
         self.id: str = payload["term_id"]
         self.owner: PartialUser = PartialUser(
             payload["owner_broadcaster_user_id"],
@@ -136,7 +136,7 @@ class AutomodMessageHold(BaseEvent):
         The datetime of when automod saved the message.
     fragments: list[ChatMessageFragment]
         List of chat message fragments.
-    reason: Literal["automod", "blocked_term"] | None
+    reason: typing.Literal["automod", "blocked_term"] | None
         The reason for the message being held. This is only populated for the V2 endpoint.
     boundaries: list[Boundary]
         The start and end index of the words caught by automod. This is only populated for the V2 endpoint and when the reason is `automod`.
@@ -183,7 +183,7 @@ class AutomodMessageHold(BaseEvent):
         self.boundaries: list[Boundary] = [Boundary(boundary["start_pos"], boundary["end_pos"]) for boundary in boundaries]
 
         blocked_terms = blocked_term_data.get("terms_found", [])
-        self.blocked_terms: list[BlockedTerm] = [BlockedTerm(term, http=http) for term in blocked_terms]
+        self.blocked_terms: list[AutomodBlockedTerm] = [AutomodBlockedTerm(term, http=http) for term in blocked_terms]
 
     def __repr__(self) -> str:
         return f"<AutomodMessageHold broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"
@@ -217,7 +217,7 @@ class AutomodMessageHold(BaseEvent):
 
 class AutomodMessageUpdate(AutomodMessageHold):
     """
-    Represents an automod message update event.
+    Represents an automod message update event. Both V1 and V2.
 
     Attributes
     ----------
@@ -250,7 +250,7 @@ class AutomodMessageUpdate(AutomodMessageHold):
         - Denied
         - Expired
 
-    reason: Literal["automod", "blocked_term"] | None
+    reason: typing.Literal["automod", "blocked_term"] | None
         The reason for the message being held. This is only populated for the V2 endpoint.
     boundaries: list[Boundary]
         The start and end index of the words caught by automod. This is only populated for the V2 endpoint and when the reason is `automod`.

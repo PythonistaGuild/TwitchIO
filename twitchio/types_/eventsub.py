@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "AutomodBlockedTerm",
+    "AutomodBlockedTermData",
     "AutomodMessageHoldEvent",
     "AutomodMessageHoldV2Event",
     "AutomodMessageUpdateEvent",
@@ -283,7 +283,7 @@ class AutomodV2Data(TypedDict):
     boundaries: list[AutomodBoundaries]
 
 
-class AutomodBlockedTerm(TypedDict):
+class AutomodBlockedTermData(TypedDict):
     term_id: str
     boundary: AutomodBoundaries
     owner_broadcaster_user_id: str
@@ -292,7 +292,7 @@ class AutomodBlockedTerm(TypedDict):
 
 
 class AutomodBlockedTerms(TypedDict):
-    terms_found: list[AutomodBlockedTerm]
+    terms_found: list[AutomodBlockedTermData]
 
 
 class AutomodMessageHoldV2Event(BroadcasterUserEvent):
