@@ -33,7 +33,9 @@ if TYPE_CHECKING:
 
 
 __all__ = (
+    "AutomodBlockedTerm",
     "AutomodMessageHoldEvent",
+    "AutomodMessageHoldV2Event",
     "AutomodMessageUpdateEvent",
     "AutomodSettingsUpdateEvent",
     "AutomodTermsUpdateEvent",
@@ -268,6 +270,38 @@ class AutomodMessageHoldEvent(BroadcasterUserEvent):
     level: int
     category: str
     held_at: str
+
+
+class AutomodBoundaries(TypedDict):
+    start_pos: int
+    end_pos: int
+
+
+class AutomodV2Data(TypedDict):
+    category: str
+    level: int
+    boundaries: list[AutomodBoundaries]
+
+
+class AutomodBlockedTerm(TypedDict):
+    term_id: str
+    boundary: AutomodBoundaries
+    owner_broadcaster_user_id: str
+    owner_broadcaster_user_login: str
+    owner_broadcaster_user_name: str
+
+
+class AutomodBlockedTerms(TypedDict):
+    terms_found: list[AutomodBlockedTerm]
+
+
+class AutomodMessageHoldV2Event(BroadcasterUserEvent):
+    message_id: str
+    message: ChatMessageData
+    held_at: str
+    reason: Literal["automod", "blocked_term"]
+    blocked_term: AutomodBlockedTerms | None
+    automod: AutomodV2Data | None
 
 
 class AutomodMessageUpdateEvent(BroadcasterModUserEvent):

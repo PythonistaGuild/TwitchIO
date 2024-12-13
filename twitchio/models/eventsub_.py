@@ -68,9 +68,55 @@ def create_event_instance(event_type: str, payload: dict[str, Any], http: HTTPCl
     return event_cls(payload) if http is None else event_cls(payload, http=http)
 
 
+class Boundary(NamedTuple):
+    """
+    NamedTuple that represents the boundaries of caught automod words.
+
+    Attributes
+    -----------
+    start: int
+        Index in the message for the start of the problem (0 indexed, inclusive).
+    end: int
+        Index in the message for the end of the problem (0 indexed, inclusive).
+    """
+
+    start: int
+    end: int
+
+
+class BlockedTerm:
+    """
+    Represents a blocked term from AutoMod.
+
+    Attributes
+    ----------
+    id: str
+        The id of the blocked term found.
+    owner: PartialUser
+        The broadcaster who has blocked the term.
+    boundary: Boundary
+        The start and end indexes of the blocked term in the message.
+    """
+
+    __slots__ = ("boundary", "id", "owner")
+
+    def __init__(self, payload: AutomodBlockedTerm, *, http: HTTPClient) -> None:
+        self.id: str = payload["term_id"]
+        self.owner: PartialUser = PartialUser(
+            payload["owner_broadcaster_user_id"],
+            payload["owner_broadcaster_user_login"],
+            payload["owner_broadcaster_user_name"],
+            http=http,
+        )
+        self.boundary: Boundary = Boundary(payload["boundary"]["start_pos"], payload["boundary"]["end_pos"])
+
+    def __repr__(self) -> str:
+        return f"<BlockedTerm id={self.id} owner={self.owner} boundary={self.boundary}>"
+
+
 class AutomodMessageHold(BaseEvent):
     """
-    Represents an automod message hold event.
+    Represents an automod message hold event. Both V1 and V2.
 
     Attributes
     ----------
@@ -82,33 +128,62 @@ class AutomodMessageHold(BaseEvent):
         The ID of the message that was flagged by automod.
     text: str
         The text content of the message.
-    level: int
-        The level of severity. Measured between 1 to 4.
+    level: int | None
+        The level of severity. Measured between 1 to 4. This is `None` if the V2 endpoint is used and the reason is `blocked_term`.
     category: str
         The category of the message.
     held_at: datetime.datetime
         The datetime of when automod saved the message.
     fragments: list[ChatMessageFragment]
         List of chat message fragments.
+    reason: Literal["automod", "blocked_term"] | None
+        The reason for the message being held. This is only populated for the V2 endpoint.
+    boundaries: list[Boundary]
+        The start and end index of the words caught by automod. This is only populated for the V2 endpoint and when the reason is `automod`.
+
     """
 
     subscription_type = "automod.message.hold"
 
-    __slots__ = ("broadcaster", "category", "held_at", "level", "message_id", "text", "user")
+    __slots__ = (
+        "blocked_terms",
+        "boundaries",
+        "broadcaster",
+        "category",
+        "held_at",
+        "level",
+        "message_id",
+        "reason",
+        "text",
+        "user",
+    )
 
-    def __init__(self, payload: AutomodMessageHoldEvent, *, http: HTTPClient) -> None:
+    def __init__(self, payload: AutomodMessageHoldEvent | AutomodMessageHoldV2Event, *, http: HTTPClient) -> None:
         self.broadcaster = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.user = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.message_id: str = payload["message_id"]
         self.text: str = payload["message"]["text"]
-        self.level: int = int(payload["level"])
-        self.category: str = payload["category"]
         self.held_at: datetime.datetime = parse_timestamp(payload["held_at"])
+
+        message_fragments = payload["message"]["fragments"]
         self.fragments: list[ChatMessageFragment] = [
-            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
+            ChatMessageFragment(fragment, http=http) for fragment in message_fragments
         ]
+
+        automod_data = payload.get("automod") or {}
+        blocked_term_data = payload.get("blocked_term") or {}
+
+        self.reason: Literal["automod", "blocked_term"] | None = payload.get("reason")
+        self.level: int | None = automod_data.get("level") or payload.get("level")
+        self.category: str | None = automod_data.get("category") or payload.get("category")
+
+        boundaries = automod_data.get("boundaries", [])
+        self.boundaries: list[Boundary] = [Boundary(boundary["start_pos"], boundary["end_pos"]) for boundary in boundaries]
+
+        blocked_terms = blocked_term_data.get("terms_found", [])
+        self.blocked_terms: list[BlockedTerm] = [BlockedTerm(term, http=http) for term in blocked_terms]
 
     def __repr__(self) -> str:
         return f"<AutomodMessageHold broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"

@@ -201,6 +201,7 @@ class AutomodMessageHoldSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
+
 class AutomodMessageHoldV2Subscription(SubscriptionPayload):
     """The ``automod.message.hold`` V2 subscription type notifies a user if a message was caught by automod for review.
 
@@ -286,6 +287,7 @@ class AutomodMessageUpdateSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
 
+
 class AutomodMessageUpdateV2Subscription(SubscriptionPayload):
     """The ``automod.message.update`` subscription type sends notification when a message in the automod queue has its status changed.
 
@@ -328,6 +330,7 @@ class AutomodMessageUpdateV2Subscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
 
 class AutomodSettingsUpdateSubscription(SubscriptionPayload):
     """The ``automod.settings.update`` subscription type sends a notification when a broadcaster's automod settings are updated.
