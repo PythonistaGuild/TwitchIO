@@ -38,7 +38,6 @@ __all__ = ("Routine", "routine")
 
 T = TypeVar("T")
 CoroT: TypeAlias = Callable[..., Coroutine[Any, Any, Any]]
-ErrorT: TypeAlias = Callable[..., Coroutine[Any, Any, Any]]
 
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -118,7 +117,7 @@ class Routine:
 
         self._before_routine: CoroT | None = None
         self._after_routine: CoroT | None = None
-        self._on_error: CoroT = self.on_error
+        self._on_error: CoroT | None = None
 
         self._stop_on_error: bool = stop_on_error
         self._should_stop: bool = False
@@ -172,6 +171,10 @@ class Routine:
         return self._task is not None and not self._task.done()
 
     async def _call_error(self, error: Exception) -> None:
+        if self._on_error is None:
+            await self.on_error(error)
+            return
+
         if self._injected is not None:
             await self._on_error(self._injected, error)
         else:
