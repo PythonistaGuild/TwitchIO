@@ -28,17 +28,27 @@ from typing import Any, NotRequired, TypeAlias, TypedDict
 import aiohttp
 
 from ..authentication import Scopes
-from ..web import *
+from ..web import AiohttpAdapter
+
+try:
+    from ..web import StarletteAdapter as StarletteAdapter
+
+    has_starlette = True
+except ImportError:
+    has_starlette = False
 
 
-AdapterOT: TypeAlias = type[StarletteAdapter | AiohttpAdapter] | StarletteAdapter | AiohttpAdapter
+if has_starlette:
+    AdapterOT: TypeAlias = type[StarletteAdapter | AiohttpAdapter] | StarletteAdapter | AiohttpAdapter  # type: ignore
+else:
+    AdapterOT: TypeAlias = type[AiohttpAdapter] | AiohttpAdapter  # type: ignore
 
 
 class ClientOptions(TypedDict, total=False):
     redirect_uri: str | None
     scopes: Scopes | None
     session: aiohttp.ClientSession | None
-    adapter: NotRequired[AdapterOT]
+    adapter: NotRequired[AdapterOT]  # type: ignore
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]
