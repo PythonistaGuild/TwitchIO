@@ -130,8 +130,8 @@ class AutomodMessageHold(BaseEvent):
         The text content of the message.
     level: int | None
         The level of severity. Measured between 1 to 4. This is `None` if the V2 endpoint is used and the reason is `blocked_term`.
-    category: str
-        The category of the message.
+    category: str | None
+        The category of the message. This is `None` if the V2 endpoint is used and the reason is `blocked_term`.
     held_at: datetime.datetime
         The datetime of when automod saved the message.
     fragments: list[ChatMessageFragment]
@@ -231,10 +231,10 @@ class AutomodMessageUpdate(AutomodMessageHold):
         The ID of the message that was flagged by automod.
     text: str
         The text content of the message.
-    level: int
-        The level of severity. Measured between 1 to 4.
-    category: str
-        The category of the message.
+    level: int | None
+        The level of severity. Measured between 1 to 4. This is `None` if the V2 endpoint is used and the reason is `blocked_term`.
+    category: str | None
+        The category of the message. This is `None` if the V2 endpoint is used and the reason is `blocked_term`.
     held_at: datetime.datetime
         The datetime of when automod saved the message.
     emotes: list[ChatMessageEmote]
@@ -249,6 +249,11 @@ class AutomodMessageUpdate(AutomodMessageHold):
         - Approved
         - Denied
         - Expired
+
+    reason: Literal["automod", "blocked_term"] | None
+        The reason for the message being held. This is only populated for the V2 endpoint.
+    boundaries: list[Boundary]
+        The start and end index of the words caught by automod. This is only populated for the V2 endpoint and when the reason is `automod`.
     """
 
     subscription_type = "automod.message.update"
