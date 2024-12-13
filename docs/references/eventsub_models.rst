@@ -9,6 +9,15 @@ Eventsub
 .. autoclass:: twitchio.AutomodMessageHold
     :members:
 
+.. attributetable:: twitchio.AutomodBlockedTerm
+
+.. autoclass:: twitchio.AutomodBlockedTerm
+    :members:
+
+.. attributetable:: twitchio.Boundary
+
+.. autoclass:: twitchio.Boundary
+
 .. attributetable:: twitchio.AutomodMessageUpdate
 
 .. autoclass:: twitchio.AutomodMessageUpdate

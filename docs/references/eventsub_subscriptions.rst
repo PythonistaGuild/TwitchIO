@@ -9,9 +9,19 @@ Eventsub Subscriptions
 .. autoclass:: AutomodMessageHoldSubscription
     :members:
 
+.. attributetable:: AutomodMessageHoldV2Subscription
+
+.. autoclass:: AutomodMessageHoldV2Subscription
+    :members:
+
 .. attributetable:: AutomodMessageUpdateSubscription
 
 .. autoclass:: AutomodMessageUpdateSubscription
+    :members:
+
+.. attributetable:: AutomodMessageUpdateV2Subscription
+
+.. autoclass:: AutomodMessageUpdateV2Subscription
     :members:
 
 .. attributetable:: AutomodSettingsUpdateSubscription
