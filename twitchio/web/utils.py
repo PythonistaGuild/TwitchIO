@@ -34,8 +34,11 @@ from aiohttp import web
 
 
 if TYPE_CHECKING:
+    import asyncio
+
     from starlette.requests import Request
 
+    from ..client import Client
     from ..types_.eventsub import EventSubHeaders
 
 
@@ -46,6 +49,10 @@ MESSAGE_TYPES = ["notification", "webhook_callback_verification", "revocation"]
 
 
 class BaseAdapter(abc.ABC):
+    client: Client
+    _runner_task: asyncio.Task[None] | None
+    _eventsub_secret: str | None
+
     @abc.abstractmethod
     async def event_startup(self) -> None: ...
 
@@ -69,6 +76,14 @@ class BaseAdapter(abc.ABC):
 
     @abc.abstractmethod
     async def oauth_redirect(self, request: Any) -> Any: ...
+
+    @property
+    @abc.abstractmethod
+    def eventsub_url(self) -> str: ...
+
+    @property
+    @abc.abstractmethod
+    def redirect_url(self) -> str: ...
 
 
 async def verify_message(*, request: Request | web.Request, secret: str) -> bytes:

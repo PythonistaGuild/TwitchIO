@@ -23,32 +23,19 @@ SOFTWARE.
 """
 
 from collections.abc import Callable, Coroutine
-from typing import Any, NotRequired, TypeAlias, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 import aiohttp
 
 from ..authentication import Scopes
-from ..web import AiohttpAdapter
-
-try:
-    from ..web import StarletteAdapter as StarletteAdapter
-
-    has_starlette = True
-except ImportError:
-    has_starlette = False
-
-
-if has_starlette:
-    AdapterOT: TypeAlias = type[StarletteAdapter | AiohttpAdapter] | StarletteAdapter | AiohttpAdapter  # type: ignore
-else:
-    AdapterOT: TypeAlias = type[AiohttpAdapter] | AiohttpAdapter  # type: ignore
+from ..web.utils import BaseAdapter
 
 
 class ClientOptions(TypedDict, total=False):
     redirect_uri: str | None
     scopes: Scopes | None
     session: aiohttp.ClientSession | None
-    adapter: NotRequired[AdapterOT]  # type: ignore
+    adapter: NotRequired[BaseAdapter]
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]

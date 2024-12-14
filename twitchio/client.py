@@ -64,7 +64,7 @@ if TYPE_CHECKING:
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
     from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
-    from .types_.options import AdapterOT, ClientOptions, WaitPredicateT
+    from .types_.options import ClientOptions, WaitPredicateT
     from .types_.tokens import TokenMappingData
 
 
@@ -134,7 +134,7 @@ class Client:
             scopes=scopes,
             session=session,
         )
-        adapter: AdapterOT = options.get("adapter", AiohttpAdapter)
+        adapter: BaseAdapter | type[BaseAdapter] = options.get("adapter", AiohttpAdapter)
         if isinstance(adapter, BaseAdapter):
             adapter.client = self
             self._adapter = adapter
