@@ -204,6 +204,21 @@ class Bot(Mixin[None], Client):
         """
         return self._owner_id
 
+    async def close(self) -> None:
+        for module in tuple(self.__modules):
+            try:
+                await self.unload_module(module)
+            except Exception as e:
+                logger.debug('Failed to unload module "%s" gracefully during close: %s.', module, e)
+
+        for component in tuple(self._components):
+            try:
+                await self.remove_component(component)
+            except Exception as e:
+                logger.debug('Failed to remove component "%s" gracefully during close: %s.', component, e)
+
+        await super().close()
+
     def _cleanup_component(self, component: Component, /) -> None:
         for command in component.__all_commands__.values():
             self.remove_command(command.name)
