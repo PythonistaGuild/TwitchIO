@@ -4674,7 +4674,7 @@ class UserUpdate(BaseEvent):
     """
     Represents a user update event.
 
-    ??? note
+    .. note::
         The email attribute requires the `user:read:email` scope otherwise it is None.
 
     Attributes
