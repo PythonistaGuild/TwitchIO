@@ -128,6 +128,15 @@ hr {
 	background-color: var(--color-button-hover--light);
 }
 
+.btn:focus {
+	outline: none;
+}
+
+.btn:active {
+	outline: none;
+	background-color: var(--color-button-hover--light);
+}
+
 .border-top {
 	border-color: var(--color-background-dim--light) !important;
 }
@@ -268,6 +277,15 @@ body.theme-dark {
 	}
 
 	.btn-light:hover {
+		background-color: var(--color-button-hover--dark);
+	}
+
+	.btn:focus {
+		outline: none;
+	}
+
+	.btn:active {
+		outline: none;
 		background-color: var(--color-button-hover--dark);
 	}
 
