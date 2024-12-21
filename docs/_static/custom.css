@@ -6,7 +6,7 @@
 	--color-primary--dark: rgba(255, 255, 255, 0.8);
 	--color-primary-dim--dark: rgba(255, 255, 255, 0.7);
 	--color-background--dark: #15151c;
-	--color-background-dim--dark: #1a1a23;
+	--color-background-dim--dark: #1a1a2390;
 	--color-accent--dark: #dcb5f3;
 	--color-links--dark: #889ad9;
 	--color-header-back--dark: #1a1a23;
@@ -246,6 +246,7 @@ body.theme-dark {
 body.theme-dark {
 	code {
 		color: #cb7f90!important;
+		background-color: var(--color-background-dim--dark);
 	}
 
 	.input-group-text.bg-white {
