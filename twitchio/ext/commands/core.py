@@ -156,6 +156,7 @@ class Command(Generic[Component_T, P]):
         self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
         self._extras: dict[Any, Any] = kwargs.get("extras", {})
         self._parent: Group[Component_T, P] | None = kwargs.get("parent")
+        self._bypass_global_guards: bool = kwargs.get("bypass_global_guards", False)
 
     def __repr__(self) -> str:
         return f"Command(name={self._name}, parent={self.parent})"
@@ -396,7 +397,8 @@ class Command(Generic[Component_T, P]):
             await self._run_cooldowns(context)
 
         # Run global guard first...
-        await self._guard_runner([context.bot.global_guard], context)
+        if not self._bypass_global_guards:
+            await self._guard_runner([context.bot.global_guard], context)
 
         # Run component guards next, if this command is in a component...
         if self._injected is not None and self._injected.__all_guards__:
@@ -618,6 +620,9 @@ def command(
     cooldowns_before_guards: bool
         An optional bool, indicating whether to run cooldown guards after all other guards succeed.
         Defaults to ``False``, which means cooldowns will be checked **after** all guards have successfully completed.
+    bypass_global_guards: bool
+        An optional bool, indicating whether the command should bypass the :func:`~.commands.Bot.global_guard`.
+        Defaults to ``False``.
 
     Examples
     --------
@@ -848,6 +853,9 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         cooldowns_before_guards: bool
             An optional bool, indicating whether to run cooldown guards after all other guards succeed.
             Defaults to ``False``, which means cooldowns will be checked **after** all guards have successfully completed.
+        bypass_global_guards: bool
+            An optional bool, indicating whether the command should bypass the :func:`~.commands.Bot.global_guard`.
+            Defaults to ``False``.
         """
 
         def wrapper(
