@@ -297,6 +297,10 @@ body.theme-dark {
 		color: var(--color-primary--dark) !important;
 	}
 
+	strong {
+		color: #FFF;
+	}
+
 	.tooltipster-content > p {
 		color: var(--color-primary--dark) !important;
 	}
