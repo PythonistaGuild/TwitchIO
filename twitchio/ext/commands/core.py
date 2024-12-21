@@ -621,7 +621,7 @@ def command(
         An optional bool, indicating whether to run cooldown guards after all other guards succeed.
         Defaults to ``False``, which means cooldowns will be checked **after** all guards have successfully completed.
     bypass_global_guards: bool
-        An optional bool, indicating whether the command should bypass the :func:`~.commands.Bot.global_guard`.
+        An optional bool, indicating whether the command should bypass the :meth:`.Bot.global_guard`.
         Defaults to ``False``.
 
     Examples
