@@ -57,7 +57,7 @@
 }
 
 html {
-	scrollbar-width: none!important;
+	scrollbar-width: auto!important;
 }
 
 body {
