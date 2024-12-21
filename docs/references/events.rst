@@ -221,7 +221,7 @@ All events are prefixed with **event_**
    * - Charity Donation
      - :meth:`~eventsub.CharityDonationSubscription`
      - charity_campaign_donate
-     - :class:`~models.eventsub_.ChannelWarningSend`
+     - :class:`~models.eventsub_.CharityCampaignDonation`
    * - Charity Campaign Start
      - :meth:`~eventsub.CharityCampaignStartSubscription`
      - charity_campaign_start

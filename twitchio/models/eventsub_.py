@@ -3827,23 +3827,59 @@ class BaseCharityCampaign(BaseEvent):
 
     def __init__(
         self,
-        payload: CharityCampaignStartEvent | CharityCampaignProgressEvent | CharityCampaignStopEvent,
+        payload: CharityCampaignStartEvent
+        | CharityCampaignProgressEvent
+        | CharityCampaignStopEvent
+        | CharityCampaignDonationEvent,
         *,
         http: HTTPClient,
     ) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.id: str = payload["id"]
+        self.id: str = payload.get("campaign_id") or payload["id"]
         self.name: str = payload["charity_name"]
         self.description: str = payload["charity_description"]
         self.logo: Asset = Asset(payload["charity_logo"], http=http, dimensions=(100, 100))
         self.website: str = payload["charity_website"]
-        self.current: CharityValues = CharityValues(payload["current_amount"])
-        self.target: CharityValues = CharityValues(payload["target_amount"])
 
     def __repr__(self) -> str:
-        return f"<CharityCampaignStart broadcaster={self.broadcaster} id={self.id} name={self.name}>"
+        return f"<BaseCharityCampaign broadcaster={self.broadcaster} id={self.id} name={self.name}>"
+
+
+class CharityCampaignDonation(BaseEvent):
+    """
+    Represents a charity campaign start event.
+
+    Attributes
+    ----------
+    id: str
+        An ID that identifies the donation. The ID is unique across campaigns.
+    broadcaster: PartialUser
+        The broadcaster that's running the campaign.
+    user: PartialUser
+        The user that donated to the campaign.
+    charity: BaseCharityCampaign
+        The charity associated with the campaign.
+    amount: CharityValues
+        The amount of money donated.
+    """
+
+    subscription_type = "channel.charity_campaign.donate"
+
+    __slots__ = ("amount", "broadcaster", "charity", "id", "user")
+
+    def __init__(self, payload: CharityCampaignDonationEvent, *, http: HTTPClient) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
+        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+        self.charity: BaseCharityCampaign = BaseCharityCampaign(payload, http=http)
+        self.amount: CharityValues = CharityValues(payload["amount"])
+
+    def __repr__(self) -> str:
+        return f"<CharityCampaignDonation id={self.id} broadcaster={self.broadcaster} user={self.user} amount={self.amount}>"
 
 
 class CharityCampaignStart(BaseCharityCampaign):
@@ -3874,11 +3910,13 @@ class CharityCampaignStart(BaseCharityCampaign):
 
     subscription_type = "channel.charity_campaign.start"
 
-    __slots__ = ("started_at",)
+    __slots__ = ("current", "started_at", "target")
 
     def __init__(self, payload: CharityCampaignStartEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
+        self.current: CharityValues = CharityValues(payload["current_amount"])
+        self.target: CharityValues = CharityValues(payload["target_amount"])
 
     def __repr__(self) -> str:
         return f"<CharityCampaignStart broadcaster={self.broadcaster} id={self.id} name={self.name} started_at={self.started_at}>"
@@ -3910,8 +3948,12 @@ class CharityCampaignProgress(BaseCharityCampaign):
 
     subscription_type = "channel.charity_campaign.progress"
 
+    __slots__ = ("current", "target")
+
     def __init__(self, payload: CharityCampaignProgressEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
+        self.current: CharityValues = CharityValues(payload["current_amount"])
+        self.target: CharityValues = CharityValues(payload["target_amount"])
 
     def __repr__(self) -> str:
         return f"<CharityCampaignProgress broadcaster={self.broadcaster} id={self.id} name={self.name} current={self.current} target={self.target}>"
@@ -3945,11 +3987,13 @@ class CharityCampaignStop(BaseCharityCampaign):
 
     subscription_type = "channel.charity_campaign.stop"
 
-    __slots__ = ("stopped_at",)
+    __slots__ = ("current", "stopped_at", "target")
 
     def __init__(self, payload: CharityCampaignStopEvent, *, http: HTTPClient) -> None:
         super().__init__(payload, http=http)
         self.stopped_at: datetime.datetime = parse_timestamp(payload["stopped_at"])
+        self.current: CharityValues = CharityValues(payload["current_amount"])
+        self.target: CharityValues = CharityValues(payload["target_amount"])
 
     def __repr__(self) -> str:
         return f"<CharityCampaignStop broadcaster={self.broadcaster} id={self.id} name={self.name} stopped_at={self.stopped_at}>"

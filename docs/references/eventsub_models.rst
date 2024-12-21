@@ -148,6 +148,11 @@ Eventsub
 .. autoclass:: twitchio.ChatBitsBadgeTier
     :members:
 
+.. attributetable:: twitchio.BaseCharityCampaign
+
+.. autoclass:: twitchio.BaseCharityCampaign
+    :members:
+
 .. attributetable:: twitchio.ChatCharityDonation
 
 .. autoclass:: twitchio.ChatCharityDonation
@@ -420,6 +425,11 @@ Eventsub
 .. attributetable:: twitchio.ChannelWarningSend
 
 .. autoclass:: twitchio.ChannelWarningSend
+    :members:
+
+.. attributetable:: twitchio.CharityCampaignDonation
+
+.. autoclass:: twitchio.CharityCampaignDonation
     :members:
 
 .. attributetable:: twitchio.CharityCampaignStart
