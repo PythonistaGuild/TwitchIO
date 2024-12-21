@@ -129,7 +129,8 @@ hr {
 }
 
 .btn:focus {
-	outline: none;
+	outline: none!important;
+	background-color: var(--color-button-hover--light)!important;
 }
 
 .btn:active {
@@ -281,7 +282,8 @@ body.theme-dark {
 	}
 
 	.btn:focus {
-		outline: none;
+		outline: none!important;
+		background-color: var(--color-button-hover--dark)!important;
 	}
 
 	.btn:active {
