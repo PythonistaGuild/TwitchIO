@@ -72,7 +72,8 @@ html_last_updated_fmt = "%b %d, %Y"
 # html_logo = "logo.png"
 
 html_theme_options = dict(
-    project_name="Docs",
+    project_name="Documentation",
+    github_url = "https://github.com/PythonistaGuild/TwitchIO/tree/dev/3.0/docs",
     logo="logo.png",
     logo_alt="TwitchIO",
     logo_height=120,
@@ -82,10 +83,16 @@ html_theme_options = dict(
         [
             "GitHub|https://github.com/PythonistaGuild/TwitchIO",
             "Discord|https://discord.gg/RAKc3HF",
-            "Docs|https://twitchio.dev",
+            "Documentation|https://twitchio.dev",
         ]
     ),
 )
+
+copyright = "2017 - Present, PythonistaGuild"
+html_show_copyright = True
+html_show_sphinx = False
+
+html_last_updated_fmt = "%b %d, %Y - %H:%M:%S"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
