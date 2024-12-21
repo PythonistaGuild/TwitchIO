@@ -239,7 +239,7 @@ pre {
 
 body.theme-dark {
 	color: var(--color-primary--dark);
-	background-color: var(#22222d);
+	background-color: #22222d;
 }
 
 body.theme-dark {
