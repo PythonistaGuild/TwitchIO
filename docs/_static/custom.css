@@ -138,16 +138,6 @@ hr {
 	background-color: var(--color-button-hover--light);
 }
 
-.copybtn {
-	top: .5em!important;
-	right: .5em!important;
-	opacity: .2!important;
-}
-
-.copybtn:hover {
-	opacity: 0.9!important;
-}
-
 .border-top {
 	border-color: var(--color-background-dim--light) !important;
 }
@@ -332,6 +322,16 @@ body.theme-dark {
 		background-color: var(--color-background--dark);
 		color: var(--color-primary--dark) !important;
 	}
+
+	.copybtn {
+		top: .5em!important;
+		right: .5em!important;
+		opacity: .2!important;
+	}
+	
+	.copybtn:hover {
+		opacity: 0.9!important;
+	}	
 
 	.navbar-brand {
 		color: var(--color-primary--dark)!important;
