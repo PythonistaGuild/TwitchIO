@@ -147,6 +147,7 @@ class Client:
 
         self._login_called: bool = False
         self._has_closed: bool = False
+        self._dump_tokens: bool = True
 
         # Websockets for EventSub
         self._websockets: dict[str, dict[str, Websocket]] = defaultdict(dict)
@@ -256,7 +257,7 @@ class Client:
         """
         ...
 
-    async def login(self, *, token: str | None = None) -> None:
+    async def login(self, *, token: str | None = None, load_tokens: bool = True, dump_tokens: bool = True) -> None:
         """Method to login the client and generate or store an app token.
 
         This method is called automatically when using :meth:`~.start`.
@@ -273,11 +274,18 @@ class Client:
         ----------
         token: str | None
             An optional app token to use instead of generating one automatically.
+        load_tokens: bool
+            Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
+            login automatically. Defaults to ``True``.
+        dump_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.dump_tokens` during the
+            :meth:`.close` automatically. Defaults to ``True``.
         """
         if self._login_called:
             return
 
         self._login_called = True
+        self._dump_tokens = dump_tokens
 
         if not token:
             payload: ClientCredentialsPayload = await self._http.client_credentials_token()
@@ -288,8 +296,9 @@ class Client:
 
         self._http._app_token = token
 
-        async with self._http._token_lock:
-            await self.load_tokens()
+        if load_tokens:
+            async with self._http._token_lock:
+                await self.load_tokens()
 
         await self.setup_hook()
 
@@ -299,7 +308,14 @@ class Client:
     async def __aexit__(self, *_: Any) -> None:
         await self.close()
 
-    async def start(self, token: str | None = None, *, with_adapter: bool = True) -> None:
+    async def start(
+        self,
+        token: str | None = None,
+        *,
+        with_adapter: bool = True,
+        load_tokens: bool = True,
+        dump_tokens: bool = True,
+    ) -> None:
         """|coro|
 
         Method to login and run the `Client` asynchronously on an already running event loop.
@@ -317,7 +333,12 @@ class Client:
             An optional app token to use instead of generating one automatically.
         with_adapter: bool
             Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
-
+        load_tokens: bool
+            Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
+            :meth:`.login` automatically. Defaults to ``True``.
+        dump_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.dump_tokens` during the
+            :meth:`.close` automatically. Defaults to ``True``.
 
         Examples
         --------
@@ -335,7 +356,7 @@ class Client:
                     await client.start()
         """
         self.__waiter.clear()
-        await self.login(token=token)
+        await self.login(token=token, load_tokens=load_tokens, dump_tokens=dump_tokens)
 
         if with_adapter:
             await self._adapter.run()
@@ -350,7 +371,14 @@ class Client:
             self._ready_event.clear()
             await self.close()
 
-    def run(self, token: str | None = None, *, with_adapter: bool = True) -> None:
+    def run(
+        self,
+        token: str | None = None,
+        *,
+        with_adapter: bool = True,
+        load_tokens: bool = True,
+        dump_tokens: bool = True,
+    ) -> None:
         """Method to login the client and create a continuously running event loop.
 
         The behaviour of this method is similar to :meth:`~.start` but instead of being used in an already running
@@ -374,7 +402,12 @@ class Client:
             An optional app token to use instead of generating one automatically.
         with_adapter: bool
             Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
-
+        load_tokens: bool
+            Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
+            :meth:`.login` automatically. Defaults to ``True``.
+        dump_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.dump_tokens` during the
+            :meth:`.close` automatically. Defaults to ``True``.
 
         Examples
         --------
@@ -387,7 +420,7 @@ class Client:
 
         async def run() -> None:
             async with self:
-                await self.start(token=token, with_adapter=with_adapter)
+                await self.start(token=token, with_adapter=with_adapter, load_tokens=load_tokens, dump_tokens=dump_tokens)
 
         try:
             asyncio.run(run())
@@ -429,8 +462,9 @@ class Client:
         for socket in sockets:
             await socket.close()
 
-        async with self._http._token_lock:
-            await self.dump_tokens()
+        if self._dump_tokens:
+            async with self._http._token_lock:
+                await self.dump_tokens()
 
         self._http.cleanup()
         self.__waiter.set()
@@ -586,8 +620,9 @@ class Client:
 
         .. note::
 
-            This method is always called by the client during :meth:`~.login` but **before**
-            :meth:`~.setup_hook`.
+            This method is called by the client during :meth:`~.login` but **before**
+            :meth:`~.setup_hook` when the ``load_tokens`` keyword-argument
+            is ``True`` in either, :meth:`.run`, :meth:`.start` or :meth:`.login` (Default).
 
         You can override this method to implement your own token loading logic into the client, such as from a database.
 
@@ -627,7 +662,8 @@ class Client:
 
         .. note::
 
-            This method is always called by the client when it is gracefully closed.
+            This method is called by the client when it is gracefully closed and the ``dump_tokens`` keyword-argument
+            is ``True`` in either, :meth:`.run`, :meth:`.start` or :meth:`.login` (Default).
 
         .. note::
 
