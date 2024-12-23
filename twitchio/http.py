@@ -402,7 +402,6 @@ class HTTPClient:
         self._session_set = True
 
         if self._session is not MISSING:
-            self._session.headers.update(self.headers)
             return
 
         logger.debug("Initialising ClientSession on %s.", self.__class__.__qualname__)
@@ -436,6 +435,7 @@ class HTTPClient:
         assert self._session is not None
 
         logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
+        route.headers.update(self.headers)
 
         async with self._session.request(
             route.method,
@@ -459,6 +459,7 @@ class HTTPClient:
         return data
 
     async def request_json(self, route: Route) -> Any:
+        route.headers.update({"Accept": "application/json"})
         data = await self.request(route)
 
         if isinstance(data, str):
