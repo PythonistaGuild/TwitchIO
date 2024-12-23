@@ -29,6 +29,7 @@ import urllib.parse
 from typing import TYPE_CHECKING, ClassVar
 
 from ..http import HTTPClient, Route
+from ..utils import MISSING
 from .payloads import *
 
 
@@ -55,7 +56,7 @@ class OAuth(HTTPClient):
         client_secret: str,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
-        session: aiohttp.ClientSession | None = None,
+        session: aiohttp.ClientSession = MISSING,
     ) -> None:
         super().__init__(session=session, client_id=client_id)
 

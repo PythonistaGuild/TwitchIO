@@ -377,11 +377,12 @@ class HTTPAsyncIterator(Generic[T]):
 
 
 class HTTPClient:
-    __slots__ = ("_client_id", "_session", "_should_close", "user_agent")
+    __slots__ = ("_client_id", "_session", "_session_set", "_should_close", "user_agent")
 
     def __init__(self, session: aiohttp.ClientSession = MISSING, *, client_id: str) -> None:
         self._session: aiohttp.ClientSession = session
         self._should_close: bool = session is MISSING
+        self._session_set: bool = False
 
         self._client_id: str = client_id
 
@@ -395,6 +396,11 @@ class HTTPClient:
         return {"User-Agent": self.user_agent, "Client-ID": self._client_id}
 
     async def _init_session(self) -> None:
+        if self._session_set:
+            return
+
+        self._session_set = True
+
         if self._session is not MISSING:
             self._session.headers.update(self.headers)
             return
@@ -408,6 +414,7 @@ class HTTPClient:
                 "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
             )
             self._session = MISSING
+            self._session_set = False
 
     async def close(self) -> None:
         if not self._should_close:

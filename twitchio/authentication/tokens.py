@@ -37,6 +37,7 @@ from ..backoff import Backoff
 from ..exceptions import HTTPException, InvalidTokenException
 from ..http import HTTPAsyncIterator, PaginatedConverter
 from ..types_.tokens import TokenMappingData
+from ..utils import MISSING
 from .oauth import OAuth
 from .payloads import ClientCredentialsPayload, ValidateTokenPayload
 from .scopes import Scopes
@@ -61,7 +62,7 @@ class ManagedHTTPClient(OAuth):
         client_secret: str,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
-        session: aiohttp.ClientSession | None = None,
+        session: aiohttp.ClientSession = MISSING,
         nested_key: str | None = None,
     ) -> None:
         super().__init__(
