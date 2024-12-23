@@ -82,13 +82,14 @@ class ManagedHTTPClient(OAuth):
 
         self._tokens: TokenMapping = {}
         self._app_token: str | None = None
-        self._validate_task: asyncio.Task[None] | None = None
         self._nested_key: str | None = None
 
         self._token_lock: asyncio.Lock = asyncio.Lock()
         self._has_loaded: bool = False
         self._backoff: Backoff = Backoff(base=3, maximum_time=90)
+
         self._validated_event: asyncio.Event = asyncio.Event()
+        self._validate_task: asyncio.Task[None] | None = None
 
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
         logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
@@ -122,6 +123,9 @@ class ManagedHTTPClient(OAuth):
         return valid_resp
 
     async def add_token(self, token: str, refresh: str) -> ValidateTokenPayload:
+        if not self._validate_task:
+            self._validate_task = asyncio.create_task(self.__validate_loop())
+
         try:
             resp: ValidateTokenPayload = await self.__isolated.validate_token(token)
         except HTTPException as e:
@@ -171,9 +175,6 @@ class ManagedHTTPClient(OAuth):
         return token or self._app_token
 
     async def request(self, route: Route) -> RawResponse | str | None:
-        if not self._session:
-            await self._init_session()
-
         old: TokenMappingData | None | str = self._find_token(route)
         if old:
             token: str = old if isinstance(old, str) else old["token"]
@@ -266,9 +267,6 @@ class ManagedHTTPClient(OAuth):
     async def __validate_loop(self) -> None:
         logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
 
-        if not self._session:
-            await self._init_session()
-
         while True:
             self._validated_event.clear()
 
@@ -283,12 +281,6 @@ class ManagedHTTPClient(OAuth):
 
             self._validated_event.set()
             await asyncio.sleep(60)
-
-    async def _init_session(self) -> None:
-        await super()._init_session()
-
-        if not self._validate_task:
-            self._validate_task = asyncio.create_task(self.__validate_loop())
 
     def cleanup(self) -> None:
         self._tokens.clear()
