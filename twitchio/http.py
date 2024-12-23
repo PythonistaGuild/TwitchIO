@@ -430,7 +430,9 @@ class HTTPClient:
             logger.debug("%s session closed successfully.", self.__class__.__qualname__)
 
     async def request(self, route: Route) -> RawResponse | str | None:
-        await self._init_session()
+        if not self._session_set:
+            await self._init_session()
+
         assert self._session is not None
 
         logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
@@ -466,7 +468,9 @@ class HTTPClient:
         return data
 
     async def _request_asset_head(self, url: str) -> dict[str, str]:
-        await self._init_session()
+        if not self._session_set:
+            await self._init_session()
+
         assert self._session is not None
 
         logger.debug('Attempting to request headers for asset "%s" with %s.', url, self.__class__.__qualname__)
@@ -479,7 +483,9 @@ class HTTPClient:
             return dict(resp.headers)
 
     async def _request_asset(self, asset: Asset, *, chunk_size: int = 1024) -> AsyncIterator[bytes]:
-        await self._init_session()
+        if not self._session_set:
+            await self._init_session()
+
         assert self._session is not None
 
         logger.debug('Attempting a request to asset "%r" with %s.', asset, self.__class__.__qualname__)
