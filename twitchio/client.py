@@ -43,7 +43,7 @@ from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload
 from .user import ActiveExtensions, Extension, PartialUser, User
-from .utils import EventWaiter, unwrap_function
+from .utils import MISSING, EventWaiter, unwrap_function
 from .web import AiohttpAdapter
 from .web.utils import BaseAdapter
 
@@ -124,7 +124,7 @@ class Client:
     ) -> None:
         redirect_uri: str | None = options.get("redirect_uri")
         scopes: Scopes | None = options.get("scopes")
-        session: aiohttp.ClientSession | None = options.get("session")
+        session: aiohttp.ClientSession = options.get("session", MISSING) or MISSING
         self._bot_id: str | None = bot_id
 
         self._http = ManagedHTTPClient(

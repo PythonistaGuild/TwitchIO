@@ -57,7 +57,7 @@ from .models.streams import Stream, VideoMarkers
 from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
 from .models.videos import Video
 from .user import ActiveExtensions, PartialUser
-from .utils import Colour, _from_json, date_to_datetime_with_z, handle_user_ids, url_encode_datetime  # type: ignore
+from .utils import MISSING, Colour, _from_json, date_to_datetime_with_z, handle_user_ids, url_encode_datetime  # type: ignore
 
 
 if TYPE_CHECKING:
@@ -377,10 +377,12 @@ class HTTPAsyncIterator(Generic[T]):
 
 
 class HTTPClient:
-    __slots__ = ("_client_id", "_session", "user_agent")
+    __slots__ = ("_client_id", "_session", "user_agent", "_should_close")
 
-    def __init__(self, session: aiohttp.ClientSession | None = None, *, client_id: str) -> None:
-        self._session: aiohttp.ClientSession | None = session  # should be set on the first request
+    def __init__(self, session: aiohttp.ClientSession = MISSING, *, client_id: str) -> None:
+        self._session: aiohttp.ClientSession = session
+        self._should_close: bool = session is MISSING
+
         self._client_id: str = client_id
 
         # User Agent...
@@ -393,24 +395,24 @@ class HTTPClient:
         return {"User-Agent": self.user_agent, "Client-ID": self._client_id}
 
     async def _init_session(self) -> None:
-        if self._session and not self._session.closed:
+        if self._session is not MISSING:
+            self._session.headers.update(self.headers)
             return
 
-        logger.debug("Initialising a new session on %s.", self.__class__.__qualname__)
-
-        session = self._session or aiohttp.ClientSession()
-        session.headers.update(self.headers)
-
-        self._session = session
+        logger.debug("Initialising ClientSession on %s.", self.__class__.__qualname__)
+        self._session = aiohttp.ClientSession(headers=self.headers)
 
     def clear(self) -> None:
         if self._session and self._session.closed:
             logger.debug(
                 "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
             )
-            self._session = None
+            self._session = MISSING
 
     async def close(self) -> None:
+        if not self._should_close:
+            return
+
         if self._session and not self._session.closed:
             try:
                 await self._session.close()
