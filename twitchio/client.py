@@ -147,7 +147,7 @@ class Client:
 
         self._login_called: bool = False
         self._has_closed: bool = False
-        self._dump_tokens: bool = True
+        self._save_tokens: bool = True
 
         # Websockets for EventSub
         self._websockets: dict[str, dict[str, Websocket]] = defaultdict(dict)
@@ -169,7 +169,7 @@ class Client:
 
         :meth:`~.load_tokens`
 
-        :meth:`~.dump_tokens`
+        :meth:`~.save_tokens`
 
         :meth:`~.add_token`
 
@@ -257,7 +257,7 @@ class Client:
         """
         ...
 
-    async def login(self, *, token: str | None = None, load_tokens: bool = True, dump_tokens: bool = True) -> None:
+    async def login(self, *, token: str | None = None, load_tokens: bool = True, save_tokens: bool = True) -> None:
         """Method to login the client and generate or store an app token.
 
         This method is called automatically when using :meth:`~.start`.
@@ -277,15 +277,15 @@ class Client:
         load_tokens: bool
             Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
             login automatically. Defaults to ``True``.
-        dump_tokens: bool
-            Optional bool which inicates whether the :class:`Client` should call :meth:`.dump_tokens` during the
+        save_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.save_tokens` during the
             :meth:`.close` automatically. Defaults to ``True``.
         """
         if self._login_called:
             return
 
         self._login_called = True
-        self._dump_tokens = dump_tokens
+        self._save_tokens = save_tokens
 
         if not token:
             payload: ClientCredentialsPayload = await self._http.client_credentials_token()
@@ -314,7 +314,7 @@ class Client:
         *,
         with_adapter: bool = True,
         load_tokens: bool = True,
-        dump_tokens: bool = True,
+        save_tokens: bool = True,
     ) -> None:
         """|coro|
 
@@ -336,8 +336,8 @@ class Client:
         load_tokens: bool
             Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
             :meth:`.login` automatically. Defaults to ``True``.
-        dump_tokens: bool
-            Optional bool which inicates whether the :class:`Client` should call :meth:`.dump_tokens` during the
+        save_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.save_tokens` during the
             :meth:`.close` automatically. Defaults to ``True``.
 
         Examples
@@ -356,7 +356,7 @@ class Client:
                     await client.start()
         """
         self.__waiter.clear()
-        await self.login(token=token, load_tokens=load_tokens, dump_tokens=dump_tokens)
+        await self.login(token=token, load_tokens=load_tokens, save_tokens=save_tokens)
 
         if with_adapter:
             await self._adapter.run()
@@ -377,7 +377,7 @@ class Client:
         *,
         with_adapter: bool = True,
         load_tokens: bool = True,
-        dump_tokens: bool = True,
+        save_tokens: bool = True,
     ) -> None:
         """Method to login the client and create a continuously running event loop.
 
@@ -405,8 +405,8 @@ class Client:
         load_tokens: bool
             Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
             :meth:`.login` automatically. Defaults to ``True``.
-        dump_tokens: bool
-            Optional bool which inicates whether the :class:`Client` should call :meth:`.dump_tokens` during the
+        save_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.save_tokens` during the
             :meth:`.close` automatically. Defaults to ``True``.
 
         Examples
@@ -420,21 +420,29 @@ class Client:
 
         async def run() -> None:
             async with self:
-                await self.start(token=token, with_adapter=with_adapter, load_tokens=load_tokens, dump_tokens=dump_tokens)
+                await self.start(token=token, with_adapter=with_adapter, load_tokens=load_tokens, save_tokens=save_tokens)
 
         try:
             asyncio.run(run())
         except KeyboardInterrupt:
             pass
 
-    async def close(self) -> None:
-        """Method which closes the :class:`~Client` gracefully.
+    async def close(self, **options: Any) -> None:
+        r"""Method which closes the :class:`~Client` gracefully.
 
         This method is called for you automatically when using :meth:`~.run` or when using the client with the
         async context-manager, E.g: `async with client:`
 
         You can override this method to implement your own clean-up logic, however you should call `await super().close()`
         when doing this.
+
+        Parameters
+        ----------
+        \*
+        save_tokens: bool | None
+            An optional bool override which allows overriding the identical keyword-argument set in either
+            :meth:`.run`, :meth:`.start` or :meth:`.login` to call the :meth:`.save_tokens` coroutine.
+            Defaults to ``None`` which won't override.
 
         Examples
         --------
@@ -462,9 +470,12 @@ class Client:
         for socket in sockets:
             await socket.close()
 
-        if self._dump_tokens:
+        save_tokens = options.get("save_tokens")
+        save = save_tokens if save_tokens is not None else self._save_tokens
+
+        if save:
             async with self._http._token_lock:
-                await self.dump_tokens()
+                await self.save_tokens()
 
         self._http.cleanup()
         self.__waiter.set()
@@ -627,7 +638,7 @@ class Client:
         You can override this method to implement your own token loading logic into the client, such as from a database.
 
         By default this method loads tokens from a file named `".tio.tokens.json"` if it is present;
-        always present if you use the default method of dumping tokens.
+        always present if you use the default method of saving tokens.
 
         **However**, it is preferred you would override this function to load your tokens from a database,
         as this has far less chance of being corrupted, damaged or lost.
@@ -655,19 +666,19 @@ class Client:
         """
         await self._http.load_tokens(name=path)
 
-    async def dump_tokens(self, path: str | None = None, /) -> None:
+    async def save_tokens(self, path: str | None = None, /) -> None:
         """|coro|
 
-        Method which dumps all the added OAuth tokens currently managed by this Client.
+        Method which saves all the added OAuth tokens currently managed by this Client.
 
         .. note::
 
-            This method is called by the client when it is gracefully closed and the ``dump_tokens`` keyword-argument
+            This method is called by the client when it is gracefully closed and the ``save_tokens`` keyword-argument
             is ``True`` in either, :meth:`.run`, :meth:`.start` or :meth:`.login` (Default).
 
         .. note::
 
-            By default this method dumps to a JSON file named `".tio.tokens.json"`.
+            By default this method saves to a JSON file named `".tio.tokens.json"`.
 
         You can override this method to implement your own custom logic, such as saving tokens to a database, however
         it is preferred to use :meth:`~.add_token` to ensure the tokens are handled as they are added.
@@ -677,7 +688,7 @@ class Client:
         path: str | None
             The path of the file to save to. Defaults to `.tio.tokens.json`.
         """
-        await self._http.dump(path)
+        await self._http.save(path)
 
     def add_listener(self, listener: Callable[..., Coroutine[Any, Any, None]], *, event: str | None = None) -> None:
         # TODO: Docs...

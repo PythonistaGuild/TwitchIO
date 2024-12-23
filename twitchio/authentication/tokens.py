@@ -297,7 +297,7 @@ class ManagedHTTPClient(OAuth):
         await super().close()
         await self.__isolated.close()
 
-    async def dump(self, name: str | None = None) -> None:
+    async def save(self, name: str | None = None) -> None:
         if not self._has_loaded:
             return
 
