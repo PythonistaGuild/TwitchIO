@@ -59,9 +59,9 @@ class Stream:
     user: twitchio.PartialUser
         The user who is streaming.
     game_id: str | None
-        Current game ID being played on the channel. Could be `None` if no game is being played.
+        Current game ID being played on the channel. Could be `None` if no category / game has been set.
     game_name: str | None
-        Name of the game being played on the channel. Could be `None` if no game is being played.
+        Name of the game being played on the channel. Could be `None` if no category / game has been set.
     type: str
         Whether the stream is "live" or not.
     title: str
@@ -121,7 +121,7 @@ class Stream:
         The :class:`~twitchio.Game` returned is current from the time the :class:`~twitchio.Stream`
         instance was created.
 
-        Could be `None` if no game was being played at the time the :class:`~twitchio.Stream`
+        Could be `None` if no category / game was set at the time the :class:`~twitchio.Stream`
         instance was created.
 
         Returns
