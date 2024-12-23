@@ -377,7 +377,7 @@ class HTTPAsyncIterator(Generic[T]):
 
 
 class HTTPClient:
-    __slots__ = ("_client_id", "_session", "user_agent", "_should_close")
+    __slots__ = ("_client_id", "_session", "_should_close", "user_agent")
 
     def __init__(self, session: aiohttp.ClientSession = MISSING, *, client_id: str) -> None:
         self._session: aiohttp.ClientSession = session
