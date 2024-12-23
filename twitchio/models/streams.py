@@ -58,10 +58,10 @@ class Stream:
         The current stream ID.
     user: twitchio.PartialUser
         The user who is streaming.
-    game_id: str
-        Current game ID being played on the channel.
-    game_name: str
-        Name of the game being played on the channel.
+    game_id: str | None
+        Current game ID being played on the channel. Could be `None` if no game is being played.
+    game_name: str | None
+        Name of the game being played on the channel. Could be `None` if no game is being played.
     type: str
         Whether the stream is "live" or not.
     title: str
@@ -101,8 +101,8 @@ class Stream:
 
         self.id: str = data["id"]
         self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
-        self.game_id: str = data["game_id"]
-        self.game_name: str = data["game_name"]
+        self.game_id: str | None = data["game_id"]
+        self.game_name: str | None = data["game_name"]
         self.type: str = data["type"]
         self.title: str = data["title"]
         self.viewer_count: int = data["viewer_count"]
@@ -115,19 +115,25 @@ class Stream:
     def __repr__(self) -> str:
         return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
 
-    async def fetch_game(self) -> Game:
+    async def fetch_game(self) -> Game | None:
         """Fetches the :class:`~twitchio.Game` associated with this stream.
 
         The :class:`~twitchio.Game` returned is current from the time the :class:`~twitchio.Stream`
         instance was created.
 
+        Could be `None` if no game was being played at the time the :class:`~twitchio.Stream`
+        instance was created.
+
         Returns
         -------
-        twitchio.Game
-            The game associated with this :class:`~twitchio.Stream` instance.
+        twitchio.Game | None
+            The game associated with this :class:`~twitchio.Stream` instance, or `None`.
         """
+        if self.game_id is None:
+            return None
+
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
-        return Game(payload["data"][0], http=self._http)
+        return Game(payload["data"][0], http=self._http) if payload["data"] else None
 
 
 class StreamMarker:

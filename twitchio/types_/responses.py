@@ -1451,8 +1451,8 @@ class StreamsResponseData(TypedDict):
     user_id: str
     user_login: str
     user_name: str
-    game_id: str
-    game_name: str
+    game_id: str | None
+    game_name: str | None
     type: Literal["live", ""]
     title: str
     tags: list[str]
