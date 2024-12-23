@@ -131,7 +131,7 @@ class Asset:
         If the file extension has not been set, this method returns the same as :attr:`.name`.
         """
         name: str = self._name.split(".")[0]
-        return name + self.ext if self.ext else self._name
+        return f"{name}{self._ext}" if self._ext else self._name
 
     @property
     def ext(self) -> str | None:
@@ -141,7 +141,7 @@ class Asset:
 
         See: `:meth:`.fetch_ext` to try and force setting the file extension by content type.
         """
-        return "." + self._ext.removeprefix(".") if self._ext else None
+        return self._ext.removeprefix(".") if self._ext else None
 
     @property
     def dimensions(self) -> tuple[int, int] | None:
@@ -341,7 +341,7 @@ class Asset:
             fp = pathlib.Path(fp) / (self.qualified_name if force_extension else self.name)
 
         elif isinstance(fp, str) and force_extension:
-            fp = f"{fp}{self.ext or ''}"
+            fp = f"{fp}{self._ext or ''}"
 
         with open(fp, "wb") as new:
             written = new.write(data.read())
