@@ -101,8 +101,8 @@ class Stream:
 
         self.id: str = data["id"]
         self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
-        self.game_id: str | None = data["game_id"]
-        self.game_name: str | None = data["game_name"]
+        self.game_id: str | None = data["game_id"] or None
+        self.game_name: str | None = data["game_name"] or None
         self.type: str = data["type"]
         self.title: str = data["title"]
         self.viewer_count: int = data["viewer_count"]
