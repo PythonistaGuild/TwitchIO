@@ -2666,19 +2666,19 @@ class ShieldModeBeginSubscription(SubscriptionPayload):
 
     This event informs the subscriber that the broadcaster's moderation settings were changed  based on the broadcaster's Shield Mode configuration settings.
 
-    Parameters
-    ----------
-    broadcaster_user_id: str | PartialUser
-        The ID, or PartialUser, of the broadcaster to subscribe to.
-    moderator_user_id: str | PartialUser
-        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
     .. important::
         Requires the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
 
         - If you use webhooks, the moderator must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
 
         - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -2712,19 +2712,19 @@ class ShieldModeEndSubscription(SubscriptionPayload):
 
     This event informs the subscriber that the broadcaster's moderation settings were changed back to the broadcaster's previous moderation settings.
 
-    Parameters
-    ----------
-    broadcaster_user_id: str | PartialUser
-        The ID, or PartialUser, of the broadcaster to subscribe to.
-    moderator_user_id: str | PartialUser
-        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
     .. important::
         Requires the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
 
         - If you use webhooks, the moderator must have granted your app (client ID) one of the above permissions prior to your app subscribing to this subscription type.
 
         - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -2756,13 +2756,6 @@ class ShieldModeEndSubscription(SubscriptionPayload):
 class ShoutoutCreateSubscription(SubscriptionPayload):
     """The ``channel.shoutout.create`` subscription type sends a notification when the specified broadcaster sends a shoutout.
 
-    Parameters
-    ----------
-    broadcaster_user_id: str | PartialUser
-        The ID, or PartialUser, of the broadcaster to subscribe to.
-    moderator_user_id: str | PartialUser
-        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
     .. important::
         Requires the ``moderator:read:shoutouts`` or ``moderator:manage:shoutouts`` scope.
 
@@ -2772,6 +2765,13 @@ class ShoutoutCreateSubscription(SubscriptionPayload):
 
     .. note::
         This is only sent if Twitch posts the Shoutout to the broadcaster's activity feed.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
@@ -2803,13 +2803,6 @@ class ShoutoutCreateSubscription(SubscriptionPayload):
 class ShoutoutReceiveSubscription(SubscriptionPayload):
     """The ``channel.shoutout.receive`` subscription type sends a notification when the specified broadcaster receives a shoutout.
 
-    Parameters
-    ----------
-    broadcaster_user_id: str | PartialUser
-        The ID, or PartialUser, of the broadcaster to subscribe to.
-    moderator_user_id: str | PartialUser
-        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
     .. important::
         Requires the ``moderator:read:shoutouts`` or ``moderator:manage:shoutouts`` scope.
 
@@ -2819,6 +2812,13 @@ class ShoutoutReceiveSubscription(SubscriptionPayload):
 
     .. note::
         This is only sent if Twitch posts the Shoutout to the broadcaster's activity feed.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    moderator_user_id: str | PartialUser
+        The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
 
     Attributes
     ----------
