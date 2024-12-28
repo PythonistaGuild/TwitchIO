@@ -189,7 +189,7 @@ class PredictionOutcome:
         self.users: int | None = int(users) if users is not None else None
         channel_points = data.get("channel_points")
         self.channel_points: int | None = int(channel_points) if channel_points is not None else None
-        self.top_predictors: list[Predictor] = [Predictor(d, http=http) for d in data.get("top_predictors", [])]
+        self.top_predictors: list[Predictor] = [Predictor(d, http=http) for d in data.get("top_predictors") or []]
 
     @property
     def color(self) -> str:
