@@ -181,9 +181,6 @@ class Routine:
             await self._on_error(error)
 
     async def _routine_loop(self, *args: Any, **kwargs: Any) -> None:
-        self._args = args
-        self._kwargs = kwargs
-
         backoff: Backoff = Backoff(base=3, maximum_time=10, maximum_tries=5)
 
         if self._should_stop:
@@ -266,6 +263,22 @@ class Routine:
 
         self.cancel()
 
+    @property
+    def args(self) -> tuple[Any, ...]:
+        """|prop|
+
+        Property returning any positional arguments passed to the routine via :meth:`.start`.
+        """
+        return self._args
+
+    @property
+    def kwargs(self) -> Any:
+        """|prop|
+
+        Property returning any keyword arguments passed to the routine via :meth:`.start`.
+        """
+        return self._kwargs
+
     def start(self, *args: Any, **kwargs: Any) -> asyncio.Task[None]:
         r"""Method to start the :class:`~Routine` in the background.
 
@@ -287,6 +300,9 @@ class Routine:
         """
         if self._task and not self._task.done() and not self._restarting:
             raise RuntimeError(f"Routine {self!r} is currently running and has not completed.")
+
+        self._args = args
+        self._kwargs = kwargs
 
         if self._injected:
             args = (self._injected, *args)
