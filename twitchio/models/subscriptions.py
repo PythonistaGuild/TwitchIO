@@ -137,18 +137,23 @@ class BroadcasterSubscription(UserSubscription):
 class BroadcasterSubscriptions:
     """Represents all the users that subscribe to a broadcaster.
 
+    .. note::
+        total and points are `None` if `user_ids` is provided.
+
     Attributes
     ----------
     subscriptions: HTTPAsyncIterator[BroadcasterSubscription]
         HTTPAsyncIterator of [`BroadcasterSubscription`][] objects.
-    total: int
-        The total number of users that subscribe to this broadcaster.
-    points: int
+    total: int | None
+        The total number of users that subscribe to this broadcaster. This is `None` if `user_ids` is provided.
+    points: int | None
         The current number of subscriber points earned by this broadcaster.
         Points are based on the subscription tier of each user that subscribes to this broadcaster.
 
         For example, a Tier 1 subscription is worth 1 point, Tier 2 is worth 2 points, and Tier 3 is worth 6 points.
         The number of points determines the number of emote slots that are unlocked for the broadcaster (see  `Subscriber Emote Slots <https://help.twitch.tv/s/article/subscriber-emote-guide#emoteslots>`_).
+
+        This is `None` if `user_ids` is provided.
     """
 
     __slots__ = (
@@ -159,8 +164,8 @@ class BroadcasterSubscriptions:
 
     def __init__(self, data: BroadcasterSubscriptionsResponse, iterator: HTTPAsyncIterator[BroadcasterSubscription]) -> None:
         self.subscriptions: HTTPAsyncIterator[BroadcasterSubscription] = iterator
-        self.total: int = data["total"]
-        self.points: int = data["points"]
+        self.total: int | None = data.get("total")
+        self.points: int | None = data.get("points")
 
     def __repr__(self) -> str:
         return f"<BroadcasterSubscriptions total={self.total} points={self.points}>"
