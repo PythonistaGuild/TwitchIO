@@ -1783,7 +1783,7 @@ class ChannelSubscribe(BaseEvent):
         The broadcaster whose channel received a subscription.
     user: PartialUser
         The user who subscribed to the channel.
-    tier: str
+    tier: typing.Literal["1000", "2000", "3000"]
         The tier of the subscription. Valid values are 1000, 2000, and 3000.
     gift: bool
         Whether the subscription is a gift.
@@ -1820,7 +1820,7 @@ class ChannelSubscriptionEnd(BaseEvent):
         The broadcaster whose channel had the subscription end.
     user: PartialUser
         The user whose subscription ended.
-    tier: str
+    tier: typing.Literal["1000", "2000", "3000"]
         The tier of the subscription that ended. Valid values are 1000, 2000, and 3000.
     gift: bool
         Whether the subscription was a gift.
@@ -1840,7 +1840,7 @@ class ChannelSubscriptionEnd(BaseEvent):
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
-        self.tier: str = payload["tier"]
+        self.tier: Literal["1000", "2000", "3000"] = payload["tier"]
         self.gift: bool = bool(payload["is_gift"])
 
     def __repr__(self) -> str:
@@ -1857,7 +1857,7 @@ class ChannelSubscriptionGift(BaseEvent):
         The broadcaster whose channel received the gift subscriptions.
     user: PartialUser | None
         The user who sent the gift. `None` if it was an anonymous subscription gift.
-    tier: str
+    tier: typing.Literal["1000", "2000", "3000"]
         The tier of the subscription that ended. Valid values are 1000, 2000, and 3000.
     total: int
         The number of subscriptions in the subscription gift.
@@ -1881,7 +1881,7 @@ class ChannelSubscriptionGift(BaseEvent):
             if payload["user_id"] is not None
             else None
         )
-        self.tier: str = payload["tier"]
+        self.tier: Literal["1000", "2000", "3000"] = payload["tier"]
         self.total: int = int(payload["total"])
         self.anonymous: bool = bool(payload["is_anonymous"])
         cumulative_total = payload.get("cumulative_total")
@@ -1934,8 +1934,8 @@ class ChannelSubscriptionMessage(BaseEvent):
         The broadcaster whose channel received a subscription message.
     user: PartialUser
         The user who sent a resubscription chat message.
-    tier: str
-        The tier of the user's subscription.
+    tier: typing.Literal["1000", "2000", "3000"]
+        The tier of the user's subscription. Valid values are 1000, 2000, and 3000.
     months: str
         The month duration of the subscription.
     cumulative_months: int
@@ -1958,7 +1958,7 @@ class ChannelSubscriptionMessage(BaseEvent):
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
-        self.tier: str = payload["tier"]
+        self.tier: Literal["1000", "2000", "3000"] = payload["tier"]
         self.months: int = int(payload["duration_months"])
         self.cumulative_months: int = int(payload["cumulative_months"])
         self.streak_months: int | None = int(payload["streak_months"]) if payload["streak_months"] is not None else None

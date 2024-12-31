@@ -632,7 +632,7 @@ class ChannelSubscribeEvent(BroadcasterUserEvent):
 
 
 class ChannelSubscriptionEndEvent(BroadcasterUserEvent):
-    tier: str
+    tier: Literal["1000", "2000", "3000"]
     is_gift: bool
 
 
@@ -641,7 +641,7 @@ class ChannelSubscriptionGiftEvent(BaseBroadcasterEvent):
     user_login: str | None
     user_name: str | None
     total: int
-    tier: str
+    tier: Literal["1000", "2000", "3000"]
     cumulative_total: int | None
     is_anonymous: bool
 
@@ -665,7 +665,7 @@ class SubscribeMessageData(BaseMessageData): ...
 
 class ChannelSubscribeMessageEvent(BroadcasterUserEvent):
     total: int
-    tier: str
+    tier: Literal["1000", "2000", "3000"]
     cumulative_months: int
     streak_months: int | None
     duration_months: int
