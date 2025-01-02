@@ -36,6 +36,7 @@ class ClientOptions(TypedDict, total=False):
     scopes: Scopes | None
     session: aiohttp.ClientSession | None
     adapter: NotRequired[BaseAdapter]
+    fetch_client_user: NotRequired[bool]
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]

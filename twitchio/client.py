@@ -112,6 +112,10 @@ class Client:
         When this is not provided, it will default to a :class:`twitchio.AiohttpAdapter` with default settings.
 
         When requiring an adapter for use with EventSub, you must provide an adapter with the correct settings set.
+    fetch_client_user: bool
+        An optional bool indicating whether to fetch and cache the client/bot accounts own :class:`.User` object to use with
+        :attr:`.user`.
+        Defaults to ``True``. You must pass ``bot_id`` for this parameter to have any effect.
     """
 
     def __init__(
@@ -141,6 +145,10 @@ class Client:
         else:
             self._adapter = adapter()
             self._adapter.client = self
+
+        # Own Client User. Set in login...
+        self._fetch_self: bool = options.get("fetch_client_user", True)
+        self._user: User | PartialUser | None = None
 
         self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
         self._wait_fors: dict[str, set[EventWaiter]] = defaultdict(set)
@@ -191,6 +199,21 @@ class Client:
             It is highly recommended to set this parameter.
         """
         return self._bot_id
+
+    @property
+    def user(self) -> User | PartialUser | None:
+        """Property which returns the :class:`.User` or :class:`.PartialUser` associated with with the Client/Bot.
+
+        In most cases this will be a :class:`.User` object. Could be :class:`.PartialUser` when passing ``False`` to the
+        ``fetch_client_user`` keyword parameter of Client.
+
+        Could be ``None`` if no ``bot_id`` was passed to the Client constructor.
+
+        .. important::
+
+            If ``bot_id`` has not been passed to the constructor of :class:`.Client` this will return ``None``.
+        """
+        return self._user
 
     async def event_error(self, payload: EventErrorPayload) -> None:
         """
@@ -299,6 +322,11 @@ class Client:
         if load_tokens:
             async with self._http._token_lock:
                 await self.load_tokens()
+
+        if self._bot_id:
+            logger.debug("Fetching Clients self user for %r", self)
+            partial = PartialUser(id=self._bot_id, http=self._http)
+            self._user = partial if not self._fetch_self else await partial.user()
 
         await self.setup_hook()
 
