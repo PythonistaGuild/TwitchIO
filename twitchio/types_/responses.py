@@ -476,8 +476,8 @@ class ChannelEmotesResponseData(TypedDict):
     id: str
     name: str
     images: ChannelEmotesResponseImages
-    tier: str
-    emote_type: str
+    tier: Literal["1000", "2000", "3000"]
+    emote_type: Literal["bitstier", "follower", "subscriptions"]
     emote_set_id: str
     format: list[str]
     scale: list[str]

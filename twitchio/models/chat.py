@@ -398,12 +398,17 @@ class ChannelEmote(Emote):
         The name of the emote.
     images: dict[str, str]
         Contains the image URLs for the emote. These image URLs will always provide a static (i.e., non-animated) emote image with a light background.
-    tier: str
-        This field contains the tier information only if type is set to ``subscriptions``, otherwise, it's an empty string.
+    tier: typing.Literal["1000", "2000", "3000"] | None
+        This field contains the tier information only if type is set to ``subscriptions``, otherwise it's `None`.
     set_id: str
         An ID that identifies the emote set that the emote belongs to.
-    type: str
-        The type of emote. The possible values are: ``bitstier``, ``follower``, ``subscriptions``.
+    type: typing.Literal["bitstier", "follower", "subscriptions"]
+        The type of emote. The possible values are:
+
+        - bitstier — A custom Bits tier emote.
+        - follower — A custom follower emote.
+        - subscriptions — A custom subscriber emote.
+
     owner: PartialUser
         The :class:`~twitchio.PartialUser` who owns this emote.
     format: list[str]
@@ -419,9 +424,9 @@ class ChannelEmote(Emote):
     def __init__(self, data: ChannelEmotesResponseData, *, template: str, http: HTTPClient) -> None:
         super().__init__(data, template=template, http=http)
         self.images: ChannelEmotesResponseImages = data["images"]
-        self.tier: str = data["tier"]
+        self.tier: Literal["1000", "2000", "3000"] | None = data.get("tier")
         self.set_id: str = data["emote_set_id"]
-        self.type: str = data["emote_type"]
+        self.type: Literal["bitstier", "follower", "subscriptions"] = data["emote_type"]
 
     def __repr__(self) -> str:
         return f"<ChannelEmote id={self.id} name={self.name} set_id={self.set_id}>"

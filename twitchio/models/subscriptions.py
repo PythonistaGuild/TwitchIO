@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from twitchio.types_.responses import (
     CheckUserSubscriptionResponseData,
@@ -53,7 +53,7 @@ class UserSubscription:
         The broadcaster being subscribed to.
     gift: bool
         A Boolean value that determines whether the subscription is a gift subscription. Is ``True`` if the subscription was gifted.
-    tier: int
+    tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription. Possible values are:
 
         - 1000: Tier 1
@@ -78,7 +78,7 @@ class UserSubscription:
             data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
         )
         self.gift: bool = bool(data["is_gift"])
-        self.tier: int = int(data["tier"])
+        self.tier: Literal["1000", "2000", "3000"] = data["tier"]
         _gifter_id, _gifter_login, _gifter_display_name = (
             data.get("gifter_id"),
             data.get("gifter_login"),
@@ -96,7 +96,7 @@ class UserSubscription:
     @property
     def rounded_tier(self) -> int:
         """Returns the tier as a single digit. e.g. Tier 1000 = 1."""
-        return round(self.tier / 1000)
+        return round(int(self.tier) / 1000)
 
 
 class BroadcasterSubscription(UserSubscription):
@@ -108,7 +108,7 @@ class BroadcasterSubscription(UserSubscription):
         The broadcaster being subscribed to.
     gift: bool
         A Boolean value that determines whether the subscription is a gift subscription. Is ``True`` if the subscription was gifted.
-    tier: int
+    tier: typing.Literal["1000", "2000", "3000"]
         The type of subscription. Possible values are:
 
         - 1000: Tier 1
