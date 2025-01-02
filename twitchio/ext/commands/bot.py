@@ -468,8 +468,8 @@ class Bot(Mixin[None], Client):
 
     async def subscribe_webhook(
         self,
-        *,
         payload: SubscriptionPayload,
+        *,
         as_bot: bool = True,
         token_for: str | PartialUser | None,
         callback_url: str | None = None,
@@ -485,8 +485,8 @@ class Bot(Mixin[None], Client):
 
     async def subscribe_websocket(
         self,
-        *,
         payload: SubscriptionPayload,
+        *,
         as_bot: bool = True,
         token_for: str | PartialUser | None = None,
         socket_id: str | None = None,

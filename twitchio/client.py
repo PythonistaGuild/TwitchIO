@@ -1953,8 +1953,8 @@ class Client:
 
     async def subscribe_websocket(
         self,
-        *,
         payload: SubscriptionPayload,
+        *,
         as_bot: bool = False,
         token_for: str | PartialUser | None = None,
         socket_id: str | None = None,
@@ -2079,8 +2079,8 @@ class Client:
 
     async def subscribe_webhook(
         self,
-        *,
         payload: SubscriptionPayload,
+        *,
         as_bot: bool = False,
         token_for: str | PartialUser | None,
         callback_url: str | None = None,
