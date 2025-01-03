@@ -25,6 +25,9 @@ SOFTWARE.
 from typing import TypedDict
 
 
+__all__ = ("Colours", "Colors")
+
+
 class Colours(TypedDict):
     code: int
     hex: str

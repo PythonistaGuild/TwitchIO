@@ -31,6 +31,9 @@ from ..authentication import Scopes
 from ..web.utils import BaseAdapter
 
 
+__all__ = ("ClientOptions", "WaitPredicateT")
+
+
 class ClientOptions(TypedDict, total=False):
     redirect_uri: str | None
     scopes: Scopes | None

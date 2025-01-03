@@ -24,6 +24,33 @@ SOFTWARE.
 
 from typing import Any, Literal, Never, NotRequired, TypeAlias, TypedDict
 
+__all__ = (
+    "WelcomeMetaData",
+    "KeepAliveMetaData",
+    "NotificationMetaData",
+    "ReconnectMetaData",
+    "RevocationMetaData",
+    "WelcomeSession",
+    "WelcomePayload",
+    "WelcomeMessage",
+    "KeepAliveMessage",
+    "Condition",
+    "NotificationTransport",
+    "NotificationSubscription",
+    "NotificationPayload",
+    "NotificationMessage",
+    "ReconnectSession",
+    "ReconnectPayload",
+    "ReconnectMessage",
+    "RevocationTransport",
+    "RevocationPayload",
+    "RevocationMessage",
+    "RevocationSubscription",
+    "WebsocketMessages",
+    "MetaData",
+    "MessageTypes",
+)
+
 
 class ShardTransport(TypedDict):
     method: Literal["websocket", "webhook"]
@@ -76,7 +103,7 @@ class NotificationMetaData(TypedDict):
     subscription_version: str
 
 
-class ReconnectMetadata(TypedDict):
+class ReconnectMetaData(TypedDict):
     message_id: str
     message_type: Literal["session_reconnect"]
     message_timestamp: str
@@ -166,7 +193,7 @@ class ReconnectPayload(TypedDict):
 
 
 class ReconnectMessage(TypedDict):
-    metadata: ReconnectMetadata
+    metadata: ReconnectMetaData
     payload: ReconnectPayload
 
 
@@ -197,5 +224,5 @@ class RevocationMessage(TypedDict):
 
 
 WebsocketMessages: TypeAlias = WelcomeMessage | ReconnectMessage | RevocationMessage | NotificationMessage | KeepAliveMessage
-MetaData: TypeAlias = WelcomeMetaData | ReconnectMetadata | RevocationMetaData | NotificationMetaData | KeepAliveMetaData
+MetaData: TypeAlias = WelcomeMetaData | ReconnectMetaData | RevocationMetaData | NotificationMetaData | KeepAliveMetaData
 MessageTypes: TypeAlias = Literal["session_welcome", "session_reconnect", "session_keepalive", "notification", "revocation"]
