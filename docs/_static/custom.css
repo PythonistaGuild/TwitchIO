@@ -328,6 +328,10 @@ body.theme-dark {
 	th {
 		border-color: var(--color-button-hover--dark) !important;
 	}
+
+	blockquote {
+		border-color: #2b4459!important;
+	}
 }
 
 .theme-dark {
