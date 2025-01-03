@@ -31,7 +31,7 @@ __version__ = "3.0.0dev"
 from . import (  # noqa: F401
     authentication as authentication,
     eventsub as eventsub,
-    types_ as types,
+    types_ as types,  # pyright: ignore [reportUnusedImport]
     utils as utils,
     web as web,
 )
