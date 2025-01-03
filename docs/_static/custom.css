@@ -253,7 +253,7 @@ a > code {
 	padding-left: 1rem;
 	font-size: 0.9em;
 	font-weight: 400;
-	border-left: 2px solid var(--color-links--light);
+	border-left: 4px solid var(--color-warning-background--title);
 	line-height: 1.6;
 }
 
@@ -268,10 +268,6 @@ body.theme-dark {
 }
 
 body.theme-dark {
-	.sig-usagetable {
-		border-left: 2px solid var(--color-links--dark)!important;
-	}
-
 	code {
 		color: #cb7f90!important;
 		background-color: var(--color-background-dim--dark);

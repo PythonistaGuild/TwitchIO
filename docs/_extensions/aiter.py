@@ -42,7 +42,7 @@ def visit_aiterinfo_node(self: HTML5Translator, node: aiter):
 
     self.body.append("<em>await </em>")
     self.body.append(self.starttag(node, "span", CLASS="sig-name"))
-    self.body.append(f"{dot}{node['python-name']}()</span>")
+    self.body.append(f"{dot}{node['python-name']}(...)</span>")
 
     self.body.append(self.starttag(node, "span"))
     self.body.append(" -> ")
@@ -60,7 +60,7 @@ def visit_aiterinfo_node(self: HTML5Translator, node: aiter):
 
     self.body.append("<em>async for</em> item in ")
     self.body.append(self.starttag(node, "span", CLASS="sig-name"))
-    self.body.append(f"{dot}{node['python-name']}()")
+    self.body.append(f"{dot}{node['python-name']}(...)")
     self.body.append("</span>")
     self.body.append(":")
 
