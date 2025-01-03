@@ -247,6 +247,16 @@ a > code {
 	border-color: var(--color-background-dim--light);
 }
 
+.sig-usagetable {
+	font-style: normal;
+	margin-top: 0.5rem;
+	padding-left: 1rem;
+	font-size: 0.9em;
+	font-weight: 400;
+	border-left: 2px solid var(--color-links--light);
+	line-height: 1.6;
+}
+
 pre {
 	color: var(--color-pre-primary--light) !important;
 	background-color: var(--color-pre-background--light);
@@ -258,6 +268,10 @@ body.theme-dark {
 }
 
 body.theme-dark {
+	.sig-usagetable {
+		border-left: 2px solid var(--color-links--dark)!important;
+	}
+
 	code {
 		color: #cb7f90!important;
 		background-color: var(--color-background-dim--dark);

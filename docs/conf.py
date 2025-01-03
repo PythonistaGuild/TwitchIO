@@ -52,6 +52,7 @@ extensions = [
     "hoverxref.extension",
     "sphinxcontrib_trio",
     "sphinx_wagtail_theme",
+    "aiter",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -73,7 +74,7 @@ html_last_updated_fmt = "%b %d, %Y"
 
 html_theme_options = dict(
     project_name="Documentation",
-    github_url = "https://github.com/PythonistaGuild/TwitchIO/tree/dev/3.0/docs/",
+    github_url="https://github.com/PythonistaGuild/TwitchIO/tree/dev/3.0/docs/",
     logo="logo.png",
     logo_alt="TwitchIO",
     logo_height=120,
