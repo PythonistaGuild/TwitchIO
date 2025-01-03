@@ -29,10 +29,10 @@ from typing import TYPE_CHECKING, Any
 
 __all__ = (
     "HTTPException",
+    "InvalidTokenException",
     "MessageRejectedError",
     "TwitchioException",
     "WebsocketConnectionException",
-    "InvalidTokenException",
 )
 
 

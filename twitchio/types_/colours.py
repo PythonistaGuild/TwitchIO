@@ -25,7 +25,7 @@ SOFTWARE.
 from typing import TypedDict
 
 
-__all__ = ("Colours", "Colors")
+__all__ = ("Colors", "Colours")
 
 
 class Colours(TypedDict):
