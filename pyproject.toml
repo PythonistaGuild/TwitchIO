@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "twitchio"
 authors = [{ name = "PythonistaGuild" }]
 dynamic = ["dependencies", "version"]
-description = "A fully asynchronous and modern Python wrapper around the Twitch API."
+description = "A powerful, asynchronous Python library for twitch.tv."
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
@@ -24,7 +24,9 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/PythonistaGuild/TwitchIO"
+Homepage = "https://github.com/PythonistaGuild/TwitchIO"
+Documentation = "https://twitchio.dev"
+"Issue tracker" = "https://github.com/PythonistaGuild/TwitchIO/issues"
 
 [tool.setuptools]
 packages = [
