@@ -20,7 +20,7 @@ TwitchIO 3 currently supports the following `Python <https://www.python.org/down
 +---------------------+-------------------------------------------------+-------------------------------+
 | **3.13, 3.14**      | .. raw:: html                                   | May require custom index      |
 |                     |                                                 |                               |
-|                     |   <span class="warn-tio"Check Notes</span>      |                               |
+|                     |   <span class="warn-tio">Check Notes</span>     |                               |
 |                     |                                                 |                               |
 +---------------------+-------------------------------------------------+-------------------------------+
 
