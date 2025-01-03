@@ -265,18 +265,12 @@ class Routine:
 
     @property
     def args(self) -> tuple[Any, ...]:
-        """|prop|
-
-        Property returning any positional arguments passed to the routine via :meth:`.start`.
-        """
+        """Property returning any positional arguments passed to the routine via :meth:`.start`."""
         return self._args
 
     @property
     def kwargs(self) -> Any:
-        """|prop|
-
-        Property returning any keyword arguments passed to the routine via :meth:`.start`.
-        """
+        """Property returning any keyword arguments passed to the routine via :meth:`.start`."""
         return self._kwargs
 
     def start(self, *args: Any, **kwargs: Any) -> asyncio.Task[None]:
