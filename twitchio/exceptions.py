@@ -52,7 +52,7 @@ class TwitchioException(Exception):
 class HTTPException(TwitchioException):
     """Exception raised when an HTTP request fails.
 
-    This exception can be raised anywhere the :class:`twitchio.Client` or :class:`twitchio.commands.ext.Bot`
+    This exception can be raised anywhere the :class:`twitchio.Client` or :class:`twitchio.ext.commands.Bot`
     is used to make a HTTP request to the Twitch API.
 
     Attributes
