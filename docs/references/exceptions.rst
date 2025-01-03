@@ -4,15 +4,15 @@
 Exceptions
 ----------
 
-.. autoclass:: twitchio.TwitchioException
+.. autoclass:: twitchio.TwitchioException()
 
-.. autoclass:: twitchio.HTTPException
+.. autoclass:: twitchio.HTTPException()
     :members:
 
-.. autoclass:: twitchio.InvalidTokenException
+.. autoclass:: twitchio.InvalidTokenException()
     :members:
 
-.. autoclass:: twitchio.MessageRejectedError
+.. autoclass:: twitchio.MessageRejectedError()
     :members:
 
 
