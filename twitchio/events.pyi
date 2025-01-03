@@ -15,4 +15,4 @@ async def event_oauth_authorized(payload: UserTokenPayload) -> None:
     """
 
 async def event_ready() -> None:
-    """Event dispatched when the Client is ready."""
+    """Event dispatched when the Client is ready and has completed login."""

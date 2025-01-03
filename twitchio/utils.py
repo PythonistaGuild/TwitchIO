@@ -202,6 +202,40 @@ def setup_logging(
     level: int | None = None,
     root: bool = True,
 ) -> None:
+    """A helper function to setup logging for your application.
+
+    Parameters
+    ----------
+    handler: :class:`logging.Handler` | None
+        An optional :class:`logging.Handler` to use. Defaults to ``None``, which creates a :class:`logging.StreamHandler`
+        by default.
+    formatter: :class:`logging.Formatter` | None
+        An optional :class:`logging.Formatter` to use. Defaults to ``None``, which uses a custom TrueColour
+        formatter by default, falling back to standard colour support and finally no colour support if no colour
+        is supported.
+    level: int | None
+        An optional int indicating the level of logging output. Defaults to ``20``, which is ``INFO``.
+    root: bool
+        An optional bool indicating whether logging should be setup on the root logger. When ``False``, logging will only be
+        setup for twitchio. Defaults to ``True``.
+
+    Examples
+    --------
+
+    .. code-block:: python3
+
+        import logging
+
+        import twitchio
+
+
+        LOGGER: logging.Logger = logging.getLogger(__name__)
+        twitchio.utils.setup_logging(level=logging.INFO)
+        ...
+
+        arg: str = "World!"
+        LOGGER.info("Hello %s", arg)
+    """
     if level is None:
         level = logging.INFO
 
