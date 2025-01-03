@@ -54,7 +54,7 @@ def visit_aiterinfo_node(self: HTML5Translator, node: aiter):
     self.body.append("</a>")
 
     # TODO: Type...
-    self.body.append("[T]: ...")
+    self.body.append("[T]")
 
     self.body.append(self.starttag(node, "br"))
 
@@ -62,7 +62,7 @@ def visit_aiterinfo_node(self: HTML5Translator, node: aiter):
     self.body.append(self.starttag(node, "span", CLASS="sig-name"))
     self.body.append(f"{dot}{node['python-name']}()")
     self.body.append("</span>")
-    self.body.append(": ...")
+    self.body.append(":")
 
 
 def depart_aiterinfo_node(self: HTML5Translator, node: aiter):
