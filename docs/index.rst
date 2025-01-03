@@ -48,8 +48,8 @@ Getting Started
    getting-started/installing
    getting-started/migrating
    getting-started/quickstart
-   getting-started/faq
    getting-started/changelog
+   getting-started/faq
 
 
 References
@@ -63,8 +63,8 @@ References
    references/events
    references/user
    references/eventsub_subscriptions
-   references/exceptions
    references/web
+   references/exceptions
 
 .. toctree::
    :maxdepth: 1
