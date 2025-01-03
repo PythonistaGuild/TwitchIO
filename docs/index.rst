@@ -49,15 +49,7 @@ Getting Started
    getting-started/migrating
    getting-started/quickstart
    getting-started/faq
-
-
-Authenticating and Scopes
--------------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   references/authenticating
+   getting-started/changelog
 
 
 References
