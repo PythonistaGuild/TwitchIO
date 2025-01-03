@@ -3,7 +3,7 @@ TwitchIO
 
 .. warning::
 
-   This is an alpha release. Please do not use this release in production ready applications.
+   This is a beta release. Please take care using this release in production ready applications.
 
 
 TwitchIO is a powerful, asynchronous Python library for `twitch.tv <https://twitch.tv>`_.
