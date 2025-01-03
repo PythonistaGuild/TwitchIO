@@ -6,7 +6,7 @@ Asset
 
 .. attributetable:: twitchio.Asset
 
-.. autoclass:: twitchio.Asset
+.. autoclass:: twitchio.Asset()
     :members:
 
 
@@ -14,7 +14,7 @@ Colour
 ------
 .. attributetable:: twitchio.Colour
 
-.. autoclass:: twitchio.Colour
+.. autoclass:: twitchio.Colour()
     :members:
 
 
