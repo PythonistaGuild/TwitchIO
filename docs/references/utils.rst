@@ -38,3 +38,12 @@ Helpers
 .. autofunction:: twitchio.utils.parse_timestamp
  
 .. autofunction:: twitchio.utils.setup_logging
+
+
+HTTP
+----
+
+.. attributetable:: twitchio.Route
+
+.. autoclass:: twitchio.Route()
+

@@ -28,13 +28,18 @@ __license__ = "MIT"
 __copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
 __version__ = "3.0.0dev"
 
-from . import types_ as types
-
-from . import authentication as authentication, eventsub as eventsub, utils as utils, web as web
+from . import (  # noqa: F401
+    authentication as authentication,
+    eventsub as eventsub,
+    types_ as types,
+    utils as utils,
+    web as web,
+)
 from .assets import Asset as Asset
 from .authentication import Scopes as Scopes
 from .client import Client as Client
 from .exceptions import *
+from .http import HTTPAsyncIterator as HTTPAsyncIterator, Route as Route
 from .models import *
 from .payloads import *
 from .user import *

@@ -176,6 +176,28 @@ async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
 
 
 class Route:
+    """Route class used by TwitchIO to prepare HTTP requests to Twitch.
+
+    .. warning::
+
+        You should not change or instantiate this class manually, as it is used internally.
+
+    Attributes
+    ----------
+    params: dict[str, Any]
+        A mapping of parameters used in the request.
+    json: dict[Any, Any]
+        The JSON used in the body of the request. Could be an empty :class:`dict`.
+    headers: dict[str, str]
+        The headers used in the request.
+    token_for: str
+        The User ID that was used to gather a token for authentication. Could be an empty :class:`str`.
+    method: Literal['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE']
+        The request method used.
+    path: str
+        The API endpoint requested.
+    """
+
     __slots__ = (
         "_base_url",
         "_url",
@@ -258,10 +280,12 @@ class Route:
 
     @property
     def url(self) -> str:
+        """Property returning the URL used to make a request. Could include query parameters."""
         return self._url
 
     @property
     def base_url(self) -> str:
+        """Property returning the URL used to make a request without query parameters."""
         return self._base_url
 
     def update_params(self, params: ParamMapping, *, remove_none: bool = True) -> str:
