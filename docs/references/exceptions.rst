@@ -12,6 +12,9 @@ Exceptions
 .. autoclass:: twitchio.InvalidTokenException
     :members:
 
+.. autoclass:: twitchio.MessageRejectedError
+    :members:
+
 
 Exception Hierarchy
 ~~~~~~~~~~~~~~~~~~~
@@ -19,5 +22,6 @@ Exception Hierarchy
 .. exception_hierarchy::
 
     - :exc:`TwitchioException`
-         - :exc:`HTTPException`
-             - :exc:`InvalidTokenException`
+        - :exc:`HTTPException`
+            - :exc:`InvalidTokenException`
+        - :exc:`MessageRejectedError`

@@ -133,6 +133,21 @@ class EventsubVerifyException(TwitchioException): ...
 
 
 class MessageRejectedError(TwitchioException):
+    """Exception raised when Twitch rejects a sent message. This is not the same as a :exc:`HTTPException` which is raised
+    when the request fails for a reason.
+
+    Attributes
+    ----------
+    channel: :class:`~twitchio.PartialUser`
+        The the channel the message was attempted to be sent to.
+    code: str | None
+        The drop code Twitch responded with.
+    message: str | None
+        The message Twitch responded with, with the reason why the message was rejected.
+    content: str
+        The content of the original message sent.
+    """
+
     def __init__(self, msg: str, *, message: SentMessage, channel: PartialUser, content: str) -> None:
         self.channel: PartialUser = channel
         self.code: str | None = message.dropped_code
