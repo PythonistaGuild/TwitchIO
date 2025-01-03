@@ -53,6 +53,7 @@ extensions = [
     "sphinxcontrib_trio",
     "sphinx_wagtail_theme",
     "aiter",
+    "exc_hierarchy"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

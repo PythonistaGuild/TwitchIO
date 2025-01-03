@@ -63,6 +63,7 @@ References
    references/events
    references/user
    references/eventsub_subscriptions
+   references/exceptions
 
 .. toctree::
    :maxdepth: 1
