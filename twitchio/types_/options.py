@@ -22,13 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
-from typing import Any, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, NotRequired, TypedDict
 
-import aiohttp
 
-from ..authentication import Scopes
-from ..web.utils import BaseAdapter
+if TYPE_CHECKING:
+    import aiohttp
+
+    from ..authentication import Scopes
+    from ..web.utils import BaseAdapter
 
 
 __all__ = ("ClientOptions", "WaitPredicateT")
