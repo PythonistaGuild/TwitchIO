@@ -53,6 +53,81 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class AiohttpAdapter(BaseAdapter, web.Application):
+    """The AiohttpAdapter for OAuth and Webhook based EventSub.
+
+    This adapter uses ``aiohttp`` which is a base dependency and should be installed and available with Twitchio.
+
+    Optionally you can use `Starlette <https://www.starlette.io/>`_ with `Uvicorn <https://www.uvicorn.org/>`_ by using the
+    :class:`StarletteAdapter`. This will require additional dependencies.
+
+    An adapter will always be started and is ran alongside the :class:`~twitchio.Client` or
+    :class:`~twitchio.ext.commands.Bot` by default. You can disable starting the adapter by passing ``with_adapter=False``
+    to :meth:`twitchio.Client.start` or :meth:`twitchio.Client.run`.
+
+    The adapter can be used to authenticate users via OAuth, and supports webhooks for EventSub, with in-built event
+    dispatching to the :class:`~twitchio.Client`.
+
+    The default callbacks for OAuth are:
+
+    - ``/oauth`` E.g. ``http://localhost:4343/oauth`` or ``https://mydomain.org/oauth``.
+        - Should be used with the ``?scopes=`` query parameter to pass a URL encoded list of scopes.
+           See: :class:`~twitchio.Scopes` for a helper class for generating scopes.
+
+    - ``/oauth/callback`` E.g. ``http://localhost:4343/oauth/callback`` or ``https://mydomain.org/oauth/callback``.
+        - The redirect URL for OAuth request. This should be set in the developer console of your application on Twitch.
+
+    The default callbacks for EventSub are:
+
+    - ``/callback`` E.g. ``http://localhost:4343/callback`` or ``https://mydomain.org/callback``.
+
+
+    This class handles processing and validating EventSub requests for you, and dispatches any events identical to
+    the websocket equivalent.
+
+    Parameters
+    ----------
+    host: str | None
+        An optional :class:`str` passed to bind as the host address. Defaults to ``localhost``.
+    port: int | None
+        An optional :class:`int` passed to bind as the port for the host address. Defaults to ``4343``.
+    domain: str | None
+        An optional :class:`str` passed used to identify the external domain used, if any. If passed, the domain will be used
+        for the redirect URL in OAuth and for validation in EventSub. It must be publicly accessible and support HTTPS.
+    eventsub_path: str | None
+        An optional :class:`str` passed to use as the path to the eventsub callback. Defaults to ``/callback``. E.g.
+        ``http://localhost:4343/callback`` or ``https://mydomain.org/callback``.
+    eventsub_secret: str | None
+        An optional :class:`str` passed to use as the EventSub secret. It is recommended you pass this parameter when using
+        an adapter for EventSub, as it will reset upon restarting otherwise. You can generate token safe secrets with the
+        :mod:`secrets` module.
+
+    Examples
+    --------
+
+    .. code-block:: python3
+
+        import twitchio
+        from twitchio import web
+        from twitchio.ext import commands
+
+
+        class Bot(commands.Bot):
+
+            def __init__(self) -> None:
+                # Requests will be sent to, as an example:
+                # http://bot.twitchio.dev
+                # You DO NOT need to pass a domain, however not passing a domain will mean only you can authenticate
+                # via OAuth and Webhooks will not be supported...
+                # The domain should support HTTPS and be publicly accessible...
+                # An easy way to do this is add your domain to a CDN like Cloudflare and set SSL to Flexible.
+                #
+                # Visit: http://localhost:8080/oauth?scopes=channel:bot as the broadcaster as an example.
+                # Visit: https://bot.twitchio.dev?scopes=channel:bot as the broadcaster as an example.
+
+                adapter = web.AiohttpAdapter(domain="bot.twitchio.dev", port=8080)
+                super().__init__(adapter=adapter)
+    """
+
     client: Client
 
     def __init__(
@@ -99,10 +174,12 @@ class AiohttpAdapter(BaseAdapter, web.Application):
 
     @property
     def eventsub_url(self) -> str:
+        """Property returning the fully qualified URL to the EventSub callback."""
         return f"{self._domain}{self._eventsub_path}"
 
     @property
     def redirect_url(self) -> str:
+        """Property returning the fully qualified URL to the OAuth callback."""
         return f"{self._domain}/oauth/callback"
 
     async def event_startup(self) -> None:
@@ -165,7 +242,6 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         except Exception as e:
             return web.Response(text=f"Challenge Failed. Failed to verify the integrity of the message: {e}", status=400)
 
-        # TODO: Types...
         data: Any = _from_json(resp)  # type: ignore
         sent: datetime.datetime = parse_timestamp(timestamp)
         now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)
