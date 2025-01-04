@@ -88,6 +88,7 @@ html_theme_options = dict(
             "Documentation|https://twitchio.dev",
         ]
     ),
+    header_links = "Guides|/guides/index.html, Examples|https://github.com/PythonistaGuild/TwitchIO/tree/master/examples, Commands|/exts/commands/index.html, Routines|/exts/routines/index.html",
 )
 
 copyright = "2017 - Present, PythonistaGuild"
