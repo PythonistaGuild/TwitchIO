@@ -298,3 +298,57 @@ All events are prefixed with **event_**
      - :meth:`~eventsub.WhisperReceivedSubscription`
      - message_whisper
      - :class:`~models.eventsub_.Whisper`
+
+
+Client Events
+~~~~~~~~~~~~~
+
+.. py:function:: event_ready() -> None
+   
+   Event dispatched when the :class:`~.Client` is ready and has completed login.
+
+.. py:function:: event_error(payload: twitchio.EventErrorPayload) -> None
+   
+   Event dispatched when an exception is raised inside of a dispatched event.
+
+   :param twitchio.EventErrorPayload payload: The payload containing information about the event and exception raised.
+  
+.. py:function:: event_oauth_authorized(payload: twitchio.authentication.UserTokenPayload) -> None
+
+   Event dispatched when a user authorizes your Client-ID via Twitch OAuth on a built-in web adapter.
+
+   The default behaviour of this event is to add the authorized token to the client.
+   See: :class:`~twitchio.Client.add_token` for more details.
+
+   :param UserTokenPayload payload: The payload containing token information.
+
+
+Commands Events
+~~~~~~~~~~~~~~~
+
+.. py:function:: event_command_invoked(ctx: twitchio.ext.commands.Context) -> None
+   
+   Event dispatched when a :class:`~twitchio.ext.commands.Command` is invoked.
+
+   :param twitchio.ext.commands.Context ctx: The context object that invoked the command.
+
+.. py:function:: event_command_completed(ctx: twitchio.ext.commands.Context) -> None
+   
+   Event dispatched when a :class:`~twitchio.ext.commands.Command` has completed invocation.
+
+   :param twitchio.ext.commands.Context ctx: The context object that invoked the command.
+
+.. py:function:: event_command_error(payload: twitchio.ext.commands.CommandErrorPayload) -> None
+   
+   Event dispatched when a :class:`~twitchio.ext.commands.Command` encounters an error during invocation.
+
+   :param twitchio.ext.commands.CommandErrorPayload payload: The error payload containing context and the exception raised.
+
+
+Payloads
+~~~~~~~~
+
+.. attributetable:: twitchio.EventErrorPayload
+
+.. autoclass:: twitchio.EventErrorPayload()
+  :members:
