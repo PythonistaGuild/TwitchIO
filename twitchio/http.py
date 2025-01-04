@@ -396,8 +396,7 @@ class HTTPAsyncIterator(Generic[T]):
         try:
             inner: list[RawResponse] = data["data"] if self._nested_key is None else data["data"][self._nested_key]
         except KeyError as e:
-            # TODO: Proper exception...
-            raise ValueError('Expected "data" key not found.') from e
+            raise HTTPException('Expected "data" key not found.', route=self._route, status=500, extra="") from e
 
         if not self._nested_key:
             for value in inner:
@@ -531,8 +530,7 @@ class HTTPClient:
         data = await self.request(route)
 
         if isinstance(data, str):
-            # TODO: Add a HTTPException here.
-            raise TypeError("Expected JSON data, but received text data.")
+            raise HTTPException("Expected JSON data, but received text data.", status=500, extra=data)
 
         return data
 
