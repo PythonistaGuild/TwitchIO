@@ -106,7 +106,7 @@ Extra and Optional Dependencies
 
 .. raw:: html
 
-    <span class="warn-tio">This version of TwitchIO is an Beta Version!</span>
+    <span class="warn-tio">This version of TwitchIO is a Beta Version!</span>
     <hr></hr>
 
 
