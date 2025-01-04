@@ -64,9 +64,9 @@ dev = ["ruff", "pyright", "isort"]
 
 [tool.ruff]
 line-length = 125
+target-version = "py311"
 indent-width = 4
 exclude = ["venv", "docs", "examples"]
-
 
 [tool.ruff.lint]
 select = [
@@ -78,7 +78,7 @@ select = [
     "PTH",
     "RUF",
     "SIM",
-    "TCH",
+    "TC",
     "UP",
     "W",
     "PERF",
@@ -97,7 +97,7 @@ ignore = [
     "ANN401",
     "UP031",
     "PTH123",
-    "E203", 
+    "E203",
     "E501",
 ]
 
