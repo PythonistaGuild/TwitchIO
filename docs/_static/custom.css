@@ -579,6 +579,20 @@ main .py-attribute-table-column > ul {
 	margin-bottom: 2rem;
 }
 
+.admonition {
+	padding-bottom: 0;
+}
+
+.admonition-title {
+	padding: .25rem .5rem;
+	font-weight: 600;
+}
+
+.versionmodified {
+	padding: .25rem .5rem;
+	font-weight: 500;
+}
+
 /* Fix padding on meth/prop dd */
 dl.py > dd {
 	padding: 0.5rem 0;
