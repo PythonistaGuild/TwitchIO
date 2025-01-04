@@ -568,17 +568,11 @@ main .py-attribute-table-column > ul {
 }
 
 /* Fix indent on class/func */
-.py.class > dd {
-	margin: 0 2em;
+
+dl.py > dd {
+	margin: 0.75em 2em;
 }
 
-.py.function > dd {
-	margin: 0 2em!important;
-}
-
-.py.exception > dd {
-	margin: 0 2em!important;
-}
 
 /* Fix code block admonitions */
 .codeB {
