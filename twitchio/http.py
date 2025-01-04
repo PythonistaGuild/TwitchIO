@@ -299,6 +299,50 @@ class Route:
 
 
 class HTTPAsyncIterator(Generic[T]):
+    """TwitchIO async iterator for HTTP requests.
+
+    When a method or function returns this iterator you should call the returning function in one of the following two ways:
+
+    ``await method(...)``
+
+    **or**
+
+    ``async for item in method(...)``
+
+    When awaited the iterator will return a flattened list of all the items returned via the request for the first page only.
+    If the endpoint is paginated, it is preferred you use ``async for item in method(...)`` in a list comprehension.
+
+    When used with ``async for`` the iterator will return the next item available until no items remain or you break from the
+    loop manually, E.g. with ``break`` or ``return`` etc.
+
+    ``async for item in method(...)`` will continue making requests on paginated endpoints to the next page as needed
+    and when available.
+
+    You can create a flattened list of all pages with a list comprehension.
+
+    Examples
+    --------
+
+    .. code-block:: python3
+
+        # Flatten and return first page (20 results)
+        streams = await bot.fetch_streams()
+
+        # Flatten and return up to 1000 results (max 100 per page) which equates to 10 requests...
+        streams = [async for stream in bot.fetch_streams(first=100, max_results=1000)]
+
+        # Loop over results until we manually stop...
+        async for item in bot.fetch_streams(first=100, max_results=1000):
+            # Some logic...
+            ...
+            break
+
+
+    .. important::
+
+        Everything in this class is private internals, and should not be modified.
+    """
+
     __slots__ = (
         "_buffer",
         "_converter",

@@ -47,3 +47,4 @@ HTTP
 
 .. autoclass:: twitchio.Route()
 
+.. autoclass:: twitchio.HTTPAsyncIterator()
