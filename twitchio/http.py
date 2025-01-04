@@ -329,7 +329,7 @@ class HTTPAsyncIterator(Generic[T]):
         streams = await bot.fetch_streams()
 
         # Flatten and return up to 1000 results (max 100 per page) which equates to 10 requests...
-        streams = [async for stream in bot.fetch_streams(first=100, max_results=1000)]
+        streams = [stream async for stream in bot.fetch_streams(first=100, max_results=1000)]
 
         # Loop over results until we manually stop...
         async for item in bot.fetch_streams(first=100, max_results=1000):
