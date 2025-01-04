@@ -168,6 +168,7 @@ th {
 
 .admonition.warning {
 	background-color: var(--color-warning-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
 }
 
 .warning > .admonition-title {
@@ -177,6 +178,7 @@ th {
 
 .admonition.important {
 	background-color: var(--color-important-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
 }
 
 .important > .admonition-title {
@@ -185,6 +187,7 @@ th {
 
 .admonition.note {
 	background-color: var(--color-note-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
 }
 
 .note > .admonition-title {
@@ -193,6 +196,7 @@ th {
 
 .admonition.tip {
 	background-color: var(--color-tip-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
 }
 
 .tip > .admonition-title {
