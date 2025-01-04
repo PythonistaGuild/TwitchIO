@@ -576,6 +576,10 @@ main .py-attribute-table-column > ul {
 	margin: 0 2em!important;
 }
 
+.py.exception > dd {
+	margin: 0 2em!important;
+}
+
 /* Fix code block admonitions */
 .codeB {
 	background-color: var(--color-dim-line);
