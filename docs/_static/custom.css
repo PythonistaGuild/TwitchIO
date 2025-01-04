@@ -262,12 +262,20 @@ pre {
 	background-color: var(--color-pre-background--light);
 }
 
+.toctree-expand {
+	background-color: var(--color-accent--light);
+}
+
 body.theme-dark {
 	color: var(--color-primary--dark);
 	background-color: #22222d;
 }
 
 body.theme-dark {
+	.toctree-expand {
+		background-color: var(--color-accent--dark)!important;
+	}
+
 	code {
 		color: #cb7f90!important;
 		background-color: var(--color-background-dim--dark);
