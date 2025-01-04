@@ -17,6 +17,7 @@
 	--color-warn: #ebcc00;
 	--color-dim-line: #ededf060;
 	--color-search-border: #ededf02d;
+	--color-section-border--dark: rgba(255, 255, 255, 0.2);
 
 	/* Light Theme */
 	--color-primary--light: rgba(21, 21, 28, 0.8);
@@ -28,6 +29,7 @@
 	--color-header-back--light: #2d2d37;
 	--color-scrollbar--light: #b589ce7c;
 	--color-button-hover--light: #9363af81;
+	--color-section-border--light: rgba(21, 21, 28, 0.2);
 
 	/* Code Blocks */
 	--color-pre-background--dark: #1a1a23;
@@ -76,6 +78,11 @@ strong {
 	font-size: 1.05em;
 }
 
+h2, h1 {
+	padding: 0 0 0.25rem 0;
+	border-bottom: 1px solid var(--color-section-border--light);
+}
+
 .simple > li {
 	line-height: 1.4;
 	padding: 0.3em 0;
@@ -86,6 +93,10 @@ code {
 	font-family: var(--font-pre--mono);
 	font-weight: 300;
 	font-size: 0.9em;
+}
+
+code {
+	padding: 0.18rem 0.22rem;
 }
 
 .form-control {
@@ -276,12 +287,16 @@ body.theme-dark {
 }
 
 body.theme-dark {
+	h2, h1 {
+		border-bottom: 1px solid var(--color-section-border--dark)!important;
+	}
+
 	.toctree-expand {
 		background-color: var(--color-accent--light)!important;
 	}
 
 	code {
-		color: #cb7f90!important;
+		color: #bac4d9 !important;
 		background-color: var(--color-background-dim--dark);
 	}
 
@@ -564,6 +579,7 @@ main .py-attribute-table-column > ul {
 
 .codeW {
 	border: 1px solid #a071bb31;
+	padding-bottom: 1rem!important;
 }
 
 .admonition-title.codeB {
@@ -581,10 +597,6 @@ main .py-attribute-table-column > ul {
 .admonition.codeW {
 	overflow-x: auto;
 	margin-bottom: 2rem;
-}
-
-.admonition {
-	padding: 1rem 1rem 0 1rem!important;
 }
 
 .admonition-title {
