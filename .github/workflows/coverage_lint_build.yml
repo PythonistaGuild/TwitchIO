@@ -111,7 +111,7 @@ jobs:
 
       - name: Check formatting with Ruff
         run: |
-          format --check
+          ruff format --check
 
   upload_pypi:
     if: github.event_name == 'push' && github.ref_type == 'tag'
