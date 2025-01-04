@@ -52,7 +52,7 @@ extensions = [
     "hoverxref.extension",
     "sphinxcontrib_trio",
     "sphinx_wagtail_theme",
-    "aiter",
+    "sig_prefix",
     "exc_hierarchy"
 ]
 

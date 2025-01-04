@@ -88,7 +88,7 @@ def check_return(sig: str) -> bool:
 
 class AiterPyF(PyFunction):
     option_spec = PyFunction.option_spec.copy()
-    option_spec.update({"aiter": directives.flag})
+    option_spec.update({"aiter": directives.flag, "deco": directives.flag})
 
     def parse_name_(self, content: str) -> tuple[str | None, str]:
         match = NAME_RE.match(content)
@@ -118,13 +118,15 @@ class AiterPyF(PyFunction):
 
             parent = usagetable("", node)
             return [parent, hrnode(), addnodes.desc_sig_keyword("", "async"), addnodes.desc_sig_space()]
+        elif "deco" in self.options:
+            return [addnodes.desc_sig_keyword("", "@"), addnodes.desc_sig_space()]
 
         return super().get_signature_prefix(sig)
 
 
 class AiterPyM(PyMethod):
     option_spec = PyMethod.option_spec.copy()
-    option_spec.update({"aiter": directives.flag})
+    option_spec.update({"aiter": directives.flag, "deco": directives.flag})
 
     def parse_name_(self, content: str) -> tuple[str, str]:
         match = NAME_RE.match(content)
@@ -137,7 +139,7 @@ class AiterPyM(PyMethod):
 
     def get_signature_prefix(self, sig: str) -> list[nodes.Node]:
         cname, name = self.parse_name_(sig)
-
+        
         if "aiter" in self.options:
             node = aiter()
             node["python-name"] = name
@@ -145,6 +147,8 @@ class AiterPyM(PyMethod):
 
             parent = usagetable("", node)
             return [parent, hrnode(), addnodes.desc_sig_keyword("", "async"), addnodes.desc_sig_space()]
+        elif "deco" in self.options:
+            return [addnodes.desc_sig_keyword("", "@"), addnodes.desc_sig_space()]
 
         return super().get_signature_prefix(sig)
 
@@ -161,6 +165,8 @@ class AiterFuncDocumenter(FunctionDocumenter):
 
         if docs.startswith("|aiter|") or check_return(sig):
             self.add_line("   :aiter:", sourcename)
+        elif docs.startswith("|deco|"):
+            self.add_line("   :deco:", sourcename)
 
 
 class AiterMethDocumenter(MethodDocumenter):
@@ -176,6 +182,8 @@ class AiterMethDocumenter(MethodDocumenter):
         docs = obj.__doc__ or ""
         if docs.startswith("|aiter|") or check_return(sig):
             self.add_line("   :aiter:", sourcename)
+        elif docs.startswith("|deco|"):
+            self.add_line("   :deco:", sourcename)
 
 
 def setup(app: Sphinx) -> dict[str, bool]:
