@@ -68,7 +68,7 @@ jobs:
         run: |
           sudo apt update
           python -m ensurepip
-          pip install -Ur '.[starlette,docs]'
+          pip install -U '.[starlette,docs]'
       - name: Build Docs
         run: |
           cd docs
@@ -99,7 +99,7 @@ jobs:
       - name: "Install Python deps @ ${{ matrix.python-version }}"
         id: install-deps
         run: |
-          pip install -Ur '.[starlette]'
+          pip install -U '.[starlette]'
       - name: "Run Pyright @ ${{ matrix.python-version }}"
         uses: jakebailey/pyright-action@v1
         with:
