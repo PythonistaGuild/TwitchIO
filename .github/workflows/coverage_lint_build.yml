@@ -109,6 +109,10 @@ jobs:
       - name: Lint with Ruff
         uses: astral-sh/ruff-action@v3
 
+      - name: Check formatting with Ruff
+        run: |
+          format --check
+
   upload_pypi:
     if: github.event_name == 'push' && github.ref_type == 'tag'
     name: Publish built wheels to Pypi
