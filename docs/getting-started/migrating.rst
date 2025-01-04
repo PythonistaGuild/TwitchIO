@@ -1,2 +1,4 @@
+.. _Migrating Guide:
+
 Migrating
 #########
