@@ -254,7 +254,6 @@ class StarletteAdapter(BaseAdapter, Starlette):
         except Exception as e:
             return Response(f"Challenge Failed. Failed to verify the integrity of the message: {e}", status_code=400)
 
-        # TODO: Types...
         data: Any = _from_json(resp)  # type: ignore
         sent: datetime.datetime = parse_timestamp(timestamp)
         now: datetime.datetime = datetime.datetime.now(tz=datetime.UTC)

@@ -53,7 +53,6 @@ def visit_aiterinfo_node(self: HTML5Translator, node: aiter):
     self.body.append("list")
     self.body.append("</a>")
 
-    # TODO: Type...
     self.body.append("[T]")
 
     self.body.append(self.starttag(node, "br"))

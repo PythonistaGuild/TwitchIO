@@ -1325,7 +1325,6 @@ class HTTPClient:
     ### Conduits ###
 
     # async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
-    #     # TODO: Type for return...
 
     #     params = {"conduit_id": conduit_id}
     #     body = {"shards": shards}
