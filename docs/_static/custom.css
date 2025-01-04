@@ -273,7 +273,7 @@ body.theme-dark {
 
 body.theme-dark {
 	.toctree-expand {
-		background-color: var(--color-accent--dark)!important;
+		background-color: var(--color-accent--light)!important;
 	}
 
 	code {
