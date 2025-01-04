@@ -1,0 +1,133 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  build:
+    name: Build wheels
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install CPython
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install deps
+        run: |
+          pip install -U wheel setuptools pip Cython
+          pip install '.[starlette]'
+
+      - name: Build wheels
+        run: pip wheel -w ./wheelhouse/ '.[starlette]'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-wheels-${{ matrix.python-version }}
+          path: ./wheelhouse/twitchio*.whl
+
+  sdist:
+    name: Make source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-source-dist
+          path: "./**/dist/*.tar.gz"
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install CPython
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install Deps
+        run: |
+          sudo apt update
+          python -m ensurepip
+          pip install -Ur '.[starlette,docs]'
+      - name: Build Docs
+        run: |
+          cd docs
+          make html
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.x"]
+
+    name: "Type Coverage and Linting @ ${{ matrix.python-version }}"
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: dev/3.0
+
+      - name: "Setup Python @ ${{ matrix.python-version }}"
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "${{ matrix.python-version }}"
+          cache: "pip"
+
+      - name: "Install Python deps @ ${{ matrix.python-version }}"
+        id: install-deps
+        run: |
+          pip install -Ur '.[starlette]'
+      - name: "Run Pyright @ ${{ matrix.python-version }}"
+        uses: jakebailey/pyright-action@v1
+        with:
+          no-comments: ${{ matrix.python-version != '3.x' }}
+          warnings: false
+
+      - name: Lint with Ruff
+        if: ${{ always() && steps.install-deps.outcome == 'success' }}
+        uses: chartboost/ruff-action@v1
+
+  upload_pypi:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    name: Publish built wheels to Pypi
+    runs-on: ubuntu-latest
+    environment: release
+    needs: [build, sdist]
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+
+      - name: Copy artifacts to dist/ folder
+        run: |
+          find . -name 'artifact-*' -exec unzip '{}' \;
+          mkdir -p dist/
+          find . -name '*.tar.gz' -exec mv '{}' dist/ \;
+          find . -name '*.whl' -exec mv '{}' dist/ \;
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        name: Publish to PyPI
