@@ -719,7 +719,27 @@ class Client:
         await self._http.save(path)
 
     def add_listener(self, listener: Callable[..., Coroutine[Any, Any, None]], *, event: str | None = None) -> None:
-        # TODO: Docs...
+        """Method to add an event listener to the client.
+
+        See: :meth:`.listen` for more information on event listeners and for a decorator version of this function.
+
+        Parameters
+        ----------
+        listener: Callable[..., Coroutine[Any, Any, None]]
+            The coroutine to assign as the callback for the listener.
+        event: str | None
+            An optional :class:`str` which indicates which event to listen to. This should include the ``event_`` prefix.
+            Defaults to ``None`` which uses the coroutine function name passed instead.
+
+        Raises
+        ------
+        ValueError
+            The ``event`` string passed should start with ``event_``.
+        ValueError
+            The ``event`` string passed must not == ``event_``.
+        TypeError
+            The listener callback must be a coroutine function.
+        """
         name: str = event or listener.__name__
 
         if not name.startswith("event_"):
@@ -729,15 +749,32 @@ class Client:
             raise ValueError('Listener and event names cannot be named "event_".')
 
         if not asyncio.iscoroutinefunction(listener):
-            raise ValueError("Listeners and Events must be coroutines.")
+            raise TypeError("Listeners and Events must be coroutines.")
 
         self._listeners[name].add(listener)
 
-    def remove_listener(self, listener: Callable[..., Coroutine[Any, Any, None]]) -> None:
-        # TODO: Docs...
+    def remove_listener(
+        self,
+        listener: Callable[..., Coroutine[Any, Any, None]],
+    ) -> Callable[..., Coroutine[Any, Any, None]] | None:
+        """Method to remove a currently registered listener from the client.
+
+        Parameters
+        ----------
+        listener: Callable[..., Coroutine[Any, Any, None]]
+            The coroutine wrapped with :meth:`.listen` or added via :meth:`.add_listener` to remove as a listener.
+
+        Returns
+        -------
+        Callable[..., Coroutine[Any, Any, None]]
+            If a listener was removed, the coroutine function will be returned.
+        None
+            Returns ``None`` when no listener was removed.
+        """
         for listeners in self._listeners.values():
             if listener in listeners:
                 listeners.remove(listener)
+                return listener
 
     def listen(self, name: str | None = None) -> Any:
         """|deco|
