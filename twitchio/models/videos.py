@@ -117,3 +117,9 @@ class Video:
             A user oauth token with the ``channel:manage:videos`` scope.
         """
         await self._http.delete_videos(ids=[self.id], token_for=token_for)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Video):
+            return NotImplemented
+
+        return self.id == other.id

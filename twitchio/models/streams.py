@@ -135,6 +135,12 @@ class Stream:
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
         return Game(payload["data"][0], http=self._http) if payload["data"] else None
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Stream):
+            return NotImplemented
+
+        return self.id == other.id and self.started_at == other.started_at
+
 
 class StreamMarker:
     """Represents a stream marker.
