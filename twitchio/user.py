@@ -107,6 +107,12 @@ class PartialUser:
     def __str__(self) -> str:
         return self.name or "..."
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (PartialUser, User, Chatter)):
+            return NotImplemented
+
+        return self.id == other.id
+
     @property
     def mention(self) -> str:
         """Property returning the users display_name formatted to mention them in chat.
