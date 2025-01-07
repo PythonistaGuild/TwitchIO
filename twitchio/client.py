@@ -310,6 +310,12 @@ class Client:
         self._login_called = True
         self._save_tokens = save_tokens
 
+        if not self._http.client_id:
+            raise RuntimeError('Expected a valid "client_id", instead received: %s', self._http.client_id)
+
+        if not token and not self._http.client_secret:
+            raise RuntimeError('Expected a valid "client_secret", instead received: %s', self._http.client_secret)
+
         if not token:
             payload: ClientCredentialsPayload = await self._http.client_credentials_token()
             validated: ValidateTokenPayload = await self._http.validate_token(payload.access_token)
