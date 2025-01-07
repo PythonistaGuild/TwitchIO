@@ -256,6 +256,7 @@ class Client:
         if extra:
             listeners.add(extra)
 
+        logger.debug('Dispatching event: "%s" to %d listeners.', name, len(listeners))
         _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
         waits: set[asyncio.Task[None]] = set()
@@ -489,6 +490,7 @@ class Client:
                 await super().close()
         """
         if self._has_closed:
+            logger.debug("Client was already set as closed. Disregarding call to close.")
             return
 
         self._has_closed = True
@@ -497,10 +499,13 @@ class Client:
         if self._adapter._runner_task is not None:
             try:
                 await self._adapter.close()
-            except Exception:
+            except Exception as e:
+                logger.debug("Encountered a cleanup error while closing the Client Web Adapter: %s. Disregarding.", e)
                 pass
 
         sockets: list[Websocket] = [w for p in self._websockets.values() for w in p.values()]
+        logger.debug("Attempting cleanup on %d EventSub websocket connection(s).", len(sockets))
+
         for socket in sockets:
             await socket.close()
 
@@ -513,6 +518,7 @@ class Client:
 
         self._http.cleanup()
         self.__waiter.set()
+        logger.debug("Cleanup completed on %r.", self)
 
     async def wait_until_ready(self) -> None:
         """|coro|

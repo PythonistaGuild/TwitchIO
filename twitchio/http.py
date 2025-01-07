@@ -515,6 +515,8 @@ class HTTPClient:
         ) as resp:
             data: RawResponse | str = await json_or_text(resp)
 
+            logger.debug("Request to %r with %s returned: status=%d", route, self.__class__.__qualname__, resp.status)
+
             if resp.status >= 400:
                 raise HTTPException(
                     f"Request {route} failed with status {resp.status}: {data}",
