@@ -460,7 +460,10 @@ class HTTPClient:
 
     @property
     def headers(self) -> dict[str, str]:
-        return {"User-Agent": self.user_agent, "Client-ID": self._client_id}
+        # If the user somehow gets a client_id passed that isn't a str
+        # this will allow Twitch to throw a reasonable HTTPException
+
+        return {"User-Agent": self.user_agent, "Client-ID": str(self._client_id)}
 
     async def _init_session(self) -> None:
         if self._session_set:
