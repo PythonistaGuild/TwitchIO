@@ -308,6 +308,7 @@ class Scopes(metaclass=_ScopeMeta):
     moderator_manage_warnings = _scope_property()
     moderator_read_moderators = _scope_property()
     moderator_read_vips = _scope_property()
+    user_edit_broadcast = _scope_property()
     user_edit = _scope_property()
     user_edit_follows = _scope_property()
     user_read_blocked_users = _scope_property()
