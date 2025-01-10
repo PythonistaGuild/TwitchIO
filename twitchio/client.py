@@ -2393,6 +2393,8 @@ class Client:
         id: str
             The ID of the eventsub subscription to delete.
         token_for: str | PartialUser | None
+            Do not pass this if you wish to delete webhook subscriptions, which are what usually require deleting.
+
             For websocket subscriptions, provide the user ID, or PartialUser, associated with the subscription.
 
         """
@@ -2406,8 +2408,9 @@ class Client:
         Parameters
         ----------
         token_for: str | PartialUser | None
-            For websocket subscriptions, provide the user ID, or PartialUser, associated with the subscription.
+            Do not pass this if you wish to delete webhook subscriptions, which are what usually require deleting.
 
+            For websocket subscriptions, provide the user ID, or PartialUser, associated with the subscription.
         """
         events = await self.fetch_eventsub_subscriptions(token_for=token_for)
         async for sub in events.subscriptions:
