@@ -413,7 +413,7 @@ class Websocket:
         event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel.")).replace(".", "_")
 
         try:
-            payload_class = create_event_instance(sub_type, data["payload"]["event"], http=self._http)
+            payload_class = create_event_instance(sub_type, data, http=self._http)
         except ValueError:
             logger.warning("Websocket '%s' received an unhandled eventsub event: '%s'.", self, event)
             return

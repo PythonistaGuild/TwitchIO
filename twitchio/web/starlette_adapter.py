@@ -269,7 +269,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
             event = _SUB_MAPPING.get(sub_type, sub_type.removeprefix("channel.")).replace(".", "_")
 
             try:
-                payload_class = create_event_instance(sub_type, data["event"], http=self.client._http)
+                payload_class = create_event_instance(sub_type, data, http=self.client._http, headers=headers)
             except ValueError:
                 logger.warning("Webhook '%s' received an unhandled eventsub event: '%s'.", self, event)
                 return Response(status_code=200)

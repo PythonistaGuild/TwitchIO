@@ -101,7 +101,7 @@ class NotificationMetaData(TypedDict):
     message_type: Literal["notification"]
     message_timestamp: str
     subscription_type: str
-    subscription_version: str
+    subscription_version: Literal["1", "2"]
 
 
 class ReconnectMetaData(TypedDict):
@@ -156,15 +156,15 @@ class Condition(TypedDict, total=False):
 
 
 class NotificationTransport(TypedDict):
-    method: Literal["websocket"]
+    method: Literal["websocket", "webhook"]
     session_id: str
 
 
 class NotificationSubscription(TypedDict):
     id: str
-    status: Literal["enabled"]
+    status: str
     type: str
-    version: str
+    version: Literal["1", "2"]
     cost: int
     condition: Condition
     transport: NotificationTransport

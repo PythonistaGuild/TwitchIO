@@ -112,6 +112,7 @@ __all__ = (
     "ChatSubGiftData",
     "ChatUserMessageHoldEvent",
     "ChatUserMessageUpdateEvent",
+    "EventSubHeaders",
     "GoalBeginEvent",
     "GoalEndEvent",
     "GoalProgressEvent",
