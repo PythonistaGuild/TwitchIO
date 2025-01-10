@@ -261,7 +261,7 @@ class Route:
                 continue
 
             if isinstance(value, (str, int)):
-                url += f'{key}={self.encode(str(value), safe="+", plus=True)}&'
+                url += f"{key}={self.encode(str(value), safe='+', plus=True)}&"
             elif duplicate_key:
                 for v in value:
                     url += f"{key}={self.encode(str(v), safe='+', plus=True)}&"
