@@ -146,6 +146,11 @@ class Context:
         return self._message.chatter
 
     @property
+    def author(self) -> Chatter:
+        """Alias to :attr:`.chatter`."""
+        return self._message.chatter
+
+    @property
     def broadcaster(self) -> PartialUser:
         """Property returning the :class:`twitchio.PartialUser` who is the broadcaster of the channel associated with this
         context.
