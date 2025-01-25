@@ -79,10 +79,10 @@ class BaseEvent:
             BaseEvent._registry[cls.subscription_type] = cls
 
     @property
-    def timestamp(self) -> datetime.datetime:
+    def timestamp(self) -> datetime.datetime | None:
         """The timestamp of the eventsub notification from Twitch in UTC.
 
-        If the notification Twitch sends is missing this data, then it will fall back to current UTC time.
+        If the notification Twitch sends is missing this data, then it will return `None`.
 
         Returns
         -------
@@ -95,7 +95,7 @@ class BaseEvent:
         if self._headers and (timestamp := self._headers.get("Twitch-Eventsub-Message-Timestamp")):
             return parse_timestamp(timestamp)
 
-        return datetime.datetime.now(datetime.UTC)
+        return None
 
     @property
     def metadata(self) -> Metadata | None:
@@ -105,9 +105,7 @@ class BaseEvent:
         -------
         Metadata | None
         """
-        if self._metadata is not None:
-            return Metadata(self._metadata)
-        return None
+        return Metadata(self._metadata) if self._metadata is not None else None
 
     @property
     def headers(self) -> Headers | None:
@@ -117,9 +115,7 @@ class BaseEvent:
         -------
         Headers | None
         """
-        if self._headers is not None:
-            return Headers(self._headers)
-        return None
+        return Headers(self._headers) if self._headers is not None else None
 
     @property
     def subscription_data(self) -> NotificationSubscription:
