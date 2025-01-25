@@ -158,6 +158,14 @@ class Context:
         return self._message.broadcaster
 
     @property
+    def source_broadcaster(self) -> PartialUser | None:
+        """Property returning the :class:`twitchio.PartialUser` who is the broadcaster of the channel associated with
+        the original :class:`~twitchio.ChatMessage`. This will usually always be ``None`` as the default behaviour is to
+        ignore shared messages when invoking commands.
+        """
+        return self._message.source_broadcaster
+
+    @property
     def channel(self) -> PartialUser:
         """An alias to :attr:`.broadcaster`."""
         return self.broadcaster
