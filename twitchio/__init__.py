@@ -28,7 +28,7 @@ __title__ = "TwitchIO"
 __author__ = "TwitchIO, PythonistaGuild"
 __license__ = "MIT"
 __copyright__ = "Copyright 2017-present (c) TwitchIO"
-__version__ = "2.10.0"
+__version__ = "2.10.1"
 
 from .client import Client
 from .user import *
