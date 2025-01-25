@@ -104,7 +104,7 @@ class AdSchedule:
         Will always be ``None`` when this comes from snoozing an ad.
     duration: :class:`int`
         How long the upcoming ad will be, in seconds.
-    preroll_freeze_time: Optional[:class:`int`]
+    preroll_free_time: Optional[:class:`int`]
         The amount of pre-roll free time remaining for the channel in seconds. Will be 0 if the streamer is not pre-roll free.
         Will be ``None`` when this comes from snoozing an ad.
     snooze_count: :class:`int`
@@ -113,11 +113,11 @@ class AdSchedule:
         When the streamer will gain another snooze.
     """
 
-    __slots__ = "next_ad_at", "last_ad_at", "duration", "preroll_freeze_time", "snooze_count", "snooze_refresh_at"
+    __slots__ = "next_ad_at", "last_ad_at", "duration", "preroll_free_time", "snooze_count", "snooze_refresh_at"
 
     def __init__(self, data: dict) -> None:
         self.duration: int = data["duration"]
-        self.preroll_freeze_time: int = data["preroll_freeze_time"]
+        self.preroll_free_time: int = data["preroll_free_time"]
         self.snooze_count: int = data["snooze_count"]
 
         self.snooze_refresh_at: datetime.datetime = parse_timestamp(data["snooze_refresh_at"])
