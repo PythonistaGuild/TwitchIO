@@ -345,6 +345,9 @@ class Bot(Mixin[None], Client):
         if payload.chatter.id == self.bot_id:
             return
 
+        if payload.source_broadcaster is not None:
+            return
+
         await self.process_commands(payload)
 
     async def event_command_error(self, payload: CommandErrorPayload) -> None:
