@@ -315,7 +315,7 @@ class Client:
             raise RuntimeError('Expected a valid "client_id", instead received: %s', self._http.client_id)
 
         if not token and not self._http.client_secret:
-            raise RuntimeError(f'Expected a valid "client_secret", instead received: {self._http.client_secret}',)
+            raise RuntimeError(f'Expected a valid "client_secret", instead received: {self._http.client_secret}')
 
         if not token:
             payload: ClientCredentialsPayload = await self._http.client_credentials_token()
