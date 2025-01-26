@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from .models.analytics import ExtensionAnalytics, GameAnalytics
     from .models.bits import BitsLeaderboard
     from .models.channel_points import CustomReward
-    from .models.channels import ChannelEditor, ChannelFollowers, ChannelInfo, FollowedChannels
+    from .models.channels import ChannelEditor, ChannelFollowerEvent, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
     from .models.chat import ChannelEmote, ChatBadge, ChatSettings, Chatters, SentMessage, SharedChatSession, UserEmote
     from .models.clips import Clip, CreatedClip
@@ -795,7 +795,7 @@ class PartialUser:
     async def fetch_chatters(
         self,
         *,
-        moderator_id: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         token_for: str | PartialUser,
         first: int = 100,
         max_results: int | None = None,
@@ -809,7 +809,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
@@ -828,7 +828,7 @@ class PartialUser:
         first = max(1, min(1000, first))
 
         return await self._http.get_chatters(
-            token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator_id, max_results=max_results
+            token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator, max_results=max_results
         )
 
     async def fetch_channel_emotes(self, token_for: str | PartialUser | None = None) -> list[ChannelEmote]:
@@ -919,7 +919,7 @@ class PartialUser:
         Fetches the broadcaster's chat settings.
 
         .. note::
-            If you wish to view ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will need to provide a moderator_id, which can be
+            If you wish to view ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will need to provide a moderator, which can be
             either the broadcaster's or a moderators'. The token must include the ``moderator:read:chat_settings`` scope.
             the toke
 
@@ -931,7 +931,7 @@ class PartialUser:
             If you specify this field, this ID must match the user ID in the user access token.
 
         token_for: str | PartialUser | None
-            If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will provide a token for the user in ``moderator_id``.
+            If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will provide a token for the user in ``moderator``.
             The required scope is ``moderator:read:chat_settings``.
             Otherwise it is an optional user token to use instead of the default app token.
 
@@ -1812,7 +1812,7 @@ class PartialUser:
     async def update_automod_settings(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,
         settings: AutomodSettings,
         token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> AutomodSettings:
@@ -1842,7 +1842,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
         settings: AutomodSettings
@@ -1859,7 +1859,7 @@ class PartialUser:
         from .models import AutomodSettings
 
         data = await self._http.put_automod_settings(
-            broadcaster_id=self.id, moderator_id=moderator_id, settings=settings, token_for=token_for
+            broadcaster_id=self.id, moderator_id=moderator, settings=settings, token_for=token_for
         )
         return AutomodSettings(data["data"][0], http=self._http)
 
@@ -2024,7 +2024,7 @@ class PartialUser:
     async def unban_user(
         self,
         *,
-        moderator_id: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
         user_id: str | int | PartialUser,
         token_for: str,
     ) -> None:
@@ -2038,7 +2038,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
         user_id: str | int | PartialUser
@@ -2049,7 +2049,7 @@ class PartialUser:
 
         return await self._http.delete_unban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator_id,
+            moderator_id=moderator,
             user_id=user_id,
             token_for=token_for,
         )
@@ -2584,7 +2584,7 @@ class PartialUser:
     async def fetch_shield_mode_status(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,
         token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> ShieldModeStatus:
         """|coro|
@@ -2596,7 +2596,7 @@ class PartialUser:
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
             This ID must match the user ID in the access token.
         token_for: str | PartialUser
@@ -2605,9 +2605,7 @@ class PartialUser:
 
         from .models.moderation import ShieldModeStatus
 
-        data = await self._http.get_shield_mode_status(
-            broadcaster_id=self.id, moderator_id=moderator_id, token_for=token_for
-        )
+        data = await self._http.get_shield_mode_status(broadcaster_id=self.id, moderator_id=moderator, token_for=token_for)
         return ShieldModeStatus(data["data"][0], http=self._http)
 
     def fetch_polls(
@@ -3329,7 +3327,7 @@ class PartialUser:
     async def warn_user(
         self,
         *,
-        moderator_id: str | int | PartialUser,
+        moderator: str | int | PartialUser,
         user_id: str | int | PartialUser,
         reason: str,
         token_for: str | PartialUser,
@@ -3341,11 +3339,11 @@ class PartialUser:
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:warnings`` scope.
-            moderator_id must match the user id in the user access token.
+            moderator id must match the user id in the user access token.
 
         Parameters
         ----------
-        moderator_id: str | int | PartialUser
+        moderator: str | int | PartialUser
             The ID, or PartialUser, of the user who requested the warning.
         user_id: str | int | PartialUser
             The ID, or PartialUser, of the user being warned.
@@ -3356,13 +3354,13 @@ class PartialUser:
 
         Returns
         -------
-        ActiveExtensions
-            ActiveExtensions object.
+        Warning
+            Warning object.
         """
         from .models.moderation import Warning
 
         data = await self._http.post_warn_chat_user(
-            broadcaster_id=self.id, moderator_id=moderator_id, user_id=user_id, reason=reason, token_for=token_for
+            broadcaster_id=self.id, moderator_id=moderator, user_id=user_id, reason=reason, token_for=token_for
         )
         return Warning(data["data"][0], http=self._http)
 
@@ -3842,6 +3840,85 @@ class Chatter(PartialUser):
 
         return await self._channel.timeout_user(moderator=moderator, user=self, duration=duration, reason=reason)
 
-    async def warn(self) -> ...: ...
+    async def warn(self, moderator: str | PartialUser, reason: str) -> Warning:
+        """|coro|
 
-    async def block(self) -> ...: ...
+        Send this chatter a warning, preventing them from chat interaction until the warning is acknowledged.
+        New warnings can be issued to a chatter / user when they already have a warning in the channel (new warning will replace old warning).
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:warnings`` scope.
+            moderator id must match the user id in the user access token.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the user who requested the warning.
+        reason: str
+            The reason provided for warning.
+
+        Returns
+        -------
+        Warning
+            Warning object.
+        """
+        from .models.moderation import Warning
+
+        data = await self._http.post_warn_chat_user(
+            broadcaster_id=self.channel, moderator_id=moderator, user_id=self, reason=reason, token_for=moderator
+        )
+        return Warning(data["data"][0], http=self._http)
+
+    async def block(
+        self,
+        source: Literal["chat", "whisper"] | None = None,
+        reason: Literal["harassment", "spam", "other"] | None = None,
+    ) -> None:
+        """|coro|
+
+        Blocks this chatter from interacting with or having contact with the broadcaster.
+
+        The user ID in the OAuth token identifies the broadcaster who is blocking the user.
+
+        Parameters
+        ----------
+        source: Literal["chat", "whisper"] | None
+            The location where the harassment took place that is causing the brodcaster to block the user. Possible values are:
+
+            - chat
+            - whisper
+
+        reason: Literal["harassment", "spam", "other"] | None
+            The reason that the broadcaster is blocking the user. Possible values are:
+
+            - harassment
+            - spam
+            - other
+
+        Returns
+        -------
+        None
+        """
+
+        return await self._http.put_block_user(user_id=self, source=source, reason=reason, token_for=self.channel)
+
+    async def follow_info(self) -> ChannelFollowerEvent | None:
+        """|coro|
+
+        Check whether this Chatter is following the broadcaster. If the user is not following then this will return `None`.
+
+        .. important::
+            You must have a user token for the broadcaster / channel that this chatter is being checked in.
+
+        .. note::
+            Requires user access token that includes the ``moderator:read:followers`` scope.
+
+        Returns
+        -------
+        ChannelFollowerEvent | None
+        """
+
+        data = await self._http.get_channel_followers(
+            user_id=self, broadcaster_id=self.channel, token_for=self.channel, max_results=1
+        )
+        return await anext(data.followers, None)

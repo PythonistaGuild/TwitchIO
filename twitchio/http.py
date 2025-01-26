@@ -836,7 +836,7 @@ class HTTPClient:
         params = {"first": first, "broadcaster_id": broadcaster_id}
 
         if user_id is not None:
-            params["user_id"] = broadcaster_id
+            params["user_id"] = str(user_id)
 
         route = Route("GET", "channels/followers", params=params, token_for=token_for)
 
@@ -2499,7 +2499,7 @@ class HTTPClient:
     async def put_block_user(
         self,
         user_id: str | int | PartialUser,
-        token_for: str,
+        token_for: str | PartialUser,
         source: Literal["chat", "whisper"] | None = None,
         reason: Literal["harassment", "spam", "other"] | None = None,
     ) -> None:
