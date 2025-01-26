@@ -100,8 +100,14 @@ code {
 }
 
 .page-toc {
-	font-family: unset!important;
+	font-family: "Lato", sans-serif!important;
 }
+
+.page-toc > ul > li > ul > li > a > code > span {
+	font-family: "Lato", sans-serif!important;
+}
+
+body > div.container-fluid > div > div > div:nth-child(3) > nav > div > ul > li > ul > li > ul > li > a > code > span
 
 .form-control {
 	border-left: none !important;
