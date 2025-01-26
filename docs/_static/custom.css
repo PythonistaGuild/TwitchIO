@@ -622,7 +622,6 @@ dl.py > dd {
 
 .versionmodified {
 	padding: .25rem .5rem;
-	font-weight: 500;
 }
 
 /* Fix padding on meth/prop dd */
