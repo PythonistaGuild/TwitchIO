@@ -168,17 +168,15 @@ class AutomodMessageHoldSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -212,17 +210,15 @@ class AutomodMessageHoldV2Subscription(SubscriptionPayload):
 
         If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -254,17 +250,15 @@ class AutomodMessageUpdateSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -298,17 +292,15 @@ class AutomodMessageUpdateV2Subscription(SubscriptionPayload):
 
         If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -340,17 +332,15 @@ class AutomodSettingsUpdateSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires the ``moderator:read:automod_settings`` scope for the moderator.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -382,17 +372,15 @@ class AutomodTermsUpdateSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires the ``moderator:manage:automod`` scope for the moderator.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -419,15 +407,13 @@ class AutomodTermsUpdateSubscription(SubscriptionPayload):
 class ChannelUpdateSubscription(SubscriptionPayload):
     """The ``channel.update`` subscription type sends notifications when a broadcaster updates the category, title, content classification labels, or broadcast language for their channel.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -456,17 +442,15 @@ class ChannelFollowSubscription(SubscriptionPayload):
     .. important::
         Must have ``moderator:read:followers`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -496,15 +480,13 @@ class AdBreakBeginSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:ads`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -535,17 +517,15 @@ class ChatClearSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -577,17 +557,15 @@ class ChatClearUserMessagesSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -619,17 +597,15 @@ class ChatMessageSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -661,17 +637,15 @@ class ChatNotificationSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -703,17 +677,15 @@ class ChatMessageDeleteSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -745,17 +717,15 @@ class ChatSettingsUpdateSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user, and either ``channel:bot`` scope from broadcaster or moderator status.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -787,17 +757,15 @@ class ChatUserMessageHoldSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -829,17 +797,15 @@ class ChatUserMessageUpdateSubscription(SubscriptionPayload):
 
         If app access token used, then additionally requires ``user:bot`` scope from chatting user.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     user_id: str | PartialUser
         The ID, or PartialUser, of the chatter reading chat. e.g. Your bot ID.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -866,15 +832,13 @@ class ChatUserMessageUpdateSubscription(SubscriptionPayload):
 class SharedChatSessionBeginSubscription(SubscriptionPayload):
     """The ``channel.shared_chat.begin`` subscription type sends a notification when a channel becomes active in an active shared chat session.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -900,15 +864,13 @@ class SharedChatSessionBeginSubscription(SubscriptionPayload):
 class SharedChatSessionUpdateSubscription(SubscriptionPayload):
     """The ``channel.shared_chat.update`` subscription type sends a notification when the active shared chat session the channel is in changes.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -934,15 +896,13 @@ class SharedChatSessionUpdateSubscription(SubscriptionPayload):
 class SharedChatSessionEndSubscription(SubscriptionPayload):
     """The ``channel.shared_chat.end`` subscription type sends a notification when a channel leaves a shared chat session or the session ends.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -971,15 +931,13 @@ class ChannelSubscribeSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:subscriptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1008,15 +966,13 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:subscriptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1045,15 +1001,13 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:subscriptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1082,15 +1036,13 @@ class ChannelSubscribeMessageSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:subscriptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1119,15 +1071,13 @@ class ChannelCheerSubscription(SubscriptionPayload):
     .. important::
         Must have ``bits:read`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1153,17 +1103,15 @@ class ChannelCheerSubscription(SubscriptionPayload):
 class ChannelRaidSubscription(SubscriptionPayload):
     """The ``channel.raid`` subscription type sends a notification when a broadcaster raids another broadcaster's channel.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     to_broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to. This listens to the raid events to a specific broadcaster.
     from_broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to. This listens to the raid events from a specific broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1198,15 +1146,13 @@ class ChannelBanSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:moderate`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1235,15 +1181,13 @@ class ChannelUnbanSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:moderate`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1272,17 +1216,15 @@ class ChannelUnbanRequestSubscription(SubscriptionPayload):
     .. important::
         Must have ``moderator:read:unban_requests`` or ``moderator:manage:unban_requests`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1316,17 +1258,15 @@ class ChannelUnbanRequestResolveSubscription(SubscriptionPayload):
 
         If you use WebSockets, the ID in moderator_user_id must match the user ID in the user access token.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1367,17 +1307,15 @@ class ChannelModerateSubscription(SubscriptionPayload):
         - ``moderator:read:moderators``
         - ``moderator:read:vips``
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1419,17 +1357,15 @@ class ChannelModerateV2Subscription(SubscriptionPayload):
         - ``moderator:read:moderators``
         - ``moderator:read:vips``
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1459,15 +1395,13 @@ class ChannelModeratorAddSubscription(SubscriptionPayload):
     .. important::
         Must have ``moderation:read`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1496,15 +1430,13 @@ class ChannelModeratorRemoveSubscription(SubscriptionPayload):
     .. important::
         Must have ``moderation:read`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1533,15 +1465,13 @@ class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1572,15 +1502,13 @@ class ChannelPointsRewardAddSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1609,17 +1537,15 @@ class ChannelPointsRewardUpdateSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1649,17 +1575,15 @@ class ChannelPointsRewardRemoveSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1689,17 +1613,15 @@ class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1731,17 +1653,15 @@ class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     reward_id: str
         Optional to only get notifications for a specific reward.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1773,15 +1693,13 @@ class ChannelPollBeginSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:polls`` or ``channel:manage:polls`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1810,15 +1728,13 @@ class ChannelPollProgressSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:polls`` or ``channel:manage:polls`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1847,15 +1763,13 @@ class ChannelPollEndSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:polls`` or ``channel:manage:polls`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1884,15 +1798,13 @@ class ChannelPredictionBeginSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1921,15 +1833,13 @@ class ChannelPredictionLockSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1958,15 +1868,13 @@ class ChannelPredictionProgressSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -1995,15 +1903,13 @@ class ChannelPredictionEndSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2036,17 +1942,15 @@ class SuspiciousUserUpdateSubscription(SubscriptionPayload):
 
         If you use WebSockets, the ID in moderator_user_id must match the user ID in the user access token.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2080,17 +1984,15 @@ class SuspiciousUserMessageSubscription(SubscriptionPayload):
 
         If you use WebSockets, the ID in moderator_user_id must match the user ID in the user access token.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2120,15 +2022,13 @@ class ChannelVIPAddSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:vips`` or ``channel:manage:vips`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2157,15 +2057,13 @@ class ChannelVIPRemoveSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:vips`` or ``channel:manage:vips`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2195,17 +2093,15 @@ class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
     .. important::
         Must have the ``moderator:read:warnings`` or ``moderator:manage:warnings`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2236,17 +2132,15 @@ class ChannelWarningSendSubscription(SubscriptionPayload):
     .. important::
         Must have the ``moderator:read:warnings`` or ``moderator:manage:warnings`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2276,15 +2170,13 @@ class CharityDonationSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:charity`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2316,15 +2208,13 @@ class CharityCampaignStartSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:charity`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2358,15 +2248,13 @@ class CharityCampaignProgressSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:charity`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2395,15 +2283,13 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
     .. important::
         Must have ``channel:read:charity`` scope.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2435,15 +2321,13 @@ class GoalBeginSubscription(SubscriptionPayload):
     .. important::
         Requires a user OAuth access token with scope ``channel:read:goals``.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2476,15 +2360,13 @@ class GoalProgressSubscription(SubscriptionPayload):
     .. important::
         Requires a user OAuth access token with scope ``channel:read:goals``.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2513,15 +2395,13 @@ class GoalEndSubscription(SubscriptionPayload):
     .. important::
         Requires a user OAuth access token with scope ``channel:read:goals``.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2553,15 +2433,13 @@ class HypeTrainBeginSubscription(SubscriptionPayload):
     .. note::
         EventSub does not make strong assurances about the order of message delivery, so it is possible to receive `channel.hype_train.progress` notifications before you receive the corresponding `channel.hype_train.begin` notification.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2593,15 +2471,13 @@ class HypeTrainProgressSubscription(SubscriptionPayload):
     .. note::
         EventSub does not make strong assurances about the order of message delivery, so it is possible to receive `channel.hype_train.progress` notifications before you receive the corresponding `channel.hype_train.begin` notification.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2630,15 +2506,13 @@ class HypeTrainEndSubscription(SubscriptionPayload):
     .. important::
         Requires a user OAuth access token with scope ``channel:read:hype_train``.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2673,17 +2547,15 @@ class ShieldModeBeginSubscription(SubscriptionPayload):
 
         - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2719,17 +2591,15 @@ class ShieldModeEndSubscription(SubscriptionPayload):
 
         - If you use WebSockets, the moderator's ID must match the user ID in the user access token.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2766,17 +2636,15 @@ class ShoutoutCreateSubscription(SubscriptionPayload):
     .. note::
         This is only sent if Twitch posts the Shoutout to the broadcaster's activity feed.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2813,17 +2681,15 @@ class ShoutoutReceiveSubscription(SubscriptionPayload):
     .. note::
         This is only sent if Twitch posts the Shoutout to the broadcaster's activity feed.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
     moderator_user_id: str | PartialUser
         The ID, or PartialUser, of a moderator for the the broadcaster you are subscribing to. This could also be the broadcaster.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2850,15 +2716,13 @@ class ShoutoutReceiveSubscription(SubscriptionPayload):
 class StreamOnlineSubscription(SubscriptionPayload):
     """The ``stream.online`` subscription type sends a notification when the specified broadcaster starts a stream.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2884,15 +2748,13 @@ class StreamOnlineSubscription(SubscriptionPayload):
 class StreamOfflineSubscription(SubscriptionPayload):
     """The ``stream.offline`` subscription type sends a notification when the specified broadcaster stops a stream.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     broadcaster_user_id: str | PartialUser
         The ID, or PartialUser, of the broadcaster to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2921,15 +2783,13 @@ class UserAuthorizationGrantSubscription(SubscriptionPayload):
     .. important::
         This subscription type is **only** supported by **webhooks**, and cannot be used with WebSockets.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     client_id: str
         Provided client_id must match the client id in the application access token.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2958,15 +2818,13 @@ class UserAuthorizationRevokeSubscription(SubscriptionPayload):
     .. important::
         This subscription type is **only** supported by **webhooks**, and cannot be used with WebSockets.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     client_id: str
         Provided client_id must match the client id in the application access token.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -2996,15 +2854,13 @@ class UserUpdateSubscription(SubscriptionPayload):
 
         If the user no longer exists then the login attribute will be None.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     user_id: str | PartialUser
         The ID, or PartialUser, of the user receiving the whispers you wish to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
@@ -3032,15 +2888,13 @@ class WhisperReceivedSubscription(SubscriptionPayload):
     .. important::
         Must have oauth scope ``user:read:whispers`` or ``user:manage:whispers``.
 
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
     Parameters
     ----------
     user_id: str | PartialUser
         The ID, or PartialUser, of the user receiving the whispers you wish to subscribe to.
-
-    Attributes
-    ----------
-    condition: Condition
-        Mapping of the subscription parameters.
 
     Raises
     ------
