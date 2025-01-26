@@ -179,8 +179,6 @@ class Client:
 
         :meth:`~.save_tokens`
 
-        :meth:`~.add_token`
-
 
         .. warning::
 

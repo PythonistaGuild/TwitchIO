@@ -22,3 +22,9 @@ To send a message to a specific channel/broadcaster you should use :meth:`~twitc
 
 If you are inside of a :class:`~twitchio.ext.commands.Command`, 
 consider using the available :class:`~twitchio.ext.commands.Context` instead.
+
+
+.. _irc_faq:
+
+Why was IRC functionality removed from the core library?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
