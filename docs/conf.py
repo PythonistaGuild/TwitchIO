@@ -137,6 +137,7 @@ intersphinx_mapping = {
 
 extlinks = {
     "tioissue": ("https://github.com/PythonistaGuild/Twitchio/issues/%s", "GH-%s"),
+    "es-docs": ("https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#%s", "Twitch Eventsub %s")
 }
 
 
