@@ -16,11 +16,11 @@ All events are prefixed with **event_**
      - Payload
    * - Automod Message Hold
      - :meth:`~eventsub.AutomodMessageHoldSubscription`
-     - automod_message_hold
+     - :func:`~twitchio.event_automod_message_hold()`
      - :class:`~models.eventsub_.AutomodMessageHold`
    * - Automod Message Update
      - :meth:`~eventsub.AutomodMessageUpdateSubscription`
-     - automod_message_update
+     - :func:`~twitchio.event_automod_message_update()`
      - :class:`~models.eventsub_.AutomodMessageUpdate`
    * - Automod Settings Update
      - :meth:`~eventsub.AutomodSettingsUpdateSubscription`
@@ -276,11 +276,11 @@ All events are prefixed with **event_**
      - :class:`~models.eventsub_.ShoutoutReceive`
    * - Stream Online
      - :meth:`~eventsub.StreamOnlineSubscription`
-     - stream_online
+     - :func:`~twitchio.event_stream_online()`
      - :class:`~models.eventsub_.StreamOnline`
    * - Stream Offline
      - :meth:`~eventsub.StreamOfflineSubscription`
-     - stream_offline
+     - :func:`~twitchio.event_stream_offline()`
      - :class:`~models.eventsub_.StreamOffline`
    * - User Authorization Grant
      - :meth:`~eventsub.UserAuthorizationGrantSubscription`
@@ -304,46 +304,111 @@ Client Events
 ~~~~~~~~~~~~~
 
 .. py:function:: event_ready() -> None
+  :async:
    
-   Event dispatched when the :class:`~.Client` is ready and has completed login.
+  Event dispatched when the :class:`~.Client` is ready and has completed login.
 
 .. py:function:: event_error(payload: twitchio.EventErrorPayload) -> None
+  :async:
    
-   Event dispatched when an exception is raised inside of a dispatched event.
+  Event dispatched when an exception is raised inside of a dispatched event.
 
-   :param twitchio.EventErrorPayload payload: The payload containing information about the event and exception raised.
+  :param twitchio.EventErrorPayload payload: The payload containing information about the event and exception raised.
   
 .. py:function:: event_oauth_authorized(payload: twitchio.authentication.UserTokenPayload) -> None
+  :async:
 
-   Event dispatched when a user authorizes your Client-ID via Twitch OAuth on a built-in web adapter.
+  Event dispatched when a user authorizes your Client-ID via Twitch OAuth on a built-in web adapter.
 
-   The default behaviour of this event is to add the authorized token to the client.
-   See: :class:`~twitchio.Client.add_token` for more details.
+  The default behaviour of this event is to add the authorized token to the client.
+  See: :class:`~twitchio.Client.add_token` for more details.
 
-   :param UserTokenPayload payload: The payload containing token information.
+  :param UserTokenPayload payload: The payload containing token information.
 
 
 Commands Events
 ~~~~~~~~~~~~~~~
 
 .. py:function:: event_command_invoked(ctx: twitchio.ext.commands.Context) -> None
+  :async:
    
-   Event dispatched when a :class:`~twitchio.ext.commands.Command` is invoked.
+  Event dispatched when a :class:`~twitchio.ext.commands.Command` is invoked.
 
-   :param twitchio.ext.commands.Context ctx: The context object that invoked the command.
+  :param twitchio.ext.commands.Context ctx: The context object that invoked the command.
 
 .. py:function:: event_command_completed(ctx: twitchio.ext.commands.Context) -> None
+  :async:
    
-   Event dispatched when a :class:`~twitchio.ext.commands.Command` has completed invocation.
+  Event dispatched when a :class:`~twitchio.ext.commands.Command` has completed invocation.
 
-   :param twitchio.ext.commands.Context ctx: The context object that invoked the command.
+  :param twitchio.ext.commands.Context ctx: The context object that invoked the command.
 
 .. py:function:: event_command_error(payload: twitchio.ext.commands.CommandErrorPayload) -> None
+  :async:
    
-   Event dispatched when a :class:`~twitchio.ext.commands.Command` encounters an error during invocation.
+  Event dispatched when a :class:`~twitchio.ext.commands.Command` encounters an error during invocation.
 
-   :param twitchio.ext.commands.CommandErrorPayload payload: The error payload containing context and the exception raised.
+  :param twitchio.ext.commands.CommandErrorPayload payload: The error payload containing context and the exception raised.
 
+
+EventSub Events
+~~~~~~~~~~~~~~~
+
+Automod
+-------
+
+.. py:function:: event_automod_message_hold(payload: twitchio.AutomodMessageHold) -> None
+    :async:
+
+    Event dispatched when a message is held by Automod and needs review.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Automod Message Hold <automodmessagehold>` and 
+    :es-docs:`Automod Message Hold V2 <automodmessagehold-v2>`.
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.AutomodMessageHoldSubscription` or 
+    :class:`~twitchio.eventsub.AutomodMessageHoldV2Subscription` for each required stream to receive this event.
+
+    :param twitchio.AutomodMessageHold payload: The EventSub payload received for this event.
+
+.. py:function:: event_automod_message_update(payload: twitchio.AutomodMessageUpdate) -> None
+    :async:
+
+    Event dispatched when a message held by Automod status changes.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Automod Message Update <automodmessageupdate>` and 
+    :es-docs:`Automod Message Update V2 <automodmessageupdate-v2>`.
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.AutomodMessageUpdateSubscription` or 
+    :class:`~twitchio.eventsub.AutomodMessageUpdateV2Subscription` for each required stream to receive this event.
+
+    :param twitchio.AutomodMessageUpdate payload: The EventSub payload received for this event.
+
+Streams
+-------
+
+.. py:function:: event_stream_online(payload: twitchio.StreamOnline) -> None
+  :async:
+
+  Event dispatched when a stream comes online.
+
+  Corresponds to the Twitch EventSub subscription :es-docs:`Stream Online <streamonline>`.
+
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.StreamOnlineSubscription` for each required stream
+  to receive this event.
+
+  :param twitchio.StreamOnline payload: The Stream Online payload for this event.
+
+.. py:function:: event_stream_offline(payload: twitchio.StreamOffline) -> None
+  :async:
+
+  Event dispatched when a stream goes offline.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Stream Offline <streamoffline>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.StreamOfflineSubscription` for each required stream
+  to receive this event.
+
+  :param twitchio.StreamOffline payload: The Stream Offline payload for this event.
 
 Payloads
 ~~~~~~~~
