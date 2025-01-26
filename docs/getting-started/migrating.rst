@@ -1,9 +1,9 @@
-.. _Migrating Guide:
-
 .. warning::
 
    This document is a work in progress.
 
+
+.. _Migrating Guide:
 
 Migrating
 #########
