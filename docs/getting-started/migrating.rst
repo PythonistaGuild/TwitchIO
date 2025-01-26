@@ -1,12 +1,12 @@
-.. warning::
-
-   This document is a work in progress.
-
-
 .. _Migrating Guide:
 
 Migrating
 #########
+
+.. warning::
+
+   This document is a work in progress.
+
 
 Version 2 to version 3 has many breaking changes, new systems, new implementations and new designs that will require rewriting
 any existing applications. Some of these changes will feel similar (such as ext.commands), while others have been completely
