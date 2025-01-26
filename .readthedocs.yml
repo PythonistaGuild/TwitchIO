@@ -1,4 +1,5 @@
 version: 2
+  configuration: docs/conf.py
 
 build:
   os: ubuntu-22.04
