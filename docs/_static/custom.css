@@ -99,6 +99,10 @@ code {
 	padding: 0.18rem 0.22rem;
 }
 
+.page-toc {
+	font-family: unset!important;
+}
+
 .form-control {
 	border-left: none !important;
 	border-color: transparent !important;
