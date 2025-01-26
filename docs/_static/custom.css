@@ -107,6 +107,10 @@ code {
 	font-family: "Lato", sans-serif!important;
 }
 
+li > a > code > .pre {
+	font-family: "Lato", sans-serif!important;
+}
+
 body > div.container-fluid > div > div > div:nth-child(3) > nav > div > ul > li > ul > li > ul > li > a > code > span
 
 .form-control {
