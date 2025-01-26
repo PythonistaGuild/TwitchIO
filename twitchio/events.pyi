@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import twitchio
+
     from .authentication import UserTokenPayload
 
 async def event_oauth_authorized(payload: UserTokenPayload) -> None:
