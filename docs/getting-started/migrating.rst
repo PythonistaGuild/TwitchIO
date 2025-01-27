@@ -31,19 +31,26 @@ however since there are no ratelimits on this endpoint, it is generally safer an
 
 The following systems have been added to help aid in token management in version 3:
 
-- **Web Adapters:**
-   - :class:`twitchio.web.AiohttpAdapter`
-   - :class:`twitchio.web.StarletteAdapter`
-- **Client:**
-   - :attr:`twitchio.Client.tokens`
-   - :meth:`twitchio.Client.add_token`
-   - :meth:`twitchio.Client.remove_token`
-   - :meth:`twitchio.Client.load_tokens`
-   - :meth:`twitchio.Client.save_tokens`
-- **Events:**
-   - :func:`twitchio.event_oauth_authorized`
-- **Scopes:**
-   - :class:`twitchio.Scopes`
+**Web Adapters:**
+
+- :class:`twitchio.web.AiohttpAdapter`
+- :class:`twitchio.web.StarletteAdapter`
+
+**Client:**
+
+- :attr:`twitchio.Client.tokens`
+- :meth:`twitchio.Client.add_token`
+- :meth:`twitchio.Client.remove_token`
+- :meth:`twitchio.Client.load_tokens`
+- :meth:`twitchio.Client.save_tokens`
+
+**Events:**
+
+- :func:`twitchio.event_oauth_authorized`
+
+**Scopes:**
+
+- :class:`twitchio.Scopes`
 
 
 By default a web adapter is started and ran alongside your application when it starts. The web adapters are ready with 
@@ -99,11 +106,14 @@ However we recommend following the below as a simple and modern way of starting 
             ...
 
 
-- **Added:**
-   - :meth:`twitchio.Client.login`
-- **Changed:**
-   - :meth:`twitchio.Client.start`
-   - :meth:`twitchio.Client.run`
+**Added:**
+
+- :meth:`twitchio.Client.login`
+
+**Changed:**
+
+- :meth:`twitchio.Client.start`
+- :meth:`twitchio.Client.run`
 
 
 Logging
@@ -116,8 +126,9 @@ we would encourage you to call this function. Usually you would call this helper
 
 If you are calling this on the ``root`` logger (default), you should only need to call this function once. 
 
-- **Added:**
-   - :func:`twitchio.utils.setup_logging()`
+**Added:**
+
+- :func:`twitchio.utils.setup_logging()`
 
 
 Assets and Colours
@@ -133,10 +144,11 @@ Any colour that Twitch returns as a valid HEX or RGB code is also a special clas
 implements various dunders such as ``__format__`` which will help in using the :class:`~twitchio.Colour` in strings,
 other helpers to convert the colour data to different formats, and classmethod helpers to retrieve default colours.
 
-- **Added:**
-   - :class:`twitchio.Asset`
-   - :class:`twitchio.Colour`
-   - :class:`twitchio.Color` (An alias to :class:`twitchio.Colour`)
+**Added:**
+
+- :class:`twitchio.Asset`
+- :class:`twitchio.Colour`
+- :class:`twitchio.Color` (An alias to :class:`twitchio.Colour`)
 
 
 HTTP Async Iterator
@@ -193,8 +205,44 @@ function in the docs:
    </br>
 
 
-- **Added:**
-   - :class:`twitchio.HTTPAsyncIterator`
+**Added:**
+
+- :class:`twitchio.HTTPAsyncIterator`
+
+Events
+======
+
+Events in version 3 have changed internally, however user facing should be fairly similar. One main difference to note
+is that all events accept exactly one argument, a payload containing relevant event data, with the exception of 
+:func:`twitchio.event_ready` which accepts exactly ``0`` arguments, and some command events which accept
+:class:`twitchio.ext.commands.Context` only.
+
+For a list of events and their relevant payloads see the :ref:`Event Reference <Event Ref>`.
+
+**Changed:**
+
+- :ref:`Events <Event Ref>` now accept a single argument, ``payload`` or :class:`~twitchio.ext.commands.Context`, with one exception (:func:`twitchio.event_ready`).
+
+
+Wait For
+========
+
+:meth:`twitchio.Client.wait_for` has changed internally however should act similiary to previous versions with some notes:
+
+- ``predicate`` and ``timeout`` are now both keyword-only arguments.
+- ``predicate`` is now async.
+
+:meth:`twitchio.Client.wait_for` returns the payload of the waiting event.
+
+To wait until the bot is ready, consider using :meth:`twitchio.Client.wait_until_ready`.
+
+**Changed:**
+
+- :meth:`twitchio.Client.wait_for`
+   - ``predicate`` and ``timeout`` are now both keyword-only arguments.
+   - ``predicate`` is now async.
+- ``Client.wait_for_ready`` is now :meth:`twitchio.Client.wait_until_ready`
+
 
 
 Changelog
@@ -235,3 +283,7 @@ Client:
 
 - :meth:`twitchio.Client.start`
 - :meth:`twitchio.Client.run`
+- :meth:`twitchio.Client.wait_for`
+   - ``predicate`` and ``timeout`` are now both keyword-only arguments.
+   - ``predicate`` is now async.
+- ``Client.wait_for_ready`` is now :meth:`twitchio.Client.wait_until_ready`
