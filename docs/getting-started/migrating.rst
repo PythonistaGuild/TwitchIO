@@ -287,3 +287,4 @@ Client:
    - ``predicate`` and ``timeout`` are now both keyword-only arguments.
    - ``predicate`` is now async.
 - ``Client.wait_for_ready`` is now :meth:`twitchio.Client.wait_until_ready`
+- ``Client.create_user`` is now :meth:`twitchio.Client.create_partialuser`
