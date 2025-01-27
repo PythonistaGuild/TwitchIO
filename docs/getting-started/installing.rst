@@ -7,24 +7,24 @@ Installing
 TwitchIO 3 currently supports the following `Python <https://www.python.org/downloads/>`_ versions:
 
 
-+---------------------+-------------------------------------------------+-------------------------------+
-| Python Version      | Status                                          | Notes                         |
-+=====================+=================================================+===============================+
-| **<= 3.10**         | .. raw:: html                                   | ...                           |
-|                     |                                                 |                               |
-|                     |   <span class="error-tio">Not Supported</span>  |                               |
-|                     |                                                 |                               |
-+---------------------+-------------------------------------------------+-------------------------------+
-| **3.11, 3.12**      | .. raw:: html                                   | ...                           |
-|                     |                                                 |                               |
-|                     |   <span class="success-tio">Supported</span>    |                               |
-|                     |                                                 |                               |
-+---------------------+-------------------------------------------------+-------------------------------+
-| **3.13, 3.14**      | .. raw:: html                                   | May require custom index      |
-|                     |                                                 |                               |
-|                     |   <span class="warn-tio">Check Notes</span>     |                               |
-|                     |                                                 |                               |
-+---------------------+-------------------------------------------------+-------------------------------+
++-----------------------------+-------------------------------------------------------+-------------------------------+
+| Python Version              | Status                                                | Notes                         |
++=============================+=======================================================+===============================+
+| **<= 3.10**                 | .. raw:: html                                         | ...                           |
+|                             |                                                       |                               |
+|                             |   <span class="error-tio">Not Supported</span>        |                               |
+|                             |                                                       |                               |
++-----------------------------+-------------------------------------------------------+-------------------------------+
+| **3.11, 3.12m 3.13**        | .. raw:: html                                         | ...                           |
+|                             |                                                       |                               |
+|                             |   <span class="success-tio">Fully Supported</span>    |                               |
+|                             |                                                       |                               |
++-----------------------------+-------------------------------------------------------+-------------------------------+
+| **3.14**                    | .. raw:: html                                         | May require custom index      |
+|                             |                                                       |                               |
+|                             |   <span class="warn-tio">Check Notes</span>           |                               |
+|                             |                                                       |                               |
++-----------------------------+-------------------------------------------------------+-------------------------------+
 
 
 Virtual Environments
@@ -55,7 +55,7 @@ Windows
     venv/Scripts/Activate
 
     # Install your packages...
-    pip install -U twitchio
+    pip install -U twitchio --pre
 
     # You can use your venv python while it's activated simply by running py
     # E.g. py main.py
@@ -88,7 +88,7 @@ Linux & MacOS
     source venv/bin/activate
 
     # Install your packages...
-    pip install -U twitchio
+    pip install -U twitchio --pre
 
     # You can use your venv python while it's activated simply by running python
     # E.g. python main.py
@@ -120,27 +120,27 @@ The following commands can be used to install TwitchIO with optional features:
 
 .. code:: shell
 
-    pip install -U twitchio[starlette]
+    pip install -U twitchio[starlette] --pre
 
 
 **For development purposes**:
 
 .. code:: shell
 
-    pip install -U twitchio[dev]
+    pip install -U twitchio[dev] --pre
 
 
 **For documentation purposes**:
 
 .. code:: shell
 
-    pip install -U twitchio[docs]
+    pip install -U twitchio[docs] --pre
 
 
 Custom Index
 ============
 
-Using TwitchIO with ``Python >= 3.13`` may require the use of a custom pip index.
+Using TwitchIO with ``Python >= 3.14`` may require the use of a custom pip index.
 The index allows pip to fetch pre-built wheels for some dependencies that may require build-tools for C/C++ due to not having released their own wheels for recent versions of Python.
 
 Usually with time, dependencies will eventually release wheels for new Python releases.
@@ -151,7 +151,7 @@ For convenience we provide an index thanks to `Abstract Umbra <https://github.co
 
 .. code:: shell
 
-    pip install -U twitchio --extra-index-url https://pip.pythonista.gg
+    pip install -U twitchio --pre --extra-index-url https://pip.pythonista.gg
 
 
 Installation Issues
