@@ -65,12 +65,13 @@ class ComponentLoadError(CommandError):
 
 class CommandInvokeError(CommandError):
     """Exception raised when an error occurs during invocation of a command.
-    
+
     Attributes
     ----------
     original: :class:`Exception` | None
         The original exception that caused this error. Could be None.
     """
+
     def __init__(self, msg: str | None = None, original: Exception | None = None) -> None:
         self.original: Exception | None = original
         super().__init__(msg)
@@ -86,7 +87,7 @@ class CommandNotFound(CommandError):
 
 
 class CommandExistsError(CommandError):
-    """Exception raised when you try to add a command or alias to a command that is already registered on the 
+    """Exception raised when you try to add a command or alias to a command that is already registered on the
     :class:`~twitchio.ext.commands.Bot`."""
 
 
@@ -97,6 +98,7 @@ class PrefixError(CommandError):
 class InputError(CommandError):
     """Base exception for errors raised while parsing the input for command invocation. All :class:`ArgumentError` and
     child exception inherit from this class."""
+
 
 class ArgumentError(InputError):
     """Base exception for errors raised while parsing arguments in commands."""
@@ -122,7 +124,7 @@ class ExpectedClosingQuoteError(ArgumentError):
 
 class GuardFailure(CommandError):
     """Exception raised when a :func:`~.commands.guard` fails or blocks a command from executing.
-    
+
     This exception should be subclassed when raising a custom exception for a :func:`~twitchio.ext.commands.guard`.
     """
 
