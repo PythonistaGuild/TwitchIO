@@ -6,6 +6,10 @@
 
 [![](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org)
 
+![Pyright Strict](https://img.shields.io/badge/Pyright-Strict-b8dbb4?style=plastic)
+
+![GitHub License](https://img.shields.io/github/license/PythonistaGuild/twitchio)
+
 
 ### TwitchIO is a powerful, asynchronous Python library for [twitch.tv](https://twitch.tv).
 
