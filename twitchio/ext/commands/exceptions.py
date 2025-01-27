@@ -64,6 +64,13 @@ class ComponentLoadError(CommandError):
 
 
 class CommandInvokeError(CommandError):
+    """Exception raised when an error occurs during invocation of a command.
+    
+    Attributes
+    ----------
+    original: :class:`Exception` | None
+        The original exception that caused this error. Could be None.
+    """
     def __init__(self, msg: str | None = None, original: Exception | None = None) -> None:
         self.original: Exception | None = original
         super().__init__(msg)
@@ -72,19 +79,27 @@ class CommandInvokeError(CommandError):
 class CommandHookError(CommandInvokeError): ...
 
 
-class CommandNotFound(CommandError): ...
+class CommandNotFound(CommandError):
+    """Exception raised when a message is processed with a valid prefix and no :class:`~twitchio.ext.commands.Command`
+    could be found.
+    """
 
 
-class CommandExistsError(CommandError): ...
+class CommandExistsError(CommandError):
+    """Exception raised when you try to add a command or alias to a command that is already registered on the 
+    :class:`~twitchio.ext.commands.Bot`."""
 
 
-class PrefixError(CommandError): ...
+class PrefixError(CommandError):
+    """Exception raised when invalid prefix or prefix callable is passed."""
 
 
-class InputError(CommandError): ...
+class InputError(CommandError):
+    """Base exception for errors raised while parsing the input for command invocation. All :class:`ArgumentError` and
+    child exception inherit from this class."""
 
-
-class ArgumentError(InputError): ...
+class ArgumentError(InputError):
+    """Base exception for errors raised while parsing arguments in commands."""
 
 
 class UnexpectedQuoteError(ArgumentError):
@@ -106,7 +121,10 @@ class ExpectedClosingQuoteError(ArgumentError):
 
 
 class GuardFailure(CommandError):
-    """Exception raised when a :func:`~.commands.guard` fails or blocks a command from executing."""
+    """Exception raised when a :func:`~.commands.guard` fails or blocks a command from executing.
+    
+    This exception should be subclassed when raising a custom exception for a :func:`~twitchio.ext.commands.guard`.
+    """
 
     def __init__(self, msg: str | None = None, *, guard: Any | None = None) -> None:
         self.guard: Any | None = guard
@@ -114,7 +132,7 @@ class GuardFailure(CommandError):
 
 
 class ConversionError(ArgumentError):
-    """Base exception for conversion errors."""
+    """Base exception for conversion errors which occur during argument parsing in commands."""
 
 
 class BadArgument(ConversionError):
