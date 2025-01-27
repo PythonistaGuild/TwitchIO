@@ -4,7 +4,7 @@
 
 ![](https://raw.githubusercontent.com/TwitchIO/TwitchIO/master/logo.png)
 [![](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org)
-![Static Badge](https://img.shields.io/badge/Pyright-Strict-b8d4b5)
+![Pyright Strict](https://img.shields.io/badge/Pyright-Strict-b8dbb4)
 ![GitHub License](https://img.shields.io/github/license/PythonistaGuild/twitchio)
 
 
