@@ -2,6 +2,62 @@
 	pre > .c1 {
 		color: rgba(255, 255, 255, 0.4);
 	}
+	pre > .kn {
+		color: #e0a2f3;
+	}
+
+	pre > .k {
+		color: #e0a2f3;
+	}
+
+	pre > .kc {
+		color: #e0a2f3;
+	}
+
+	pre > .nb {
+		color: #96b7ff;
+	}
+
+	pre > .nn {
+		color: rgba(248, 248, 248, 0.9);
+	}
+	pre > .n {
+		color: rgba(248, 248, 248, 0.9);
+	}
+	pre > .p {
+		color: rgba(248, 248, 248, 0.9);
+	}
+	pre > .o {
+		color: rgba(248, 248, 248, 0.8);
+	}
+
+	pre > .ow {
+		color: #e0a2f3;
+	}
+
+	pre > .s2 {
+		color: #8abb89;
+	}
+
+	pre > .mi {
+		color: #fab011;
+	}
+
+	pre > .nd {
+		color: #fab011;
+	}
+
+	pre > .nf {
+		color: #97b2eb;
+	}
+
+	pre > .nc {
+		color: #ffc74f;
+	}
+
+	pre > .bp {
+		color: #97b2eb;
+	}
 }
 
 body:not(.theme-dark) > * {
