@@ -1,1261 +1,1039 @@
 """
-The MIT License (MIT)
+MIT License
 
-Copyright (c) 2017-present TwitchIO
+Copyright (c) 2017 - Present PythonistaGuild
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
 
 from __future__ import annotations
 
-import datetime
-import time
-from typing import TYPE_CHECKING, List, Optional, Union, Tuple, Dict
+from typing import TYPE_CHECKING, Literal
 
-from .enums import BroadcasterTypeEnum, UserTypeEnum
-from .errors import HTTPException
-from .rewards import CustomReward
-from .utils import parse_timestamp
+from .assets import Asset
+from .exceptions import HTTPException, MessageRejectedError
+from .models.ads import AdSchedule, CommercialStart, SnoozeAd
+from .models.raids import Raid
+from .utils import Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
-    from .http import TwitchHTTP
-    from .channel import Channel
-    from .models import (
-        AdSchedule,
-        BitsLeaderboard,
-        Clip,
-        Emote,
-        ExtensionBuilder,
-        Tag,
-        FollowEvent,
-        Prediction,
-        CharityCampaign,
-        ChannelFollowerEvent,
-        ChannelFollowingEvent,
+    import datetime
+
+    from twitchio.types_.responses import (
+        UserActiveExtensionsResponseData,
+        UserExtensionsResponseData,
+        UserPanelComponentItem,
+        UserPanelItem,
+        UserPanelOverlayItem,
+        UsersResponseData,
     )
-__all__ = (
-    "PartialUser",
-    "BitLeaderboardUser",
-    "UserBan",
-    "SearchUser",
-    "User",
-)
+
+    from .http import HTTPAsyncIterator, HTTPClient
+    from .models.analytics import ExtensionAnalytics, GameAnalytics
+    from .models.bits import BitsLeaderboard
+    from .models.channel_points import CustomReward
+    from .models.channels import ChannelEditor, ChannelFollowerEvent, ChannelFollowers, ChannelInfo, FollowedChannels
+    from .models.charity import CharityCampaign, CharityDonation
+    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, Chatters, SentMessage, SharedChatSession, UserEmote
+    from .models.clips import Clip, CreatedClip
+    from .models.eventsub_ import ChannelChatMessageEvent, ChatMessageBadge
+    from .models.goals import Goal
+    from .models.hype_train import HypeTrainEvent
+    from .models.moderation import (
+        AutomodCheckMessage,
+        AutomodSettings,
+        AutoModStatus,
+        Ban,
+        BannedUser,
+        BlockedTerm,
+        ShieldModeStatus,
+        Timeout,
+        UnbanRequest,
+        Warning,
+    )
+    from .models.polls import Poll
+    from .models.predictions import Prediction
+    from .models.schedule import Schedule
+    from .models.streams import Stream, StreamMarker, VideoMarkers
+    from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
+    from .models.teams import ChannelTeam
+
+__all__ = ("ActiveExtensions", "Extension", "PartialUser", "User")
 
 
 class PartialUser:
-    """
-    A class that contains minimal data about a user from the API.
+    """A class that contains minimal data about a user from the API.
+
+    Any API calls pertaining to a user / broadcaster / channel will be on this object.
 
     Attributes
     -----------
-    id: :class:`int`
+    id: str | int
         The user's ID.
-    name: Optional[:class:`str`]
+    name: str | None
         The user's name. In most cases, this is provided. There are however, rare cases where it is not.
+    display_name: str | None
+        The user's display name in chat. In most cases, this is provided otherwise fallsback to `name`. There are however, rare cases where it is not.
     """
 
-    __slots__ = "id", "name", "_http", "_cached_rewards"
+    __slots__ = "_cached_rewards", "_http", "display_name", "id", "name"
 
-    def __init__(self, http: "TwitchHTTP", id: Union[int, str], name: Optional[str]):
-        self.id = int(id)
-        self.name = name
+    def __init__(self, id: str | int, name: str | None = None, display_name: str | None = None, *, http: HTTPClient) -> None:
         self._http = http
+        self.id = str(id)
+        self.name = name
+        self.display_name = display_name or name
 
-        self._cached_rewards = None
+    def __repr__(self) -> str:
+        return f"<PartialUser id={self.id} name={self.name}>"
 
-    def __repr__(self):
-        return f"<PartialUser id={self.id}, name={self.name}>"
+    def __str__(self) -> str:
+        return self.name or "..."
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (PartialUser, User, Chatter)):
+            return NotImplemented
+
+        return self.id == other.id
 
     @property
-    def channel(self) -> Optional["Channel"]:
+    def mention(self) -> str:
+        """Property returning the users display_name formatted to mention them in chat.
+
+        E.g. "@kappa"
         """
-        Returns the :class:`twitchio.Channel` associated with this user. Could be None if you are not part of the channel's chat
+        return f"@{self.display_name or '...'}"
 
-        Returns
-        --------
-        Optional[:class:`twitchio.Channel`]
-        """
-        from .channel import Channel
-
-        if self.name in self._http.client._connection._cache:
-            return Channel(self.name, self._http.client._connection)
-
-    async def fetch(self, token: str = None, force=False) -> "User":
+    async def start_commercial(self, *, length: int) -> CommercialStart:
         """|coro|
 
-        Fetches the full user from the api or cache
+        Starts a commercial on the specified channel.
 
-        Parameters
-        -----------
-        token : :class:`str`
-            Optional OAuth token to be used instead of the bot-wide OAuth token
-        force : :class:`bool`
-            Whether to force a fetch from the api or try to get from the cache first. Defaults to False
+        .. important::
+            Only partners and affiliates may run commercials and they must be streaming live at the time.
 
-        Returns
-        --------
-        :class:`twitchio.User` The full user associated with this PartialUser
-        """
-        data = await self._http.client.fetch_users(ids=[self.id], force=force, token=token)
-        return data[0]
+            Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
 
-    async def edit(self, token: str, description: str) -> None:
-        """|coro|
-
-        Edits a channels description
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token for the user with the user:edit scope
-        description: :class:`str`
-            The new description for the user
-        """
-        await self._http.put_update_user(token, description)
-
-    async def fetch_tags(self):
-        """|coro|
-
-        Fetches tags the user currently has active.
-
-        Returns
-        --------
-            List[:class:`twitchio.Tag`]
-        """
-        from .models import Tag
-
-        data = await self._http.get_channel_tags(str(self.id))
-        return [Tag(x) for x in data]
-
-    async def replace_tags(self, token: str, tags: List[Union[str, "Tag"]]):
-        """|coro|
-
-        Replaces the channels active tags. Tags expire 72 hours after being applied,
-        unless the stream is live during that time period.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the user:edit:broadcast scope
-        tags: List[Union[:class:`twitchio.Tag`, :class:`str`]]
-            A list of :class:`twitchio.Tag` or tag ids to put on the channel. Max 100
-        """
-        tags = [x if isinstance(x, str) else x.id for x in tags]
-        await self._http.put_replace_channel_tags(token, str(self.id), tags)
-
-    async def get_custom_rewards(
-        self, token: str, *, only_manageable=False, ids: List[int] = None, force=False
-    ) -> List["CustomReward"]:
-        """|coro|
-
-        Fetches the channels custom rewards (aka channel points) from the api.
+        .. note::
+            Requires user access token that includes the ``channel:edit:commercial`` scope.
 
         Parameters
         ----------
-        token: :class:`str`
-            The users oauth token.
-        only_manageable: :class:`bool`
-            Whether to fetch all rewards or only ones you can manage. Defaults to false.
-        ids: List[:class:`int`]
-            An optional list of reward ids
-        force: :class:`bool`
-            Whether to force a fetch or try to get from cache. Defaults to False
+        length: int
+            The length of the commercial to run, in seconds. Max length is 180.
+            If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
 
         Returns
         -------
-        List[:class:`twitchio.CustomReward`]
+        CommercialStart
+            A CommercialStart object.
         """
-        if not force and self._cached_rewards and self._cached_rewards[0] + 300 > time.monotonic():
-            return self._cached_rewards[1]
-        try:
-            data = await self._http.get_rewards(token, self.id, only_manageable, ids)
-        except HTTPException as error:
-            status = error.args[2]
-            if status == 403:
-                raise HTTPException(
-                    "The custom reward was created by a different application, or channel points are "
-                    "not available for the broadcaster (403)",
-                    reason=error.args[1],
-                    status=403,
-                ) from error
-            raise
-        else:
-            values = [CustomReward(self._http, x, self) for x in data]
-            self._cached_rewards = time.monotonic(), values
-            return values
+        data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=self.id)
+        return CommercialStart(data["data"][0])
 
-    async def create_custom_reward(
-        self,
-        token: str,
-        title: str,
-        cost: int,
-        prompt: Optional[str] = None,
-        enabled: Optional[bool] = True,
-        background_color: Optional[str] = None,
-        input_required: Optional[bool] = False,
-        max_per_stream: Optional[int] = None,
-        max_per_user_per_stream: Optional[int] = None,
-        global_cooldown: Optional[int] = None,
-        redemptions_skip_queue: Optional[bool] = False,
-    ) -> "CustomReward":
+    async def fetch_ad_schedule(self) -> AdSchedule:
         """|coro|
 
-        Creates a custom reward for the user.
+        Fetch ad schedule related information, including snooze, when the last ad was run, when the next ad is scheduled, and if the channel is currently in pre-roll free time.
+
+        .. important::
+            A new ad cannot be run until 8 minutes after running a previous ad.
+
+            The user id in the user access token must match the id of this PartialUser object.
+
+        .. note::
+            Requires user access token that includes the ``channel:read:ads`` scope.
+
+        Returns
+        -------
+        AdSchedule
+            An AdSchedule object.
+        """
+        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=self.id)
+        return AdSchedule(data["data"][0])
+
+    async def snooze_next_ad(self) -> SnoozeAd:
+        """|coro|
+
+        If available, pushes back the timestamp of the upcoming automatic mid-roll ad by 5 minutes.
+        This endpoint duplicates the snooze functionality in the creator dashboard's Ads Manager.
+
+        .. important::
+            The user id in the user access token must match the id of this PartialUser object.
+
+        .. note::
+            Requires user access token that includes the ``channel:manage:ads`` scope.
+
+        Returns
+        -------
+        SnoozeAd
+            A SnoozeAd object.
+        """
+        data = await self._http.post_snooze_ad(broadcaster_id=self.id, token_for=self.id)
+        return SnoozeAd(data["data"][0])
+
+    def fetch_extension_analytics(
+        self,
+        *,
+        token_for: str | PartialUser,
+        first: int = 20,
+        extension_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[ExtensionAnalytics]:
+        """|aiter|
+
+        Fetches an analytics report for one or more extensions. The response contains the URLs used to download the reports (CSV files)
+
+        .. important::
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range. They are UTC timezone by default.
+            If you omit both of these then the report includes all available data from January 31, 2018.
+
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            If not, the API ignores your end date and uses an end date that is today minus one to two days.
+
+        .. note::
+            Requires user access token that includes the ``analytics:read:extensions`` scope.
 
         Parameters
         -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:redemptions`` scope
-        title: :class:`str`
-            The title of the reward
-        cost: :class:`int`
-            The cost of the reward
-        prompt: Optional[:class:`str`]
-            The prompt for the reward. Defaults to None
-        enabled: Optional[:class:`bool`]
-            Whether the reward is enabled. Defaults to True
-        background_color: Optional[:class:`str`]
-            The background color of the reward. Defaults to None
-        input_required: Optional[:class:`bool`]
-            Whether the reward requires input. Defaults to False
-        max_per_stream: Optional[:class:`int`]
-            The maximum number of times the reward can be redeemed per stream. Defaults to None
-        max_per_user_per_stream: Optional[:class:`int`]
-            The maximum number of times the reward can be redeemed per user per stream. Defaults to None
-        global_cooldown: Optional[:class:`int`]
-            The global cooldown of the reward. Defaults to None
-        redemptions_skip_queue: Optional[:class:`bool`]
-            Whether the reward skips the queue when redeemed. Defaults to False
+        token_for: str | PartialUser
+            A user access token that includes the `analytics:read:extensions` scope.
+        extension_id: str
+            The extension's client ID. If specified, the response contains a report for the specified extension.
+            If not specified, the response includes a report for each extension that the authenticated user owns.
+        type: Literal["overview_v2"]
+            The type of analytics report to get. This is set to ``overview_v2`` by default.
+        started_at: datetime.date
+            The date to start the report from. If you specify a start date, you must specify an end date.
+        ended_at: datetime.date
+            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        --------
+        HTTPAsyncIterator[ExtensionAnalytics]
+
+        Raises
+        ------
+        ValueError
+            Both started_at and ended_at must be provided together.
         """
-        try:
-            data = await self._http.create_reward(
-                token,
-                self.id,
-                title,
-                cost,
-                prompt,
-                enabled,
-                background_color,
-                input_required,
-                max_per_stream,
-                max_per_user_per_stream,
-                global_cooldown,
-                redemptions_skip_queue,
-            )
-            return CustomReward(self._http, data[0], self)
-        except HTTPException as error:
-            status = error.args[2]
-            if status == 403:
-                raise HTTPException(
-                    "The custom reward was created by a different application, or channel points are "
-                    "not available for the broadcaster (403)",
-                    reason=error.args[1],
-                    status=403,
-                ) from error
-            raise
+
+        first = max(1, min(100, first))
+
+        if bool(started_at) != bool(ended_at):
+            raise ValueError("Both started_at and ended_at must be provided together.")
+
+        return self._http.get_extension_analytics(
+            first=first,
+            token_for=token_for,
+            extension_id=extension_id,
+            type=type,
+            started_at=started_at,
+            ended_at=ended_at,
+            max_results=max_results,
+        )
+
+    def fetch_game_analytics(
+        self,
+        *,
+        token_for: str | PartialUser,
+        first: int = 20,
+        game_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[GameAnalytics]:
+        """|aiter|
+
+        Fetches a game report for one or more games. The response contains the URLs used to download the reports (CSV files)
+
+        .. important::
+            Both ``started_at`` and ``ended_at`` must be provided when requesting a date range.
+            If you omit both of these then the report includes all available data from January 31, 2018.
+
+            Because it can take up to two days for the data to be available, you must specify an end date that's earlier than today minus one to two days.
+            If not, the API ignores your end date and uses an end date that is today minus one to two days.
+
+        .. note::
+            Requires user access token that includes the ``analytics:read:extensions`` scope.
+
+        Parameters
+        -----------
+        token_for: str | PartialUser
+            A user access token that includes the ``analytics:read:extensions`` scope.
+        game_id: str
+            The game's client ID. If specified, the response contains a report for the specified game.
+            If not specified, the response includes a report for each of the authenticated user's games.
+        type: Literal["overview_v2"]
+            The type of analytics report to get. This is set to ``overview_v2`` by default.
+        started_at: datetime.date
+            The date to start the report from. If you specify a start date, you must specify an end date.
+        ended_at: datetime.date
+            The end date for the report, this is inclusive. Specify an end date only if you provide a start date.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        --------
+        twitchio.HTTPAsyncIterator[GameAnalytics]
+
+        Raises
+        ------
+        ValueError
+            Both started_at and ended_at must be provided together.
+        """
+
+        first = max(1, min(100, first))
+
+        if bool(started_at) != bool(ended_at):
+            raise ValueError("Both started_at and ended_at must be provided together")
+
+        return self._http.get_game_analytics(
+            first=first,
+            token_for=token_for,
+            game_id=game_id,
+            type=type,
+            started_at=started_at,
+            ended_at=ended_at,
+            max_results=max_results,
+        )
 
     async def fetch_bits_leaderboard(
         self,
-        token: str,
-        period: str = "all",
-        user_id: Optional[int] = None,
-        started_at: Optional[datetime.datetime] = None,
-    ) -> "BitsLeaderboard":
+        token_for: str | PartialUser,
+        count: int = 10,
+        period: Literal["all", "day", "week", "month", "year"] = "all",
+        started_at: datetime.datetime | None = None,
+        user: str | int | PartialUser | None = None,
+    ) -> BitsLeaderboard:
         """|coro|
 
-        Fetches the bits leaderboard for the channel. This requires an OAuth token with the ``bits:read`` scope.
+        Fetches the Bits leaderboard for this user.
 
-        Parameters
-        -----------
-        token: :class:`str`
-            the OAuth token with the ``bits:read`` scope
-        period: Optional[:class:`str`]
-            one of `day`, `week`, `month`, `year`, or `all`, defaults to `all`
-        started_at: Optional[:class:`datetime.datetime`]
-            the timestamp to start the period at. This is ignored if the period is `all`
-        user_id: Optional[:class:`int`]
-            the id of the user to fetch for
-        """
-        from .models import BitsLeaderboard
+        .. important::
+            ``started_at`` is converted to PST before being used, so if you set the start time to 2022-01-01T00:00:00.0Z and period to month, the actual reporting period is December 2021, not January 2022.
 
-        data = await self._http.get_bits_board(token, period, str(user_id), started_at)
-        return BitsLeaderboard(self._http, data)
+            If you want the reporting period to be January 2022, you must set the start time to 2022-01-01T08:00:00.0Z or 2022-01-01T00:00:00.0-08:00.
 
-    async def start_commercial(self, token: str, length: int) -> dict:
-        """|coro|
+            When providing ``started_at``, you must also change the ``period`` parameter to any value other than "all".
 
-        Starts a commercial on the channel. Requires an OAuth token with the ``channel:edit:commercial`` scope.
+            Conversely, if `period` is set to anything other than "all", ``started_at`` must also be provided.
 
-        Parameters
-        -----------
-        token: :class:`str`
-            the OAuth token
-        length: :class:`int`
-            the length of the commercial. Should be one of `30`, `60`, `90`, `120`, `150`, `180`
-
-        Returns
-        --------
-        :class:`dict` a dictionary with `length`, `message`, and `retry_after`
-        """
-        data = await self._http.post_commercial(token, str(self.id), length)
-        return data[0]
-
-    async def create_clip(self, token: str, has_delay=False) -> dict:
-        """|coro|
-
-        Creates a clip on the channel. Note that clips are not created instantly, so you will have to query
-        :meth:`~get_clips` to confirm the clip was created. Requires an OAuth token with the ``clips:edit`` scope
-
-        Parameters
-        -----------
-        token: :class:`str`
-            the OAuth token
-        has_delay: :class:`bool`
-            Whether the clip should have a delay to match that of a viewer. Defaults to False
-
-        Returns
-        --------
-        :class:`dict` a dictionary with `id` and `edit_url`
-        """
-        data = await self._http.post_create_clip(token, self.id, has_delay)
-        return data[0]
-
-    async def fetch_ad_schedule(self, token: str) -> AdSchedule:
-        """|coro|
-
-        Fetches the streamers's ad schedule.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            The user's oauth token with the ``channel:read:ads`` scope.
-
-        Returns
-        --------
-        :class:`twitchio.AdSchedule`
-        """
-        from .models import AdSchedule
-
-        data = await self._http.get_ad_schedule(token, str(self.id))
-        return AdSchedule(data[0])
-
-    async def snooze_ad(self, token: str) -> List[AdSchedule]:
-        """|coro|
-
-        Snoozes an ad on the streamer's channel.
 
         .. note::
-            The resulting :class:`~twitchio.AdSchedule` only has data for the :attr:`~twitchio.AdSchedule.snooze_count`,
-            :attr:`~twitchio.AdSchedule.snooze_refresh_at`, and :attr:`~twitchio.AdSchedule.next_ad_at` attributes.
+            Requires user access token that includes the ``bits:read`` scope.
+
+        +---------+-----------------------------------------------------------------------------------------------------+
+        | Period  | Description                                                                                         |
+        +=========+=====================================================================================================+
+        | day     | A day spans from 00:00:00 on the day specified in started_at and runs through 00:00:00 of the next  |
+        |         | day.                                                                                                |
+        +---------+-----------------------------------------------------------------------------------------------------+
+        | week    | A week spans from 00:00:00 on the Monday of the week specified in started_at and runs through       |
+        |         | 00:00:00 of the next Monday.                                                                        |
+        +---------+-----------------------------------------------------------------------------------------------------+
+        | month   | A month spans from 00:00:00 on the first day of the month specified in started_at and runs through  |
+        |         | 00:00:00 of the first day of the next month.                                                        |
+        +---------+-----------------------------------------------------------------------------------------------------+
+        | year    | A year spans from 00:00:00 on the first day of the year specified in started_at and runs through    |
+        |         | 00:00:00 of the first day of the next year.                                                         |
+        +---------+-----------------------------------------------------------------------------------------------------+
+        | all     | Default. The lifetime of the broadcaster's channel.                                                 |
+        +---------+-----------------------------------------------------------------------------------------------------+
+
+
+        Parameters
+        ----------
+        count: int
+            The number of results to return. The minimum count is 1 and the maximum is 100. The default is 10.
+        period: Literal["all", "day", "week", "month", "year"]
+            The time period over which data is aggregated (uses the PST time zone).
+        started_at: datetime.datetime | None
+            The start date, used for determining the aggregation period. Specify this parameter only if you specify the period query parameter.
+            The start date is ignored if period is all. This can be timezone aware.
+        user: str | int | PartialUser | None
+            A User ID that identifies a user that cheered bits in the channel.
+            If count is greater than 1, the response may include users ranked above and below the specified user.
+            To get the leaderboard's top leaders, don't specify a user ID.
+        token_for: str | PartialUser
+            User token to use that includes the ``bits:read`` scope.
+
+        Returns
+        -------
+        BitsLeaderboard
+            BitsLeaderboard object for a user's channel.
+
+        Raises
+        ------
+        ValueError
+            Count must be between 10 and 100.
+        ValueError
+            The 'period' parameter must be set to anything other than 'all' if 'started_at' is provided, and vice versa.
+        """
+        if count > 100 or count < 1:
+            raise ValueError("Count must be between 10 and 100.")
+
+        if (period != "all" and started_at is None) or (period == "all" and started_at is not None):
+            raise ValueError(
+                "The 'period' parameter must be set to anything other than 'all' if 'started_at' is provided, and vice versa."
+            )
+        from .models.bits import BitsLeaderboard
+
+        data = await self._http.get_bits_leaderboard(
+            broadcaster_id=self.id,
+            token_for=token_for,
+            count=count,
+            period=period,
+            started_at=started_at,
+            user_id=user,
+        )
+        return BitsLeaderboard(data, http=self._http)
+
+    async def fetch_channel_info(self, *, token_for: str | PartialUser | None = None) -> ChannelInfo:
+        """|coro|
+
+        Retrieve channel information for this user.
 
         Parameters
         -----------
-        token: :class:`str`
-            The user's oauth token with the ``channel:manage:ads`` scope.
+        token_for: str | PartialUser | None
+            An optional user token to use instead of the default app token.
 
         Returns
         --------
-        :class:`twitchio.AdSchedule`
+        ChannelInfo
+            ChannelInfo object representing the channel information.
         """
-        from .models import AdSchedule
+        from .models.channels import ChannelInfo
 
-        data = await self._http.post_snooze_ad(token, str(self.id))
-        return AdSchedule(data[0])
+        data = await self._http.get_channel_info(broadcaster_ids=[self.id], token_for=token_for)
+        return ChannelInfo(data["data"][0], http=self._http)
 
-    async def fetch_clips(
+    async def modify_channel(
         self,
-        started_at: Optional[datetime.datetime] = None,
-        ended_at: Optional[datetime.datetime] = None,
-        is_featured: Optional[bool] = None,
-    ) -> List["Clip"]:
+        *,
+        game_id: str | None = None,
+        language: str | None = None,
+        title: str | None = None,
+        delay: int | None = None,
+        tags: list[str] | None = None,
+        classification_labels: list[
+            dict[
+                Literal[
+                    "DebatedSocialIssuesAndPolitics",
+                    "MatureGame",
+                    "DrugsIntoxication",
+                    "SexualThemes",
+                    "ViolentGraphic",
+                    "Gambling",
+                    "ProfanityVulgarity",
+                ],
+                bool,
+            ]
+        ]
+        | None = None,
+        branded: bool | None = None,
+    ) -> None:
         """|coro|
 
-        Fetches clips from the api. This will only return clips from the specified user.
-        Use :class:`Client.fetch_clips` to fetch clips by id
+        Updates this user's channel properties.
 
-        Parameters
-        -----------
-        started_at: Optional[:class:`datetime.datetime`]
-            Starting date/time for returned clips.
-            If this is specified, ended_at also should be specified; otherwise, the ended_at date/time will be 1 week after the started_at value.
-        ended_at: Optional[:class:`datetime.datetime`]
-            Ending date/time for returned clips.
-            If this is specified, started_at also must be specified; otherwise, the time period is ignored.
-        is_featured: Optional[:class:`bool`]
-            Optional bool to only return only featured clips or not featured clips.
-
-
-        Returns
-        --------
-        List[:class:`twitchio.Clip`]
-        """
-        from .models import Clip
-
-        data = await self._http.get_clips(self.id, started_at=started_at, ended_at=ended_at, is_featured=is_featured)
-
-        return [Clip(self._http, x) for x in data]
-
-    async def fetch_hypetrain_events(self, id: str = None, token: str = None):
-        """|coro|
-
-        Fetches hypetrain event from the api. Needs a token with the ``channel:read:hype_train`` scope.
-
-        Parameters
-        -----------
-        id: Optional[:class:`str`]
-            The hypetrain id, if known, to fetch for
-        token: Optional[:class:`str`]
-            The oauth token to use. Will default to the one passed to the bot/client.
-
-        Returns
-        --------
-        List[:class:`twitchio.HypeTrainEvent`]
-        """
-        from .models import HypeTrainEvent
-
-        data = await self._http.get_hype_train(self.id, id=id, token=token)
-        return [HypeTrainEvent(self._http, d) for d in data]
-
-    async def fetch_bans(self, token: str, userids: List[Union[str, int]] = None) -> List["UserBan"]:
-        """|coro|
-
-        Fetches a list of people the User has banned from their channel.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            The oauth token with the ``moderation:read`` scope.
-        userids: List[Union[:class:`str`, :class:`int`]]
-            An optional list of userids to fetch. Will fetch all bans if this is not passed
-        """
-        data = await self._http.get_channel_bans(token, str(self.id), user_ids=userids)
-        return [UserBan(self._http, d) for d in data]
-
-    async def fetch_moderated_channels(self, token: str) -> List[PartialUser]:
-        """|coro|
-
-        Fetches channels that this user moderates.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token for this user with the ``user:read:moderated_channels`` scope.
-
-        Returns
-        --------
-        List[:class:`twitchio.PartialUser`]
-        """
-        data = await self._http.get_moderated_channels(token, str(self.id))
-        return [PartialUser(self._http, d["broadcaster_id"], d["broadcaster_login"]) for d in data]
-
-    async def fetch_moderators(self, token: str, userids: List[int] = None):
-        """|coro|
-
-        Fetches the moderators for this channel.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            The oauth token with the ``moderation:read`` scope.
-        userids: List[:class:`int`]
-            An optional list of users to check mod status of
-
-        Returns
-        --------
-        List[:class:`twitchio.PartialUser`]
-        """
-        data = await self._http.get_channel_moderators(token, str(self.id), user_ids=userids)
-        return [PartialUser(self._http, d["user_id"], d["user_name"]) for d in data]
-
-    async def fetch_mod_events(self, token: str):
-        """|coro|
-
-        Fetches mod events (moderators being added and removed) for this channel.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            The oauth token with the ``moderation:read`` scope.
-
-        Returns
-        --------
-        List[:class:`twitchio.ModEvent`]
-        """
-        from .models import ModEvent
-
-        data = await self._http.get_channel_mod_events(token, str(self.id))
-        return [ModEvent(self._http, d, self) for d in data]
-
-    async def automod_check(self, token: str, query: list):
-        """|coro|
-
-        Checks if a string passes the automod filter
-
-        Parameters
-        -----------
-        token: :class:`str`
-            The oauth token with the ``moderation:read`` scope.
-        query: List[:class:`AutomodCheckMessage`]
-            A list of :class:`twitchio.AutomodCheckMessage`
-
-        Returns
-        --------
-        List[:class:`twitchio.AutomodCheckResponse`]
-        """
-        from .models import AutomodCheckResponse
-
-        data = await self._http.post_automod_check(token, str(self.id), *[x._to_dict() for x in query])
-        return [AutomodCheckResponse(d) for d in data]
-
-    async def fetch_stream_key(self, token: str):
-        """|coro|
-
-        Fetches the users stream key
-
-        Parameters
-        -----------
-        token: :class:`str`
-            The oauth token with the ``channel:read:stream_key`` scope
-
-        Returns
-        --------
-        :class:`str`
-        """
-        data = await self._http.get_stream_key(token, str(self.id))
-        return data
-
-    async def fetch_channel_followers(self, token: str, user_id: Optional[int] = None) -> List[ChannelFollowerEvent]:
-        """|coro|
-
-        Fetches a list of users that are following this broadcaster.
-        Requires a user access token that includes the ``moderator:read:followers`` scope.
-        The ID in the broadcaster_id query parameter must match the user ID in the access token or the user must be a moderator for the specified broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            User access token that includes the ``moderator:read:followers`` scope for the channel.
-        user_id: Optional[:class:`int`]
-            Use this parameter to see whether the user follows this broadcaster.
-
-
-        Returns
-        --------
-        List[:class:`twitchio.FollowEvent`]
-        """
-        from .models import ChannelFollowerEvent
-
-        data = await self._http.get_channel_followers(token=token, broadcaster_id=str(self.id), user_id=user_id)
-        return [ChannelFollowerEvent(self._http, d) for d in data]
-
-    async def fetch_channel_following(
-        self, token: str, broadcaster_id: Optional[int] = None
-    ) -> List[ChannelFollowingEvent]:
-        """|coro|
-
-        Fetches a list of users that this user follows.
-        Requires a user access token that includes the ``user:read:follows`` scope.
-        The ID in the broadcaster_id query parameter must match the user ID in the access token or the user must be a moderator for the specified broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            User access token that includes the ``moderator:read:follows`` scope for the channel.
-        broadcaster_id: Optional[:class:`int`]
-            Use this parameter to see whether the user follows this broadcaster.
-
-
-        Returns
-        --------
-        List[:class:`twitchio.ChannelFollowingEvent`]
-        """
-        from .models import ChannelFollowingEvent
-
-        data = await self._http.get_channel_followed(token=token, user_id=str(self.id), broadcaster_id=broadcaster_id)
-        return [ChannelFollowingEvent(self._http, d) for d in data]
-
-    async def fetch_channel_follower_count(self, token: Optional[str] = None) -> int:
-        """|coro|
-
-        Fetches the total number of users that are following this user.
-
-        Parameters
-        -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token.
-
-        Returns
-        --------
-        :class:`int`
-        """
-
-        data = await self._http.get_channel_follower_count(token=token, broadcaster_id=str(self.id))
-        return data["total"]
-
-    async def fetch_channel_following_count(self, token: str) -> int:
-        """|coro|
-
-        Fetches the total number of users that the user is following.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            Requires a user access token that includes the ``user:read:follows`` scope.
-
-        Returns
-        --------
-        :class:`int`
-        """
-
-        data = await self._http.get_channel_followed_count(token=token, user_id=str(self.id))
-        return data["total"]
-
-    async def fetch_channel_emotes(self):
-        """|coro|
-
-        Fetches channel emotes from the user
-
-        Returns
-        --------
-        List[:class:`twitchio.ChannelEmote`]
-        """
-        from .models import ChannelEmote
-
-        data = await self._http.get_channel_emotes(str(self.id))
-        return [ChannelEmote(self._http, x) for x in data]
-
-    async def fetch_user_emotes(self, token: str, broadcaster: Optional[PartialUser] = None) -> List[Emote]:
-        """|coro|
-
-        Fetches emotes the user has access to. Optionally, you can filter by a broadcaster.
+        .. important::
+            A channel may specify a maximum of 10 tags. Each tag is limited to a maximum of 25 characters and may not be an empty string or contain spaces or special characters.
+            Tags are case insensitive.
+            For readability, consider using camelCasing or PascalCasing.
 
         .. note::
+            Requires user access token that includes the ``channel:manage:broadcast`` scope.
 
-            As of writing, this endpoint seems extrememly unoptimized by twitch, and may (read: will) take a lot of API requests to load.
-            See https://github.com/twitchdev/issues/issues/921 .
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An OAuth token belonging to this user with the ``user:read:emotes`` scope.
-        broadcaster: Optional[:class:`~twitchio.PartialUser`]
-            A channel to filter the results with.
-            Filtering will return all emotes available to the user on that channel, including global emotes.
-
-        Returns
+        Examples
         --------
-        List[:class:`~twitchio.Emote`]
-        """
-        from .models import Emote
+        .. code:: python3
 
-        data = await self._http.get_user_emotes(str(self.id), broadcaster and str(broadcaster.id), token)
-        return [Emote(d) for d in data]
+            import twitchio
 
-    async def follow(self, userid: int, token: str, *, notifications=False):
-        """|coro|
+            users: list[ChannelInfo] = await client.fetch_channels([21734222])
 
-        Follows the user
+            msg_checks: list[AutomodCheckMessage]  = [AutomodCheckMessage(id="1234", text="Some Text"), AutomodCheckMessage(id="12345", text="Some More Text")]
 
-        .. warning::
+            checks: list[AutoModStatus] = await users[0].check_automod_status(messages=msg_checks, token_for="21734222")
 
-            This method is obsolete as Twitch removed the endpoint.
 
         Parameters
         -----------
-        userid: :class:`int`
-            The user id to follow this user with
-        token: :class:`str`
-            An oauth token with the ``user:edit:follows`` scope
-        notifications: :class:`bool`
-            Whether to allow push notifications when this user goes live. Defaults to False
-        """
-        await self._http.post_follow_channel(
-            token, from_id=str(userid), to_id=str(self.id), notifications=notifications
-        )
+        game_id: str | None
+            The ID of the game that the user plays. The game is not updated if the ID isn't a game ID that Twitch recognizes. To unset this field, use '0' or '' (an empty string).
+        language: str | None
+            The user's preferred language. Set the value to an ISO 639-1 two-letter language code (for example, en for English).
+            Set to “other” if the user's preferred language is not a Twitch supported language.
+            The language isn't updated if the language code isn't a Twitch supported language.
+        title: str | None
+            The title of the user's stream. You may not set this field to an empty string.
+        delay: int | None
+            The number of seconds you want your broadcast buffered before streaming it live.
+            The delay helps ensure fairness during competitive play.
+            Only users with Partner status may set this field. The maximum delay is 900 seconds (15 minutes).
+        tags: list[str] | None
+            A list of channel-defined tags to apply to the channel. To remove all tags from the channel, set tags to an empty array. Tags help identify the content that the channel streams.
+            You may set a maximum of 10 tags, each limited to 25 characters. They can not be empty strings, contain spaces or special characters.
 
-    async def unfollow(self, userid: int, token: str):
-        """|coro|
-
-        Unfollows the user
-
-        .. warning::
-
-            This method is obsolete as Twitch removed the endpoint.
-
-        Parameters
-        -----------
-        userid: :class:`int`
-            The user id to unfollow this user with
-        token: :class:`str`
-            An oauth token with the ``user:edit:follows`` scope
-        """
-        await self._http.delete_unfollow_channel(token, from_id=str(userid), to_id=str(self.id))
-
-    async def fetch_subscriptions(self, token: str, userids: Optional[List[int]] = None):
-        """|coro|
-
-        Fetches the subscriptions for this channel.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:read:subscriptions`` scope
-        userids: Optional[List[:class:`int`]]
-            An optional list of userids to look for
-
-        Returns
-        --------
-        List[:class:`twitchio.SubscriptionEvent`]
-        """
-        from .models import SubscriptionEvent
-
-        data = await self._http.get_channel_subscriptions(token, str(self.id), user_ids=userids)
-        return [SubscriptionEvent(self._http, d, broadcaster=self) for d in data]
-
-    async def create_marker(self, token: str, description: str = None):
-        """|coro|
-
-        Creates a marker on the stream. This only works if the channel is live (among other conditions)
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``user:edit:broadcast`` scope
-        description: :class:`str`
-            An optional description of the marker
-
-        Returns
-        --------
-        :class:`twitchio.Marker`
-        """
-        from .models import Marker
-
-        data = await self._http.post_stream_marker(token, user_id=str(self.id), description=description)
-        return Marker(data[0])
-
-    async def fetch_markers(self, token: str, video_id: str = None):
-        """|coro|
-
-        Fetches markers from the given video id, or the most recent video.
-        The Twitch api will only return markers created by the user of the authorized token
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``user:edit:broadcast`` scope
-        video_id: :class:`str`
-            A specific video o fetch from. Defaults to the most recent stream if not passed
-
-        Returns
-        --------
-        Optional[:class:`twitchio.VideoMarkers`]
-        """
-        from .models import VideoMarkers
-
-        data = await self._http.get_stream_markers(token, user_id=str(self.id), video_id=video_id)
-        if data:
-            return VideoMarkers(data[0]["videos"][0])
-
-    async def fetch_extensions(self, token: str):
-        """|coro|
-
-        Fetches extensions the user has (active and inactive)
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``user:read:broadcast`` scope
-
-        Returns
-        --------
-        List[:class:`twitchio.Extension`]
-        """
-        from .models import Extension
-
-        data = await self._http.get_channel_extensions(token)
-        return [Extension(d) for d in data]
-
-    async def fetch_active_extensions(self, token: str = None):
-        """|coro|
-
-        Fetches active extensions the user has.
-        Returns a dictionary containing the following keys: `panel`, `overlay`, `component`.
-
-        Parameters
-        -----------
-        token: Optional[:class:`str`]
-            An oauth token with the ``user:read:broadcast`` *or* ``user:edit:broadcast`` scope
-
-        Returns
-        --------
-        Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
-        """
-        from .models import ActiveExtension
-
-        data = await self._http.get_user_active_extensions(token, str(self.id))
-        return {typ: {int(n): ActiveExtension(d) for n, d in vals.items()} for typ, vals in data.items()}
-
-    async def update_extensions(self, token: str, extensions: "ExtensionBuilder"):
-        """|coro|
-
-        Updates a users extensions. See the :class:`twitchio.ExtensionBuilder`
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with ``user:edit:broadcast`` scope
-        extensions: :class:`twitchio.ExtensionBuilder`
-            A :class:`twitchio.ExtensionBuilder` to be given to the twitch api
-
-        Returns
-        --------
-        Dict[:class:`str`, Dict[:class:`int`, :class:`twitchio.ActiveExtension`]]
-        """
-        from .models import ActiveExtension
-
-        data = await self._http.put_user_extensions(token, extensions._to_dict())
-        return {typ: {int(n): ActiveExtension(d) for n, d in vals.items()} for typ, vals in data.items()}
-
-    async def fetch_videos(self, period="all", sort="time", type="all", language=None):
-        """|coro|
-
-        Fetches videos that belong to the user. If you have specific video ids use :func:`Client.fetch_videos`
-
-        Parameters
-        -----------
-        period: :class:`str`
-            The period for which to fetch videos. Valid values are `all`, `day`, `week`, `month`. Defaults to `all`
-        sort: :class:`str`
-            Sort orders of the videos. Valid values are `time`, `trending`, `views`, Defaults to `time`
-        type: Optional[:class:`str`]
-            Type of the videos to fetch. Valid values are `upload`, `archive`, `highlight`. Defaults to `all`
-        language: Optional[:class:`str`]
-            Language of the videos to fetch. Must be an `ISO-639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ two letter code.
-
-        Returns
-        --------
-        List[:class:`twitchio.Video`]
-        """
-        from .models import Video
-
-        data = await self._http.get_videos(user_id=str(self.id), period=period, sort=sort, type=type, language=language)
-        return [Video(self._http, x, self) for x in data]
-
-    async def end_prediction(
-        self, token: str, prediction_id: str, status: str, winning_outcome_id: Optional[str] = None
-    ) -> "Prediction":
-        """|coro|
-
-        End a prediction with an outcome.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:predictions`` scope
-        prediction_id: :class:`str`
-            ID of the prediction to end.
-        status: :class:`str`
-            Status of the prediction. Valid values are:
-            RESOLVED - Winning outcome has been choson and points distributed.
-            CANCELED - Prediction canceled and points refunded
-            LOCKED - Viewers can no longer make predictions.
-        winning_outcome_id: Optional[:class:`str`]
-            ID of the winning outcome. This is required if status is RESOLVED
-
-        Returns
-        --------
-        :class:`twitchio.Prediction`
-        """
-        from .models import Prediction
-
-        data = await self._http.patch_prediction(
-            token,
-            broadcaster_id=str(self.id),
-            prediction_id=prediction_id,
-            status=status,
-            winning_outcome_id=winning_outcome_id,
-        )
-        return Prediction(self._http, data[0])
-
-    async def get_predictions(self, token: str, prediction_id: str = None) -> List["Prediction"]:
-        """|coro|
-
-        Gets information on a prediction or the list of predictions
-        if none is provided.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:predictions`` scope
-        prediction_id: :class:`str`
-            ID of the prediction to receive information about.
-
-        Returns
-        --------
-        :class:`twitchio.Prediction`
-        """
-        from .models import Prediction
-
-        data = await self._http.get_predictions(token, broadcaster_id=str(self.id), prediction_id=prediction_id)
-        return [Prediction(self._http, d) for d in data]
-
-    async def create_prediction(
-        self, token: str, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
-    ) -> "Prediction":
-        """|coro|
-
-        Creates a prediction for the channel.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:predictions`` scope
-        title: :class:`str`
-            Title for the prediction (max of 45 characters)
-        blue_outcome: :class:`str`
-            Text for the first outcome people can vote for. (max 25 characters)
-        pink_outcome: :class:`str`
-            Text for the second outcome people can vote for. (max 25 characters)
-        prediction_window: :class:`int`
-            Total duration for the prediction (in seconds)
-
-        Returns
-        --------
-        :class:`twitchio.Prediction`
-        """
-        from .models import Prediction
-
-        data = await self._http.post_prediction(
-            token,
-            broadcaster_id=str(self.id),
-            title=title,
-            blue_outcome=blue_outcome,
-            pink_outcome=pink_outcome,
-            prediction_window=prediction_window,
-        )
-        return Prediction(self._http, data[0])
-
-    async def modify_stream(
-        self,
-        token: str,
-        game_id: int = None,
-        language: str = None,
-        title: str = None,
-        content_classification_labels: List[Dict[str, Union[str, bool]]] = None,
-        is_branded_content: bool = None,
-    ):
-        """|coro|
-
-        Modify stream information
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:broadcast`` scope
-        game_id: :class:`int`
-            Optional game ID being played on the channel. Use 0 to unset the game.
-        language: :class:`str`
-            Optional language of the channel. A language value must be either the ISO 639-1 two-letter code for a supported stream language or “other”.
-        title: :class:`str`
-            Optional title of the stream.
-        content_classification_labels: List[Dict[:class:`str`, Union[:class:`str`, :class:`bool`]]]
+            See `here for more information <https://help.twitch.tv/s/article/guide-to-tags>`_
+        classification_labels: list[dict[Literal["DebatedSocialIssuesAndPolitics", "MatureGame", "DrugsIntoxication", "SexualThemes", "ViolentGraphic", "Gambling", "ProfanityVulgarity"], bool]] | None
             List of labels that should be set as the Channel's CCLs.
-        is_branded_content: :class:`bool`
+        branded: bool | None
             Boolean flag indicating if the channel has branded content.
-
-                .. note::
-
-                    Example of a content classification labels
-                    .. code:: py
-
-                        ccl = [{"id": "Gambling", "is_enabled": False}, {"id": "DrugsIntoxication", "is_enabled": False}]
-                        await my_partial_user.modify_stream(token="abcd", content_classification_labels=ccl)
-
         """
-        if game_id is not None:
-            game_id = str(game_id)
-        await self._http.patch_channel(
-            token,
-            broadcaster_id=str(self.id),
+
+        return await self._http.patch_channel_info(
+            broadcaster_id=self.id,
+            token_for=self.id,
             game_id=game_id,
             language=language,
             title=title,
-            content_classification_labels=content_classification_labels,
-            is_branded_content=is_branded_content,
+            delay=delay,
+            tags=tags,
+            classification_labels=classification_labels,
+            branded_content=branded,
         )
 
-    async def fetch_schedule(
+    async def fetch_editors(self) -> list[ChannelEditor]:
+        """|coro|
+
+        Fetches a list of the user's editors for their channel.
+
+        .. note::
+            Requires user access token that includes the ``channel:manage:broadcast`` scope.
+
+        Returns
+        -------
+        list[ChannelEditor]
+            A list of ChannelEditor objects.
+        """
+        from .models.channels import ChannelEditor
+
+        data = await self._http.get_channel_editors(broadcaster_id=self.id, token_for=self.id)
+        return [ChannelEditor(d, http=self._http) for d in data["data"]]
+
+    async def fetch_followed_channels(
         self,
-        segment_ids: Optional[List[str]] = None,
-        start_time: Optional[datetime.datetime] = None,
-        utc_offset: Optional[int] = None,
+        broadcaster: str | int | None = None,
         first: int = 20,
-    ):
+        max_results: int | None = None,
+    ) -> FollowedChannels | None:
         """|coro|
 
-        Fetches the schedule of a streamer
+        Fetches information of who and when this user followed other channels.
+
+        .. note::
+            Requires user access token that includes the ``user:read:follows`` scope.
+
         Parameters
         -----------
-        segment_ids: Optional[List[:class:`str`]]
-            List of segment IDs of the stream schedule to return. Maximum: 100
-        start_time: Optional[:class:`datetime.datetime`]
-            A datetime object to start returning stream segments from. If not specified, the current date and time is used.
-        utc_offset: Optional[:class:`int`]
-            A timezone offset for the requester specified in minutes. +4 hours from GMT would be `240`
-        first: Optional[:class:`int`]
-            Maximum number of stream segments to return. Maximum: 25. Default: 20.
+        broadcaster: str | int | PartialUser | None
+            Provide a User ID, or PartialUser, to check whether the user follows this broadcaster.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
 
         Returns
-        --------
-        :class:`twitchio.Schedule`
+        -------
+        FollowedChannels
+            FollowedChannels object.
         """
-        from .models import Schedule
 
-        data = await self._http.get_channel_schedule(
-            broadcaster_id=str(self.id),
-            segment_ids=segment_ids,
-            start_time=start_time,
-            utc_offset=utc_offset,
+        return await self._http.get_followed_channels(
+            user_id=self.id,
+            token_for=self.id,
+            broadcaster_id=broadcaster,
             first=first,
-        )
-        return Schedule(self._http, data)
-
-    async def fetch_channel_teams(self):
-        """|coro|
-
-        Fetches a list of Twitch Teams of which the specified channel/broadcaster is a member.
-
-        Returns
-        --------
-        List[:class:`twitchio.ChannelTeams`]
-        """
-        from .models import ChannelTeams
-
-        data = await self._http.get_channel_teams(
-            broadcaster_id=str(self.id),
+            max_results=max_results,
         )
 
-        return [ChannelTeams(self._http, x) for x in data["data"]] if data["data"] else []
-
-    async def fetch_polls(self, token: str, poll_ids: Optional[List[str]] = None, first: Optional[int] = 20):
-        """|coro|
-
-        Fetches a list of polls for the specified channel/broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:read:polls`` scope
-        poll_ids: Optional[List[:class:`str`]]
-            List of poll IDs to return. Maximum: 100
-        first: Optional[:class:`int`]
-            Number of polls to return. Maximum: 20. Default: 20.
-
-        Returns
-        --------
-        List[:class:`twitchio.Poll`]
-        """
-        from .models import Poll
-
-        data = await self._http.get_polls(broadcaster_id=str(self.id), token=token, poll_ids=poll_ids, first=first)
-        return [Poll(self._http, x) for x in data["data"]] if data["data"] else []
-
-    async def create_poll(
+    async def fetch_followers(
         self,
-        token: str,
+        user: str | int | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> ChannelFollowers:
+        """|coro|
+
+        Fetches information of who and when users followed this channel.
+
+        .. important::
+            The user ID in the token must match that of the broadcaster or a moderator.
+
+        .. note::
+            Requires user access token that includes the ``moderator:read:followers`` scope.
+
+        Parameters
+        -----------
+        user: str | int | PartialUser | None
+            Provide a User ID, or PartialUser, to check whether the user follows this broadcaster.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+
+        Returns
+        -------
+        ChannelFollowers
+            A ChannelFollowers object.
+        """
+
+        return await self._http.get_channel_followers(
+            broadcaster_id=self.id,
+            token_for=self.id,
+            user_id=user,
+            first=first,
+            max_results=max_results,
+        )
+
+    async def create_custom_reward(
+        self,
+        *,
         title: str,
-        choices: List[str],
-        duration: int,
-        bits_voting_enabled: Optional[bool] = False,
-        bits_per_vote: Optional[int] = None,
-        channel_points_voting_enabled: Optional[bool] = False,
-        channel_points_per_vote: Optional[int] = None,
-    ):
+        cost: int,
+        prompt: str | None = None,
+        enabled: bool = True,
+        background_color: str | Colour | None = None,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        redemptions_skip_queue: bool = False,
+    ) -> CustomReward:
         """|coro|
 
-        Creates a poll for the specified channel/broadcaster.
+        Creates a Custom Reward in the broadcaster's channel.
+
+        .. note::
+            The maximum number of custom rewards per channel is 50, which includes both enabled and disabled rewards.
+
+        .. note::
+            Requires user access token that includes the channel:manage:redemptions scope.
 
         Parameters
         -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:polls`` scope.
-            User ID in token must match the broadcaster's ID.
-        title: :class:`str`
-            Question displayed for the poll.
-        choices: List[:class:`str`]
-            List of choices for the poll. Must be between 2 and 5 choices.
-        duration: :class:`int`
-            Total duration for the poll in seconds. Must be between 15 and 1800.
-        bits_voting_enabled: Optional[:class:`bool`]
-            Indicates if Bits can be used for voting. Default is False.
-        bits_per_vote: Optional[:class:`int`]
-            Number of Bits required to vote once with Bits. Max 10000.
-        channel_points_voting_enabled: Optional[:class:`bool`]
-            Indicates if Channel Points can be used for voting. Default is False.
-        channel_points_per_vote: Optional[:class:`int`]
-            Number of Channel Points required to vote once with Channel Points. Max 1000000.
+        title: str
+            The custom reward's title. The title may contain a maximum of 45 characters and it must be unique amongst all of the broadcaster's custom rewards.
+        cost: int
+            The cost of the reward, in Channel Points. The minimum is 1 point.
+        prompt: str | None
+            The prompt shown to the viewer when they redeem the reward. The prompt is limited to a maximum of 200 characters.
+        enabled: bool
+            A Boolean value that determines whether the reward is enabled. Viewers see only enabled rewards. The default is True.
+        background_color: str | Colour | None
+            The background color to use for the reward. Specify the color using Hex format (for example, #9147FF).
+            This can also be a [`.Colour`][twitchio.utils.Colour] object.
+        max_per_stream: int | None
+            The maximum number of redemptions allowed per live stream. Minimum value is 1.
+        max_per_user: int | None
+            The maximum number of redemptions allowed per user per stream. Minimum value is 1.
+        global_cooldown: int | None
+            The cooldown period, in seconds. The minimum value is 1; however, the minimum value is 60 for it to be shown in the Twitch UX.
+        redemptions_skip_queue: bool
+            A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed. If False, status is set to UNFULFILLED and follows the normal request queue process. The default is False.
 
         Returns
         --------
-        List[:class:`twitchio.Poll`]
-        """
-        from .models import Poll
+        CustomReward
+            Information regarding the custom reward.
 
-        data = await self._http.post_poll(
-            broadcaster_id=str(self.id),
-            token=token,
+        Raises
+        ------
+        ValueError
+            title must be a maximum of 45 characters.
+        ValueError
+            prompt must be a maximum of 200 characters.
+        ValueError
+            Minimum value must be at least 1.
+        """
+
+        if len(title) > 45:
+            raise ValueError("title must be a maximum of 45 characters.")
+        if cost < 1:
+            raise ValueError("cost must be at least 1.")
+        if prompt is not None and len(prompt) > 200:
+            raise ValueError("prompt must be a maximum of 200 characters.")
+        if max_per_stream is not None and max_per_stream < 1:
+            raise ValueError("max_per_stream must be at least 1.")
+        if max_per_user is not None and max_per_user < 1:
+            raise ValueError("max_per_user must be at least 1.")
+        if global_cooldown is not None and global_cooldown < 1:
+            raise ValueError("global_cooldown must be at least 1.")
+
+        from .models.channel_points import CustomReward
+
+        data = await self._http.post_custom_reward(
+            broadcaster_id=self.id,
+            token_for=self.id,
             title=title,
-            choices=choices,
-            duration=duration,
-            bits_voting_enabled=bits_voting_enabled,
-            bits_per_vote=bits_per_vote,
-            channel_points_voting_enabled=channel_points_voting_enabled,
-            channel_points_per_vote=channel_points_per_vote,
+            cost=cost,
+            prompt=prompt,
+            enabled=enabled,
+            background_color=background_color,
+            max_per_stream=max_per_stream,
+            max_per_user=max_per_user,
+            global_cooldown=global_cooldown,
+            skip_queue=redemptions_skip_queue,
         )
-        return Poll(self._http, data[0])
+        return CustomReward(data["data"][0], http=self._http)
 
-    async def end_poll(self, token: str, poll_id: str, status: str):
+    async def fetch_custom_rewards(self, *, ids: list[str] | None = None, manageable: bool = False) -> list[CustomReward]:
         """|coro|
 
-        Ends a poll for the specified channel/broadcaster.
+        Fetches list of custom rewards that the specified broadcaster created.
+
+        .. note::
+            Requires user access token that includes the ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
 
         Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:polls`` scope
-        poll_id: :class:`str`
-            ID of the poll.
-        status: :class:`str`
-            The poll status to be set. Valid values:
-            TERMINATED: End the poll manually, but allow it to be viewed publicly.
-            ARCHIVED: End the poll manually and do not allow it to be viewed publicly.
+        ----------
+        ids: list[str] | None
+            A list of IDs to filter the rewards by. You may request a maximum of 50.
+        manageable: bool | None
+            A Boolean value that determines whether the response contains only the custom rewards that the app (Client ID) may manage.
+            Default is False.
 
         Returns
-        --------
-        :class:`twitchio.Poll`
+        -------
+        list[CustomReward]
+            _description_
         """
-        from .models import Poll
+        from .models.channel_points import CustomReward
 
-        data = await self._http.patch_poll(broadcaster_id=str(self.id), token=token, id=poll_id, status=status)
-        return Poll(self._http, data[0])
-
-    async def fetch_goals(self, token: str):
-        """|coro|
-
-        Fetches a list of goals for the specified channel/broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:read:goals`` scope
-
-        Returns
-        --------
-        List[:class:`twitchio.Goal`]
-        """
-        from .models import Goal
-
-        data = await self._http.get_goals(broadcaster_id=str(self.id), token=token)
-        return [Goal(self._http, x) for x in data]
-
-    async def fetch_chat_settings(self, token: Optional[str] = None, moderator_id: Optional[int] = None):
-        """|coro|
-
-        Fetches the current chat settings for this channel/broadcaster.
-
-        Parameters
-        -----------
-        token: Optional[:class:`str`]
-            An oauth token with the ``moderator:read:chat_settings`` scope. Required if moderator_id is provided.
-        moderator_id: Optional[:class:`int`]
-            The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires ``moderator:read:chat_settings`` scope.
-
-        Returns
-        --------
-        :class:`twitchio.ChatSettings`
-        """
-        from .models import ChatSettings
-
-        data = await self._http.get_chat_settings(
-            broadcaster_id=str(self.id), moderator_id=str(moderator_id), token=token
+        data = await self._http.get_custom_reward(
+            broadcaster_id=self.id, reward_ids=ids, manageable=manageable, token_for=self.id
         )
-        return ChatSettings(self._http, data[0])
+        return [CustomReward(d, http=self._http) for d in data["data"]]
+
+    async def fetch_charity_campaign(self) -> CharityCampaign:
+        """|coro|
+
+        Fetch the active charity campaign of a broadcaster.
+
+        .. note::
+            Requires user access token that includes the `channel:read:charity` scope.
+
+        Returns
+        -------
+        CharityCampaign
+            A CharityCampaign object.
+        """
+        from .models.charity import CharityCampaign
+
+        data = await self._http.get_charity_campaign(broadcaster_id=self.id, token_for=self.id)
+        return CharityCampaign(data["data"][0], http=self._http)
+
+    def fetch_charity_donations(
+        self,
+        *,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[CharityDonation]:
+        """|aiter|
+
+        Fetches information about all broadcasts on Twitch.
+
+        .. note::
+            Requires user access token that includes the ``channel:read:charity`` scope.
+
+        Parameters
+        -----------
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        --------
+        HTTPAsyncIterator[CharityDonation]
+        """
+
+        first = max(1, min(100, first))
+
+        return self._http.get_charity_donations(
+            broadcaster_id=self.id,
+            first=first,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    async def fetch_chatters(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+        first: int = 100,
+        max_results: int | None = None,
+    ) -> Chatters:
+        """|coro|
+
+        Fetches users that are connected to the broadcaster's chat session.
+
+        .. note::
+            Requires user access token that includes the ``moderator:read:chatters`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+            This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            A user access token that includes the ``moderator:read:chatters`` scope.
+        first: int | None
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 1,000. The default is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        Chatters
+            A Chatters object containing the information of a broadcaster's connected chatters.
+        """
+        first = max(1, min(1000, first))
+
+        return await self._http.get_chatters(
+            token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator, max_results=max_results
+        )
+
+    async def fetch_channel_emotes(self, token_for: str | PartialUser | None = None) -> list[ChannelEmote]:
+        """|coro|
+
+        Fetches the broadcaster's list of custom emotes.
+
+        Broadcasters create these custom emotes for users who subscribe to or follow the channel or cheer Bits in the channel's chat window.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            An optional user token to use instead of the default app token.
+
+        Returns
+        -------
+        list[ChannelEmote]
+            A list of ChannelEmote objects
+        """
+
+        from twitchio.models.chat import ChannelEmote
+
+        data = await self._http.get_channel_emotes(broadcaster_id=self.id, token_for=token_for)
+        template = data["template"]
+        return [ChannelEmote(d, template=template, http=self._http) for d in data["data"]]
+
+    def fetch_user_emotes(
+        self,
+        *,
+        broadcaster: str | int | PartialUser | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[UserEmote]:
+        """|aiter|
+
+        Fetches the broadcaster's list of custom emotes.
+
+        Broadcasters create these custom emotes for users who subscribe to or follow the channel or cheer Bits in the channel's chat window.
+
+        .. note::
+            Requires user access token that includes the ``user:read:emotes`` scope.
+
+        Parameters
+        ----------
+        broadcaster: str | int | PartialUser | None
+            The User ID, or PartialUser, of a broadcaster you wish to get follower emotes of. Using this query parameter will guarantee inclusion of the broadcaster's follower emotes in the response body.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[UserEmote]
+        """
+
+        return self._http.get_user_emotes(
+            user_id=self.id,
+            token_for=self.id,
+            broadcaster_id=broadcaster,
+            max_results=max_results,
+        )
+
+    async def fetch_badges(self, token_for: str | PartialUser | None = None) -> list[ChatBadge]:
+        """|coro|
+
+        Fetches the broadcaster's list of custom chat badges.
+
+        If you wish to fetch globally available chat badges use If you wish to fetch a specific broadcaster's chat badges use [`client.fetch_badges`][twitchio.client.fetch_badges]
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            An optional user token to use instead of the default app token.
+
+        Returns
+        --------
+        list[ChatBadge]
+            A list of ChatBadge objects belonging to the user.
+        """
+        from .models.chat import ChatBadge
+
+        data = await self._http.get_channel_chat_badges(broadcaster_id=self.id, token_for=token_for)
+        return [ChatBadge(d, http=self._http) for d in data["data"]]
+
+    async def fetch_chat_settings(
+        self, *, moderator: str | int | PartialUser | None = None, token_for: str | PartialUser | None = None
+    ) -> ChatSettings:
+        """|coro|
+
+        Fetches the broadcaster's chat settings.
+
+        .. note::
+            If you wish to view ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will need to provide a moderator, which can be
+            either the broadcaster's or a moderators'. The token must include the ``moderator:read:chat_settings`` scope.
+            the toke
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser | None
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+            This field is only required if you want to include the ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` settings in the response.
+            If you specify this field, this ID must match the user ID in the user access token.
+
+        token_for: str | PartialUser | None
+            If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will provide a token for the user in ``moderator``.
+            The required scope is ``moderator:read:chat_settings``.
+            Otherwise it is an optional user token to use instead of the default app token.
+
+        Returns
+        -------
+        ChatSettings
+            ChatSettings object of the broadcaster's chat settings.
+        """
+        from .models.chat import ChatSettings
+
+        data = await self._http.get_channel_chat_settings(
+            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for
+        )
+        return ChatSettings(data["data"][0], http=self._http)
 
     async def update_chat_settings(
         self,
-        token: str,
-        moderator_id: int,
-        emote_mode: Optional[bool] = None,
-        follower_mode: Optional[bool] = None,
-        follower_mode_duration: Optional[int] = None,
-        slow_mode: Optional[bool] = None,
-        slow_mode_wait_time: Optional[int] = None,
-        subscriber_mode: Optional[bool] = None,
-        unique_chat_mode: Optional[bool] = None,
-        non_moderator_chat_delay: Optional[bool] = None,
-        non_moderator_chat_delay_duration: Optional[int] = None,
-    ):
+        moderator: str | int | PartialUser,
+        token_for: str | PartialUser,  # TODO Default to bot_id or self.id? same for token_for.
+        emote_mode: bool | None = None,
+        follower_mode: bool | None = None,
+        follower_mode_duration: int | None = None,
+        slow_mode: bool | None = None,
+        slow_mode_wait_time: int | None = None,
+        subscriber_mode: bool | None = None,
+        unique_chat_mode: bool | None = None,
+        non_moderator_chat_delay: bool | None = None,
+        non_moderator_chat_delay_duration: Literal[2, 4, 6] | None = None,
+    ) -> ChatSettings:
         """|coro|
 
-        Updates the current chat settings for this channel/broadcaster.
+        Update the user's chat settings.
+
+        .. note::
+            - To set the ``slow_mode_wait_time`` or ``follower_mode_duration`` field to its default value, set the corresponding ``slow_mode`` or ``follower_mode`` field to True (and don't include the ``slow_mode_wait_time`` or ``follower_mode_duration`` field).
+
+            - To set the ``slow_mode_wait_time``, ``follower_mode_duration``, or ``non_moderator_chat_delay_duration`` field's value, you must set the corresponding ``slow_mode``, ``follower_mode``, or ``non_moderator_chat_delay`` field to True.
+
+            - To remove the ``slow_mode_wait_time``, ``follower_mode_duration``, or ``non_moderator_chat_delay_duration`` field's value, set the corresponding ``slow_mode``, ``follower_mode``, or ``non_moderator_chat_delay`` field to False (and don't include the slow_mode_wait_time, follower_mode_duration, or non_moderator_chat_delay_duration field).
+
+        .. note::
+            Requires a user access token that includes the `moderator:manage:chat_settings` scope.
 
         Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``moderator:manage:chat_settings`` scope.
-        moderator_id: :class:`int`
-            The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires ``moderator:manage:chat_settings`` scope.
-        emote_mode: Optional[:class:`bool`]
-            A boolean to determine whether chat must contain only emotes or not.
-        follower_mode: Optional[:class:`bool`]
-            A boolean to determine whether chat must contain only emotes or not.
-        follower_mode_duration: Optional[:class:`int`]
-            The length of time, in minutes, that the followers must have followed the broadcaster to participate in chat.
-            Values: 0 (no restriction) through 129600 (3 months). The default is 0.
-        slow_mode: Optional[:class:`bool`]
-            A boolean to determine whether the broadcaster limits how often users in the chat room are allowed to send messages.
-        slow_mode_wait_time: Optional[:class:`int`]
-            The amount of time, in seconds, that users need to wait between sending messages.
-            Values: 3 through 120 (2 minute delay). The default is 30 seconds.
-        subscriber_mode: Optional[:class:`bool`]
-            A boolean to determine whether only users that subscribe to the broadcaster's channel can talk in chat.
-        unique_chat_mode: Optional[:class:`bool`]
-            A boolean to determine whether the broadcaster requires users to post only unique messages in chat.
-        non_moderator_chat_delay: Optional[:class:`bool`]
-            A boolean to determine whether the broadcaster adds a short delay before chat messages appear in chat.
-        non_moderator_chat_delay_duration: Optional[:class:`int`]
-            The amount of time, in seconds, that messages are delayed from appearing in chat.
-            Valid values: 2, 4 and 6.
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of a user that has permission to moderate the broadcaster's chat room, or the broadcaster's ID if they're making the update.
+            This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:chat_settings`` scope.
+        emote_mode: bool | None
+            A Boolean value that determines whether chat messages must contain only emotes.
+        follower_mode: bool | None
+            A Boolean value that determines whether the broadcaster restricts the chat room to followers only.
+        follower_mode_duration: int | None
+            The length of time, in minutes, that users must follow the broadcaster before being able to participate in the chat room.
+            Set only if follower_mode is True. Possible values are: 0 (no restriction) through 129600 (3 months).
+        slow_mode: bool | None
+            A Boolean value that determines whether the broadcaster limits how often users in the chat room are allowed to send messages.
+            Set to True if the broadcaster applies a wait period between messages; otherwise, False.
+        slow_mode_wait_time: int | None
+            The amount of time, in seconds, that users must wait between sending messages. Set only if slow_mode is True.
+            Possible values are: 3 (3 second delay) through 120 (2 minute delay). The default is 30 seconds.
+        subscriber_mode: bool | None
+            A Boolean value that determines whether only users that subscribe to the broadcaster's channel may talk in the chat room.
+            Set to True if the broadcaster restricts the chat room to subscribers only; otherwise, False.
+        unique_chat_mode: bool | None
+            A Boolean value that determines whether the broadcaster requires users to post only unique messages in the chat room.
+            Set to True if the broadcaster allows only unique messages; otherwise, False.
+        non_moderator_chat_delay: bool | None
+            A Boolean value that determines whether the broadcaster adds a short delay before chat messages appear in the chat room.
+            This gives chat moderators and bots a chance to remove them before viewers can see the message.
+            Set to True if the broadcaster applies a delay; otherwise, False.
+        non_moderator_chat_delay_duration: Literal[2, 4, 6] | None
+            The amount of time, in seconds, that messages are delayed before appearing in chat.
+            Set only if non_moderator_chat_delay is True.
+            Possible values in seconds: 2 (recommended), 4 and 6.
 
         Returns
-        --------
-        :class:`twitchio.ChatSettings`
+        -------
+        ChatSettings
+            The newly applied chat settings.
+
+        Raises
+        ------
+        ValueError
+            follower_mode_duration must be below 129600
+        ValueError
+            slow_mode_wait_time must be between 3 and 120
+
         """
-        from .models import ChatSettings
+        if follower_mode_duration is not None and follower_mode_duration > 129600:
+            raise ValueError("follower_mode_duration must be below 129600")
+        if slow_mode_wait_time is not None and (slow_mode_wait_time < 3 or slow_mode_wait_time > 120):
+            raise ValueError("slow_mode_wait_time must be between 3 and 120")
+
+        from .models.chat import ChatSettings
 
         data = await self._http.patch_chat_settings(
-            broadcaster_id=str(self.id),
-            moderator_id=str(moderator_id),
-            token=token,
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
             emote_mode=emote_mode,
             follower_mode=follower_mode,
             follower_mode_duration=follower_mode_duration,
@@ -1266,796 +1044,2881 @@ class PartialUser:
             non_moderator_chat_delay=non_moderator_chat_delay,
             non_moderator_chat_delay_duration=non_moderator_chat_delay_duration,
         )
-        return ChatSettings(self._http, data[0])
 
-    async def chat_announcement(self, token: str, moderator_id: int, message: str, color: Optional[str] = None):
+        return ChatSettings(data["data"][0], http=self._http)
+
+    async def fetch_shared_chat_session(self, token_for: str | PartialUser | None = None) -> SharedChatSession:
         """|coro|
 
-        Sends a chat announcement to the specified channel/broadcaster.
+        Fetches the active shared chat session for a channel.
 
         Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``moderator:manage:chat_settings`` scope.
-        moderator_id: :class:`int`
-            The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires ``moderator:manage:announcements`` scope.
-        message: :class:`str`
-            The message to be sent.
-        color: Optional[:class:`str`]
-            The color of the message. Valid values:
-            blue, green orange, purple. The default is primary.
+        ----------
+        token_for: str | PartialUser | None
+            An optional user token to use instead of the default app token.
+
         Returns
         --------
-        None
+        SharedChatSession
+            Object representing the user's shared chat session.
         """
-        await self._http.post_chat_announcement(
-            broadcaster_id=str(self.id),
-            moderator_id=str(moderator_id),
-            token=token,
-            message=message,
-            color=color,
+        from .models.chat import SharedChatSession
+
+        data = await self._http.get_shared_chat_session(broadcaster_id=self.id, token_for=token_for)
+        return SharedChatSession(data["data"][0], http=self._http)
+
+    async def send_announcement(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+        message: str,
+        color: Literal["blue", "green", "orange", "purple", "primary"] | None = None,
+    ) -> None:
+        """|coro|
+
+        Sends an announcement to the broadcaster's chat room.
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:announcements`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of a user who has permission to moderate the broadcaster's chat room,
+            or the broadcaster''s ID if they're sending the announcement.
+
+            This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:announcements`` scope.
+        message: str
+            The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters;
+            announcements longer than 500 characters are truncated.
+        color: Literal["blue", "green", "orange", "purple", "primary"] | None
+            An optional colour to use for the announcement. If set to ``"primary``" or `None`
+            the channels accent colour will be used instead. Defaults to ``None``.
+        """
+        return await self._http.post_chat_announcement(
+            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, message=message, color=color
         )
 
-    async def delete_chat_messages(self, token: str, moderator_id: int, message_id: Optional[str] = None):
+    async def send_shoutout(
+        self,
+        *,
+        to_broadcaster: str | int | PartialUser,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+    ) -> None:
         """|coro|
 
-        Deletes a chat message, or clears chat, in the specified channel/broadcaster's chat.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``moderator:manage:chat_settings`` scope.
-        moderator_id: :class:`int`
-            The ID of a user that has permission to moderate the broadcaster's chat room.
-            Requires ``moderator:manage:chat_messages`` scope.
-        message_id: Optional[:class:`str`]
-            The ID of the message to be deleted.
-            The message must have been created within the last 6 hours.
-            The message must not belong to the broadcaster.
-            If not specified, the request removes all messages in the broadcaster's chat room.
-
-        Returns
-        --------
-        None
-        """
-        await self._http.delete_chat_messages(
-            broadcaster_id=str(self.id), token=token, moderator_id=str(moderator_id), message_id=message_id
-        )
-
-    async def fetch_channel_vips(self, token: str, first: int = 20, user_ids: Optional[List[int]] = None):
-        """|coro|
-
-        Fetches the list of VIPs for the specified channel/broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:read:vips`` or ``moderator:manage:chat_settings`` scope.
-            Must be the broadcaster's token.
-        first: Optional[:class:`int`]
-            The maximum number of items to return per page in the response.
-            The minimum page size is 1 item per page and the maximum is 100. The default is 20.
-        user_ids: Optional[List[:class:`int`]]
-            A list of user IDs to filter the results by.
-            The maximum number of IDs that you may specify is 100. Ignores those users in the list that aren't VIPs.
-
-        Returns
-        --------
-        List[:class:`twitchio.PartialUser`]
-        """
-
-        data = await self._http.get_channel_vips(
-            broadcaster_id=str(self.id), token=token, first=first, user_ids=user_ids
-        )
-        return [PartialUser(self._http, x["user_id"], x["user_login"]) for x in data]
-
-    async def add_channel_vip(self, token: str, user_id: int):
-        """|coro|
-
-        Adds a VIP to the specified channel/broadcaster.
-        The channel may add a maximum of 10 VIPs within a 10 seconds period.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:vips scope``.
-            Must be the broadcaster's token.
-        user_id: :class:`int`
-            The ID of the user to add as a VIP.
-
-        Returns
-        --------
-        None
-        """
-        await self._http.post_channel_vip(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
-
-    async def remove_channel_vip(self, token: str, user_id: int):
-        """|coro|
-
-        Removes a VIP from the specified channel/broadcaster.
-        The channel may remove a maximum of 10 vips within a 10 seconds period.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:vips`` scope.
-            Must be the broadcaster's token.
-        user_id: :class:`int`
-            The ID of the user to remove as a VIP.
-
-        Returns
-        --------
-        None
-        """
-        await self._http.delete_channel_vip(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
-
-    async def add_channel_moderator(self, token: str, user_id: int):
-        """|coro|
-
-        Adds a moderator to the specified channel/broadcaster.
-        The channel may add a maximum of 10 moderators within a 10 seconds period.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:moderators`` scope.
-            Must be the broadcaster's token.
-        user_id: :class:`str`
-            The ID of the user to add as a moderator.
-
-        Returns
-        --------
-        None
-        """
-        await self._http.post_channel_moderator(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
-
-    async def remove_channel_moderator(self, token: str, user_id: int):
-        """|coro|
-
-        Removes a moderator from the specified channel/broadcaster.
-        The channel may remove a maximum of 10 moderators within a 10 seconds period.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:moderators`` scope.
-            Must be the broadcaster's token.
-        user_id: :class:`str`
-            The ID of the user to remove as a moderator.
-
-        Returns
-        --------
-        None
-        """
-        await self._http.delete_channel_moderator(broadcaster_id=str(self.id), token=token, user_id=str(user_id))
-
-    async def start_raid(self, token: str, to_broadcaster_id: int):
-        """|coro|
-
-        Starts a raid for the channel/broadcaster.
-        The UTC date and time, in RFC3339 format, when the raid request was created.
-        A Boolean value that indicates whether the channel being raided contains mature content.
-
-        Rate Limit: The limit is 10 requests within a 10-minute window.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:raids`` scope
-            Must be the broadcaster's token.
-        to_broadcaster_id: :class:`int`
-            The ID of the broadcaster to raid.
-
-        Returns
-        --------
-        :class:`twitchio.Raid`
-        """
-
-        data = await self._http.post_raid(
-            from_broadcaster_id=str(self.id), token=token, to_broadcaster_id=str(to_broadcaster_id)
-        )
-
-        from .models import Raid
-
-        return Raid(data[0])
-
-    async def cancel_raid(self, token: str):
-        """|coro|
-
-        Cancels a raid for the channel/broadcaster.
-        The limit is 10 requests within a 10-minute window.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:raids`` scope
-            Must be the broadcaster's token.
-
-        Returns
-        --------
-        None
-        """
-
-        await self._http.delete_raid(broadcaster_id=str(self.id), token=token)
-
-    async def ban_user(self, token: str, moderator_id: int, user_id, reason: str):
-        """|coro|
-
-        Bans a user from the channel/broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth user access token with the ``moderator:manage:banned_users`` scope
-        moderator_id: :class:`int`
-            The ID of a user that has permission to moderate the broadcaster's chat room.
-            If the broadcaster wants to ban the user set this parameter to the broadcaster's ID.
-        user_id: :class:`int`
-            The ID of the user to ban.
-        reason: :class:`str`
-            The reason for the ban.
-
-        Returns
-        --------
-        :class:`twitchio.Ban`
-        """
-        from .models import Ban
-
-        data = await self._http.post_ban_timeout_user(
-            broadcaster_id=str(self.id),
-            moderator_id=str(moderator_id),
-            user_id=str(user_id),
-            reason=reason,
-            token=token,
-        )
-        return Ban(self._http, data[0])
-
-    async def timeout_user(self, token: str, moderator_id: int, user_id: int, duration: int, reason: str):
-        """|coro|
-
-        Timeouts a user from the channel/broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth user access token with the ``moderator:manage:banned_users`` scope
-        moderator_id: :class:`int`
-            The ID of a user that has permission to moderate the broadcaster's chat room.
-            If the broadcaster wants to timeout the user set this parameter to the broadcaster's ID.
-        user_id: :class:`int`
-            The ID of the user that you wish to timeout.
-        duration: :class:`int`
-            The duration of the timeout in seconds.
-            The minimum timeout is 1 second and the maximum is 1,209,600 seconds (2 weeks).
-            To end a user's timeout early, set this field to 1, or send an Unban user request.
-        reason: :class:`str`
-            The reason for the timeout.
-
-        Returns
-        --------
-        :class:`twitchio.Timeout`
-        """
-        from .models import Timeout
-
-        data = await self._http.post_ban_timeout_user(
-            broadcaster_id=str(self.id),
-            moderator_id=str(moderator_id),
-            user_id=str(user_id),
-            duration=duration,
-            reason=reason,
-            token=token,
-        )
-        return Timeout(self._http, data[0])
-
-    async def unban_user(self, token: str, moderator_id: int, user_id):
-        """|coro|
-
-        Unbans a user or removes a timeout from the channel/broadcaster.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth user access token with the ``moderator:manage:banned_users`` scope
-        moderator_id: :class:`int`
-            The ID of a user that has permission to moderate the broadcaster's chat room.
-            If the broadcaster wants to ban the user set this parameter to the broadcaster's ID.
-        user_id: :class:`int`
-            The ID of the user to unban.
-
-        Returns
-        --------
-        None
-        """
-
-        await self._http.delete_ban_timeout_user(
-            broadcaster_id=str(self.id),
-            moderator_id=str(moderator_id),
-            user_id=str(user_id),
-            token=token,
-        )
-
-    async def send_whisper(self, token: str, user_id: int, message: str):
-        """|coro|
-
-        Sends a whisper to a user.
-        Important Notes:
-        - The user sending the whisper must have a verified phone number.
-        - The API may silently drop whispers that it suspects of violating Twitch policies.
-        - You may whisper to a maximum of 40 unique recipients per day. Within the per day limit.
-        - You may whisper a maximum of 3 whispers per second and a maximum of 100 whispers per minute.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth user token with the ``user:manage:whispers`` scope.
-        user_id: :class:`int`
-            The ID of the user to send the whisper to.
-        message: :class:`str`
-            The message to send.
-            500 characters if the user you're sending the message to hasn't whispered you before.
-            10,000 characters if the user you're sending the message to has whispered you before.
-
-        Returns
-        --------
-        None
-        """
-
-        await self._http.post_whisper(token=token, from_user_id=str(self.id), to_user_id=str(user_id), message=message)
-
-    async def fetch_shield_mode_status(self, token: str, moderator_id: int):
-        """|coro|
-
-        Fetches the user's Shield Mode activation status.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth user token with the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
-        moderator_id: :class:`int`
-            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
-
-        Returns
-        --------
-        :class:`twitchio.ShieldStatus`
-        """
-        from .models import ShieldStatus
-
-        data = await self._http.get_shield_mode_status(
-            broadcaster_id=str(self.id), moderator_id=str(moderator_id), token=token
-        )
-
-        return ShieldStatus(self._http, data[0])
-
-    async def update_shield_mode_status(self, token: str, moderator_id: int, is_active: bool):
-        """|coro|
-
-        Updates the user's Shield Mode activation status.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth user token with the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
-        moderator_id: :class:`int`
-            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
-        is_active: :class:`bool`
-            A Boolean value that determines whether to activate Shield Mode. Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
-
-        Returns
-        --------
-        :class:`twitchio.ShieldStatus`
-        """
-        from .models import ShieldStatus
-
-        data = await self._http.put_shield_mode_status(
-            broadcaster_id=str(self.id), moderator_id=str(moderator_id), is_active=is_active, token=token
-        )
-
-        return ShieldStatus(self._http, data[0])
-
-    async def fetch_followed_streams(self, token: str):
-        """|coro|
-
-        Fetches a list of broadcasters that the user follows and that are streaming live.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth user token with the ``user:read:follows`` scope.
-
-        Returns
-        --------
-        List[:class:`twitchio.Stream`]
-        """
-
-        data = await self._http.get_followed_streams(broadcaster_id=str(self.id), token=token)
-
-        from .models import Stream
-
-        return [Stream(self._http, x) for x in data]
-
-    async def shoutout(self, token: str, to_broadcaster_id: int, moderator_id: int):
-        """|coro|
         Sends a Shoutout to the specified broadcaster.
-        ``Rate Limits``: The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
-        Requires a user access token that includes the ``moderator:manage:shoutouts`` scope.
+
+        .. note::
+            The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:shoutouts`` scope.
 
         Parameters
-        -----------
-        token: :class:`str`
-            An oauth user token with the ``moderator:manage:shoutouts`` scope.
-        to_broadcaster: :class:`int`
-            The ID of the broadcaster that is recieving the shoutout.
-        moderator_id: :class:`int`
-            The ID of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
-
-        Returns
-        --------
-        None
+        ----------
+        to_broadcaster: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster that's receiving the Shoutout.
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:shoutouts`` scope.
         """
-
-        await self._http.post_shoutout(
-            token=token,
-            broadcaster_id=str(self.id),
-            to_broadcaster_id=str(to_broadcaster_id),
-            moderator_id=str(moderator_id),
+        return await self._http.post_chat_shoutout(
+            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, to_broadcaster_id=to_broadcaster
         )
 
-    async def fetch_chat_badges(self):
+    async def send_message(
+        self,
+        *,
+        sender: str | int | PartialUser,
+        message: str,
+        token_for: str | PartialUser | None = None,
+        reply_to_message_id: str | None = None,
+    ) -> SentMessage:
         """|coro|
 
-        Fetches broadcaster's list of custom chat badges.
-        The list is empty if the broadcaster hasn't created custom chat badges.
+        Send a message to the broadcaster's chat room.
 
-        Returns
-        --------
-        List[:class:`twitchio.ChatBadge`]
-        """
+        .. important::
+            Requires an app access token or user access token that includes the ``user:write:chat`` scope.
+            User access token is generally recommended.
 
-        from .models import ChatBadge
+            If app access token used, then additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
+            This means creating a user token for the "bot" account with the above scopes associated to the correct Client ID. This token does not need to be used.
 
-        data = await self._http.get_channel_chat_badges(broadcaster_id=str(self.id))
-        return [ChatBadge(x) for x in data]
+        .. tip::
+            Chat messages can also include emoticons. To include emoticons, use the name of the emote.
 
-    async def fetch_charity_campaigns(self, token: str) -> List[CharityCampaign]:
-        """|coro|
+            The names are case sensitive. Don't include colons around the name e.g., ``:bleedPurple:``
 
-        Fetches a list of charity campaigns the broadcaster is running.
-        Requires a user token with the ``channel:read:charity`` scope.
-
-        Returns
-        --------
-        List[:class:`twitchio.CharityCampaign`]
-        """
-        from .models import CharityCampaign
-
-        data = await self._http.get_channel_charity_campaigns(str(self.id), token)
-        return [CharityCampaign(d, self._http, self) for d in data]
-
-    # DEPRECATED
-
-    async def fetch_follow(self, to_user: "PartialUser", token: Optional[str] = None):
-        """|coro|
-
-        Check if a user follows another user or when they followed a user.
-
-        .. warning::
-
-            The endpoint this method uses has been deprecated by Twitch and is no longer available.
+            If Twitch recognizes the name, Twitch converts the name to the emote before writing the chat message to the chat room.
 
         Parameters
-        -----------
-        to_user: :class:`PartialUser`
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
+        ----------
+        sender: str | int | PartialUser
+            The ID, or PartialUser, of the user sending the message. This ID must match the user ID in the user access token.
+        message: str
+            The message to send. The message is limited to a maximum of 500 characters.
+            Chat messages can also include emoticons. To include emoticons, use the name of the emote.
+            The names are case sensitive. Don't include colons around the name e.g., `:bleedPurple:`.
+            If Twitch recognizes the name, Twitch converts the name to the emote before writing the chat message to the chat room
+        token_for: str | PartialUser | None
+            User access token that includes the ``user:write:chat`` scope.
+            You can use an app access token which additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
+        reply_to_message_id: str | None
+            The ID of the chat message being replied to.
 
         Returns
-        --------
-        :class:`twitchio.FollowEvent`
+        -------
+        SentMessage
+            An object containing the response from Twitch regarding the sent message.
+
+        Raises
+        ------
+        ValueError
+            The message is limited to a maximum of 500 characters.
         """
-        if not isinstance(to_user, PartialUser):
-            raise TypeError(f"to_user must be a PartialUser not {type(to_user)}")
-        from .models import FollowEvent
+        _message = " ".join(message.split())
+        if len(_message) > 500:
+            raise ValueError("The message is limited to a maximum of 500 characters.")
 
-        data = await self._http.get_user_follows(token=token, from_id=str(self.id), to_id=str(to_user.id))
-        return FollowEvent(self._http, data[0]) if data else None
+        from twitchio.models import SentMessage
 
-    async def fetch_following(self, token: Optional[str] = None) -> List["FollowEvent"]:
-        """|coro|
-
-        Fetches a list of users that this user is following.
-
-        .. warning::
-
-            The endpoint this method uses has been deprecated by Twitch and is no longer available.
-
-        Parameters
-        -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
-
-        Returns
-        --------
-        List[:class:`twitchio.FollowEvent`]
-        """
-        from .models import FollowEvent
-
-        data = await self._http.get_user_follows(token=token, from_id=str(self.id))
-        return [FollowEvent(self._http, d, from_=self) for d in data]
-
-    async def fetch_followers(self, token: Optional[str] = None):
-        """|coro|
-
-        Fetches a list of users that are following this user.
-
-        .. warning::
-
-            The endpoint this method uses has been deprecated by Twitch and is no longer available.
-
-        Parameters
-        -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
-
-        Returns
-        --------
-        List[:class:`twitchio.FollowEvent`]
-        """
-        from .models import FollowEvent
-
-        data = await self._http.get_user_follows(token=token, to_id=str(self.id))
-        return [FollowEvent(self._http, d, to=self) for d in data]
-
-    async def fetch_follower_count(self, token: Optional[str] = None) -> int:
-        """|coro|
-
-        Fetches the total number of users that are following this user.
-
-        .. warning::
-
-            The endpoint this method uses has been deprecated by Twitch and is no longer available.
-
-        Parameters
-        -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
-
-        Returns
-        --------
-        :class:`int`
-        """
-
-        data = await self._http.get_follow_count(token=token, to_id=str(self.id))
-        return data["total"]
-
-    async def fetch_following_count(self, token: Optional[str] = None) -> int:
-        """|coro|
-
-        Fetches a list of users that this user is following.
-
-        .. warning::
-
-            The endpoint this method uses has been deprecated by Twitch and is no longer available.
-
-        Parameters
-        -----------
-        token: Optional[:class:`str`]
-            An oauth token to use instead of the bots token
-
-        Returns
-        --------
-        :class:`int`
-        """
-        data = await self._http.get_follow_count(token=token, from_id=str(self.id))
-        return data["total"]
-
-    async def fetch_ban_events(self, token: str, userids: List[int] = None):
-        """|coro|
-
-        This has been deprecated and will be removed in a future release.
-
-        Fetches ban/unban events from the User's channel.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            The oauth token with the ``moderation:read`` scope.
-        userids: List[:class:`int`]
-            An optional list of users to fetch ban/unban events for
-
-        Returns
-        --------
-        List[:class:`twitchio.BanEvent`]
-        """
-        from .models import BanEvent
-
-        data = await self._http.get_channel_ban_unban_events(token, str(self.id), userids)
-        return [BanEvent(self._http, x, self) for x in data]
-
-
-class BitLeaderboardUser(PartialUser):
-    __slots__ = "rank", "score"
-
-    def __init__(self, http: "TwitchHTTP", data: dict):
-        super(BitLeaderboardUser, self).__init__(http, id=data["user_id"], name=data["user_name"])
-        self.rank: int = data["rank"]
-        self.score: int = data["score"]
-
-
-class UserBan(PartialUser):
-    """
-    Represents a banned user or one in timeout.
-
-    Attributes
-    ----------
-    id: :class:`int`
-        The ID of the banned user.
-    name: :class:`str`
-        The name of the banned user.
-    created_at: :class:`datetime.datetime`
-        The date and time the ban was created.
-    expires_at: Optional[:class:`datetime.datetime`]
-        The date and time the timeout will expire.
-        Is None if it's a ban.
-    reason: :class:`str`
-        The reason for the ban/timeout.
-    moderator: :class:`~twitchio.PartialUser`
-        The moderator that banned the user.
-    """
-
-    __slots__ = ("created_at", "expires_at", "reason", "moderator")
-
-    def __init__(self, http: "TwitchHTTP", data: dict):
-        super(UserBan, self).__init__(http, id=data["user_id"], name=data["user_login"])
-        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
-        self.expires_at: Optional[datetime.datetime] = (
-            parse_timestamp(data["expires_at"]) if data["expires_at"] else None
+        data = await self._http.post_chat_message(
+            broadcaster_id=self.id,
+            sender_id=sender,
+            message=message,
+            reply_to_message_id=reply_to_message_id,
+            token_for=token_for,
         )
-        self.reason: str = data["reason"]
-        self.moderator = PartialUser(http, id=data["moderator_id"], name=data["moderator_login"])
 
-    def __repr__(self):
-        return f"<UserBan {super().__repr__()} created_at={self.created_at} expires_at={self.expires_at} reason={self.reason}>"
+        sent: SentMessage = SentMessage(data["data"][0])
+        if sent.dropped_code:
+            msg = f"Twitch rejected your message to '{self}': '{sent.dropped_message}' ({sent.dropped_code})"
+            raise MessageRejectedError(msg, message=sent, channel=self, content=_message)
 
+        return SentMessage(data["data"][0])
 
-class SearchUser(PartialUser):
-    """
-    Represents a User that has been searched for.
+    async def update_chatter_color(self, color: str) -> None:
+        """|coro|
 
-    Attributes
-    ----------
-    id: :class:`int`
-        The ID of the user.
-    name: :class:`str`
-        The name of the user.
-    display_name: :class:`str`
-        The broadcaster's display name.
-    game_id: :class:`str`
-        The ID of the game that the broadcaster is playing or last played.
-    title: :class:`str`
-        The stream's title. Is an empty string if the broadcaster didn't set it.
-    thumbnail_url :class:`str`
-        A URL to a thumbnail of the broadcaster's profile image.
-    language :class:`str`
-        The ISO 639-1 two-letter language code of the language used by the broadcaster. For example, en for English.
-    live: :class:`bool`
-        A Boolean value that determines whether the broadcaster is streaming live. Is true if the broadcaster is streaming live; otherwise, false.
-    started_at: :class:`datetime.datetime`
-        The UTC date and time of when the broadcaster started streaming.
-    tag_ids: List[:class:`str`]
-        Tag IDs that apply to the stream.
+        Updates the color used for the user's name in chat.
 
-        .. warning::
+        **Available Colors**
+            - blue
+            - blue_violet
+            - cadet_blue
+            - chocolate
+            - coral
+            - dodger_blue
+            - firebrick
+            - golden_rod
+            - green
+            - hot_pink
+            - orange_red
+            - red
+            - sea_green
+            - spring_green
+            - yellow_green
 
-            This field will be deprecated by twitch in 2023.
+        .. note::
+            Requires a user access token that includes the ``user:manage:chat_color`` scope.
 
-    tags: List[:class:`str`]
-        The tags applied to the channel.
-    """
+        Parameters
+        ----------
+        color: str
+            The color to use, to see the list of colors available please refer to the docs.
+            If the user is a Turbo or Prime member then you may specify a Hex color code e.g. ``#9146FF``
+        """
+        return await self._http.put_user_chat_color(user_id=self.id, color=color, token_for=self.id)
 
-    __slots__ = (
-        "game_id",
-        "name",
-        "display_name",
-        "language",
-        "title",
-        "thumbnail_url",
-        "live",
-        "started_at",
-        "tag_ids",
-        "tags",
-    )
+    async def create_clip(
+        self, *, token_for: str | PartialUser, has_delay: bool = False
+    ) -> CreatedClip:  # TODO Test this with non broadcaster token
+        """|coro|
 
-    def __init__(self, http: "TwitchHTTP", data: dict):
-        self._http = http
-        self.display_name: str = data["display_name"]
-        self.name: str = data["broadcaster_login"]
-        self.id: int = int(data["id"])
-        self.game_id: str = data["game_id"]
-        self.title: str = data["title"]
-        self.thumbnail_url: str = data["thumbnail_url"]
-        self.language: str = data["broadcaster_language"]
-        self.live: bool = data["is_live"]
-        self.started_at = datetime.datetime.strptime(data["started_at"], "%Y-%m-%dT%H:%M:%SZ") if self.live else None
-        self.tag_ids: List[str] = data["tag_ids"]
-        self.tags: List[str] = data["tags"]
+        Creates a clip from the broadcaster's stream.
 
-    def __repr__(self):
-        return f"<SearchUser id={self.id} display_name={self.name} language={self.language} game_id={self.game_id} title={self.title} live={self.live}>"
+        This API captures up to 90 seconds of the broadcaster's stream. The 90 seconds spans the point in the stream from when you called the API.
+        For example, if you call the API at the 4:00 minute mark, the API captures from approximately the 3:35 mark to approximately the 4:05 minute mark.
+        Twitch tries its best to capture 90 seconds of the stream, but the actual length may be less.
+        This may occur if you begin capturing the clip near the beginning or end of the stream.
 
+        By default, Twitch publishes up to the last 30 seconds of the 90 seconds window and provides a default title for the clip.
+        To specify the title and the portion of the 90 seconds window that's used for the clip, use the URL in the CreatedClip's ``edit_url`` attribute.
+        You can specify a clip that's from 5 seconds to 60 seconds in length. The URL is valid for up to 24 hours or until the clip is published, whichever comes first.
 
-class User(PartialUser):
-    """
-    A full user object, containing data from the users endpoint.
+        Creating a clip is an asynchronous process that can take a short amount of time to complete.
+        To determine whether the clip was successfully created, call [`fetch_clips`][twitchio.user.PartialUser.fetch_clips] using the clip ID that this request returned.
+        If [`fetch_clips`][twitchio.user.PartialUser.fetch_clips] returns the clip, the clip was successfully created. If after 15 seconds [`fetch_clips`][twitchio.user.PartialUser.fetch_clips] hasn't returned the clip, assume it failed.
 
-    Attributes
-    -----------
-    id: :class:`int`
-        The user's ID
-    name: :class:`str`
-        The user's login name
-    display_name: :class:`str`
-        The name that is displayed in twitch chat. For the most part, this is simply a change of capitalization
-    type: :class:`~twitchio.UserTypeEnum`
-        The user's type. This will normally be :class:`~twitchio.UserTypeEnum.none`, unless they are twitch staff or admin
-    broadcaster_type: :class:`~twitchio.BroadcasterTypeEnum`
-        What type of broacaster the user is. none, affiliate, or partner
-    description: :class:`str`
-        The user's bio
-    profile_image: :class:`str`
-        The user's profile image URL
-    offline_image: :class:`str`
-        The user's offline image splash URL
-    view_count: Tuple[int]
-        The amount of views this channel has
+        .. note::
+            Requires a user access token that includes the `clips:edit` scope.
 
-        .. warning::
+        Parameters
+        ----------
+        has_delay: bool
+            A Boolean value that determines whether the API captures the clip at the moment the viewer requests it or after a delay.
+            If False (default), Twitch captures the clip at the moment the viewer requests it (this is the same clip experience as the Twitch UX).
+            If True, Twitch adds a delay before capturing the clip (this basically shifts the capture window to the right slightly).
+        token_for: str | PartialUser
+            User access token that includes the `clips:edit` scope.
 
-            This field has been deprecated by twitch, and is no longer updated.
-            See `here <https://discuss.dev.twitch.tv/t/get-users-api-endpoint-view-count-deprecation/37777>`_ for more information.
+        Returns
+        -------
+        CreatedClip
+            The CreatedClip object.
+        """
+        from .models.clips import CreatedClip
+
+        data = await self._http.post_create_clip(broadcaster_id=self.id, token_for=token_for, has_delay=has_delay)
+        return CreatedClip(data["data"][0])
+
+    def fetch_clips(
+        self,
+        *,
+        started_at: datetime.datetime | None = None,
+        ended_at: datetime.datetime | None = None,
+        featured: bool | None = None,
+        token_for: str | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Clip]:
+        """|aiter|
+
+        Fetches clips from the broadcaster's streams.
+
+        Parameters
+        -----------
+        started_at: datetime.datetime
+            The start date used to filter clips.
+            This can be timezone aware.
+        ended_at: datetime.datetime
+            The end date used to filter clips. If not specified, the time window is the start date plus one week.
+            This can be timezone aware.
+        featured: bool | None = None
+            If True, returns only clips that are featured.
+            If False, returns only clips that aren't featured.
+            All clips are returned if this parameter is not provided.
+        token_for: str | PartialUser | None
+            An optional user token to use instead of the default app token.
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        --------
+        HTTPAsyncIterator[Clip]
+        """
+
+        first = max(1, min(100, first))
+
+        return self._http.get_clips(
+            broadcaster_id=self.id,
+            first=first,
+            started_at=started_at,
+            ended_at=ended_at,
+            is_featured=featured,
+            token_for=token_for,
+            max_results=max_results,
+        )
+
+    async def fetch_goals(self) -> list[Goal]:
+        """|coro|
+
+        Fetches a list of the creator's goals.
+
+        .. note::
+            Requires a user access token that includes the ``channel:read:goals`` scope.
+
+        Returns
+        -------
+        list[Goal]
+            List of Goal objects.
+        """
+        from .models.goals import Goal
+
+        data = await self._http.get_creator_goals(broadcaster_id=self.id, token_for=self.id)
+        return [Goal(d, http=self._http) for d in data["data"]]
+
+    def fetch_hype_train_events(
+        self,
+        *,
+        first: int = 1,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[HypeTrainEvent]:
+        """|aiter|
+
+        Fetches information about the broadcaster's current or most recent Hype Train event.
+
+        Parameters
+        ----------
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 1.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[HypeTrainEvent]
+            HTTPAsyncIterator of HypeTrainEvent objects.
+        """
+        first = max(1, min(100, first))
+
+        return self._http.get_hype_train_events(
+            broadcaster_id=self.id,
+            first=first,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    async def start_raid(self, to_broadcaster: str | int | PartialUser) -> Raid:
+        """|coro|
+
+        Starts a raid to another channel.
+
+        .. note::
+            The limit is 10 requests within a 10-minute window.
+
+            When you call the API from a chat bot or extension, the Twitch UX pops up a window at the top of the chat room that identifies the number of viewers in the raid.
+            The raid occurs when the broadcaster clicks Raid Now or after the 90-second countdown expires.
+
+            To determine whether the raid successfully occurred, you must subscribe to the Channel Raid event.
+
+            To cancel a pending raid, use the Cancel a raid endpoint.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:raids`` scope.
+
+        Parameters
+        ----------
+        to_broadcaster: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster to raid.
+
+        Returns
+        -------
+        Raid
+            Raid object.
+        """
+        data = await self._http.post_raid(from_broadcaster_id=self.id, to_broadcaster_id=to_broadcaster, token_for=self.id)
+
+        return Raid(data["data"][0])
+
+    async def cancel_raid(self) -> None:
+        """|coro|
+
+        Cancel a pending raid.
+
+        You can cancel a raid at any point up until the broadcaster clicks `Raid Now` in the Twitch UX or the 90-second countdown expires.
+
+        .. note::
+            The limit is 10 requests within a 10-minute window.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:raids`` scope.
+
+        Returns
+        -------
+        Raid
+            Raid object.
+        """
+
+        return await self._http.delete_raid(broadcaster_id=self.id, token_for=self.id)
+
+    def fetch_stream_schedule(
+        self,
+        *,
+        ids: list[str] | None = None,
+        token_for: str | PartialUser | None = None,
+        start_time: datetime.datetime | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Schedule]:
+        """|aiter|
+
+        Fetches stream schedule information for a broadcaster.
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            List of scheduled segments ids to return.
+        start_time: datetime.datetime | None
+            The datetime of when to start returning segments from the schedule. This can be timezone aware.
+        token_for: str | PartialUser | None
+            An optional token to use instead of the default app token.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 25 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Schedule]
+            HTTPAsyncIterator of Schedule objects.
+
+        Raises
+        ------
+        ValueError
+            You may specify a maximum of 100 ids.
+        """
+        first = max(1, min(25, first))
+
+        if ids is not None and len(ids) > 100:
+            raise ValueError("You may specify a maximum of 100 ids.")
+
+        return self._http.get_channel_stream_schedule(
+            broadcaster_id=self.id,
+            ids=ids,
+            token_for=token_for,
+            start_time=start_time,
+            first=first,
+            max_results=max_results,
+        )
+
+    async def update_stream_schedule(
+        self,
+        *,
+        vacation: bool,
+        vacation_start_time: datetime.datetime | None = None,
+        vacation_end_time: datetime.datetime | None = None,
+        timezone: str | None = None,
+    ) -> None:
+        """|coro|
+
+        Updates the broadcaster's schedule settings, such as scheduling a vacation.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:schedule`` scope.
+
+        Parameters
+        ----------
+        vacation: bool
+            A Boolean value that indicates whether the broadcaster has scheduled a vacation. Set to True to enable Vacation Mode and add vacation dates, or False to cancel a previously scheduled vacation.
+        vacation_start_time: datetime.datetime | None
+            Datetime of when the broadcaster's vacation starts. Required if `vacation` is True. This can be timezone aware.
+        vacation_end_time: datetime.datetime | None
+            Datetime of when the broadcaster's vacation ends. Required if `vacation` is True. This can be timezone aware.
+        timezone: str | None
+            The time zone that the broadcaster broadcasts from. Specify the time zone using `IANA time zone database <https://www.iana.org/time-zones>`_ format (for example, `America/New_York`). Required if vaction is True.
+
+        Raises
+        ------
+        ValueError
+            When vacation is True, all of vacation_start_time, vacation_end_time, and timezone must be provided.
+        """
+
+        if vacation and any(v is None for v in (vacation_start_time, vacation_end_time, timezone)):
+            raise ValueError(
+                "When vacation is True, all of vacation_start_time, vacation_end_time, and timezone must be provided."
+            )
+
+        return await self._http.patch_channel_stream_schedule(
+            broadcaster_id=self.id,
+            vacation=vacation,
+            token_for=self.id,
+            vacation_start_time=vacation_start_time,
+            vacation_end_time=vacation_end_time,
+            timezone=timezone,
+        )
+
+    async def create_schedule_segment(
+        self,
+        *,
+        start_time: datetime.datetime,
+        timezone: str,
+        duration: int,
+        recurring: bool = True,
+        category_id: str | None = None,
+        title: str | None = None,
+    ) -> Schedule:
+        """|coro|
+
+        Adds a single or recurring broadcast to the broadcaster's streaming schedule.
+
+        For information about scheduling broadcasts, see `Stream Schedule <https://help.twitch.tv/s/article/channel-page-setup#Schedule>`_.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:schedule`` scope.
+
+        Parameters
+        ----------
+        start_time: datetime.datetime
+            Datetime that the broadcast segment starts. This can be timezone aware.
+        timezone: str | None
+            The time zone that the broadcaster broadcasts from. Specify the time zone using `IANA time zone database <https://www.iana.org/time-zones>`_ format (for example, `America/New_York`).
+        duration: int
+            The length of time, in minutes, that the broadcast is scheduled to run. The duration must be in the range 30 through 1380 (23 hours)
+        recurring: bool
+            A Boolean value that determines whether the broadcast recurs weekly. Is True if the broadcast recurs weekly. Only partners and affiliates may add non-recurring broadcasts.
+            Default is True.
+        category_id: str | None
+            The ID of the category that best represents the broadcast's content. To get the category ID, use the [Search Categories][twitchio.client.search_categories].
+        title: str | None
+            The broadcast's title. The title may contain a maximum of 140 characters.
+
+        Raises
+        ------
+        ValueError
+            Duration must be between 30 and 1380.
+        ValueError
+            Title must not be greater than 140 characters.
+        """
+
+        if duration < 30 or duration > 1380:
+            raise ValueError("Duration must be between 30 and 1380.")
+        if title is not None and len(title) > 140:
+            raise ValueError("Title must not be greater than 140 characters.")
+
+        from .models.schedule import Schedule
+
+        data = await self._http.post_channel_stream_schedule_segment(
+            broadcaster_id=self.id,
+            start_time=start_time,
+            token_for=self.id,
+            duration=duration,
+            recurring=recurring,
+            timezone=timezone,
+            category_id=category_id,
+            title=title,
+        )
+        return Schedule(data["data"], http=self._http)
+
+    async def update_schedule_segment(
+        self,
+        *,
+        id: str,
+        start_time: datetime.datetime | None = None,
+        duration: int | None = None,
+        category_id: str | None = None,
+        title: str | None = None,
+        canceled: bool | None = None,
+        timezone: str | None = None,
+    ) -> Schedule:
+        """|coro|
+
+        Updates a scheduled broadcast segment.
+
+        Parameters
+        ----------
+        id: str
+            The ID of the broadcast segment to update.
+        start_time: datetime.datetime | None
+            The datetime that the broadcast segment starts. This can be timezone aware.
+        duration: int | None
+            he length of time, in minutes, that the broadcast is scheduled to run. The duration must be in the range 30 through 1380 (23 hours)
+        category_id: str | None
+            The ID of the category that best represents the broadcast's content. To get the category ID, use :meth:`~Client.search_categories`.
+        title: str | None
+            The broadcast's title. The title may contain a maximum of 140 characters.
+        canceled: bool | None
+            A Boolean value that indicates whether the broadcast is canceled. Set to True to cancel the segment.
+        timezone: str | None
+            The time zone where the broadcast takes place. Specify the time zone using `IANA time zone database <https://www.iana.org/time-zones>`_  format (for example, America/New_York).
+
+        Returns
+        -------
+        Schedule
+            Schedule object.
+
+        Raises
+        ------
+        ValueError
+            Duration must be between 30 and 1380.
+        ValueError
+            Title must not be greater than 140 characters.
+        """
+        if duration is not None and (duration < 30 or duration > 1380):
+            raise ValueError("Duration must be between 30 and 1380.")
+        if title is not None and len(title) > 140:
+            raise ValueError("Title must not be greater than 140 characters.")
+
+        from .models.schedule import Schedule
+
+        data = await self._http.patch_channel_stream_schedule_segment(
+            broadcaster_id=self.id,
+            id=id,
+            start_time=start_time,
+            duration=duration,
+            category_id=category_id,
+            title=title,
+            canceled=canceled,
+            timezone=timezone,
+            token_for=self.id,
+        )
+
+        return Schedule(data["data"], http=self._http)
+
+    async def delete_schedule_segment(self, id: str) -> None:
+        """|coro|
+
+        Removes a broadcast segment from the broadcaster's streaming schedule.
+
+        .. note::
+            For recurring segments, removing a segment removes all segments in the recurring schedule.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:schedule`` scope.
+
+        Parameters
+        ----------
+        id: str
+            The ID of the segment to remove.
+        """
+        return await self._http.delete_channel_stream_schedule_segment(broadcaster_id=self.id, id=id, token_for=self.id)
+
+    async def fetch_channel_teams(self, *, token_for: str | PartialUser | None = None) -> list[ChannelTeam]:
+        """|coro|
+
+        Fetches the list of Twitch teams that the broadcaster is a member of.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            An optional user token to use instead of the default app token.
+
+        Returns
+        -------
+        list[ChannelTeam]
+            List of ChannelTeam objects.
+        """
+        from .models.teams import ChannelTeam
+
+        data = await self._http.get_channel_teams(broadcaster_id=self.id, token_for=token_for)
+
+        return [ChannelTeam(d, http=self._http) for d in data["data"]]
+
+    async def check_automod_status(self, *messages: list[AutomodCheckMessage]) -> list[AutoModStatus]:
+        r"""|coro|
+
+        Checks whether AutoMod would flag the specified message for review.
+
+        Rates are limited per channel based on the account type rather than per access token.
+
+        +---------------+-----------------+---------------+
+        | Account type  | Limit per minute| Limit per hour|
+        +===============+=================+===============+
+        | Normal        | 5               | 50            |
+        +---------------+-----------------+---------------+
+        | Affiliate     | 10              | 100           |
+        +---------------+-----------------+---------------+
+        | Partner       | 30              | 300           |
+        +---------------+-----------------+---------------+
+
+        .. note::
+            AutoMod is a moderation tool that holds inappropriate or harassing chat messages for moderators to review.
+            Moderators approve or deny the messages that AutoMod flags; only approved messages are released to chat.
+            AutoMod detects misspellings and evasive language automatically.
+
+            For information about AutoMod, see `How to Use AutoMod <https://help.twitch.tv/s/article/how-to-use-automod?language=en_US>`_.
+
+        .. note::
+            Requires a user access token that includes the ``moderation:read`` scope.
+
+        Parameters
+        ----------
+        \*messages: :class:`twitchio.AutomodCheckMessage`
+            An argument list of AutomodCheckMessage objects.
+
+        Returns
+        -------
+        list[AutoModStatus]
+            List of AutoModStatus objects.
+        """
+        from .models.moderation import AutoModStatus
+
+        data = await self._http.post_check_automod_status(broadcaster_id=self.id, messages=messages, token_for=self.id)
+        return [AutoModStatus(d) for d in data["data"]]
+
+    async def approve_automod_messages(self, msg_id: str) -> None:
+        """|coro|
+
+        Allow the message that AutoMod flagged for review.
+
+        The PartialUser / User object to perform this task is the moderator.
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:automod`` scope.
+
+        Parameters
+        ----------
+        msg_id: str
+            The ID of the message to allow.
+        """
+        return await self._http.post_manage_automod_messages(
+            user_id=self.id, msg_id=msg_id, action="ALLOW", token_for=self.id
+        )
+
+    async def deny_automod_messages(self, msg_id: str) -> None:
+        """|coro|
+
+        Deny the message that AutoMod flagged for review.
+
+        The PartialUser / User object to perform this task is the moderator.
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:automod`` scope.
+
+        Parameters
+        ----------
+        msg_id: str
+            The ID of the message to deny.
+        """
+        return await self._http.post_manage_automod_messages(
+            user_id=self.id, msg_id=msg_id, action="DENY", token_for=self.id
+        )
+
+    async def fetch_automod_settings(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+    ) -> AutomodSettings:
+        """|coro|
+
+        Fetches the broadcaster's AutoMod settings.
+
+        The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
+
+        .. note::
+            Requires a user access token that includes the ``moderator:read:automod_settings`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:read:automod_settings`` scope.
+
+        Returns
+        -------
+        AutomodSettings
+            AutomodSettings object.
+        """
+        from .models import AutomodSettings
+
+        data = await self._http.get_automod_settings(broadcaster_id=self.id, moderator_id=moderator, token_for=token_for)
+        return AutomodSettings(data["data"][0], http=self._http)
+
+    async def update_automod_settings(
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        settings: AutomodSettings,
+        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
+    ) -> AutomodSettings:
+        """|coro|
+
+        Updates the broadcaster's AutoMod settings.
+
+        The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
+
+        Perform a fetch with :meth:`~fetch_automod_settings` to obtain the :class:`~twitchio.models.moderation.AutomodSettings` object to modify and pass to this method.
+
+        You may set either overall_level or the individual settings like aggression, but not both.
+
+        Setting overall_level applies default values to the individual settings. However, setting overall_level to 4 does not necessarily mean that it applies 4 to all the individual settings.
+        Instead, it applies a set of recommended defaults to the rest of the settings. For example, if you set overall_level to 2, Twitch provides some filtering on discrimination and sexual content, but more filtering on hostility (see the first example response).
+
+        If overall_level is currently set and you update swearing to 3, overall_level will be set to null and all settings other than swearing will be set to 0.
+        The same is true if individual settings are set and you update overall_level to 3 — all the individual settings are updated to reflect the default level.
+
+        Note that if you set all the individual settings to values that match what overall_level would have set them to, Twitch changes AutoMod to use the default AutoMod level instead of using the individual settings.
+
+        Valid values for all levels are from 0 (no filtering) through 4 (most aggressive filtering).
+        These levels affect how aggressively AutoMod holds back messages for moderators to review before they appear in chat or are denied (not shown).
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:automod_settings`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        settings: AutomodSettings
+            AutomodSettings object containing the new settings for the broadcaster's channel.
+            You can fetch this using :meth:`~fetch_automod_settings`
+        token_for: str | PartialUser
+            User access token that includes the `moderator:manage:automod_settings` scope.
+
+        Returns
+        -------
+        AutomodSettings
+            AutomodSettings object.
+        """
+        from .models import AutomodSettings
+
+        data = await self._http.put_automod_settings(
+            broadcaster_id=self.id, moderator_id=moderator, settings=settings, token_for=token_for
+        )
+        return AutomodSettings(data["data"][0], http=self._http)
+
+    def fetch_banned_user(
+        self,
+        *,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[BannedUser]:
+        """|aiter|
+
+        Fetch all users that the broadcaster has banned or put in a timeout.
+
+        .. note::
+            Requires a user access token that includes the ``moderation:read`` or ``moderator:manage:banned_users`` scope.
+
+        Parameters
+        ----------
+        user_ids: list[str | int] | None
+            A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each user you want to get.
+            You may specify a maximum of 100 IDs.
+
+            The returned list includes only those users that were banned or put in a timeout.
+            The list is returned in the same order that you specified the IDs.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[BannedUser]
+            HTTPAsyncIterator of BannedUser objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 100 users.
+        """
+        first = max(1, min(100, first))
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only specify a maximum of 100 users.")
+
+        return self._http.get_banned_users(
+            broadcaster_id=self.id,
+            user_ids=user_ids,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    async def ban_user(
+        self,
+        *,
+        moderator: str | PartialUser | None = None,  # TODO Default to bot_id, same for token_for.
+        user: str | PartialUser,
+        reason: str | None = None,
+    ) -> Ban:
+        """|coro|
+
+        Ban the provided user from the channel tied with this :class:`~twitchio.PartialUser`.
 
         .. note::
 
-            This field is a tuple due to a mistake when creating the models.
-            Due to semver principals, this cannot be fixed until version 3.0 (at which time we will be removing the field entirely).
-    created_at: :class:`datetime.datetime`
-        When the user created their account
-    email: Optional[class:`str`]
-        The user's email. This is only returned if you have the ``user:read:email`` scope on the token used to make the request
+            Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
+
+        Parameters
+        ----------
+        moderator: str | PartialUser | None
+            An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
+            You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+
+            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
+        user: str | PartialUser
+            The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
+        reason: str | None
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+
+        Raises
+        ------
+        ValueError
+            The length of the reason parameter exceeds 500 characters.
+        HTTPException
+            The request to ban the chatter failed.
+
+        Returns
+        -------
+        Ban
+            The :class:`~twitchio.Ban` object for this ban.
+        """
+        from .models import Ban  # fixes: circular import
+
+        if reason and len(reason) > 500:
+            raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
+
+        data = await self._http.post_ban_user(
+            broadcaster_id=self.id,
+            moderator_id=moderator or self.id,
+            user_id=user,
+            token_for=moderator,
+            reason=reason,
+        )
+
+        return Ban(data["data"][0], http=self._http)
+
+    async def timeout_user(
+        self,
+        *,
+        moderator: str | int | PartialUser | None,  # TODO Default to bot_id, same for token_for.
+        user: str | PartialUser | None,
+        duration: int,
+        reason: str | None = None,
+    ) -> Timeout:
+        """|coro|
+
+        Timeout the provided user from the channel tied with this :class:`~twitchio.PartialUser`.
+
+        .. note::
+
+            Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
+
+        Parameters
+        ----------
+        moderator: str | PartialUser | None
+            An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
+            You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+
+            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
+        user: str | PartialUser
+            The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
+        reason: str | None
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+        duration: int
+            The duration of the timeout in seconds. The minimum duration is ``1`` second and the
+            maximum is ``1_209_600`` seconds (2 weeks).
+
+            To end the chatters timeout early, set this field to ``1``,
+            or use the :meth:`~twitchio.user.PartialUser.unban_user` endpoint.
+
+            The default is ``600`` which is ten minutes.
+
+        Returns
+        -------
+        Timeout
+            The :class:`~twitchio.Timeout` object.
+        """
+        from .models import Timeout
+
+        data = await self._http.post_ban_user(
+            broadcaster_id=self.id,
+            moderator_id=moderator or self.id,
+            user_id=user,
+            token_for=moderator,
+            duration=duration,
+            reason=reason,
+        )
+        return Timeout(data["data"][0], http=self._http)
+
+    async def unban_user(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        user_id: str | int | PartialUser,
+        token_for: str,
+    ) -> None:
+        """|coro|
+
+        Unban a user from the broadcaster's channel.
+
+        .. note::
+
+            Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        user_id: str | int | PartialUser
+            The ID, or PartialUser, of the user to ban or put in a timeout.
+        token_for: str
+            User access token that includes the ``moderator:manage:banned_users`` scope.
+        """
+
+        return await self._http.delete_unban_user(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            user_id=user_id,
+            token_for=token_for,
+        )
+
+    def fetch_unban_requests(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+        status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
+        user: str | int | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[UnbanRequest]:
+        """|aiter|
+
+        Fetches the unban requests of a broadcaster's channel.
+
+        .. note::
+            Requires a user access token that includes the ``moderator:read:unban_requests`` or ``moderator:manage:unban_requests`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:read:unban_requests` or ``moderator:manage:unban_requests`` scope.
+        status: Literal["pending", "approved", "denied", "acknowledged", "canceled"]
+            Filter by a status. Possible values are:
+
+            - pending
+            - approved
+            - denied
+            - acknowledged
+            - canceled
+
+        user: str | int | PartialUser | None
+            An ID, or PartialUser, used to filter what unban requests are returned.
+        first: int
+            The maximum number of items to return per page in response. Default 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[UnbanRequest]
+            HTTPAsyncIterator of UnbanRequest objects.
+        """
+        first = max(1, min(100, first))
+
+        return self._http.get_unban_requests(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
+            status=status,
+            user_id=user,
+            first=first,
+            max_results=max_results,
+        )
+
+    async def resolve_unban_request(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+        status: Literal["approved", "denied"],
+        unban_request_id: str,
+        resolution_text: str | None = None,
+    ) -> UnbanRequest:
+        """|coro|
+
+        Resolves an unban request by approving or denying it.
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:unban_requests`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:unban_requests`` scope.
+        status: Literal["approved", "denied"]
+            Resolution status. This is either ``approved`` or ``denied``.
+        unban_request_id: str
+            The ID of the unban request.
+        resolution_text: str | None
+            Message supplied by the unban request resolver. The message is limited to a maximum of 500 characters.
+
+        Returns
+        -------
+        UnbanRequest
+            UnbanRequest object.
+
+        Raises
+        ------
+        ValueError
+            Resolution text must be less than 500 characters.
+        """
+
+        if resolution_text is not None and len(resolution_text) > 500:
+            raise ValueError("Resolution text must be less than 500 characters.")
+
+        from .models.moderation import UnbanRequest
+
+        data = await self._http.patch_unban_requests(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
+            unban_request_id=unban_request_id,
+            status=status,
+            resolution_text=resolution_text,
+        )
+        return UnbanRequest(data["data"][0], http=self._http)
+
+    def fetch_blocked_terms(
+        self,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[BlockedTerm]:
+        """|aiter|
+
+        Fetches the broadcaster's list of non-private, blocked words or phrases.
+        These are the terms that the broadcaster or moderator added manually or that were denied by AutoMod.
+
+        ??? note
+            Requires a user access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[BlockedTerm]
+            HTTPAsyncIterator of BlockedTerm objects.
+        """
+        first = max(1, min(100, first))
+
+        return self._http.get_blocked_terms(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
+        )
+
+    async def add_blocked_term(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+        text: str,
+    ) -> BlockedTerm:
+        """|coro|
+
+        Adds a word or phrase to the broadcaster's list of blocked terms.
+
+        These are the terms that the broadcaster doesn't want used in their chat room.
+
+        .. note::
+            Terms may include a wildcard character ``(*)``. The wildcard character must appear at the beginning or end of a word or set of characters. For example, ``*foo`` or ``foo*``.
+
+            If the blocked term already exists, the response contains the existing blocked term.
+
+        .. note::
+           Requires a user access token that includes the ``moderator:manage:blocked_terms`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:blocked_terms`` scope.
+        text: str
+            The word or phrase to block from being used in the broadcaster's chat room. The term must contain a minimum of 2 characters and may contain up to a maximum of 500 characters.
+
+            Terms may include a wildcard character ``(*)``. The wildcard character must appear at the beginning or end of a word or set of characters. For example, ``*foo`` or ``foo*``.
+
+            If the blocked term already exists, the response contains the existing blocked term.
+
+        Returns
+        -------
+        BlockedTerm
+            BlockedTerm object.
+
+        Raises
+        ------
+        ValueError
+            Text must be more than 2 characters but less than 500 characters.
+        """
+
+        if len(text) > 500 or len(text) < 2:
+            raise ValueError("Text must be more than 2 characters but less than 500 characters.")
+
+        from .models.moderation import BlockedTerm
+
+        data = await self._http.post_blocked_term(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
+            text=text,
+        )
+        return BlockedTerm(data["data"][0], http=self._http)
+
+    async def remove_blocked_term(
+        self,
+        *,
+        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        token_for: str | PartialUser,
+        id: str,
+    ) -> None:
+        """|coro|
+
+        Removes the word or phrase from the broadcaster's list of blocked terms.
+
+        .. note::
+           Requires a user access token that includes the ``oderator:manage:blocked_terms`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests.
+            This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:blocked_terms`` scope.
+        id: str
+            The ID of the blocked term to remove from the broadcaste's list of blocked terms.
+        """
+
+        return await self._http.delete_blocked_term(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
+            id=id,
+        )
+
+    async def delete_chat_messages(
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        token_for: str | PartialUser,
+        message_id: str | None = None,  # TODO Default to bot_id, same for token_for.
+    ) -> None:
+        """|coro|
+
+        Removes a single chat message or all chat messages from the broadcaster's chat room.
+
+        .. important::
+            Restrictions:
+
+            - The message must have been created within the last 6 hours.
+            - The message must not belong to the broadcaster.
+            - The message must not belong to another moderator.
+
+            If not specified, the request removes all messages in the broadcaster's chat room.
+
+        .. note::
+           Requires a user access token that includes the ``moderator:manage:chat_messages`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:chat_messages`` scope.
+        message_id: str
+            The ID of the message to remove.
+        """
+
+        return await self._http.delete_chat_message(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
+            message_id=message_id,
+        )
+
+    def fetch_moderated_channels(self, *, first: int = 20, max_results: int | None = None) -> HTTPAsyncIterator[PartialUser]:
+        """|aiter|
+
+        Fetches channels that the specified user has moderator privileges in.
+
+        .. note::
+           Requires a user access token that includes the ``user:read:moderated_channels`` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
+        """
+        first = max(1, min(100, first))
+        return self._http.get_moderated_channels(
+            user_id=self.id,
+            first=first,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    def fetch_moderators(
+        self,
+        *,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[PartialUser]:
+        """|aiter|
+
+        Fetches users allowed to moderate the broadcaster's chat room.
+
+        .. note::
+           Requires a user access token that includes the ``moderation:read`` scope.
+           If your app also adds and removes moderators, you can use the ``channel:manage:moderators`` scope instead.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        user_ids: list[str | int] | None
+            A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each moderator you want to get.
+            The returned list includes only the users from the list who are moderators in the broadcaster's channel. You may specify a maximum of 100 IDs.
+        token_for: str | PartialUser
+            User access token that includes the `moderation:read` scope.
+            If your app also adds and removes moderators, you can use the ``channel:manage:moderators`` scope instead.
+            The user ID in the access token must match the broadcaster's ID.
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 100 user IDs.
+
+        """
+        first = max(1, min(100, first))
+
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only specify a maximum of 100 user IDs.")
+
+        return self._http.get_moderators(
+            broadcaster_id=self.id,
+            user_ids=user_ids,
+            first=first,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    async def add_moderator(self, user: str | int | PartialUser) -> None:
+        """|coro|
+
+        Adds a moderator to the broadcaster's chat room.
+
+        The broadcaster may add a maximum of 10 moderators within a 10-second window.
+
+        .. note::
+           Requires a user access token that includes the ``channel:manage:moderators`` scope.
+
+        Parameters
+        ----------
+        user: str | int | PartialUser
+            The ID of the user to add as a moderator in the broadcaster's chat room.
+        """
+
+        return await self._http.post_channel_moderator(broadcaster_id=self.id, user_id=user, token_for=self.id)
+
+    async def remove_moderator(self, user: str | int | PartialUser) -> None:
+        """|coro|
+
+        Removes a moderator to the broadcaster's chat room.
+
+        The broadcaster may remove a maximum of 10 moderators within a 10-second window.
+
+        .. note::
+           Requires a user access token that includes the ``channel:manage:moderators`` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        user: str | int | PartialUser
+            The ID of the user to remove as a moderator in the broadcaster's chat room.
+        """
+
+        return await self._http.delete_channel_moderator(broadcaster_id=self.id, user_id=user, token_for=self.id)
+
+    def fetch_vips(
+        self,
+        *,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[PartialUser]:
+        """|aiter|
+
+        Fetches the broadcaster's VIPs.
+
+        .. note::
+           Requires a user access token that includes the ``channel:read:vips`` scope.
+           If your app also adds and removes moderators, you can use the ``channel:manage:vips`` scope instead.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        user_ids: list[str | int] | None
+            Filters the list for specific VIPs. You may specify a maximum of 100 IDs.
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 100 user IDs.
+
+        """
+        first = max(1, min(100, first))
+
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only specify a maximum of 100 user IDs.")
+
+        return self._http.get_vips(
+            broadcaster_id=self.id,
+            user_ids=user_ids,
+            first=first,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    async def add_vip(self, user: str | int | PartialUser) -> None:
+        """|coro|
+
+        Adds a VIP to the broadcaster's chat room.
+
+        The broadcaster may add a maximum of 10 VIPs within a 10-second window.
+
+        .. note::
+           Requires a user access token that includes the ``channel:manage:vips`` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        user: str | int
+            The ID, or PartialUser, of the user to add as a VIP in the broadcaster's chat room.
+        """
+
+        return await self._http.add_vip(broadcaster_id=self.id, user_id=user, token_for=self.id)
+
+    async def remove_vip(self, user: str | int | PartialUser) -> None:
+        """|coro|
+
+        Removes a VIP to the broadcaster's chat room.
+
+        The broadcaster may remove a maximum of 10 VIPs within a 10-second window.
+
+        .. note::
+           Requires a user access token that includes the ``channel:manage:vips`` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        user: str | int | PartialUser
+            The ID, or PartialUser, of the user to remove as a VIP in the broadcaster's chat room.
+        """
+
+        return await self._http.delete_vip(broadcaster_id=self.id, user_id=user, token_for=self.id)
+
+    async def update_shield_mode_status(
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        active: bool,
+        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
+    ) -> ShieldModeStatus:
+        """|coro|
+
+        Activates or deactivates  the broadcaster's Shield Mode.
+
+        .. note::
+           Requires a user access token that includes the ``moderator:manage:shield_mode`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
+            This ID must match the user ID in the access token.
+        active: bool
+            A Boolean value that determines whether to activate Shield Mode.
+            Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:manage:shield_mode`` scope.
+        """
+
+        from .models.moderation import ShieldModeStatus
+
+        data = await self._http.put_shield_mode_status(
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=token_for,
+            active=active,
+        )
+        return ShieldModeStatus(data["data"][0], http=self._http)
+
+    async def fetch_shield_mode_status(
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
+    ) -> ShieldModeStatus:
+        """|coro|
+
+        Fetches the broadcaster's Shield Mode activation status.
+
+        .. note::
+           Requires a user access token that includes the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
+            This ID must match the user ID in the access token.
+        token_for: str | PartialUser
+            User access token that includes the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+        """
+
+        from .models.moderation import ShieldModeStatus
+
+        data = await self._http.get_shield_mode_status(broadcaster_id=self.id, moderator_id=moderator, token_for=token_for)
+        return ShieldModeStatus(data["data"][0], http=self._http)
+
+    def fetch_polls(
+        self,
+        *,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Poll]:
+        """|aiter|
+
+        Fetches polls that the broadcaster created.
+
+        Polls are available for 90 days after they're created.
+
+        .. note::
+           Requires a user access token that includes the ``channel:read:polls`` or ``channel:manage:polls`` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            A list of IDs that identify the polls to return. You may specify a maximum of 20 IDs.
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 20 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Poll]
+            HTTPAsyncIterator of Poll objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 20 IDs.
+
+        """
+        first = max(1, min(20, first))
+
+        if ids is not None and len(ids) > 20:
+            raise ValueError("You may only specify a maximum of 20 IDs.")
+
+        return self._http.get_polls(
+            broadcaster_id=self.id,
+            ids=ids,
+            first=first,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    async def create_poll(
+        self,
+        *,
+        title: str,
+        choices: list[str],
+        duration: int,
+        channel_points_voting_enabled: bool = False,
+        channel_points_per_vote: int | None = None,
+    ) -> Poll:
+        """|coro|
+
+        Creates a poll that viewers in the broadcaster's channel can vote on.
+
+        The poll begins as soon as it's created. You may run only one poll at a time.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:polls`` scope.
+
+        Parameters
+        ----------
+        title: str
+            The question that viewers will vote on.
+            The question may contain a maximum of 60 characters.
+        choices: list[str]
+            A list of choice titles that viewers may choose from.
+            The list must contain a minimum of 2 choices and up to a maximum of 5 choices.
+            The title itself can only have a maximum of 25 characters.
+        duration: int
+            The length of time (in seconds) that the poll will run for.
+            The minimum is 15 seconds and the maximum is 1800 seconds (30 minutes).
+        channel_points_voting_enabled: bool
+            A Boolean value that indicates whether viewers may cast additional votes using Channel Points.
+            If True, the viewer may cast more than one vote but each additional vote costs the number of Channel Points specified in ``channel_points_per_vote``. The default is False
+        channel_points_per_vote: int | None
+            The number of points that the viewer must spend to cast one additional vote. The minimum is 1 and the maximum is 1000000.
+            Only use this if ``channel_points_voting_enabled`` is True; otherwise it is ignored.
+
+        Returns
+        -------
+        Poll
+            A Poll object.
+
+        Raises
+        ------
+        ValueError
+            The question may contain a maximum of 60 characters.
+        ValueError
+            You must provide a minimum of 2 choices or a maximum of 5.
+        ValueError
+            Choice title may contain a maximum of 25 characters.
+        ValueError
+            Duration must be between 15 and 1800.
+        ValueError
+            Channel points per vote must be between 1 and 1000000.
+        """
+        data = await self._http.post_poll(
+            broadcaster_id=self.id,
+            title=title,
+            choices=choices,
+            duration=duration,
+            token_for=self.id,
+            channel_points_voting_enabled=channel_points_voting_enabled,
+            channel_points_per_vote=channel_points_per_vote,
+        )
+
+        if len(title) > 60:
+            raise ValueError("The question may contain a maximum of 60 characters.")
+        if len(choices) < 2 or len(choices) > 5:
+            raise ValueError("You must provide a minimum of 2 choices or a maximum of 5.")
+        if any(len(title) > 25 for title in choices):
+            raise ValueError("Choice title may contain a maximum of 25 characters.")
+        if duration < 15 or duration > 1800:
+            raise ValueError("Duration must be between 15 and 1800.")
+        if channel_points_per_vote is not None and (channel_points_per_vote < 1 or channel_points_per_vote > 1000000):
+            raise ValueError("Channel points per vote must be between 1 and 1000000.")
+
+        from .models.polls import Poll
+
+        return Poll(data["data"][0], http=self._http)
+
+    async def end_poll(self, *, id: str, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
+        """|coro|
+
+        End an active poll. You have the option to end it or end it and archive it.
+
+        Status must be set to one of the below.
+
+        - TERMINATED — Ends the poll before the poll is scheduled to end. The poll remains publicly visible.
+        - ARCHIVED — Ends the poll before the poll is scheduled to end, and then archives it so it's no longer publicly visible.
+
+        .. tip::
+            You can also call this method directly on a Poll object with [`end_poll`][twitchio.models.polls.Poll.end_poll]
+
+        Parameters
+        ----------
+        id: str
+            The ID of the poll to end.
+        status:  Literal["ARCHIVED", "TERMINATED"]
+            The status to set the poll to. Possible case-sensitive values are: ``ARCHIVED`` and ``TERMINATED``.
+
+        Returns
+        -------
+        Poll
+            A Poll object.
+        """
+        from .models.polls import Poll
+
+        data = await self._http.patch_poll(broadcaster_id=self.id, id=id, status=status, token_for=self.id)
+        return Poll(data["data"][0], http=self._http)
+
+    def fetch_predictions(
+        self,
+        *,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Prediction]:
+        """|aiter|
+
+        Fetches predictions that the broadcaster created.
+
+        If the number of outcomes is two, the color is BLUE for the first outcome and PINK for the second outcome.
+        If there are more than two outcomes, the color is BLUE for all outcomes.
+
+        .. note::
+           Requires a user access token that includes the ``channel:read:predictions`` or ``channel:manage:predictions`` scope.
+           The user ID in the access token must match the broadcaster's ID.
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            A list of IDs that identify the predictions to return. You may specify a maximum of 20 IDs.
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 25 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Prediction]
+            HTTPAsyncIterator of Prediction objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specify a maximum of 25 IDs.
+
+        """
+        first = max(1, min(25, first))
+
+        if ids is not None and len(ids) > 20:
+            raise ValueError("You may only specify a maximum of 25 IDs.")
+
+        return self._http.get_predictions(
+            broadcaster_id=self.id,
+            ids=ids,
+            first=first,
+            token_for=self.id,
+            max_results=max_results,
+        )
+
+    async def create_prediction(
+        self,
+        *,
+        title: str,
+        outcomes: list[str],
+        prediction_window: int,
+    ) -> Prediction:
+        """|coro|
+
+        Creates a prediction that viewers in the broadcaster's channel can vote on.
+
+        The prediction begins as soon as it's created. You may run only one prediction at a time.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:predictions`` scope.
+
+        Parameters
+        ----------
+        title: str
+            The question that viewers will vote on.
+            The question may contain a maximum of 45 characters.
+        outcomes: list[str]
+            A list of outcomes titles that viewers may choose from.
+            The list must contain a minimum of 2 outcomes and up to a maximum of 10 outcomes.
+            The title itself can only have a maximum of 25 characters.
+        prediction_window: int
+            The length of time (in seconds) that the prediction will run for.
+            The minimum is 30 seconds and the maximum is 1800 seconds (30 minutes).
+
+        Returns
+        -------
+        Prediction
+            A Prediction object.
+
+        Raises
+        ------
+        ValueError
+            The question may contain a maximum of 45 characters.
+        ValueError
+            You must provide a minimum of 2 choices or a maximum of 5.
+        ValueError
+            Choice title may contain a maximum of 25 characters.
+        ValueError
+            Duration must be between 15 and 1800.
+        """
+        data = await self._http.post_prediction(
+            broadcaster_id=self.id,
+            title=title,
+            outcomes=outcomes,
+            prediction_window=prediction_window,
+            token_for=self.id,
+        )
+
+        if len(outcomes) < 2 or len(outcomes) > 10:
+            raise ValueError("You must provide a minimum of 2 choices or a maximum of 10.")
+        if any(len(title) > 25 for title in outcomes):
+            raise ValueError("Choice title may contain a maximum of 25 characters.")
+        if prediction_window < 15 or prediction_window > 1800:
+            raise ValueError("Duration must be between 15 and 1800.")
+
+        from .models.predictions import Prediction
+
+        return Prediction(data["data"][0], http=self._http)
+
+    async def end_prediction(
+        self,
+        *,
+        id: str,
+        status: Literal["RESOLVED", "CANCELED", "LOCKED"],
+        winning_outcome_id: str | None = None,
+    ) -> Prediction:
+        """|coro|
+
+        End an active prediction.
+
+        The status to set the prediction to. Possible case-sensitive values are:
+
+        - RESOLVED — The winning outcome is determined and the Channel Points are distributed to the viewers who predicted the correct outcome.
+        - CANCELED — The broadcaster is canceling the prediction and sending refunds to the participants.
+        - LOCKED — The broadcaster is locking the prediction, which means viewers may no longer make predictions.
+
+        The broadcaster can update an active prediction to LOCKED, RESOLVED, or CANCELED; and update a locked prediction to RESOLVED or CANCELED.
+
+        The broadcaster has up to 24 hours after the prediction window closes to resolve the prediction. If not, Twitch sets the status to CANCELED and returns the points.
+
+        A winning_outcome_id must be provided when setting to RESOLVED>
+
+        .. tip::
+            You can also call this method directly on a Prediction object with [`end_poll`][twitchio.models.predictions.Prediction.end_prediction]
+
+        Parameters
+        ----------
+        id: str
+            The ID of the prediction to end.
+        status  Literal["RESOLVED", "CANCELED", "LOCKED"]
+            The status to set the prediction to. Possible case-sensitive values are: ``RESOLVED`` , ``CANCELED`` and ``LOCKED``.
+        winning_outcome_id: str
+            The ID of the winning outcome. You must set this parameter if you set status to ``RESOLVED``.
+
+        Returns
+        -------
+        Prediction
+            A Prediction object.
+        """
+        from .models.predictions import Prediction
+
+        data = await self._http.patch_prediction(
+            broadcaster_id=self.id, id=id, status=status, token_for=self.id, winning_outcome_id=winning_outcome_id
+        )
+        return Prediction(data["data"][0], http=self._http)
+
+    async def fetch_stream_key(self) -> str:
+        """|coro|
+
+        Fetches the channel's stream key.
+
+        .. note::
+            Requires a user access token that includes the ``channel:read:stream_key`` scope
+
+        Returns
+        -------
+        str
+            The channel's stream key.
+        """
+        data = await self._http.get_stream_key(broadcaster_id=self.id, token_for=self.id)
+        return data["data"][0]["stream_key"]
+
+    def fetch_followed_streams(
+        self,
+        *,
+        first: int = 100,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Stream]:
+        """|aiter|
+
+        Fetches the broadcasters that the user follows and that are streaming live.
+
+        .. note::
+            Requires a user access token that includes the ``user:read:follows`` scope
+
+        Parameters
+        ----------
+        first: int
+            The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[Stream]
+            HTTPAsyncIterator of Stream objects.
+        """
+        first = max(1, min(100, first))
+        return self._http.get_followed_streams(
+            user_id=self.id,
+            token_for=self.id,
+            first=first,
+            max_results=max_results,
+        )
+
+    async def create_stream_marker(self, *, token_for: str | PartialUser, description: str | None = None) -> StreamMarker:
+        """|coro|
+
+        Adds a marker to a live stream.
+
+        A marker is an arbitrary point in a live stream that the broadcaster or editor wants to mark, so they can return to that spot later to create video highlights.
+
+        .. important::
+            You may not add markers:
+
+            - If the stream is not live
+            - If the stream has not enabled video on demand (VOD)
+            - If the stream is a premiere (a live, first-viewing event that combines uploaded videos with live chat)
+            - If the stream is a rerun of a past broadcast, including past premieres.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:broadcast`` scope.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser
+            This must be the user ID, or PartialUser, of the broadcaster or one of the broadcaster's editors.
+        description: str | None
+            A short description of the marker to help the user remember why they marked the location.
+            The maximum length of the description is 140 characters.
+
+        Returns
+        -------
+        StreamMarker
+            Represents a StreamMarker
+
+        Raises
+        ------
+        ValueError
+            The maximum length of the description is 140 characters.
+        """
+        if description is not None and len(description) > 140:
+            raise ValueError("The maximum length of the description is 140 characters.")
+
+        from .models.streams import StreamMarker
+
+        data = await self._http.post_stream_marker(user_id=self.id, token_for=token_for, description=description)
+        return StreamMarker(data["data"][0])
+
+    def fetch_stream_markers(
+        self, *, token_for: str | PartialUser, first: int = 20, max_results: int | None = None
+    ) -> HTTPAsyncIterator[VideoMarkers]:
+        """|aiter|
+
+        Fetches markers from the user's most recent stream or from the specified VOD/video.
+
+        A marker is an arbitrary point in a live stream that the broadcaster or editor marked, so they can return to that spot later to create video highlights
+
+        .. tip::
+            To fetch by video ID please use [`fetch_stream_markers`][twitchio.client.fetch_stream_markers]
+
+        .. note::
+            Requires a user access token that includes the ``user:read:broadcast`` or ``channel:manage:broadcast scope``.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser
+            This must be the user ID, or PartialUser, of the broadcaster or one of the broadcaster's editors.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[VideoMarkers]
+            HTTPAsyncIterator of VideoMarkers objects.
+        """
+        first = max(1, min(100, first))
+        return self._http.get_stream_markers(
+            user_id=self.id,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
+        )
+
+    async def fetch_subscription(self, broadcaster: str | int | PartialUser) -> UserSubscription | None:
+        """|coro|
+
+        Checks whether the user subscribes to the broadcaster's channel.
+
+        .. note::
+            Requires a user access token that includes the ``user:read:subscriptions`` scope.
+
+        Parameters
+        ----------
+        broadcaster: str | int | PartialUser
+            The ID, or PartialUser, of a partner or affiliate broadcaster.
+
+        Returns
+        -------
+        UserSubscription | None
+            Returns UserSubscription if subscription exists; otherwise None.
+
+        Raises
+        ------
+        HTTPException
+        """
+        from .models.subscriptions import UserSubscription
+
+        try:
+            data = await self._http.get_user_subscription(user_id=self.id, broadcaster_id=broadcaster, token_for=self.id)
+        except HTTPException as e:
+            if e.status == 404:
+                return None
+            else:
+                raise e
+
+        return UserSubscription(data["data"][0], http=self._http)
+
+    async def fetch_broadcaster_subscriptions(
+        self,
+        *,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> BroadcasterSubscriptions:
+        """|coro|
+
+        Fetches all subscriptions for the broadcaster.
+
+        .. note::
+            Requires a user access token that includes the ``channel:read:subscriptions`` scope
+
+        Parameters
+        ----------
+        user_ids: list[str | int] | None
+            Filters the list to include only the specified subscribers. You may specify a maximum of 100 subscribers.
+        first: int
+            The maximum number of items to return per page in the response.
+            The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        BroadcasterSubscriptions
+
+        Raises
+        ------
+        ValueError
+            You may only provide a maximum of 100 user IDs.
+        """
+        first = max(1, min(100, first))
+
+        if user_ids is not None and len(user_ids) > 100:
+            raise ValueError("You may only provide a maximum of 100 user IDs.")
+
+        return await self._http.get_broadcaster_subscriptions(
+            token_for=self.id, broadcaster_id=self.id, user_ids=user_ids, first=first, max_results=max_results
+        )
+
+    async def send_whisper(self, *, to_user: str | int | PartialUser, message: str) -> None:
+        """|coro|
+
+        Send a whisper to a user.
+
+        You may whisper to a maximum of 40 unique recipients per day. Within the per day limit, you may whisper a maximum of 3 whispers per second and a maximum of 100 whispers per minute.
+
+        .. important::
+            The user sending the whisper must have a verified phone number (see the `Phone Number setting in your Security and Privacy <https://www.twitch.tv/settings/security>`_ settings).
+
+            The API may silently drop whispers that it suspects of violating Twitch policies. (The API does not indicate that it dropped the whisper).
+
+            The message must not be empty.
+
+            The maximum message lengths are:
+
+            - 500 characters if the user you're sending the message to hasn't whispered you before.
+            - 10,000 characters if the user you're sending the message to has whispered you before.
+
+            Messages that exceed the maximum length are truncated.
+
+        .. note::
+            Requires a user access token that includes the ``user:manage:whispers`` scope.
+
+        Parameters
+        ----------
+        to_user: str | int | PartialUser
+            The ID or the PartialUser of the user to receive the whisper.
+        message: str
+            The whisper message to send. The message must not be empty.
+
+            The maximum message lengths are:
+
+            - 500 characters if the user you're sending the message to hasn't whispered you before.
+            - 10,000 characters if the user you're sending the message to has whispered you before.
+
+            Messages that exceed the maximum length are truncated.
+        """
+
+        return await self._http.post_whisper(from_user_id=self.id, to_user_id=to_user, token_for=self.id, message=message)
+
+    async def user(self) -> User:
+        """|coro|
+
+        Fetch the full User information for the PartialUser.
+
+        Returns
+        -------
+        User
+            User object.
+        """
+        data = await self._http.get_users(ids=[self.id])
+        return User(data["data"][0], http=self._http)
+
+    async def update(self, description: str | None = None) -> User:
+        """|coro|
+
+        Update the user's information.
+
+        .. note::
+            Requires a user access token that includes the ``user:edit`` scope.
+
+        Parameters
+        ----------
+        description: str | None
+            The string to update the channel's description to. The description is limited to a maximum of 300 characters.
+            To remove the description then do not pass this kwarg.
+
+        Returns
+        -------
+        User
+            User object.
+
+        Raises
+        ------
+        ValueError
+            The description must be a maximum of 300 characters.
+        """
+
+        if description is not None and len(description) > 300:
+            raise ValueError("The description must be a maximum of 300 characters.")
+
+        data = await self._http.put_user(token_for=self.id, description=description)
+        return User(data["data"][0], http=self._http)
+
+    def fetch_block_list(self, *, first: int = 20, max_results: int | None = None) -> HTTPAsyncIterator[PartialUser]:
+        """|aiter|
+
+        Fetches a list of users that the broadcaster has blocked.
+
+        .. note::
+            Requires a user access token that includes the ``user:read:blocked_users`` scope.
+
+        Parameters
+        ----------
+        first: int
+            Maximum number of items to return per page. Default is 20.
+            Min is 1 and Max is 100.
+        max_results: int | None
+            Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+
+        Returns
+        -------
+        HTTPAsyncIterator[PartialUser]
+            HTTPAsyncIterator of PartialUser objects.
+        """
+        return self._http.get_user_block_list(
+            broadcaster_id=self.id, token_for=self.id, first=first, max_results=max_results
+        )
+
+    async def block_user(
+        self,
+        *,
+        user: str | int | PartialUser,
+        source: Literal["chat", "whisper"] | None = None,
+        reason: Literal["harassment", "spam", "other"] | None = None,
+    ) -> None:
+        """|coro|
+
+        Blocks the specified user from interacting with or having contact with the broadcaster.
+
+        The user ID in the OAuth token identifies the broadcaster who is blocking the user.
+
+        Parameters
+        ----------
+        user: str | int | PartialUser
+            The ID, or PartialUser, of the user to block.
+        source: Literal["chat", "whisper"] | None
+            The location where the harassment took place that is causing the brodcaster to block the user. Possible values are:
+
+            - chat
+            - whisper
+
+        reason: Literal["harassment", "spam", "other"] | None
+            The reason that the broadcaster is blocking the user. Possible values are:
+
+            - harassment
+            - spam
+            - other
+
+        Returns
+        -------
+        None
+        """
+        return await self._http.put_block_user(user_id=user, source=source, reason=reason, token_for=self.id)
+
+    async def unblock_user(
+        self,
+        *,
+        user: str | int | PartialUser,
+    ) -> None:
+        """|coro|
+
+        Removes the user from the broadcaster's list of blocked users.
+
+        Parameters
+        ----------
+        user: str | int | PartialUser
+            The ID, or PartialUser, of the user to unblock.
+
+        Returns
+        -------
+        None
+        """
+        return await self._http.delete_block_user(user_id=user, token_for=self.id)
+
+    async def fetch_active_extensions(self, token_for: str | PartialUser | None = None) -> ActiveExtensions:
+        """|coro|
+
+        Fetches a user's active extensions.
+
+        .. tip::
+            To include extensions that you have under development, you must specify a user access token that includes the ``user:read:broadcast`` or ``user:edit:broadcast`` scope.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            Optional user access token. To include extensions that you have under development, you must specify a user access token that includes the ``user:read:broadcast`` or ``user:edit:broadcast`` scope.
+
+        Returns
+        -------
+        ActiveExtensions
+            ActiveExtensions object.
+        """
+        data = await self._http.get_active_user_extensions(user_id=self.id, token_for=token_for)
+        return ActiveExtensions(data["data"])
+
+    async def warn_user(
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        user_id: str | int | PartialUser,
+        reason: str,
+        token_for: str | PartialUser,
+    ) -> Warning:
+        """|coro|
+
+        Warns a user in the specified broadcaster's chat room, preventing them from chat interaction until the warning is acknowledged.
+        New warnings can be issued to a user when they already have a warning in the channel (new warning will replace old warning).
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:warnings`` scope.
+            moderator id must match the user id in the user access token.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the user who requested the warning.
+        user_id: str | int | PartialUser
+            The ID, or PartialUser, of the user being warned.
+        reason: str
+            The reason provided for warning.
+        token_for: str
+            User access token that includes the ``moderator:manage:warnings`` scope.
+
+        Returns
+        -------
+        Warning
+            Warning object.
+        """
+        from .models.moderation import Warning
+
+        data = await self._http.post_warn_chat_user(
+            broadcaster_id=self.id, moderator_id=moderator, user_id=user_id, reason=reason, token_for=token_for
+        )
+        return Warning(data["data"][0], http=self._http)
+
+
+class User(PartialUser):
+    """Represents a User.
+
+    This class inherits from PartialUser and contains additional information about the user.
+
+    Attributes
+    ----------
+    id: str
+        The user's ID.
+    name: str | None
+        The user's name. In most cases, this is provided. There are however, rare cases where it is not.
+    display_name: str
+        The display name of the user.
+    type: Literal["admin", "global_mod", "staff", ""]
+        The type of the user. Possible values are:
+
+        - admin - Twitch administrator
+        - global_mod
+        - staff - Twitch staff
+        - empty string - Normal user
+
+    broadcaster_type: Literal["affiliate", "partner", ""]
+        The broadcaster type of the user. Possible values are:
+
+        - affiliate
+        - partner
+        - empty string - Normal user
+
+    description: str
+        Description of the user.
+    profile_image: Asset
+        Profile image as an asset.
+    offline_image: Asset | None
+        Offline image as an asset, otherwise None if broadcaster as not set one.
+    email: str | None
+        The user's verified email address. The object includes this field only if the user access token includes the ``user:read:email`` scope.
+    created_at: datetime.datetime
+        When the user was created.
     """
 
     __slots__ = (
-        "_http",
-        "id",
-        "name",
-        "display_name",
-        "type",
         "broadcaster_type",
-        "description",
-        "profile_image",
-        "offline_image",
-        "view_count",
         "created_at",
+        "description",
+        "display_name",
         "email",
-        "_cached_rewards",
+        "offline_image",
+        "profile_image",
+        "type",
     )
 
-    def __init__(self, http: "TwitchHTTP", data: dict):
-        self._http = http
-        self.id = int(data["id"])
-        self.name: str = data["login"]
-        self.display_name: str = data["display_name"]
-        self.type = UserTypeEnum(data["type"])
-        self.broadcaster_type = BroadcasterTypeEnum(data["broadcaster_type"])
+    def __init__(self, data: UsersResponseData, *, http: HTTPClient) -> None:
+        super().__init__(data["id"], data["login"], data["display_name"], http=http)
+        self.type: Literal["admin", "global_mod", "staff", ""] = data["type"]
+        self.broadcaster_type: Literal["affiliate", "partner", ""] = data["broadcaster_type"]
         self.description: str = data["description"]
-        self.profile_image: str = data["profile_image_url"]
-        self.offline_image: str = data["offline_image_url"]
-        self.view_count: Tuple[int] = (
-            data.get("view_count", 0),
-        )  # this isn't supposed to be a tuple but too late to fix it!
-        self.created_at = parse_timestamp(data["created_at"])
-        self.email: Optional[str] = data.get("email")
-        self._cached_rewards = None
+        self.profile_image: Asset = Asset(data["profile_image_url"], http=http)
+        self.offline_image: Asset | None = Asset(data["offline_image_url"], http=http) if data["offline_image_url"] else None
+        self.email: str | None = data.get("email")
+        self.created_at: datetime.datetime = parse_timestamp(data["created_at"])
 
-    def __repr__(self):
-        return f"<User id={self.id} name={self.name} display_name={self.display_name} type={self.type}>"
+    def __repr__(self) -> str:
+        return f"<User id={self.id}, name={self.name} display_name={self.display_name}>"
+
+
+class Extension:
+    """Represents a user extension.
+
+    Attributes
+    ----------
+    id: str
+       An ID that identifies the extension.
+    version: str
+        The extension's version.
+    name: str
+        The extension's name.
+    can_activate: bool
+        A Boolean value that determines whether the extension is configured and can be activated. Is True if the extension is configured and can be activated.
+    type: list[Literal["component", "mobile", "overlay", "panel"]]
+        The extension types that you can activate for this extension. Possible values are:
+
+        - component
+        - mobile
+        - overlay
+        - panel
+
+    """
+
+    __slots__ = ("can_activate", "id", "name", "type", "version")
+
+    def __init__(self, data: UserExtensionsResponseData) -> None:
+        self.id: str = data["id"]
+        self.version: str = data["version"]
+        self.name: str = data["name"]
+        self.can_activate: bool = bool(data["can_activate"])
+        self.type: list[Literal["component", "mobile", "overlay", "panel"]] = data["type"]
+
+    def __repr__(self) -> str:
+        return f"<Extension id={self.id} name={self.name}>"
+
+
+class ExtensionItem:
+    """Base class of extension items.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+    """
+
+    __slots__ = ("active", "id", "name", "version")
+
+    def __init__(self, data: UserPanelItem | UserPanelOverlayItem | UserPanelComponentItem) -> None:
+        self.id: str | None = data.get("id")
+        self.name: str | None = data.get("name")
+        self.version: str | None = data.get("version")
+        self.active: bool = bool(data["active"])
+
+    def __repr__(self) -> str:
+        return f"<ExtensionItem id={self.id} name={self.name} active={self.active}>"
+
+    def _to_dict(self) -> dict[str, bool | str | int | None]:
+        return {"active": self.active, "id": self.id, "version": self.version}
+
+
+class ExtensionPanel(ExtensionItem):
+    """Represents an extension panel item.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+    """
+
+    def __init__(self, data: UserPanelItem) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<ExtensionPanel id={self.id} name={self.name} active={self.active}>"
+
+
+class ExtensionOverlay(ExtensionItem):
+    """Represents an extension overlay item.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension's activation state. If False, the user has not configured this panel extension.
+    """
+
+    def __init__(self, data: UserPanelOverlayItem) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<ExtensionOverlay id={self.id} name={self.name} active={self.active}>"
+
+
+class ExtensionComponent(ExtensionItem):
+    """Represents an extension component item.
+
+    Attributes
+    ----------
+    id: str | None
+       An ID that identifies the extension. This is None if not active.
+    version: str | None
+        The extension's version. This is None if not active.
+    name: str | None
+        The extension's name. This is None if not active.
+    active: bool
+        A Boolean value that determines the extension';'s activation state. If False, the user has not configured this panel extension.
+    x: int | None
+        The x-coordinate where the extension is placed.
+    y: int | None
+        The y-coordinate where the extension is placed.
+    """
+
+    def __init__(self, data: UserPanelComponentItem) -> None:
+        super().__init__(data)
+        self.x = int(data["x"]) if "x" in data else None
+        self.y = int(data["y"]) if "y" in data else None
+
+    def _to_dict(self) -> dict[str, bool | str | int | None]:
+        data = super()._to_dict()
+        data.update({"x": self.x, "y": self.y})
+        return data
+
+    def __repr__(self) -> str:
+        return f"<ExtensionComponent id={self.id} name={self.name} active={self.active}>"
+
+
+class ActiveExtensions:
+    __slots__ = ("components", "overlays", "panels")
+
+    def __init__(self, data: UserActiveExtensionsResponseData) -> None:
+        self.panels: list[ExtensionPanel] = [ExtensionPanel(d) for d in data["panel"].values()]
+        self.overlays: list[ExtensionOverlay] = [ExtensionOverlay(d) for d in data["overlay"].values()]
+        self.components: list[ExtensionComponent] = [ExtensionComponent(d) for d in data["component"].values()]
+
+    def __repr__(self) -> str:
+        return f"<ActiveExtensions panels={self.panels} overlays={self.overlays} components={self.components}>"
+
+    def _to_dict(self) -> dict[str, dict[str, dict[str, bool | str | int | None]]]:
+        """
+        Serialise all contained extensions to a dictionary that can be easily converted to JSON.
+        This method aggregates the serialised data of all extensions in the format required by Helix.
+        """
+        return {
+            "panel": {str(i + 1): panel._to_dict() for i, panel in enumerate(self.panels)},
+            "overlay": {str(i + 1): overlay._to_dict() for i, overlay in enumerate(self.overlays)},
+            "component": {str(i + 1): component._to_dict() for i, component in enumerate(self.components)},
+        }
+
+
+class Chatter(PartialUser):
+    """Class which represents a User in a chat room and has sent a message.
+
+    This class inherits from :class:`~twitchio.PartialUser` and contains additional information about the chatting user.
+    Most of the additional information is received in the form of the badges sent by Twitch.
+
+    .. note::
+
+        You usually wouldn't construct this class yourself. You will receive it in :class:`~.commands.Command` callbacks,
+        via :class:`~.commands.Context` and in the ``event_message`` event.
+    """
+
+    __slots__ = (
+        "__dict__",
+        "_badges",
+        "_channel",
+        "_colour",
+        "_is_admin",
+        "_is_artist_badge",
+        "_is_broadcaster",
+        "_is_founder",
+        "_is_moderator",
+        "_is_no_audio",
+        "_is_no_video",
+        "_is_premium",
+        "_is_staff",
+        "_is_subscriber",
+        "_is_turbo",
+        "_is_verified",
+        "_is_vip",
+    )
+
+    def __init__(
+        self,
+        payload: ChannelChatMessageEvent,
+        *,
+        http: HTTPClient,
+        broadcaster: PartialUser,
+        badges: list[ChatMessageBadge],
+    ) -> None:
+        super().__init__(
+            id=payload["chatter_user_id"],
+            name=payload["chatter_user_login"],
+            display_name=payload["chatter_user_name"],
+            http=http,
+        )
+
+        slots = [s for s in self.__slots__ if not s.startswith("__")]
+        for badge in badges:
+            name = f"_is_{badge.set_id}".replace("-", "_")
+
+            if name in slots:
+                setattr(self, name, True)
+
+        self._channel: PartialUser = broadcaster
+        self._colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
+        self._badges: list[ChatMessageBadge] = badges
+
+    def __repr__(self) -> str:
+        return f"<Chatter id={self.id} name={self.name}, channel={self.channel}>"
+
+    @property
+    def channel(self) -> PartialUser:
+        """Property returning the channel in the form of a :class:`~twitchio.PartialUser` this chatter belongs to."""
+        return self._channel
+
+    @property
+    def staff(self) -> bool:
+        """A property returning a bool indicating whether the chatter is Twitch Staff.
+
+        This bool should always be ``True`` when the chatter is a Twitch Staff.
+        """
+        return getattr(self, "_is_staff", False)
+
+    @property
+    def admin(self) -> bool:
+        """A property returning a bool indicating whether the chatter is Twitch Admin.
+
+        This bool should always be ``True`` when the chatter is a Twitch Admin.
+        """
+        return getattr(self, "_is_admin", False)
+
+    @property
+    def broadcaster(self) -> bool:
+        """A property returning a bool indicating whether the chatter is the broadcaster.
+
+        This bool should always be ``True`` when the chatter is the broadcaster.
+        """
+        return getattr(self, "_is_broadcaster", False)
+
+    @property
+    def moderator(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a moderator.
+
+        This bool should always be ``True`` when the chatter is a moderator.
+        """
+        return getattr(self, "_is_moderator", False) or self.broadcaster
+
+    @property
+    def vip(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a VIP."""
+        return getattr(self, "_is_vip", False)
+
+    @property
+    def artist(self) -> bool:
+        """A property returning a bool indicating whether the chatter is an artist for the channel."""
+        return getattr(self, "_is_artist_badge", False)
+
+    @property
+    def founder(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a founder of the channel."""
+        return getattr(self, "_is_founder", False)
+
+    @property
+    def subscriber(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a subscriber of the channel."""
+        return getattr(self, "_is_subscriber", False)
+
+    @property
+    def no_audio(self) -> bool:
+        """A property returning a bool indicating whether the chatter is watching without audio."""
+        return getattr(self, "_is_no_audio", False)
+
+    @property
+    def no_video(self) -> bool:
+        """A property returning a bool indicating whether the chatter is watching without video."""
+        return getattr(self, "_is_no_video", False)
+
+    @property
+    def partner(self) -> bool:
+        """A property returning a bool indicating whether the chatter is a Twitch partner."""
+        return getattr(self, "_is_partner", False)
+
+    @property
+    def turbo(self) -> bool:
+        """A property returning a bool indicating whether the chatter has Twitch Turbo."""
+        return getattr(self, "_is_turbo", False)
+
+    @property
+    def prime(self) -> bool:
+        """A property returning a bool indicating whether the chatter has Twitch Prime."""
+        return getattr(self, "_is_premium", False)
+
+    @property
+    def colour(self) -> Colour | None:
+        """Property returning the colour of the chatter as a :class:`~twitchio.Colour`.
+
+        There is an alias for this property named :attr:`.color`.
+
+        Could be ``None`` if the chatter has not set a colour.
+        """
+        return self._colour
+
+    @property
+    def color(self) -> Colour | None:
+        """Property returning the color of the chatter as a :class:`~twitchio.Colour`.
+
+        There is an alias for this property named :attr:`.colour`.
+
+        Could be ``None`` if the chatter has not set a color.
+        """
+        return self._colour
+
+    @property
+    def badges(self) -> list[ChatMessageBadge]:
+        """Property returning a list of :class:`~twitchio.ChatMessageBadge` associated with the chatter in this channel."""
+        return self._badges
+
+    async def ban(self, moderator: str | PartialUser, reason: str | None = None) -> Ban:
+        """|coro|
+
+        Ban the chatter from the associated channel/broadcaster.
+
+        .. note::
+
+            You must have a user access token that includes the ``moderator:manage:banned_users`` scope to do this.
+
+        Parameters
+        ----------
+        moderator: str | PartialUser
+            The ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action. You must have a
+            token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+        reason: str | None
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+
+        Raises
+        ------
+        ValueError
+            The length of the reason parameter exceeds 500 characters.
+        TypeError
+            You can not ban the broadcaster.
+        HTTPException
+            The request to ban the chatter failed.
+
+        Returns
+        -------
+        Ban
+            The :class:`~twitchio.Ban` object for this ban.
+        """
+        if reason and len(reason) > 500:
+            raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
+
+        if self.broadcaster:
+            raise TypeError("Banning the broadcaster of a channel is not a possible action.")
+
+        return await self._channel.ban_user(moderator=moderator, user=self, reason=reason)
+
+    async def timeout(
+        self, moderator: str | PartialUser | None = None, duration: int = 600, reason: str | None = None
+    ) -> Timeout:
+        """|coro|
+
+        Timeout the chatter from the associated channel/broadcaster.
+
+        .. note::
+
+            You must have a user access token that includes the ``moderator:manage:banned_users`` scope to do this.
+
+        Parameters
+        ----------
+        moderator: str | PartialUser | None
+            The ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action. You must have a
+            token stored with the ``moderator:manage:banned_users`` scope for this moderator.
+        duration: int
+            The duration of the timeout in seconds. The minimum duration is ``1`` second and the
+            maximum is ``1_209_600`` seconds (2 weeks).
+
+            To end the chatters timeout early, set this field to ``1``,
+            or use the :meth:`~twitchio.user.PartialUser.unban_user` endpoint.
+
+            The default is ``600`` which is ten minutes.
+        reason: str | None
+            An optional reason this chatter is being banned. If provided the length of the reason must not be more than
+            ``500`` characters long. Defaults to ``None``.
+        """
+        if reason and len(reason) > 500:
+            raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
+
+        if self.broadcaster:
+            raise TypeError("Banning the broadcaster of a channel is not a possible action.")
+
+        return await self._channel.timeout_user(moderator=moderator, user=self, duration=duration, reason=reason)
+
+    async def warn(self, moderator: str | PartialUser, reason: str) -> Warning:
+        """|coro|
+
+        Send this chatter a warning, preventing them from chat interaction until the warning is acknowledged.
+        New warnings can be issued to a chatter / user when they already have a warning in the channel (new warning will replace old warning).
+
+        .. note::
+            Requires a user access token that includes the ``moderator:manage:warnings`` scope.
+            moderator id must match the user id in the user access token.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the user who requested the warning.
+        reason: str
+            The reason provided for warning.
+
+        Returns
+        -------
+        Warning
+            Warning object.
+        """
+        from .models.moderation import Warning
+
+        data = await self._http.post_warn_chat_user(
+            broadcaster_id=self.channel, moderator_id=moderator, user_id=self, reason=reason, token_for=moderator
+        )
+        return Warning(data["data"][0], http=self._http)
+
+    async def block(
+        self,
+        source: Literal["chat", "whisper"] | None = None,
+        reason: Literal["harassment", "spam", "other"] | None = None,
+    ) -> None:
+        """|coro|
+
+        Blocks this chatter from interacting with or having contact with the broadcaster.
+
+        The user ID in the OAuth token identifies the broadcaster who is blocking the user.
+
+        Parameters
+        ----------
+        source: Literal["chat", "whisper"] | None
+            The location where the harassment took place that is causing the brodcaster to block the user. Possible values are:
+
+            - chat
+            - whisper
+
+        reason: Literal["harassment", "spam", "other"] | None
+            The reason that the broadcaster is blocking the user. Possible values are:
+
+            - harassment
+            - spam
+            - other
+
+        Returns
+        -------
+        None
+        """
+
+        return await self._http.put_block_user(user_id=self, source=source, reason=reason, token_for=self.channel)
+
+    async def follow_info(self) -> ChannelFollowerEvent | None:
+        """|coro|
+
+        Check whether this Chatter is following the broadcaster. If the user is not following then this will return `None`.
+
+        .. important::
+            You must have a user token for the broadcaster / channel that this chatter is being checked in.
+
+        .. note::
+            Requires user access token that includes the ``moderator:read:followers`` scope.
+
+        Returns
+        -------
+        ChannelFollowerEvent | None
+        """
+
+        data = await self._http.get_channel_followers(
+            user_id=self, broadcaster_id=self.channel, token_for=self.channel, max_results=1
+        )
+        return await anext(data.followers, None)

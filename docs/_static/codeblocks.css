@@ -1,0 +1,120 @@
+.theme-dark {
+	pre > .c1 {
+		color: rgba(255, 255, 255, 0.4);
+	}
+	pre > .kn {
+		color: #e0a2f3;
+	}
+
+	pre > .k {
+		color: #e0a2f3;
+	}
+
+	pre > .kc {
+		color: #e0a2f3;
+	}
+
+	pre > .nb {
+		color: #96b7ff;
+	}
+
+	pre > .nn {
+		color: rgba(248, 248, 248, 0.9);
+	}
+	pre > .n {
+		color: rgba(248, 248, 248, 0.9);
+	}
+	pre > .p {
+		color: rgba(248, 248, 248, 0.9);
+	}
+	pre > .o {
+		color: rgba(248, 248, 248, 0.8);
+	}
+
+	pre > .ow {
+		color: #e0a2f3;
+	}
+
+	pre > .s2 {
+		color: #8abb89;
+	}
+
+	pre > .mi {
+		color: #fab011;
+	}
+
+	pre > .nd {
+		color: #fab011;
+	}
+
+	pre > .nf {
+		color: #97b2eb;
+	}
+
+	pre > .nc {
+		color: #ffc74f;
+	}
+
+	pre > .bp {
+		color: #97b2eb;
+	}
+}
+
+body:not(.theme-dark) > * {
+	pre > .c1 {
+		color: rgba(0, 0, 0, 0.5);
+	}
+
+	pre > .kn {
+		color: #a626a4;
+	}
+
+	pre > .k {
+		color: #a626a4;
+	}
+
+	pre > .kc {
+		color: #c086e7;
+	}
+
+	pre > .nn {
+		color: rgba(21, 21, 28, 0.9);
+	}
+	pre > .n {
+		color: rgba(21, 21, 28, 0.9);
+	}
+	pre > .p {
+		color: rgba(21, 21, 28, 0.9);
+	}
+	pre > .o {
+		color: rgba(21, 21, 28, 0.9);
+	}
+
+	pre > .ow {
+		color: #c086e7;
+	}
+
+	pre > .s2 {
+		color: #50a14f;
+	}
+
+	pre > .nb {
+		color: #986801;
+	}
+
+	pre > .mi {
+		color: #986801;
+	}
+
+	pre > .nf {
+		color: #4078f2;
+	}
+
+	pre > .nc {
+		color: #c18401;
+	}
+
+	pre > .bp {
+		color: #4078f2;
+	}
+}

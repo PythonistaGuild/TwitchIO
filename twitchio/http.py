@@ -1,1054 +1,1200 @@
 """
-The MIT License (MIT)
+MIT License
 
-Copyright (c) 2017-present TwitchIO
+Copyright (c) 2017 - Present PythonistaGuild
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
 
-import asyncio
+from __future__ import annotations
+
 import copy
 import datetime
 import logging
-from typing import TYPE_CHECKING, Union, List, Tuple, Any, Dict, Optional
-from typing_extensions import Literal
+import sys
+import urllib.parse
+from collections import deque
+from collections.abc import AsyncIterator, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Self, TypeAlias, TypeVar, Unpack
 
 import aiohttp
-from yarl import URL
 
-from . import errors
-from .cooldowns import RateBucket
+from . import __version__
+from .exceptions import HTTPException
+from .models.analytics import ExtensionAnalytics, GameAnalytics
+from .models.bits import ExtensionTransaction
+from .models.channel_points import CustomRewardRedemption
+from .models.channels import ChannelFollowerEvent, ChannelFollowers, FollowedChannels, FollowedChannelsEvent
+from .models.charity import CharityDonation
+from .models.chat import Chatters, UserEmote
+from .models.clips import Clip
+from .models.entitlements import Entitlement
+from .models.eventsub_ import EventsubSubscription, EventsubSubscriptions
+from .models.games import Game
+from .models.hype_train import HypeTrainEvent
+from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
+from .models.polls import Poll
+from .models.predictions import Prediction
+from .models.schedule import Schedule
+from .models.search import SearchChannel
+from .models.streams import Stream, VideoMarkers
+from .models.subscriptions import BroadcasterSubscription, BroadcasterSubscriptions
+from .models.videos import Video
+from .user import ActiveExtensions, PartialUser
+from .utils import MISSING, Colour, _from_json, date_to_datetime_with_z, handle_user_ids, url_encode_datetime  # type: ignore
 
-try:
-    import ujson as json
-except Exception:
-    import json
+
 if TYPE_CHECKING:
-    from .client import Client
-logger = logging.getLogger("twitchio.http")
+    from collections.abc import Generator, Sequence
+
+    from .assets import Asset
+    from .eventsub.enums import SubscriptionType
+    from .models.channel_points import CustomReward
+    from .models.moderation import AutomodCheckMessage, AutomodSettings
+    from .types_.conduits import Condition
+    from .types_.eventsub import (
+        SubscriptionCreateRequest,
+        SubscriptionCreateTransport,
+        SubscriptionResponse,
+        _SubscriptionData,
+    )
+    from .types_.requests import APIRequestKwargs, HTTPMethod, ParamMapping
+    from .types_.responses import (
+        AddBlockedTermResponse,
+        AdScheduleResponse,
+        AutomodSettingsResponse,
+        BannedUsersResponseData,
+        BanUserResponse,
+        BitsLeaderboardResponse,
+        BlockedTermsResponseData,
+        BroadcasterSubscriptionsResponseData,
+        ChannelChatBadgesResponse,
+        ChannelEditorsResponse,
+        ChannelEmotesResponse,
+        ChannelFollowersResponseData,
+        ChannelInformationResponse,
+        ChannelStreamScheduleResponse,
+        ChannelTeamsResponse,
+        CharityCampaignDonationsResponseData,
+        CharityCampaignResponse,
+        ChatSettingsResponse,
+        ChattersResponseData,
+        CheckAutomodStatusResponse,
+        CheckUserSubscriptionResponse,
+        CheermotesResponse,
+        ClipsResponseData,
+        ContentClassificationLabelsResponse,
+        CreateChannelStreamScheduleSegmentResponse,
+        CreateClipResponse,
+        CreateStreamMarkerResponse,
+        CreatorGoalsResponse,
+        CustomRewardRedemptionResponse,
+        CustomRewardRedemptionResponseData,
+        CustomRewardsResponse,
+        DeleteVideosResponse,
+        DropsEntitlementsResponseData,
+        EmoteSetsResponse,
+        EventsubSubscriptionResponseData,
+        ExtensionAnalyticsResponseData,
+        ExtensionTransactionsResponseData,
+        FollowedChannelsResponseData,
+        GameAnalyticsResponseData,
+        GamesResponse,
+        GamesResponseData,
+        GlobalChatBadgesResponse,
+        GlobalEmotesResponse,
+        HypeTrainEventsResponseData,
+        ModeratedChannelsResponseData,
+        ModeratorsResponseData,
+        PollsResponse,
+        PollsResponseData,
+        PredictionsResponse,
+        PredictionsResponseData,
+        RawResponse,
+        ResolveUnbanRequestsResponse,
+        SearchChannelsResponseData,
+        SendChatMessageResponse,
+        SharedChatSessionResponse,
+        ShieldModeStatusResponse,
+        SnoozeNextAdResponse,
+        StartARaidResponse,
+        StartCommercialResponse,
+        StreamKeyResponse,
+        StreamMarkersResponseData,
+        StreamsResponseData,
+        TeamsResponse,
+        TopGamesResponseData,
+        UnbanRequestsResponseData,
+        UpdateChannelStreamScheduleSegmentResponse,
+        UpdateDropsEntitlementsResponse,
+        UpdateUserExtensionsResponse,
+        UpdateUserResponse,
+        UserActiveExtensionsResponse,
+        UserBlockListResponseData,
+        UserChatColorResponse,
+        UserEmotesResponseData,
+        UserExtensionsResponse,
+        UsersResponse,
+        VideosResponseData,
+        WarnChatUserResponse,
+    )
+
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+
+T = TypeVar("T")
+PaginatedConverter: TypeAlias = Callable[..., Awaitable[T]] | None
+
+
+async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
+    text: str = await resp.text()
+
+    try:
+        if resp.headers["Content-Type"].startswith("application/json"):
+            return _from_json(text)  # type: ignore
+    except KeyError:
+        pass
+
+    return text
 
 
 class Route:
-    BASE_URL = "https://api.twitch.tv/helix"
+    """Route class used by TwitchIO to prepare HTTP requests to Twitch.
 
-    __slots__ = "path", "body", "headers", "query", "method"
+    .. warning::
+
+        You should not change or instantiate this class manually, as it is used internally.
+
+    Attributes
+    ----------
+    params: dict[str, Any]
+        A mapping of parameters used in the request.
+    json: dict[Any, Any]
+        The JSON used in the body of the request. Could be an empty :class:`dict`.
+    headers: dict[str, str]
+        The headers used in the request.
+    token_for: str
+        The User ID that was used to gather a token for authentication. Could be an empty :class:`str`.
+    method: Literal['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE']
+        The request method used.
+    path: str
+        The API endpoint requested.
+    """
+
+    __slots__ = (
+        "_base_url",
+        "_url",
+        "data",
+        "headers",
+        "json",
+        "method",
+        "packed",
+        "params",
+        "path",
+        "token_for",
+        "use_id",
+    )
+
+    BASE: ClassVar[str] = "https://api.twitch.tv/helix/"
+    ID_BASE: ClassVar[str] = "https://id.twitch.tv/"
 
     def __init__(
         self,
-        method: str,
-        path: Union[str, URL],
-        body: Union[str, dict] = None,
-        query: List[Tuple[str, Any]] = None,
-        headers: dict = None,
-        token: str = None,
-    ):
-        self.headers = headers or {}
+        method: HTTPMethod,
+        path: str,
+        *,
+        use_id: bool = False,
+        **kwargs: Unpack[APIRequestKwargs],
+    ) -> None:
+        self.params: ParamMapping = kwargs.pop("params", {})
+        self.json: Any = kwargs.get("json", {})
+        self.headers: dict[str, str] = kwargs.get("headers", {})
+        self.token_for: str = str(kwargs.get("token_for", ""))
+
+        self.use_id = use_id
         self.method = method
-        self.query = query
+        self.path = path
 
-        if token:
-            self.headers["Authorization"] = "Bearer " + token
-        if isinstance(path, URL):
-            self.path = path
-        else:
-            self.path = URL(self.BASE_URL + "/" + path.rstrip("/"))
-        if query:
-            self.path = self.path.with_query(query)
-        if isinstance(body, dict):
-            self.body = json.dumps(body)
-            self.headers["Content-Type"] = "application/json"
-        else:
-            self.body = body
+        self._base_url: str = ""
+        self._url: str = self.build_url(duplicate_key=not use_id)
+
+    def __str__(self) -> str:
+        return str(self._url)
+
+    def __repr__(self) -> str:
+        return f"{self.method}[{self.base_url}]"
+
+    def build_url(self, *, remove_none: bool = True, duplicate_key: bool = True) -> str:
+        base = self.ID_BASE if self.use_id else self.BASE
+        self.path = self.path.lstrip("/").rstrip("/")
+
+        url: str = f"{base}{self.path}"
+        self._base_url = url
+
+        if not self.params:
+            return url
+
+        url += "?"
+
+        # We expect a dict so keys should be unique...
+        for key, value in copy.copy(self.params).items():
+            if value is None:
+                if remove_none:
+                    del self.params[key]
+                continue
+
+            if isinstance(value, (str, int)):
+                url += f"{key}={self.encode(str(value), safe='+', plus=True)}&"
+            elif duplicate_key:
+                for v in value:
+                    url += f"{key}={self.encode(str(v), safe='+', plus=True)}&"
+            else:
+                joined: str = "+".join([self.encode(str(v), safe="+") for v in value])
+                url += f"{key}={joined}&"
+
+        return url.rstrip("&")
+
+    @classmethod
+    def encode(cls, value: str, /, safe: str = "", plus: bool = False) -> str:
+        method = urllib.parse.quote_plus if plus else urllib.parse.quote
+        unquote = urllib.parse.unquote_plus if plus else urllib.parse.unquote
+
+        return method(value, safe=safe) if unquote(value) == value else value
+
+    @property
+    def url(self) -> str:
+        """Property returning the URL used to make a request. Could include query parameters."""
+        return self._url
+
+    @property
+    def base_url(self) -> str:
+        """Property returning the URL used to make a request without query parameters."""
+        return self._base_url
+
+    def update_params(self, params: ParamMapping, *, remove_none: bool = True) -> str:
+        self.params.update(params)
+        self._url = self.build_url(remove_none=remove_none)
+
+        return self.url
+
+    def update_headers(self, headers: dict[str, str]) -> None:
+        self.headers.update(headers)
 
 
-class TwitchHTTP:
-    TOKEN_BASE = "https://id.twitch.tv/oauth2/token"
+class HTTPAsyncIterator(Generic[T]):
+    """TwitchIO async iterator for HTTP requests.
+
+    When a method or function returns this iterator you should call the returning function in one of the following two ways:
+
+    ``await method(...)``
+
+    **or**
+
+    ``async for item in method(...)``
+
+    When awaited the iterator will return a flattened list of all the items returned via the request for the first page only.
+    If the endpoint is paginated, it is preferred you use ``async for item in method(...)`` in a list comprehension.
+
+    When used with ``async for`` the iterator will return the next item available until no items remain or you break from the
+    loop manually, E.g. with ``break`` or ``return`` etc.
+
+    ``async for item in method(...)`` will continue making requests on paginated endpoints to the next page as needed
+    and when available.
+
+    You can create a flattened list of all pages with a list comprehension.
+
+    Examples
+    --------
+
+    .. code-block:: python3
+
+        # Flatten and return first page (20 results)
+        streams = await bot.fetch_streams()
+
+        # Flatten and return up to 1000 results (max 100 per page) which equates to 10 requests...
+        streams = [stream async for stream in bot.fetch_streams(first=100, max_results=1000)]
+
+        # Loop over results until we manually stop...
+        async for item in bot.fetch_streams(first=100, max_results=1000):
+            # Some logic...
+            ...
+            break
+
+
+    .. important::
+
+        Everything in this class is private internals, and should not be modified.
+    """
+
+    __slots__ = (
+        "_buffer",
+        "_converter",
+        "_cursor",
+        "_first",
+        "_http",
+        "_max_results",
+        "_nested_key",
+        "_route",
+    )
 
     def __init__(
-        self, client: "Client", *, api_token: str = None, client_secret: str = None, client_id: str = None, **kwargs
-    ):
-        self.client = client
-        self.session = None
-        self.token = api_token
-        self.app_token = None
-        self._refresh_token = None
-        self.client_secret = client_secret
-        self.client_id = client_id
-        self.nick = None
-        self.user_id: Optional[int] = None
+        self,
+        http: HTTPClient,
+        route: Route,
+        max_results: int | None = None,
+        converter: PaginatedConverter[T] = None,
+        nested_key: str | None = None,
+    ) -> None:
+        self._http = http
+        self._route = route
 
-        self.bucket = RateBucket(method="http")
-        self.scopes = kwargs.get("scopes", [])
+        self._cursor: str | None | bool = None
+        self._first: int = int(route.params.get("first", 20))  # 20 is twitch default
+        self._max_results: int | None = max_results
 
-    async def request(self, route: Route, *, paginate=True, limit=100, full_body=False, force_app_token=False):
-        """
-        Fulfills an API request
+        if self._max_results is not None and self._max_results < self._first:
+            self._first = self._max_results
 
-        Parameters
-        -----------
-        route : :class:`twitchio.http.Route`
-            The route to follow
-        paginate : :class:`bool`
-            whether or not to paginate the requests where possible. Defaults to True
-        limit : :class:`int`
-            The data limit per request when paginating. Defaults to 100
-        full_body : class:`bool`
-            Whether to return the full response body or to accumulate the `data` key. Defaults to False. `paginate` must be False if this is True.
-        force_app_token : :class:`bool`
-            Forcibly use the client_id and client_secret generated token, if available. Otherwise fail the request immediately
-        """
-        if full_body:
-            assert not paginate
-        if (not self.client_id or not self.nick) and self.token:
-            await self.validate(token=self.token)
-        if not self.client_id:
-            raise errors.NoClientID("A Client ID is required to use the Twitch API")
-        headers = route.headers or {}
+        self._converter = converter or self._base_converter
+        self._buffer: deque[T] = deque()
+        self._nested_key: str | None = nested_key
 
-        await self._apply_auth(headers, force_app_token, False)
+    async def _base_converter(self, data: Any, *, raw: Any = None) -> T:
+        if raw is None:
+            raw = {}
 
-        headers["Client-ID"] = self.client_id
-
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-        if self.bucket.limited:
-            await self.bucket
-        cursor = None
-        data = []
-
-        def reached_limit():
-            return limit and len(data) >= limit
-
-        def get_limit():
-            if limit is None:
-                return "100"
-            to_get = limit - len(data)
-            return str(to_get) if to_get < 100 else "100"
-
-        is_finished = False
-        while not is_finished:
-            path = copy.copy(route.path)
-
-            if limit is not None and paginate:
-                q = route.query or []
-                if cursor is not None:
-                    q = [("after", cursor), *q]
-                q = [("first", get_limit()), *q]
-                path = path.with_query(q)
-            body, is_text = await self._request(route, path, headers, force_app_token=force_app_token)
-            if is_text:
-                return body
-            if full_body:
-                return body
-            data += body["data"]
-
-            try:
-                cursor = body["pagination"].get("cursor", None)
-            except KeyError:
-                break
-            else:
-                if not cursor:
-                    break
-            is_finished = reached_limit() if limit is not None else True if paginate else True
         return data
 
-    async def _apply_auth(self, headers: dict, force_app_token: bool, force_apply: bool) -> None:
-        if force_app_token and "Authorization" not in headers:
-            if not self.client_secret:
-                raise errors.NoToken(
-                    "An app access token is required for this route, please provide a client id and client secret"
-                )
-            if self.app_token is None:
-                await self._generate_login()
-                headers["Authorization"] = f"Bearer {self.app_token}"
-        elif not self.token and not self.client_secret and "Authorization" not in headers:
-            raise errors.NoToken(
-                "Authorization is required to use the Twitch API. Pass token and/or client_secret to the Client constructor"
-            )
-        if "Authorization" not in headers or force_apply:
-            if not self.token:
-                await self._generate_login()
+    async def _call_next(self) -> None:
+        if self._cursor is False:
+            raise StopAsyncIteration
 
-            headers["Authorization"] = f"Bearer {self.token}"
+        if self._max_results is not None and self._max_results <= 0:
+            raise StopAsyncIteration
 
-    async def _request(self, route, path, headers, utilize_bucket=True, force_app_token: bool = False):
-        reason = None
+        self._route.update_params({"after": self._cursor})
+        data: RawResponse = await self._http.request_json(self._route)
+        self._cursor = data.get("pagination", {}).get("cursor", False)
 
-        for attempt in range(5):
-            if utilize_bucket and self.bucket.limited:
-                await self.bucket.wait_reset()
-            async with self.session.request(route.method, path, headers=headers, data=route.body) as resp:
-                try:
-                    message = await resp.text(encoding="utf-8")
-                    logger.debug(f"Received a response from a request with status {resp.status}: {message}")
-                except Exception:
-                    message = None
-                    logger.debug(f"Received a response from a request with status {resp.status} and without body")
-
-                if 500 <= resp.status <= 504:
-                    reason = resp.reason
-                    await asyncio.sleep(2**attempt + 1)
-                    continue
-
-                if utilize_bucket:
-                    reset = resp.headers.get("Ratelimit-Reset")
-                    remaining = resp.headers.get("Ratelimit-Remaining")
-
-                    self.bucket.update(reset=reset, remaining=remaining)
-
-                if 200 <= resp.status < 300:
-                    if resp.content_type == "application/json" and message:
-                        return json.loads(message), False
-
-                    return message, True
-
-                elif resp.status == 400:
-                    message_json = json.loads(message)
-                    raise errors.HTTPException(
-                        f"Failed to fulfill the request", reason=message_json.get("message", ""), status=resp.status
-                    )
-
-                elif resp.status == 401:
-                    message_json = json.loads(message)
-                    if "Invalid OAuth token" in message_json.get("message", ""):
-                        try:
-                            await self._generate_login()
-                            await self._apply_auth(headers, force_app_token, True)
-                            continue
-                        except:
-                            raise errors.Unauthorized(
-                                "Your oauth token is invalid, and a new one could not be generated"
-                            )
-
-                    raise errors.Unauthorized(
-                        "You're not authorized to use this route.",
-                        reason=message_json.get("message", ""),
-                        status=resp.status,
-                    )
-
-                elif resp.status == 429:
-                    reason = "Ratelimit Reached"
-
-                    if not utilize_bucket:  # non Helix APIs don't have ratelimit headers
-                        await asyncio.sleep(3**attempt + 1)
-
-                    continue
-
-                raise errors.HTTPException(f"Failed to fulfill the request", reason=resp.reason, status=resp.status)
-        raise errors.HTTPException("Failed to reach Twitch API", reason=reason, status=resp.status)
-
-    async def _generate_login(self):
         try:
-            token = await self.client.event_token_expired()
-            if token is not None:
-                assert isinstance(token, str), TypeError(f"Expected a string, got {type(token)}")
-                self.token = self.app_token = token
-                return
-        except Exception as e:
-            self.client.run_event("error", e)
-        if not self.client_id or not self.client_secret:
-            raise errors.HTTPException("Unable to generate a token, client id and/or client secret not given")
-        if self._refresh_token:
-            url = (
-                self.TOKEN_BASE
-                + "?grant_type=refresh_token&refresh_token={0}&client_id={1}&client_secret={2}".format(
-                    self._refresh_token, self.client_id, self.client_secret
-                )
-            )
+            inner: list[RawResponse] = data["data"] if self._nested_key is None else data["data"][self._nested_key]
+        except KeyError as e:
+            raise HTTPException('Expected "data" key not found.', route=self._route, status=500, extra="") from e
+
+        if not self._nested_key:
+            for value in inner:
+                if self._max_results is None:
+                    self._buffer.append(await self._do_conversion(value, raw=data))
+                    continue
+
+                self._max_results -= 1  # If this is causing issues, it's just pylance bugged/desynced...
+                if self._max_results < 0:
+                    return
+
+                self._buffer.append(await self._do_conversion(value, raw=data))
         else:
-            url = self.TOKEN_BASE + "?client_id={0}&client_secret={1}&grant_type=client_credentials".format(
-                self.client_id, self.client_secret
-            )
-            if self.scopes:
-                url += "&scope=" + " ".join(self.scopes)
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-        async with self.session.post(url) as resp:
-            if resp.status > 300 or resp.status < 200:
-                raise errors.HTTPException("Unable to generate a token: " + await resp.text())
-            data = await resp.json()
-            self.token = self.app_token = data["access_token"]
-            self._refresh_token = data.get("refresh_token", None)
-            logger.info("Invalid or no token found, generated new token: %s", self.token)
+            if self._max_results is not None:
+                self._max_results -= 1  # If this is causing issues, it's just pylance bugged/desynced...
+                if self._max_results < 0:
+                    return
+            self._buffer.append(await self._do_conversion(inner[0], raw=data))
 
-    async def validate(self, *, token: str = None) -> dict:
-        if not token:
-            token = self.token
-        if not self.session:
-            self.session = aiohttp.ClientSession()
-        url = "https://id.twitch.tv/oauth2/validate"
-        headers = {"Authorization": f"OAuth {token}"}
+    async def _do_conversion(self, data: RawResponse, *, raw: RawResponse) -> T:
+        return await self._converter(data, raw=raw)
 
-        async with self.session.get(url, headers=headers) as resp:
-            if resp.status == 401:
-                raise errors.AuthenticationError("Invalid or unauthorized Access Token passed.")
-            if resp.status > 300 or resp.status < 200:
-                raise errors.HTTPException("Unable to validate Access Token: " + await resp.text())
-            data: dict = await resp.json()
-        if not self.nick:
-            self.nick = data.get("login")
-            self.user_id = data.get("user_id") and int(data["user_id"])
-            self.client_id = data.get("client_id")
+    async def _flatten(self) -> list[T]:
+        if not self._buffer:
+            await self._call_next()
+
+        return list(self._buffer)
+
+    def __await__(self) -> Generator[Any, None, list[T]]:
+        return self._flatten().__await__()
+
+    def __aiter__(self) -> Self:
+        return self
+
+    async def __anext__(self) -> T:
+        if not self._buffer:
+            await self._call_next()
+
+        try:
+            data = self._buffer.popleft()
+        except IndexError as e:
+            raise StopAsyncIteration from e
+
         return data
 
-    async def post_commercial(self, token: str, broadcaster_id: str, length: int):
-        assert length in {30, 60, 90, 120, 150, 180}
-        data = await self.request(
-            Route(
-                "POST", "channels/commercial", body={"broadcaster_id": broadcaster_id, "length": length}, token=token
-            ),
-            paginate=False,
-        )
-        data = data[0]
-        if data["message"]:
-            raise errors.HTTPException(data["message"], extra=data["retry_after"])
 
-    async def get_extension_analytics(
-        self,
-        token: str,
-        extension_id: str = None,
-        type: str = None,
-        started_at: datetime.datetime = None,
-        ended_at: datetime.datetime = None,
-    ):
-        raise NotImplementedError  # TODO
+class HTTPClient:
+    __slots__ = ("_client_id", "_session", "_session_set", "_should_close", "user_agent")
 
-    async def get_game_analytics(
-        self,
-        token: str,
-        game_id: str = None,
-        type: str = None,
-        started_at: datetime.datetime = None,
-        ended_at: datetime.datetime = None,
-    ):
-        raise NotImplementedError  # TODO
+    def __init__(self, session: aiohttp.ClientSession = MISSING, *, client_id: str) -> None:
+        self._session: aiohttp.ClientSession = session
+        self._should_close: bool = session is MISSING
+        self._session_set: bool = False
 
-    async def get_bits_board(
-        self,
-        token: str,
-        period: str = "all",
-        user_id: Optional[str] = None,
-        started_at: Optional[datetime.datetime] = None,
-    ):
-        assert period in {"all", "day", "week", "month", "year"}
-        query = [
-            ("period", period),
-            ("started_at", started_at.isoformat() if started_at else None),
-            ("user_id", user_id),
-        ]
+        self._client_id: str = client_id
 
-        route = Route(
-            "GET",
-            "bits/leaderboard",
-            "",
-            query=[q for q in query if q[1] is not None],
-            token=token,
-        )
-        return await self.request(route, full_body=True, paginate=False)
+        # User Agent...
+        pyver = f"{sys.version_info[0]}.{sys.version_info[1]}"
+        ua = "TwitchioClient (https://github.com/PythonistaGuild/TwitchIO {0}) Python/{1} aiohttp/{2}"
+        self.user_agent: str = ua.format(__version__, pyver, aiohttp.__version__)
 
-    async def get_cheermotes(self, broadcaster_id: str):
-        return await self.request(Route("GET", "bits/cheermotes", "", query=[("broadcaster_id", broadcaster_id)]))
+    @property
+    def headers(self) -> dict[str, str]:
+        # If the user somehow gets a client_id passed that isn't a str
+        # this will allow Twitch to throw a reasonable HTTPException
 
-    async def get_channel_emotes(self, broadcaster_id: str):
-        return await self.request(Route("GET", "chat/emotes", "", query=[("broadcaster_id", broadcaster_id)]))
+        return {"User-Agent": self.user_agent, "Client-ID": str(self._client_id)}
 
-    async def get_global_emotes(self):
-        return await self.request(Route("GET", "chat/emotes/global", ""))
+    async def _init_session(self) -> None:
+        if self._session_set:
+            return
 
-    async def get_extension_transactions(self, extension_id: str, ids: List[Any] = None):
-        q = [("extension_id", extension_id)]
-        if ids:
-            q.extend(("id", id) for id in ids)
-        return await self.request(Route("GET", "extensions/transactions", "", query=q))
+        self._session_set = True
 
-    async def create_reward(
-        self,
-        token: str,
-        broadcaster_id: int,
-        title: str,
-        cost: int,
-        prompt: Optional[str] = None,
-        is_enabled: Optional[bool] = True,
-        background_color: Optional[str] = None,
-        user_input_required: Optional[bool] = False,
-        max_per_stream: Optional[int] = None,
-        max_per_user: Optional[int] = None,
-        global_cooldown: Optional[int] = None,
-        fufill_immediatly: Optional[bool] = False,
-    ):
-        params = [("broadcaster_id", str(broadcaster_id))]
-        data = {
-            "title": title,
-            "cost": cost,
-            "prompt": prompt,
-            "is_enabled": is_enabled,
-            "is_user_input_required": user_input_required,
-            "should_redemptions_skip_request_queue": fufill_immediatly,
-        }
-        if max_per_stream:
-            data["max_per_stream"] = max_per_stream
-            data["is_max_per_stream_enabled"] = True
-        if max_per_user:
-            data["max_per_user_per_stream"] = max_per_user
-            data["is_max_per_user_per_stream_enabled"] = True
-        if background_color:
-            data["background_color"] = background_color
-        if global_cooldown:
-            data["global_cooldown_seconds"] = global_cooldown
-            data["is_global_cooldown_enabled"] = True
-        return await self.request(Route("POST", "channel_points/custom_rewards", query=params, body=data, token=token))
+        if self._session is not MISSING:
+            return
 
-    async def get_rewards(self, token: str, broadcaster_id: int, only_manageable: bool = False, ids: List[int] = None):
-        params = [("broadcaster_id", str(broadcaster_id)), ("only_manageable_rewards", str(only_manageable))]
+        logger.debug("Initialising ClientSession on %s.", self.__class__.__qualname__)
+        self._session = aiohttp.ClientSession(headers=self.headers)
 
-        if ids:
-            params.extend(("id", str(id)) for id in ids)
-        return await self.request(Route("GET", "channel_points/custom_rewards", query=params, token=token))
-
-    async def update_reward(
-        self,
-        token: str,
-        broadcaster_id: int,
-        reward_id: str,
-        title: Optional[str] = None,
-        prompt: Optional[str] = None,
-        cost: Optional[int] = None,
-        background_color: Optional[str] = None,
-        enabled: Optional[bool] = None,
-        input_required: Optional[bool] = None,
-        max_per_stream_enabled: Optional[bool] = None,
-        max_per_stream: Optional[int] = None,
-        max_per_user_per_stream_enabled: Optional[bool] = None,
-        max_per_user_per_stream: Optional[int] = None,
-        global_cooldown_enabled: Optional[bool] = None,
-        global_cooldown: Optional[int] = None,
-        paused: Optional[bool] = None,
-        redemptions_skip_queue: Optional[bool] = None,
-    ):
-        data = {
-            "title": title,
-            "prompt": prompt,
-            "cost": cost,
-            "background_color": background_color,
-            "is_enabled": enabled,
-            "is_user_input_required": input_required,
-            "is_max_per_stream_enabled": max_per_stream_enabled,
-            "max_per_stream": max_per_stream,
-            "is_max_per_user_per_stream_enabled": max_per_user_per_stream_enabled,
-            "max_per_user_per_stream": max_per_user_per_stream,
-            "is_global_cooldown_enabled": global_cooldown_enabled,
-            "global_cooldown_seconds": global_cooldown,
-            "is_paused": paused,
-            "should_redemptions_skip_request_queue": redemptions_skip_queue,
-        }
-
-        data = {k: v for k, v in data.items() if v is not None}
-
-        if not data:
-            raise ValueError("Nothing changed!")
-        params = [("broadcaster_id", str(broadcaster_id)), ("id", str(reward_id))]
-        return await self.request(
-            Route(
-                "PATCH",
-                "channel_points/custom_rewards",
-                query=params,
-                headers={"Authorization": f"Bearer {token}"},
-                body=data,
+    def clear(self) -> None:
+        if self._session and self._session.closed:
+            logger.debug(
+                "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
             )
-        )
+            self._session = MISSING
+            self._session_set = False
 
-    async def delete_custom_reward(self, token: str, broadcaster_id: int, reward_id: str):
-        params = [("broadcaster_id", str(broadcaster_id)), ("id", reward_id)]
-        return await self.request(Route("DELETE", "channel_points/custom_rewards", query=params, token=token))
+    async def close(self) -> None:
+        if not self._should_close:
+            return
 
-    async def get_reward_redemptions(
+        if self._session and not self._session.closed:
+            try:
+                await self._session.close()
+            except Exception as e:
+                logger.debug("Ignoring exception caught while closing %s session: %s.", self.__class__.__qualname__, e)
+
+            self.clear()
+            logger.debug("%s session closed successfully.", self.__class__.__qualname__)
+
+    async def request(self, route: Route) -> RawResponse | str | None:
+        if not self._session_set:
+            await self._init_session()
+
+        assert self._session is not None
+
+        logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
+        route.headers.update(self.headers)
+
+        async with self._session.request(
+            route.method,
+            route.url,
+            headers=route.headers,
+            json=route.json or None,
+        ) as resp:
+            data: RawResponse | str = await json_or_text(resp)
+
+            logger.debug("Request to %r with %s returned: status=%d", route, self.__class__.__qualname__, resp.status)
+
+            if resp.status >= 400:
+                raise HTTPException(
+                    f"Request {route} failed with status {resp.status}: {data}",
+                    route=route,
+                    status=resp.status,
+                    extra=data,
+                )
+
+            if resp.status == 204:
+                return None
+
+        return data
+
+    async def request_json(self, route: Route) -> Any:
+        route.headers.update({"Accept": "application/json"})
+        data = await self.request(route)
+
+        if isinstance(data, str):
+            raise HTTPException("Expected JSON data, but received text data.", status=500, extra=data)
+
+        return data
+
+    async def _request_asset_head(self, url: str) -> dict[str, str]:
+        if not self._session_set:
+            await self._init_session()
+
+        assert self._session is not None
+
+        logger.debug('Attempting to request headers for asset "%s" with %s.', url, self.__class__.__qualname__)
+
+        async with self._session.head(url) as resp:
+            if resp.status != 200:
+                msg = f'Failed to header for asset at "{url}" with status {resp.status}.'
+                raise HTTPException(msg, status=resp.status, extra=await resp.text())
+
+            return dict(resp.headers)
+
+    async def _request_asset(self, asset: Asset, *, chunk_size: int = 1024) -> AsyncIterator[bytes]:
+        if not self._session_set:
+            await self._init_session()
+
+        assert self._session is not None
+
+        logger.debug('Attempting a request to asset "%r" with %s.', asset, self.__class__.__qualname__)
+
+        async with self._session.get(asset.url) as resp:
+            if resp.status != 200:
+                msg = f'Failed to get asset at "{asset.url}" with status {resp.status}.'
+                raise HTTPException(msg, status=resp.status, extra=await resp.text())
+
+            headers: dict[str, str] = dict(resp.headers)
+            asset._set_ext(headers)
+
+            async for chunk in resp.content.iter_chunked(chunk_size):
+                yield chunk
+
+    def request_paginated(
         self,
-        token: str,
-        broadcaster_id: int,
-        reward_id: str,
-        redemption_id: Optional[str] = None,
-        status: Optional[str] = None,
-        sort: str = "OLDEST",
+        route: Route,
+        max_results: int | None = None,
+        *,
+        converter: PaginatedConverter[T] | None = None,
+        nested_key: str | None = None,
+    ) -> HTTPAsyncIterator[T]:
+        iterator: HTTPAsyncIterator[T] = HTTPAsyncIterator(
+            self, route, max_results, converter=converter, nested_key=nested_key
+        )
+        return iterator
+
+    ### Ads ###
+
+    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
+        data = {"broadcaster_id": broadcaster_id, "length": length}
+
+        route: Route = Route("POST", "channels/commercial", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdScheduleResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "channels/ads", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeNextAdResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Analytics ###
+
+    @handle_user_ids()
+    def get_extension_analytics(
+        self,
+        *,
+        token_for: str | PartialUser,
+        extension_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
         first: int = 20,
-    ):
-        params = [("broadcaster_id", str(broadcaster_id)), ("reward_id", reward_id), ("first", first)]
-        if redemption_id:
-            params.append(("id", redemption_id))
-        if status:
-            params.append(("status", status))
-        if sort:
-            params.append(("sort", sort))
-        return await self.request(Route("GET", "channel_points/custom_rewards/redemptions", query=params, token=token))
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[ExtensionAnalytics]:
+        params = {"type": type, "First": first}
 
-    async def update_reward_redemption_status(
-        self, token: str, broadcaster_id: int, reward_id: str, custom_reward_id: str, status: bool
-    ):
-        params = [("id", reward_id), ("broadcaster_id", str(broadcaster_id)), ("reward_id", custom_reward_id)]
-        status = "FULFILLED" if status else "CANCELED"
-        return await self.request(
-            Route(
-                "PATCH",
-                "channel_points/custom_rewards/redemptions",
-                query=params,
-                body={"status": status},
-                token=token,
-            )
-        )
+        if extension_id:
+            params["extension_id"] = extension_id
 
-    async def get_predictions(
+        if started_at and ended_at:
+            params["started_at"] = date_to_datetime_with_z(started_at)
+            params["ended_at"] = date_to_datetime_with_z(ended_at)
+
+        route: Route = Route("GET", "analytics/extensions", params=params, token_for=token_for)
+
+        async def converter(data: ExtensionAnalyticsResponseData, *, raw: Any) -> ExtensionAnalytics:
+            return ExtensionAnalytics(data)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    @handle_user_ids()
+    def get_game_analytics(
         self,
-        token: str,
-        broadcaster_id: int,
-        prediction_id: Optional[str] = None,
-    ):
-        params = [("broadcaster_id", str(broadcaster_id))]
+        *,
+        token_for: str | PartialUser,
+        game_id: str | None = None,
+        type: Literal["overview_v2"] = "overview_v2",
+        started_at: datetime.date | None = None,
+        ended_at: datetime.date | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[GameAnalytics]:
+        params = {"type": type, "First": first}
 
-        if prediction_id:
-            params.extend(("prediction_id", prediction_id))
-        return await self.request(Route("GET", "predictions", query=params, token=token), paginate=False)
+        if game_id:
+            params["game_id"] = game_id
 
-    async def patch_prediction(
-        self, token: str, broadcaster_id: str, prediction_id: str, status: str, winning_outcome_id: Optional[str] = None
-    ):
-        body = {
+        if started_at and ended_at:
+            params["started_at"] = date_to_datetime_with_z(started_at)
+            params["ended_at"] = date_to_datetime_with_z(ended_at)
+
+        route: Route = Route("GET", "analytics/games", params=params, token_for=token_for)
+
+        async def converter(data: GameAnalyticsResponseData, *, raw: Any) -> GameAnalytics:
+            return GameAnalytics(data)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    ### Bits ###
+    @handle_user_ids()
+    async def get_bits_leaderboard(
+        self,
+        *,
+        broadcaster_id: str | int,
+        token_for: str | PartialUser,
+        count: int = 10,
+        period: Literal["day", "week", "month", "year", "all"] = "all",
+        started_at: datetime.datetime | None = None,
+        user_id: str | int | PartialUser | None = None,
+    ) -> BitsLeaderboardResponse:
+        params: dict[str, str | int | datetime.datetime] = {
             "broadcaster_id": broadcaster_id,
-            "id": prediction_id,
-            "status": status,
+            "count": count,
+            "period": period,
         }
 
-        if status == "RESOLVED" and winning_outcome_id:
-            body["winning_outcome_id"] = winning_outcome_id
+        if started_at is not None:
+            params["started_at"] = url_encode_datetime(started_at)
+        if user_id is not None:
+            params["user_id"] = str(user_id)
 
-        return await self.request(
-            Route(
-                "PATCH",
-                "predictions",
-                body=body,
-                token=token,
-            )
-        )
+        route: Route = Route("GET", "bits/leaderboard", params=params, token_for=str(token_for))
+        return await self.request_json(route)
 
-    async def post_prediction(
-        self, token: str, broadcaster_id: int, title: str, blue_outcome: str, pink_outcome: str, prediction_window: int
-    ):
-        body = {
-            "broadcaster_id": broadcaster_id,
-            "title": title,
-            "prediction_window": prediction_window,
-            "outcomes": [
-                {
-                    "title": blue_outcome,
-                },
-                {
-                    "title": pink_outcome,
-                },
-            ],
-        }
-        return await self.request(
-            Route("POST", "predictions", body=body, token=token),
-            paginate=False,
-        )
-
-    async def post_create_clip(self, token: str, broadcaster_id: int, has_delay=False):
-        return await self.request(
-            Route(
-                "POST", "clips", query=[("broadcaster_id", broadcaster_id), ("has_delay", str(has_delay))], token=token
-            ),
-            paginate=False,
-        )
-
-    async def get_clips(
+    @handle_user_ids()
+    async def get_cheermotes(
         self,
-        broadcaster_id: int = None,
-        game_id: str = None,
-        ids: Optional[List[str]] = None,
-        started_at: Optional[datetime.datetime] = None,
-        ended_at: Optional[datetime.datetime] = None,
-        is_featured: Optional[bool] = None,
-        token: Optional[str] = None,
-    ):
-        if started_at and started_at.tzinfo is None:
-            started_at = started_at.replace(tzinfo=datetime.timezone.utc)
-        if ended_at and ended_at.tzinfo is None:
-            ended_at = ended_at.replace(tzinfo=datetime.timezone.utc)
+        broadcaster_id: str | int | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> CheermotesResponse:
+        params = {"broadcaster_id": broadcaster_id} if broadcaster_id is not None else {}
 
-        q = [
-            ("broadcaster_id", broadcaster_id),
-            ("game_id", game_id),
-            ("started_at", started_at.isoformat() if started_at else None),
-            ("ended_at", ended_at.isoformat() if ended_at else None),
-            ("is_featured", str(is_featured) if is_featured is not None else None),
-        ]
+        route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    def get_extension_transactions(
+        self,
+        *,
+        extension_id: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[ExtensionTransaction]:
+        params: dict[str, str | int | list[str]] = {"extension_id": extension_id, "first": first}
         if ids:
-            q.extend(("id", id) for id in ids)
-        query = [x for x in q if x[1] is not None]
+            params["id"] = ids
 
-        return await self.request(Route("GET", "clips", query=query, token=token))
+        route: Route = Route("GET", "extensions/transactions", params=params)
 
-    async def post_entitlements_upload(self, manifest_id: str, type="bulk_drops_grant"):
-        return await self.request(
-            Route("POST", "entitlements/upload", query=[("manifest_id", manifest_id), ("type", type)])
+        async def converter(data: ExtensionTransactionsResponseData, *, raw: Any) -> ExtensionTransaction:
+            return ExtensionTransaction(data, http=self)
+
+        iterator: HTTPAsyncIterator[ExtensionTransaction] = self.request_paginated(
+            route, converter=converter, max_results=max_results
         )
 
-    async def get_entitlements(self, id: str = None, user_id: str = None, game_id: str = None):
-        return await self.request(
-            Route("GET", "entitlements/drops", query=[("id", id), ("user_id", user_id), ("game_id", game_id)])
-        )
+        return iterator
 
-    async def get_code_status(self, codes: List[str], user_id: int):
-        q = [("user_id", user_id)]
-        q.extend(("code", code) for code in codes)
+    ### Channels ###
 
-        return await self.request(Route("GET", "entitlements/codes", query=q))
-
-    async def post_redeem_code(self, user_id: int, codes: List[str]):
-        q = [("user_id", user_id)]
-        q.extend(("code", c) for c in codes)
-
-        return await self.request(Route("POST", "entitlements/code", query=q))
-
-    async def get_top_games(self):
-        return await self.request(Route("GET", "games/top"))
-
-    async def get_games(
-        self, game_ids: Optional[List[Any]], game_names: Optional[List[str]], igdb_ids: Optional[List[int]]
-    ):
-        if not any((game_ids, game_names, igdb_ids)):
-            raise ValueError("At least one of game id, name or IGDB id must be provided.")
-        q = []
-        if game_ids:
-            q.extend(("id", id) for id in game_ids)
-        if game_names:
-            q.extend(("name", name) for name in game_names)
-        if igdb_ids:
-            q.extend(("igdb_id", id) for id in igdb_ids)
-        return await self.request(Route("GET", "games", query=q))
-
-    async def get_hype_train(self, broadcaster_id: str, id: Optional[str] = None, token: str = None):
-        return await self.request(
-            Route(
-                "GET",
-                "hypetrain/events",
-                query=[x for x in [("broadcaster_id", broadcaster_id), ("id", id)] if x[1] is not None],
-                token=token,
-            )
-        )
-
-    async def post_automod_check(self, token: str, broadcaster_id: str, *msgs: List[Dict[str, str]]):
-        return await self.request(
-            Route(
-                "POST",
-                "moderation/enforcements/status",
-                query=[("broadcaster_id", broadcaster_id)],
-                body={"data": msgs},
-                token=token,
-            )
-        )
-
-    async def post_snooze_ad(self, token: str, broadcaster_id: str):
-        q = [("broadcaster_id", broadcaster_id)]
-        return await self.request(Route("POST", "channels/ads/schedule/snooze", query=q, token=token))
-
-    async def get_ad_schedule(self, token: str, broadcaster_id: str):
-        q = [("broadcaster_id", broadcaster_id)]
-        return await self.request(Route("GET", "channels/ads", query=q, token=token))
-
-    async def get_channel_ban_unban_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
-        q = [("broadcaster_id", broadcaster_id)]
-        if user_ids:
-            q.extend(("user_id", id) for id in user_ids)
-        return await self.request(Route("GET", "moderation/banned/events", query=q, token=token))
-
-    async def get_channel_bans(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
-        q = [("broadcaster_id", broadcaster_id)]
-        if user_ids:
-            q.extend(("user_id", id) for id in user_ids)
-        return await self.request(Route("GET", "moderation/banned", query=q, token=token))
-
-    async def get_moderated_channels(self, token: str, user_id: str):
-        q = [("user_id", user_id)]
-        return await self.request(Route("GET", "moderation/channels", query=q, token=token))
-
-    async def get_channel_moderators(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
-        q = [("broadcaster_id", broadcaster_id)]
-        if user_ids:
-            q.extend(("user_id", id) for id in user_ids)
-        return await self.request(Route("GET", "moderation/moderators", query=q, token=token))
-
-    async def get_channel_mod_events(self, token: str, broadcaster_id: str, user_ids: List[str] = None):
-        q = [("broadcaster_id", broadcaster_id)]
-        q.extend(("user_id", id) for id in user_ids)
-
-        return await self.request(Route("GET", "moderation/moderators/events", query=q, token=token))
-
-    async def get_search_categories(self, query: str, token: str = None):
-        return await self.request(Route("GET", "search/categories", query=[("query", query)], token=token))
-
-    async def get_search_channels(self, query: str, token: str = None, live: bool = False):
-        return await self.request(
-            Route("GET", "search/channels", query=[("query", query), ("live_only", str(live))], token=token)
-        )
-
-    async def get_user_emotes(self, user_id: str, broadcaster_id: Optional[str], token: str):
-        q: List = [("user_id", user_id)]
-        if broadcaster_id:
-            q.append(("broadcaster_id", broadcaster_id))
-
-        return await self.request(Route("GET", "chat/emotes/user", query=q, token=token))
-
-    async def get_stream_key(self, token: str, broadcaster_id: str):
-        return await self.request(
-            Route("GET", "streams/key", query=[("broadcaster_id", broadcaster_id)], token=token), paginate=False
-        )
-
-    async def get_streams(
+    @handle_user_ids()
+    async def get_channel_info(
         self,
-        game_ids: Optional[List[int]] = None,
-        user_ids: Optional[List[int]] = None,
-        user_logins: Optional[List[str]] = None,
-        languages: Optional[List[str]] = None,
-        type_: Literal["all", "live"] = "all",
-        token: Optional[str] = None,
-    ):
-        q = [("type", type_)]
-        if game_ids:
-            q.extend(("game_id", str(g)) for g in game_ids)
-        if user_ids:
-            q.extend(("user_id", str(u)) for u in user_ids)
-        if user_logins:
-            q.extend(("user_login", l) for l in user_logins)
-        if languages:
-            q.extend(("language", l) for l in languages)
-        return await self.request(Route("GET", "streams", query=q, token=token))
+        broadcaster_ids: list[str | int],
+        token_for: str | PartialUser | None = None,
+    ) -> ChannelInformationResponse:
+        params = {"broadcaster_id": broadcaster_ids}
 
-    async def post_stream_marker(self, token: str, user_id: str, description: str = None):
-        return await self.request(
-            Route("POST", "streams/markers", body={"user_id": user_id, "description": description}, token=token)
-        )
+        route: Route = Route("GET", "channels", params=params, token_for=token_for)
+        return await self.request_json(route)
 
-    async def get_stream_markers(self, token: str, user_id: str = None, video_id: str = None):
-        return await self.request(
-            Route(
-                "GET",
-                "streams/markers",
-                query=[x for x in [("user_id", user_id), ("video_id", video_id)] if x[1] is not None],
-                token=token,
-            )
-        )
-
-    async def get_channels(self, broadcaster_id: str, token: Optional[str] = None):
-        return await self.request(Route("GET", "channels", query=[("broadcaster_id", broadcaster_id)], token=token))
-
-    async def get_channels_new(self, broadcaster_ids: List[int], token: Optional[str] = None):
-        if len(broadcaster_ids) > 100:
-            raise ValueError("Maximum of 100 broadcaster_ids")
-        q = [("broadcaster_id", str(broadcaster_id)) for broadcaster_id in broadcaster_ids]
-        return await self.request(Route("GET", "channels", query=q, token=token))
-
-    async def patch_channel(
+    async def patch_channel_info(
         self,
-        token: str,
-        broadcaster_id: str,
-        game_id: str = None,
-        language: str = None,
-        title: str = None,
-        content_classification_labels: List[Dict[str, Union[str, bool]]] = None,
-        is_branded_content: bool = None,
-    ):
-        assert any((game_id, language, title, content_classification_labels, is_branded_content))
-        body = {
+        *,
+        broadcaster_id: str | int,
+        token_for: str,
+        game_id: str | int | None = None,
+        language: str | None = None,
+        title: str | None = None,
+        delay: int | None = None,
+        tags: list[str] | None = None,
+        branded_content: bool | None = None,
+        classification_labels: list[
+            dict[
+                Literal[
+                    "DebatedSocialIssuesAndPolitics",
+                    "MatureGame",
+                    "DrugsIntoxication",
+                    "SexualThemes",
+                    "ViolentGraphic",
+                    "Gambling",
+                    "ProfanityVulgarity",
+                ],
+                bool,
+            ]
+        ]
+        | None = None,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id}
+
+        data: dict[str, str | int | list[str] | list[dict[str, str | bool]]] = {
             k: v
             for k, v in {
                 "game_id": game_id,
                 "broadcaster_language": language,
                 "title": title,
-                "is_branded_content": is_branded_content,
+                "delay": delay,
+                "tags": tags,
+                "is_branded_content": branded_content,
             }.items()
             if v is not None
         }
 
-        if content_classification_labels is not None:
-            body["content_classification_labels"] = content_classification_labels
+        if classification_labels is not None:
+            converted_labels = [
+                {"id": label, "is_enabled": enabled} for item in classification_labels for label, enabled in item.items()
+            ]
+            data["content_classification_labels"] = converted_labels
 
-        return await self.request(
-            Route("PATCH", "channels", query=[("broadcaster_id", broadcaster_id)], body=body, token=token)
-        )
+        route: Route = Route("PATCH", "channels", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
 
-    async def get_channel_schedule(
+    async def get_channel_editors(self, broadcaster_id: str | int, token_for: str) -> ChannelEditorsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "channels/editors", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_followed_channels(
         self,
-        broadcaster_id: str,
-        segment_ids: Optional[List[str]] = None,
-        start_time: Optional[datetime.datetime] = None,
-        utc_offset: Optional[int] = None,
+        *,
+        user_id: str | int,
+        token_for: str,
+        broadcaster_id: str | int | PartialUser | None = None,
         first: int = 20,
-    ):
-        if first > 25 or first < 1:
-            raise ValueError("The parameter 'first' was malformed: the value must be less than or equal to 25")
-        if segment_ids is not None and len(segment_ids) > 100:
-            raise ValueError("segment_id can only have 100 entries")
-        if start_time:
-            start_time = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-        if utc_offset:
-            utc_offset = str(utc_offset)
-        q = [
-            x
-            for x in [
-                ("broadcaster_id", broadcaster_id),
-                ("first", first),
-                ("start_time", start_time),
-                ("utc_offset", utc_offset),
-            ]
-            if x[1] is not None
-        ]
+        max_results: int | None = None,
+    ) -> FollowedChannels:
+        first = max(1, min(100, first))
+        params = {"first": first, "user_id": user_id}
 
-        if segment_ids:
-            q.extend(("id", id) for id in segment_ids)
-        return await self.request(Route("GET", "schedule", query=q), paginate=False, full_body=True)
+        if broadcaster_id is not None:
+            params["broadcaster_id"] = str(broadcaster_id)
 
-    async def get_channel_subscriptions(self, token: str, broadcaster_id: str, user_ids: Optional[List[str]] = None):
-        q = [("broadcaster_id", broadcaster_id)]
-        if user_ids:
-            q.extend(("user_id", u) for u in user_ids)
-        return await self.request(Route("GET", "subscriptions", query=q, token=token))
+        route = Route("GET", "channels/followed", params=params, token_for=token_for)
 
-    async def get_stream_tags(self, tag_ids: Optional[List[str]] = None):
-        q = []
-        if tag_ids:
-            q.extend(("tag_id", u) for u in tag_ids)
-        return await self.request(Route("GET", "tags/streams", query=q or None))
+        async def converter(data: FollowedChannelsResponseData, *, raw: Any) -> FollowedChannelsEvent:
+            return FollowedChannelsEvent(data, http=self)
 
-    async def get_channel_tags(self, broadcaster_id: str):
-        return await self.request(Route("GET", "streams/tags", query=[("broadcaster_id", broadcaster_id)]))
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        data = await self.request_json(route)
 
-    async def put_replace_channel_tags(self, token: str, broadcaster_id: str, tag_ids: List[str] = None):
-        return await self.request(
-            Route(
-                "PUT",
-                "streams/tags",
-                query=[("broadcaster_id", broadcaster_id)],
-                body={"tag_ids": tag_ids},
-                token=token,
-            )
-        )
+        return FollowedChannels(data, iterator)
 
-    async def post_follow_channel(self, token: str, from_id: str, to_id: str, notifications=False):
-        return await self.request(
-            Route(
-                "POST",
-                "users/follows",
-                query=[("from_id", from_id), ("to_id", to_id), ("allow_notifications", str(notifications))],
-                token=token,
-            )
-        )
-
-    async def delete_unfollow_channel(self, token: str, from_id: str, to_id: str):
-        return await self.request(
-            Route("DELETE", "users/follows", query=[("from_id", from_id), ("to_id", to_id)], token=token)
-        )
-
-    async def get_users(self, ids: List[int], logins: List[str], token: Optional[str] = None):
-        q = []
-        if ids:
-            q.extend(("id", id) for id in ids)
-        if logins:
-            q.extend(("login", login) for login in logins)
-        return await self.request(Route("GET", "users", query=q, token=token))
-
-    async def get_user_follows(
-        self, from_id: Optional[str] = None, to_id: Optional[str] = None, token: Optional[str] = None
-    ):
-        return await self.request(
-            Route(
-                "GET",
-                "users/follows",
-                query=[x for x in [("from_id", from_id), ("to_id", to_id)] if x[1] is not None],
-                token=token,
-            )
-        )
-
-    async def put_update_user(self, token: str, description: str):
-        return await self.request(Route("PUT", "users", query=[("description", description)], token=token))
-
-    async def get_channel_extensions(self, token: str):
-        return await self.request(Route("GET", "users/extensions/list", token=token))
-
-    async def get_user_active_extensions(self, token: str, user_id: str = None):
-        return (
-            await self.request(
-                Route("GET", "users/extensions", query=[("user_id", user_id)], token=token),
-                paginate=False,
-                full_body=True,
-            )
-        )["data"]
-
-    async def put_user_extensions(self, token: str, data: Dict[str, Any]):
-        return (
-            await self.request(
-                Route("PUT", "users/extensions", token=token, body={"data": data}), paginate=False, full_body=True
-            )
-        )["data"]
-
-    async def get_videos(
+    @handle_user_ids()
+    async def get_channel_followers(
         self,
-        ids: List[str] = None,
-        user_id: str = None,
-        game_id: str = None,
-        sort: str = "time",
-        type: str = "all",
-        period: str = "all",
-        language: str = None,
-        token: str = None,
-    ):
-        q = [
-            x
-            for x in [
-                ("user_id", user_id),
-                ("game_id", game_id),
-                ("sort", sort),
-                ("type", type),
-                ("period", period),
-                ("lanaguage", language),
-            ]
-            if x[1] is not None
-        ]
+        *,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> ChannelFollowers:
+        first = max(1, min(100, first))
+        params = {"first": first, "broadcaster_id": broadcaster_id}
 
-        if ids:
-            q.extend(("id", id) for id in ids)
-        return await self.request(Route("GET", "videos", query=q, token=token))
+        if user_id is not None:
+            params["user_id"] = str(user_id)
 
-    async def delete_videos(self, token: str, ids: List[int]):
-        q = [("id", str(x)) for x in ids]
+        route = Route("GET", "channels/followers", params=params, token_for=token_for)
 
-        return (await self.request(Route("DELETE", "videos", query=q, token=token), paginate=False, full_body=True))[
-            "data"
-        ]
+        async def converter(data: ChannelFollowersResponseData, *, raw: Any) -> ChannelFollowerEvent:
+            return ChannelFollowerEvent(data, http=self)
 
-    async def get_webhook_subs(self):
-        return await self.request(Route("GET", "webhooks/subscriptions"))
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        data = await self.request_json(route)
 
-    async def get_teams(self, team_name: Optional[str] = None, team_id: Optional[str] = None):
-        if team_name:
-            q = [("name", team_name)]
-        elif team_id:
-            q = [("id", team_id)]
-        else:
-            raise ValueError("You need to provide a team name or id")
-        return await self.request(Route("GET", "teams", query=q))
+        return ChannelFollowers(data, iterator)
 
-    async def get_channel_teams(self, broadcaster_id: str):
-        q = [("broadcaster_id", broadcaster_id)]
-        return await self.request(Route("GET", "teams/channel", query=q), paginate=False, full_body=True)
+    ### Channel Points ###
 
-    async def get_polls(
+    async def post_custom_reward(
         self,
+        *,
         broadcaster_id: str,
-        token: str,
-        poll_ids: Optional[List[str]] = None,
-        first: Optional[int] = 20,
-    ):
-        if poll_ids and len(poll_ids) > 100:
-            raise ValueError("poll_ids can only have up to 100 entries")
-        if first and (first > 25 or first < 1):
-            raise ValueError("first can only be between 1 and 20")
-        q = [("broadcaster_id", broadcaster_id), ("first", first)]
-
-        if poll_ids:
-            q.extend(("id", poll_id) for poll_id in poll_ids)
-        return await self.request(Route("GET", "polls", query=q, token=token), paginate=False, full_body=True)
-
-    async def post_poll(
-        self,
-        broadcaster_id: str,
-        token: str,
+        token_for: str,
         title: str,
-        choices,
-        duration: int,
-        bits_voting_enabled: Optional[bool] = False,
-        bits_per_vote: Optional[int] = None,
-        channel_points_voting_enabled: Optional[bool] = False,
-        channel_points_per_vote: Optional[int] = None,
-    ):
-        if len(title) > 60:
-            raise ValueError("title must be less than or equal to 60 characters")
-        if len(choices) < 2 or len(choices) > 5:
-            raise ValueError("You must have between 2 and 5 choices")
-        for c in choices:
-            if len(c) > 25:
-                raise ValueError("choice title must be less than or equal to 25 characters")
-        if duration < 15 or duration > 1800:
-            raise ValueError("duration must be between 15 and 1800 seconds")
-        if bits_per_vote and bits_per_vote > 10000:
-            raise ValueError("bits_per_vote must bebetween 0 and 10000")
-        if channel_points_per_vote and channel_points_per_vote > 1000000:
-            raise ValueError("channel_points_per_vote must bebetween 0 and 1000000")
-        body = {
-            "broadcaster_id": broadcaster_id,
+        cost: int,
+        prompt: str | None = None,
+        enabled: bool = True,
+        background_color: str | Colour | None = None,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        skip_queue: bool = False,
+    ) -> CustomRewardsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        data = {
             "title": title,
-            "choices": [{"title": choice} for choice in choices],
-            "duration": duration,
-            "bits_voting_enabled": str(bits_voting_enabled),
-            "channel_points_voting_enabled": str(channel_points_voting_enabled),
+            "cost": cost,
+            "is_enabled": enabled,
+            "should_redemptions_skip_request_queue": skip_queue,
         }
-        if bits_voting_enabled and bits_per_vote:
-            body["bits_per_vote"] = bits_per_vote
-        if channel_points_voting_enabled and channel_points_per_vote:
-            body["channel_points_per_vote"] = channel_points_per_vote
-        return await self.request(Route("POST", "polls", body=body, token=token))
 
-    async def patch_poll(self, broadcaster_id: str, token: str, id: str, status: str):
-        body = {"broadcaster_id": broadcaster_id, "id": id, "status": status}
-        return await self.request(Route("PATCH", "polls", body=body, token=token))
+        if prompt is not None:
+            data["prompt"] = prompt
+            data["is_user_input_required"] = True
 
-    async def get_goals(self, broadcaster_id: str, token: str):
-        return await self.request(Route("GET", "goals", query=[("broadcaster_id", broadcaster_id)], token=token))
+        if background_color:
+            if isinstance(background_color, Colour):
+                background_color = str(background_color)
+            data["background_color"] = background_color
 
-    async def get_chat_settings(
-        self, broadcaster_id: str, token: Optional[str] = None, moderator_id: Optional[str] = None
-    ):
-        q = [("broadcaster_id", broadcaster_id)]
-        if moderator_id and token:
-            q.append(("moderator_id", moderator_id))
-        return await self.request(Route("GET", "chat/settings", query=q, token=token))
+        if max_per_stream:
+            data["max_per_stream"] = max_per_stream
+            data["is_max_per_stream_enabled"] = True
 
+        if max_per_user:
+            data["max_per_user_per_stream"] = max_per_user
+            data["is_max_per_user_per_stream_enabled"] = True
+
+        if global_cooldown:
+            data["global_cooldown_seconds"] = global_cooldown
+            data["is_global_cooldown_enabled"] = True
+
+        route: Route = Route("POST", "channel_points/custom_rewards", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def delete_custom_reward(self, broadcaster_id: str, reward_id: str, token_for: str) -> None:
+        params = {"broadcaster_id": broadcaster_id, "id": reward_id}
+
+        route: Route = Route("DELETE", "channel_points/custom_rewards", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_custom_reward(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str,
+        reward_ids: list[str] | None = None,
+        manageable: bool = False,
+    ) -> CustomRewardsResponse:
+        params: dict[str, str | bool | list[str]] = {
+            "broadcaster_id": broadcaster_id,
+            "only_manageable_rewards": manageable,
+        }
+
+        if reward_ids is not None:
+            params["id"] = reward_ids
+
+        route: Route = Route("GET", "channel_points/custom_rewards", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def patch_custom_reward(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str | PartialUser,
+        reward_id: str,
+        title: str | None = None,
+        cost: int | None = None,
+        prompt: str | None = None,
+        enabled: bool | None = None,
+        background_color: str | Colour | None = None,
+        user_input_required: bool | None = None,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        skip_queue: bool | None = None,
+    ) -> CustomRewardsResponse:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "id": reward_id,
+        }
+
+        data: dict[str, str | int | bool] = {}
+
+        if title is not None:
+            data["title"] = title
+
+        if cost is not None:
+            data["cost"] = cost
+
+        if prompt is not None:
+            data["prompt"] = prompt
+            data["user_input_required"] = True
+
+        if enabled is not None:
+            data["is_enabled"] = enabled
+
+        if background_color:
+            if isinstance(background_color, Colour):
+                background_color = str(background_color)
+            data["background_color"] = background_color
+
+        if user_input_required is not None:
+            data["is_user_input_required"] = user_input_required
+
+        if skip_queue is not None:
+            data["should_redemptions_skip_request_queue"] = skip_queue
+
+        if max_per_stream is not None:
+            data["max_per_stream"] = max_per_stream
+            data["is_max_per_stream_enabled"] = max_per_stream != 0
+
+        if max_per_user is not None:
+            data["max_per_user_per_stream"] = max_per_user
+            data["is_max_per_user_per_stream_enabled"] = max_per_user != 0
+
+        if global_cooldown is not None:
+            data["global_cooldown_seconds"] = global_cooldown
+            data["is_global_cooldown_enabled"] = global_cooldown != 0
+
+        route: Route = Route("PATCH", "channel_points/custom_rewards", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    def get_custom_reward_redemptions(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str | PartialUser,
+        reward_id: str,
+        parent_reward: CustomReward,
+        status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"] | None = None,
+        ids: list[str] | None = None,
+        sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
+        first: int = 20,
+    ) -> HTTPAsyncIterator[CustomRewardRedemption]:
+        params: dict[str, str | int | list[str]] = {
+            "broadcaster_id": broadcaster_id,
+            "reward_id": reward_id,
+            "sort": sort,
+            "First": first,
+        }
+        if ids is None and status is None:
+            raise ValueError("You must provide at least a status if not providing any ids.")
+
+        if ids is not None:
+            params["id"] = ids
+        if status is not None:
+            params["status"] = status
+
+        route: Route = Route("GET", "channel_points/custom_rewards/redemptions", params=params, token_for=token_for)
+
+        async def converter(data: CustomRewardRedemptionResponseData, *, raw: Any) -> CustomRewardRedemption:
+            return CustomRewardRedemption(data, parent_reward=parent_reward, http=self)
+
+        iterator = self.request_paginated(route, converter=converter)
+        return iterator
+
+    @handle_user_ids()
+    async def patch_custom_reward_redemption(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str | PartialUser,
+        reward_id: str,
+        id: str,
+        status: Literal["CANCELED", "FULFILLED"],
+    ) -> CustomRewardRedemptionResponse:
+        params = {"broadcaster_id": broadcaster_id, "reward_id": reward_id, "id": id}
+        data = {"status": status}
+
+        route: Route = Route(
+            "PATCH",
+            "channel_points/custom_rewards/redemptions",
+            params=params,
+            json=data,
+            token_for=token_for,
+        )
+
+        return await self.request_json(route)
+
+    ### Charity ###
+
+    async def get_charity_campaign(self, broadcaster_id: str, token_for: str) -> CharityCampaignResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "charity/campaigns", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    def get_charity_donations(
+        self,
+        broadcaster_id: str,
+        token_for: str,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[CharityDonation]:
+        params = {"broadcaster_id": broadcaster_id, "first": first}
+        route: Route = Route("GET", "charity/donations", params=params, token_for=token_for)
+
+        async def converter(data: CharityCampaignDonationsResponseData, *, raw: Any) -> CharityDonation:
+            return CharityDonation(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    ### Chat ###
+
+    @handle_user_ids()
+    async def get_chatters(
+        self,
+        token_for: str | PartialUser,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        first: int = 100,
+        max_results: int | None = None,
+    ) -> Chatters:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "first": first}
+        route: Route = Route("GET", "chat/chatters", params=params, token_for=token_for)
+
+        async def converter(data: ChattersResponseData, *, raw: Any) -> PartialUser:
+            return PartialUser(data["user_id"], data["user_login"], http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        data = await self.request_json(route)
+
+        return Chatters(iterator, data)
+
+    @handle_user_ids()
+    async def get_global_chat_badges(self, token_for: str | PartialUser | None = None) -> GlobalChatBadgesResponse:
+        route: Route = Route("GET", "chat/badges/global", token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_user_chat_color(
+        self,
+        user_ids: list[str | int],
+        token_for: str | PartialUser | None = None,
+    ) -> UserChatColorResponse:
+        params: dict[str, list[str | int]] = {"user_id": user_ids}
+
+        route: Route = Route("GET", "chat/color", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_channel_emotes(
+        self,
+        broadcaster_id: str | int,
+        token_for: str | PartialUser | None = None,
+    ) -> ChannelEmotesResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "chat/emotes", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_global_emotes(self, token_for: str | PartialUser | None = None) -> GlobalEmotesResponse:
+        route: Route = Route("GET", "chat/emotes/global", token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_emote_sets(
+        self, emote_set_ids: list[str], token_for: str | PartialUser | None = None
+    ) -> EmoteSetsResponse:
+        params = {"emote_set_id": emote_set_ids}
+
+        route: Route = Route("GET", "chat/emotes/set", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_channel_chat_badges(
+        self,
+        broadcaster_id: str,
+        token_for: str | PartialUser | None = None,
+    ) -> ChannelChatBadgesResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "chat/badges", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_channel_chat_settings(
+        self,
+        broadcaster_id: str,
+        moderator_id: str | int | PartialUser | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> ChatSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        if moderator_id is not None:
+            params["moderator_id"] = str(moderator_id)
+
+        route: Route = Route("GET", "chat/settings", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    def get_user_emotes(
+        self,
+        user_id: str,
+        token_for: str,
+        broadcaster_id: str | int | PartialUser | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[UserEmote]:
+        params = {"user_id": user_id}
+        if broadcaster_id is not None:
+            params["broadcaster_id"] = str(broadcaster_id)
+
+        route: Route = Route("GET", "chat/emotes/user", params=params, token_for=token_for)
+
+        async def converter(data: UserEmotesResponseData, *, raw: Any) -> UserEmote:
+            return UserEmote(data, template=raw["template"], http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    @handle_user_ids()
     async def patch_chat_settings(
         self,
-        token: str,
-        broadcaster_id: str,
-        moderator_id: str,
-        emote_mode: Optional[bool] = None,
-        follower_mode: Optional[bool] = None,
-        follower_mode_duration: Optional[int] = None,
-        slow_mode: Optional[bool] = None,
-        slow_mode_wait_time: Optional[int] = None,
-        subscriber_mode: Optional[bool] = None,
-        unique_chat_mode: Optional[bool] = None,
-        non_moderator_chat_delay: Optional[bool] = None,
-        non_moderator_chat_delay_duration: Optional[int] = None,
-    ):
-        if follower_mode_duration and follower_mode_duration > 129600:
-            raise ValueError("follower_mode_duration must be below 129600")
-        if slow_mode_wait_time and (slow_mode_wait_time < 3 or slow_mode_wait_time > 120):
-            raise ValueError("slow_mode_wait_time must be between 3 and 120")
-        if non_moderator_chat_delay_duration and non_moderator_chat_delay_duration not in {2, 4, 6}:
-            raise ValueError("non_moderator_chat_delay_duration must be 2, 4 or 6")
-        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
-        data = {
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        emote_mode: bool | None = None,
+        follower_mode: bool | None = None,
+        follower_mode_duration: int | None = None,
+        slow_mode: bool | None = None,
+        slow_mode_wait_time: int | None = None,
+        subscriber_mode: bool | None = None,
+        unique_chat_mode: bool | None = None,
+        non_moderator_chat_delay: bool | None = None,
+        non_moderator_chat_delay_duration: Literal[2, 4, 6] | None = None,
+    ) -> ChatSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+
+        _data = {
             "emote_mode": emote_mode,
             "follower_mode": follower_mode,
             "follower_mode_duration": follower_mode_duration,
@@ -1059,212 +1205,1394 @@ class TwitchHTTP:
             "non_moderator_chat_delay": non_moderator_chat_delay,
             "non_moderator_chat_delay_duration": non_moderator_chat_delay_duration,
         }
-        data = {k: v for k, v in data.items() if v is not None}
-        return await self.request(Route("PATCH", "chat/settings", query=q, body=data, token=token))
+        data = {k: v for k, v in _data.items() if v is not None}
 
+        route: Route = Route("PATCH", "chat/settings", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_shared_chat_session(
+        self, broadcaster_id: str | int, *, token_for: str | PartialUser | None = None
+    ) -> SharedChatSessionResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        route: Route = Route("POST", "chat/shared_chat/session", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
     async def post_chat_announcement(
-        self, token: str, broadcaster_id: str, moderator_id: str, message: str, color: Optional[str] = "primary"
-    ):
-        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
-        body = {"message": message, "color": color}
-        return await self.request(Route("POST", "chat/announcements", query=q, body=body, token=token))
-
-    async def delete_chat_messages(
-        self, token: str, broadcaster_id: str, moderator_id: str, message_id: Optional[str] = None
-    ):
-        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
-        if message_id:
-            q.append(("message_id", message_id))
-        return await self.request(Route("DELETE", "moderation/chat", query=q, token=token))
-
-    async def put_user_chat_color(self, token: str, user_id: str, color: str):
-        q = [("user_id", user_id), ("color", color)]
-        return await self.request(Route("PUT", "chat/color", query=q, token=token))
-
-    async def get_user_chat_color(self, user_ids: List[int], token: Optional[str] = None):
-        if len(user_ids) > 100:
-            raise ValueError("You can only get up to 100 user chat colors at once")
-        q = [("user_id", str(user_id)) for user_id in user_ids]
-        return await self.request(Route("GET", "chat/color", query=q, token=token))
-
-    async def post_channel_moderator(self, token: str, broadcaster_id: str, user_id: str):
-        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
-        return await self.request(Route("POST", "moderation/moderators", query=q, token=token))
-
-    async def delete_channel_moderator(self, token: str, broadcaster_id: str, user_id: str):
-        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
-        return await self.request(Route("DELETE", "moderation/moderators", query=q, token=token))
-
-    async def get_channel_vips(
-        self, token: str, broadcaster_id: str, first: int = 20, user_ids: Optional[List[int]] = None
-    ):
-        q = [("broadcaster_id", broadcaster_id), ("first", first)]
-        if first > 100:
-            raise ValueError("You can only get up to 100 VIPs at once")
-        if user_ids:
-            if len(user_ids) > 100:
-                raise ValueError("You can can only specify up to 100 VIPs")
-            q.extend(("user_id", str(user_id)) for user_id in user_ids)
-        return await self.request(Route("GET", "channels/vips", query=q, token=token))
-
-    async def post_channel_vip(self, token: str, broadcaster_id: str, user_id: str):
-        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
-        return await self.request(Route("POST", "channels/vips", query=q, token=token))
-
-    async def delete_channel_vip(self, token: str, broadcaster_id: str, user_id: str):
-        q = [("broadcaster_id", broadcaster_id), ("user_id", user_id)]
-        return await self.request(Route("DELETE", "channels/vips", query=q, token=token))
-
-    async def post_whisper(self, token: str, from_user_id: str, to_user_id: str, message: str):
-        q = [("from_user_id", from_user_id), ("to_user_id", to_user_id)]
-        body = {"message": message}
-        return await self.request(Route("POST", "whispers", query=q, body=body, token=token))
-
-    async def post_raid(self, token: str, from_broadcaster_id: str, to_broadcaster_id: str):
-        q = [("from_broadcaster_id", from_broadcaster_id), ("to_broadcaster_id", to_broadcaster_id)]
-        return await self.request(Route("POST", "raids", query=q, token=token))
-
-    async def delete_raid(self, token: str, broadcaster_id: str):
-        q = [("broadcaster_id", broadcaster_id)]
-        return await self.request(Route("DELETE", "raids", query=q, token=token))
-
-    async def post_ban_timeout_user(
         self,
-        token: str,
-        broadcaster_id: str,
-        moderator_id: str,
-        user_id: str,
-        reason: str,
-        duration: Optional[int] = None,
-    ):
-        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
-        body = {"data": {"user_id": user_id, "reason": reason}}
-        if duration:
-            if duration < 1 or duration > 1209600:
-                raise ValueError("Duration must be between 1 and 1209600 seconds")
-            body["data"]["duration"] = str(duration)
-        return await self.request(Route("POST", "moderation/bans", query=q, body=body, token=token))
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        message: str,
+        color: Literal["blue", "green", "orange", "purple", "primary"] = "primary",
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"color": color, "message": message}
 
-    async def delete_ban_timeout_user(
+        route: Route = Route("POST", "chat/announcements", json=data, params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def post_chat_shoutout(
         self,
-        token: str,
+        broadcaster_id: str | int,
+        to_broadcaster_id: str | int | PartialUser,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+    ) -> None:
+        params = {
+            "from_broadcaster_id": broadcaster_id,
+            "moderator_id": moderator_id,
+            "to_broadcaster_id": to_broadcaster_id,
+        }
+
+        route: Route = Route("POST", "chat/shoutouts", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def post_chat_message(
+        self,
         broadcaster_id: str,
-        moderator_id: str,
-        user_id: str,
-    ):
-        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id), ("user_id", user_id)]
-        return await self.request(Route("DELETE", "moderation/bans", query=q, token=token))
+        sender_id: str | int | PartialUser,
+        message: str,
+        token_for: str | PartialUser | None,
+        reply_to_message_id: str | None = None,
+    ) -> SendChatMessageResponse:
+        data = {"broadcaster_id": broadcaster_id, "sender_id": sender_id, "message": message}
+        if reply_to_message_id is not None:
+            data["reply_parent_message_id"] = reply_to_message_id
 
-    async def get_follow_count(
-        self, from_id: Optional[str] = None, to_id: Optional[str] = None, token: Optional[str] = None
-    ):
-        return await self.request(
-            Route(
-                "GET",
-                "users/follows",
-                query=[x for x in [("from_id", from_id), ("to_id", to_id)] if x[1] is not None],
-                token=token,
-            ),
-            full_body=True,
-            paginate=False,
-        )
+        route: Route = Route("POST", "chat/messages", json=data, token_for=token_for)
+        return await self.request_json(route)
 
-    async def get_shield_mode_status(self, token: str, broadcaster_id: str, moderator_id: str):
-        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
-        return await self.request(
-            Route("GET", "moderation/shield_mode", query=q, token=token), paginate=False, full_body=False
-        )
+    async def put_user_chat_color(self, user_id: str | int, color: str, token_for: str) -> None:
+        params = {"user_id": user_id, "color": color}
 
-    async def put_shield_mode_status(self, token: str, broadcaster_id: str, moderator_id: str, is_active: bool):
-        q = [("broadcaster_id", broadcaster_id), ("moderator_id", moderator_id)]
-        body = {"is_active": is_active}
-        return await self.request(Route("PUT", "moderation/shield_mode", query=q, body=body, token=token))
+        route: Route = Route("PUT", "chat/color", params=params, token_for=token_for)
+        return await self.request_json(route)
 
-    async def get_followed_streams(self, broadcaster_id: str, token: str):
-        return await self.request(Route("GET", "streams/followed", query=[("user_id", broadcaster_id)], token=token))
+    ### Clips ###
 
-    async def post_shoutout(self, token: str, broadcaster_id: str, moderator_id: str, to_broadcaster_id: str):
-        q = [
-            ("from_broadcaster_id", broadcaster_id),
-            ("moderator_id", moderator_id),
-            ("to_broadcaster_id", to_broadcaster_id),
+    @handle_user_ids()
+    def get_clips(
+        self,
+        *,
+        first: int,
+        broadcaster_id: str | None = None,
+        game_id: str | None = None,
+        clip_ids: list[str] | None = None,
+        started_at: datetime.datetime | None = None,
+        ended_at: datetime.datetime | None = None,
+        is_featured: bool | None = None,
+        token_for: str | PartialUser | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Clip]:
+        params: dict[str, str | int | list[str]] = {"first": first}
+
+        if broadcaster_id:
+            params["broadcaster_id"] = broadcaster_id
+        elif game_id:
+            params["game_id"] = game_id
+        elif clip_ids:
+            params["id"] = clip_ids
+
+        if started_at:
+            params["started_at"] = url_encode_datetime(started_at)
+        if ended_at:
+            params["ended_at"] = url_encode_datetime(ended_at)
+        if is_featured is not None:
+            params["is_featured"] = is_featured
+
+        route: Route = Route("GET", "clips", params=params, token_for=token_for)
+
+        async def converter(data: ClipsResponseData, *, raw: Any) -> Clip:
+            return Clip(data, http=self)
+
+        iterator: HTTPAsyncIterator[Clip] = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    @handle_user_ids()
+    async def post_create_clip(
+        self,
+        *,
+        broadcaster_id: str | int,
+        token_for: str | PartialUser,
+        has_delay: bool = False,
+    ) -> CreateClipResponse:
+        params = {"broadcaster_id": broadcaster_id, "has_delay": has_delay}
+
+        route: Route = Route("POST", "clips", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Conduits ###
+
+    # async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
+
+    #     params = {"conduit_id": conduit_id}
+    #     body = {"shards": shards}
+
+    #     route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
+    #     return await self.request_json(route)
+
+    # async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
+    #     params = {"shard_count": shard_count}
+
+    #     route: Route = Route("POST", "eventsub/conduits", params=params)
+    #     return await self.request_json(route)
+
+    # async def get_conduits(self) -> ConduitPayload:
+    #     route = Route("GET", "eventsub/conduits")
+    #     return await self.request_json(route)
+
+    # def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[Shard]:
+    #     params = {"conduit_id": conduit_id}
+    #     if status:
+    #         params["status"] = status
+
+    #     async def converter(data: ShardData, *, raw: Any) -> Shard:
+    #         return Shard(data=data)
+
+    #     route: Route = Route("GET", "eventsub/conduits/shards", params=params)
+    #     iterator = self.request_paginated(route, converter=converter)
+
+    #     return iterator
+
+    # async def update_conduits(self, id: str, /, shard_count: int) -> ConduitPayload:
+    #     params = {"id": id, "shard_count": shard_count}
+
+    #     route: Route = Route("PATCH", "eventsub/conduits", params=params)
+    #     return await self.request_json(route)
+
+    ### CCLs ###
+
+    @handle_user_ids()
+    async def get_content_classification_labels(
+        self,
+        locale: str,
+        token_for: str | PartialUser | None = None,
+    ) -> ContentClassificationLabelsResponse:
+        params: dict[str, str] = {"locale": locale}
+
+        route: Route = Route("GET", "content_classification_labels", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Entitlements ###
+
+    @handle_user_ids()
+    def get_drop_entitlements(
+        self,
+        token_for: str | PartialUser | None = None,
+        ids: list[str] | None = None,
+        user_id: str | PartialUser | int | None = None,
+        game_id: str | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Entitlement]:
+        params: dict[str, str | int | list[str]] = {"first": first}
+        if ids is not None:
+            params["id"] = ids
+        if user_id is not None:
+            params["user_id"] = str(user_id)
+        if game_id is not None:
+            params["game_id"] = game_id
+        if fulfillment_status is not None:
+            params["fulfillment_status"] = fulfillment_status
+
+        route: Route = Route("GET", "entitlements/drops", params=params, token_for=token_for)
+
+        async def converter(data: DropsEntitlementsResponseData, *, raw: Any) -> Entitlement:
+            return Entitlement(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    @handle_user_ids()
+    async def patch_drop_entitlements(
+        self,
+        ids: list[str] | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> UpdateDropsEntitlementsResponse:
+        data: dict[str, list[str] | str] = {}
+        if ids is not None:
+            data["entitlement_ids"] = ids
+        if fulfillment_status is not None:
+            data["fulfillment_status"] = fulfillment_status
+
+        route: Route = Route("PATCH", "entitlements/drops", json=data, token_for=token_for)
+
+        return await self.request_json(route)
+
+    ### Extensions ###
+
+    ### EventSub ###
+
+    # MARK
+    async def create_eventsub_subscription(self, **kwargs: Unpack[_SubscriptionData]) -> SubscriptionResponse:
+        # TODO: Token?
+        token: str | None = None
+
+        _type: SubscriptionType = kwargs["type"]
+        version: str = kwargs["version"]
+        condition: Condition = kwargs["condition"]
+        transport: SubscriptionCreateTransport = kwargs["transport"]
+        token_for: str | None = kwargs["token_for"]
+
+        method: str = transport["method"]
+        if method in ("webhook", "conduit"):
+            # Webhook/conduit must use app tokens...
+            token_for = None
+
+        elif method == "websocket" and not token_for and not token:
+            raise ValueError("A valid User Access token must be passed for websocket subscriptions.")
+
+        data: SubscriptionCreateRequest = {
+            "type": _type.value,
+            "version": version,
+            "condition": condition,
+            "transport": transport,
+        }
+
+        route: Route = Route("POST", "eventsub/subscriptions", token_for=token_for, json=data)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_eventsub_subscription(
+        self,
+        *,
+        status: Literal[
+            "enabled",
+            "webhook_callback_verification_pending",
+            "webhook_callback_verification_failed",
+            "notification_failures_exceeded",
+            "authorization_revoked",
+            "moderator_removed",
+            "user_removed",
+            "version_removed",
+            "beta_maintenance",
+            "websocket_disconnected",
+            "websocket_failed_ping_pong",
+            "websocket_received_inbound_traffic",
+            "websocket_connection_unused",
+            "websocket_internal_error",
+            "websocket_network_timeout",
+            "websocket_network_error",
         ]
-        return await self.request(Route("POST", "chat/shoutouts", query=q, token=token))
+        | None = None,
+        user_id: str | PartialUser | None = None,
+        type: str | None = None,
+        max_results: int | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> EventsubSubscriptions:
+        params: dict[str, str] = {}
 
-    async def get_global_chat_badges(self):
-        return await self.request(Route("GET", "chat/badges/global", ""))
+        if type is not None:
+            params["type"] = type
+        if status is not None:
+            params["status"] = status
+        if user_id is not None:
+            params["user_id"] = str(user_id)
 
-    async def get_channel_chat_badges(self, broadcaster_id: str):
-        return await self.request(Route("GET", "chat/badges", "", query=[("broadcaster_id", broadcaster_id)]))
+        route: Route = Route("GET", "eventsub/subscriptions", params=params, token_for=token_for)
 
-    async def get_content_classification_labels(self, locale: str):
-        return await self.request(Route("GET", "content_classification_labels", "", query=[("locale", locale)]))
+        async def converter(data: EventsubSubscriptionResponseData, *, raw: Any) -> EventsubSubscription:
+            return EventsubSubscription(data, http=self)
 
-    async def get_channel_charity_campaigns(self, broadcaster_id: str, token: str):
-        return await self.request(
-            Route("GET", "charity/campaigns", query=[("broadcaster_id", broadcaster_id)], token=token)
+        iterator: HTTPAsyncIterator[EventsubSubscription] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+        data = await self.request_json(route)
+
+        return EventsubSubscriptions(data, iterator)
+
+    @handle_user_ids()
+    async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
+        params = {"id": id}
+        route: Route = Route("DELETE", "eventsub/subscriptions", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Games ###
+
+    @handle_user_ids()
+    def get_top_games(
+        self,
+        first: int,
+        token_for: str | PartialUser | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Game]:
+        params: dict[str, int] = {"first": first}
+
+        route: Route = Route("GET", "games/top", params=params, token_for=token_for)
+
+        async def converter(data: TopGamesResponseData, *, raw: Any) -> Game:
+            return Game(data, http=self)
+
+        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    @handle_user_ids()
+    async def get_games(
+        self,
+        *,
+        names: list[str] | None = None,
+        ids: list[str] | None = None,
+        igdb_ids: list[str] | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> GamesResponse:
+        params: dict[str, list[str]] = {}
+
+        if names is not None:
+            params["name"] = names
+        if ids is not None:
+            params["id"] = ids
+        if igdb_ids is not None:
+            params["igdb_id"] = igdb_ids
+
+        route: Route = Route("GET", "games", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Goals ###
+
+    async def get_creator_goals(self, broadcaster_id: str | int, token_for: str) -> CreatorGoalsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "goals", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Guest Start ###
+
+    ### Hype Train ###
+
+    def get_hype_train_events(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        first: int = 1,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[HypeTrainEvent]:
+        params = {"broadcaster_id": broadcaster_id, "first": first}
+
+        route: Route = Route("GET", "hypetrain/events", params=params, token_for=token_for)
+
+        async def converter(data: HypeTrainEventsResponseData, *, raw: Any) -> HypeTrainEvent:
+            return HypeTrainEvent(data, http=self)
+
+        iterator: HTTPAsyncIterator[HypeTrainEvent] = self.request_paginated(
+            route, converter=converter, max_results=max_results
         )
 
-    async def get_channel_followers(
+        return iterator
+
+    ### Moderation ###
+
+    @handle_user_ids()
+    async def post_check_automod_status(
         self,
-        token: str,
-        broadcaster_id: str,
-        user_id: Optional[int] = None,
-    ):
-        query = [("broadcaster_id", broadcaster_id)]
+        broadcaster_id: str | int,
+        messages: list[AutomodCheckMessage],
+        token_for: str | PartialUser,
+    ) -> CheckAutomodStatusResponse:
+        params = {"broadcaster_id": broadcaster_id}
+        msg = [x._to_dict() for x in messages]
+        data = {"data": msg}
+
+        route: Route = Route("POST", "moderation/enforcements/status", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def post_manage_automod_messages(
+        self,
+        user_id: str | int,
+        msg_id: str,
+        action: Literal["ALLOW", "DENY"],
+        token_for: str,
+    ) -> None:
+        data = {"user_id": user_id, "msg_id": msg_id, "action": action}
+
+        route: Route = Route("POST", "moderation/automod/message", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_automod_settings(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+    ) -> AutomodSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+
+        route: Route = Route("GET", "moderation/automod/settings", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def put_automod_settings(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        settings: AutomodSettings,
+        token_for: str | PartialUser,
+    ) -> AutomodSettingsResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = settings.to_dict()
+
+        route: Route = Route("PUT", "moderation/automod/settings", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    def get_banned_users(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[BannedUser]:
+        params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
+        if user_ids is not None:
+            params["user_id"] = user_ids
+
+        route: Route = Route("GET", "moderation/banned", params=params, token_for=token_for)
+
+        async def converter(data: BannedUsersResponseData, *, raw: Any) -> BannedUser:
+            return BannedUser(data, http=self)
+
+        iterator: HTTPAsyncIterator[BannedUser] = self.request_paginated(route, converter=converter, max_results=max_results)
+
+        return iterator
+
+    @handle_user_ids()
+    async def post_ban_user(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        user_id: str | int | PartialUser,
+        duration: int | None = None,
+        reason: str | None = None,
+    ) -> BanUserResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"data": {"user_id": user_id}}
+
+        if duration is not None:
+            data["data"]["duration"] = duration
+        if reason is not None:
+            data["data"]["reason"] = reason
+
+        route: Route = Route("POST", "moderation/bans", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_unban_user(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        user_id: str | int | PartialUser,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "user_id": user_id}
+
+        route: Route = Route("DELETE", "moderation/bans", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    def get_unban_requests(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
+        user_id: str | int | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[UnbanRequest]:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "status": status, "first": first}
+        if user_id is not None:
+            params["user_id"] = user_id
+
+        route: Route = Route("GET", "moderation/unban_requests", params=params, token_for=token_for)
+
+        async def converter(data: UnbanRequestsResponseData, *, raw: Any) -> UnbanRequest:
+            return UnbanRequest(data, http=self)
+
+        iterator: HTTPAsyncIterator[UnbanRequest] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+
+        return iterator
+
+    @handle_user_ids()
+    async def patch_unban_requests(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        status: Literal["approved", "denied"],
+        unban_request_id: str,
+        resolution_text: str | None = None,
+    ) -> ResolveUnbanRequestsResponse:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "moderator_id": moderator_id,
+            "status": status,
+            "unban_request_id": unban_request_id,
+        }
+        if resolution_text is not None:
+            params["resolution_text"] = resolution_text
+
+        route: Route = Route("PATCH", "moderation/unban_requests", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    def get_blocked_terms(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[BlockedTerm]:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "first": first}
+
+        route: Route = Route("GET", "moderation/blocked_terms", params=params, token_for=token_for)
+
+        async def converter(data: BlockedTermsResponseData, *, raw: Any) -> BlockedTerm:
+            return BlockedTerm(data, http=self)
+
+        iterator: HTTPAsyncIterator[BlockedTerm] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+
+        return iterator
+
+    @handle_user_ids()
+    async def post_blocked_term(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        text: str,
+    ) -> AddBlockedTermResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"text": text}
+
+        route: Route = Route("POST", "moderation/blocked_terms", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_blocked_term(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        id: str,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "id": id}
+
+        route: Route = Route("DELETE", "moderation/blocked_terms", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_chat_message(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        message_id: str | None = None,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        if message_id is not None:
+            params["message_id"] = message_id
+
+        route: Route = Route("DELETE", "moderation/chat", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    def get_moderated_channels(
+        self,
+        user_id: str | int,
+        token_for: str,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[PartialUser]:
+        params = {"user_id": user_id, "first": first}
+
+        route: Route = Route("GET", "moderation/channels", params=params, token_for=token_for)
+
+        async def converter(data: ModeratedChannelsResponseData, *, raw: Any) -> PartialUser:
+            return PartialUser(data["broadcaster_id"], data["broadcaster_login"], http=self)
+
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+
+        return iterator
+
+    def get_moderators(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[PartialUser]:
+        params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
+
+        if user_ids is not None:
+            params["user_id"] = user_ids
+
+        route: Route = Route("GET", "moderation/moderators", params=params, token_for=token_for)
+
+        async def converter(data: ModeratorsResponseData, *, raw: Any) -> PartialUser:
+            return PartialUser(data["user_id"], data["user_login"], http=self)
+
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+
+        return iterator
+
+    @handle_user_ids()
+    async def post_channel_moderator(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int | PartialUser,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
+        route: Route = Route("POST", "moderation/moderators", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_channel_moderator(
+        self,
+        broadcaster_id: str | int,
+        token_for: str | PartialUser,
+        user_id: str | int,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
+        route: Route = Route("DELETE", "moderation/moderators", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    def get_vips(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[PartialUser]:
+        params: dict[str, str | int | list[str | int]] = {"broadcaster_id": broadcaster_id, "first": first}
+
+        if user_ids is not None:
+            params["user_id"] = user_ids
+
+        route: Route = Route("GET", "channels/vips", params=params, token_for=token_for)
+
+        async def converter(data: ModeratorsResponseData, *, raw: Any) -> PartialUser:
+            return PartialUser(data["user_id"], data["user_login"], http=self)
+
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+
+        return iterator
+
+    @handle_user_ids()
+    async def add_vip(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int | PartialUser,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
+        route: Route = Route("POST", "channels/vips", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_vip(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        user_id: str | int | PartialUser,
+    ) -> None:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
+
+        route: Route = Route("DELETE", "channels/vips", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def put_shield_mode_status(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        active: bool,
+    ) -> ShieldModeStatusResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"is_active": active}
+
+        route: Route = Route("PUT", "moderation/shield_mode", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_shield_mode_status(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+    ) -> ShieldModeStatusResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+
+        route: Route = Route("GET", "moderation/shield_mode", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def post_warn_chat_user(
+        self,
+        broadcaster_id: str | int,
+        moderator_id: str | int | PartialUser,
+        user_id: str | int | PartialUser,
+        reason: str,
+        token_for: str | PartialUser,
+    ) -> WarnChatUserResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"user_id": user_id, "reason": reason}
+
+        route: Route = Route("POST", "moderation/warnings", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Polls ###
+
+    def get_polls(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Poll]:
+        params: dict[str, str | int | list[str]] = {"broadcaster_id": broadcaster_id, "first": first}
+
+        if ids is not None:
+            params["id"] = ids
+
+        route: Route = Route("GET", "polls", params=params, token_for=token_for)
+
+        async def converter(data: PollsResponseData, *, raw: Any) -> Poll:
+            return Poll(data, http=self)
+
+        iterator: HTTPAsyncIterator[Poll] = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    async def post_poll(
+        self,
+        broadcaster_id: str | int,
+        title: str,
+        choices: list[str],
+        duration: int,
+        token_for: str,
+        channel_points_voting_enabled: bool = False,
+        channel_points_per_vote: int | None = None,
+    ) -> PollsResponse:
+        _choices = [{"title": t} for t in choices]
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "choices": _choices,
+            "duration": duration,
+            "channel_points_voting_enabled": channel_points_voting_enabled,
+        }
+
+        if channel_points_per_vote is not None:
+            data["channel_points_per_vote"] = channel_points_per_vote
+
+        route: Route = Route("POST", "polls", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def patch_poll(
+        self,
+        broadcaster_id: str | int,
+        id: str,
+        status: Literal["ARCHIVED", "TERMINATED"],
+        token_for: str,
+    ) -> PollsResponse:
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "id": id,
+            "status": status,
+        }
+
+        route: Route = Route("PATCH", "polls", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Predictions ###
+
+    def get_predictions(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Prediction]:
+        params: dict[str, str | int | list[str]] = {"broadcaster_id": broadcaster_id, "first": first}
+
+        if ids is not None:
+            params["id"] = ids
+
+        route: Route = Route("GET", "predictions", params=params, token_for=token_for)
+
+        async def converter(data: PredictionsResponseData, *, raw: Any) -> Prediction:
+            return Prediction(data, http=self)
+
+        iterator: HTTPAsyncIterator[Prediction] = self.request_paginated(route, converter=converter, max_results=max_results)
+
+        return iterator
+
+    async def post_prediction(
+        self,
+        broadcaster_id: str | int,
+        title: str,
+        outcomes: list[str],
+        prediction_window: int,
+        token_for: str,
+    ) -> PredictionsResponse:
+        _outcomes = [{"title": t} for t in outcomes]
+
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "title": title,
+            "outcomes": _outcomes,
+            "prediction_window": prediction_window,
+        }
+
+        route: Route = Route("POST", "predictions", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def patch_prediction(
+        self,
+        broadcaster_id: str | int,
+        id: str,
+        status: Literal["RESOLVED", "CANCELED", "LOCKED"],
+        token_for: str,
+        winning_outcome_id: str | None = None,
+    ) -> PredictionsResponse:
+        data = {
+            "broadcaster_id": broadcaster_id,
+            "id": id,
+            "status": status,
+        }
+
+        if winning_outcome_id is not None:
+            data["winning_outcome_id"] = winning_outcome_id
+
+        route: Route = Route("PATCH", "predictions", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Raids ###
+
+    @handle_user_ids()
+    async def post_raid(
+        self,
+        from_broadcaster_id: str | int,
+        to_broadcaster_id: str | int | PartialUser,
+        token_for: str,
+    ) -> StartARaidResponse:
+        params = {"from_broadcaster_id": from_broadcaster_id, "to_broadcaster_id": to_broadcaster_id}
+        route: Route = Route("POST", "raids", params=params, token_for=token_for)
+
+        return await self.request_json(route)
+
+    async def delete_raid(self, broadcaster_id: str | int, token_for: str) -> None:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("DELETE", "raids", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Schedule ###
+
+    @handle_user_ids()
+    def get_channel_stream_schedule(
+        self,
+        *,
+        broadcaster_id: str | int,
+        ids: list[str] | None = None,
+        start_time: datetime.datetime | None = None,
+        first: int = 20,
+        token_for: str | PartialUser | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Schedule]:
+        params: dict[str, str | int | list[str]] = {
+            "broadcaster_id": broadcaster_id,
+            "first": first,
+        }
+
+        if ids is not None:
+            params["id"] = ids
+        if start_time is not None:
+            params["start_time"] = url_encode_datetime(start_time)
+
+        route: Route = Route("GET", "schedule", params=params, token_for=token_for)
+
+        async def converter(data: str, *, raw: ChannelStreamScheduleResponse) -> Schedule:
+            return Schedule(raw["data"], http=self)
+
+        iterator: HTTPAsyncIterator[Schedule] = self.request_paginated(
+            route=route, max_results=max_results, converter=converter, nested_key="segments"
+        )
+        return iterator
+
+    async def patch_channel_stream_schedule(
+        self,
+        broadcaster_id: str | int,
+        vacation: bool,
+        token_for: str,
+        vacation_start_time: datetime.datetime | None = None,
+        vacation_end_time: datetime.datetime | None = None,
+        timezone: str | None = None,
+    ) -> None:
+        params = {
+            "broadcaster_id": broadcaster_id,
+            "is_vacation_enabled": vacation,
+        }
+
+        if vacation and vacation_start_time is not None and vacation_end_time is not None and timezone is not None:
+            params["vacation_start_time"] = url_encode_datetime(vacation_start_time)
+            params["vacation_end_time"] = url_encode_datetime(vacation_end_time)
+            params["timezone"] = timezone
+
+        route: Route = Route("PATCH", "schedule/settings", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def post_channel_stream_schedule_segment(
+        self,
+        broadcaster_id: str | int,
+        token_for: str | PartialUser,
+        start_time: datetime.datetime,
+        timezone: str,
+        duration: int,
+        recurring: bool = True,
+        category_id: str | None = None,
+        title: str | None = None,
+    ) -> CreateChannelStreamScheduleSegmentResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        _start_time = (
+            start_time.isoformat() if start_time.tzinfo is not None else start_time.replace(tzinfo=datetime.UTC).isoformat()
+        )
+
+        data = {
+            "start_time": _start_time,
+            "timezone": timezone,
+            "duration": duration,
+            "is_recurring": recurring,
+        }
+
+        if category_id is not None:
+            data["category_id"] = category_id
+        if title is not None:
+            data["title"] = title
+
+        route: Route = Route("POST", "schedule/segment", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def patch_channel_stream_schedule_segment(
+        self,
+        broadcaster_id: str | int,
+        token_for: str,
+        id: str,
+        start_time: datetime.datetime | None = None,
+        timezone: str | None = None,
+        duration: int | None = None,
+        canceled: bool | None = None,
+        category_id: str | None = None,
+        title: str | None = None,
+    ) -> UpdateChannelStreamScheduleSegmentResponse:
+        params = {"broadcaster_id": broadcaster_id, "id": id}
+
+        data: dict[str, str | int | bool] = {}
+
+        if start_time is not None:
+            _start_time = (
+                start_time.isoformat()
+                if start_time.tzinfo is not None
+                else start_time.replace(tzinfo=datetime.UTC).isoformat()
+            )
+            data["start_time"] = _start_time
+        if category_id is not None:
+            data["category_id"] = category_id
+        if title is not None:
+            data["title"] = title
+        if timezone is not None:
+            data["timezone"] = timezone
+        if duration is not None:
+            data["duration"] = duration
+        if canceled is not None:
+            data["is_canceled"] = canceled
+
+        route: Route = Route("PATCH", "schedule/segment", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    async def delete_channel_stream_schedule_segment(self, broadcaster_id: str | int, id: str, token_for: str) -> None:
+        params = {"broadcaster_id": broadcaster_id, "id": id}
+        route: Route = Route("DELETE", "schedule/segment", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Search ###
+
+    @handle_user_ids()
+    def get_search_categories(
+        self,
+        *,
+        query: str,
+        first: int,
+        token_for: str | PartialUser | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Game]:
+        params: dict[str, str | int | Sequence[str | int]] = {
+            "query": query,
+            "first": first,
+        }
+        route: Route = Route("GET", "search/categories", params=params, token_for=token_for)
+
+        async def converter(data: GamesResponseData, *, raw: Any) -> Game:
+            return Game(data, http=self)
+
+        iterator: HTTPAsyncIterator[Game] = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    @handle_user_ids()
+    def get_search_channels(
+        self,
+        *,
+        query: str,
+        first: int,
+        live: bool = False,
+        token_for: str | PartialUser | None = None,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[SearchChannel]:
+        params: dict[str, str | int] = {"query": query, "live_only": live, "first": first}
+        route: Route = Route("GET", "search/channels", params=params, token_for=token_for)
+
+        async def converter(data: SearchChannelsResponseData, *, raw: Any) -> SearchChannel:
+            return SearchChannel(data, http=self)
+
+        iterator: HTTPAsyncIterator[SearchChannel] = self.request_paginated(
+            route, converter=converter, max_results=max_results
+        )
+
+        return iterator
+
+    ### Streams ###
+
+    @handle_user_ids()
+    def get_streams(
+        self,
+        *,
+        first: int = 20,
+        user_ids: list[int | str] | None = None,
+        game_ids: list[int | str] | None = None,
+        user_logins: list[int | str] | None = None,
+        languages: list[str] | None = None,
+        token_for: str | PartialUser | None = None,
+        type: Literal["all", "live"] = "all",
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Stream]:
+        params: dict[str, str | int | Sequence[str | int]] = {
+            "type": type,
+            "first": first,
+        }
+
+        if user_ids is not None:
+            params["user_id"] = user_ids
+        if game_ids is not None:
+            params["game_ids"] = game_ids
+        if user_logins is not None:
+            params["user_login"] = user_logins
+        if languages is not None:
+            params["language"] = languages
+
+        route: Route = Route("GET", "streams", params=params, token_for=token_for)
+
+        async def converter(data: StreamsResponseData, *, raw: Any) -> Stream:
+            return Stream(data, http=self)
+
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter, max_results=max_results)
+
+        return iterator
+
+    async def get_stream_key(self, broadcaster_id: str | int, token_for: str | PartialUser) -> StreamKeyResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "streams/key", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    def get_followed_streams(
+        self,
+        *,
+        user_id: str | int,
+        token_for: str,
+        first: int = 100,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Stream]:
+        params = {
+            "user_id": user_id,
+            "first": first,
+        }
+
+        route: Route = Route("GET", "streams/followed", params=params, token_for=token_for)
+
+        async def converter(data: StreamsResponseData, *, raw: Any) -> Stream:
+            return Stream(data, http=self)
+
+        iterator: HTTPAsyncIterator[Stream] = self.request_paginated(route, converter=converter, max_results=max_results)
+
+        return iterator
+
+    @handle_user_ids()
+    async def post_stream_marker(
+        self,
+        user_id: str | int,
+        token_for: str | PartialUser,
+        description: str | None = None,
+    ) -> CreateStreamMarkerResponse:
+        data = {"user_id": user_id}
+        if description is not None:
+            data["description"] = description
+
+        route: Route = Route("POST", "streams/markers", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    def get_stream_markers(
+        self,
+        *,
+        user_id: str | int | None = None,
+        video_id: str | None = None,
+        token_for: str | PartialUser,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[VideoMarkers]:
+        params: dict[str, str | int] = {"first": first}
 
         if user_id is not None:
-            query.append(("user_id", str(user_id)))
+            params["user_id"] = user_id
+        if video_id is not None:
+            params["video_id"] = video_id
 
-        return await self.request(
-            Route(
-                "GET",
-                "channels/followers",
-                query=query,
-                token=token,
-            )
+        route: Route = Route("GET", "streams/markers", params=params, token_for=token_for)
+
+        async def converter(data: StreamMarkersResponseData, *, raw: Any) -> VideoMarkers:
+            return VideoMarkers(data, http=self)
+
+        iterator: HTTPAsyncIterator[VideoMarkers] = self.request_paginated(
+            route, converter=converter, max_results=max_results
         )
 
-    async def get_channel_followed(
+        return iterator
+
+    ### Subscriptions ###
+
+    @handle_user_ids()
+    async def get_user_subscription(
         self,
-        token: str,
-        user_id: str,
-        broadcaster_id: Optional[int] = None,
-    ):
-        query = [("user_id", user_id)]
+        broadcaster_id: str | int,
+        user_id: str | int,
+        token_for: str,
+    ) -> CheckUserSubscriptionResponse:
+        params = {"broadcaster_id": broadcaster_id, "user_id": user_id}
 
-        if broadcaster_id is not None:
-            query.append(("broadcaster_id", str(broadcaster_id)))
+        route: Route = Route("GET", "subscriptions/user", params=params, token_for=token_for)
+        return await self.request_json(route)
 
-        return await self.request(
-            Route(
-                "GET",
-                "channels/followed",
-                query=query,
-                token=token,
-            )
+    async def get_broadcaster_subscriptions(
+        self,
+        token_for: str,
+        broadcaster_id: str | int,
+        user_ids: list[str | int] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> BroadcasterSubscriptions:
+        params: dict[str, list[str | int] | str | int] = {"broadcaster_id": broadcaster_id, "first": first}
+        if user_ids is not None:
+            params["user_id"] = user_ids
+
+        route: Route = Route("GET", "subscriptions", params=params, token_for=token_for)
+
+        async def converter(data: BroadcasterSubscriptionsResponseData, *, raw: Any) -> BroadcasterSubscription:
+            return BroadcasterSubscription(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        data = await self.request_json(route)
+
+        return BroadcasterSubscriptions(data, iterator)
+
+    ### Tags ###
+
+    ### Teams ###
+
+    @handle_user_ids()
+    async def get_teams(
+        self,
+        *,
+        team_name: str | None = None,
+        team_id: str | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> TeamsResponse:
+        params: dict[str, str] = {}
+
+        if team_name:
+            params = params = {"name": team_name}
+        elif team_id:
+            params = {"id": team_id}
+
+        route: Route = Route("GET", "teams", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_channel_teams(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str | PartialUser | None = None,
+    ) -> ChannelTeamsResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "teams/channel", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Users ###
+
+    @handle_user_ids()
+    async def get_users(
+        self, ids: list[str | int] | None = None, logins: list[str] | None = None, token_for: str | PartialUser | None = None
+    ) -> UsersResponse:
+        params = {"id": ids, "login": logins}
+        route: Route = Route("GET", "users", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def put_user(self, token_for: str, description: str | None) -> UpdateUserResponse:
+        params = {"description": description} if description is not None else {"description": ""}
+        route: Route = Route("PUT", "users", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    def get_user_block_list(
+        self, broadcaster_id: str | int, token_for: str, first: int = 20, max_results: int | None = None
+    ) -> HTTPAsyncIterator[PartialUser]:
+        params = {"broadcaster_id": broadcaster_id, "first": first}
+
+        route: Route = Route("GET", "users/blocks", params=params, token_for=token_for)
+
+        async def converter(data: UserBlockListResponseData, *, raw: Any) -> PartialUser:
+            return PartialUser(data["user_id"], data["user_login"], http=self)
+
+        iterator: HTTPAsyncIterator[PartialUser] = self.request_paginated(
+            route, converter=converter, max_results=max_results
         )
 
-    async def get_channel_follower_count(self, broadcaster_id: str, token: Optional[str] = None):
-        return await self.request(
-            Route(
-                "GET",
-                "channels/followers",
-                query=[("broadcaster_id", broadcaster_id)],
-                token=token,
-            ),
-            full_body=True,
-            paginate=False,
-        )
+        return iterator
 
-    async def get_channel_followed_count(self, token: str, user_id: str):
-        return await self.request(
-            Route(
-                "GET",
-                "channels/followed",
-                query=[("user_id", user_id)],
-                token=token,
-            ),
-            full_body=True,
-            paginate=False,
-        )
+    @handle_user_ids()
+    async def put_block_user(
+        self,
+        user_id: str | int | PartialUser,
+        token_for: str | PartialUser,
+        source: Literal["chat", "whisper"] | None = None,
+        reason: Literal["harassment", "spam", "other"] | None = None,
+    ) -> None:
+        params = {"target_user_id": user_id}
+        if source is not None:
+            params["source_context"] = source
+        if reason is not None:
+            params["reason"] = reason
+        route: Route = Route("PUT", "users/blocks", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_block_user(
+        self,
+        user_id: str | int | PartialUser,
+        token_for: str,
+    ) -> None:
+        params = {"target_user_id": user_id}
+        route: Route = Route("DELETE", "users/blocks", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_user_extensions(self, token_for: str | PartialUser) -> UserExtensionsResponse:
+        route: Route = Route("GET", "users/extensions/list", token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_active_user_extensions(
+        self, *, user_id: str | int | None = None, token_for: str | PartialUser | None = None
+    ) -> UserActiveExtensionsResponse:
+        params: dict[str, str | int] = {"user_id": user_id} if user_id is not None else {}
+        route: Route = Route("GET", "users/extensions", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def put_user_extensions(
+        self, *, user_extensions: ActiveExtensions, token_for: str | PartialUser
+    ) -> UpdateUserExtensionsResponse:
+        data = {"data": user_extensions._to_dict()}
+        route: Route = Route("PUT", "users/extensions", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Videos ###
+
+    @handle_user_ids()
+    def get_videos(
+        self,
+        *,
+        ids: list[str | int] | None = None,
+        user_id: str | int | PartialUser | None = None,
+        game_id: str | int | None = None,
+        language: str | None = None,
+        period: Literal["all", "day", "month", "week"] = "all",
+        sort: Literal["time", "trending", "views"] = "time",
+        type: Literal["all", "archive", "highlight", "upload"] = "all",
+        first: int = 20,
+        max_results: int | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> HTTPAsyncIterator[Video]:
+        params: dict[str, int | str | list[str | int]] = {"first": first, "period": period, "sort": sort, "type": type}
+
+        if ids is not None:
+            params["id"] = ids
+        if user_id is not None:
+            params["user_id"] = str(user_id)
+        if game_id is not None:
+            params["game_id"] = game_id
+        if language is not None:
+            params["language"] = language
+
+        route = Route("GET", "videos", params=params, token_for=token_for)
+
+        async def converter(data: VideosResponseData, *, raw: Any) -> Video:
+            return Video(data, http=self)
+
+        iterator = self.request_paginated(route, converter=converter, max_results=max_results)
+        return iterator
+
+    @handle_user_ids()
+    async def delete_videos(self, ids: list[str | int], token_for: str | PartialUser) -> DeleteVideosResponse:
+        params = {"id": ids}
+
+        route: Route = Route("DELETE", "videos", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    ### Whispers ###
+
+    @handle_user_ids()
+    async def post_whisper(
+        self, from_user_id: str | int, to_user_id: str | int | PartialUser, token_for: str | PartialUser, message: str
+    ) -> None:
+        params = {"from_user_id": from_user_id, "to_user_id": to_user_id}
+        data = {"message": message}
+
+        route: Route = Route("POST", "whispers", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)

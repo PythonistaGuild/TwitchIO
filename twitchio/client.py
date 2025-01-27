@@ -1,1128 +1,2418 @@
 """
-The MIT License (MIT)
+MIT License
 
-Copyright (c) 2017-present TwitchIO
+Copyright (c) 2017 - Present PythonistaGuild
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
 
+from __future__ import annotations
+
 import asyncio
-import inspect
-import warnings
 import logging
-import traceback
-import sys
-from typing import Union, Callable, List, Optional, Tuple, Any, Coroutine, Dict
-from typing_extensions import Literal
+from collections import defaultdict
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
 
-from twitchio.errors import HTTPException
-from . import models
-from .websocket import WSConnection
-from .http import TwitchHTTP
-from .channel import Channel
-from .message import Message
-from .user import User, PartialUser, SearchUser
-from .cache import user_cache, id_cache
+from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
+from .eventsub.enums import SubscriptionType, TransportMethod
+from .eventsub.websockets import Websocket
+from .exceptions import HTTPException
+from .http import HTTPAsyncIterator
+from .models.bits import Cheermote, ExtensionTransaction
+from .models.ccls import ContentClassificationLabel
+from .models.channels import ChannelInfo
+from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
+from .models.games import Game
+from .models.teams import Team
+from .payloads import EventErrorPayload
+from .user import ActiveExtensions, Extension, PartialUser, User
+from .utils import MISSING, EventWaiter, unwrap_function
+from .web import AiohttpAdapter
+from .web.utils import BaseAdapter
 
-__all__ = ("Client",)
 
-logger = logging.getLogger("twitchio.client")
+if TYPE_CHECKING:
+    import datetime
+    from collections.abc import Awaitable, Callable, Coroutine
+
+    import aiohttp
+
+    from .authentication import ClientCredentialsPayload, ValidateTokenPayload
+    from .eventsub.subscriptions import SubscriptionPayload
+    from .http import HTTPAsyncIterator
+    from .models.clips import Clip
+    from .models.entitlements import Entitlement, EntitlementStatus
+    from .models.eventsub_ import EventsubSubscriptions
+    from .models.search import SearchChannel
+    from .models.streams import Stream, VideoMarkers
+    from .models.videos import Video
+    from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
+    from .types_.options import ClientOptions, WaitPredicateT
+    from .types_.tokens import TokenMappingData
+
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Client:
-    """TwitchIO Client object that is used to interact with the Twitch API and connect to Twitch IRC over websocket.
+    """The TwitchIO Client.
+
+    The `Client` acts as an entry point to the Twitch API, EventSub and OAuth and serves as a base for chat-bots.
+
+    :class:`commands.Bot` inherits from this class and such should be treated as a `Client` with an in-built
+    commands extension.
+
+    You don't need to :meth:`~.start` or :meth:`~.run` the `Client` to use it soley as a HTTP Wrapper,
+    but you must still :meth:`~.login` with this use case.
 
     Parameters
-    ------------
-    token: :class:`str`
-        An OAuth Access Token to login with on IRC and interact with the API.
-    client_secret: Optional[:class:`str`]
-        An optional application Client Secret used to generate Access Tokens automatically.
-    initial_channels: Optional[Union[:class:`list`, :class:`tuple`, Callable]]
-        An optional list, tuple or callable which contains channel names to connect to on startup.
-        If this is a callable, it must return a list or tuple.
-    loop: Optional[:class:`asyncio.AbstractEventLoop`]
-        The event loop the client will use to run.
-    heartbeat: Optional[float]
-        An optional float in seconds to send a PING message to the server. Defaults to 30.0.
-    retain_cache: Optional[bool]
-        An optional bool that will retain the cache if PART is received from websocket when True.
-        It will still remove from cache if part_channels is manually called. Defaults to True.
+    -----------
+    client_id: str
+        The client ID of the application you registered on the Twitch Developer Portal.
+    client_secret: str
+        The client secret of the application you registered on the Twitch Developer Portal.
+        This must be associated with the same `client_id`.
+    bot_id: str | None
+        An optional `str` which should be the User ID associated with the Bot Account.
 
-    Attributes
-    ------------
-    loop: :class:`asyncio.AbstractEventLoop`
-        The event loop the Client uses.
+        It is highly recommended setting this parameter as it will allow TwitchIO to use the bot's own tokens where
+        appropriate and needed.
+    redirect_uri: str | None
+        An optional `str` to set as the redirect uri for anything relating to Twitch OAuth. You most often do not need to set
+        this.
+    scopes: twitchio.Scopes | None
+        An optional :class:`~twitchio.Scopes` object to use as defaults when using anything related to Twitch OAuth.
+
+        Useful when you want to set default scopes for users to authenticate with.
+    session: aiohttp.ClientSession | None
+        An optional :class:`aiohttp.ClientSession` to use for all HTTP requests including any requests made with
+        :class:`~twitchio.Asset`'s.
+    adapter:  twitchio.StarletteAdapter | twitchio.AiohttpAdapter | None
+        An optional  :class:`StarletteAdapter` or :class:`twitchio.AiohttpAdapter` to use as the clients web server adapter.
+
+        The adapter is a built-in webserver used for OAuth and when needed for EventSub over Webhooks.
+
+        When this is not provided, it will default to a :class:`twitchio.AiohttpAdapter` with default settings.
+
+        When requiring an adapter for use with EventSub, you must provide an adapter with the correct settings set.
+    fetch_client_user: bool
+        An optional bool indicating whether to fetch and cache the client/bot accounts own :class:`.User` object to use with
+        :attr:`.user`.
+        Defaults to ``True``. You must pass ``bot_id`` for this parameter to have any effect.
     """
 
     def __init__(
         self,
-        token: str,
         *,
-        client_secret: str = None,
-        initial_channels: Union[list, tuple, Callable] = None,
-        loop: asyncio.AbstractEventLoop = None,
-        heartbeat: Optional[float] = 30.0,
-        retain_cache: Optional[bool] = True,
-    ):
-        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
-        self._heartbeat = heartbeat
-
-        token = token.replace("oauth:", "")
-
-        self._http = TwitchHTTP(self, api_token=token, client_secret=client_secret)
-        self._connection = WSConnection(
-            client=self,
-            token=token,
-            loop=self.loop,
-            initial_channels=initial_channels,
-            heartbeat=heartbeat,
-            retain_cache=retain_cache,
-        )
-
-        self._events = {}
-        self._waiting: List[Tuple[str, Callable[[...], bool], asyncio.Future]] = []
-        self.registered_callbacks: Dict[Callable, str] = {}
-        self._closing: Optional[asyncio.Event] = None
-
-    @classmethod
-    def from_client_credentials(
-        cls,
         client_id: str,
         client_secret: str,
-        *,
-        loop: asyncio.AbstractEventLoop = None,
-        heartbeat: Optional[float] = 30.0,
-    ) -> "Client":
-        """
-        creates a client application token from your client credentials.
+        bot_id: str | None = None,
+        **options: Unpack[ClientOptions],
+    ) -> None:
+        redirect_uri: str | None = options.get("redirect_uri")
+        scopes: Scopes | None = options.get("scopes")
+        session: aiohttp.ClientSession = options.get("session", MISSING) or MISSING
+        self._bot_id: str | None = bot_id
 
-        .. warning:
-
-            this is not suitable for logging in to IRC.
-
-        .. note:
-
-            This classmethod skips :meth:`~.__init__`
-
-        Parameters
-        ------------
-        client_id: :class:`str`
-
-        client_secret: :class:`str`
-            An application Client Secret used to generate Access Tokens automatically.
-        loop: Optional[:class:`asyncio.AbstractEventLoop`]
-            The event loop the client will use to run.
-
-        Returns
-        --------
-        A new :class:`Client` instance
-        """
-        self = cls.__new__(cls)
-        self.loop = loop or asyncio.get_event_loop()
-        self._http = TwitchHTTP(self, client_id=client_id, client_secret=client_secret)
-        self._heartbeat = heartbeat
-        self._connection = WSConnection(
-            client=self,
-            loop=self.loop,
-            initial_channels=None,
-            heartbeat=self._heartbeat,
-        )  # The only reason we're even creating this is to avoid attribute errors
-        self._events = {}
-        self._waiting = []
-        self.registered_callbacks = {}
-        return self
-
-    def run(self):
-        """
-        A blocking function that starts the asyncio event loop,
-        connects to the twitch IRC server, and cleans up when done.
-        """
-        try:
-            task = self.loop.create_task(self.connect())
-            self.loop.run_until_complete(task)  # this'll raise if the connect fails
-            self.loop.run_forever()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            if not self._closing.is_set():
-                self.loop.run_until_complete(self.close())
-
-            self.loop.close()
-
-    async def start(self):
-        """|coro|
-
-        Connects to the twitch IRC server, and cleanly disconnects when done.
-        """
-        if self.loop is not asyncio.get_running_loop():
-            raise RuntimeError(
-                f"Attempted to start a {self.__class__.__name__} instance on a different loop "
-                f"than the one it was initialized with."
-            )
-        try:
-            await self.connect()
-            await self._closing.wait()
-        finally:
-            if not self._closing.is_set():
-                await self.close()
-
-    async def connect(self):
-        """|coro|
-
-        Connects to the twitch IRC server
-        """
-        self._closing = asyncio.Event()
-        await self._connection._connect()
-
-    async def close(self):
-        """|coro|
-
-        Cleanly disconnects from the twitch IRC server
-        """
-        self._closing.set()
-        await self._connection._close()
-
-    def run_event(self, event_name, *args):
-        name = f"event_{event_name}"
-        logger.debug(f"dispatching event {event_name}")
-
-        async def wrapped(func):
-            try:
-                await func(*args)
-            except Exception as e:
-                if name == "event_error":
-                    # don't enter a dispatch loop!
-                    raise
-
-                self.run_event("error", e)
-
-        inner_cb = getattr(self, name, None)
-        if inner_cb is not None:
-            if inspect.iscoroutinefunction(inner_cb):
-                self.loop.create_task(wrapped(inner_cb))
-            else:
-                warnings.warn(
-                    f"event '{name}' callback is not a coroutine",
-                    category=RuntimeWarning,
-                )
-
-        if name in self._events:
-            for event in self._events[name]:
-                self.loop.create_task(wrapped(event))
-
-        for e, check, future in self._waiting:
-            if e == event_name:
-                if check(*args):
-                    future.set_result(args)
-            if future.done():
-                self._waiting.remove((e, check, future))
-
-    def add_event(self, callback: Callable, name: str = None) -> None:
-        try:
-            func = callback.func
-        except AttributeError:
-            func = callback
-
-        if not inspect.iscoroutine(func) and not inspect.iscoroutinefunction(func):
-            raise ValueError("Event callback must be a coroutine")
-
-        event_name = name or callback.__name__
-        self.registered_callbacks[callback] = event_name
-
-        if event_name in self._events:
-            self._events[event_name].append(callback)
-
+        self._http = ManagedHTTPClient(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uri=redirect_uri,
+            scopes=scopes,
+            session=session,
+        )
+        adapter: BaseAdapter | type[BaseAdapter] = options.get("adapter", AiohttpAdapter)
+        if isinstance(adapter, BaseAdapter):
+            adapter.client = self
+            self._adapter = adapter
         else:
-            self._events[event_name] = [callback]
+            self._adapter = adapter()
+            self._adapter.client = self
 
-    def remove_event(self, callback: Callable) -> bool:
-        event_name = self.registered_callbacks.get(callback)
+        # Own Client User. Set in login...
+        self._fetch_self: bool = options.get("fetch_client_user", True)
+        self._user: User | PartialUser | None = None
 
-        if event_name is None:
-            raise ValueError("Event callback is not a registered event")
+        self._listeners: dict[str, set[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(set)
+        self._wait_fors: dict[str, set[EventWaiter]] = defaultdict(set)
 
-        if callback in self._events[event_name]:
-            self._events[event_name].remove(callback)
-            return True
+        self._login_called: bool = False
+        self._has_closed: bool = False
+        self._save_tokens: bool = True
 
-        return False
+        # Websockets for EventSub
+        self._websockets: dict[str, dict[str, Websocket]] = defaultdict(dict)
 
-    def event(self, name: str = None) -> Callable:
-        def decorator(func: Callable) -> Callable:
-            self.add_event(func, name)
-            return func
+        self._ready_event: asyncio.Event = asyncio.Event()
+        self._ready_event.clear()
 
-        return decorator
-
-    async def wait_for(
-        self,
-        event: str,
-        predicate: Callable[[], bool] = lambda *a: True,
-        *,
-        timeout=60.0,
-    ) -> Tuple[Any]:
-        """|coro|
-
-
-        Waits for an event to be dispatched, then returns the events data
-
-        Parameters
-        -----------
-        event: :class:`str`
-            The event to wait for. Do not include the `event_` prefix
-        predicate: Callable[[...], bool]
-            A check that is fired when the desired event is dispatched. if the check returns false,
-            the waiting will continue until the timeout.
-        timeout: :class:`int`
-            How long to wait before timing out and raising an error.
-
-        Returns
-        --------
-        The arguments passed to the event.
-        """
-        fut = self.loop.create_future()
-        tup = (event, predicate, fut)
-        self._waiting.append(tup)
-        values = await asyncio.wait_for(fut, timeout)
-        return values
-
-    def wait_for_ready(self) -> Coroutine[Any, Any, bool]:
-        """|coro|
-
-        Waits for the underlying connection to finish startup
-
-        Returns
-        --------
-        :class:`bool` The state of the underlying flag. This will always be ``True``
-        """
-        return self._connection.is_ready.wait()
-
-    @id_cache()
-    def get_channel(self, name: str) -> Optional[Channel]:
-        """Retrieve a channel from the cache.
-
-        Parameters
-        -----------
-        name: str
-            The channel name to retrieve from cache. Returns None if no channel was found.
-
-        Returns
-        --------
-        :class:`.Channel`
-        """
-        name = name.lower()
-
-        if name in self._connection._cache:
-            # Basically the cache doesn't store channels naturally, instead it stores a channel key
-            # With the associated users as a set.
-            # We create a Channel here and return it only if the cache has that channel key.
-
-            return Channel(name=name, websocket=self._connection)
-
-    async def part_channels(self, channels: Union[List[str], Tuple[str]]):
-        """|coro|
-
-        Part the specified channels.
-
-        Parameters
-        ------------
-        channels: Union[List[str], Tuple[str]]
-            The channels in either a list or tuple form to part.
-        """
-        await self._connection.part_channels(*channels)
-
-    async def join_channels(self, channels: Union[List[str], Tuple[str]]):
-        """|coro|
-
-        Join the specified channels.
-
-        Parameters
-        ------------
-        channels: Union[List[str], Tuple[str]]
-            The channels in either a list or tuple form to join.
-        """
-        await self._connection.join_channels(*channels)
+        self.__waiter: asyncio.Event = asyncio.Event()
 
     @property
-    def connected_channels(self) -> List[Channel]:
-        """A list of currently connected :class:`.Channel`"""
-        return [self.get_channel(x) for x in self._connection._cache.keys()]
+    def tokens(self) -> MappingProxyType[str, TokenMappingData]:
+        """Property which returns a read-only mapping of the tokens that are managed by the `Client`.
+
+        **For various methods of managing the tokens on the client, see:**
+
+        :meth:`~.add_token`
+
+        :meth:`~.remove_token`
+
+        :meth:`~.load_tokens`
+
+        :meth:`~.save_tokens`
+
+
+        .. warning::
+
+            This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
+        """
+        return MappingProxyType(self._http._tokens)
 
     @property
-    def events(self):
-        """A mapping of events name to coroutine."""
-        return self._events
+    def bot_id(self) -> str | None:
+        """Property which returns the User-ID associated with this :class:`~twitchio.Client` if set, or `None`.
 
-    @property
-    def nick(self):
-        """The IRC bots nick."""
-        return self._http.nick or self._connection.nick
-
-    @property
-    def user_id(self):
-        """The IRC bot user id."""
-        return self._http.user_id or self._connection.user_id
-
-    def create_user(self, user_id: int, user_name: str) -> PartialUser:
-        """
-        A helper method to create a :class:`twitchio.PartialUser` from a user id and user name.
-
-        Parameters
-        -----------
-        user_id: :class:`int`
-            The id of the user
-        user_name: :class:`str`
-            The name of the user
-
-        Returns
-        --------
-        :class:`twitchio.PartialUser`
-        """
-        return PartialUser(self._http, user_id, user_name)
-
-    @user_cache()
-    async def fetch_users(
-        self,
-        names: List[str] = None,
-        ids: List[int] = None,
-        token: str = None,
-        force=False,
-    ) -> List[User]:
-        """|coro|
-
-        Fetches users from the helix API
-
-        Parameters
-        -----------
-        names: Optional[List[:class:`str`]]
-            usernames of people to fetch
-        ids: Optional[List[:class:`str`]]
-            ids of people to fetch
-        token: Optional[:class:`str`]
-            An optional OAuth token to use instead of the bot OAuth token
-        force: :class:`bool`
-            whether to force a fetch from the api, or check the cache first. Defaults to False
-
-        Returns
-        --------
-        List[:class:`twitchio.User`]
-        """
-        # the forced argument doesnt actually get used here, it gets used by the cache wrapper.
-        # But we'll include it in the args here so that sphinx catches it
-        assert names or ids
-        data = await self._http.get_users(ids, names, token=token)
-        return [User(self._http, x) for x in data]
-
-    async def fetch_clips(self, ids: List[str]):
-        """|coro|
-
-        Fetches clips by clip id.
-        To fetch clips by user id, use :meth:`twitchio.PartialUser.fetch_clips`
-
-        Parameters
-        -----------
-        ids: List[:class:`str`]
-            A list of clip ids
-
-        Returns
-        --------
-        List[:class:`twitchio.Clip`]
-        """
-        data = await self._http.get_clips(ids=ids)
-        return [models.Clip(self._http, d) for d in data]
-
-    async def fetch_channel(self, broadcaster: str, token: Optional[str] = None):
-        """|coro|
-
-        Retrieve channel information from the API.
+        This can be set using the `bot_id` parameter when initialising the :class:`~twitchio.Client`.
 
         .. note::
-            This will be deprecated in 3.0. It's recommended to use :func:`~fetch_channels` instead.
+
+            It is highly recommended to set this parameter.
+        """
+        return self._bot_id
+
+    @property
+    def user(self) -> User | PartialUser | None:
+        """Property which returns the :class:`.User` or :class:`.PartialUser` associated with with the Client/Bot.
+
+        In most cases this will be a :class:`.User` object. Could be :class:`.PartialUser` when passing ``False`` to the
+        ``fetch_client_user`` keyword parameter of Client.
+
+        Could be ``None`` if no ``bot_id`` was passed to the Client constructor.
+
+        .. important::
+
+            If ``bot_id`` has not been passed to the constructor of :class:`.Client` this will return ``None``.
+        """
+        return self._user
+
+    async def event_error(self, payload: EventErrorPayload) -> None:
+        """
+        Event called when an error occurs in an event or event listener.
+
+        This event can be overriden to handle event errors differently.
+        By default, this method logs the error and ignores it.
+
+        .. warning::
+
+            If an error occurs in this event, it will be ignored and logged. It will **NOT** re-trigger this event.
 
         Parameters
-        -----------
-        broadcaster: str
-            The channel name or ID to request from API. Returns empty dict if no channel was found.
-        token: Optional[:class:`str`]
-            An optional OAuth token to use instead of the bot OAuth token.
-
-        Returns
-        --------
-        :class:`twitchio.ChannelInfo`
+        ----------
+        payload: EventErrorPayload
+            A payload containing the Exception, the listener, and the original payload.
         """
+        logger.error('Ignoring Exception in listener "%s":\n', payload.listener.__qualname__, exc_info=payload.error)
 
-        if not broadcaster.isdigit():
-            get_id = await self.fetch_users(names=[broadcaster.lower()])
-            if not get_id:
-                raise IndexError("Invalid channel name.")
-            broadcaster = str(get_id[0].id)
+    async def _dispatch(self, listener: Callable[..., Coroutine[Any, Any, None]], *, original: Any | None = None) -> None:
         try:
-            data = await self._http.get_channels(broadcaster_id=broadcaster, token=token)
+            called_: Awaitable[None] = listener(original) if original else listener()
+            await called_
+        except Exception as e:
+            try:
+                payload: EventErrorPayload = EventErrorPayload(
+                    error=e, listener=unwrap_function(listener), original=original
+                )
+                await self.event_error(payload)
+            except Exception as inner:
+                logger.error(
+                    'Ignoring Exception in listener "%s.event_error":\n', self.__class__.__qualname__, exc_info=inner
+                )
 
-            from .models import ChannelInfo
+    def dispatch(self, event: str, payload: Any | None = None) -> None:
+        name: str = "event_" + event.lower()
 
-            return ChannelInfo(self._http, data=data[0])
+        listeners: set[Callable[..., Coroutine[Any, Any, None]]] = self._listeners[name]
+        extra: Callable[..., Coroutine[Any, Any, None]] | None = getattr(self, name, None)
+        if extra:
+            listeners.add(extra)
 
-        except HTTPException:
-            raise HTTPException("Incorrect channel ID.")
+        logger.debug('Dispatching event: "%s" to %d listeners.', name, len(listeners))
+        _ = [asyncio.create_task(self._dispatch(listener, original=payload)) for listener in listeners]
 
-    async def fetch_channels(self, broadcaster_ids: List[int], token: Optional[str] = None):
-        """|coro|
+        waits: set[asyncio.Task[None]] = set()
+        for waiter in self._wait_fors[name]:
+            coro = waiter(payload) if payload else waiter()
+            task = asyncio.create_task(coro, name=f'TwitchIO:Client.wait_for: "{name}"')
 
-        Retrieve information for up to 100 channels from the API.
+            task.add_done_callback(waits.discard)
+            waits.add(task)
+
+    async def setup_hook(self) -> None:
+        """
+        Method called after :meth:`~.login` has been called but before the client is ready.
+
+        :meth:`~.start` calls :meth:`~.login` internally for you, so when using
+        :meth:`~.start` this method will be called after the client has generated and validated an
+        app token. The client won't complete start up until this method has completed.
+
+        This method is intended to be overriden to provide an async environment for any setup required.
+
+        By default, this method does not implement any logic.
+        """
+        ...
+
+    async def login(self, *, token: str | None = None, load_tokens: bool = True, save_tokens: bool = True) -> None:
+        """Method to login the client and generate or store an app token.
+
+        This method is called automatically when using :meth:`~.start`.
+        You should **NOT** call this method if you are using :meth:`~.start`.
+
+        This method calls :meth:`~.setup_hook`.
+
+        .. note::
+
+            If no token is provided, the client will attempt to generate a new app token for you.
+            This is usually preferred as generating a token is inexpensive and does not have rate-limits associated with it.
 
         Parameters
-        -----------
-        broadcaster_ids: List[:class:`int`]
-            The channel ids to request from API.
-        token: Optional[:class:`str`]
-            An optional OAuth token to use instead of the bot OAuth token
-
-        Returns
-        --------
-        List[:class:`twitchio.ChannelInfo`]
+        ----------
+        token: str | None
+            An optional app token to use instead of generating one automatically.
+        load_tokens: bool
+            Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
+            login automatically. Defaults to ``True``.
+        save_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.save_tokens` during the
+            :meth:`.close` automatically. Defaults to ``True``.
         """
-        from .models import ChannelInfo
+        if self._login_called:
+            return
 
-        data = await self._http.get_channels_new(broadcaster_ids=broadcaster_ids, token=token)
-        return [ChannelInfo(self._http, data=d) for d in data]
+        self._login_called = True
+        self._save_tokens = save_tokens
 
-    async def fetch_videos(
+        if not self._http.client_id:
+            raise RuntimeError('Expected a valid "client_id", instead received: %s', self._http.client_id)
+
+        if not token and not self._http.client_secret:
+            raise RuntimeError(f'Expected a valid "client_secret", instead received: {self._http.client_secret}')
+
+        if not token:
+            payload: ClientCredentialsPayload = await self._http.client_credentials_token()
+            validated: ValidateTokenPayload = await self._http.validate_token(payload.access_token)
+            token = payload.access_token
+
+            logger.info("Generated App Token for Client-ID: %s", validated.client_id)
+
+        self._http._app_token = token
+
+        if load_tokens:
+            async with self._http._token_lock:
+                await self.load_tokens()
+
+        if self._bot_id:
+            logger.debug("Fetching Clients self user for %r", self)
+            partial = PartialUser(id=self._bot_id, http=self._http)
+            self._user = partial if not self._fetch_self else await partial.user()
+
+        await self.setup_hook()
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(self, *_: Any) -> None:
+        await self.close()
+
+    async def start(
         self,
-        ids: List[int] = None,
-        game_id: int = None,
-        user_id: int = None,
-        period=None,
-        sort=None,
-        type=None,
-        language=None,
-    ):
+        token: str | None = None,
+        *,
+        with_adapter: bool = True,
+        load_tokens: bool = True,
+        save_tokens: bool = True,
+    ) -> None:
         """|coro|
 
-        Fetches videos by id, game id, or user id
+        Method to login and run the `Client` asynchronously on an already running event loop.
+
+        You should not call :meth:`~.login` if you are using this method as it is called internally
+        for you.
+
+        .. note::
+
+            This method blocks asynchronously until the client is closed.
 
         Parameters
-        -----------
-        ids: Optional[List[:class:`int`]]
-            A list of video ids
-        game_id: Optional[:class:`int`]
-            A game to fetch videos from
-        user_id: Optional[:class:`int`]
-            A user to fetch videos from. See :meth:`twitchio.PartialUser.fetch_videos`
-        period: Optional[:class:`str`]
-            The period for which to fetch videos. Valid values are `all`, `day`, `week`, `month`. Defaults to `all`.
-            Cannot be used when video id(s) are passed
-        sort: :class:`str`
-            Sort orders of the videos. Valid values are `time`, `trending`, `views`, Defaults to `time`.
-            Cannot be used when video id(s) are passed
-        type: Optional[:class:`str`]
-            Type of the videos to fetch. Valid values are `upload`, `archive`, `highlight`. Defaults to `all`.
-            Cannot be used when video id(s) are passed
-        language: Optional[:class:`str`]
-            Language of the videos to fetch. Must be an `ISO-639-1 <https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes>`_ two letter code.
-            Cannot be used when video id(s) are passed
+        ----------
+        token: str | None
+            An optional app token to use instead of generating one automatically.
+        with_adapter: bool
+            Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+        load_tokens: bool
+            Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
+            :meth:`.login` automatically. Defaults to ``True``.
+        save_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.save_tokens` during the
+            :meth:`.close` automatically. Defaults to ``True``.
 
-        Returns
+        Examples
         --------
-        List[:class:`twitchio.Video`]
+
+        .. code:: python3
+
+            import asyncio
+            import twitchio
+
+
+            async def main() -> None:
+                client = twitchio.Client(...)
+
+                async with client:
+                    await client.start()
         """
-        from .models import Video
+        self.__waiter.clear()
+        await self.login(token=token, load_tokens=load_tokens, save_tokens=save_tokens)
 
-        data = await self._http.get_videos(
-            ids,
-            user_id=user_id,
-            game_id=game_id,
-            period=period,
-            sort=sort,
-            type=type,
-            language=language,
-        )
-        return [Video(self._http, x) for x in data]
+        if with_adapter:
+            await self._adapter.run()
 
-    async def fetch_cheermotes(self, user_id: int = None):
-        """|coro|
+        # Dispatch ready event... May change places in the future.
+        self.dispatch("ready")
+        self._ready_event.set()
 
+        try:
+            await self.__waiter.wait()
+        finally:
+            self._ready_event.clear()
+            await self.close()
 
-        Fetches cheermotes from the twitch API
-
-        Parameters
-        -----------
-        user_id: Optional[:class:`int`]
-            The channel id to fetch from.
-
-        Returns
-        --------
-        List[:class:`twitchio.CheerEmote`]
-        """
-        data = await self._http.get_cheermotes(str(user_id) if user_id else None)
-        return [models.CheerEmote(self._http, x) for x in data]
-
-    async def fetch_global_emotes(self):
-        """|coro|
-
-        Fetches global emotes from the twitch API
-
-        Returns
-        --------
-        List[:class:`twitchio.GlobalEmote`]
-        """
-        from .models import GlobalEmote
-
-        data = await self._http.get_global_emotes()
-        return [GlobalEmote(self._http, x) for x in data]
-
-    async def fetch_top_games(self) -> List[models.Game]:
-        """|coro|
-
-        Fetches the top games from the api
-
-        Returns
-        --------
-        List[:class:`twitchio.Game`]
-        """
-        data = await self._http.get_top_games()
-        return [models.Game(d) for d in data]
-
-    async def fetch_games(
-        self, ids: Optional[List[int]] = None, names: Optional[List[str]] = None, igdb_ids: Optional[List[int]] = None
-    ) -> List[models.Game]:
-        """|coro|
-
-        Fetches games by id or name.
-        At least one id or name must be provided
-
-        Parameters
-        -----------
-        ids: Optional[List[:class:`int`]]
-            An optional list of game ids
-        names: Optional[List[:class:`str`]]
-            An optional list of game names
-        igdb_ids: Optional[List[:class:`int`]]
-            An optional list of IGDB game ids
-
-        Returns
-        --------
-        List[:class:`twitchio.Game`]
-        """
-
-        data = await self._http.get_games(ids, names, igdb_ids)
-        return [models.Game(d) for d in data]
-
-    async def fetch_tags(self, ids: Optional[List[str]] = None):
-        """|coro|
-
-        Fetches stream tags.
-
-        Parameters
-        -----------
-        ids: Optional[List[:class:`str`]]
-            The ids of the tags to fetch
-
-        Returns
-        --------
-        List[:class:`twitchio.Tag`]
-        """
-        data = await self._http.get_stream_tags(ids)
-        return [models.Tag(x) for x in data]
-
-    async def fetch_streams(
+    def run(
         self,
-        user_ids: Optional[List[int]] = None,
-        game_ids: Optional[List[int]] = None,
-        user_logins: Optional[List[str]] = None,
-        languages: Optional[List[str]] = None,
-        token: Optional[str] = None,
-        type: Literal["all", "live"] = "all",
-    ):
-        """|coro|
+        token: str | None = None,
+        *,
+        with_adapter: bool = True,
+        load_tokens: bool = True,
+        save_tokens: bool = True,
+    ) -> None:
+        """Method to login the client and create a continuously running event loop.
 
-        Fetches live streams from the helix API
+        The behaviour of this method is similar to :meth:`~.start` but instead of being used in an already running
+        async environment, this method will setup and create an async environment for you.
+
+        You should not call :meth:`~.login` if you are using this method as it is called internally
+        for you.
+
+        .. important::
+
+            You can not use this method in an already running async event loop. See: :meth:`~.start` for starting the
+            client in already running async environments.
+
+        .. note::
+
+            This method will block until the client is closed.
 
         Parameters
-        -----------
-        user_ids: Optional[List[:class:`int`]]
-            user ids of people whose streams to fetch
-        game_ids: Optional[List[:class:`int`]]
-            game ids of streams to fetch
-        user_logins: Optional[List[:class:`str`]]
-            user login names of people whose streams to fetch
-        languages: Optional[List[:class:`str`]]
-            language for the stream(s). ISO 639-1 or two letter code for supported stream language
-        token: Optional[:class:`str`]
-            An optional OAuth token to use instead of the bot OAuth token
-        type: Literal["all", "live"]
-            One of ``"all"`` or ``"live"``. Defaults to ``"all"``. Specifies what type of stream to fetch.
+        ----------
+        token: str | None
+            An optional app token to use instead of generating one automatically.
+        with_adapter: bool
+            Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+        load_tokens: bool
+            Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
+            :meth:`.login` automatically. Defaults to ``True``.
+        save_tokens: bool
+            Optional bool which inicates whether the :class:`Client` should call :meth:`.save_tokens` during the
+            :meth:`.close` automatically. Defaults to ``True``.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            client = twitchio.Client(...)
+            client.run()
+        """
+
+        async def run() -> None:
+            async with self:
+                await self.start(token=token, with_adapter=with_adapter, load_tokens=load_tokens, save_tokens=save_tokens)
+
+        try:
+            asyncio.run(run())
+        except KeyboardInterrupt:
+            pass
+
+    async def close(self, **options: Any) -> None:
+        r"""Method which closes the :class:`~Client` gracefully.
+
+        This method is called for you automatically when using :meth:`~.run` or when using the client with the
+        async context-manager, E.g: `async with client:`
+
+        You can override this method to implement your own clean-up logic, however you should call `await super().close()`
+        when doing this.
+
+        Parameters
+        ----------
+        \*
+        save_tokens: bool | None
+            An optional bool override which allows overriding the identical keyword-argument set in either
+            :meth:`.run`, :meth:`.start` or :meth:`.login` to call the :meth:`.save_tokens` coroutine.
+            Defaults to ``None`` which won't override.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            async def close(self) -> None:
+                # Own clenup logic...
+                ...
+                await super().close()
+        """
+        if self._has_closed:
+            logger.debug("Client was already set as closed. Disregarding call to close.")
+            return
+
+        self._has_closed = True
+        await self._http.close()
+
+        if self._adapter._runner_task is not None:
+            try:
+                await self._adapter.close()
+            except Exception as e:
+                logger.debug("Encountered a cleanup error while closing the Client Web Adapter: %s. Disregarding.", e)
+                pass
+
+        sockets: list[Websocket] = [w for p in self._websockets.values() for w in p.values()]
+        logger.debug("Attempting cleanup on %d EventSub websocket connection(s).", len(sockets))
+
+        for socket in sockets:
+            await socket.close()
+
+        save_tokens = options.get("save_tokens")
+        save = save_tokens if save_tokens is not None else self._save_tokens
+
+        if save:
+            async with self._http._token_lock:
+                await self.save_tokens()
+
+        self._http.cleanup()
+        self.__waiter.set()
+        logger.debug("Cleanup completed on %r.", self)
+
+    async def wait_until_ready(self) -> None:
+        """|coro|
+
+        Method which suspends the current coroutine and waits for "event_ready" to be dispatched.
+
+        If "event_ready" has previously been dispatched, this method returns immediately.
+
+        "event_ready" is dispatched after the HTTP Client has successfully logged in, tokens have sucessfully been loaded,
+        and :meth:`.setup_hook` has completed execution.
+
+        .. warning::
+
+            Since this method directly relies on :meth:`.setup_hook` completing, using it in :meth:`.setup_hook` or in any
+            call :meth:`.setup_hook` is waiting for execution to complete, will completely deadlock the Client.
+        """
+        await self._ready_event.wait()
+
+    async def wait_for(self, event: str, *, timeout: float | None = None, predicate: WaitPredicateT | None = None) -> Any:
+        """Method which waits for any known dispatched event and returns the payload associated with the event.
+
+        This method can be used with a predicate check to determine whether the `wait_for` should stop listening and return
+        the event payload.
+
+        Parameters
+        ----------
+        event: str
+            The name of the event/listener to wait for. This should be the name of the event minus the `event_` prefix.
+
+            E.g. `chat_message`
+        timeout: float | None
+            An optional `float` to pass that this method will wait for a valid event. If `None` `wait_for` won't timeout.
+            Defaults to `None`.
+
+            If this method does timeout, the `TimeoutError` will be raised and propagated back.
+        predicate: WaitPredicateT
+            An optional `coroutine` to use as a check to determine whether this method should stop listening and return the
+            event payload. This coroutine should always return a bool.
+
+            The predicate function should take in the same payload as the event you are waiting for.
+
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            async def predicate(payload: twitchio.ChatMessage) -> bool:
+                # Only wait for a message sent by "chillymosh"
+                return payload.chatter.name == "chillymosh"
+
+            payload: twitchio.ChatMessage = await client.wait_for("chat_message", predicate=predicate)
+            print(f"Chillymosh said: {payload.text}")
+
+
+        Raises
+        ------
+        TimeoutError
+            Raised when waiting for an event that meets the requirements and passes the predicate check exceeds the timeout.
 
         Returns
-        --------
-        List[:class:`twitchio.Stream`]
+        -------
+        Any
+            The payload associated with the event being listened to.
         """
-        from .models import Stream
+        name: str = "event_" + event.lower()
 
-        data = await self._http.get_streams(
-            game_ids=game_ids,
-            user_ids=user_ids,
-            user_logins=user_logins,
-            languages=languages,
-            type_=type,
-            token=token,
-        )
-        return [Stream(self._http, x) for x in data]
+        set_ = self._wait_fors[name]
+        waiter: EventWaiter = EventWaiter(event=name, predicate=predicate, timeout=timeout)
 
-    async def fetch_teams(
+        waiter._set = set_
+        set_.add(waiter)
+
+        return await waiter.wait()
+
+    async def add_token(self, token: str, refresh: str) -> ValidateTokenPayload:
+        """|coro|
+
+        Adds a token and refresh-token pair to the client to be automatically managed.
+
+        After successfully adding a token to the client, the token will be automatically revalidated and refreshed both when
+        required and periodically.
+
+        This method is automatically called in the :func:`~twitchio.events.event_oauth_authorized` event,
+        when a token is authorized by a user via the built-in OAuth adapter.
+
+        You can override the :func:`~twitchio.events.event_oauth_authorized` or this method to
+        implement custom functionality such as storing the token in a database.
+
+        Storing your tokens safely is highly recommended and required to prevent users needing to reauthorize
+        your application after restarts.
+
+        .. note::
+
+            Both `token` and `refresh` are required parameters.
+
+        Parameters
+        ----------
+        token: str
+            The User-Access token to add.
+        refresh: str
+            The refresh token associated with the User-Access token to add.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            class Client(twitchio.Client):
+
+                async def add_token(self, token: str, refresh: str) -> None:
+                    # Code to add token to database here...
+                    ...
+
+                    # Adds the token to the client...
+                    await super().add_token(token, refresh)
+
+        """
+        return await self._http.add_token(token, refresh)
+
+    async def remove_token(self, user_id: str, /) -> TokenMappingData | None:
+        """|coro|
+
+        Removes a token for the specified `user-ID` from the `Client`.
+
+        Removing a token will ensure the client stops managing the token.
+
+        This method has been made `async` for convenience when overriding the default functionality.
+
+        You can override this method to implement custom logic, such as removing a token from your database.
+
+        Parameters
+        ----------
+        user_id: str
+            The user-ID for the token to remove from the client. This argument is `positional-only`.
+
+        Returns
+        -------
+        TokenMappingData
+            The token data assoicated with the user-id that was successfully removed.
+        None
+            The user-id was not managed by the client.
+        """
+        return self._http.remove_token(user_id)
+
+    async def load_tokens(self, path: str | None = None, /) -> None:
+        """|coro|
+
+        Method used to load tokens when the :class:`~Client` starts.
+
+        .. note::
+
+            This method is called by the client during :meth:`~.login` but **before**
+            :meth:`~.setup_hook` when the ``load_tokens`` keyword-argument
+            is ``True`` in either, :meth:`.run`, :meth:`.start` or :meth:`.login` (Default).
+
+        You can override this method to implement your own token loading logic into the client, such as from a database.
+
+        By default this method loads tokens from a file named `".tio.tokens.json"` if it is present;
+        always present if you use the default method of saving tokens.
+
+        **However**, it is preferred you would override this function to load your tokens from a database,
+        as this has far less chance of being corrupted, damaged or lost.
+
+        Parameters
+        ----------
+        path: str | None
+            The path to load tokens from, if this is `None` and the method has not been overriden, this will default to
+            `.tio.tokens.json`. Defaults to `None`.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            class Client(twitchio.Client):
+
+                async def load_tokens(self, path: str | None = None) -> None:
+                    # Code to fetch all tokens from the database here...
+                    ...
+
+                    for row in tokens:
+                        await self.add_token(row["token"], row["refresh"])
+
+        """
+        await self._http.load_tokens(name=path)
+
+    async def save_tokens(self, path: str | None = None, /) -> None:
+        """|coro|
+
+        Method which saves all the added OAuth tokens currently managed by this Client.
+
+        .. note::
+
+            This method is called by the client when it is gracefully closed and the ``save_tokens`` keyword-argument
+            is ``True`` in either, :meth:`.run`, :meth:`.start` or :meth:`.login` (Default).
+
+        .. note::
+
+            By default this method saves to a JSON file named `".tio.tokens.json"`.
+
+        You can override this method to implement your own custom logic, such as saving tokens to a database, however
+        it is preferred to use :meth:`~.add_token` to ensure the tokens are handled as they are added.
+
+        Parameters
+        ----------
+        path: str | None
+            The path of the file to save to. Defaults to `.tio.tokens.json`.
+        """
+        await self._http.save(path)
+
+    def add_listener(self, listener: Callable[..., Coroutine[Any, Any, None]], *, event: str | None = None) -> None:
+        """Method to add an event listener to the client.
+
+        See: :meth:`.listen` for more information on event listeners and for a decorator version of this function.
+
+        Parameters
+        ----------
+        listener: Callable[..., Coroutine[Any, Any, None]]
+            The coroutine to assign as the callback for the listener.
+        event: str | None
+            An optional :class:`str` which indicates which event to listen to. This should include the ``event_`` prefix.
+            Defaults to ``None`` which uses the coroutine function name passed instead.
+
+        Raises
+        ------
+        ValueError
+            The ``event`` string passed should start with ``event_``.
+        ValueError
+            The ``event`` string passed must not == ``event_``.
+        TypeError
+            The listener callback must be a coroutine function.
+        """
+        name: str = event or listener.__name__
+
+        if not name.startswith("event_"):
+            raise ValueError('Listener and event names must start with "event_".')
+
+        if name == "event_":
+            raise ValueError('Listener and event names cannot be named "event_".')
+
+        if not asyncio.iscoroutinefunction(listener):
+            raise TypeError("Listeners and Events must be coroutines.")
+
+        self._listeners[name].add(listener)
+
+    def remove_listener(
         self,
-        team_name: Optional[str] = None,
-        team_id: Optional[str] = None,
-    ):
-        """|coro|
-
-        Fetches information for a specific Twitch Team.
+        listener: Callable[..., Coroutine[Any, Any, None]],
+    ) -> Callable[..., Coroutine[Any, Any, None]] | None:
+        """Method to remove a currently registered listener from the client.
 
         Parameters
-        -----------
-        name: Optional[:class:`str`]
-            Team name to fetch
-        id: Optional[:class:`str`]
-            Team id to fetch
+        ----------
+        listener: Callable[..., Coroutine[Any, Any, None]]
+            The coroutine wrapped with :meth:`.listen` or added via :meth:`.add_listener` to remove as a listener.
+
+        Returns
+        -------
+        Callable[..., Coroutine[Any, Any, None]]
+            If a listener was removed, the coroutine function will be returned.
+        None
+            Returns ``None`` when no listener was removed.
+        """
+        for listeners in self._listeners.values():
+            if listener in listeners:
+                listeners.remove(listener)
+                return listener
+
+    def listen(self, name: str | None = None) -> Any:
+        """|deco|
+
+        A decorator that adds a coroutine as an event listener.
+
+        Listeners listen for dispatched events on the :class:`.Client` or :class:`~.commands.Bot` and can come from multiple
+        sources, such as internally, or via EventSub. Unlike the overridable events built into bot
+        :class:`~Client` and :class:`~.commands.Bot`, listeners do not change the default functionality of the event,
+        and can be used as many times as required.
+
+        By default, listeners use the name of the function wrapped for the event name. This can be changed by passing the
+        name parameter.
+
+        For a list of events and their documentation, see: :ref:`Events Reference <Event Ref>`.
+
+        For adding listeners to components, see: :meth:`~.commands.Component.listener`
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            @bot.listen()
+            async def event_message(message: twitchio.ChatMessage) -> None:
+                ...
+
+            # You can have multiple of the same event...
+            @bot.listen("event_message")
+            async def event_message_two(message: twitchio.ChatMessage) -> None:
+                ...
+
+        Parameters
+        ----------
+        name: str
+            The name of the event to listen to, E.g. ``"event_message"`` or simply ``"message"``.
+        """
+
+        def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
+            name_ = name or func.__name__
+            qual = f"event_{name_.removeprefix('event_')}"
+
+            self.add_listener(func, event=qual)
+
+            return func
+
+        return wrapper
+
+    def create_partialuser(self, user_id: str | int, user_login: str | None = None) -> PartialUser:
+        """Helper method used to create :class:`twitchio.PartialUser` objects.
+
+        :class:`~twitchio.PartialUser`'s are used to make HTTP requests regarding users on Twitch.
+
+        .. versionadded:: 3.0.0
+
+            This has been renamed from `create_user` to `create_partialuser`.
+
+        Parameters
+        ----------
+        user_id: str | int
+            ID of the user you wish to create a :class:`~twitchio.PartialUser` for.
+        user_login: str | None
+            Login name of the user you wish to create a :class:`~twitchio.PartialUser` for, if available.
+
+        Returns
+        -------
+        PartialUser
+            A :class:`~twitchio.PartialUser` object.
+        """
+        return PartialUser(user_id, user_login, http=self._http)
+
+    async def fetch_badges(self, *, token_for: str | PartialUser | None = None) -> list[ChatBadge]:
+        """|coro|
+
+        Fetches Twitch's list of global chat badges, which users may use in any channel's chat room.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            |token_for|
+
+        To fetch a specific broadcaster's chat badges, see: :meth:`~twitchio.PartialUser.fetch_badges`
 
         Returns
         --------
-        List[:class:`twitchio.Team`]
+        list[twitchio.ChatBadge]
+            A list of :class:`~twitchio.ChatBadge` objects
         """
-        from .models import Team
 
-        assert team_name or team_id
-        data = await self._http.get_teams(
-            team_name=team_name,
-            team_id=team_id,
-        )
+        data = await self._http.get_global_chat_badges(token_for=token_for)
+        return [ChatBadge(x, http=self._http) for x in data["data"]]
 
-        return Team(self._http, data[0])
-
-    async def search_categories(self, query: str):
+    async def fetch_emote_sets(
+        self, emote_set_ids: list[str], *, token_for: str | PartialUser | None = None
+    ) -> list[EmoteSet]:
         """|coro|
 
-        Searches twitches categories
+        Fetches emotes for one or more specified emote sets.
+
+        .. note::
+
+            An emote set groups emotes that have a similar context.
+            For example, Twitch places all the subscriber emotes that a broadcaster uploads for their channel
+            in the same emote set.
 
         Parameters
-        -----------
-        query: :class:`str`
-            The query to search for
+        ----------
+        emote_set_ids: list[str]
+            A list of the IDs that identifies the emote set to get. You may specify a maximum of **25** IDs.
+        token_for: str | PartialUser | None
+            |token_for|
 
         Returns
-        --------
-        List[:class:`twitchio.Game`]
+        -------
+        list[:class:`~twitchio.EmoteSet`]
+            A list of :class:`~twitchio.EmoteSet` objects.
+
+        Raises
+        ------
+        ValueError
+            You can only specify a maximum of **25** emote set IDs.
         """
-        data = await self._http.get_search_categories(query)
-        return [models.Game(x) for x in data]
 
-    async def search_channels(self, query: str, *, live_only=False):
-        """|coro|
+        if len(emote_set_ids) > 25:
+            raise ValueError("You can only specify a maximum of 25 emote set IDs.")
 
-        Searches channels for the given query
+        data = await self._http.get_emote_sets(emote_set_ids=emote_set_ids, token_for=token_for)
+        template: str = data["template"]
 
-        Parameters
-        -----------
-        query: :class:`str`
-            The query to search for
-        live_only: :class:`bool`
-            Only search live channels. Defaults to False
+        return [EmoteSet(d, template=template, http=self._http) for d in data["data"]]
 
-        Returns
-        --------
-        List[:class:`twitchio.SearchUser`]
-        """
-        data = await self._http.get_search_channels(query, live=live_only)
-        return [SearchUser(self._http, x) for x in data]
-
-    async def delete_videos(self, token: str, ids: List[int]) -> List[int]:
-        """|coro|
-
-        Delete videos from the api. Returns the video ids that were successfully deleted.
-
-        Parameters
-        -----------
-        token: :class:`str`
-            An oauth token with the ``channel:manage:videos`` scope
-        ids: List[:class:`int`]
-            A list of video ids from the channel of the oauth token to delete
-
-        Returns
-        --------
-        List[:class:`int`]
-        """
-        resp = []
-        for chunk in [ids[x : x + 3] for x in range(0, len(ids), 3)]:
-            resp.append(await self._http.delete_videos(token, chunk))
-
-        return resp
-
-    async def fetch_chatters_colors(self, user_ids: List[int], token: Optional[str] = None):
+    async def fetch_chatters_color(
+        self,
+        user_ids: list[str | int],
+        *,
+        token_for: str | PartialUser | None = None,
+    ) -> list[ChatterColor]:
         """|coro|
 
         Fetches the color of a chatter.
 
-        Parameters
-        -----------
-        user_ids: List[:class:`int`]
-            List of user ids to fetch the colors for
-        token: Optional[:class:`str`]
-            An optional user oauth token
+        .. versionchanged:: 3.0
 
-        Returns
-        --------
-        List[:class:`twitchio.ChatterColor`]
-        """
-        data = await self._http.get_user_chat_color(user_ids, token)
-        return [models.ChatterColor(self._http, x) for x in data]
-
-    async def update_chatter_color(self, token: str, user_id: int, color: str):
-        """|coro|
-
-        Updates the color of the specified user in the specified channel/broadcaster's chat.
+            Removed the `token` parameter. Added the `token_for` parameter.
 
         Parameters
         -----------
-        token: :class:`str`
-            An oauth token with the ``user:manage:chat_color`` scope.
-        user_id: :class:`int`
-            The ID of the user whose color is being updated, this must match the user ID in the token.
-        color: :class:`str`
-            Turbo and Prime users may specify a named color or a Hex color code like #9146FF.
-            Please see the Twitch documentation for more information.
+        user_ids: list[str | int]
+            A list of user ids to fetch the colours for.
+        token_for: str | PartialUser | None
+            |token_for|
 
         Returns
         --------
-        None
+        list[:class:`~twitchio.ChatterColor`]
+            A list of :class:`~twitchio.ChatterColor` objects associated with the passed user IDs.
         """
-        await self._http.put_user_chat_color(token=token, user_id=str(user_id), color=color)
+        if len(user_ids) > 100:
+            raise ValueError("Maximum of 100 user_ids")
 
-    async def fetch_global_chat_badges(self):
+        data = await self._http.get_user_chat_color(user_ids, token_for)
+        return [ChatterColor(d, http=self._http) for d in data["data"] if data]
+
+    async def fetch_channels(
+        self,
+        broadcaster_ids: list[str | int],
+        *,
+        token_for: str | PartialUser | None = None,
+    ) -> list[ChannelInfo]:
         """|coro|
 
-        Fetches Twitch's list of chat badges, which users may use in any channel's chat room.
+        Retrieve channel information from the API.
+
+        Parameters
+        ----------
+        broadcaster_ids: list[str | int]
+            A list of channel IDs to request from API.
+            You may specify a maximum of **100** IDs.
+        token_for: str | PartialUser | None
+            |token_for|
 
         Returns
         --------
-        List[:class:`twitchio.ChatBadge`]
+        list[:class:`~twitchio.ChannelInfo`]
+            A list of :class:`~twitchio.ChannelInfo` objects.
         """
+        if len(broadcaster_ids) > 100:
+            raise ValueError("Maximum of 100 broadcaster_ids")
 
-        data = await self._http.get_global_chat_badges()
-        return [models.ChatBadge(x) for x in data]
+        data = await self._http.get_channel_info(broadcaster_ids, token_for)
+        return [ChannelInfo(d, http=self._http) for d in data["data"]]
 
-    async def fetch_content_classification_labels(self, locale: Optional[str] = None):
+    async def fetch_cheermotes(
+        self,
+        *,
+        broadcaster_id: int | str | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> list[Cheermote]:
+        """|coro|
+
+        Fetches a list of Cheermotes that users can use to cheer Bits in any Bits-enabled channel's chat room.
+
+        Cheermotes are animated emotes that viewers can assign Bits to.
+        If a `broadcaster_id` is not specified then only global cheermotes will be returned.
+
+        If the broadcaster uploaded Cheermotes, the type attribute will be set to `channel_custom`.
+
+        Parameters
+        -----------
+        broadcaster_id: str | int | None
+            The ID of the broadcaster whose custom Cheermotes you want to fetch.
+            If not provided or `None` then you will fetch global Cheermotes. Defaults to `None`
+        token_for: str | PartialUser | None
+            |token_for|
+
+        Returns
+        --------
+        list[:class:`~twitchio.Cheermote`]
+            A list of :class:`~twitchio.Cheermote` objects.
+        """
+        data = await self._http.get_cheermotes(str(broadcaster_id) if broadcaster_id else None, token_for)
+        return [Cheermote(d, http=self._http) for d in data["data"]]
+
+    async def fetch_classifications(
+        self, locale: str = "en-US", *, token_for: str | PartialUser | None = None
+    ) -> list[ContentClassificationLabel]:
+        # TODO: Docs need more info...
         """|coro|
 
         Fetches information about Twitch content classification labels.
 
         Parameters
         -----------
-        locale: Optional[:class:`str`]
+        locale: str
             Locale for the Content Classification Labels.
-            You may specify a maximum of 1 locale. Default: “en-US”
+        token_for: str | PartialUser | None
+            |token_for|
 
         Returns
         --------
-        List[:class:`twitchio.ContentClassificationLabel`]
+        list[:class:`~twitchio.ContentClassificationLabel`]
+            A list of :class:`~twitchio.ContentClassificationLabel` objects.
         """
-        locale = "en-US" if locale is None else locale
-        data = await self._http.get_content_classification_labels(locale)
-        return [models.ContentClassificationLabel(x) for x in data]
+        data = await self._http.get_content_classification_labels(locale, token_for)
+        return [ContentClassificationLabel(d) for d in data["data"]]
 
-    async def get_webhook_subscriptions(self):
-        """|coro|
+    def fetch_clips(
+        self,
+        *,
+        game_id: str | None = None,
+        clip_ids: list[str] | None = None,
+        started_at: datetime.datetime | None = None,
+        ended_at: datetime.datetime | None = None,
+        featured: bool | None = None,
+        token_for: str | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Clip]:
+        """|aiter|
 
-        Fetches your current webhook subscriptions. Requires your bot to be logged in with an app access token.
+        Fetches clips by the provided clip ids or game id.
+
+        Parameters
+        -----------
+        game_id: list[str | int] | None
+            A game id to fetch clips from.
+        clip_ids: list[str] | None
+            A list of specific clip IDs to fetch.
+            The Maximum amount you can request is **100**.
+        started_at: datetime.datetime
+            The start date used to filter clips.
+        ended_at: datetime.datetime
+            The end date used to filter clips. If not specified, the time window is the start date plus one week.
+        featured: bool | None
+            When this parameter is `True`, this method returns only clips that are featured.
+            When this parameter is `False`, this method returns only clips that are not featured.
+
+            Othwerise if this parameter is not provided or `None`, all clips will be returned. Defaults to `None`.
+        token_for: str | PartialUser | None
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
         Returns
         --------
-        List[:class:`twitchio.WebhookSubscription`]
+        HTTPAsyncIterator[:class:`~twitchio.Clip`]
+
+        Raises
+        ------
+        ValueError
+            Only one of `game_id` or `clip_ids` can be provided.
+        ValueError
+            You must provide either a `game_id` *or* `clip_ids`.
         """
-        data = await self._http.get_webhook_subs()
-        return [models.WebhookSubscription(x) for x in data]
 
-    async def event_token_expired(self):
-        """|coro|
+        provided: int = len([v for v in (game_id, clip_ids) if v])
+        if provided > 1:
+            raise ValueError("Only one of 'game_id' or 'clip_ids' can be provided.")
+        elif provided == 0:
+            raise ValueError("One of 'game_id' or 'clip_ids' must be provided.")
 
+        first = max(1, min(100, first))
 
-        A special event called when the oauth token expires. This is a hook into the http system, it will call this
-        when a call to the api fails due to a token expiry. This function should return either a new token, or `None`.
-        Returning `None` will cause the client to attempt an automatic token generation.
+        return self._http.get_clips(
+            game_id=game_id,
+            clip_ids=clip_ids,
+            first=first,
+            started_at=started_at,
+            ended_at=ended_at,
+            is_featured=featured,
+            max_results=max_results,
+            token_for=token_for,
+        )
+
+    def fetch_extension_transactions(
+        self,
+        extension_id: str,
+        *,
+        ids: list[str] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[ExtensionTransaction]:
+        # TODO: Check docs?...
+        """|aiter|
+
+        Fetches global emotes from the Twitch API.
 
         .. note::
-            This event is a callback hook. It is not a dispatched event. Any errors raised will be passed to the
-            :func:`~event_error` event.
-        """
-        return None
 
-    async def event_mode(self, channel: Channel, user: User, status: str):
-        """|coro|
-
-
-        Event called when a MODE is received from Twitch.
+            The ID in the `extension_id` parameter must match the Client-ID provided to this :class:`~Client`.
 
         Parameters
-        ------------
-        channel: :class:`.Channel`
-            Channel object relevant to the MODE event.
-        user: :class:`.User`
-            User object containing relevant information to the MODE.
-        status: str
-            The JTV status received by Twitch. Could be either o+ or o-.
-            Indicates a moderation promotion/demotion to the :class:`.User`
-        """
-        pass
+        -----------
+        extension_id: str
+            The ID of the extension whose list of transactions you want to fetch.
+        ids: list[str] | None
+            A transaction ID used to filter the list of transactions.
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
 
-    async def event_userstate(self, user: User):
-        """|coro|
-
-
-        Event called when a USERSTATE is received from Twitch.
-
-        Parameters
-        ------------
-        user: :class:`.User`
-            User object containing relevant information to the USERSTATE.
-        """
-        pass
-
-    async def event_raw_usernotice(self, channel: Channel, tags: dict):
-        """|coro|
-
-
-        Event called when a USERNOTICE is received from Twitch.
-        Since USERNOTICE's can be fairly complex and vary, the following sub-events are available:
-
-            :meth:`event_usernotice_subscription` :
-            Called when a USERNOTICE Subscription or Re-subscription event is received.
-
-        .. tip::
-
-            For more information on how to handle USERNOTICE's visit:
-            https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
-
-
-        Parameters
-        ------------
-        channel: :class:`.Channel`
-            Channel object relevant to the USERNOTICE event.
-        tags : dict
-            A dictionary with the relevant information associated with the USERNOTICE.
-            This could vary depending on the event.
-        """
-        pass
-
-    async def event_usernotice_subscription(self, metadata):
-        """|coro|
-
-
-        Event called when a USERNOTICE subscription or re-subscription event is received from Twitch.
-
-        Parameters
-        ------------
-        metadata: :class:`NoticeSubscription`
-            The object containing various metadata about the subscription event.
-            For ease of use, this contains a :class:`User` and :class:`Channel`.
-
-        """
-        pass
-
-    async def event_part(self, user: User):
-        """|coro|
-
-
-        Event called when a PART is received from Twitch.
-
-        Parameters
-        ------------
-        user: :class:`.User`
-            User object containing relevant information to the PART.
-        """
-        pass
-
-    async def event_join(self, channel: Channel, user: User):
-        """|coro|
-
-
-        Event called when a JOIN is received from Twitch.
-
-        Parameters
-        ------------
-        channel: :class:`.Channel`
-            The channel associated with the JOIN.
-        user: :class:`.User`
-            User object containing relevant information to the JOIN.
-        """
-        pass
-
-    async def event_message(self, message: Message):
-        """|coro|
-
-
-        Event called when a PRIVMSG is received from Twitch.
-
-        Parameters
-        ------------
-        message: :class:`.Message`
-            Message object containing relevant information.
-        """
-        pass
-
-    async def event_error(self, error: Exception, data: str = None):
-        """|coro|
-
-
-        Event called when an error occurs while processing data.
-
-        Parameters
-        ------------
-        error: Exception
-            The exception raised.
-        data: str
-            The raw data received from Twitch. Depending on how this is called, this could be None.
-
-        Example
-        ---------
-        .. code:: py
-
-            @bot.event()
-            async def event_error(error, data):
-                traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-        """
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
-    async def event_ready(self):
-        """|coro|
-
-
-        Event called when the Bot has logged in and is ready.
-
-        Example
-        ---------
-        .. code:: py
-
-            @bot.event()
-            async def event_ready():
-                print(f'Logged into Twitch | {bot.nick}')
-        """
-        pass
-
-    async def event_reconnect(self):
-        """|coro|
-
-        Event called when twitch sends a RECONNECT notice.
-        The library will automatically handle reconnecting when such an event is received
+        Returns
+        --------
+        HTTPAsyncIterator[:class:`~twitchio.ExtensionTransaction`]
         """
 
-    async def event_raw_data(self, data: str):
+        first = max(1, min(100, first))
+
+        if ids and len(ids) > 100:
+            raise ValueError("You can only provide a mximum of 100 IDs")
+
+        return self._http.get_extension_transactions(
+            extension_id=extension_id,
+            ids=ids,
+            first=first,
+            max_results=max_results,
+        )
+
+    async def fetch_extensions(self, *, token_for: str | PartialUser) -> list[Extension]:
         """|coro|
 
+        Fetch a list of all extensions (both active and inactive) that the broadcaster has installed.
 
-        Event called with the raw data received by Twitch.
+        The user ID in the access token identifies the broadcaster.
 
-        Parameters
-        ------------
-        data: str
-            The raw data received from Twitch.
+        .. note::
 
-        Example
-        ---------
-        .. code:: py
-
-            @bot.event()
-            async def event_raw_data(data):
-                print(data)
-        """
-        pass
-
-    async def event_channel_joined(self, channel: Channel):
-        """|coro|
-
-        Event called when the bot joins a channel.
+            Requires a user access token that includes the `user:read:broadcast` or `user:edit:broadcast` scope.
+            To include inactive extensions, you must include the `user:edit:broadcast` scope.
 
         Parameters
         ----------
-        channel: :class:`.Channel`
-            The channel that was joined.
-        """
-        pass
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `user:read:broadcast` or `user:edit:broadcast` scope.
 
-    async def event_channel_join_failure(self, channel: str):
+            See: :meth:`~.add_token` to add managed tokens to the client.
+            To include inactive extensions, you must include the `user:edit:broadcast` scope.
+
+        Returns
+        -------
+        list[:class:`~twitchio.UserExtension`]
+            List of :class:`~twitchio.UserExtension` objects.
+        """
+        data = await self._http.get_user_extensions(token_for=token_for)
+        return [Extension(d) for d in data["data"]]
+
+    async def update_extensions(
+        self, *, user_extensions: ActiveExtensions, token_for: str | PartialUser
+    ) -> ActiveExtensions:
         """|coro|
 
-        Event called when the bot fails to join a channel.
+        Update an installed extension's information for a specific broadcaster.
+
+        You can update the extension's activation `state`, `ID`, and `version number`.
+        The User-ID passed to `token_for` identifies the broadcaster whose extensions you are updating.
+
+        .. note::
+
+            The best way to change an installed extension's configuration is to use
+            :meth:`~twitchio.PartialUser.fetch_active_extensions` to fetch the extension.
+
+            You can then edit the approperiate extension within the `ActiveExtensions` model and pass it to this method.
+
+        .. note::
+
+            Requires a user access token that includes the `user:edit:broadcast` scope.
+            See: :meth:`~.add_token` to add managed tokens to the client.
 
         Parameters
         ----------
-        channel: `str`
-            The channel name that was attempted to be joined.
-        """
-        logger.error(f'The channel "{channel}" was unable to be joined. Check the channel is valid.')
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `user:edit:broadcast` scope.
 
-    async def event_raw_notice(self, data: str):
+            See: :meth:`~.add_token` to add managed tokens to the client.
+
+        Returns
+        -------
+        ActiveExtensions
+            The :class:`~twitchio.ActiveExtensions` object.
+        """
+        data = await self._http.put_user_extensions(user_extensions=user_extensions, token_for=token_for)
+        return ActiveExtensions(data["data"])
+
+    async def fetch_emotes(self, *, token_for: str | PartialUser | None = None) -> list[GlobalEmote]:
         """|coro|
 
+        Fetches global emotes from the Twitch API.
 
-        Event called with the raw NOTICE data received by Twitch.
+        .. note::
+            If you wish to fetch a specific broadcaster's chat emotes use :meth:`~twitchio.PartialUser.fetch_channel_emotes`.
 
         Parameters
-        ------------
-        data: str
-            The raw NOTICE data received from Twitch.
+        ----------
+        token_for: str | PartialUser | None
+            |token_for|
 
-        Example
-        ---------
-        .. code:: py
-
-            @bot.event()
-            async def event_raw_notice(data):
-                print(data)
+        Returns
+        --------
+        list[:class:`twitchio.GlobalEmote`]
+            A list of :class:`~twitchio.GlobalEmote` objects.
         """
-        pass
+        data = await self._http.get_global_emotes(token_for)
+        template: str = data["template"]
 
-    async def event_notice(self, message: str, msg_id: Optional[str], channel: Optional[Channel]):
+        return [GlobalEmote(d, template=template, http=self._http) for d in data["data"]]
+
+    def fetch_streams(
+        self,
+        *,
+        user_ids: list[int | str] | None = None,
+        game_ids: list[int | str] | None = None,
+        user_logins: list[int | str] | None = None,
+        languages: list[str] | None = None,
+        type: Literal["all", "live"] = "all",
+        token_for: str | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Stream]:
+        """|aiter|
+
+        Fetches streams from the Twitch API.
+
+        Parameters
+        -----------
+        user_ids: list[int | str] | None
+            An optional list of User-IDs to fetch live stream information for.
+        game_ids: list[int | str] | None
+            An optional list of Game-IDs to fetch live streams for.
+        user_logins: list[str] | None
+            An optional list of User-Logins to fetch live stream information for.
+        languages: list[str] | None
+            A language code used to filter the list of streams. Returns only streams that broadcast in the specified language.
+            Specify the language using an ISO 639-1 two-letter language code or other if the broadcast uses a language not in the list of `supported stream languages <https://help.twitch.tv/s/article/languages-on-twitch#streamlang>`_.
+            You may specify a maximum of `100` language codes.
+        type: Literal["all", "live"]
+            One of `"all"` or `"live"`. Defaults to `"all"`. Specifies what type of stream to fetch.
+
+            .. important::
+                Twitch deprecated filtering streams by type. `all` and `live` both return the same data.
+                This is being kept in the library in case of future additions.
+
+        token_for: str | PartialUser | None
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
+        Returns
+        --------
+        HTTPAsyncIterator[:class:`twitchio.Stream`]
+        """
+
+        first = max(1, min(100, first))
+
+        return self._http.get_streams(
+            first=first,
+            game_ids=game_ids,
+            user_ids=user_ids,
+            user_logins=user_logins,
+            languages=languages,
+            type=type,
+            token_for=token_for,
+            max_results=max_results,
+        )
+
+    async def fetch_team(
+        self,
+        *,
+        team_name: str | None = None,
+        team_id: str | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> Team:
         """|coro|
 
+        Fetches information about a specific Twitch team.
 
-        Event called with the NOTICE data received by Twitch.
-
-        .. tip::
-
-            For more information on NOTICE msg_ids visit:
-            https://dev.twitch.tv/docs/irc/msg-id/
+        You must provide one of either `team_name` or `team_id`.
 
         Parameters
-        ------------
-        message: :class:`str`
-            The message of the NOTICE.
-        msg_id: Optional[:class:`str`]
-            The msg_id that indicates what the NOTICE type.
-        channel: Optional[:class:`~twitchio.Channel`]
-            The channel the NOTICE message originated from.
+        -----------
+        team_name: str | None
+            The team name.
+        team_id: str | None
+            The team id.
+        token_for: str | PartialUser | None
+            |token_for|
 
-        Example
-        ---------
-        .. code:: py
+        Returns
+        --------
+        Team
+            The :class:`twitchio.Team` object.
 
-            @bot.event()
-            async def event_notice(message, msg_id, channel):
-                print(message)
+        Raises
+        ------
+        ValueError
+            You can only provide either `team_name` or `team_id`, not both.
         """
-        pass
+
+        if team_name and team_id:
+            raise ValueError("Only one of 'team_name' or 'team_id' should be provided, not both.")
+
+        data = await self._http.get_teams(
+            team_name=team_name,
+            team_id=team_id,
+            token_for=token_for,
+        )
+
+        return Team(data["data"][0], http=self._http)
+
+    def fetch_top_games(
+        self,
+        *,
+        token_for: str | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Game]:
+        # TODO: Docs??? More info...
+        """|aiter|
+
+        Fetches information about the current top games on Twitch.
+
+        Parameters
+        -----------
+        token_for: str | PartialUser | None
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
+        Returns
+        --------
+        HTTPAsyncIterator[:class:`twitchio.Game`]
+        """
+
+        first = max(1, min(100, first))
+
+        return self._http.get_top_games(first=first, token_for=token_for, max_results=max_results)
+
+    async def fetch_games(
+        self,
+        *,
+        names: list[str] | None = None,
+        ids: list[str] | None = None,
+        igdb_ids: list[str] | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> list[Game]:
+        # TODO: Docs??? More info...
+        """|coro|
+
+        Fetches information about multiple games on Twitch.
+
+        Parameters
+        -----------
+        names: list[str] | None
+            A list of game names to use to fetch information about. Defaults to `None`.
+        ids: list[str] | None
+            A list of game ids to use to fetch information about. Defaults to `None`.
+        igdb_ids: list[str] | None
+            A list of `igdb` ids to use to fetch information about. Defaults to `None`.
+        token_for: str | PartialUser | None
+            |token_for|
+
+        Returns
+        --------
+        list[:class:`twitchio.Game`]
+            A list of :class:`twitchio.Game` objects.
+        """
+
+        data = await self._http.get_games(
+            names=names,
+            ids=ids,
+            igdb_ids=igdb_ids,
+            token_for=token_for,
+        )
+
+        return [Game(d, http=self._http) for d in data["data"]]
+
+    async def fetch_game(
+        self,
+        *,
+        name: str | None = None,
+        id: str | None = None,
+        igdb_id: str | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> Game | None:
+        """|coro|
+
+        Fetch a :class:`~twitchio.Game` object with the provided `name`, `id`, or `igdb_id`.
+
+        One of `name`, `id`, or `igdb_id` must be provided.
+        If more than one is provided or no parameters are provided, a `ValueError` will be raised.
+
+        If no game is found, `None` will be returned.
+
+        .. note::
+
+            See: :meth:`~.fetch_games` to fetch multiple games at once.
+
+            See: :meth:`~.fetch_top_games` to fetch the top games currently being streamed.
+
+        Parameters
+        ----------
+        name: str | None
+            The name of the game to fetch.
+        id: str | None
+            The id of the game to fetch.
+        igdb_id: str | None
+            The igdb id of the game to fetch.
+        token_for: str | PartialUser | None
+            |token_for|
+
+        Returns
+        -------
+        Game | None
+            The :class:`twitchio.Game` object if found, otherwise `None`.
+
+        Raises
+        ------
+        ValueError
+            Only one of the `name`, `id`, or `igdb_id` parameters can be provided.
+        ValueError
+            One of the `name`, `id`, or `igdb_id` parameters must be provided.
+        """
+        provided: int = len([v for v in (name, id, igdb_id) if v])
+        if provided > 1:
+            raise ValueError("Only one of 'name', 'id', or 'igdb_id' can be provided.")
+        elif provided == 0:
+            raise ValueError("One of 'name', 'id', or 'igdb_id' must be provided.")
+
+        names: list[str] | None = [name] if name else None
+        id_: list[str] | None = [id] if id else None
+        igdb_ids: list[str] | None = [igdb_id] if igdb_id else None
+
+        data = await self._http.get_games(names=names, ids=id_, igdb_ids=igdb_ids, token_for=token_for)
+        return Game(data["data"][0], http=self._http) if data["data"] else None
+
+    async def fetch_users(
+        self,
+        *,
+        ids: list[str | int] | None = None,
+        logins: list[str] | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> list[User]:
+        """|coro|
+
+        Fetch information about one or more users.
+
+        .. note::
+
+            You may look up users using their user ID, login name, or both but the sum total
+            of the number of users you may look up is `100`.
+
+            For example, you may specify `50` IDs and `50` names or `100` IDs or names,
+            but you cannot specify `100` IDs and `100` names.
+
+            If you don't specify IDs or login names but provide the `token_for` parameter,
+            the request returns information about the user associated with the access token.
+
+            To include the user's verified email address in the response,
+            you must have a user access token that includes the `user:read:email` scope.
+
+        Parameters
+        ----------
+        ids: list[str | int] | None
+            The ids of the users to fetch information about.
+        logins: list[str] | None
+            The login names of the users to fetch information about.
+        token_for: str | PartialUser | None
+            |token_for|
+
+            If this parameter is provided, the token must have the `user:read:email` scope
+            in order to request the user's verified email address.
+
+        Returns
+        -------
+        list[:class:`twitchio.User`]
+            A list of :class:`twitchio.User` objects.
+
+        Raises
+        ------
+        ValueError
+            The combined number of 'ids' and 'logins' must not exceed `100` elements.
+        """
+
+        if (len(ids or []) + len(logins or [])) > 100:
+            raise ValueError("The combined number of 'ids' and 'logins' must not exceed 100 elements.")
+
+        data = await self._http.get_users(ids=ids, logins=logins, token_for=token_for)
+        return [User(d, http=self._http) for d in data["data"]]
+
+    def search_categories(
+        self,
+        query: str,
+        *,
+        token_for: str | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Game]:
+        """|aiter|
+
+        Searches Twitch categories via the API.
+
+        Parameters
+        -----------
+        query: str
+            The query to search for.
+        token_for: str | PartialUser | None
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
+        Returns
+        --------
+        HTTPAsyncIterator[:class:`twitchio.Game`]
+        """
+
+        first = max(1, min(100, first))
+
+        return self._http.get_search_categories(
+            query=query,
+            first=first,
+            max_results=max_results,
+            token_for=token_for,
+        )
+
+    def search_channels(
+        self,
+        query: str,
+        *,
+        live: bool = False,
+        token_for: str | PartialUser | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[SearchChannel]:
+        """|aiter|
+
+        Searches Twitch channels that match the specified query and have streamed content within the past `6` months.
+
+        .. note::
+
+            If the `live` parameter is set to `False` (default), the query will look to match broadcaster login names.
+            If the `live` parameter is set to `True`, the query will match on the broadcaster login names and category names.
+
+            To match, the beginning of the broadcaster's name or category must match the query string.
+
+            The comparison is case insensitive. If the query string is `angel_of_death`,
+            it will matche all names that begin with `angel_of_death`.
+
+            However, if the query string is a phrase like `angel of death`, it will match
+            to names starting with `angelofdeath` *or* names starting with `angel_of_death`.
+
+        Parameters
+        -----------
+        query: str
+            The query to search for.
+        live: bool
+            Whether to return live channels only.
+            Defaults to `False`.
+        token_for: str | PartialUser  | None
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
+        Returns
+        --------
+        HTTPAsyncIterator[:class:`twitchio.SearchChannel`]
+        """
+
+        first = max(1, min(100, first))
+
+        return self._http.get_search_channels(
+            query=query,
+            first=first,
+            live=live,
+            max_results=max_results,
+            token_for=token_for,
+        )
+
+    def fetch_videos(
+        self,
+        *,
+        ids: list[str | int] | None = None,
+        user_id: str | int | PartialUser | None = None,
+        game_id: str | int | None = None,
+        language: str | None = None,
+        period: Literal["all", "day", "month", "week"] = "all",
+        sort: Literal["time", "trending", "views"] = "time",
+        type: Literal["all", "archive", "highlight", "upload"] = "all",
+        first: int = 20,
+        max_results: int | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> HTTPAsyncIterator[Video]:
+        """|aiter|
+
+        Fetch a list of :class:`~twitchio.Video` objects with the provided `ids`, `user_id` or `game_id`.
+
+        One of `ids`, `user_id` or `game_id` must be provided.
+        If more than one is provided or no parameters are provided, a `ValueError` will be raised.
+
+        Parameters
+        ----------
+        ids: list[str | int] | None
+            A list of video IDs to fetch.
+        user_id: str | int | PartialUser | None
+            The ID of the user whose list of videos you want to fetch.
+        game_id: str | int | None
+            The igdb id of the game to fetch.
+        language: str | None
+            A filter used to filter the list of videos by the language that the video owner broadcasts in.
+
+            For example, to get videos that were broadcast in German, set this parameter to the ISO 639-1 two-letter code for German (i.e., DE).
+
+            For a list of supported languages, see `Supported Stream Language <https://help.twitch.tv/s/article/languages-on-twitch#streamlang>`_. If the language is not supported, use `other`.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id query parameter.
+
+        period: Literal["all", "day", "month", "week"]
+            A filter used to filter the list of videos by when they were published. For example, videos published in the last week.
+            Possible values are: `all`, `day`, `month`, `week`.
+
+            The default is `all`, which returns videos published in all periods.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id or user_id query parameter.
+
+        sort: Literal["time", "trending", "views"]
+            The order to sort the returned videos in.
+
+            +------------+---------------------------------------------------------------+
+            | Sort Key   | Description                                                   |
+            +============+===============================================================+
+            | time       | Sort the results in descending order by when they were        |
+            |            | created (i.e., latest video first).                           |
+            +------------+---------------------------------------------------------------+
+            | trending   | Sort the results in descending order by biggest gains in      |
+            |            | viewership (i.e., highest trending video first).              |
+            +------------+---------------------------------------------------------------+
+            | views      | Sort the results in descending order by most views (i.e.,     |
+            |            | highest number of views first).                               |
+            +------------+---------------------------------------------------------------+
+
+            The default is `time`.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id or user_id query parameter.
+
+        type: Literal["all", "archive", "highlight", "upload"]
+            A filter used to filter the list of videos by the video's type.
+
+            +-----------+-------------------------------------------------------------+
+            | Type      | Description                                                 |
+            +===========+=============================================================+
+            | all       | Include all video types.                                    |
+            +-----------+-------------------------------------------------------------+
+            | archive   | On-demand videos (VODs) of past streams.                    |
+            +-----------+-------------------------------------------------------------+
+            | highlight | Highlight reels of past streams.                            |
+            +-----------+-------------------------------------------------------------+
+            | upload    | External videos that the broadcaster uploaded using the     |
+            |           | Video Producer.                                             |
+            +-----------+-------------------------------------------------------------+
+
+            The default is `all`, which returns all video types.
+
+            .. note::
+
+                Specify this parameter only if you specify the game_id or user_id query parameter.
+
+        token_for: str | PartialUser | None
+            |token_for|
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
+        Returns
+        -------
+        HTTPAsyncIterator[:class:`twitchio.Video`]
+
+        Raises
+        ------
+        ValueError
+            Only one of the 'ids', 'user_id', or 'game_id' parameters can be provided.
+        ValueError
+            One of the 'ids', 'user_id', or 'game_id' parameters must be provided.
+        """
+        provided: int = len([v for v in (ids, game_id, user_id) if v])
+        if provided > 1:
+            raise ValueError("Only one of 'ids', 'user_id', or 'game_id' can be provided.")
+        elif provided == 0:
+            raise ValueError("One of 'name', 'id', or 'igdb_id' must be provided.")
+
+        first = max(1, min(100, first))
+
+        return self._http.get_videos(
+            ids=ids,
+            user_id=user_id,
+            game_id=game_id,
+            language=language,
+            period=period,
+            sort=sort,
+            type=type,
+            first=first,
+            max_results=max_results,
+            token_for=token_for,
+        )
+
+    async def delete_videos(self, *, ids: list[str | int], token_for: str | PartialUser) -> list[str]:
+        """|coro|
+
+        Deletes one or more videos for a specific broadcaster.
+
+        .. note::
+
+            You may delete past broadcasts, highlights, or uploads.
+
+        .. note::
+            This requires a user token with the scope `channel:manage:videos`.
+
+        The limit is to delete `5` ids at a time. When more than 5 ids are provided,
+        an attempt to delete them in chunks is made.
+
+        If any of the videos fail to delete in a chunked request, no videos will be deleted in that chunk.
+
+        Parameters
+        ----------
+        ids: list[str | int] | None
+            A list of video IDs to delete.
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `channel:manage:videos` scope.
+
+            See: :meth:`~.add_token` to add managed tokens to the client.
+
+        Returns
+        -------
+        list[str]
+            A list of Video IDs that were successfully deleted.
+        """
+        resp: list[str] = []
+
+        for chunk in [ids[x : x + 5] for x in range(0, len(ids), 5)]:
+            data = await self._http.delete_videos(ids=chunk, token_for=token_for)
+            if data:
+                resp.extend(data["data"])
+
+        return resp
+
+    def fetch_stream_markers(
+        self,
+        *,
+        video_id: str,
+        token_for: str | PartialUser,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[VideoMarkers]:
+        """|aiter|
+
+        Fetches markers from a specific user's most recent stream or from the specified VOD/video.
+
+        A marker is an arbitrary point in a live stream that the broadcaster or editor has marked,
+        so they can return to that spot later to create video highlights.
+
+        .. important::
+
+            See: :meth:`~twitchio.PartialUser.fetch_stream_markers` for a more streamlined version of this method.
+
+        .. note::
+
+            Requires a user access token that includes the `user:read:broadcast` *or* `channel:manage:broadcast` scope.
+
+        Parameters
+        ----------
+        video_id: str
+            A video on demand (VOD)/video ID. The request returns the markers from this VOD/video.
+            The User ID provided to `token_for` must own the video or the user must be one of the broadcaster's editors.
+        token_for: str | PartialUser
+            The User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
+            The token must inlcude the `user:read:broadcast` *or* `channel:manage:broadcast` scope
+
+            See: :meth:`~.add_token` to add managed tokens to the client.
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
+        Returns
+        -------
+        HTTPAsyncIterator[:class:`twitchio.VideoMarkers`]
+        """
+        first = max(1, min(100, first))
+        return self._http.get_stream_markers(
+            video_id=video_id,
+            token_for=token_for,
+            first=first,
+            max_results=max_results,
+        )
+
+    def fetch_drop_entitlements(
+        self,
+        *,
+        token_for: str | PartialUser | None = None,
+        ids: list[str] | None = None,
+        user_id: str | int | PartialUser | None = None,
+        game_id: str | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        first: int = 20,
+        max_results: int | None = None,
+    ) -> HTTPAsyncIterator[Entitlement]:
+        # TODO: Docs??? More info in parameters?
+        """|aiter|
+
+        Fetches an organization's list of entitlements that have been granted to a `game`, a `user`, or `both`.
+
+        .. note::
+
+            Entitlements returned in the response body data are not guaranteed to be sorted by any field returned by the API.
+
+            To retrieve `CLAIMED` or `FULFILLED` entitlements, use the `fulfillment_status` query parameter to filter results.
+            To retrieve entitlements for a specific game, use the `game_id` query parameter to filter results.
+
+        .. note::
+
+            Requires an app access token or user access token. The Client-ID associated with the token must own the game.
+
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | Access token type  | Parameter        | Description                                                                                                                                                          |
+        +====================+==================+======================================================================================================================================================================+
+        | App                | None             | If you don't specify request parameters, the request returns all entitlements that your organization owns.                                                           |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | App                | user_id          | The request returns all entitlements for any game that the organization granted to the specified user.                                                               |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | App                | user_id, game_id | The request returns all entitlements that the specified game granted to the specified user.                                                                          |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | App                | game_id          | The request returns all entitlements that the specified game granted to all entitled users.                                                                          |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | None             | If you don't specify request parameters, the request returns all entitlements for any game that the organization granted to the user identified in the access token. |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | user_id          | Invalid.                                                                                                                                                             |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | user_id, game_id | Invalid.                                                                                                                                                             |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | game_id          | The request returns all entitlements that the specified game granted to the user identified in the access token.                                                     |
+        +--------------------+------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            An optional User-ID that will be used to find an appropriate managed user token for this request.
+            The Client-ID associated with the token must own the game.
+
+            See: :meth:`~.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
+        ids: list[str] | None
+            A list of entitlement ids that identifies the entitlements to fetch.
+        user_id: str | int | PartialUser | None
+            An optional User ID of the user that was granted entitlements.
+        game_id: str | None
+            An ID that identifies a game that offered entitlements.
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None
+            The entitlement's fulfillment status. Used to filter the list to only those with the specified status.
+            Possible values are: `CLAIMED` and `FULFILLED`.
+        first: int
+            The maximum number of items to return per page. Defaults to **20**.
+            The maximum number of items per page is **100**.
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to `None`, all results are returned.
+            Defaults to `None`.
+
+        Returns
+        -------
+        HTTPAsyncIterator[:class:`twitchio.Entitlement`]
+
+        Raises
+        ------
+        ValueError
+            You may only specifiy a maximum of `100` ids.
+        """
+        first = max(1, min(1000, first))
+
+        if ids is not None and len(ids) > 100:
+            raise ValueError("You may specifiy a maximum of 100 ids.")
+
+        return self._http.get_drop_entitlements(
+            token_for=token_for,
+            ids=ids,
+            user_id=user_id,
+            game_id=game_id,
+            fulfillment_status=fulfillment_status,
+            max_results=max_results,
+        )
+
+    async def update_entitlements(
+        self,
+        *,
+        ids: list[str] | None = None,
+        fulfillment_status: Literal["CLAIMED", "FULFILLED"] | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> list[EntitlementStatus]:
+        """|coro|
+
+        Updates a Drop entitlement's fulfillment status.
+
+        .. note::
+
+            Requires an app access token or user access token.
+            The Client-ID associated with the token must own the game associated with this drop entitlment.
+
+        +--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | Access token type  | Updated Data                                                                                                                                            |
+        +====================+=========================================================================================================================================================+
+        | App                | Updates all entitlements with benefits owned by the organization in the access token.                                                                   |
+        +--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+        | User               | Updates all entitlements owned by the user in the access win the access token and where the benefits are owned by the organization in the access token. |
+        +--------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            A list of IDs that identify the entitlements to update. You may specify a maximum of **100** IDs.
+        fulfillment_status: Literal[""CLAIMED", "FULFILLED"] | None
+            The fulfillment status to set the entitlements to.
+            Possible values are: `CLAIMED` and `FULFILLED`.
+        token_for: str | PartialUser | None
+            An optional User ID that will be used to find an appropriate managed user token for this request.
+            The Client-ID associated with the token must own the game associated with this drop entitlment.
+
+            See: :meth:`~.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
+
+        Returns
+        -------
+        list[:class:`twitchio.EntitlementStatus`]
+            A list of :class:`twitchio.EntitlementStatus` objects.
+
+        Raises
+        ------
+        ValueError
+            You may only specifiy a maximum of **100** ids.
+        """
+        if ids is not None and len(ids) > 100:
+            raise ValueError("You may specifiy a maximum of 100 ids.")
+
+        from .models.entitlements import EntitlementStatus
+
+        data = await self._http.patch_drop_entitlements(ids=ids, fulfillment_status=fulfillment_status, token_for=token_for)
+        return [EntitlementStatus(d) for d in data["data"]]
+
+    async def _subscribe(
+        self,
+        method: TransportMethod,
+        payload: SubscriptionPayload,
+        as_bot: bool = False,
+        token_for: str | None = None,
+        socket_id: str | None = None,
+        callback_url: str | None = None,
+        eventsub_secret: str | None = None,
+    ) -> SubscriptionResponse | None:
+        if method is TransportMethod.WEBSOCKET:
+            return await self.subscribe_websocket(payload=payload, as_bot=as_bot, token_for=token_for, socket_id=socket_id)
+
+        elif method is TransportMethod.WEBHOOK:
+            return await self.subscribe_webhook(
+                payload=payload,
+                as_bot=as_bot,
+                token_for=token_for,
+                callback_url=callback_url,
+                eventsub_secret=eventsub_secret,
+            )
+
+    async def subscribe_websocket(
+        self,
+        payload: SubscriptionPayload,
+        *,
+        as_bot: bool = False,
+        token_for: str | PartialUser | None = None,
+        socket_id: str | None = None,
+    ) -> SubscriptionResponse | None:
+        # TODO: Complete docs...
+        """|coro|
+
+        Subscribe to an EventSub Event via Websockets.
+
+        .. note::
+
+            See: ... for more information and recipes on using eventsub.
+
+        Parameters
+        ----------
+        payload: :class:`twitchio.SubscriptionPayload`
+            The payload which should include the required conditions to subscribe to.
+        as_bot: bool
+            Whether to subscribe to this event using the user token associated with the provided
+            :attr:`Client.bot_id`. If this is set to `True` and `bot_id` has not been set, this method will
+            raise `ValueError`. Defaults to `False` on :class:`Client` but will default to `True` on
+            :class:`~twitchio.ext.commands.Bot`
+        token_for: str | PartialUser | None
+            An optional User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
+
+            If `as_bot` is `True`, this is always the token associated with the
+            :attr:`~.bot_id` account. Defaults to `None`.
+
+            See: :meth:`~.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
+        socket_id: str | None
+            An optional `str` corresponding to an exisiting and connected websocket session, to use for this subscription.
+            You usually do not need to pass this parameter as TwitchIO delegates subscriptions to websockets as needed.
+            Defaults to `None`.
+
+        Returns
+        -------
+        SubscriptionResponse
+
+        Raises
+        ------
+        ValueError
+            One of the provided parameters is incorrect or incompatible.
+        HTTPException
+            An error was raised while making the subscription request to Twitch.
+        """
+        if as_bot and not self.bot_id:
+            raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
+
+        elif as_bot:
+            token_for = self.bot_id
+
+        if not token_for:
+            raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
+
+        if isinstance(token_for, PartialUser):
+            token_for = token_for.id
+
+        sockets: dict[str, Websocket] = self._websockets[token_for]
+        websocket: Websocket
+
+        if socket_id:
+            try:
+                websocket = sockets[socket_id]
+            except KeyError:
+                raise KeyError(f"The websocket with ID '{socket_id}' does not exist.")
+
+        elif not sockets:
+            websocket = Websocket(client=self, token_for=token_for, http=self._http)
+            await websocket.connect(fail_once=True)
+
+            # session_id is guaranteed at this point.
+            self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore
+
+        else:
+            sorted_: list[Websocket] = sorted(sockets.values(), key=lambda s: s.subscription_count)
+
+            try:
+                websocket = next(s for s in sorted_ if s.can_subscribe)
+            except StopIteration:
+                raise ValueError(
+                    "No suitable websocket can be used to subscribe to this event. "
+                    "You may have exahusted your 'toal_cost' allocation or max subscription count for this user token."
+                )
+
+        session_id: str | None = websocket.session_id
+        if not session_id:
+            # This really shouldn't ever happen that I am aware of.
+            raise ValueError("Eventsub Websocket is missing 'session_id'.")
+
+        type_ = SubscriptionType(payload.type)
+        version: str = payload.version
+        transport: SubscriptionCreateTransport = {"method": "websocket", "session_id": session_id}
+
+        data: _SubscriptionData = {
+            "type": type_,
+            "version": version,
+            "condition": payload.condition,
+            "transport": transport,
+            "token_for": token_for,
+        }
+
+        try:
+            resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
+        except HTTPException as e:
+            if e.status == 409:
+                logger.error(
+                    "Disregarding HTTPException in subscribe: "
+                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                    payload.type,
+                    str(payload.condition),
+                )
+                return
+
+            raise e
+
+        for sub in resp["data"]:
+            identifier: str = sub["id"]
+            websocket._subscriptions[identifier] = data
+
+        return resp
+
+    async def subscribe_webhook(
+        self,
+        payload: SubscriptionPayload,
+        *,
+        as_bot: bool = False,
+        token_for: str | PartialUser | None,
+        callback_url: str | None = None,
+        eventsub_secret: str | None = None,
+    ) -> SubscriptionResponse | None:
+        # TODO: Complete docs...
+        """|coro|
+
+        Subscribe to an EventSub Event via Webhook.
+
+        .. note::
+
+            For more information on how to setup your bot with webhooks, see: ...
+
+        .. important::
+
+            Usually you wouldn't use webhooks to subscribe to the
+            :class:`~twitchio.eventsub.ChatMessageSubscription` subscription.
+
+            Consider using :meth:`~.subscribe_websocket` for this subscription.
+
+        Parameters
+        ----------
+        payload: :class:`~twitchio.SubscriptionPayload`
+            The payload which should include the required conditions to subscribe to.
+        as_bot: bool
+            Whether to subscribe to this event using the user token associated with the provided
+            :attr:`Client.bot_id`. If this is set to `True` and `bot_id` has not been set, this method will
+            raise `ValueError`. Defaults to `False` on :class:`Client` but will default to `True` on
+            :class:`~twitchio.ext.commands.Bot`
+        token_for: str | PartialUser | None
+            An optional User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
+
+            If `as_bot` is `True`, this is always the token associated with the
+            :attr:`~.bot_id` account. Defaults to `None`.
+
+            See: :meth:`~.add_token` to add managed tokens to the client.
+            If this paramter is not provided or `None`, the default app token is used.
+        callback_url: str | None
+            An optional url to use as the webhook `callback_url` for this subscription. If you are using one of the built-in
+            web adapters, you should not need to set this. See: (web adapter docs link) for more info.
+        eventsub_secret: str | None
+            An optional `str` to use as the eventsub_secret, which is required by Twitch. If you are using one of the
+            built-in web adapters, you should not need to set this. See: (web adapter docs link) for more info.
+
+        Returns
+        -------
+        SubscriptionResponse
+
+        Raises
+        ------
+        ValueError
+            One of the provided parameters is incorrect or incompatible.
+        HTTPException
+            An error was raised while making the subscription request to Twitch.
+        """
+        if as_bot and not self.bot_id:
+            raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
+
+        elif as_bot:
+            token_for = self.bot_id
+
+        if not token_for:
+            raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
+
+        if not self._adapter and not callback_url:
+            raise ValueError(
+                "Either a 'twitchio.web' Adapter or 'callback_url' should be provided for webhook based eventsub."
+            )
+
+        callback: str | None = self._adapter.eventsub_url or callback_url
+        if not callback:
+            raise ValueError(
+                "A callback URL must be provided when subscribing to events via Webhook. "
+                "Use 'twitchio.web' Adapter or provide a 'callback_url'."
+            )
+
+        secret: str | None = self._adapter._eventsub_secret or eventsub_secret
+        if not secret:
+            raise ValueError("An eventsub secret must be provided when subscribing to events via Webhook. ")
+
+        if not 10 <= len(secret) <= 100:
+            raise ValueError("The 'eventsub_secret' must be between 10 and 100 characters long.")
+
+        if isinstance(token_for, PartialUser):
+            token_for = token_for.id
+
+        type_ = SubscriptionType(payload.type)
+        version: str = payload.version
+        transport: SubscriptionCreateTransport = {"method": "webhook", "callback": callback, "secret": secret}
+
+        data: _SubscriptionData = {
+            "type": type_,
+            "version": version,
+            "condition": payload.condition,
+            "transport": transport,
+            "token_for": token_for,
+        }
+
+        try:
+            resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
+        except HTTPException as e:
+            if e.status == 409:
+                logger.warning(
+                    "Disregarding HTTPException in subscribe: "
+                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                    payload.type,
+                    str(payload.condition),
+                )
+                return
+
+            raise e
+        return resp
+
+    async def fetch_eventsub_subscriptions(
+        self,
+        *,
+        token_for: str | PartialUser | None = None,
+        type: str | None = None,
+        user_id: str | PartialUser | None = None,
+        status: Literal[
+            "enabled",
+            "webhook_callback_verification_pending",
+            "webhook_callback_verification_failed",
+            "notification_failures_exceeded",
+            "authorization_revoked",
+            "moderator_removed",
+            "user_removed",
+            "version_removed",
+            "beta_maintenance",
+            "websocket_disconnected",
+            "websocket_failed_ping_pong",
+            "websocket_received_inbound_traffic",
+            "websocket_connection_unused",
+            "websocket_internal_error",
+            "websocket_network_timeout",
+            "websocket_network_error",
+        ]
+        | None = None,
+        max_results: int | None = None,
+    ) -> EventsubSubscriptions:
+        """|coro|
+
+        Fetches Eventsub Subscriptions for either webhook or websocket.
+
+        .. note::
+            type, status and user_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
+
+        Parameters
+        -----------
+        token_for: str | PartialUser | None
+            By default, if this is ignored or set to None then the App Token is used. This is the case when you want to fetch webhook events.
+
+            Provide a user ID here for when you want to fetch websocket events tied to a user.
+        type: str | None
+            Filter subscriptions by subscription type. e.g. ``channel.follow`` For a list of subscription types, see `Subscription Types <https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#subscription-types>`_.
+        user_id: str | PartialUser | None
+            Filter subscriptions by user ID, or PartialUser. The response contains subscriptions where this ID matches a user ID that you specified in the Condition object when you created the subscription.
+        status: str | None = None
+            Filter subscriptions by its status. Possible values are:
+
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | Status                                 | Description                                                                                                       |
+            +========================================+===================================================================================================================+
+            | enabled                                | The subscription is enabled.                                                                                      |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | webhook_callback_verification_pending  | The subscription is pending verification of the specified callback URL.                                           |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | webhook_callback_verification_failed   | The specified callback URL failed verification.                                                                   |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | notification_failures_exceeded         | The notification delivery failure rate was too high.                                                              |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | authorization_revoked                  | The authorization was revoked for one or more users specified in the Condition object.                            |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | moderator_removed                      | The moderator that authorized the subscription is no longer one of the broadcaster's moderators.                  |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | user_removed                           | One of the users specified in the Condition object was removed.                                                   |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | chat_user_banned                       | The user specified in the Condition object was banned from the broadcaster's chat.                                |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | version_removed                        | The subscription to subscription type and version is no longer supported.                                         |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | beta_maintenance                       | The subscription to the beta subscription type was removed due to maintenance.                                    |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_disconnected                 | The client closed the connection.                                                                                 |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_failed_ping_pong             | The client failed to respond to a ping message.                                                                   |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_received_inbound_traffic     | The client sent a non-pong message. Clients may only send pong messages (and only in response to a ping message). |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_connection_unused            | The client failed to subscribe to events within the required time.                                                |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_internal_error               | The Twitch WebSocket server experienced an unexpected error.                                                      |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_network_timeout              | The Twitch WebSocket server timed out writing the message to the client.                                          |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_network_error                | The Twitch WebSocket server experienced a network error writing the message to the client.                        |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | websocket_failed_to_reconnect          | The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message. |
+            +----------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+
+        max_results: int | None
+            The maximum number of total results to return. When this parameter is set to ``None``, all results are returned.
+            Defaults to ``None``.
+
+        Returns
+        --------
+        EventsubSubscriptions
+
+        Raises
+        ------
+        ValueError
+            Only one of 'status', 'user_id', or 'type' can be provided.
+        """
+
+        provided: int = len([v for v in (type, user_id, status) if v])
+        if provided > 1:
+            raise ValueError("Only one of 'status', 'user_id', or 'type' can be provided.")
+
+        return await self._http.get_eventsub_subscription(
+            type=type,
+            max_results=max_results,
+            token_for=token_for,
+        )
+
+    async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
+        """|coro|
+
+        Delete an eventsub subscription.
+
+        Parameters
+        ----------
+        id: str
+            The ID of the eventsub subscription to delete.
+        token_for: str | PartialUser | None
+            Do not pass this if you wish to delete webhook subscriptions, which are what usually require deleting.
+
+            For websocket subscriptions, provide the user ID, or PartialUser, associated with the subscription.
+
+        """
+        await self._http.delete_eventsub_subscription(id, token_for=token_for)
+
+    async def delete_all_eventsub_subscriptions(self, *, token_for: str | PartialUser | None = None) -> None:
+        """|coro|
+
+        Delete all eventsub subscriptions.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            Do not pass this if you wish to delete webhook subscriptions, which are what usually require deleting.
+
+            For websocket subscriptions, provide the user ID, or PartialUser, associated with the subscription.
+        """
+        events = await self.fetch_eventsub_subscriptions(token_for=token_for)
+        async for sub in events.subscriptions:
+            await sub.delete()
+
+    async def event_oauth_authorized(self, payload: UserTokenPayload) -> None:
+        await self.add_token(payload["access_token"], payload["refresh_token"])

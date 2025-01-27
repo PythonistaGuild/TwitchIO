@@ -1,0 +1,683 @@
+@import url("https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap");
+
+:root {
+	/* Dark Theme */
+	--color-primary--dark: rgba(255, 255, 255, 0.8);
+	--color-primary-dim--dark: rgba(255, 255, 255, 0.7);
+	--color-background--dark: #15151c;
+	--color-background-dim--dark: #1a1a2390;
+	--color-accent--dark: #dcb5f3;
+	--color-links--dark: #889ad9;
+	--color-header-back--dark: #1a1a23;
+	--color-scrollbar--dark: #dcb5f338;
+	--color-button-hover--dark: #9363af81;
+	--color-error: rgb(221, 46, 46);
+	--color-success: rgb(32, 158, 105);
+	--color-warn: #ebcc00;
+	--color-dim-line: #ededf060;
+	--color-search-border: #ededf02d;
+	--color-section-border--dark: rgba(255, 255, 255, 0.2);
+
+	/* Light Theme */
+	--color-primary--light: rgba(21, 21, 28, 0.8);
+	--color-primary-dim--light: rgba(21, 21, 28, 0.7);
+	--color-background--light: #ffffff;
+	--color-background-dim--light: #f0f0f8;
+	--color-accent--light: #a071bb;
+	--color-links--light: #4d5e9d;
+	--color-header-back--light: #2d2d37;
+	--color-scrollbar--light: #b589ce7c;
+	--color-button-hover--light: #9363af81;
+	--color-section-border--light: rgba(21, 21, 28, 0.2);
+
+	/* Code Blocks */
+	--color-pre-background--dark: #1a1a23;
+	--color-pre-primary--dark: rgba(255, 255, 255, 0.9);
+	--color-pre-background--light: #f0f0f8b0;
+	--color-pre-primary--light: rgba(21, 21, 28, 0.9);
+	--font-pre--mono: "JetBrains Mono", monospace;
+
+	/* Admonitions */
+	--color-warning-background: #ffdd0005;
+	--color-warning-background--title: #ffdd00e0;
+	--color-warning--title: #2b2b2b;
+	--color-important-background--title: #cd526a;
+	--color-important-background: #cd526a05;
+	--color-note-background--title: #269da1;
+	--color-note-background: #269da105;
+	--color-versionadd-background--title: #5aa569;
+	--color-versionadd-background: #5aa56905;
+	--color-versionchange-background--title: #616faf;
+	--color-versionchange-background: #616faf05;
+	--color-tip-background: #9f6fb505;
+	--color-tip-background--title: #9f6fb5;
+}
+
+* {
+	scrollbar-width: thin;
+}
+
+html {
+	scrollbar-width: auto!important;
+}
+
+body {
+	font-family: "Lato", sans-serif;
+	font-size: 0.9em;
+	font-weight: 300;
+	color: var(--color-primary--light);
+	background-color: var(--color-background--light);
+	scrollbar-color: var(--color-scrollbar--light)
+		var(--color-background-dim--light);
+	word-wrap: break-word;
+}
+
+.modal__container {
+	background-color: var(--color-background--light)!important;
+}
+
+strong {
+	font-weight: 700;
+	font-size: 1.05em;
+}
+
+h2, h1 {
+	padding: 0 0 0.25rem 0;
+	border-bottom: 1px solid var(--color-section-border--light);
+}
+
+.simple > li {
+	line-height: 1.4;
+	padding: 0.3em 0;
+}
+
+pre,
+code {
+	font-family: var(--font-pre--mono);
+	font-weight: 300;
+	font-size: 0.9em;
+}
+
+code {
+	padding: 0.18rem 0.22rem;
+}
+
+.page-toc {
+	font-family: "Lato", sans-serif!important;
+}
+
+.page-toc > ul > li > ul > li > a > code > span {
+	font-family: "Lato", sans-serif!important;
+}
+
+li > a > code > .pre {
+	font-family: "Lato", sans-serif!important;
+}
+
+body > div.container-fluid > div > div > div:nth-child(3) > nav > div > ul > li > ul > li > ul > li > a > code > span
+
+.form-control {
+	border-left: none !important;
+	border-color: transparent !important;
+}
+
+.input-group-text.bg-white {
+	border-color: transparent !important;
+}
+
+dl.field-list.simple > dt {
+	font-weight: 700;
+}
+
+dl.field-list.simple > dd {
+	padding: 0.5rem 0 0 2rem;
+}
+
+dl.field-list.simple > dd > ul {
+	margin-left: -2rem;
+}
+
+/* Colours Light */
+.input-group-text.bg-white {
+	background-color: var(--color-background-dim--light) !important;
+}
+
+.sidebar-container {
+	border-color: var(--color-background-dim--light) !important;
+}
+
+hr {
+	border-color: var(--color-background-dim--light) !important;
+}
+
+.btn-light {
+	background-color: var(--color-background-dim--light);
+	color: var(--color-primary--light);
+	border-color: var(--color-scrollbar--light);
+}
+
+.btn-light:hover {
+	background-color: var(--color-button-hover--light);
+}
+
+.btn:focus {
+	outline: none!important;
+	background-color: var(--color-button-hover--light)!important;
+}
+
+.btn:active {
+	outline: none;
+	background-color: var(--color-button-hover--light);
+}
+
+.border-top {
+	border-color: var(--color-background-dim--light) !important;
+}
+
+table.docutils:not(.field-list) thead th {
+	background-color: var(--color-background-dim--light);
+}
+
+table.docutils:not(.field-list) tbody tr:nth-of-type(odd) {
+	background-color: var(--color-background--light);
+}
+
+table.docutils:not(.field-list) {
+	background-color: var(--color-background-dim--light);
+}
+
+td {
+	border-color: var(--color-button-hover--light) !important;
+}
+
+th {
+	border-color: var(--color-button-hover--light) !important;
+}
+
+.admonition.warning {
+	background-color: var(--color-warning-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
+}
+
+.warning > .admonition-title {
+	background-color: var(--color-warning-background--title) !important;
+	color: var(--color-warning--title) !important;
+}
+
+.admonition.important {
+	background-color: var(--color-important-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
+}
+
+.important > .admonition-title {
+	background-color: var(--color-important-background--title) !important;
+}
+
+.admonition.note {
+	background-color: var(--color-note-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
+}
+
+.note > .admonition-title {
+	background-color: var(--color-note-background--title) !important;
+}
+
+.admonition.tip {
+	background-color: var(--color-tip-background) !important;
+	padding: 1rem 1rem 0 1rem!important;
+}
+
+.tip > .admonition-title {
+	background-color: var(--color-tip-background--title) !important;
+}
+
+.versionadded {
+	background-color: var(--color-versionadd-background) !important;
+}
+
+.versionmodified.added {
+	background-color: var(--color-versionadd-background--title) !important;
+}
+
+.versionchanged {
+	background-color: var(--color-versionchange-background) !important;
+}
+
+.versionmodified.changed {
+	background-color: var(--color-versionchange-background--title) !important;
+}
+
+a {
+	color: var(--color-links--light) !important;
+}
+
+a > code {
+	color: var(--color-links--light) !important;
+}
+
+.bg-primary {
+	background-color: var(--color-header-back--light) !important;
+}
+
+.sig {
+	background-color: var(--color-background-dim--light);
+}
+
+.sig-name {
+	color: var(--color-accent--light);
+}
+
+.sig-prename {
+	color: var(--color-accent--light);
+}
+
+.form-control {
+	background-color: var(--color-background-dim--light) !important;
+}
+
+.toc > ul:not(:last-child) {
+	border-color: var(--color-background-dim--light);
+}
+
+.sig-usagetable {
+	font-style: normal;
+	margin-top: 0.5rem;
+	padding-left: 1rem;
+	font-size: 0.9em;
+	font-weight: 400;
+	border-left: 4px solid var(--color-warning-background--title);
+	line-height: 1.6;
+}
+
+pre {
+	color: var(--color-pre-primary--light) !important;
+	background-color: var(--color-pre-background--light);
+}
+
+.toctree-expand {
+	background-color: var(--color-accent--light);
+}
+
+body.theme-dark {
+	color: var(--color-primary--dark);
+	background-color: #22222d;
+}
+
+body.theme-dark {
+	.modal__container {
+		background-color: var(--color-background--dark)!important;
+	}
+	
+	h2, h1 {
+		border-bottom: 1px solid var(--color-section-border--dark)!important;
+	}
+
+	.toctree-expand {
+		background-color: var(--color-accent--light)!important;
+	}
+
+	code {
+		color: #bac4d9 !important;
+		background-color: var(--color-background-dim--dark);
+	}
+
+	.input-group-text.bg-white {
+		background-color: var(--color-background-dim--dark) !important;
+	}
+
+	.sidebar-container {
+		border-color: var(--color-background-dim--dark) !important;
+	}
+
+	hr {
+		border-color: var(--color-background-dim--dark) !important;
+	}
+
+	.btn-light {
+		background-color: var(--color-background-dim--dark);
+		color: var(--color-primary--dark);
+		border-color: var(--color-scrollbar--dark);
+	}
+
+	.btn-light:hover {
+		background-color: var(--color-button-hover--dark);
+	}
+
+	.btn:focus {
+		outline: none!important;
+		background-color: var(--color-button-hover--dark)!important;
+	}
+
+	.btn:active {
+		outline: none;
+		background-color: var(--color-button-hover--dark);
+	}
+
+	.border-top {
+		border-color: var(--color-background-dim--dark) !important;
+	}
+
+	table.docutils:not(.field-list) thead th {
+		background-color: var(--color-background-dim--dark);
+	}
+
+	table.docutils:not(.field-list) tbody tr:nth-of-type(odd) {
+		background-color: var(--color-background--dark);
+	}
+
+	table.docutils:not(.field-list) {
+		background-color: var(--color-background-dim--dark);
+	}
+
+	td {
+		border-color: var(--color-button-hover--dark) !important;
+	}
+
+	th {
+		border-color: var(--color-button-hover--dark) !important;
+	}
+
+	blockquote {
+		border-color: #2b4459!important;
+	}
+}
+
+.theme-dark {
+	/* HOVERXREF (TOOLTIP STYLES */
+	.tooltipster-content {
+		background-color: var(--color-background--dark);
+		color: var(--color-primary--dark) !important;
+	}
+
+	.copybtn {
+		top: .5em!important;
+		right: .5em!important;
+		opacity: .2!important;
+	}
+	
+	.copybtn:hover {
+		opacity: 0.9!important;
+	}	
+
+	.navbar-brand {
+		color: var(--color-primary--dark)!important;
+	}
+
+	strong {
+		color: #FFF;
+	}
+
+	a > strong {
+		color: var(--color-links--dark)!important;
+	}
+
+	.tooltipster-content > p {
+		color: var(--color-primary--dark) !important;
+	}
+
+	.tooltipster-box {
+		border-bottom: 2px solid var(--color-accent--dark) !important;
+	}
+
+	a {
+		color: var(--color-links--dark) !important;
+	}
+
+	a > code {
+		color: var(--color-links--dark) !important;
+	}
+
+	.bg-primary {
+		background-color: var(--color-header-back--dark) !important;
+	}
+
+	.sig {
+		background-color: var(--color-background-dim--dark);
+	}
+
+	.sig-name {
+		color: var(--color-accent--dark);
+	}
+
+	.sig-prename {
+		color: var(--color-accent--dark);
+	}
+
+	.form-control {
+		background-color: var(--color-background-dim--dark) !important;
+	}
+
+	.toc > ul:not(:last-child) {
+		border-color: var(--color-background-dim--dark);
+	}
+
+	pre {
+		color: var(--color-pre-primary--dark) !important;
+		background-color: var(--color-pre-background--dark) !important;
+	}
+
+	scrollbar-color: var(--color-scrollbar--dark)
+		var(--color-background-dim--dark) !important;
+
+	.sig-param {
+		color: var(--color-primary-dim--dark);
+	}
+}
+
+.error-tio {
+	font-weight: 600;
+	color: var(--color-error);
+}
+
+.error-tio::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	content: "\f06a";
+	margin-right: 0.5rem;
+}
+
+.success-tio {
+	font-weight: 600;
+	color: var(--color-success);
+}
+
+.success-tio::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	content: "\f00c";
+	margin-right: 0.5rem;
+}
+
+.warn-tio {
+	font-weight: 600;
+	color: var(--color-warn);
+}
+
+.warn-tio::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	content: "\f059";
+	margin-right: 0.5rem;
+}
+
+.sig {
+	font-size: 1em;
+	padding: 0.5rem;
+	word-spacing: 0.25rem;
+}
+
+.sig-param {
+	font-style: normal;
+	padding: 0 0.125rem;
+	color: var(--color-primary-dim--light);
+}
+
+.sig-paren {
+	padding: 0 0.125rem;
+}
+
+dt {
+	font-weight: 400;
+}
+
+a {
+	text-decoration: none;
+}
+
+.py.class > .sig {
+	padding: 0.75rem;
+	border-left: 1px solid var(--color-links--dark);
+}
+
+/* attribute tables */
+.py-attribute-table {
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: row;
+	margin: 0em 2em 1em 2em;
+	padding-top: 16px;
+}
+
+.py-attribute-table-column {
+	flex: 1 1 auto;
+}
+
+.py-attribute-table-column > span {
+	font-weight: bold;
+}
+
+main .py-attribute-table-column > ul {
+	list-style: none;
+	margin: 4px 0px;
+	padding-left: 0;
+	font-size: 0.95em;
+}
+
+.py-attribute-table-entry {
+	margin: 0;
+	padding: 2px 0;
+	padding-left: 0.2em;
+	border-left: 2px solid var(--color-links--dark);
+	display: flex;
+	line-height: 1.2em;
+}
+
+.py-attribute-table-entry > a {
+	padding-left: 0.5em;
+	flex-grow: 1;
+}
+
+.py-attribute-table-entry > a:hover {
+	text-decoration: none;
+}
+
+.py-attribute-table-entry:hover {
+	border-left: 2px solid var(--color-accent--dark);
+	text-decoration: none;
+}
+
+.py-attribute-table-badge {
+	flex-basis: 3em;
+	text-align: right;
+	font-size: 0.9em;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+/* Fix indent on class/func */
+
+dl.py > dd {
+	margin: 0.75em 2em;
+}
+
+
+/* Fix code block admonitions */
+.codeB {
+	background-color: var(--color-dim-line);
+}
+
+.codeW {
+	border: 1px solid #a071bb31;
+	padding-bottom: 1rem!important;
+}
+
+.admonition-title.codeB {
+	padding: 0.25rem 1rem;
+	font-weight: 400;
+	width: 100%;
+}
+
+.admonition-title.codeB::before {
+	/* biome-ignore lint/a11y/useGenericFontNames: ... */
+	font-family: "Font Awesome 5 Free";
+	content: "\f121" !important;
+}
+
+.admonition.codeW {
+	overflow-x: auto;
+	margin-bottom: 2rem;
+}
+
+.admonition-title {
+	padding: .25rem .5rem;
+	font-weight: 600;
+}
+
+.versionmodified {
+	padding: .25rem .5rem;
+}
+
+/* Fix padding on meth/prop dd */
+dl.py > dd {
+	padding: 0.5rem 0;
+}
+
+/* Fix Search Box and Outline */
+.input-group {
+	border: 1px solid var(--color-search-border) !important;
+	border-radius: .25rem;
+}
+
+.input-group:focus-within {
+	outline: 1px solid var(--color-dim-line) !important;
+	border-radius: .25rem;
+}
+
+.form-control:focus {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.input-group > .input-group-prepend:hover {
+	cursor: pointer;
+}
+
+[type="search"]::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	appearance: none;
+	background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZGVkZjA4MCIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNxdWFyZS14Ij48cmVjdCB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHg9IjMiIHk9IjMiIHJ4PSIyIiByeT0iMiIvPjxwYXRoIGQ9Im0xNSA5LTYgNiIvPjxwYXRoIGQ9Im05IDkgNiA2Ii8+PC9zdmc+);
+	color: var(--color-accent--light) !important;
+	height: 20px;
+	width: 20px;
+	background-repeat: no-repeat;
+	cursor: pointer;
+}
+
+/* HOVERXREF (TOOLTIP STYLES */
+.tooltipster-content {
+	background-color: var(--color-background--light);
+	color: var(--color-primary--light) !important;
+}
+
+.tooltipster-content > p {
+	color: var(--color-primary--light) !important;
+}
+
+.tooltipster-box {
+	border-bottom: 2px solid var(--color-accent--dark) !important;
+}

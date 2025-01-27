@@ -1,0 +1,127 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twitchio"
+authors = [{ name = "PythonistaGuild" }]
+dynamic = ["dependencies", "version"]
+description = "A powerful, asynchronous Python library for twitch.tv."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/PythonistaGuild/TwitchIO"
+Documentation = "https://twitchio.dev"
+"Issue tracker" = "https://github.com/PythonistaGuild/TwitchIO/issues"
+
+[tool.setuptools]
+packages = [
+    "twitchio",
+    "twitchio.models",
+    "twitchio.eventsub",
+    "twitchio.authentication",
+    "twitchio.web",
+    "twitchio.ext.commands",
+    "twitchio.ext.routines",
+    "twitchio.types_",
+]
+include-package-data = true
+
+[tool.setuptools.package-data]
+twitchio = ["py.typed"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[project.optional-dependencies]
+docs = [
+    "sphinx-wagtail-theme",
+    "sphinx",
+    "docutils<0.18",
+    "sphinxcontrib-napoleon",
+    "sphinxcontrib-asyncio",
+    "sphinxcontrib-websupport",
+    "Pygments",
+    "sphinx-hoverxref",
+    "sphinxcontrib_trio",
+]
+starlette = ["starlette", "uvicorn"]
+dev = ["ruff", "pyright", "isort"]
+
+[tool.ruff]
+line-length = 125
+target-version = "py311"
+indent-width = 4
+exclude = ["venv", "docs", "examples"]
+
+[tool.ruff.lint]
+select = [
+    "C4",
+    "E",
+    "F",
+    "G",
+    "I",
+    "PTH",
+    "RUF",
+    "SIM",
+    "TC",
+    "UP",
+    "W",
+    "PERF",
+    "ANN",
+]
+ignore = [
+    "F402",
+    "F403",
+    "F405",
+    "PERF203",
+    "RUF001",
+    "RUF009",
+    "SIM105",
+    "UP034",
+    "UP038",
+    "ANN401",
+    "UP031",
+    "PTH123",
+    "E203",
+    "E501",
+]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = true
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "double"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.pyright]
+exclude = ["venv", "docs", "examples", "twitchio/__main__.py"]
+useLibraryCodeForTypes = true
+typeCheckingMode = "strict"
+reportImportCycles = false
+reportPrivateUsage = false
+pythonVersion = "3.11"

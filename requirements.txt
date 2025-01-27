@@ -1,3 +1,1 @@
-aiohttp>=3.6.0,<4
-iso8601
-typing-extensions
+aiohttp>=3.9.1,<4

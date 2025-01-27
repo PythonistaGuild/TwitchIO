@@ -1,42 +1,46 @@
-# -*- coding: utf-8 -*-
-
 """
-The MIT License (MIT)
+MIT License
 
-Copyright (c) 2017-present TwitchIO
+Copyright (c) 2017 - Present PythonistaGuild
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
 
 __title__ = "TwitchIO"
-__author__ = "TwitchIO, PythonistaGuild"
+__author__ = "PythonistaGuild"
 __license__ = "MIT"
-__copyright__ = "Copyright 2017-present (c) TwitchIO"
-__version__ = "2.10.1"
+__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
+__version__ = "3.0.0b"
 
-from .client import Client
-from .user import *
-from .channel import Channel
-from .chatter import Chatter, PartialChatter
-from .enums import *
-from .errors import *
-from .message import Message, HypeChatData
+from . import (  # noqa: F401
+    authentication as authentication,
+    eventsub as eventsub,
+    types_ as types,  # pyright: ignore [reportUnusedImport]
+    utils as utils,
+    web as web,
+)
+from .assets import Asset as Asset
+from .authentication import Scopes as Scopes
+from .client import Client as Client
+from .exceptions import *
+from .http import HTTPAsyncIterator as HTTPAsyncIterator, Route as Route
 from .models import *
-from .rewards import *
-from .utils import *
+from .payloads import *
+from .user import *
+from .utils import Color as Color, Colour as Colour
