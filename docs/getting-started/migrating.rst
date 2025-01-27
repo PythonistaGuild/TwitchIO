@@ -105,6 +105,7 @@ However we recommend following the below as a simple and modern way of starting 
    - :meth:`twitchio.Client.start`
    - :meth:`twitchio.Client.run`
 
+
 Logging
 =======
 
@@ -117,6 +118,7 @@ If you are calling this on the ``root`` logger (default), you should only need t
 
 - **Added:**
    - :func:`twitchio.utils.setup_logging()`
+
 
 Assets and Colours
 ==================
@@ -135,6 +137,64 @@ other helpers to convert the colour data to different formats, and classmethod h
    - :class:`twitchio.Asset`
    - :class:`twitchio.Colour`
    - :class:`twitchio.Color` (An alias to :class:`twitchio.Colour`)
+
+
+HTTP Async Iterator
+===================
+
+In previous versions all requests made to Twitch were made in a single call and did not have an option to paginate.
+
+With version 3 you will notice paginated endpoints now return a :class:`twitchio.HTTPAsyncIterator`. This class is a async
+iterator which allows the following semantics:
+
+``await method(...)``
+
+**or**
+
+``async for item in method(...)``
+
+This allows fetching a flattened list of the first page of results only (``await``) or making paginated requests as an iterator
+(``async for``).
+
+You can flatten a paginated request by using a list comprehension.
+
+.. code-block:: python3
+
+   # Flatten and return first page (20 results)
+   streams = await bot.fetch_streams()
+
+   # Flatten and return up to 1000 results (max 100 per page) which equates to 10 requests...
+   streams = [stream async for stream in bot.fetch_streams(first=100, max_results=1000)]
+
+   # Loop over results until we manually stop...
+   async for item in bot.fetch_streams(first=100, max_results=1000):
+      # Some logic...
+      ...
+      break
+
+Twitch endpoints only allow a max of ``100`` results per page, with a default of ``20``.
+
+You can identify endpoints which support the :class:`twitchio.HTTPAsyncIterator` by looking for the following on top of the
+function in the docs:
+
+.. raw:: html
+
+   <div class="sig sig-object py">
+      <div class="sig-usagetable">
+         <span class="pre">
+            <em>await </em>
+            <span class="sig-name">.endpoint(...)</span>
+            <span>-&gt; </span>
+            <a href="https://docs.python.org/3/library/stdtypes.html#list">list</a>[T]<br>
+            <em>async for</em> item in <span class="sig-name">.endpoint(...)</span>:
+         </span>
+      </div>
+   </div>
+   </br>
+
+
+- **Added:**
+   - :class:`twitchio.HTTPAsyncIterator`
 
 
 Changelog
@@ -162,6 +222,7 @@ Utils/Helpers:
 - :class:`twitchio.Color` (An alias to :class:`twitchio.Colour`)
 - :func:`twitchio.utils.setup_logging()`
 - :class:`twitchio.Scopes`
+- :class:`twitchio.HTTPAsyncIterator`
 
 Events:
 
