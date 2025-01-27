@@ -15,7 +15,7 @@ TwitchIO 3 currently supports the following `Python <https://www.python.org/down
 |                             |   <span class="error-tio">Not Supported</span>        |                               |
 |                             |                                                       |                               |
 +-----------------------------+-------------------------------------------------------+-------------------------------+
-| **3.11, 3.12m 3.13**        | .. raw:: html                                         | ...                           |
+| **3.11, 3.12, 3.13**        | .. raw:: html                                         | ...                           |
 |                             |                                                       |                               |
 |                             |   <span class="success-tio">Fully Supported</span>    |                               |
 |                             |                                                       |                               |
