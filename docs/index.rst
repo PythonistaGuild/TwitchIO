@@ -33,9 +33,9 @@ Help and support
 - Visit our `Discord <https://discord.gg/RAKc3HF>`_ for help using TwitchIO
 
 
-.. important::
+.. warning::
 
-   The information in this documentation is subject to change before an official production ready release.
+   This document is a work in progress.
 
 
 Getting Started

@@ -5,6 +5,11 @@
 Events Reference
 ################
 
+.. warning::
+
+   This document is a work in progress.
+
+
 All events are prefixed with **event_**
 
 .. list-table::
