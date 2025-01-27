@@ -73,6 +73,10 @@ body {
 	word-wrap: break-word;
 }
 
+.modal__container {
+	background-color: var(--color-background--light)!important;
+}
+
 strong {
 	font-weight: 700;
 	font-size: 1.05em;
@@ -301,6 +305,10 @@ body.theme-dark {
 }
 
 body.theme-dark {
+	.modal__container {
+		background-color: var(--color-background--dark)!important;
+	}
+	
 	h2, h1 {
 		border-bottom: 1px solid var(--color-section-border--dark)!important;
 	}
