@@ -4069,7 +4069,7 @@ class BaseCharityCampaign(BaseEvent):
 
 class CharityCampaignDonation(BaseEvent):
     """
-    Represents a charity campaign start event.
+    Represents a charity campaign donation event.
 
     Attributes
     ----------
