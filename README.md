@@ -28,9 +28,9 @@ TwitchIO is more than a simple wrapper, providing ease of use when accessing the
    
 Getting Started
 --------------------------------
-[Installing](https://twitchio.dev/en/getting-started/installing.html)
+[Installing](https://twitchio.dev/en/latest/getting-started/installing.html)
 
-[Quickstart](https://twitchio.dev/en/getting-started/quickstart.html)
+[Quickstart](https://twitchio.dev/en/latest/getting-started/quickstart.html)
 
 [Examples](/examples)
 
