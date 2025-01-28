@@ -16,5 +16,6 @@ User Reference
 
 .. attributetable:: twitchio.Chatter
 
-.. autoclass:: twitchio.Chatter
+.. autoclass:: twitchio.Chatter()
     :members:
+    :inherited-members:
