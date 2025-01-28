@@ -75,7 +75,7 @@ html_last_updated_fmt = "%b %d, %Y"
 
 html_theme_options = dict(
     project_name="Documentation",
-    github_url="https://github.com/PythonistaGuild/TwitchIO/tree/master/docs/",
+    github_url="https://github.com/PythonistaGuild/TwitchIO/tree/main/docs/",
     logo="logo.png",
     logo_alt="TwitchIO",
     logo_height=120,
@@ -88,7 +88,7 @@ html_theme_options = dict(
             "Documentation|https://twitchio.dev",
         ]
     ),
-    header_links = "Guides|/guides/index.html, Examples|https://github.com/PythonistaGuild/TwitchIO/tree/master/examples, Commands|/exts/commands/index.html, Routines|/exts/routines/index.html",
+    header_links = "Guides|/guides/index.html, Examples|https://github.com/PythonistaGuild/TwitchIO/tree/main/examples, Commands|/exts/commands/index.html, Routines|/exts/routines/index.html",
 )
 
 copyright = "2017 - Present, PythonistaGuild"
