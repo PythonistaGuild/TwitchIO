@@ -29,39 +29,39 @@ All events are prefixed with **event_**
      - :class:`~models.eventsub_.AutomodMessageUpdate`
    * - Automod Settings Update
      - :meth:`~eventsub.AutomodSettingsUpdateSubscription`
-     - automod_settings_update
+     - :func:`~twitchio.event_automod_settings_update()`
      - :class:`~models.eventsub_.AutomodSettingsUpdate`
    * - Automod Terms Update
      - :meth:`~eventsub.AutomodTermsUpdateSubscription`
-     - automod_terms_update
+     - :func:`~twitchio.event_automod_terms_update()`
      - :class:`~models.eventsub_.AutomodTermsUpdate`
    * - Channel Update
      - :meth:`~eventsub.ChannelUpdateSubscription`
-     - channel_update
+     - :func:`~twitchio.event_channel_update()`
      - :class:`~models.eventsub_.ChannelUpdate`
    * - Channel Follow
      - :meth:`~eventsub.ChannelFollowSubscription`
-     - follow
+     - :func:`~twitchio.event_follow()`
      - :class:`~models.eventsub_.ChannelFollow`
    * - Channel Ad Break Begin
      - :meth:`~eventsub.AdBreakBeginSubscription`
-     - ad_break
+     - :func:`~twitchio.event_ad_break()`
      - :class:`~models.eventsub_.ChannelAdBreakBegin`
    * - Channel Chat Clear
      - :meth:`~eventsub.ChatClearSubscription`
-     - chat_clear
+     - :func:`~twitchio.event_chat_clear()`
      - :class:`~models.eventsub_.ChannelChatClear`
    * - Channel Chat Clear User Messages
      - :meth:`~eventsub.ChatClearUserMessagesSubscription`
-     - chat_clear_user
+     - :func:`~twitchio.event_chat_clear_user()`
      - :class:`~models.eventsub_.ChannelChatClearUserMessages`
    * - Channel Chat Message
      - :meth:`~eventsub.ChatMessageSubscription`
-     - message
+     - :func:`~twitchio.event_message()`
      - :class:`~models.eventsub_.ChatMessage`
    * - Channel Chat Message Delete
      - :meth:`~eventsub.ChatMessageDeleteSubscription`
-     - message_delete
+     - :func:`~twitchio.event_message_delete()`
      - :class:`~models.eventsub_.ChatMessageDelete`
    * - Channel Chat Notification 
      - :meth:`~eventsub.ChatNotificationSubscription`
@@ -273,11 +273,11 @@ All events are prefixed with **event_**
      - :class:`~models.eventsub_.ShieldModeEnd`
    * - Shoutout Create
      - :meth:`~eventsub.ShoutoutCreateSubscription`
-     - shoutout_create
+     - :func:`~twitchio.event_shoutout_create()`
      - :class:`~models.eventsub_.ShoutoutCreate`
    * - Shoutout Received
      - :meth:`~eventsub.ShoutoutReceiveSubscription`
-     - shoutout_receive
+     - :func:`~twitchio.event_shoutout_receive()`
      - :class:`~models.eventsub_.ShoutoutReceive`
    * - Stream Online
      - :meth:`~eventsub.StreamOnlineSubscription`
@@ -289,19 +289,19 @@ All events are prefixed with **event_**
      - :class:`~models.eventsub_.StreamOffline`
    * - User Authorization Grant
      - :meth:`~eventsub.UserAuthorizationGrantSubscription`
-     - user_authorization_grant
+     - :func:`~twitchio.event_user_authorization_grant()`
      - :class:`~models.eventsub_.UserAuthorizationGrant`
    * - User Authorization Revoke
      - :meth:`~eventsub.UserAuthorizationRevokeSubscription`
-     - user_authorization_revoke
+     - :func:`~twitchio.event_user_authorization_revoke()`
      - :class:`~models.eventsub_.UserAuthorizationRevoke`
    * - User Update
      - :meth:`~eventsub.UserUpdateSubscription`
-     - user_update
+     - :func:`~twitchio.event_user_update()`
      - :class:`~models.eventsub_.UserUpdate`
    * - Whisper Received
      - :meth:`~eventsub.WhisperReceivedSubscription`
-     - message_whisper
+     - :func:`~twitchio.event_message_whisper()`
      - :class:`~models.eventsub_.Whisper`
 
 
@@ -371,7 +371,7 @@ Automod
     :es-docs:`Automod Message Hold V2 <automodmessagehold-v2>`.
     
     You must subscribe to EventSub with :class:`~twitchio.eventsub.AutomodMessageHoldSubscription` or 
-    :class:`~twitchio.eventsub.AutomodMessageHoldV2Subscription` for each required stream to receive this event.
+    :class:`~twitchio.eventsub.AutomodMessageHoldV2Subscription` for each required broadcaster to receive this event.
 
     :param twitchio.AutomodMessageHold payload: The EventSub payload received for this event.
 
@@ -384,9 +384,121 @@ Automod
     :es-docs:`Automod Message Update V2 <automodmessageupdate-v2>`.
     
     You must subscribe to EventSub with :class:`~twitchio.eventsub.AutomodMessageUpdateSubscription` or 
-    :class:`~twitchio.eventsub.AutomodMessageUpdateV2Subscription` for each required stream to receive this event.
+    :class:`~twitchio.eventsub.AutomodMessageUpdateV2Subscription` for each required broadcaster to receive this event.
 
     :param twitchio.AutomodMessageUpdate payload: The EventSub payload received for this event.
+
+.. py:function:: event_automod_settings_update(payload: twitchio.AutomodSettingsUpdate) -> None
+    :async:
+
+    Event dispatched when a broadcaster's automod settings are updated.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Automod Settings Update <automodsettingsupdate>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.AutomodSettingsUpdateSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.AutomodSettingsUpdate payload: The EventSub payload received for this event.
+
+.. py:function:: event_automod_terms_update(payload: twitchio.AutomodTermsUpdate) -> None
+    :async:
+
+    Event dispatched when a broadcaster's automod terms are updated. Changes to private terms are not sent.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Automod Terms Update <automodtermsupdate>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.AutomodTermsUpdateSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.AutomodTermsUpdate payload: The EventSub payload received for this event.
+
+
+Channel / Broadcaster
+---------------------
+
+.. py:function:: event_channel_update(payload: twitchio.ChannelUpdate) -> None
+    :async:
+
+    Event dispatched when a broadcaster updates their channel properties e.g. category, title, content classification labels, broadcast, or language.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Update <channelupdate>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelUpdateSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelUpdate payload: The EventSub payload received for this event.
+
+.. py:function:: event_follow(payload: twitchio.ChannelFollow) -> None
+    :async:
+
+    Event dispatched when someone follows a channel.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Follow <channelfollow>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelFollowSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelFollow payload: The EventSub payload received for this event.
+
+.. py:function:: event_ad_break(payload: twitchio.ChannelAdBreakBegin) -> None
+    :async:
+
+    Event dispatched when a midroll commercial break has started running.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Ad Break Begin <channelad_breakbegin>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.AdBreakBeginSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelAdBreakBegin payload: The EventSub payload received for this event.
+
+.. py:function:: event_chat_clear(payload: twitchio.ChannelChatClear) -> None
+    :async:
+
+    Event dispatched when a moderator or bot has cleared all messages from the chat room.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Clear <channelchatclear>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatClearSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelChatClear payload: The EventSub payload received for this event.
+
+.. py:function:: event_chat_clear_user(payload: twitchio.ChannelChatClearUserMessages) -> None
+    :async:
+
+    Event dispatched when a moderator or bot has cleared all messages from a specific user.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Clear User Messages <channelchatclear_user_messages>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatClearUserMessagesSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelChatClearUserMessages payload: The EventSub payload received for this event.
+
+.. py:function:: event_message(payload: twitchio.ChatMessage) -> None
+    :async:
+
+    Event dispatched when a user sends a message to a chat room.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Message <channelchatmessage>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatMessageSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChatMessage payload: The EventSub payload received for this event.
+
+.. py:function:: event_message_delete(payload: twitchio.ChatMessageDelete) -> None
+    :async:
+
+    Event dispatched when a moderator has removed a specific message.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Message Delete <channelchatmessage_delete>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatMessageDeleteSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChatMessageDelete payload: The EventSub payload received for this event.
 
 Streams
 -------
@@ -398,10 +510,10 @@ Streams
 
   Corresponds to the Twitch EventSub subscription :es-docs:`Stream Online <streamonline>`.
 
-  You must subscribe to EventSub with :class:`~twitchio.eventsub.StreamOnlineSubscription` for each required stream
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.StreamOnlineSubscription` for each required broadcaster
   to receive this event.
 
-  :param twitchio.StreamOnline payload: The Stream Online payload for this event.
+  :param twitchio.StreamOnline payload: The EventSub payload for this event.
 
 .. py:function:: event_stream_offline(payload: twitchio.StreamOffline) -> None
   :async:
@@ -410,10 +522,93 @@ Streams
     
   Corresponds to the Twitch EventSub subscription :es-docs:`Stream Offline <streamoffline>`.
     
-  You must subscribe to EventSub with :class:`~twitchio.eventsub.StreamOfflineSubscription` for each required stream
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.StreamOfflineSubscription` for each required broadcaster
   to receive this event.
 
-  :param twitchio.StreamOffline payload: The Stream Offline payload for this event.
+  :param twitchio.StreamOffline payload: The EventSub payload for this event.
+
+
+Shoutouts
+---------
+
+.. py:function:: event_shoutout_create(payload: twitchio.ShoutoutCreate) -> None
+  :async:
+
+  Event dispatched when when the specified broadcaster sends a shoutout.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Shoutout Create <shoutoutcreate>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShoutoutCreateSubscription` for each required broadcaster 
+  to receive this event to receive this event.
+
+  :param twitchio.ShoutoutCreate payload: The EventSub payload for this event.
+
+.. py:function:: event_shoutout_receive(payload: twitchio.ShoutoutReceive) -> None
+  :async:
+
+  Event dispatched when when the specified broadcaster receives a shoutout.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Shoutout Create <shoutoutreceive>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShoutoutReceiveSubscription` for each required broadcaster
+  to receive this event.
+
+  :param twitchio.ShoutoutReceive payload: The EventSub payload for this event.
+
+
+OAuth
+-----
+
+.. py:function:: event_user_authorization_grant(payload: twitchio.UserAuthorizationGrant) -> None
+  :async:
+
+  Event dispatched when a user's authorization has been granted for your client id.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`User Authorization Grant <userauthorizationgrant>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.UserAuthorizationRevokeSubscription` to receive this event.
+
+  :param twitchio.UserAuthorizationGrant payload: The EventSub payload for this event.
+
+.. py:function:: event_user_authorization_revoke(payload: twitchio.UserAuthorizationRevoke) -> None
+  :async:
+
+  Event dispatched when a user's authorization has been revoked for your client id.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`User Authorization Revoke <userauthorizationrevoke>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.UserAuthorizationRevokeSubscription` to receive this event.
+
+  :param twitchio.UserAuthorizationRevoke payload: The EventSub payload for this event.
+
+
+User
+-----
+
+.. py:function:: event_user_update(payload: twitchio.UserUpdate) -> None
+  :async:
+
+  Event dispatched when a user has updated their account.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`User Update <userupdate>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.UserUpdateSubscription` for each required user
+  to receive this event.
+
+  :param twitchio.UserUpdate payload: The EventSub payload for this event.
+
+.. py:function:: event_message_whisper(payload: twitchio.Whisper) -> None
+  :async:
+
+  Event dispatched when a user receives this a whisper.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`User Whisper <userwhispermessage>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.WhisperReceivedSubscription` for each required user
+  to receive this event.
+
+  :param twitchio.Whisper payload: The EventSub payload for this event.
+
 
 Payloads
 ~~~~~~~~
