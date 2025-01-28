@@ -45,3 +45,20 @@ is more performant and easier to use. Twitch is also actively working on adding 
 when they do, there will be a faster and easier turn-around for this data to be added into the library.
 
 In the future, we are looking to devlop an ext that will run IRC, however the core lib going forward will stay with EventSub.
+
+
+What is the difference between Client and Bot?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`twitchio.ext.commands.Bot` subclasses :class:`~twitchio.Client`, which means that everything :class:`~twitchio.Client`
+can do, and everything belonging to :class:`~twitchio.Client` is also possible and available on :class:`~twitchio.ext.commands.Bot`.
+
+The benefit of :class:`twitchio.ext.commands.Bot` is that it is part of the `ext.commands <https://twitchio.dev/en/latest/exts/commands/index.html#commands>`_
+extension. This extension is a powerful and easy to use package that allows the creation of :class:`~twitchio.ext.commands.Command`'s' and
+:class:`twitchio.ext.commands.Component`'s which allow you to easily create chat based commands and sub-commands, 
+with argument parsing and converters, guards for fine-grained permission control, cooldowns, 
+the use of :class:`twitchio.ext.commands.Context` (featureful context around the invocation of commands; with many helpers)
+and more.
+
+Used with :class:`twitchio.ext.commands.Component`'s and hot-reloading extension support you can easily manage your applications
+codebase with multiple modules and/or pacakges, with minimal down-time.
