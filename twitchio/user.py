@@ -217,7 +217,7 @@ class PartialUser:
         Parameters
         -----------
         token_for: str | PartialUser
-            A user access token that includes the `analytics:read:extensions` scope.
+            A user access token that includes the ``analytics:read:extensions`` scope.
         extension_id: str
             The extension's client ID. If specified, the response contains a report for the specified extension.
             If not specified, the response includes a report for each extension that the authenticated user owns.
@@ -745,7 +745,7 @@ class PartialUser:
         Fetch the active charity campaign of a broadcaster.
 
         .. note::
-            Requires user access token that includes the `channel:read:charity` scope.
+            Requires user access token that includes the ``channel:read:charity`` scope.
 
         Returns
         -------
@@ -973,7 +973,7 @@ class PartialUser:
             - To remove the ``slow_mode_wait_time``, ``follower_mode_duration``, or ``non_moderator_chat_delay_duration`` field's value, set the corresponding ``slow_mode``, ``follower_mode``, or ``non_moderator_chat_delay`` field to False (and don't include the slow_mode_wait_time, follower_mode_duration, or non_moderator_chat_delay_duration field).
 
         .. note::
-            Requires a user access token that includes the `moderator:manage:chat_settings` scope.
+            Requires a user access token that includes the ``moderator:manage:chat_settings`` scope.
 
         Parameters
         ----------
@@ -1096,7 +1096,7 @@ class PartialUser:
             announcements longer than 500 characters are truncated.
         color: Literal["blue", "green", "orange", "purple", "primary"] | None
             An optional colour to use for the announcement. If set to ``"primary``" or `None`
-            the channels accent colour will be used instead. Defaults to ``None``.
+            the channels accent colour will be used instead. Defaults to `None`.
         """
         return await self._http.post_chat_announcement(
             broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, message=message, color=color
@@ -1258,7 +1258,7 @@ class PartialUser:
         If [`fetch_clips`][twitchio.user.PartialUser.fetch_clips] returns the clip, the clip was successfully created. If after 15 seconds [`fetch_clips`][twitchio.user.PartialUser.fetch_clips] hasn't returned the clip, assume it failed.
 
         .. note::
-            Requires a user access token that includes the `clips:edit` scope.
+            Requires a user access token that includes the ``clips:edit`` scope.
 
         Parameters
         ----------
@@ -1267,7 +1267,7 @@ class PartialUser:
             If False (default), Twitch captures the clip at the moment the viewer requests it (this is the same clip experience as the Twitch UX).
             If True, Twitch adds a delay before capturing the clip (this basically shifts the capture window to the right slightly).
         token_for: str | PartialUser
-            User access token that includes the `clips:edit` scope.
+            User access token that includes the ``clips:edit`` scope.
 
         Returns
         -------
@@ -1849,7 +1849,7 @@ class PartialUser:
             AutomodSettings object containing the new settings for the broadcaster's channel.
             You can fetch this using :meth:`~fetch_automod_settings`
         token_for: str | PartialUser
-            User access token that includes the `moderator:manage:automod_settings` scope.
+            User access token that includes the ``moderator:manage:automod_settings`` scope.
 
         Returns
         -------
@@ -1933,12 +1933,12 @@ class PartialUser:
             An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
             You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
 
-            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
+            If `None`, the ID of this :class:`~twitchio.PartialUser` will be used.
         user: str | PartialUser
             The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to ``None``.
+            ``500`` characters long. Defaults to `None`.
 
         Raises
         ------
@@ -1989,12 +1989,12 @@ class PartialUser:
             An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
             You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
 
-            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
+            If `None`, the ID of this :class:`~twitchio.PartialUser` will be used.
         user: str | PartialUser
             The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to ``None``.
+            ``500`` characters long. Defaults to `None`.
         duration: int
             The duration of the timeout in seconds. The minimum duration is ``1`` second and the
             maximum is ``1_209_600`` seconds (2 weeks).
@@ -2177,8 +2177,8 @@ class PartialUser:
         Fetches the broadcaster's list of non-private, blocked words or phrases.
         These are the terms that the broadcaster or moderator added manually or that were denied by AutoMod.
 
-        ??? note
-            Requires a user access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
+        .. note::
+            Requires a user access token that includes the ``moderator:read:blocked_terms` or ``moderator:manage:blocked_terms`` scope.
 
         Parameters
         ----------
@@ -2186,7 +2186,7 @@ class PartialUser:
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser
-            User access token that includes the `moderator:read:blocked_terms` or `moderator:manage:blocked_terms` scope.
+            User access token that includes the ``moderator:read:blocked_terms`` or ``moderator:manage:blocked_terms`` scope.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
@@ -2389,7 +2389,7 @@ class PartialUser:
             A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each moderator you want to get.
             The returned list includes only the users from the list who are moderators in the broadcaster's channel. You may specify a maximum of 100 IDs.
         token_for: str | PartialUser
-            User access token that includes the `moderation:read` scope.
+            User access token that includes the ``moderation:read`` scope.
             If your app also adds and removes moderators, you can use the ``channel:manage:moderators`` scope instead.
             The user ID in the access token must match the broadcaster's ID.
         first: int
@@ -3745,7 +3745,7 @@ class Chatter(PartialUser):
 
         There is an alias for this property named :attr:`.color`.
 
-        Could be ``None`` if the chatter has not set a colour.
+        Could be `None` if the chatter has not set a colour.
         """
         return self._colour
 
@@ -3755,7 +3755,7 @@ class Chatter(PartialUser):
 
         There is an alias for this property named :attr:`.colour`.
 
-        Could be ``None`` if the chatter has not set a color.
+        Could be `None` if the chatter has not set a color.
         """
         return self._colour
 
@@ -3769,6 +3769,9 @@ class Chatter(PartialUser):
 
         Ban the chatter from the associated channel/broadcaster.
 
+        .. important::
+            This is different to the :meth:`~twitchio.user.PartialUser.ban_user` as it will ban this chatter directly in the associated channel in the object.
+
         .. note::
 
             You must have a user access token that includes the ``moderator:manage:banned_users`` scope to do this.
@@ -3780,7 +3783,7 @@ class Chatter(PartialUser):
             token stored with the ``moderator:manage:banned_users`` scope for this moderator.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to ``None``.
+            ``500`` characters long. Defaults to `None`.
 
         Raises
         ------
@@ -3811,6 +3814,9 @@ class Chatter(PartialUser):
 
         Timeout the chatter from the associated channel/broadcaster.
 
+        .. important::
+            This is different to the :meth:`~twitchio.user.PartialUser.timeout_user` as it will timeout this chatter directly in the associated channel in the object.
+
         .. note::
 
             You must have a user access token that includes the ``moderator:manage:banned_users`` scope to do this.
@@ -3830,7 +3836,7 @@ class Chatter(PartialUser):
             The default is ``600`` which is ten minutes.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to ``None``.
+            ``500`` characters long. Defaults to `None`.
         """
         if reason and len(reason) > 500:
             raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
@@ -3845,6 +3851,9 @@ class Chatter(PartialUser):
 
         Send this chatter a warning, preventing them from chat interaction until the warning is acknowledged.
         New warnings can be issued to a chatter / user when they already have a warning in the channel (new warning will replace old warning).
+
+        .. important::
+            This is different to the :meth:`~twitchio.user.PartialUser.warn_user` as it will warn this chatter directly for the associated channel in the object.
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:warnings`` scope.
@@ -3879,6 +3888,12 @@ class Chatter(PartialUser):
         Blocks this chatter from interacting with or having contact with the broadcaster.
 
         The user ID in the OAuth token identifies the broadcaster who is blocking the user.
+
+        .. important::
+            This is different to the :meth:`~twitchio.user.PartialUser.block_user` as it will block this chatter directly from the associated channel in the object.
+
+        .. note::
+            Requires a user access token that includes the ``user:manage:blocked_users`` scope.
 
         Parameters
         ----------
