@@ -41,14 +41,17 @@ __all__ = (
     "CommandOnCooldown",
     "ComponentLoadError",
     "ConversionError",
+    "ExpectedClosingQuoteError",
     "GuardFailure",
     "InputError",
+    "InvalidEndOfQuotedStringError",
     "MissingRequiredArgument",
     "ModuleAlreadyLoadedError",
     "ModuleLoadFailure",
     "ModuleNotLoadedError",
     "NoEntryPointError",
     "PrefixError",
+    "UnexpectedQuoteError",
 )
 
 
