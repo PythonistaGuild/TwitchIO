@@ -62,3 +62,24 @@ and more.
 
 Used with :class:`~twitchio.ext.commands.Component`'s and hot-reloading extension support you can easily manage your applications
 codebase with multiple modules and/or pacakges, with minimal down-time.
+
+
+Why does TwitchIO use PartialUser in-place of a full User object?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The large majority of both Helix endpoints and EventSub subscriptions from Twitch only send partial data relating to the user.
+
+Creating a complete :class:`~twitchio.User` on all these events and endpoints would mean making an extra HTTP request,
+which is both needlessly slow and consumes ratelimit tokens.
+
+Since Twitch only requires the ``ID`` of users to perform actions and make requests, :class:`~twitchio.PartialUser` is an
+inexpensive way of having an object that can perform actions for or against the user. However if you need extra data about the
+user (such as profile image) you can always fetch the full data via :meth:`twitchio.PartialUser.user`. Since the
+:class:`~twitchio.User` subclasses :class:`~twitchio.PartialUser`, all the methods available on :class:`~twitchio.PartialUser`
+are also available on :class:`~twitchio.User`.
+
+You can also create a :class:`~twitchio.PartialUser` with :meth:`~twitchio.Client.create_partialuser`.
+
+If you are using :class:`~twitchio.ext.commands.Command`'s or anywhere :class:`~twitchio.ext.commands.Context` is available,
+or are receiving a :class:`~twitchio.ChatMessage`, consider looking at :class:`~twitchio.Chatter` for a more complete object
+with more information and helpers.
