@@ -28,6 +28,7 @@ import logging
 
 from ..utils import ColorFormatter
 from .aio_adapter import AiohttpAdapter as AiohttpAdapter
+from .utils import FetchTokenPayload as FetchTokenPayload
 
 
 handler = logging.StreamHandler()

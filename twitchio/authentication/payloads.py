@@ -84,6 +84,24 @@ class ValidateTokenPayload(BasePayload):
 
 
 class UserTokenPayload(BasePayload):
+    """OAuth model received when a user successfully authenticates your application on Twitch.
+
+    This is a raw container class.
+
+    Attributes
+    ----------
+    access_token: str
+        The user access token.
+    refresh_token: str
+        The user refresh token for this access token.
+    expires_in: int
+        The amount of time this token is valid before expiring as seconds.
+    scope: str | list[str]
+        A ``str`` or ``list[str]`` containing the scopes the user authenticated with.
+    token_type: str
+        The type of token provided. Usually ``bearer``.
+    """
+
     __slots__ = ("access_token", "expires_in", "refresh_token", "scope", "token_type")
 
     def __init__(self, raw: UserTokenResponse, /) -> None:

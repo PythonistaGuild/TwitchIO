@@ -13,3 +13,14 @@ Web/OAuth Reference
 
 .. autoclass:: twitchio.web.StarletteAdapter
     :members:
+
+Models and Payloads
+===================
+
+.. attributetable:: twitchio.web.FetchTokenPayload
+
+.. autoclass:: twitchio.web.FetchTokenPayload()
+
+.. attributetable:: twitchio.authentication.UserTokenPayload
+
+.. autoclass:: twitchio.authentication.UserTokenPayload()
