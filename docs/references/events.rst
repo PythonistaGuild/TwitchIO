@@ -65,19 +65,19 @@ All events are prefixed with **event_**
      - :class:`~models.eventsub_.ChatMessageDelete`
    * - Channel Chat Notification 
      - :meth:`~eventsub.ChatNotificationSubscription`
-     - chat_notification
+     - :func:`~twitchio.event_chat_notification()`
      - :class:`~models.eventsub_.ChatNotification`
    * - Channel Chat Settings Update
      - :meth:`~eventsub.ChatSettingsUpdateSubscription`
-     - chat_settings_update
+     - :func:`~twitchio.event_chat_settings_update()`
      - :class:`~models.eventsub_.ChatSettingsUpdate`
    * - Channel Chat User Message Hold
      - :meth:`~eventsub.ChatUserMessageHoldSubscription`
-     - chat_user_message_hold
+     - :func:`~twitchio.event_chat_user_message_hold()`
      - :class:`~models.eventsub_.ChatUserMessageHold`
    * - Channel Chat User Message Update
      - :meth:`~eventsub.ChatUserMessageUpdateSubscription`
-     - chat_user_message_update
+     - :func:`~twitchio.event_chat_user_message_update()`
      - :class:`~models.eventsub_.ChatUserMessageUpdate`
    * - Channel Shared Chat Session Begin
      - :meth:`~eventsub.SharedChatSessionBeginSubscription`
@@ -109,27 +109,27 @@ All events are prefixed with **event_**
      - :class:`~models.eventsub_.ChannelSubscriptionMessage`
    * - Channel Cheer
      - :meth:`~eventsub.ChannelCheerSubscription`
-     - cheer
+     - :func:`~twitchio.event_cheer()`
      - :class:`~models.eventsub_.ChannelCheer`
    * - Channel Raid
      - :meth:`~eventsub.ChannelRaidSubscription`
-     - raid
+     - :func:`~twitchio.event_raid()`
      - :class:`~models.eventsub_.ChannelRaid`
    * - Channel Ban
      - :meth:`~eventsub.ChannelBanSubscription`
-     - ban
+     - :func:`~twitchio.event_ban()`
      - :class:`~models.eventsub_.ChannelBan`
    * - Channel Unban
      - :meth:`~eventsub.ChannelUnbanSubscription`
-     - unban
+     - :func:`~twitchio.event_unban()`
      - :class:`~models.eventsub_.ChannelUnban`
    * - Channel Unban Request Create
      - :meth:`~eventsub.ChannelUnbanRequestSubscription`
-     - unban_request
+     - :func:`~twitchio.event_unban_request()`
      - :class:`~models.eventsub_.ChannelUnbanRequest`
    * - Channel Unban Request Resolve
      - :meth:`~eventsub.ChannelUnbanRequestResolveSubscription`
-     - unban_request_resolve
+     - :func:`~twitchio.event_unban_request_resolve()`
      - :class:`~models.eventsub_.ChannelUnbanRequestResolve`
    * - Channel Moderate
      - :meth:`~eventsub.ChannelModerateSubscription`
@@ -209,67 +209,67 @@ All events are prefixed with **event_**
      - :class:`~models.eventsub_.SuspiciousUserUpdate`
    * - Channel VIP Add
      - :meth:`~eventsub.ChannelVIPAddSubscription`
-     - vip_add
+     - :func:`~twitchio.event_vip_add()`
      - :class:`~models.eventsub_.ChannelVIPAdd`
    * - Channel VIP Remove
      - :meth:`~eventsub.ChannelVIPRemoveSubscription`
-     - vip_remove
+     - :func:`~twitchio.event_vip_remove()`
      - :class:`~models.eventsub_.ChannelVIPRemove`
    * - Channel Warning Acknowledgement
      - :meth:`~eventsub.ChannelWarningAcknowledgementSubscription`
-     - warning_acknowledge
+     - :func:`~twitchio.event_warning_acknowledge()`
      - :class:`~models.eventsub_.ChannelWarningAcknowledge`
    * - Channel Warning Send
      - :meth:`~eventsub.ChannelWarningSendSubscription`
-     - warning_send
+     - :func:`~twitchio.event_warning_send()`
      - :class:`~models.eventsub_.ChannelWarningSend`
    * - Charity Donation
      - :meth:`~eventsub.CharityDonationSubscription`
-     - charity_campaign_donate
+     - :func:`~twitchio.event_charity_campaign_donate()`
      - :class:`~models.eventsub_.CharityCampaignDonation`
    * - Charity Campaign Start
      - :meth:`~eventsub.CharityCampaignStartSubscription`
-     - charity_campaign_start
+     - :func:`~twitchio.event_charity_campaign_start()`
      - :class:`~models.eventsub_.CharityCampaignStart`
    * - Charity Campaign Progress
      - :meth:`~eventsub.CharityCampaignProgressSubscription`
-     - charity_campaign_progress
+     - :func:`~twitchio.event_charity_campaign_progress()`
      - :class:`~models.eventsub_.CharityCampaignProgress`
    * - Charity Campaign Stop
      - :meth:`~eventsub.CharityCampaignStopSubscription`
-     - charity_campaign_stop
+     - :func:`~twitchio.event_charity_campaign_stop()`
      - :class:`~models.eventsub_.CharityCampaignStop`
    * - Goal Begin
      - :meth:`~eventsub.GoalBeginSubscription`
-     - goal_begin
+     - :func:`~twitchio.event_goal_begin()`
      - :class:`~models.eventsub_.GoalBegin`
    * - Goal Progress
      - :meth:`~eventsub.GoalProgressSubscription`
-     - goal_progress
+     - :func:`~twitchio.event_goal_progress()`
      - :class:`~models.eventsub_.GoalProgress`
    * - Goal End
      - :meth:`~eventsub.GoalEndSubscription`
-     - goal_end
+     - :func:`~twitchio.event_goal_end()`
      - :class:`~models.eventsub_.GoalEnd`
    * - Hype Train Begin
      - :meth:`~eventsub.HypeTrainBeginSubscription`
-     - hype_train
+     - :func:`~twitchio.event_hype_train()`
      - :class:`~models.eventsub_.HypeTrainBegin`
    * - Hype Train Progress
      - :meth:`~eventsub.HypeTrainProgressSubscription`
-     - hype_train_progress
+     - :func:`~twitchio.event_hype_train_progress()`
      - :class:`~models.eventsub_.HypeTrainProgress`
    * - Hype Train End
      - :meth:`~eventsub.HypeTrainEndSubscription`
-     - hype_train_end
+     - :func:`~twitchio.event_hype_train_end()`
      - :class:`~models.eventsub_.HypeTrainEnd`
    * - Shield Mode Begin
      - :meth:`~eventsub.ShieldModeBeginSubscription`
-     - shield_mode_begin
+     - :func:`~twitchio.event_shield_mode_begin()`
      - :class:`~models.eventsub_.ShieldModeBegin`
    * - Shield Mode End
      - :meth:`~eventsub.ShieldModeEndSubscription`
-     - shield_mode_end
+     - :func:`~twitchio.event_shield_mode_end()`
      - :class:`~models.eventsub_.ShieldModeEnd`
    * - Shoutout Create
      - :meth:`~eventsub.ShoutoutCreateSubscription`
@@ -413,6 +413,58 @@ Automod
     :param twitchio.AutomodTermsUpdate payload: The EventSub payload received for this event.
 
 
+Bans
+----
+
+.. py:function:: event_ban(payload: twitchio.ChannelBan) -> None
+    :async:
+
+    Event dispatched when a viewer is banned from the specified channel.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Ban <channelban>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelBanSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelBan payload: The EventSub payload received for this event.
+
+.. py:function:: event_unban(payload: twitchio.ChannelUnban) -> None
+    :async:
+
+    Event dispatched when a viewer is unbanned from the specified channel.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Unban <channelunban>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelUnbanSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelUnban payload: The EventSub payload received for this event.
+
+.. py:function:: event_unban_request(payload: twitchio.ChannelUnbanRequest) -> None
+    :async:
+
+    Event dispatched when user creates an unban request.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Unban Request Create <channelunban_requestcreate>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelUnbanRequestSubscription`
+    for each required broadcaster, with moderator, to receive this event.
+
+    :param twitchio.ChannelUnbanRequest payload: The EventSub payload received for this event.
+
+.. py:function:: event_unban_request_resolve(payload: twitchio.ChannelUnbanRequest) -> None
+    :async:
+
+    Event dispatched when an unban request is resolved.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Unban Request Resolve <channelunban_requestresolve>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelUnbanRequestResolveSubscription`
+    for each required broadcaster, with moderator, to receive this event.
+
+    :param twitchio.ChannelUnbanRequest payload: The EventSub payload received for this event.
+
+
 Channel / Broadcaster
 ---------------------
 
@@ -452,29 +504,84 @@ Channel / Broadcaster
 
     :param twitchio.ChannelAdBreakBegin payload: The EventSub payload received for this event.
 
-.. py:function:: event_chat_clear(payload: twitchio.ChannelChatClear) -> None
+.. py:function:: event_cheer(payload: twitchio.ChannelCheer) -> None
     :async:
 
-    Event dispatched when a moderator or bot has cleared all messages from the chat room.
+    Event dispatched when a user cheers on the specified channel.
     
-    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Clear <channelchatclear>`
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Cheer <channelcheer>`
     
-    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatClearSubscription`
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelCheerSubscription`
     for each required broadcaster to receive this event.
 
-    :param twitchio.ChannelChatClear payload: The EventSub payload received for this event.
+    :param twitchio.ChannelCheer payload: The EventSub payload received for this event.
 
-.. py:function:: event_chat_clear_user(payload: twitchio.ChannelChatClearUserMessages) -> None
+.. py:function:: event_raid(payload: twitchio.ChannelRaid) -> None
     :async:
 
-    Event dispatched when a moderator or bot has cleared all messages from a specific user.
+    Event dispatched when a user broadcaster raids another broadcaster's channel.
     
-    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Clear User Messages <channelchatclear_user_messages>`
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Raid <channelraid>`
     
-    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatClearUserMessagesSubscription`
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelCheerSubscription`
     for each required broadcaster to receive this event.
 
-    :param twitchio.ChannelChatClearUserMessages payload: The EventSub payload received for this event.
+    :param twitchio.ChannelRaid payload: The EventSub payload received for this event.
+
+
+Charity Campaigns
+-----------------
+
+.. py:function:: event_charity_campaign_donate(payload: twitchio.CharityCampaignDonation) -> None
+  :async:
+
+  Event dispatched when a user donates to the broadcaster's charity campaign.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Charity Donation <channelcharity_campaigndonate>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.CharityDonationSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.CharityCampaignDonation payload: The EventSub payload for this event.
+
+.. py:function:: event_charity_campaign_start(payload: twitchio.CharityCampaignStart) -> None
+  :async:
+
+  Event dispatched when the broadcaster starts a charity campaign.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Charity Campaign Start <channelcharity_campaignstart>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.CharityCampaignStartSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.CharityCampaignStart payload: The EventSub payload for this event.
+
+.. py:function:: event_charity_campaign_progress(payload: twitchio.CharityCampaignProgress) -> None
+  :async:
+
+  Event dispatched when progress is made towards the campaign’s goal or when the broadcaster changes the fundraising goal.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Charity Campaign Progress <channelcharity_campaignprogress>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.CharityCampaignProgressSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.CharityCampaignProgress payload: The EventSub payload for this event.
+
+.. py:function:: event_charity_campaign_stop(payload: twitchio.CharityCampaignStop) -> None
+  :async:
+
+  Event dispatched when the broadcaster stops a charity campaign.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Charity Campaign Stop <channelcharity_campaignend>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.CharityCampaignStopSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.CharityCampaignStop payload: The EventSub payload for this event.
+
+Chat / Messages
+---------------
 
 .. py:function:: event_message(payload: twitchio.ChatMessage) -> None
     :async:
@@ -499,6 +606,227 @@ Channel / Broadcaster
     for each required broadcaster to receive this event.
 
     :param twitchio.ChatMessageDelete payload: The EventSub payload received for this event.
+
+.. py:function:: event_chat_clear(payload: twitchio.ChannelChatClear) -> None
+    :async:
+
+    Event dispatched when a moderator or bot has cleared all messages from the chat room.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Clear <channelchatclear>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatClearSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelChatClear payload: The EventSub payload received for this event.
+
+.. py:function:: event_chat_clear_user(payload: twitchio.ChannelChatClearUserMessages) -> None
+    :async:
+
+    Event dispatched when a moderator or bot has cleared all messages from a specific user.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Clear User Messages <channelchatclear_user_messages>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatClearUserMessagesSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChannelChatClearUserMessages payload: The EventSub payload received for this event.
+
+
+.. py:function:: event_chat_notification(payload: twitchio.ChatNotification) -> None
+    :async:
+
+    Event dispatched when an event that appears in chat has occurred. 
+    This event can be used to replace multiple other events, depending on the data required.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Notification <channelchatnotification>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatNotificationSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChatNotification payload: The EventSub payload received for this event.
+
+.. py:function:: event_chat_settings_update(payload: twitchio.ChatSettingsUpdate) -> None
+    :async:
+
+    Event dispatched when a broadcaster's chat settings are updated.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat Settings Update <channelchat_settingsupdate>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatSettingsUpdateSubscription`
+    for each required broadcaster to receive this event.
+
+    :param twitchio.ChatSettingsUpdate payload: The EventSub payload received for this event.
+
+.. py:function:: event_chat_user_message_hold(payload: twitchio.ChatUserMessageHold) -> None
+    :async:
+
+    Event dispatched when a user is notified if their message is caught by automod.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat User Message Hold <channelchatuser_message_hold>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatUserMessageHoldSubscription`
+    for each required broadcaster and user to receive this event.
+
+    :param twitchio.ChatUserMessageHold payload: The EventSub payload received for this event.
+
+.. py:function:: event_chat_user_message_update(payload: twitchio.ChatUserMessageUpdate) -> None
+    :async:
+
+    Event dispatched when a user is notified if their message's automod status is updated.
+    
+    Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Chat User Message Hold <channelchatuser_message_hold>`
+    
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChatUserMessageUpdateSubscription`
+    for each required broadcaster and user to receive this event.
+
+    :param twitchio.ChatUserMessageUpdate payload: The EventSub payload received for this event.
+
+Goals
+-----
+
+.. py:function:: event_goal_begin(payload: twitchio.GoalBegin) -> None
+  :async:
+
+  Event dispatched when a broadcaster begins a goal.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Goal Begin <channelgoalbegin>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.GoalBeginSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.GoalBegin payload: The EventSub payload for this event.
+
+.. py:function:: event_goal_progress(payload: twitchio.GoalProgress) -> None
+  :async:
+
+  Event dispatched when progress (either positive or negative) is made towards a broadcaster's goal.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Goal Progress <channelgoalprogress>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.GoalProgressSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.GoalProgress payload: The EventSub payload for this event.
+
+.. py:function:: event_goal_end(payload: twitchio.GoalEnd) -> None
+  :async:
+
+  Event dispatched when a broadcaster ends a goal.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Goal End <channelgoalend>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.GoalEndSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.GoalEnd payload: The EventSub payload for this event.
+
+Hype Train
+----------
+
+.. py:function:: event_hype_train(payload: twitchio.HypeTrainBegin) -> None
+  :async:
+
+  Event dispatched when a Hype Train begins on the specified channel.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Hype Train Begin <channelhype_trainbegin>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.HypeTrainBeginSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.HypeTrainBegin payload: The EventSub payload for this event.
+
+.. py:function:: event_hype_train_progress(payload: twitchio.HypeHypeTrainProgress) -> None
+  :async:
+
+  Event dispatched when a Hype Train makes progress on the specified channel.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Hype Train Progress <channelhype_trainprogress>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.HypeTrainProgressSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.HypeTrainProgress payload: The EventSub payload for this event.
+
+.. py:function:: event_hype_train_end(payload: twitchio.HypeTrainEnd) -> None
+  :async:
+
+  Event dispatched when a Hype Train ends on the specified channel.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Hype Train End <channelhype_trainend>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.HypeTrainEndSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.HypeTrainEnd payload: The EventSub payload for this event.
+
+
+Moderation
+----------
+
+Polls
+-----
+
+Shared Chat
+-----------
+
+
+Shield Mode
+-----------
+
+.. py:function:: event_shield_mode_begin(payload: twitchio.ShieldModeBegin) -> None
+  :async:
+
+  Event dispatched when the broadcaster activates Shield Mode.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Shield Mode Begin <channelshield_modebegin>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShieldModeBeginSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.ShieldModeBegin payload: The EventSub payload for this event.
+
+.. py:function:: event_shield_mode_end(payload: twitchio.ShieldModeEnd) -> None
+  :async:
+
+  Event dispatched when the broadcaster deactivates Shield Mode.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Shield Mode End <channelshield_modeend>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShieldModeEndSubscription`
+  for each required broadcaster to receive this event to receive this event.
+
+  :param twitchio.ShieldModeEnd payload: The EventSub payload for this event.
+
+
+Shoutouts
+---------
+
+.. py:function:: event_shoutout_create(payload: twitchio.ShoutoutCreate) -> None
+  :async:
+
+  Event dispatched when the specified broadcaster sends a shoutout.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Shoutout Create <shoutoutcreate>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShoutoutCreateSubscription` for each required broadcaster 
+  to receive this event to receive this event.
+
+  :param twitchio.ShoutoutCreate payload: The EventSub payload for this event.
+
+.. py:function:: event_shoutout_receive(payload: twitchio.ShoutoutReceive) -> None
+  :async:
+
+  Event dispatched when the specified broadcaster receives a shoutout.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Shoutout Create <shoutoutreceive>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShoutoutReceiveSubscription` for each required broadcaster
+  to receive this event.
+
+  :param twitchio.ShoutoutReceive payload: The EventSub payload for this event.
+
+Subscriptions
+-------------
 
 Streams
 -------
@@ -527,34 +855,8 @@ Streams
 
   :param twitchio.StreamOffline payload: The EventSub payload for this event.
 
-
-Shoutouts
----------
-
-.. py:function:: event_shoutout_create(payload: twitchio.ShoutoutCreate) -> None
-  :async:
-
-  Event dispatched when when the specified broadcaster sends a shoutout.
-    
-  Corresponds to the Twitch EventSub subscription :es-docs:`Shoutout Create <shoutoutcreate>`.
-    
-  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShoutoutCreateSubscription` for each required broadcaster 
-  to receive this event to receive this event.
-
-  :param twitchio.ShoutoutCreate payload: The EventSub payload for this event.
-
-.. py:function:: event_shoutout_receive(payload: twitchio.ShoutoutReceive) -> None
-  :async:
-
-  Event dispatched when when the specified broadcaster receives a shoutout.
-    
-  Corresponds to the Twitch EventSub subscription :es-docs:`Shoutout Create <shoutoutreceive>`.
-    
-  You must subscribe to EventSub with :class:`~twitchio.eventsub.ShoutoutReceiveSubscription` for each required broadcaster
-  to receive this event.
-
-  :param twitchio.ShoutoutReceive payload: The EventSub payload for this event.
-
+Suspicious Users
+----------------
 
 OAuth
 -----
@@ -608,6 +910,60 @@ User
   to receive this event.
 
   :param twitchio.Whisper payload: The EventSub payload for this event.
+
+VIP
+---
+
+.. py:function:: event_vip_add(payload: twitchio.ChannelVIPAdd) -> None
+  :async:
+
+  Event dispatched when a VIP is added to the channel.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Channel VIP Add <channelvipadd>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelWarningAcknowledgementSubscription` 
+  for each required broadcaster to receive this event.
+
+  :param twitchio.ChannelVIPAdd payload: The EventSub payload for this event.
+
+.. py:function:: event_vip_remove(payload: twitchio.ChannelVIPRemove) -> None
+  :async:
+
+  Event dispatched when a VIP is removed from the channel.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Channel VIP Remove <channelvipremove>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelWarningAcknowledgementSubscription` 
+  for each required broadcaster to receive this event.
+
+  :param twitchio.ChannelVIPRemove payload: The EventSub payload for this event.
+
+Warnings
+--------
+
+.. py:function:: event_warning_acknowledge(payload: twitchio.ChannelWarningAcknowledge) -> None
+  :async:
+
+  Event dispatched when a user awknowledges a warning. Broadcasters and moderators can see the warning's details.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Channel Warning Acknowledgement <channelwarningacknowledge>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelWarningAcknowledgementSubscription` 
+  for each required broadcaster, with a moderator, to receive this event.
+
+  :param twitchio.ChannelWarningAcknowledge payload: The EventSub payload for this event.
+
+.. py:function:: event_warning_send(payload: twitchio.ChannelWarningSend) -> None
+  :async:
+
+  Event dispatched when a user is sent a warning. Broadcasters and moderators can see the warning's details.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Channel Warning Send <channelwarningsend>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelWarningSendSubscription` 
+  for each required broadcaster, with a moderator, to receive this event.
+
+  :param twitchio.ChannelWarningSend payload: The EventSub payload for this event.
 
 
 Payloads
