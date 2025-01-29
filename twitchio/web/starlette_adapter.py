@@ -38,10 +38,11 @@ from starlette.routing import Route
 
 from ..authentication import Scopes
 from ..eventsub.subscriptions import _SUB_MAPPING
+from ..exceptions import HTTPException
 from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
-from .utils import MESSAGE_TYPES, BaseAdapter, verify_message
+from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
 
 if TYPE_CHECKING:
@@ -283,27 +284,82 @@ class StarletteAdapter(BaseAdapter, Starlette):
 
             return Response(status_code=204)
 
-    async def fetch_token(self, request: Request) -> Response:
+    async def fetch_token(self, request: Request) -> FetchTokenPayload:
+        """This method handles sending the provided code to Twitch to receive a User Access and Refresh Token pair, and
+        later, if successful, dispatches :func:`~twitchio.event_oauth_authorized`.
+
+        To call this coroutine you should pass the request received in the :meth:`oauth_callback`. This method is called by
+        default, however when overriding :meth:`oauth_callback` you should always call this method.
+
+        Parameters
+        ----------
+        request: starlette.requests.Request
+            The request received in :meth:`oauth_callback`.
+
+        Returns
+        -------
+        FetchTokenPayload
+            The payload containing various information about the authentication request to Twitch.
+        """
         if "code" not in request.query_params:
-            return Response(status_code=400)
+            return FetchTokenPayload(400, response=Response(status_code=400, content="No 'code' parameter provided."))
 
         try:
-            payload: UserTokenPayload = await self.client._http.user_access_token(
+            resp: UserTokenPayload = await self.client._http.user_access_token(
                 request.query_params["code"],
                 redirect_uri=self.redirect_url,
             )
-        except Exception as e:
+        except HTTPException as e:
             logger.error("Exception raised while fetching Token in <%s>: %s", self.__class__.__qualname__, e)
-            return Response(status_code=500)
+            status: int = e.status
+            return FetchTokenPayload(status=status, response=Response(status_code=status), exception=e)
 
-        self.client.dispatch(event="oauth_authorized", payload=payload)
-        return Response("Success. You can leave this page.", status_code=200)
+        self.client.dispatch(event="oauth_authorized", payload=resp)
+        return FetchTokenPayload(
+            status=20,
+            response=Response(content="Success. You can leave this page.", status_code=200),
+            payload=resp,
+        )
 
     async def oauth_callback(self, request: Request) -> Response:
+        """Default route callback for the OAuth Authentication redirect URL.
+
+        You can override this method to alter the responses sent to the user.
+
+        This callback should always return a valid response. See: `Starlette Responses <https://www.starlette.io/responses/>`_
+        for available response types.
+
+        .. important::
+
+            You should always call :meth:`.fetch_token` when overriding this method.
+
+        Parameters
+        ----------
+        request: starlette.requests.Request
+            The original request received via Starlette.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            async def oauth_callback(self, request: Request) -> Response:
+                payload: FetchTokenPayload = await self.fetch_token(request)
+
+                # Change the default success response...
+                if payload.status == 200:
+                    return HTMLResponse(status_code=200, "<h1>Success!</h1>")
+
+                # Return the default error responses...
+                return payload.response
+        """
         logger.debug("Received OAuth callback request in <%s>.", self.oauth_callback.__qualname__)
 
-        response: Response = await self.fetch_token(request)
-        return response
+        payload: FetchTokenPayload = await self.fetch_token(request)
+        if not isinstance(payload.response, Response):
+            raise ValueError(f"Responses in StarlettepAdapter should be {type(Response)!r} not {type(payload.response)!r}")
+
+        return payload.response
 
     async def oauth_redirect(self, request: Request) -> Response:
         scopes: str | None = request.query_params.get("scopes", None)

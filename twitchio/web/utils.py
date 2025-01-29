@@ -37,8 +37,11 @@ if TYPE_CHECKING:
     import asyncio
 
     from starlette.requests import Request
+    from starlette.responses import Response
 
+    from ..authentication import UserTokenPayload
     from ..client import Client
+    from ..exceptions import HTTPException
     from ..types_.eventsub import EventSubHeaders
 
 
@@ -46,6 +49,37 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 MESSAGE_TYPES = ["notification", "webhook_callback_verification", "revocation"]
+
+
+class FetchTokenPayload:
+    """Payload model returned via :meth:`twitchio.web.StarletteAdapter.fetch_token` and
+    :meth:`twitchio.web.AiohttpAdapter.fetch_token`
+
+    Attributes
+    ----------
+    status: int
+        The status code returned while trying to authenticate a user on Twitch. A status of ``200`` indicates a success.
+    response: web.Response | starlette.responses.Response
+        The response TwitchIO sends by default to the user after trying to authenticate via OAuth.
+    payload: :class:`twitchio.authentication.UserTokenPayload`
+        The payload received from Twitch when a user successfully authenticates via OAuth. Will be ``None`` if a non ``200``
+        status code is returned.
+    exception: :class:`twitchio.HTTPException` | None
+        The exception raised while trying to authenticate a user. Could be ``None`` if no exception occurred.
+    """
+
+    def __init__(
+        self,
+        status: int,
+        *,
+        response: web.Response | Response,
+        payload: UserTokenPayload | None = None,
+        exception: HTTPException | None = None,
+    ) -> None:
+        self.status = status
+        self.response = response
+        self.payload = payload
+        self.exception = exception
 
 
 class BaseAdapter(abc.ABC):

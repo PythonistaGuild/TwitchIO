@@ -35,10 +35,11 @@ from aiohttp import web
 
 from ..authentication import Scopes
 from ..eventsub.subscriptions import _SUB_MAPPING
+from ..exceptions import HTTPException
 from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
 from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
-from .utils import MESSAGE_TYPES, BaseAdapter, verify_message
+from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
 
 if TYPE_CHECKING:
@@ -271,30 +272,85 @@ class AiohttpAdapter(BaseAdapter, web.Application):
 
             return web.Response(status=204)
 
-    async def fetch_token(self, request: web.Request) -> web.Response:
+    async def fetch_token(self, request: web.Request) -> FetchTokenPayload:
+        """This method handles sending the provided code to Twitch to receive a User Access and Refresh Token pair, and
+        later, if successful, dispatches :func:`~twitchio.event_oauth_authorized`.
+
+        To call this coroutine you should pass the request received in the :meth:`oauth_callback`. This method is called by
+        default, however when overriding :meth:`oauth_callback` you should always call this method.
+
+        Parameters
+        ----------
+        request: aiohttp.web.Request
+            The request received in :meth:`oauth_callback`.
+
+        Returns
+        -------
+        FetchTokenPayload
+            The payload containing various information about the authentication request to Twitch.
+        """
         if "code" not in request.query:
-            return web.Response(status=400)
+            return FetchTokenPayload(400, response=web.Response(status=400, text="No 'code' parameter provided."))
 
         try:
-            payload: UserTokenPayload = await self.client._http.user_access_token(
+            resp: UserTokenPayload = await self.client._http.user_access_token(
                 request.query["code"],
                 redirect_uri=self.redirect_url,
             )
-        except Exception as e:
+        except HTTPException as e:
             logger.error("Exception raised while fetching Token in <%s>: %s", self.__class__.__qualname__, e)
-            return web.Response(status=500)
+            status: int = e.status
+            return FetchTokenPayload(status=status, response=web.Response(status=status), exception=e)
 
-        self.client.dispatch(event="oauth_authorized", payload=payload)
-        return web.Response(body="Success. You can leave this page.", status=200)
+        self.client.dispatch(event="oauth_authorized", payload=resp)
+        return FetchTokenPayload(
+            status=20,
+            response=web.Response(body="Success. You can leave this page.", status=200),
+            payload=resp,
+        )
 
     async def oauth_callback(self, request: web.Request) -> web.Response:
+        """Default route callback for the OAuth Authentication redirect URL.
+
+        You can override this method to alter the responses sent to the user.
+
+        This callback should always return a valid response. See: `aiohttp docs <https://docs.aiohttp.org/en/stable/web.html>`_
+        for more information.
+
+        .. important::
+
+            You should always call :meth:`.fetch_token` when overriding this method.
+
+        Parameters
+        ----------
+        request: aiohttp.web.Request
+            The original request received via aiohttp.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            async def oauth_callback(self, request: web.Request) -> web.Response:
+                payload: FetchTokenPayload = await self.fetch_token(request)
+
+                # Change the default success response to no content...
+                if payload.status == 200:
+                    return web.Response(status=204)
+
+                # Return the default error responses...
+                return payload.response
+        """
         logger.debug("Received OAuth callback request in <%s>.", self.oauth_callback.__qualname__)
 
-        response: web.Response = await self.fetch_token(request)
-        return response
+        payload: FetchTokenPayload = await self.fetch_token(request)
+        if not isinstance(payload.response, web.Response):
+            raise ValueError(f"Responses in AiohttpAdapter should be {type(web.Response)!r} not {type(payload.response)!r}")
+
+        return payload.response
 
     async def oauth_redirect(self, request: web.Request) -> web.Response:
-        scopes: str | None = request.query.get("scopes", None)
+        scopes: str | None = request.query.get("scopes", request.query.get("scope", None))
         force_verify: bool = request.query.get("force_verify", "false").lower() == "true"
 
         if not scopes:
