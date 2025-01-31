@@ -74,12 +74,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Client:
     """The TwitchIO Client.
 
-    The `Client` acts as an entry point to the Twitch API, EventSub and OAuth and serves as a base for chat-bots.
+    The ``Client`` acts as an entry point to the Twitch API, EventSub and OAuth and serves as a base for chat-bots.
 
-    :class:`twitchio.ext.commands.Bot` inherits from this class and such should be treated as a `Client` with an in-built
+    :class:`~twitchio.ext.commands.Bot` inherits from this class and such should be treated as a ``Client`` with an in-built
     commands extension.
 
-    You don't need to :meth:`~.start` or :meth:`~.run` the `Client` to use it soley as a HTTP Wrapper,
+    You don't need to :meth:`~.start` or :meth:`~.run` the ``Client`` to use it soley as a HTTP Wrapper,
     but you must still :meth:`~.login` with this use case.
 
     Parameters
@@ -98,7 +98,7 @@ class Client:
         An optional ``str`` to set as the redirect uri for anything relating to
         Twitch OAuth via :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter.
         This is a convenience attribute, it is preferred you
-        use a custom :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter instead.
+        use a custom :class:`~twitchio.web.StarletteAdapter` or :class:`~twitchio.web.AiohttpAdapter` instead.
     scopes: twitchio.Scopes | None
         An optional :class:`~twitchio.Scopes` object to use as defaults when using anything related to Twitch OAuth.
 
