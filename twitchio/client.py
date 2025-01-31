@@ -76,7 +76,7 @@ class Client:
 
     The `Client` acts as an entry point to the Twitch API, EventSub and OAuth and serves as a base for chat-bots.
 
-    :class:`commands.Bot` inherits from this class and such should be treated as a `Client` with an in-built
+    :class:`twitchio.ext.commands.Bot` inherits from this class and such should be treated as a `Client` with an in-built
     commands extension.
 
     You don't need to :meth:`~.start` or :meth:`~.run` the `Client` to use it soley as a HTTP Wrapper,
@@ -95,8 +95,10 @@ class Client:
         It is highly recommended setting this parameter as it will allow TwitchIO to use the bot's own tokens where
         appropriate and needed.
     redirect_uri: str | None
-        An optional `str` to set as the redirect uri for anything relating to Twitch OAuth. You most often do not need to set
-        this.
+        An optional ``str`` to set as the redirect uri for anything relating to
+        Twitch OAuth via :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter.
+        This is a convenience attribute, it is preferred you
+        use a custom :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter instead.
     scopes: twitchio.Scopes | None
         An optional :class:`~twitchio.Scopes` object to use as defaults when using anything related to Twitch OAuth.
 
@@ -105,13 +107,11 @@ class Client:
         An optional :class:`aiohttp.ClientSession` to use for all HTTP requests including any requests made with
         :class:`~twitchio.Asset`'s.
     adapter:  twitchio.StarletteAdapter | twitchio.AiohttpAdapter | None
-        An optional  :class:`StarletteAdapter` or :class:`twitchio.AiohttpAdapter` to use as the clients web server adapter.
+        An optional :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter` to use as the clients web server adapter.
 
         The adapter is a built-in webserver used for OAuth and when needed for EventSub over Webhooks.
 
-        When this is not provided, it will default to a :class:`twitchio.AiohttpAdapter` with default settings.
-
-        When requiring an adapter for use with EventSub, you must provide an adapter with the correct settings set.
+        When this is not provided, it will default to a :class:`twitchio.web.AiohttpAdapter` with default settings.
     fetch_client_user: bool
         An optional bool indicating whether to fetch and cache the client/bot accounts own :class:`.User` object to use with
         :attr:`.user`.
