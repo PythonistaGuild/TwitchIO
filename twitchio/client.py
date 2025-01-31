@@ -96,7 +96,7 @@ class Client:
         appropriate and needed.
     redirect_uri: str | None
         An optional ``str`` to set as the redirect uri for anything relating to
-        Twitch OAuth via :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter.
+        Twitch OAuth via :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter`.
         This is a convenience attribute, it is preferred you
         use a custom :class:`~twitchio.web.StarletteAdapter` or :class:`~twitchio.web.AiohttpAdapter` instead.
     scopes: twitchio.Scopes | None
