@@ -623,9 +623,9 @@ class PartialUser:
 
     async def create_custom_reward(
         self,
-        *,
         title: str,
         cost: int,
+        *,
         prompt: str | None = None,
         enabled: bool = True,
         background_color: str | Colour | None = None,

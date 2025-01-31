@@ -220,7 +220,7 @@ class CustomReward:
 
         return Asset(url, http=self._http)
 
-    async def delete(self, *, token_for: str) -> None:
+    async def delete(self) -> None:
         """Delete the custom reward.
 
         The app used to create the reward is the only app that may delete it.
@@ -228,13 +228,8 @@ class CustomReward:
 
         .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
-
-        Parameters
-        -----------
-        token_for: str
-            The user's token that has permission delete the reward.
         """
-        await self._http.delete_custom_reward(broadcaster_id=self.broadcaster.id, reward_id=self.id, token_for=token_for)
+        await self._http.delete_custom_reward(broadcaster_id=self.broadcaster.id, reward_id=self.id, token_for=self.broadcaster.id)
 
     async def update(
         self,
