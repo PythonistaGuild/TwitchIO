@@ -796,7 +796,6 @@ class PartialUser:
         self,
         *,
         moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
         first: int = 100,
         max_results: int | None = None,
     ) -> Chatters:
@@ -812,8 +811,6 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
             This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            A user access token that includes the ``moderator:read:chatters`` scope.
         first: int | None
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 1,000. The default is 100.
@@ -828,7 +825,7 @@ class PartialUser:
         first = max(1, min(1000, first))
 
         return await self._http.get_chatters(
-            token_for=token_for, first=first, broadcaster_id=self.id, moderator_id=moderator, max_results=max_results
+            token_for=moderator, first=first, broadcaster_id=self.id, moderator_id=moderator, max_results=max_results
         )
 
     async def fetch_channel_emotes(self, token_for: str | PartialUser | None = None) -> list[ChannelEmote]:
@@ -950,7 +947,6 @@ class PartialUser:
     async def update_chat_settings(
         self,
         moderator: str | int | PartialUser,
-        token_for: str | PartialUser,  # TODO Default to bot_id or self.id? same for token_for.
         emote_mode: bool | None = None,
         follower_mode: bool | None = None,
         follower_mode_duration: int | None = None,
@@ -980,8 +976,6 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of a user that has permission to moderate the broadcaster's chat room, or the broadcaster's ID if they're making the update.
             This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:chat_settings`` scope.
         emote_mode: bool | None
             A Boolean value that determines whether chat messages must contain only emotes.
         follower_mode: bool | None
@@ -1033,7 +1027,7 @@ class PartialUser:
         data = await self._http.patch_chat_settings(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             emote_mode=emote_mode,
             follower_mode=follower_mode,
             follower_mode_duration=follower_mode_duration,
@@ -1070,8 +1064,7 @@ class PartialUser:
     async def send_announcement(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
         message: str,
         color: Literal["blue", "green", "orange", "purple", "primary"] | None = None,
     ) -> None:
@@ -1089,8 +1082,6 @@ class PartialUser:
             or the broadcaster''s ID if they're sending the announcement.
 
             This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:announcements`` scope.
         message: str
             The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters;
             announcements longer than 500 characters are truncated.
@@ -1099,15 +1090,14 @@ class PartialUser:
             the channels accent colour will be used instead. Defaults to `None`.
         """
         return await self._http.post_chat_announcement(
-            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, message=message, color=color
+            broadcaster_id=self.id, moderator_id=moderator, token_for=moderator, message=message, color=color
         )
 
     async def send_shoutout(
         self,
         *,
         to_broadcaster: str | int | PartialUser,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
     ) -> None:
         """|coro|
 
@@ -1125,11 +1115,9 @@ class PartialUser:
             The ID, or PartialUser, of the broadcaster that's receiving the Shoutout.
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:shoutouts`` scope.
         """
         return await self._http.post_chat_shoutout(
-            broadcaster_id=self.id, moderator_id=moderator, token_for=token_for, to_broadcaster_id=to_broadcaster
+            broadcaster_id=self.id, moderator_id=moderator, token_for=moderator, to_broadcaster_id=to_broadcaster
         )
 
     async def send_message(
@@ -1779,8 +1767,7 @@ class PartialUser:
     async def fetch_automod_settings(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
     ) -> AutomodSettings:
         """|coro|
 
@@ -1796,8 +1783,6 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:read:automod_settings`` scope.
 
         Returns
         -------
@@ -1806,7 +1791,7 @@ class PartialUser:
         """
         from .models import AutomodSettings
 
-        data = await self._http.get_automod_settings(broadcaster_id=self.id, moderator_id=moderator, token_for=token_for)
+        data = await self._http.get_automod_settings(broadcaster_id=self.id, moderator_id=moderator, token_for=moderator)
         return AutomodSettings(data["data"][0], http=self._http)
 
     async def update_automod_settings(
@@ -1814,7 +1799,6 @@ class PartialUser:
         *,
         moderator: str | int | PartialUser,
         settings: AutomodSettings,
-        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> AutomodSettings:
         """|coro|
 
@@ -1848,8 +1832,6 @@ class PartialUser:
         settings: AutomodSettings
             AutomodSettings object containing the new settings for the broadcaster's channel.
             You can fetch this using :meth:`~fetch_automod_settings`
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:automod_settings`` scope.
 
         Returns
         -------
@@ -1859,7 +1841,7 @@ class PartialUser:
         from .models import AutomodSettings
 
         data = await self._http.put_automod_settings(
-            broadcaster_id=self.id, moderator_id=moderator, settings=settings, token_for=token_for
+            broadcaster_id=self.id, moderator_id=moderator, settings=settings, token_for=moderator
         )
         return AutomodSettings(data["data"][0], http=self._http)
 
@@ -1915,7 +1897,7 @@ class PartialUser:
     async def ban_user(
         self,
         *,
-        moderator: str | PartialUser | None = None,  # TODO Default to bot_id, same for token_for.
+        moderator: str | PartialUser | None = None,
         user: str | PartialUser,
         reason: str | None = None,
     ) -> Ban:
@@ -2024,9 +2006,8 @@ class PartialUser:
     async def unban_user(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        moderator: str | int | PartialUser,
         user_id: str | int | PartialUser,
-        token_for: str,
     ) -> None:
         """|coro|
 
@@ -2043,22 +2024,19 @@ class PartialUser:
             This ID must match the user ID in the user access token.
         user_id: str | int | PartialUser
             The ID, or PartialUser, of the user to ban or put in a timeout.
-        token_for: str
-            User access token that includes the ``moderator:manage:banned_users`` scope.
         """
 
         return await self._http.delete_unban_user(
             broadcaster_id=self.id,
             moderator_id=moderator,
             user_id=user_id,
-            token_for=token_for,
+            token_for=moderator,
         )
 
     def fetch_unban_requests(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
         status: Literal["pending", "approved", "denied", "acknowledged", "canceled"],
         user: str | int | PartialUser | None = None,
         first: int = 20,
@@ -2075,8 +2053,6 @@ class PartialUser:
         ----------
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:read:unban_requests` or ``moderator:manage:unban_requests`` scope.
         status: Literal["pending", "approved", "denied", "acknowledged", "canceled"]
             Filter by a status. Possible values are:
 
@@ -2103,7 +2079,7 @@ class PartialUser:
         return self._http.get_unban_requests(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             status=status,
             user_id=user,
             first=first,
@@ -2114,7 +2090,6 @@ class PartialUser:
         self,
         *,
         moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
         status: Literal["approved", "denied"],
         unban_request_id: str,
         resolution_text: str | None = None,
@@ -2130,8 +2105,6 @@ class PartialUser:
         ----------
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:unban_requests`` scope.
         status: Literal["approved", "denied"]
             Resolution status. This is either ``approved`` or ``denied``.
         unban_request_id: str
@@ -2158,7 +2131,7 @@ class PartialUser:
         data = await self._http.patch_unban_requests(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             unban_request_id=unban_request_id,
             status=status,
             resolution_text=resolution_text,
@@ -2167,8 +2140,7 @@ class PartialUser:
 
     def fetch_blocked_terms(
         self,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[BlockedTerm]:
@@ -2185,8 +2157,6 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:read:blocked_terms`` or ``moderator:manage:blocked_terms`` scope.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
@@ -2202,7 +2172,7 @@ class PartialUser:
         return self._http.get_blocked_terms(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             first=first,
             max_results=max_results,
         )
@@ -2210,8 +2180,7 @@ class PartialUser:
     async def add_blocked_term(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
         text: str,
     ) -> BlockedTerm:
         """|coro|
@@ -2232,8 +2201,6 @@ class PartialUser:
         ----------
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests. This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:blocked_terms`` scope.
         text: str
             The word or phrase to block from being used in the broadcaster's chat room. The term must contain a minimum of 2 characters and may contain up to a maximum of 500 characters.
 
@@ -2260,7 +2227,7 @@ class PartialUser:
         data = await self._http.post_blocked_term(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             text=text,
         )
         return BlockedTerm(data["data"][0], http=self._http)
@@ -2268,8 +2235,7 @@ class PartialUser:
     async def remove_blocked_term(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
-        token_for: str | PartialUser,
+        moderator: str | int | PartialUser,
         id: str,
     ) -> None:
         """|coro|
@@ -2284,8 +2250,6 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's unban requests.
             This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:blocked_terms`` scope.
         id: str
             The ID of the blocked term to remove from the broadcaste's list of blocked terms.
         """
@@ -2293,7 +2257,7 @@ class PartialUser:
         return await self._http.delete_blocked_term(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             id=id,
         )
 
@@ -2301,8 +2265,7 @@ class PartialUser:
         self,
         *,
         moderator: str | int | PartialUser,
-        token_for: str | PartialUser,
-        message_id: str | None = None,  # TODO Default to bot_id, same for token_for.
+        message_id: str | None = None,
     ) -> None:
         """|coro|
 
@@ -2334,7 +2297,7 @@ class PartialUser:
         return await self._http.delete_chat_message(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             message_id=message_id,
         )
 
@@ -2550,7 +2513,6 @@ class PartialUser:
         *,
         moderator: str | int | PartialUser,
         active: bool,
-        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> ShieldModeStatus:
         """|coro|
 
@@ -2567,8 +2529,6 @@ class PartialUser:
         active: bool
             A Boolean value that determines whether to activate Shield Mode.
             Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:shield_mode`` scope.
         """
 
         from .models.moderation import ShieldModeStatus
@@ -2576,7 +2536,7 @@ class PartialUser:
         data = await self._http.put_shield_mode_status(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=token_for,
+            token_for=moderator,
             active=active,
         )
         return ShieldModeStatus(data["data"][0], http=self._http)
@@ -2585,7 +2545,6 @@ class PartialUser:
         self,
         *,
         moderator: str | int | PartialUser,
-        token_for: str | PartialUser,  # TODO Default to bot_id, same for token_for.
     ) -> ShieldModeStatus:
         """|coro|
 
@@ -2599,13 +2558,11 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
             This ID must match the user ID in the access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
         """
 
         from .models.moderation import ShieldModeStatus
 
-        data = await self._http.get_shield_mode_status(broadcaster_id=self.id, moderator_id=moderator, token_for=token_for)
+        data = await self._http.get_shield_mode_status(broadcaster_id=self.id, moderator_id=moderator, token_for=moderator)
         return ShieldModeStatus(data["data"][0], http=self._http)
 
     def fetch_polls(
@@ -3330,7 +3287,6 @@ class PartialUser:
         moderator: str | int | PartialUser,
         user_id: str | int | PartialUser,
         reason: str,
-        token_for: str | PartialUser,
     ) -> Warning:
         """|coro|
 
@@ -3349,8 +3305,6 @@ class PartialUser:
             The ID, or PartialUser, of the user being warned.
         reason: str
             The reason provided for warning.
-        token_for: str
-            User access token that includes the ``moderator:manage:warnings`` scope.
 
         Returns
         -------
@@ -3360,7 +3314,7 @@ class PartialUser:
         from .models.moderation import Warning
 
         data = await self._http.post_warn_chat_user(
-            broadcaster_id=self.id, moderator_id=moderator, user_id=user_id, reason=reason, token_for=token_for
+            broadcaster_id=self.id, moderator_id=moderator, user_id=user_id, reason=reason, token_for=moderator
         )
         return Warning(data["data"][0], http=self._http)
 
