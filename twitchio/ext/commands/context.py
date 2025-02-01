@@ -461,9 +461,7 @@ class Context:
         HTTPException
             Sending the announcement failed. Could be ``400``, ``401`` or any ``5xx`` status code.
         """
-        await self.channel.send_announcement(
-            moderator=self.bot.bot_id, token_for=self.bot.bot_id, message=content, color=color
-        )
+        await self.channel.send_announcement(moderator=self.bot.bot_id, message=content, color=color)
 
     async def delete_message(self) -> None:
         """|coro|
@@ -485,9 +483,7 @@ class Context:
         HTTPException
             Twitch failed to remove the message. Could be ``400``, ``401``, ``403``, ``404`` or any ``5xx`` status code.
         """
-        await self.channel.delete_chat_messages(
-            moderator=self.bot.bot_id, token_for=self.bot.bot_id, message_id=self.message.id
-        )
+        await self.channel.delete_chat_messages(moderator=self.bot.bot_id, message_id=self.message.id)
 
     async def clear_messages(self) -> None:
         """|coro|
@@ -504,4 +500,4 @@ class Context:
         HTTPException
             Twitch failed to remove the message. Could be ``400``, ``401``, ``403``, ``404`` or any ``5xx`` status code.
         """
-        await self.channel.delete_chat_messages(moderator=self.bot.bot_id, token_for=self.bot.bot_id, message_id=None)
+        await self.channel.delete_chat_messages(moderator=self.bot.bot_id, message_id=None)
