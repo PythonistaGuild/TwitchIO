@@ -229,12 +229,13 @@ class CustomReward:
         .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
         """
-        await self._http.delete_custom_reward(broadcaster_id=self.broadcaster.id, reward_id=self.id, token_for=self.broadcaster.id)
+        await self._http.delete_custom_reward(
+            broadcaster_id=self.broadcaster.id, reward_id=self.id, token_for=self.broadcaster.id
+        )
 
     async def update(
         self,
         *,
-        token_for: str | PartialUser,
         title: str | None = None,
         cost: int | None = None,
         prompt: str | None = None,
@@ -256,8 +257,6 @@ class CustomReward:
 
         Parameters
         -----------
-        token_for: str | PartialUser
-            The user's token that has permission manage the reward.
         title: str | None
             The user's token that has permission manage the reward.
         cost: int | None
@@ -308,7 +307,7 @@ class CustomReward:
 
         data = await self._http.patch_custom_reward(
             broadcaster_id=self.broadcaster.id,
-            token_for=token_for,
+            token_for=self.broadcaster.id,
             reward_id=self.id,
             title=title,
             cost=cost,
@@ -327,7 +326,6 @@ class CustomReward:
     def fetch_redemptions(
         self,
         *,
-        token_for: str | PartialUser,
         status: Literal["CANCELED", "FULFILLED", "UNFULFILLED"],
         ids: list[str] | None = None,
         sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
@@ -342,8 +340,6 @@ class CustomReward:
 
         Parameters
         -----------
-        token_for: str | PartialUser
-            The user's token that has permission manage or read the broadcaster's reward redemptions.
         status: typing.Literal["CANCELED", "FULFILLED", "UNFULFILLED"]
             The state of the redemption. This can be one of the following: "CANCELED", "FULFILLED", "UNFULFILLED"
         ids: list[str] | None
@@ -371,7 +367,7 @@ class CustomReward:
 
         return self._http.get_custom_reward_redemptions(
             broadcaster_id=self.broadcaster.id,
-            token_for=token_for,
+            token_for=self.broadcaster.id,
             reward_id=self.id,
             ids=ids,
             status=status,
@@ -417,16 +413,12 @@ class CustomRewardRedemption:
     def __repr__(self) -> str:
         return f"<CustomRewardRedemption id={self.id} status={self.status} redeemed_at={self.redeemed_at}>"
 
-    async def fulfill(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
+    async def fulfill(self) -> CustomRewardRedemption:
         """Updates a redemption's status to FULFILLED.
 
         .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
 
-        Parameters
-        -----------
-        token_for: str | PartialUser
-            The user's token that has permission manage the broadcaster's reward redemptions.
 
         Returns
         --------
@@ -434,23 +426,18 @@ class CustomRewardRedemption:
         """
         data = await self._http.patch_custom_reward_redemption(
             broadcaster_id=self.reward.broadcaster.id,
-            id=self.id,
-            token_for=token_for,
+            id=self.reward.broadcaster.id,
+            token_for=self,
             reward_id=self.reward.id,
             status="FULFILLED",
         )
         return CustomRewardRedemption(data["data"][0], parent_reward=self.reward, http=self._http)
 
-    async def refund(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
+    async def refund(self) -> CustomRewardRedemption:
         """Updates a redemption's status to CANCELED.
 
         .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
-
-        Parameters
-        -----------
-        token_for: str | PartialUser
-            The user's token that has permission manage the broadcaster's reward redemptions.
 
         Returns
         --------
@@ -459,7 +446,7 @@ class CustomRewardRedemption:
         data = await self._http.patch_custom_reward_redemption(
             broadcaster_id=self.reward.broadcaster.id,
             id=self.id,
-            token_for=token_for,
+            token_for=self.reward.broadcaster.id,
             reward_id=self.reward.id,
             status="CANCELED",
         )
