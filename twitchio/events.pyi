@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     import twitchio
 
     from .authentication import UserTokenPayload
+    from .models.eventsub_ import SubscriptionRevoked
 
 async def event_oauth_authorized(payload: UserTokenPayload) -> None:
     """Event dispatched when a user authorizes your Client-ID via Twitch OAuth on a built-in web adapter.
@@ -14,6 +15,26 @@ async def event_oauth_authorized(payload: UserTokenPayload) -> None:
     Parameters
     ----------
     payload: UserTokenPayload
+    """
+
+async def event_subscription_revoked(payload: SubscriptionRevoked) -> None:
+    """Event dispatched when Twitch revokes a subscription. This can occur on websockets and webhooks.
+    You'll receive this message once and then no longer receive messages for the specified user and subscription type.
+
+    Webhook:
+        - The user mentioned in the subscription no longer exists. The notification's status is set to `user_removed`.
+        - The user revoked the authorization token or simply changed their password. The notification's status is set to `authorization_revoked`.
+        - The callback failed to respond in a timely manner too many times. The notification's status is set to `notification_failures_exceeded`.
+        - The subscribed to subscription type and version is no longer supported. The notification's status is set to `version_removed`.
+
+    Websocket:
+        - The user mentioned in the subscription no longer exists. The notification's status field is set to `user_removed`.
+        - The user revoked the authorization token that the subscription relied on. The notification's status field is set to `authorization_revoked`.
+        - The subscribed to subscription type and version is no longer supported. The notification's status field is set to `version_removed`.
+
+    Parameters
+    ----------
+    payload: SubscriptionRevoked
     """
 
 async def event_ready() -> None:
