@@ -93,8 +93,8 @@ class CustomReward:
         The cost of the reward in Channel Points.
     default_image: dict[str, str]
         A dictionary of default images for the reward. The keys are as follows: url_1x, url_2x and url_4x.
-    background_color: Colour
-        The background colour to use for the reward.
+    colour: Colour
+        The background colour to use for the reward. There is an alias named ``color``.
     enabled: bool
         A Boolean value that determines whether the reward is enabled. Is True if enabled; otherwise, False. Disabled rewards aren't shown to the user.
     input_required: bool
@@ -186,10 +186,6 @@ class CustomReward:
         return self.title
 
     @property
-    def background_color(self) -> Colour | None:
-        return self.colour
-
-    @property
     def color(self) -> Colour | None:
         return self.colour
 
@@ -269,7 +265,7 @@ class CustomReward:
             The cost of the reward, in channel points. The minimum is 1 point.
         prompt: str | None
             The prompt shown to the viewer when they redeem the reward.
-            ``input_required``` needs to be set to ``True`` for this to work,
+            ``input_required`` needs to be set to ``True`` for this to work,
         enabled: bool | None
              Boolean value that indicates whether the reward is enabled. Set to ``True`` to enable the reward. Viewers see only enabled rewards.
         background_color: str | Colour | None
