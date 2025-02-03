@@ -93,8 +93,8 @@ class CustomReward:
         The cost of the reward in Channel Points.
     default_image: dict[str, str]
         A dictionary of default images for the reward. The keys are as follows: url_1x, url_2x and url_4x.
-    background_color: Colour
-        The background colour to use for the reward.
+    colour: Colour
+        The background colour to use for the reward. There is an alias named ``color``.
     enabled: bool
         A Boolean value that determines whether the reward is enabled. Is True if enabled; otherwise, False. Disabled rewards aren't shown to the user.
     input_required: bool
@@ -245,6 +245,7 @@ class CustomReward:
         max_per_stream: int | None = None,
         max_per_user: int | None = None,
         global_cooldown: int | None = None,
+        paused: bool | None = None,
         skip_queue: bool | None = None,
     ) -> CustomReward:
         """Update the custom reward.
@@ -258,14 +259,15 @@ class CustomReward:
         Parameters
         -----------
         title: str | None
-            The user's token that has permission manage the reward.
+            The reward's title.
+            The title may contain a maximum of 45 characters and it must be unique amongst all of the broadcaster's custom rewards.
         cost: int | None
             The cost of the reward, in channel points. The minimum is 1 point.
         prompt: str | None
             The prompt shown to the viewer when they redeem the reward.
-            ``input_required``` needs to be set to ``True`` for this to work,
+            ``input_required`` needs to be set to ``True`` for this to work,
         enabled: bool | None
-             Boolean value that indicates whether the reward is enabled. Set to True to enable the reward. Viewers see only enabled rewards.
+             Boolean value that indicates whether the reward is enabled. Set to ``True`` to enable the reward. Viewers see only enabled rewards.
         background_color: str | Colour | None
             The background color to use for the reward. Specify the color using Hex format (for example, #00E5CB).
             You can also pass a twitchio.Colour object.
@@ -280,6 +282,8 @@ class CustomReward:
         global_cooldown: int | None
             The cooldown period, in seconds. The minimum value is 1; however, for it to be shown in the Twitch UX, the minimum value is 60.
             Setting this to 0 disables the global cooldown period.
+        paused: bool | None
+            A Boolean value that determines whether to pause the reward. Set to ``True`` to pause the reward. Viewers can't redeem paused rewards.
         skip_queue: bool | None
             A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed.
             If False, status is set to UNFULFILLED and follows the normal request queue process.
@@ -318,6 +322,7 @@ class CustomReward:
             max_per_stream=max_per_stream,
             max_per_user=max_per_user,
             global_cooldown=global_cooldown,
+            paused=paused,
             skip_queue=skip_queue,
         )
 
