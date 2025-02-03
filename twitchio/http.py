@@ -938,6 +938,7 @@ class HTTPClient:
         max_per_stream: int | None = None,
         max_per_user: int | None = None,
         global_cooldown: int | None = None,
+        paused: bool | None = None,
         skip_queue: bool | None = None,
     ) -> CustomRewardsResponse:
         params = {
@@ -978,6 +979,9 @@ class HTTPClient:
         if max_per_user is not None:
             data["max_per_user_per_stream"] = max_per_user
             data["is_max_per_user_per_stream_enabled"] = max_per_user != 0
+
+        if paused is not None:
+            data["is_paused"] = paused
 
         if global_cooldown is not None:
             data["global_cooldown_seconds"] = global_cooldown
