@@ -240,7 +240,7 @@ class CustomReward:
         cost: int | None = None,
         prompt: str | None = None,
         enabled: bool | None = None,
-        background_color: str | Colour | None = None,
+        colour: str | Colour | None = None,
         input_required: bool | None = None,
         max_per_stream: int | None = None,
         max_per_user: int | None = None,
@@ -268,8 +268,8 @@ class CustomReward:
             ``input_required`` needs to be set to ``True`` for this to work,
         enabled: bool | None
              Boolean value that indicates whether the reward is enabled. Set to ``True`` to enable the reward. Viewers see only enabled rewards.
-        background_color: str | Colour | None
-            The background color to use for the reward. Specify the color using Hex format (for example, #00E5CB).
+        colour: str | Colour | None
+            The background colour to use for the reward. Specify the color using Hex format (for example, #00E5CB).
             You can also pass a twitchio.Colour object.
         input_required: bool | None
             A Boolean value that determines whether users must enter information to redeem the reward.
@@ -317,7 +317,7 @@ class CustomReward:
             cost=cost,
             prompt=prompt,
             enabled=enabled,
-            background_color=background_color,
+            background_color=colour,
             user_input_required=input_required,
             max_per_stream=max_per_stream,
             max_per_user=max_per_user,
