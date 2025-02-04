@@ -524,7 +524,7 @@ class Mixin(Generic[Component_T]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         case_: bool = kwargs.pop("case_insensitive", False)
         self._case_insensitive: bool = case_
-        self._commands: dict[str, Command[Component_T, ...]] = {} if not case_ else _CaseInsensitiveDict()
+        self._commands: dict[str, Command[Component_T, ...] | Group[Any, ...]] = {} if not case_ else _CaseInsensitiveDict()
 
         super().__init__(*args, **kwargs)
 
@@ -532,6 +532,35 @@ class Mixin(Generic[Component_T]):
     def case_insensitive(self) -> bool:
         """Property returning a bool indicating whether this Mixin is using case insensitive commands."""
         return self._case_insensitive
+
+    @property
+    def commands(self) -> dict[str, Command[Component_T, ...] | Group[Any, ...]]:
+        """Property returning the mapping of currently added :class:`~.Command` and :class:`~.Group` associated with this
+        Mixin.
+
+        This mapping includes aliases as keys.
+        """
+        return self._commands
+
+    def get_command(self, name: str, /) -> Command[Component_T, ...] | Group[Any, ...] | None:
+        """Method which returns a previously added :class:`~.Command` or :class:`~.Group`.
+
+        If a :class:`~.Command` or :class:`~.Group` can not be found, has been removed or has not been added,
+        this method will return ``None``.
+
+        Parameters
+        ----------
+        name: str
+            The name or alias of the :class:`~.Command` or :class:`~.Group` to retrieve.
+
+        Returns
+        -------
+        :class:`~.Command` | :class:`~.Group`
+            The command or group command with the provided name or alias associated with this Mixin.
+        None
+            A command or group with the provided name or alias could not be found.
+        """
+        return self._commands.get(name, None)
 
     def add_command(self, command: Command[Component_T, ...], /) -> None:
         """Add a :class:`~.commands.Command` object to the mixin.
