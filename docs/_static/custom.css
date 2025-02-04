@@ -73,6 +73,13 @@ body {
 	word-wrap: break-word;
 }
 
+.indexLogo {
+	max-height: 16rem;
+	width: auto;
+	margin: auto;
+	display: block;
+}
+
 .modal__container {
 	background-color: var(--color-background--light)!important;
 }

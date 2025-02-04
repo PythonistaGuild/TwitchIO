@@ -1,3 +1,8 @@
+.. raw:: html
+
+   <img src="https://raw.githubusercontent.com/TwitchIO/TwitchIO/main/logo.png" class="indexLogo"></img>
+
+
 TwitchIO
 #########
 
