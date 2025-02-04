@@ -324,6 +324,36 @@ class Bot(Mixin[None], Client):
         return self._components.get(name)
 
     def get_context(self, message: ChatMessage, *, cls: Any = None) -> Any:
+        """Method to create and retrieve a :class:`~.commands.Context` object from a :class:`twitchio.ChatMessage`.
+
+        This method can be overriden to accept a custom class which inherits from :class:`~.commands.Context` for use within
+        the command invocation process, instead of the default.
+
+        Parameters
+        ----------
+        message: :class:`~twitchio.ChatMessage`
+            The message to construct a :class:`~.commands.Context` or derivative from.
+        cls: Any
+            A custom class to use as the context. This should inherit from :class:`~.commands.Context`.
+
+        Examples
+        --------
+
+        .. code:: python3
+
+            class CustomContext(commands.Context):
+                ...
+
+            class Bot(commands.Bot):
+
+                def get_context(self, message: twitchio.ChatMessage, *, cls: Any = None) -> CustomContext:
+                    cls = cls or CustomContext
+                    return cls(message, bot=self)
+
+            @commands.command()
+            async def test(ctx: CustomContext) -> None:
+                ...
+        """
         cls = cls or Context
         return cls(message, bot=self)
 
