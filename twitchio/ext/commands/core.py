@@ -539,8 +539,19 @@ class Mixin(Generic[Component_T]):
         Mixin.
 
         This mapping includes aliases as keys.
+
+        .. note::
+
+            See: :attr:`.unique_commands` for a :class:`set` of commands without duplicates due to aliases.
         """
         return self._commands
+
+    @property
+    def unique_commands(self) -> set[Command[Component_T, ...] | Group[Any, ...]]:
+        """Property returning a :class:`set` of currently added :class:`~.Command` and :class:`~.Group` associated with this
+        Mixin.
+        """
+        return set(self._commands.values())
 
     def get_command(self, name: str, /) -> Command[Component_T, ...] | Group[Any, ...] | None:
         """Method which returns a previously added :class:`~.Command` or :class:`~.Group`.
@@ -792,7 +803,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
     def walk_commands(self) -> Generator[Command[Component_T, P] | Group[Component_T, P]]:
         """A generator which recursively walks through the sub-commands and sub-groups of this group."""
-        for command in self._commands.values():
+        for command in self.unique_commands:
             yield command
 
             if isinstance(command, Group):
