@@ -188,6 +188,45 @@ class Command(Generic[Component_T, P]):
         return self._name
 
     @property
+    def relative_name(self) -> str:
+        """Property returning the name of this command relative to it's direct parent, if it has one.
+
+        E.g. Closely equivalent to ``"{parent.name} {name}"``.
+
+        If this command has no parent, this simply returns the name.
+        """
+        return self._name if not self._parent else f"{self._parent._name} {self._name}"
+
+    @property
+    def full_parent_name(self) -> str:
+        """Property returning the fully qualified name for all the parents for this command.
+
+        This takes into account the full parent hierarchy. If this command has no parents, this will be an empty :class:`str`.
+
+        E.g Closely equivalent to ``"{first_parent.name} {second_parent.name}"``.
+        """
+        names: list[str] = []
+        command = self
+
+        while command.parent is not None:
+            command = command.parent
+            names.append(command.name)
+
+        return " ".join(reversed(names))
+
+    @property
+    def qualified_name(self) -> str:
+        """Property returning the fully qualified name for this command.
+
+        This takes into account the parent hierarchy. If this command has no parent, this simply returns the name.
+
+        E.g. Closely equivalent to ``"{first_parent.name} {second_parent.name} {name}"``.
+
+        This would be the string you would need to send minus the command prefix to invoke this command.
+        """
+        return f"{self.full_parent_name} {self.name}" if self.full_parent_name else self.name
+
+    @property
     def aliases(self) -> list[str]:
         """Property returning a copy of the list of aliases associated with this command, if it has any set.
 
