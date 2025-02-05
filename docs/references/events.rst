@@ -540,7 +540,7 @@ Channel / Broadcaster
     
     Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Raid <channelraid>`
     
-    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelCheerSubscription`
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelRaidSubscription`
     for each required broadcaster to receive this event.
 
     :param twitchio.ChannelRaid payload: The EventSub payload received for this event.
