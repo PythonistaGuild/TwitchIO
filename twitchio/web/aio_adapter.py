@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import ssl
 import logging
 from collections import deque
 from typing import TYPE_CHECKING, Any, cast
@@ -101,8 +102,8 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         An optional :class:`str` passed to use as the EventSub secret. It is recommended you pass this parameter when using
         an adapter for EventSub, as it will reset upon restarting otherwise. You can generate token safe secrets with the
         :mod:`secrets` module.
-    ssl_context: SSLContext | None
-        An optional :class:`ssl.SSLContext` passed to the adapter, configuring SSL encryption for the HTTP routes.
+    ssl_context: ssl.SSLContext | None
+        An optional :class:`ssl.SSLContext` passed to the adapter. If SSL is setup via a front-facing web server such as NGINX, you should leave this as None.
 
     Examples
     --------
@@ -141,7 +142,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         domain: str | None = None,
         eventsub_path: str | None = None,
         eventsub_secret: str | None = None,
-        ssl_context: SSLContext | None = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         super().__init__()
         self._runner: web.AppRunner | None = None
@@ -163,7 +164,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
         self._eventsub_path: str = f"/{path}"
 
-        self._ssl_context: SSLContext = ssl_context 
+        self._ssl_context: ssl.SSLContext = ssl_context 
 
         self._runner_task: asyncio.Task[None] | None = None
         self.startup = self.event_startup
