@@ -101,6 +101,8 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         An optional :class:`str` passed to use as the EventSub secret. It is recommended you pass this parameter when using
         an adapter for EventSub, as it will reset upon restarting otherwise. You can generate token safe secrets with the
         :mod:`secrets` module.
+    ssl_context: SSLContext | None
+        An optional :class:`ssl.SSLContext` passed to the adapter, configuring SSL encryption for the HTTP routes.
 
     Examples
     --------
