@@ -139,6 +139,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         domain: str | None = None,
         eventsub_path: str | None = None,
         eventsub_secret: str | None = None,
+        ssl_context: SSLContext | None = None,
     ) -> None:
         super().__init__()
         self._runner: web.AppRunner | None = None
@@ -159,6 +160,8 @@ class AiohttpAdapter(BaseAdapter, web.Application):
 
         path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
         self._eventsub_path: str = f"/{path}"
+
+        self._ssl_context: SSLContext = ssl_context 
 
         self._runner_task: asyncio.Task[None] | None = None
         self.startup = self.event_startup
@@ -210,7 +213,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         self._runner = web.AppRunner(self, access_log=None, handle_signals=True)
         await self._runner.setup()
 
-        site: web.TCPSite = web.TCPSite(self._runner, host or self._host, port or self._port)
+        site: web.TCPSite = web.TCPSite(self._runner, host or self._host, port or self._port, ssl_context=self._ssl_context)
         self._runner_task = asyncio.create_task(site.start(), name=f"twitchio-web-adapter:{self.__class__.__qualname__}")
 
     async def eventsub_callback(self, request: web.Request) -> web.Response:
