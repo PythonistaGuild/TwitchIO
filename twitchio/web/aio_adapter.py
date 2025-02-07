@@ -44,6 +44,7 @@ from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
 if TYPE_CHECKING:
     from ssl import SSLContext
+
     from ..authentication import AuthorizationURLPayload, UserTokenPayload
     from ..client import Client
 
