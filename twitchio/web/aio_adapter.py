@@ -43,9 +43,10 @@ from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
 
 if TYPE_CHECKING:
+    from ssl import SSLContext
     from ..authentication import AuthorizationURLPayload, UserTokenPayload
     from ..client import Client
-    from ssl import SSLContext
+
 
 __all__ = ("AiohttpAdapter",)
 
@@ -163,7 +164,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
         self._eventsub_path: str = f"/{path}"
 
-        self._ssl_context: SSLContext | None = ssl_context 
+        self._ssl_context: SSLContext | None = ssl_context
 
         self._runner_task: asyncio.Task[None] | None = None
         self.startup = self.event_startup
