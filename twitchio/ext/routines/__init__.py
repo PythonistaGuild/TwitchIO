@@ -381,7 +381,7 @@ class Routine:
         if not asyncio.iscoroutinefunction(func):
             raise TypeError(f'"after_routine" for {self!r} expected a coroutine function not {type(func).__name__!r}')
 
-        if self._before_routine is not None:
+        if self._after_routine is not None:
             LOGGER.warning("The after_routine for %s has previously been set.", self.__repr__())
 
         self._after_routine = func
