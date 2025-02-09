@@ -130,7 +130,9 @@ class Prediction:
         status: Literal["RESOLVED", "CANCELED", "LOCKED"],
         winning_outcome_id: str | None = None,
     ) -> Prediction:
-        """End an active prediction.
+        """|coro|
+
+        End an active prediction.
 
         .. note::
             Requires user access token that includes the `channel:manage:predictions` scope.

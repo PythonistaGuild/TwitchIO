@@ -221,9 +221,11 @@ class CustomReward:
         return Asset(url, http=self._http)
 
     async def delete(self) -> None:
-        """Delete the custom reward.
+        """|coro|
 
-        The app used to create the reward is the only app that may delete it.
+        Delete the custom reward.
+
+        The app / client ID used to create the reward is the only app that may delete it.
         If the reward's redemption status is UNFULFILLED at the time the reward is deleted, its redemption status is marked as FULFILLED.
 
         .. note::
@@ -248,7 +250,9 @@ class CustomReward:
         paused: bool | None = None,
         skip_queue: bool | None = None,
     ) -> CustomReward:
-        """Update the custom reward.
+        """|coro|
+
+        Update the custom reward.
 
         .. important::
             The app / client ID used to create the reward is the only app that may update the reward.
@@ -336,7 +340,9 @@ class CustomReward:
         sort: Literal["OLDEST", "NEWEST"] = "OLDEST",
         first: int = 20,
     ) -> HTTPAsyncIterator[CustomRewardRedemption]:
-        """Fetch redemptions from the CustomReward.
+        """|aiter|
+
+        Fetch redemptions from the CustomReward.
 
         Canceled and fulfilled redemptions are returned for only a few days after they're canceled or fulfilled.
 
@@ -419,7 +425,9 @@ class CustomRewardRedemption:
         return f"<CustomRewardRedemption id={self.id} status={self.status} redeemed_at={self.redeemed_at}>"
 
     async def fulfill(self) -> CustomRewardRedemption:
-        """Updates a redemption's status to FULFILLED.
+        """|coro|
+
+        Updates a redemption's status to FULFILLED.
 
         .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.
@@ -439,7 +447,9 @@ class CustomRewardRedemption:
         return CustomRewardRedemption(data["data"][0], parent_reward=self.reward, http=self._http)
 
     async def refund(self) -> CustomRewardRedemption:
-        """Updates a redemption's status to CANCELED.
+        """|coro|
+
+        Updates a redemption's status to CANCELED.
 
         .. note::
             Requires a user access token that includes the ``channel:manage:redemptions`` scope.

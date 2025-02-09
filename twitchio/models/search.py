@@ -97,7 +97,9 @@ class SearchChannel:
         return f"<SearchChannel broadcaster={self.broadcaster} title={self.title} live={self.live} game_id={self.game_id}>"
 
     async def fetch_game(self) -> Game:
-        """Fetches the :class:`~twitchio.Game` associated with this channel.
+        """|coro|
+
+        Fetches the :class:`~twitchio.Game` associated with this channel.
 
         The :class:`~twitchio.Game` returned is current from the time the :class:`~twitchio.SearchChannel`
         instance was created.

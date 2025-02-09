@@ -94,7 +94,9 @@ class Entitlement:
         return self.id
 
     async def fetch_game(self) -> Game:
-        """Fetches the :class:`~twitchio.Game` associated with this drop entitlement.
+        """|coro|
+
+        Fetches the :class:`~twitchio.Game` associated with this drop entitlement.
 
         Returns
         -------

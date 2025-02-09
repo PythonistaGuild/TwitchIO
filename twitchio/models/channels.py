@@ -219,7 +219,9 @@ class ChannelInfo:
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
 
     async def fetch_game(self) -> Game:
-        """Fetches the :class:~twitchio.Game` associated with this ChannelInfo.
+        """|coro|
+
+        Fetches the :class:~twitchio.Game` associated with this ChannelInfo.
 
         Returns
         -------

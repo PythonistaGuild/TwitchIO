@@ -880,7 +880,8 @@ class ChatMessageEmote:
         return f"<ChatMessageEmote set_id={self.set_id} id={self.id} owner={self.owner} format={self.format}>"
 
     async def fetch_emote_set(self, *, token_for: str | PartialUser | None = None) -> EmoteSet:
-        """
+        """|coro|
+
         Fetches emotes for this emote set.
 
         Parameters
@@ -3431,7 +3432,8 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         return f"<ChannelPointsRedemptionAdd broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
     async def fulfill(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
-        """
+        """|coro|
+
         Updates the redemption's status to FULFILLED.
 
         .. note::
@@ -3459,7 +3461,8 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
     async def refund(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
-        """
+        """|coro|
+
         Updates the redemption's status to CANCELED.
 
         .. note::
@@ -5171,7 +5174,9 @@ class EventsubSubscription:
         return f"<EventsubSubscription id={self.id} status={self.status} transport={self.transport} type={self.type} version={self.version} condition={self.condition} created_at={self.created_at} cost={self.cost}>"
 
     async def delete(self, *, token_for: str | None = None) -> None:
-        """Delete the eventsub subscription.
+        """|coro|
+
+        Delete the eventsub subscription.
 
         Parameters
         ----------

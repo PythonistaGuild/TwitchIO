@@ -116,7 +116,9 @@ class Stream:
         return f"<Stream id={self.id} user={self.user} title={self.title} started_at={self.started_at}>"
 
     async def fetch_game(self) -> Game | None:
-        """Fetches the :class:`~twitchio.Game` associated with this stream.
+        """|coro|
+
+        Fetches the :class:`~twitchio.Game` associated with this stream.
 
         The :class:`~twitchio.Game` returned is current from the time the :class:`~twitchio.Stream`
         instance was created.

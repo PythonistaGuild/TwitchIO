@@ -117,7 +117,9 @@ class Poll:
         return f"<Poll id={self.id} title={self.title} status={self.status} started_at={self.started_at}>"
 
     async def end_poll(self, *, status: Literal["ARCHIVED", "TERMINATED"]) -> Poll:
-        """End an active poll.
+        """|coro|
+
+        End an active poll.
 
         .. note::
             Requires user access token that includes the `channel:manage:polls` scope.

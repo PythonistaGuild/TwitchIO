@@ -104,10 +104,7 @@ class Team:
         return self.name
 
     def __eq__(self, __value: object) -> bool:
-        if not isinstance(__value, Team):
-            return NotImplemented
-
-        return __value.id == self.id
+        return __value.id == self.id if isinstance(__value, Team) else NotImplemented
 
 
 class ChannelTeam:

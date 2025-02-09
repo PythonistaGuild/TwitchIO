@@ -280,7 +280,9 @@ class Client:
         ...
 
     async def login(self, *, token: str | None = None, load_tokens: bool = True, save_tokens: bool = True) -> None:
-        """Method to login the client and generate or store an app token.
+        """|coro|
+
+        Method to login the client and generate or store an app token.
 
         This method is called automatically when using :meth:`~.start`.
         You should **NOT** call this method if you are using :meth:`~.start`.
@@ -461,7 +463,9 @@ class Client:
             pass
 
     async def close(self, **options: Any) -> None:
-        r"""Method which closes the :class:`~Client` gracefully.
+        r"""|coro|
+
+        Method which closes the :class:`~Client` gracefully.
 
         This method is called for you automatically when using :meth:`~.run` or when using the client with the
         async context-manager, E.g: `async with client:`
@@ -536,7 +540,9 @@ class Client:
         await self._ready_event.wait()
 
     async def wait_for(self, event: str, *, timeout: float | None = None, predicate: WaitPredicateT | None = None) -> Any:
-        """Method which waits for any known dispatched event and returns the payload associated with the event.
+        """|coro|
+
+        Method which waits for any known dispatched event and returns the payload associated with the event.
 
         This method can be used with a predicate check to determine whether the `wait_for` should stop listening and return
         the event payload.

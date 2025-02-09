@@ -126,7 +126,9 @@ class Clip:
         return self.id
 
     async def fetch_game(self) -> Game:
-        """Fetches the :class:`~twitchio.Game` associated with this Clip.
+        """|coro|
+
+        Fetches the :class:`~twitchio.Game` associated with this Clip.
 
         Returns
         -------
@@ -137,7 +139,9 @@ class Clip:
         return Game(payload["data"][0], http=self._http)
 
     async def fetch_video(self) -> Video | None:
-        """Fetches the :class:`~twitchio.Video` associated with this clip, if it can be found.
+        """|coro|
+
+        Fetches the :class:`~twitchio.Video` associated with this clip, if it can be found.
 
         Returns
         -------
