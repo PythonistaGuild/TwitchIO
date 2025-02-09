@@ -3318,6 +3318,133 @@ class PartialUser:
         )
         return Warning(data["data"][0], http=self._http)
 
+    async def update_custom_reward(
+        self,
+        id: str,
+        *,
+        title: str | None = None,
+        cost: int | None = None,
+        prompt: str | None = None,
+        enabled: bool | None = None,
+        colour: str | Colour | None = None,
+        input_required: bool | None = None,
+        max_per_stream: int | None = None,
+        max_per_user: int | None = None,
+        global_cooldown: int | None = None,
+        paused: bool | None = None,
+        skip_queue: bool | None = None,
+    ) -> CustomReward:
+        """|coro|
+
+        Update a specific custom reward for this broadcaster / streamer.
+
+        .. important::
+            The app / client ID used to create the reward is the only app that may update the reward.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:redemptions`` scope.
+
+        Parameters
+        -----------
+        id: str
+            The ID of the custom reward.
+        title: str | None
+            The reward's title.
+            The title may contain a maximum of 45 characters and it must be unique amongst all of the broadcaster's custom rewards.
+        cost: int | None
+            The cost of the reward, in channel points. The minimum is 1 point.
+        prompt: str | None
+            The prompt shown to the viewer when they redeem the reward.
+            ``input_required`` needs to be set to ``True`` for this to work,
+        enabled: bool | None
+             Boolean value that indicates whether the reward is enabled. Set to ``True`` to enable the reward. Viewers see only enabled rewards.
+        colour: str | Colour | None
+            The background colour to use for the reward. Specify the color using Hex format (for example, #00E5CB).
+            You can also pass a twitchio.Colour object.
+        input_required: bool | None
+            A Boolean value that determines whether users must enter information to redeem the reward.
+        max_per_stream: int | None
+            The maximum number of redemptions allowed per live stream.
+            Setting this to 0 disables the maximum number of redemptions per stream.
+        max_per_user: int | None
+            The maximum number of redemptions allowed per user per live stream.
+            Setting this to 0 disables the maximum number of redemptions per user per stream.
+        global_cooldown: int | None
+            The cooldown period, in seconds. The minimum value is 1; however, for it to be shown in the Twitch UX, the minimum value is 60.
+            Setting this to 0 disables the global cooldown period.
+        paused: bool | None
+            A Boolean value that determines whether to pause the reward. Set to ``True`` to pause the reward. Viewers can't redeem paused rewards.
+        skip_queue: bool | None
+            A Boolean value that determines whether redemptions should be set to FULFILLED status immediately when a reward is redeemed.
+            If False, status is set to UNFULFILLED and follows the normal request queue process.
+
+        Returns
+        --------
+        CustomReward
+
+        Raises
+        ------
+        ValueError
+            title must be a maximum of 45 characters.
+        ValueError
+            prompt must be a maximum of 200 characters.
+        ValueError
+            Minimum value must be at least 1.
+        """
+
+        if title is not None and len(title) > 45:
+            raise ValueError("title must be a maximum of 45 characters.")
+        if cost is not None and cost < 1:
+            raise ValueError("cost must be at least 1.")
+        if prompt is not None and len(prompt) > 200:
+            raise ValueError("prompt must be a maximum of 200 characters.")
+
+        from .models.channel_points import CustomReward
+
+        data = await self._http.patch_custom_reward(
+            broadcaster_id=self.id,
+            token_for=self.id,
+            reward_id=id,
+            title=title,
+            cost=cost,
+            prompt=prompt,
+            enabled=enabled,
+            background_color=colour,
+            user_input_required=input_required,
+            max_per_stream=max_per_stream,
+            max_per_user=max_per_user,
+            global_cooldown=global_cooldown,
+            paused=paused,
+            skip_queue=skip_queue,
+        )
+
+        return CustomReward(data=data["data"][0], http=self._http)
+
+    async def delete_custom_reward(
+        self,
+        id: str,
+    ) -> None:
+        """|coro|
+
+        Delete a specific custom reward for this broadcaster / user.
+
+        The app used to create the reward is the only app that may delete it.
+        If the reward's redemption status is UNFULFILLED at the time the reward is deleted, its redemption status is marked as FULFILLED.
+
+        .. note::
+            Requires a user access token that includes the ``channel:manage:redemptions`` scope.
+
+        Parameters
+        ----------
+        id: str
+            The ID of the custom reward to delete.
+
+        Returns
+        -------
+        None
+        """
+        await self._http.delete_custom_reward(broadcaster_id=self.id, reward_id=id, token_for=self.id)
+
 
 class User(PartialUser):
     """Represents a User.
