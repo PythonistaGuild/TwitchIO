@@ -408,6 +408,35 @@ class Colour:
         return self._code
 
     @classmethod
+    def defaults(cls) -> tuple[Self, ...]:
+        """Classmethod which returns a :class:`tuple` of :class:`~twitchio.Colour` representing every default chat colour
+        on Twitch.
+
+        Returns
+        -------
+        tuple[:class:`~twitchio.Colour`]
+            A tuple of :class:`~twitchio.Colour` representing every default colour.
+        """
+        all_ = (
+            cls.blue(),
+            cls.blue_violet(),
+            cls.cadet_blue(),
+            cls.chocolate(),
+            cls.coral(),
+            cls.dodger_blue(),
+            cls.firebrick(),
+            cls.green(),
+            cls.golden_rod(),
+            cls.hot_pink(),
+            cls.orange_red(),
+            cls.sea_green(),
+            cls.spring_green(),
+            cls.yellow_green(),
+        )
+
+        return all_
+
+    @classmethod
     def from_hex(cls, hex_: str, /) -> Self:
         """Class method to create a :class:`~twitchio.Colour` object from a hex string.
 
