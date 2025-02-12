@@ -504,7 +504,7 @@ class Bot(Mixin[None], Client):
         payload: SubscriptionPayload,
         *,
         as_bot: bool = True,
-        token_for: str | PartialUser | None,
+        token_for: str | PartialUser | None = None,
         callback_url: str | None = None,
         eventsub_secret: str | None = None,
     ) -> SubscriptionResponse | None:
