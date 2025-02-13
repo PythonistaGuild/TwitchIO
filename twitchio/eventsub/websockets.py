@@ -70,6 +70,7 @@ class Websocket:
         "_backoff",
         "_client",
         "_closed",
+        "_closing",
         "_connecting",
         "_connection_tasks",
         "_heartbeat",
@@ -124,6 +125,7 @@ class Websocket:
 
         self._connecting: bool = False
         self._closed: bool = False
+        self._closing: bool = False
 
         self._connection_tasks: set[asyncio.Task[None]] = set()
 
@@ -238,7 +240,10 @@ class Websocket:
     async def _resubscribe(self) -> None:
         assert self._session_id
 
-        for identifier, sub in self._subscriptions.copy().items():
+        old_subs = self._subscriptions.copy()
+        self._subscriptions.clear()
+
+        for identifier, sub in old_subs.items():
             sub["transport"]["session_id"] = self._session_id
 
             try:
@@ -407,6 +412,9 @@ class Websocket:
             self._client.dispatch(event="subscription_revoked", payload=payload)
 
         self._subscriptions.pop(payload.id, None)
+        if not self._subscriptions:
+            logger.info("Closing websocket '%s' due to no remaining subscriptions.", self)
+            return await self.close()
 
     async def _process_notification(self, data: NotificationMessage) -> None:
         sub_type = data["metadata"]["subscription_type"]
@@ -429,6 +437,8 @@ class Websocket:
             sockets.pop(self.session_id or "", None)
 
     async def close(self, cleanup: bool = True) -> None:
+        self._closing = True
+
         if cleanup:
             self._cleanup()
 
@@ -454,4 +464,5 @@ class Websocket:
         self._listen_task = None
         self._socket = None
 
-        logger.debug("Successfully closed eventsub websocket: <%s>", self)
+        logger.info("Successfully closed eventsub websocket: <%s>", self)
+        self._closing = False
