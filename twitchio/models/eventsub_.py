@@ -5004,6 +5004,31 @@ class Whisper(BaseEvent):
 
 
 class SubscriptionRevoked:
+    """Represents a revoked eventsub subscription by Twitch.
+
+    Attributes
+    ----------
+    id: str
+        The ID of the subscription that has been revoked.
+    raw: RevocationSubscription
+        The raw payload of the revoked subscription as a TypedDict.
+    status: RevocationReason
+        The status provides the reason as to why the subscription was revoked by Twitch.
+    type: str
+        The type of subscription that was revoked e.g. `channel.follow`.
+    version: str
+        The version of the subscription e.g. `1` or `2`.
+    cost: int
+        The cost of the subscription.
+    transport_method: TransportMethod
+        The transport method of the subscription.
+    transport_data: RevocationTransport
+        The data pertaining to the transport of the subscription.
+        This will contain `session_id` or `callback` url depending on the transport method.
+    created_at: datetime.datetime
+        The datetime that the subscription was created.
+    """
+
     __slots__ = (
         "cost",
         "created_at",
