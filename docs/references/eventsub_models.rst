@@ -506,6 +506,11 @@ Eventsub
 .. autoclass:: twitchio.StreamOffline()
     :members:
 
+.. attributetable:: twitchio.SubscriptionRevoked
+
+.. autoclass:: twitchio.SubscriptionRevoked()
+    :members:
+
 .. attributetable:: twitchio.UserAuthorizationGrant
 
 .. autoclass:: twitchio.UserAuthorizationGrant()

@@ -327,7 +327,7 @@ Client Events
 
   :param UserTokenPayload payload: The payload containing token information.
   
-.. py:function:: event_subscription_revoked(payload: twitchio.models.eventsub_.SubscriptionRevoked) -> None
+.. py:function:: event_subscription_revoked(payload: ~models.eventsub_.SubscriptionRevoked) -> None
   :async:
 
   Event dispatched when Twitch revokes a subscription. This can occur on websockets and webhooks.
