@@ -36,6 +36,15 @@ __all__ = (
 
 
 class TransportMethod(enum.Enum):
+    """An enum of EventSub transports.
+
+    Attributes
+    ----------
+    WEBHOOK: Literal["webhook"]
+    WEBSOCKET: Literal["websocket]
+    CONDUIT: Literal["conduit"]
+    """
+
     WEBHOOK = "webhook"
     WEBSOCKET = "websocket"
     CONDUIT = "conduit"
@@ -75,6 +84,90 @@ class MessageType(enum.Enum):
 
 
 class SubscriptionType(enum.Enum):
+    """An enum of available EventSub subscription types.
+
+    The value of each enum attribute will be the formal name sent and received to/from Twitch.
+
+    E.g. ``AutomodMessageHold`` -> ``"automod.message.hold"``.
+
+    Attributes
+    ----------
+    AutomodMessageHold: Literal["automod.message.hold"]
+    AutomodMessageUpdate: Literal["automod.message.update"]
+    AutomodSettingsUpdate: Literal["automod.settings.update"]
+    AutomodTermsUpdate: Literal["automod.terms.update"]
+    ChannelUpdate: Literal["channel.update"]
+    ChannelFollow: Literal["channel.follow"]
+    ChannelAdBreakBegin: Literal["channel.ad_break.begin"]
+    ChannelChatClear: Literal["channel.chat.clear"]
+    ChannelChatClearUserMessages: Literal["channel.chat.clear_user_messages"]
+    ChannelChatMessage: Literal["channel.chat.message"]
+    ChannelChatMessageDelete: Literal["channel.chat.message_delete"]
+    ChannelChatNotification: Literal["channel.chat.notification"]
+    ChannelChatSettingsUpdate: Literal["channel.chat_settings.update"]
+    ChannelChatUserMessageHold: Literal["channel.chat.user_message_hold"]
+    ChannelChatUserMessageUpdate: Literal["channel.chat.user_message_update"]
+    ChannelSubscribe: Literal["channel.subscribe"]
+    ChannelSubscriptionEnd: Literal["channel.subscription.end"]
+    ChannelSubscriptionGift: Literal["channel.subscription.gift"]
+    ChannelSubscriptionMessage: Literal["channel.subscription.message"]
+    ChannelCheer: Literal["channel.cheer"]
+    ChannelRaid: Literal["channel.raid"]
+    ChannelBan: Literal["channel.ban"]
+    ChannelUnban: Literal["channel.unban"]
+    ChannelUnbanRequestCreate: Literal["channel.unban_request.create"]
+    ChannelUnbanRequestResolve: Literal["channel.unban_request.resolve"]
+    ChannelModerate: Literal["channel.moderate"]
+    ChannelModeratorAdd: Literal["channel.moderator.add"]
+    ChannelModeratorRemove: Literal["channel.moderator.remove"]
+    ChannelGuestStarSessionBegin: Literal["channel.guest_star_session.begin"]
+    ChannelGuestStarSessionEnd: Literal["channel.guest_star_session.end"]
+    ChannelGuestStarGuestUpdate: Literal["channel.guest_star_guest.update"]
+    ChannelGuestStarSettingsUpdate: Literal["channel.guest_star_settings.update"]
+    ChannelChannelPointsAutomaticRewardRedemptionAdd: Literal["channel.channel_points_automatic_reward_redemption.add"]
+    ChannelChannelPointsCustomRewardAdd: Literal["channel.channel_points_custom_reward.add"]
+    ChannelChannelPointsCustomRewardUpdate: Literal["channel.channel_points_custom_reward.update"]
+    ChannelChannelPointsCustomRewardRemove: Literal["channel.channel_points_custom_reward.remove"]
+    ChannelChannelPointsCustomRewardRedemptionAdd: Literal["channel.channel_points_custom_reward_redemption.add"]
+    ChannelChannelPointsCustomRewardRedemptionUpdate: Literal["channel.channel_points_custom_reward_redemption.update"]
+    ChannelPollBegin: Literal["channel.poll.begin"]
+    ChannelPollProgres: Literal["channel.poll.progress"]
+    ChannelPollEnd: Literal["channel.poll.end"]
+    ChannelPredictionBegin: Literal["channel.prediction.begin"]
+    ChannelPredictionProgres: Literal["channel.prediction.progress"]
+    ChannelPredictionLock: Literal["channel.prediction.lock"]
+    ChannelPredictionEnd: Literal["channel.prediction.end"]
+    ChannelSuspiciousUserMessage: Literal["channel.suspicious_user.message"]
+    ChannelSuspiciousUserUpdate: Literal["channel.suspicious_user.update"]
+    ChannelVipAdd: Literal["channel.vip.add"]
+    ChannelVipRemove: Literal["channel.vip.remove"]
+    ChannelCharityCampaignDonate: Literal["channel.charity_campaign.donate"]
+    ChannelCharityCampaignStart: Literal["channel.charity_campaign.start"]
+    ChannelCharityCampaignProgress: Literal["channel.charity_campaign.progress"]
+    ChannelCharityCampaignStop: Literal["channel.charity_campaign.stop"]
+    ConduitShardDisabled: Literal["conduit.shard.disabled"]
+    DropEntitlementGrant: Literal["drop.entitlement.grant"]
+    ExtensionBitsTransactionCreate: Literal["extension.bits_transaction.create"]
+    ChannelGoalBegin: Literal["channel.goal.begin"]
+    ChannelGoalProgress: Literal["channel.goal.progress"]
+    ChannelGoalEnd: Literal["channel.goal.end"]
+    ChannelHypeTrainBegin: Literal["channel.hype_train.begin"]
+    ChannelHypeTrainProgress: Literal["channel.hype_train.progress"]
+    ChannelHypeTrainEnd: Literal["channel.hype_train.end"]
+    ChannelShieldModeBegin: Literal["channel.shield_mode.begin"]
+    ChannelShieldModeEnd: Literal["channel.shield_mode.end"]
+    ChannelShoutoutCreate: Literal["channel.shoutout.create"]
+    ChannelShoutoutReceive: Literal["channel.shoutout.receive"]
+    ChannelWarningAcknowledgement: Literal["channel.warning.acknowledge"]
+    ChannelWarningSend: Literal["channel.warning.send"]
+    StreamOnline: Literal["stream.online"]
+    StreamOffline: Literal["stream.offline"]
+    UserAuthorizationGrant: Literal["user.authorization.grant"]
+    UserAuthorizationRevoke: Literal["user.authorization.revoke"]
+    UserUpdate: Literal["user.update"]
+    UserWhisperMessage: Literal["user.whisper.message"]
+    """
+
     AutomodMessageHold = "automod.message.hold"
     AutomodMessageUpdate = "automod.message.update"
     AutomodSettingsUpdate = "automod.settings.update"
