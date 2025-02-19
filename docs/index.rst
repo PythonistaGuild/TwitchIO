@@ -82,6 +82,7 @@ References
 
    references/eventsub_models
    references/helix_models
+   references/enums_etc
 
 .. toctree::
    :maxdepth: 1
