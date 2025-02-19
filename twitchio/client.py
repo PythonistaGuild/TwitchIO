@@ -41,7 +41,7 @@ from .models.channels import ChannelInfo
 from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
 from .models.games import Game
 from .models.teams import Team
-from .payloads import EventErrorPayload
+from .payloads import EventErrorPayload, WebsocketSubscriptionData
 from .user import ActiveExtensions, Extension, PartialUser, User
 from .utils import MISSING, EventWaiter, unwrap_function
 from .web import AiohttpAdapter
@@ -2403,6 +2403,75 @@ class Client:
 
         """
         await self._http.delete_eventsub_subscription(id, token_for=token_for)
+
+    def websocket_subscriptions(self) -> dict[str, WebsocketSubscriptionData]:
+        """Method which returns a mapping of currently active EventSub subscriptions with a websocket transport on this
+        client.
+
+        The returned mapping contains the subscription ID as a key to a :class:`~twitchio.WebsocketSubscriptionData`
+        value containing the relevant subscription data.
+
+        Returns
+        -------
+        dict[:class:`str`, :class:`~twitchio.WebsocketSubscriptionData`]
+            A mapping of currently active websocket subscriptions on the client.
+        """
+        ret: dict[str, WebsocketSubscriptionData] = {}
+
+        for pair in self._websockets.values():
+            for socket in pair.values():
+                ret.update({k: WebsocketSubscriptionData(v) for k, v in socket._subscriptions.items()})
+
+        return ret
+
+    async def delete_websocket_subscription(self, id: str) -> WebsocketSubscriptionData:
+        """|coro|
+
+        Delete an EventSub subsctiption with a Websocket Transport.
+
+        This method is a helper method to remove a websocket subscription currently active on this client. This method also
+        cleans up any websocket connections that have no remaining subscriptions after the subscription is removed.
+
+        .. note::
+
+            Make sure the subscription is currently active on this Client instance. You can check currently active websocket
+            subscriptions via :meth:`.websocket_subscriptions`.
+
+        Parameters
+        ----------
+        id: str
+            The Eventsub subscription ID. You can view currently active subscriptions via :meth:`.websocket_subscriptions`.
+
+        Returns
+        -------
+        :class:`~twitchio.WebsocketSubscriptionData`
+            The data associated with the removed subscription.
+
+        Raises
+        ------
+        ValueError
+            The subscription with the provided ID could not be found on this client.
+        :class:`~twitchio.HTTPException`
+            Removing the subscription from Twitch failed.
+        """
+        # Find subscription...
+        for token_for, pair in self._websockets.copy().items():
+            for socket in pair.values():
+                sub = socket._subscriptions.get(id, None)
+                if not sub:
+                    continue
+
+                await self._http.delete_eventsub_subscription(id, token_for=token_for)
+                socket._subscriptions.pop(id, None)
+
+                data = WebsocketSubscriptionData(sub)
+                if not socket._subscriptions and not socket._closing and not socket._closed:
+                    logger.info("Closing websocket '%s' due to no remaining subscriptions.", socket)
+                    await socket.close()
+
+                return data
+
+        raise ValueError(f"Unable to find a Websocket subscription currently active on this client with ID '{id}'.")
 
     async def delete_all_eventsub_subscriptions(self, *, token_for: str | PartialUser | None = None) -> None:
         """|coro|
