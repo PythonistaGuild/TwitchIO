@@ -2424,7 +2424,7 @@ class Client:
 
         return ret
 
-    async def delete_websocket_subscription(self, id: str) -> WebsocketSubscriptionData:
+    async def delete_websocket_subscription(self, id: str, *, force: bool = False) -> WebsocketSubscriptionData:
         """|coro|
 
         Delete an EventSub subsctiption with a Websocket Transport.
@@ -2441,6 +2441,12 @@ class Client:
         ----------
         id: str
             The Eventsub subscription ID. You can view currently active subscriptions via :meth:`.websocket_subscriptions`.
+        force: bool
+            When set to ``True``, the subscription will be forcefully removed from the Client,
+            regardless of any HTTPException's raised during the call to Twitch.
+
+            When set to ``False``, if an exception is raised, the subscription will remain on the Client websocket.
+            Defaults to ``False``.
 
         Returns
         -------
@@ -2461,10 +2467,15 @@ class Client:
                 if not sub:
                     continue
 
-                await self._http.delete_eventsub_subscription(id, token_for=token_for)
-                socket._subscriptions.pop(id, None)
+                try:
+                    await self._http.delete_eventsub_subscription(id, token_for=token_for)
+                except HTTPException as e:
+                    if not force:
+                        raise e
 
+                socket._subscriptions.pop(id, None)
                 data = WebsocketSubscriptionData(sub)
+
                 if not socket._subscriptions and not socket._closing and not socket._closed:
                     logger.info("Closing websocket '%s' due to no remaining subscriptions.", socket)
                     await socket.close()
