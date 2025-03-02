@@ -186,7 +186,7 @@ class ManagedHTTPClient(OAuth):
             if not old or e.status != 401:
                 raise e
 
-            if e.extra.get("message", "").lower() != "invalid access token":
+            if e.extra.get("message", "").lower() not in ("invalid access token", "invalid oauth token"):
                 raise e
 
             if isinstance(old, str):
