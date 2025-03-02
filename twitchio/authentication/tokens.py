@@ -252,26 +252,28 @@ class ManagedHTTPClient(OAuth):
         logger.debug("Attempting to revalidate all tokens that have passed the timeout on %s.", self.__class__.__qualname__)
 
         for data in self._tokens.copy().values():
+            user_id: str = data["user_id"]
+            token: str = data["token"]
+            refresh: str = data["refresh"]
             last_validated: datetime.datetime = datetime.datetime.fromisoformat(data["last_validated"])
+
             if last_validated + datetime.timedelta(minutes=60) > datetime.datetime.now():
                 continue
 
             try:
-                valid_resp: ValidateTokenPayload = await self.__isolated.validate_token(data["token"])
+                valid_resp: ValidateTokenPayload = await self.__isolated.validate_token(token)
             except HTTPException as e:
                 if e.status >= 500:
                     raise
 
-                logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', data["user_id"])
-                await self._refresh_token(data["user_id"], data["refresh"])
+                logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', user_id)
+                await self._refresh_token(user_id, refresh)
             else:
-                if valid_resp["expires_in"] <= 60:
-                    logger.debug(
-                        'Token for "%s" expires in %s seconds. Attempting to refresh token.',
-                        data["user_id"],
-                        valid_resp["expires_in"],
-                    )
-                    await self._refresh_token(data["user_id"], data["refresh"])
+                expires_in: int = valid_resp["expires_in"]
+
+                if expires_in <= 60:
+                    logger.debug('Token for "%s" expires in %s seconds. Attempting to refresh token.', user_id, expires_in)
+                    await self._refresh_token(user_id, refresh)
 
     async def __validate_loop(self) -> None:
         logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
