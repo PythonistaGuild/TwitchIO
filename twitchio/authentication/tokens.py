@@ -229,6 +229,25 @@ class ManagedHTTPClient(OAuth):
         )
         return iterator
 
+    async def _refresh_token(self, user_id: str, refresh: str) -> None:
+        try:
+            resp: RefreshTokenPayload = await self.__isolated.refresh_token(refresh)
+        except HTTPException as e:
+            if e.status >= 500:
+                raise
+
+            self._tokens.pop(user_id, None)
+            logger.warning('Token for "%s" was invalid and could not be refreshed.', user_id)
+        else:
+            logger.debug('Token for "%s" was successfully refreshed.', user_id)
+
+            self._tokens[user_id] = {
+                "user_id": user_id,
+                "token": resp.access_token,
+                "refresh": resp.refresh_token,
+                "last_validated": datetime.datetime.now().isoformat(),
+            }
+
     async def _revalidate_all(self) -> None:
         logger.debug("Attempting to revalidate all tokens that have passed the timeout on %s.", self.__class__.__qualname__)
 
@@ -238,31 +257,21 @@ class ManagedHTTPClient(OAuth):
                 continue
 
             try:
-                await self.__isolated.validate_token(data["token"])
+                valid_resp: ValidateTokenPayload = await self.__isolated.validate_token(data["token"])
             except HTTPException as e:
                 if e.status >= 500:
                     raise
 
                 logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', data["user_id"])
-
-                try:
-                    refresh: RefreshTokenPayload = await self.__isolated.refresh_token(data["refresh"])
-                except HTTPException as e:
-                    if e.status >= 500:
-                        raise
-
-                    self._tokens.pop(data["user_id"], None)
-                    logger.warning('Token for "%s" was invalid and could not be refreshed.', data["user_id"])
-                    continue
-
-                logger.debug('Token for "%s" was successfully refreshed.', data["user_id"])
-
-                self._tokens[data["user_id"]] = {
-                    "user_id": data["user_id"],
-                    "token": refresh.access_token,
-                    "refresh": refresh.refresh_token,
-                    "last_validated": datetime.datetime.now().isoformat(),
-                }
+                await self._refresh_token(data["user_id"], data["refresh"])
+            else:
+                if valid_resp["expires_in"] <= 60:
+                    logger.debug(
+                        'Token for "%s" expires in %s seconds. Attempting to refresh token.',
+                        data["user_id"],
+                        valid_resp["expires_in"],
+                    )
+                    await self._refresh_token(data["user_id"], data["refresh"])
 
     async def __validate_loop(self) -> None:
         logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
