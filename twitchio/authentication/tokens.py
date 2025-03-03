@@ -271,7 +271,7 @@ class ManagedHTTPClient(OAuth):
                 self._tokens[user_id]["last_validated"] = datetime.datetime.now().isoformat()
 
                 expires_in: int = valid_resp["expires_in"]
-                if expires_in <= 60:
+                if expires_in <= 300:
                     logger.debug('Token for "%s" expires in %s seconds. Attempting to refresh token.', user_id, expires_in)
 
                     await self._refresh_token(user_id, refresh)
