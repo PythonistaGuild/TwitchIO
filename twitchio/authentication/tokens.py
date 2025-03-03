@@ -88,7 +88,6 @@ class ManagedHTTPClient(OAuth):
         self._has_loaded: bool = False
         self._backoff: Backoff = Backoff(base=3, maximum_time=90)
 
-        self._validated_event: asyncio.Event = asyncio.Event()
         self._validate_task: asyncio.Task[None] | None = None
 
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
@@ -255,9 +254,9 @@ class ManagedHTTPClient(OAuth):
             user_id: str = data["user_id"]
             token: str = data["token"]
             refresh: str = data["refresh"]
-            last_validated: datetime.datetime = datetime.datetime.fromisoformat(data["last_validated"])
 
-            if last_validated + datetime.timedelta(minutes=60) > datetime.datetime.now():
+            last_validated: datetime.datetime = datetime.datetime.fromisoformat(data["last_validated"])
+            if last_validated + datetime.timedelta(minutes=55) > datetime.datetime.now():
                 continue
 
             try:
@@ -269,18 +268,18 @@ class ManagedHTTPClient(OAuth):
                 logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', user_id)
                 await self._refresh_token(user_id, refresh)
             else:
-                expires_in: int = valid_resp["expires_in"]
+                self._tokens[user_id]["last_validated"] = datetime.datetime.now().isoformat()
 
+                expires_in: int = valid_resp["expires_in"]
                 if expires_in <= 60:
                     logger.debug('Token for "%s" expires in %s seconds. Attempting to refresh token.', user_id, expires_in)
+
                     await self._refresh_token(user_id, refresh)
 
     async def __validate_loop(self) -> None:
         logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
 
         while True:
-            self._validated_event.clear()
-
             try:
                 await self._revalidate_all()
             except (ConnectionError, aiohttp.ClientConnectorError, HTTPException) as e:
@@ -290,7 +289,6 @@ class ManagedHTTPClient(OAuth):
                 await asyncio.sleep(wait)
                 continue
 
-            self._validated_event.set()
             await asyncio.sleep(60)
 
     def cleanup(self) -> None:
