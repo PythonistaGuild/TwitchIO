@@ -173,11 +173,6 @@ class Websocket:
             logger.info("Websocket <%s> was closed unexepectedly, but is flagged as 'should not reconnect'.", self)
             return await self.close()
 
-        if reconnect:
-            # We have to ensure that the tokens we need for resubscribing have been recently refreshed as
-            # we only have 10 seconds to subscribe after we receive the welcome message...
-            await self._http._validated_event.wait()
-
         while True:
             try:
                 async with aiohttp.ClientSession() as session:
