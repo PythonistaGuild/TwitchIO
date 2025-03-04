@@ -91,8 +91,6 @@ class ManagedHTTPClient(OAuth):
         self._validate_task: asyncio.Task[None] | None = None
 
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
-        logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
-
         try:
             resp: RefreshTokenPayload = await self.__isolated.refresh_token(refresh)
         except HTTPException as e:
@@ -132,6 +130,7 @@ class ManagedHTTPClient(OAuth):
                 msg: str = "Token was invalid. Please check the token or re-authenticate user with a new token."
                 raise InvalidTokenException(msg, token=token, refresh=refresh, type_="token", original=e)
 
+            logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
             return await self._attempt_refresh_on_add(token, refresh)
 
         if not resp.login or not resp.user_id:
@@ -139,6 +138,10 @@ class ManagedHTTPClient(OAuth):
             self._app_token = token
 
             return resp
+
+        if resp.expires_in <= 3600:
+            logger.debug("Token expires in %s seconds. Attempting to refresh.", resp.expires_in)
+            return await self._attempt_refresh_on_add(token, refresh)
 
         self._tokens[resp.user_id] = {
             "user_id": resp.user_id,
@@ -268,13 +271,14 @@ class ManagedHTTPClient(OAuth):
                 logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', user_id)
                 await self._refresh_token(user_id, refresh)
             else:
-                self._tokens[user_id]["last_validated"] = datetime.datetime.now().isoformat()
-
-                expires_in: int = valid_resp["expires_in"]
-                if expires_in <= 300:
-                    logger.debug('Token for "%s" expires in %s seconds. Attempting to refresh token.', user_id, expires_in)
+                if valid_resp.expires_in <= 3600:
+                    logger.debug(
+                        'Token for "%s" expires in %s seconds. Attempting to refresh token.', user_id, valid_resp.expires_in
+                    )
 
                     await self._refresh_token(user_id, refresh)
+                else:
+                    self._tokens[user_id]["last_validated"] = datetime.datetime.now().isoformat()
 
     async def __validate_loop(self) -> None:
         logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
