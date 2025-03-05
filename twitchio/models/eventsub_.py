@@ -118,6 +118,7 @@ __all__ = (
     "ChatSettingsUpdate",
     "ChatSub",
     "ChatUserMessageHold",
+    "ChatUserMessageUpdate",
     "CooldownSettings",
     "EventsubSubscription",
     "EventsubSubscriptions",
