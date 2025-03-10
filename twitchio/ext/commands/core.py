@@ -90,7 +90,9 @@ def get_signature_parameters(
     required_params = twitchio.utils.is_inside_class(function) + 1 if skip_parameters is None else skip_parameters
 
     if len(signature.parameters) < required_params:
-        raise TypeError(f"Command signature requires at least {required_params - 1} parameter(s)")
+        raise TypeError(
+            f"Command signature for {function.__name__!r} is missing {required_params - 1} required parameter(s)"
+        )
 
     iterator = iter(signature.parameters.items())
     for _ in range(0, required_params):
@@ -164,9 +166,9 @@ class Command(Generic[Component_T, P]):
     def __str__(self) -> str:
         return self._name
 
-    async def __call__(self, context: Context) -> None:
+    async def __call__(self, context: Context) -> Any:
         callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
-        await callback
+        return await callback
 
     @property
     def component(self) -> Component_T | None:
@@ -468,7 +470,7 @@ class Command(Generic[Component_T, P]):
                 cooldown=cooldown,
             )
 
-    async def _invoke(self, context: Context) -> None:
+    async def _invoke(self, context: Context) -> Any:
         context._component = self._injected
 
         if not self._guards_after_parsing:
@@ -505,13 +507,13 @@ class Command(Generic[Component_T, P]):
         callback = self._callback(*args, **kwargs)  # type: ignore
 
         try:
-            await callback
+            return await callback
         except Exception as e:
             raise CommandInvokeError(msg=str(e), original=e) from e
 
-    async def invoke(self, context: Context) -> None:
+    async def invoke(self, context: Context) -> Any:
         try:
-            await self._invoke(context)
+            return await self._invoke(context)
         except CommandError as e:
             await self._dispatch_error(context, e)
         except Exception as e:
@@ -861,7 +863,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
         if not trigger or (not next_ and self._invoke_fallback):
             view.undo()
-            await super()._invoke(context=context)
+            return await super()._invoke(context=context)
 
         elif next_:
             if self._apply_cooldowns:
@@ -870,14 +872,13 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
             if self._apply_guards:
                 await super()._run_guards(context, with_cooldowns=False)
 
-            await next_.invoke(context=context)
+            return await next_.invoke(context=context)
 
-        else:
-            raise CommandNotFound(f'The sub-command "{trigger}" for group "{self._name}" was not found.')
+        raise CommandNotFound(f'The sub-command "{trigger}" for group "{self._name}" was not found.')
 
     async def invoke(self, context: Context) -> None:
         try:
-            await self._invoke(context)
+            return await self._invoke(context)
         except CommandError as e:
             await self._dispatch_error(context, e)
 
