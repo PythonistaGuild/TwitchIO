@@ -19,23 +19,21 @@ Creating a Twitch Application
 A Minimal bot
 ==============
 
-For this example we will be using sqlite3 as our token database. 
+For this example we will be using sqlite3 as our token database.
 Since TwitchIO 3 is fully asynchronous we will be using `asqlite` as our library of choice.
 
-.. code:: shell 
-    
+.. code:: shell
+
     pip install -U git+https://github.com/Rapptz/asqlite.git
 
 Before running the code below, there just a couple more steps we need to take.
 
 #. Create a new Twitch account. This will be the dedicated bot account.
 #. Enter your CLIENT_ID, CLIENT_SECRET, BOT_ID and OWNER_ID into the placeholders in the below example.
-#. Comment out everything in ``setup_hook``.
 #. Run the bot.
 #. Open a new browser / incognito mode, log in as the bot account and visit http://localhost:4343/oauth?scopes=user:read:chat%20user:write:chat%20user:bot
 #. In your main browser whilst logged in as your account, visit http://localhost:4343/oauth?scopes=channel:bot
-#. Stop the bot and uncomment everything in ``setup_hook``.
-#. Start the bot.
+#. Restart the bot.
 
 **You only have to do this sequence of steps once. Or if the scopes need to change.**
 
@@ -71,6 +69,12 @@ Before running the code below, there just a couple more steps we need to take.
             )
 
         async def setup_hook(self) -> None:
+            # If there isn't any token in db, prompt user to authorize the application on both bot and broadcaster accounts.
+            if len(self.tokens) < 2:
+                LOGGER.info("Logged in the bots user account, visit: http://localhost:4343/oauth?scopes=user:read:chat%20user:write:chat%20user:bot")
+                LOGGER.info("Logged in as your personal user account, visit: http://localhost:4343/oauth?scopes=channel:bot")
+                return
+
             # Add our component which contains our commands...
             await self.add_component(MyComponent(self))
 
@@ -93,7 +97,7 @@ Before running the code below, there just a couple more steps we need to take.
             INSERT INTO tokens (user_id, token, refresh)
             VALUES (?, ?, ?)
             ON CONFLICT(user_id)
-            DO UPDATE SET 
+            DO UPDATE SET
                 token = excluded.token,
                 refresh = excluded.refresh;
             """
@@ -128,7 +132,7 @@ Before running the code below, there just a couple more steps we need to take.
             # Passing args is not required...
             # We pass bot here as an example...
             self.bot = bot
-    
+
         # We use a listener in our Component to display the messages received.
         @commands.Component.listener()
         async def event_message(self, payload: twitchio.ChatMessage) -> None:

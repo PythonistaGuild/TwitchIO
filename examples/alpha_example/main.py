@@ -16,15 +16,13 @@ LOGGER: logging.Logger = logging.getLogger("Bot")
 # You need to install: https://github.com/Rapptz/asqlite
 # pip install -U git+https://github.com/Rapptz/asqlite.git
 
-# 1.) Comment out lines: 54-60 (The subscriptions)
-# 2.) Add the Twitch Developer Console and Create an Application
-# 3.) Add: http://localhost:4343/oauth/callback as the callback URL
-# 4.) Enter your CLIENT_ID, CLIENT_SECRET, BOT_ID and OWNER_ID
-# 5.) Run the bot.
-# 6.) Logged in the bots user account, visit: http://localhost:4343/oauth?scopes=user:read:chat%20user:write:chat%20user:bot
-# 7.) Logged in as your personal user account, visit: http://localhost:4343/oauth?scopes=channel:bot
-# 8.) Uncomment lines: 54-60 (The subscriptions)
-# 9.) Restart the bot.
+# 1.) Add the Twitch Developer Console and Create an Application
+# 2.) Add: http://localhost:4343/oauth/callback as the callback URL
+# 3.) Enter your CLIENT_ID, CLIENT_SECRET, BOT_ID and OWNER_ID
+# 4.) Run the bot.
+# 5.) Logged in the bots user account, visit: http://localhost:4343/oauth?scopes=user:read:chat%20user:write:chat%20user:bot
+# 6.) Logged in as your personal user account, visit: http://localhost:4343/oauth?scopes=channel:bot
+# 7.) Restart the bot.
 # You only have to do the above once for this example.
 
 
@@ -46,6 +44,12 @@ class Bot(commands.Bot):
         )
 
     async def setup_hook(self) -> None:
+        # If there isn't any token in db, prompt user to authorize the application on both bot and broadcaster accounts.
+        if len(self.tokens) < 2:
+            LOGGER.info("Logged in the bots user account, visit: http://localhost:4343/oauth?scopes=user:read:chat%20user:write:chat%20user:bot")
+            LOGGER.info("Logged in as your personal user account, visit: http://localhost:4343/oauth?scopes=channel:bot")
+            return
+
         # Add our component which contains our commands...
         await self.add_component(MyComponent(self))
 
@@ -68,7 +72,7 @@ class Bot(commands.Bot):
         INSERT INTO tokens (user_id, token, refresh)
         VALUES (?, ?, ?)
         ON CONFLICT(user_id)
-        DO UPDATE SET 
+        DO UPDATE SET
             token = excluded.token,
             refresh = excluded.refresh;
         """
