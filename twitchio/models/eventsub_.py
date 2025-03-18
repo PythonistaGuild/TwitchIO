@@ -3575,7 +3575,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
             reward_id=self.reward.id,
             status="FULFILLED",
         )
-        reward = cast(CustomReward, self.reward)
+        reward = cast("CustomReward", self.reward)
         return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
     async def refund(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
@@ -3604,7 +3604,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
             reward_id=self.reward.id,
             status="CANCELED",
         )
-        reward = cast(CustomReward, self.reward)
+        reward = cast("CustomReward", self.reward)
         return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
 
