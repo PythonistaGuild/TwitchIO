@@ -107,6 +107,9 @@ class SubscriptionType(enum.Enum):
     ChannelChatSettingsUpdate: Literal["channel.chat_settings.update"]
     ChannelChatUserMessageHold: Literal["channel.chat.user_message_hold"]
     ChannelChatUserMessageUpdate: Literal["channel.chat.user_message_update"]
+    ChannelSharedChatBegin: Literal["channel.shared_chat.begin"]
+    ChannelSharedChatUpdate: Literal["channel.shared_chat.update"]
+    ChannelSharedChatEnd: Literal["channel.shared_chat.end"]
     ChannelSubscribe: Literal["channel.subscribe"]
     ChannelSubscriptionEnd: Literal["channel.subscription.end"]
     ChannelSubscriptionGift: Literal["channel.subscription.gift"]
@@ -183,6 +186,9 @@ class SubscriptionType(enum.Enum):
     ChannelChatSettingsUpdate = "channel.chat_settings.update"
     ChannelChatUserMessageHold = "channel.chat.user_message_hold"
     ChannelChatUserMessageUpdate = "channel.chat.user_message_update"
+    ChannelSharedChatBegin = "channel.shared_chat.begin"
+    ChannelSharedChatUpdate = "channel.shared_chat.update"
+    ChannelSharedChatEnd = "channel.shared_chat.end"
     ChannelSubscribe = "channel.subscribe"
     ChannelSubscriptionEnd = "channel.subscription.end"
     ChannelSubscriptionGift = "channel.subscription.gift"
