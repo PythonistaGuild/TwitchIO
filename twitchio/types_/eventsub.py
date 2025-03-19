@@ -1076,7 +1076,7 @@ class SuspiciousMessageData(ChatMessageData):
 class ChannelSuspiciousUserMessageEvent(BroadcasterUserEvent):
     low_trust_status: Literal["none", "active_monitoring", "restricted"]
     shared_ban_channel_ids: list[str]
-    types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
+    types: list[Literal["manually_added", "ban_evader", "banned_in_shared_channel"]]
     ban_evasion_evaluation: Literal["unknown", "possible", "likely"]
     message: SuspiciousMessageData
 

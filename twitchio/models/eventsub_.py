@@ -4011,12 +4011,12 @@ class SuspiciousUserMessage(BaseEvent):
 
     banned_channels: list[str]
         A list of channel IDs where the suspicious user is also banned.
-    types: list[typing.Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
+    types: list[typing.Literal["manually_added", "ban_evader", "banned_in_shared_channel"]]
         User types (if any) that apply to the suspicious user. Can be the following:
 
-        - manual
-        - ban_evader_detector
-        - shared_channel_ban
+        - manually_added
+        - ban_evader
+        - banned_in_shared_channel
 
     evaluation: typing.Literal["unknown", "possible", "likely"]
         A ban evasion likelihood value (if any) that as been applied to the user automatically by Twitch. Can be:
@@ -4040,7 +4040,7 @@ class SuspiciousUserMessage(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.low_trust_status: Literal["none", "active_monitoring", "restricted"] = payload["low_trust_status"]
         self.banned_channels: list[str] = payload["shared_ban_channel_ids"]
-        self.types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]] = payload["types"]
+        self.types: list[Literal["manually_added", "ban_evader", "banned_in_shared_channel"]] = payload["types"]
         self.evaluation: Literal["unknown", "possible", "likely"] = payload["ban_evasion_evaluation"]
         self.message: BaseChatMessage = BaseChatMessage(payload, http=http)
 
