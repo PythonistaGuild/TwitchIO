@@ -333,7 +333,7 @@ class Client:
         if self._bot_id:
             logger.debug("Fetching Clients self user for %r", self)
             partial = PartialUser(id=self._bot_id, http=self._http)
-            self._user = partial if not self._fetch_self else await partial.user()
+            self._user = await partial.user() if self._fetch_self else partial
 
         await self.setup_hook()
 

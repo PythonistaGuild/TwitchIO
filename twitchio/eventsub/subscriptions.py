@@ -43,6 +43,7 @@ __all__ = (
     "AutomodSettingsUpdateSubscription",
     "AutomodTermsUpdateSubscription",
     "ChannelBanSubscription",
+    "ChannelBitsUseSubscription",
     "ChannelCheerSubscription",
     "ChannelFollowSubscription",
     "ChannelModerateSubscription",
@@ -115,6 +116,7 @@ __all__ = (
 # Short names: Only map names that require shortening...
 _SUB_MAPPING: dict[str, str] = {
     "channel.ad_break.begin": "ad_break",
+    "channel.bits.use": "bits_use",
     "channel.chat.clear_user_messages": "chat_clear_user",
     "channel.chat.message": "message",  # Sub events?
     "channel.chat.message_delete": "message_delete",
@@ -402,6 +404,51 @@ class AutomodTermsUpdateSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "moderator_user_id": self.moderator_user_id}
+
+
+class ChannelBitsUseSubscription(SubscriptionPayload):
+    """The ``channel.bits.use`` subscription type sends a notification whenever Bits are used on a channel.
+
+    This event is designed to be an all-purpose event for when Bits are used in a channel and might be updated in the future as more Twitch features use Bits.
+
+    Currently, this event will be sent when a user:
+
+    - Cheers in a channel
+    - Uses a Power-up
+        - Will not emit when a streamer uses a Power-up for free in their own channel.
+
+    .. important::
+        Requires a user access token that includes the ``bits:read`` scope. This must be the broadcaster's token.
+
+        Bits transactions via Twitch Extensions are not included in this subscription type.
+
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+
+    Raises
+    ------
+    ValueError
+        The parameters "broadcaster_user_id" must be passed.
+    """
+
+    type: ClassVar[Literal["channel.bits.use"]] = "channel.bits.use"
+    version: ClassVar[Literal["1"]] = "1"
+
+    @handle_user_ids()
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
 
 
 class ChannelUpdateSubscription(SubscriptionPayload):

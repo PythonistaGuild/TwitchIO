@@ -42,6 +42,7 @@ __all__ = (
     "BaseEmoteData",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
+    "ChannelBitsUseEvent",
     "ChannelChatClearEvent",
     "ChannelChatClearUserMessagesEvent",
     "ChannelChatMessageDeleteEvent",
@@ -353,6 +354,24 @@ class ChannelAdBreakBeginEvent(BaseBroadcasterEvent):
     duration_seconds: str
     started_at: str
     is_automatic: str
+
+
+class PowerUpEmote(TypedDict):
+    id: str
+    name: str
+
+
+class PowerUpData(TypedDict):
+    type: Literal["message_effect", "celebration", "gigantify_an_emote"]
+    emote: PowerUpEmote | None
+    message_effect_id: str | None
+
+
+class ChannelBitsUseEvent(BroadcasterUserEvent):
+    bits: int
+    type: Literal["cheer", "power_up"]
+    message: ChatMessageData
+    power_up: PowerUpData | None
 
 
 class ChannelChatClearEvent(BaseBroadcasterEvent): ...
