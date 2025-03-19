@@ -2310,6 +2310,8 @@ class Client:
         .. note::
             type, status and user_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
 
+            This endpoint returns disabled WebSocket subscriptions for a minimum of 1 minute as compared to webhooks which returns disabled subscriptions for a minimum of 10 days.
+
         Parameters
         -----------
         token_for: str | PartialUser | None
