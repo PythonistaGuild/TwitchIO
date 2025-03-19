@@ -37,7 +37,6 @@ from ..authentication import Scopes
 from ..eventsub.subscriptions import _SUB_MAPPING
 from ..exceptions import HTTPException
 from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
-from ..types_.eventsub import EventSubHeaders
 from ..utils import _from_json, parse_timestamp  # type: ignore
 from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
@@ -47,6 +46,7 @@ if TYPE_CHECKING:
 
     from ..authentication import AuthorizationURLPayload, UserTokenPayload
     from ..client import Client
+    from ..types_.eventsub import EventSubHeaders
 
 
 __all__ = ("AiohttpAdapter",)
@@ -221,7 +221,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         self._runner_task = asyncio.create_task(site.start(), name=f"twitchio-web-adapter:{self.__class__.__qualname__}")
 
     async def eventsub_callback(self, request: web.Request) -> web.Response:
-        headers: EventSubHeaders = cast(EventSubHeaders, request.headers)
+        headers: EventSubHeaders = cast("EventSubHeaders", request.headers)
         msg_type: str | None = headers.get("Twitch-Eventsub-Message-Type")
 
         if not msg_type or msg_type not in MESSAGE_TYPES:
