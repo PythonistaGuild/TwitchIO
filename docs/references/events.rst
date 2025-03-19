@@ -44,6 +44,10 @@ Events Reference
      - :meth:`~eventsub.AdBreakBeginSubscription`
      - :func:`~twitchio.event_ad_break()`
      - :class:`~models.eventsub_.ChannelAdBreakBegin`
+   * - Channel Bits Use
+     - :meth:`~eventsub.ChannelBitsUseSubscription`
+     - :func:`~twitchio.event_bits_use()`
+     - :class:`~models.eventsub_.ChannelBitsUse`
    * - Channel Chat Clear
      - :meth:`~eventsub.ChatClearSubscription`
      - :func:`~twitchio.event_chat_clear()`
@@ -784,6 +788,18 @@ Chat / Messages
   to receive this event.
 
   :param twitchio.Whisper payload: The EventSub payload for this event.
+
+.. py:function:: event_bits_use(payload: twitchio.ChannelBitsUse) -> None
+  :async:
+
+  Event dispatched whenever Bits are used on a channel.
+    
+  Corresponds to the Twitch EventSub subscription :es-docs:`Channel Bits Use <channelbitsuse>`.
+    
+  You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelBitsUseSubscription` for each required user
+  to receive this event.
+
+  :param twitchio.ChannelBitsUse payload: The EventSub payload for this event.
 
 Goals
 -----

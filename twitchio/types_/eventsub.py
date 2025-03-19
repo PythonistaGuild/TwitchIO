@@ -131,6 +131,8 @@ __all__ = (
     "ModerateUnbanRequestData",
     "ModerateWarnData",
     "PollChoiceData",
+    "PowerUpData",
+    "PowerUpEmoteDataData",
     "ReedemedRewardData",
     "ShieldModeBeginEvent",
     "ShieldModeEndEvent",
@@ -356,14 +358,14 @@ class ChannelAdBreakBeginEvent(BaseBroadcasterEvent):
     is_automatic: str
 
 
-class PowerUpEmote(TypedDict):
+class PowerUpEmoteDataData(TypedDict):
     id: str
     name: str
 
 
 class PowerUpData(TypedDict):
     type: Literal["message_effect", "celebration", "gigantify_an_emote"]
-    emote: PowerUpEmote | None
+    emote: PowerUpEmoteDataData | None
     message_effect_id: str | None
 
 
