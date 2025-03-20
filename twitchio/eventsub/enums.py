@@ -99,6 +99,7 @@ class SubscriptionType(enum.Enum):
     ChannelUpdate: Literal["channel.update"]
     ChannelFollow: Literal["channel.follow"]
     ChannelAdBreakBegin: Literal["channel.ad_break.begin"]
+    ChannelBitsUseSubscription: Literal["channel.bits.use"]
     ChannelChatClear: Literal["channel.chat.clear"]
     ChannelChatClearUserMessages: Literal["channel.chat.clear_user_messages"]
     ChannelChatMessage: Literal["channel.chat.message"]
@@ -175,6 +176,7 @@ class SubscriptionType(enum.Enum):
     AutomodMessageUpdate = "automod.message.update"
     AutomodSettingsUpdate = "automod.settings.update"
     AutomodTermsUpdate = "automod.terms.update"
+    ChannelBitsUse = "channel.bits.use"
     ChannelUpdate = "channel.update"
     ChannelFollow = "channel.follow"
     ChannelAdBreakBegin = "channel.ad_break.begin"

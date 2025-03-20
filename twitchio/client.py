@@ -333,7 +333,7 @@ class Client:
         if self._bot_id:
             logger.debug("Fetching Clients self user for %r", self)
             partial = PartialUser(id=self._bot_id, http=self._http)
-            self._user = partial if not self._fetch_self else await partial.user()
+            self._user = await partial.user() if self._fetch_self else partial
 
         await self.setup_hook()
 
@@ -2309,6 +2309,8 @@ class Client:
 
         .. note::
             type, status and user_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
+
+            This endpoint returns disabled WebSocket subscriptions for a minimum of 1 minute as compared to webhooks which returns disabled subscriptions for a minimum of 10 days.
 
         Parameters
         -----------

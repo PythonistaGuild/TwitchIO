@@ -42,6 +42,7 @@ __all__ = (
     "BaseEmoteData",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
+    "ChannelBitsUseEvent",
     "ChannelChatClearEvent",
     "ChannelChatClearUserMessagesEvent",
     "ChannelChatMessageDeleteEvent",
@@ -130,6 +131,8 @@ __all__ = (
     "ModerateUnbanRequestData",
     "ModerateWarnData",
     "PollChoiceData",
+    "PowerUpData",
+    "PowerUpEmoteDataData",
     "ReedemedRewardData",
     "ShieldModeBeginEvent",
     "ShieldModeEndEvent",
@@ -353,6 +356,24 @@ class ChannelAdBreakBeginEvent(BaseBroadcasterEvent):
     duration_seconds: str
     started_at: str
     is_automatic: str
+
+
+class PowerUpEmoteDataData(TypedDict):
+    id: str
+    name: str
+
+
+class PowerUpData(TypedDict):
+    type: Literal["message_effect", "celebration", "gigantify_an_emote"]
+    emote: PowerUpEmoteDataData | None
+    message_effect_id: str | None
+
+
+class ChannelBitsUseEvent(BroadcasterUserEvent):
+    bits: int
+    type: Literal["cheer", "power_up"]
+    message: ChatMessageData
+    power_up: PowerUpData | None
 
 
 class ChannelChatClearEvent(BaseBroadcasterEvent): ...
@@ -1076,7 +1097,7 @@ class SuspiciousMessageData(ChatMessageData):
 class ChannelSuspiciousUserMessageEvent(BroadcasterUserEvent):
     low_trust_status: Literal["none", "active_monitoring", "restricted"]
     shared_ban_channel_ids: list[str]
-    types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
+    types: list[Literal["manually_added", "ban_evader", "banned_in_shared_channel"]]
     ban_evasion_evaluation: Literal["unknown", "possible", "likely"]
     message: SuspiciousMessageData
 

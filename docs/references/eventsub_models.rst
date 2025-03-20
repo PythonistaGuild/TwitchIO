@@ -48,6 +48,11 @@ Eventsub
 .. autoclass:: twitchio.ChannelAdBreakBegin()
     :members:
 
+.. attributetable:: twitchio.ChannelBitsUse
+
+.. autoclass:: twitchio.ChannelBitsUse()
+    :members:
+
 .. attributetable:: twitchio.ChannelChatClear
 
 .. autoclass:: twitchio.ChannelChatClear()
@@ -474,6 +479,16 @@ Eventsub
 .. attributetable:: twitchio.HypeTrainEnd
 
 .. autoclass:: twitchio.HypeTrainEnd()
+    :members:
+
+.. attributetable:: twitchio.PowerUp
+
+.. autoclass:: twitchio.PowerUp()
+    :members:
+
+.. attributetable:: twitchio.PowerUpEmote
+
+.. autoclass:: twitchio.PowerUpEmote()
     :members:
 
 .. attributetable:: twitchio.ShieldModeBegin

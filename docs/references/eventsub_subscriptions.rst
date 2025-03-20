@@ -34,6 +34,11 @@ Eventsub Subscriptions
 .. autoclass:: AutomodTermsUpdateSubscription
     :members:
 
+.. attributetable:: ChannelBitsUseSubscription
+
+.. autoclass:: ChannelBitsUseSubscription
+    :members:
+
 .. attributetable:: ChannelUpdateSubscription
 
 .. autoclass:: ChannelUpdateSubscription
