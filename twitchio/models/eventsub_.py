@@ -61,6 +61,7 @@ __all__ = (
     "AutomodBlockedTerm",
     "AutomodMessageHold",
     "AutomodMessageUpdate",
+    "AutoRedeemReward",
     "AutomodSettingsUpdate",
     "AutomodTermsUpdate",
     "BaseChannelPointsRedemption",
@@ -172,6 +173,7 @@ __all__ = (
     "SubscriptionRevoked",
     "SuspiciousUserMessage",
     "SuspiciousUserUpdate",
+    "UnlockedEmote",
     "UserAuthorizationGrant",
     "UserAuthorizationRevoke",
     "UserUpdate",
@@ -722,9 +724,9 @@ class AutomodTermsUpdate(BaseEvent):
         return f"<AutomodTermsUpdate broadcaster={self.broadcaster} moderator={self.moderator} action={self.action} automod={self.automod}>"
 
 
-class PowerUpEmote:
+class RewardEmote:
     """
-    Represents a PowerUp Emote on a channel bits use event.
+    Represents a minimal Reward Emote.
 
     Attributes
     ----------
@@ -736,9 +738,31 @@ class PowerUpEmote:
 
     __slots__ = ("id", "name")
 
-    def __init__(self, data: PowerUpEmoteDataData) -> None:
+    def __init__(self, data: ChannelPointsUnlockedEmoteData | PowerUpEmoteDataData) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
+
+    def __repr__(self) -> str:
+        return f"<RewardEmote id={self.id} name={self.name}>"
+
+
+class PowerUpEmote(RewardEmote):
+    """
+    Represents a PowerUp Emote on a channel bits use event.
+
+    Attributes
+    ----------
+    id: str
+        The ID that uniquely identifies this emote.
+    name: str
+        The human readable emote token.
+    """
+
+    def __init__(self, data: PowerUpEmoteDataData) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<PowerUpEmote id={self.id} name={self.name}>"
 
 
 class PowerUp:
@@ -3202,6 +3226,59 @@ class ChannelPointsEmote(BaseEmote):
         return f"<ChannelPointsEmote id={self.id} begin={self.id} end={self.end}>"
 
 
+class UnlockedEmote(RewardEmote):
+    """
+    Represents an Unlocked Emote on an automatic redeem.
+
+    Attributes
+    ----------
+    id: str
+        The ID that uniquely identifies this emote.
+    name: str
+        The human readable emote token.
+    """
+
+    def __init__(self, data: ChannelPointsUnlockedEmoteData) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<UnlockedEmote id={self.id} name={self.name}>"
+
+
+class AutoRedeemReward:
+    """
+    Represents a reward on an automatic redeem.
+
+    Attributes
+    ----------
+    type: typing.Literal["single_message_bypass_sub_mode", "send_highlighted_message", "random_sub_emote_unlock", "chosen_sub_emote_unlock", "chosen_modified_sub_emote_unlock", "message_effect", "gigantify_an_emote", "celebration"]
+    cost: int
+        The ID that uniquely identifies this emote.
+    unlocked_emote: UnlockedEmote | None
+        The human readable emote token.
+    """
+
+    __slots__ = ("type", "cost", "unlocked_emote")
+
+    def __init__(self, data: BaseChannelPointsRewardData) -> None:
+        self.type: Literal[
+            "single_message_bypass_sub_mode",
+            "send_highlighted_message",
+            "random_sub_emote_unlock",
+            "chosen_sub_emote_unlock",
+            "chosen_modified_sub_emote_unlock",
+            "message_effect",
+            "gigantify_an_emote",
+            "celebration",
+        ] = data["type"]
+        self.cost: int = int(data["cost"])
+        emote = data.get("unlocked_emote")
+        self.unlocked_emote: UnlockedEmote | None = UnlockedEmote(emote) if emote else None
+
+    def __repr__(self) -> str:
+        return f"<AutoRedeemReward type={self.type} cost={self.cost}>"
+
+
 class ChannelPointsAutoRedeemAdd(BaseEvent):
     """
     Represents an automatic redemption of a channel points reward.
@@ -3222,6 +3299,8 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
         The text input by the user if the reward requires input.
     redeemed_at: datetime.datetime
         The datetime object of when the reward was redeemed.
+    reward: AutoRedeemReward
+        The details of the reward auto redeemed.
     """
 
     subscription_type = "channel.channel_points_automatic_reward_redemption.add"
@@ -3239,6 +3318,7 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
         self.emotes: list[ChannelPointsEmote] = [ChannelPointsEmote(emote) for emote in emotes] if emotes is not None else []
         self.user_input: str | None = payload.get("user_input")
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
+        self.reward: AutoRedeemReward = AutoRedeemReward(payload["reward"])
 
     def __repr__(self) -> str:
         return f"<ChannelPointsAutoRedeemAdd broadcaster={self.broadcaster} user={self.user} id={self.id}>"

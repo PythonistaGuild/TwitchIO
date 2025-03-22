@@ -33,6 +33,11 @@ Eventsub
 .. autoclass:: twitchio.AutomodTermsUpdate()
     :members:
 
+.. attributetable:: twitchio.AutoRedeemReward
+
+.. autoclass:: twitchio.AutoRedeemReward()
+    :members:
+
 .. attributetable:: twitchio.ChannelUpdate
 
 .. autoclass:: twitchio.ChannelUpdate()
@@ -535,6 +540,12 @@ Eventsub
 
 .. autoclass:: twitchio.UserAuthorizationRevoke()
     :members:
+
+.. attributetable:: twitchio.UnlockedEmote
+
+.. autoclass:: twitchio.UnlockedEmote()
+    :members:
+
 
 .. attributetable:: twitchio.UserUpdate
 
