@@ -299,8 +299,9 @@ class ManagedHTTPClient(OAuth):
                     )
 
                     await self._refresh_token(user_id, refresh)
-                else:
-                    self._tokens[user_id]["last_validated"] = datetime.datetime.now().isoformat()
+                    continue
+
+                self._tokens[user_id]["last_validated"] = datetime.datetime.now().isoformat()
 
     async def __validate_loop(self) -> None:
         logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
