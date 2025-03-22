@@ -32,24 +32,22 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import aiohttp
 
-from twitchio.http import Route
-from twitchio.types_.responses import RawResponse
-
 from ..backoff import Backoff
 from ..exceptions import HTTPException, InvalidTokenException
 from ..http import HTTPAsyncIterator, PaginatedConverter
 from ..payloads import TokenRefreshedPayload
-from ..types_.tokens import TokenMappingData
 from ..utils import MISSING
 from .oauth import OAuth
-from .payloads import ClientCredentialsPayload, ValidateTokenPayload
 from .scopes import Scopes
 
 
 if TYPE_CHECKING:
+    from twitchio.http import Route
+    from twitchio.types_.responses import RawResponse
+
     from ..client import Client
-    from ..types_.tokens import TokenMapping, _TokenRefreshedPayload
-    from .payloads import RefreshTokenPayload
+    from ..types_.tokens import TokenMapping, TokenMappingData, _TokenRefreshedPayload
+    from .payloads import ClientCredentialsPayload, RefreshTokenPayload, ValidateTokenPayload
 
 
 logger: logging.Logger = logging.getLogger(__name__)
