@@ -104,6 +104,8 @@ class Scopes(metaclass=_ScopeMeta):
         Equivalent to the ``analytics:read:games`` scope on Twitch.
     bits_read
         Equivalent to the ``bits:read`` scope on Twitch.
+    channel_bot
+        Equivalent to the ``channel:bot`` scope on Twitch.
     channel_manage_ads
         Equivalent to the ``channel:manage:ads`` scope on Twitch.
     channel_read_ads
@@ -121,11 +123,11 @@ class Scopes(metaclass=_ScopeMeta):
     channel_read_goals
         Equivalent to the ``channel:read:goals`` scope on Twitch.
     channel_read_guest_star
-        Equivalent to the ``channel:read:guest:star`` scope on Twitch.
+        Equivalent to the ``channel:read:guest_star`` scope on Twitch.
     channel_manage_guest_star
-        Equivalent to the ``channel:manage:guest:star`` scope on Twitch.
+        Equivalent to the ``channel:manage:guest_star`` scope on Twitch.
     channel_read_hype_train
-        Equivalent to the ``channel:read:hype:train`` scope on Twitch.
+        Equivalent to the ``channel:read:hype_train`` scope on Twitch.
     channel_manage_moderators
         Equivalent to the ``channel:manage:moderators`` scope on Twitch.
     channel_read_polls
@@ -145,7 +147,7 @@ class Scopes(metaclass=_ScopeMeta):
     channel_manage_schedule
         Equivalent to the ``channel:manage:schedule`` scope on Twitch.
     channel_read_stream_key
-        Equivalent to the ``channel:read:stream:key`` scope on Twitch.
+        Equivalent to the ``channel:read:stream_key`` scope on Twitch.
     channel_read_subscriptions
         Equivalent to the ``channel:read:subscriptions`` scope on Twitch.
     channel_manage_videos
@@ -154,6 +156,8 @@ class Scopes(metaclass=_ScopeMeta):
         Equivalent to the ``channel:read:vips`` scope on Twitch.
     channel_manage_vips
         Equivalent to the ``channel:manage:vips`` scope on Twitch.
+    channel_moderate
+        Equivalent to the ``channel:moderate`` scope on Twitch.
     clips_edit
         Equivalent to the ``clips:edit`` scope on Twitch.
     moderation_read
@@ -163,89 +167,93 @@ class Scopes(metaclass=_ScopeMeta):
     moderator_manage_automod
         Equivalent to the ``moderator:manage:automod`` scope on Twitch.
     moderator_read_automod_settings
-        Equivalent to the ``moderator:read:automod:settings`` scope on Twitch.
+        Equivalent to the ``moderator:read:automod_settings`` scope on Twitch.
     moderator_manage_automod_settings
-        Equivalent to the ``moderator:manage:automod:settings`` scope on Twitch.
+        Equivalent to the ``moderator:manage:automod_settings`` scope on Twitch.
+    moderator_read_banned_users
+        Equivalent to the ``moderator:read:banned_users`` scope on Twitch.
     moderator_manage_banned_users
-        Equivalent to the ``moderator:manage:banned:users`` scope on Twitch.
+        Equivalent to the ``moderator:manage:banned_users`` scope on Twitch.
     moderator_read_blocked_terms
-        Equivalent to the ``moderator:read:blocked:terms`` scope on Twitch.
+        Equivalent to the ``moderator:read:blocked_terms`` scope on Twitch.
+    moderator_read_chat_messages
+        Equivalent to the ``moderator:read:chat_messages`` scope on Twitch.
     moderator_manage_blocked_terms
-        Equivalent to the ``moderator:manage:blocked:terms`` scope on Twitch.
+        Equivalent to the ``moderator:manage:blocked_terms`` scope on Twitch.
     moderator_manage_chat_messages
-        Equivalent to the ``moderator:manage:chat:messages`` scope on Twitch.
+        Equivalent to the ``moderator:manage:chat_messages`` scope on Twitch.
     moderator_read_chat_settings
-        Equivalent to the ``moderator:read:chat:settings`` scope on Twitch.
+        Equivalent to the ``moderator:read:chat_settings`` scope on Twitch.
     moderator_manage_chat_settings
-        Equivalent to the ``moderator:manage:chat:settings`` scope on Twitch.
+        Equivalent to the ``moderator:manage:chat_settings`` scope on Twitch.
     moderator_read_chatters
         Equivalent to the ``moderator:read:chatters`` scope on Twitch.
     moderator_read_followers
         Equivalent to the ``moderator:read:followers`` scope on Twitch.
     moderator_read_guest_star
-        Equivalent to the ``moderator:read:guest:star`` scope on Twitch.
+        Equivalent to the ``moderator:read:guest_star`` scope on Twitch.
     moderator_manage_guest_star
-        Equivalent to the ``moderator:manage:guest:star`` scope on Twitch.
+        Equivalent to the ``moderator:manage:guest_star`` scope on Twitch.
+    moderator_read_moderators
+        Equivalent to the ``moderator:read:moderators`` scope on Twitch.
     moderator_read_shield_mode
-        Equivalent to the ``moderator:read:shield:mode`` scope on Twitch.
+        Equivalent to the ``moderator:read:shield_mode`` scope on Twitch.
     moderator_manage_shield_mode
-        Equivalent to the ``moderator:manage:shield:mode`` scope on Twitch.
+        Equivalent to the ``moderator:manage:shield_mode`` scope on Twitch.
     moderator_read_shoutouts
         Equivalent to the ``moderator:read:shoutouts`` scope on Twitch.
     moderator_manage_shoutouts
         Equivalent to the ``moderator:manage:shoutouts`` scope on Twitch.
+    moderator_read_suspicious_users
+        Equivalent to the ``moderator:read:suspicious_users`` scope on Twitch.
     moderator_read_unban_requests
-        Equivalent to the ``moderator:read:unban:requests`` scope on Twitch.
+        Equivalent to the ``moderator:read:unban_requests`` scope on Twitch.
     moderator_manage_unban_requests
-        Equivalent to the ``moderator:manage:unban:requests`` scope on Twitch.
+        Equivalent to the ``moderator:manage:unban_requests`` scope on Twitch.
+    moderator_read_vips
+        Equivalent to the ``moderator:read:vips`` scope on Twitch.
     moderator_read_warnings
         Equivalent to the ``moderator:read:warnings`` scope on Twitch.
     moderator_manage_warnings
         Equivalent to the ``moderator:manage:warnings`` scope on Twitch.
-    moderator_read_moderators
-        Equivalent to the ``moderator:read:moderators`` scope on Twitch.
-    moderator_read_vips
-        Equivalent to the ``moderator:read:vips`` scope on Twitch.
+    user_bot
+        Equivalent to the ``user:bot`` scope on Twitch.
     user_edit
         Equivalent to the ``user:edit`` scope on Twitch.
-    user_edit_follows
-        Equivalent to the ``user:edit:follows`` scope on Twitch.
+    user_edit_broadcast
+        Equivalent to the ``user:edit:broadcast`` scope on Twitch.
     user_read_blocked_users
-        Equivalent to the ``user:read:blocked:users`` scope on Twitch.
+        Equivalent to the ``user:read:blocked_users`` scope on Twitch.
     user_manage_blocked_users
-        Equivalent to the ``user:manage:blocked:users`` scope on Twitch.
+        Equivalent to the ``user:manage:blocked_users`` scope on Twitch.
     user_read_broadcast
         Equivalent to the ``user:read:broadcast`` scope on Twitch.
+    user_read_chat
+        Equivalent to the ``user:read:chat`` scope on Twitch.
     user_manage_chat_color
-        Equivalent to the ``user:manage:chat:color`` scope on Twitch.
+        Equivalent to the ``user:manage:chat_color`` scope on Twitch.
     user_read_email
         Equivalent to the ``user:read:email`` scope on Twitch.
+    user_read_emotes
+        Equivalent to the ``user:read:emotes`` scope on Twitch.
     user_read_follows
         Equivalent to the ``user:read:follows`` scope on Twitch.
     user_read_moderated_channels
-        Equivalent to the ``user:read:moderated:channels`` scope on Twitch.
+        Equivalent to the ``user:read:moderated_channels`` scope on Twitch.
     user_read_subscriptions
         Equivalent to the ``user:read:subscriptions`` scope on Twitch.
-    user_read_emotes
-        Equivalent to the ``user:read:emotes`` scope on Twitch.
-    user_manage_whispers
-        Equivalent to the ``user:manage:whispers`` scope on Twitch.
     user_read_whispers
         Equivalent to the ``user:read:whispers`` scope on Twitch.
-    channel_bot
-        Equivalent to the ``channel:bot`` scope on Twitch.
-    channel_moderate
-        Equivalent to the ``channel:moderate`` scope on Twitch.
+    user_manage_whispers
+        Equivalent to the ``user:manage:whispers`` scope on Twitch.
+    user_write_chat
+        Equivalent to the ``user:write:chat`` scope on Twitch.
     chat_edit
         Equivalent to the ``chat:edit`` scope on Twitch.
     chat_read
         Equivalent to the ``chat:read`` scope on Twitch.
-    user_bot
-        Equivalent to the ``user:bot`` scope on Twitch.
-    user_read_chat
-        Equivalent to the ``user:read:chat`` scope on Twitch.
-    user_write_chat
-        Equivalent to the ``user:write:chat`` scope on Twitch.
+    user_edit_follows
+        Equivalent to the ``user:edit:follows`` scope on Twitch.
     whispers_read
         Equivalent to the ``whispers:read`` scope on Twitch.
     whispers_edit
@@ -257,6 +265,7 @@ class Scopes(metaclass=_ScopeMeta):
     analytics_read_extensions = _scope_property()
     analytics_read_games = _scope_property()
     bits_read = _scope_property()
+    channel_bot = _scope_property()
     channel_manage_ads = _scope_property()
     channel_read_ads = _scope_property()
     channel_manage_broadcast = _scope_property()
@@ -282,14 +291,17 @@ class Scopes(metaclass=_ScopeMeta):
     channel_manage_videos = _scope_property()
     channel_read_vips = _scope_property()
     channel_manage_vips = _scope_property()
+    channel_moderate = _scope_property()
     clips_edit = _scope_property()
     moderation_read = _scope_property()
     moderator_manage_announcements = _scope_property()
     moderator_manage_automod = _scope_property()
     moderator_read_automod_settings = _scope_property()
     moderator_manage_automod_settings = _scope_property()
+    moderator_read_banned_users = _scope_property()
     moderator_manage_banned_users = _scope_property()
     moderator_read_blocked_terms = _scope_property()
+    moderator_read_chat_messages = _scope_property()
     moderator_manage_blocked_terms = _scope_property()
     moderator_manage_chat_messages = _scope_property()
     moderator_read_chat_settings = _scope_property()
@@ -298,37 +310,36 @@ class Scopes(metaclass=_ScopeMeta):
     moderator_read_followers = _scope_property()
     moderator_read_guest_star = _scope_property()
     moderator_manage_guest_star = _scope_property()
+    moderator_read_moderators = _scope_property()
     moderator_read_shield_mode = _scope_property()
     moderator_manage_shield_mode = _scope_property()
     moderator_read_shoutouts = _scope_property()
     moderator_manage_shoutouts = _scope_property()
+    moderator_read_suspicious_users = _scope_property()
     moderator_read_unban_requests = _scope_property()
     moderator_manage_unban_requests = _scope_property()
+    moderator_read_vips = _scope_property()
     moderator_read_warnings = _scope_property()
     moderator_manage_warnings = _scope_property()
-    moderator_read_moderators = _scope_property()
-    moderator_read_vips = _scope_property()
-    user_edit_broadcast = _scope_property()
+    user_bot = _scope_property()
     user_edit = _scope_property()
-    user_edit_follows = _scope_property()
+    user_edit_broadcast = _scope_property()
     user_read_blocked_users = _scope_property()
     user_manage_blocked_users = _scope_property()
     user_read_broadcast = _scope_property()
+    user_read_chat = _scope_property()
     user_manage_chat_color = _scope_property()
     user_read_email = _scope_property()
+    user_read_emotes = _scope_property()
     user_read_follows = _scope_property()
     user_read_moderated_channels = _scope_property()
     user_read_subscriptions = _scope_property()
-    user_read_emotes = _scope_property()
-    user_manage_whispers = _scope_property()
     user_read_whispers = _scope_property()
-    channel_bot = _scope_property()
-    channel_moderate = _scope_property()
+    user_manage_whispers = _scope_property()
+    user_write_chat = _scope_property()
     chat_edit = _scope_property()
     chat_read = _scope_property()
-    user_bot = _scope_property()
-    user_read_chat = _scope_property()
-    user_write_chat = _scope_property()
+    user_edit_follows = _scope_property()
     whispers_read = _scope_property()
     whispers_edit = _scope_property()
 
