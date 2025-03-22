@@ -137,6 +137,7 @@ class Client:
             redirect_uri=redirect_uri,
             scopes=scopes,
             session=session,
+            client=self,
         )
         adapter: BaseAdapter | type[BaseAdapter] = options.get("adapter", AiohttpAdapter)
         if isinstance(adapter, BaseAdapter):

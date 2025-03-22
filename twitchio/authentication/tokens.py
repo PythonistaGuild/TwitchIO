@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import asyncio
 import datetime
 import json
@@ -36,6 +38,7 @@ from twitchio.types_.responses import RawResponse
 from ..backoff import Backoff
 from ..exceptions import HTTPException, InvalidTokenException
 from ..http import HTTPAsyncIterator, PaginatedConverter
+from ..payloads import TokenRefreshedPayload
 from ..types_.tokens import TokenMappingData
 from ..utils import MISSING
 from .oauth import OAuth
@@ -44,7 +47,8 @@ from .scopes import Scopes
 
 
 if TYPE_CHECKING:
-    from ..types_.tokens import TokenMapping
+    from ..client import Client
+    from ..types_.tokens import TokenMapping, _TokenRefreshedPayload
     from .payloads import RefreshTokenPayload
 
 
@@ -64,6 +68,7 @@ class ManagedHTTPClient(OAuth):
         scopes: Scopes | None = None,
         session: aiohttp.ClientSession = MISSING,
         nested_key: str | None = None,
+        client: Client | None = None,
     ) -> None:
         super().__init__(
             client_id=client_id,
@@ -89,6 +94,21 @@ class ManagedHTTPClient(OAuth):
         self._backoff: Backoff = Backoff(base=3, maximum_time=90)
 
         self._validate_task: asyncio.Task[None] | None = None
+        self._client = client
+
+    def _dispatch_event(self, user_id: str, payload: RefreshTokenPayload) -> None:
+        if not self._client:
+            return
+
+        data: _TokenRefreshedPayload = {
+            "user_id": user_id,
+            "refresh_token": payload.refresh_token,
+            "token": payload.access_token,
+            "scopes": Scopes(payload.scope),
+            "expires_in": payload.expires_in,
+        }
+
+        self._client.dispatch("token_refreshed", TokenRefreshedPayload(data=data))
 
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
         try:
@@ -116,6 +136,7 @@ class ManagedHTTPClient(OAuth):
             "last_validated": datetime.datetime.now().isoformat(),
         }
 
+        self._dispatch_event(valid_resp.user_id, resp)
         logger.info('Token successfully added to TokenManager after refresh: "%s"', valid_resp.user_id)
         return valid_resp
 
@@ -209,6 +230,7 @@ class ManagedHTTPClient(OAuth):
                 "last_validated": datetime.datetime.now().isoformat(),
             }
 
+            self._dispatch_event(old["user_id"], refresh)
             route.update_headers({"Authorization": f"Bearer {refresh.access_token}"})
             return await self.request(route)
 
@@ -249,6 +271,8 @@ class ManagedHTTPClient(OAuth):
                 "refresh": resp.refresh_token,
                 "last_validated": datetime.datetime.now().isoformat(),
             }
+
+            self._dispatch_event(user_id, resp)
 
     async def _revalidate_all(self) -> None:
         logger.debug("Attempting to revalidate all tokens that have passed the timeout on %s.", self.__class__.__qualname__)

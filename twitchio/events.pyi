@@ -5,6 +5,17 @@ if TYPE_CHECKING:
 
     from .authentication import UserTokenPayload
     from .models.eventsub_ import SubscriptionRevoked
+    from .payloads import TokenRefreshedPayload
+
+async def event_token_refreshed(payload: TokenRefreshedPayload) -> None:
+    """Event dispatched when a token managed by the :class:`~twitchio.Client` is successfully refreshed.
+
+    You can use this event to update the stored token locally.
+
+    Parameters
+    ----------
+    payload: TokenRefreshedPayload
+    """
 
 async def event_oauth_authorized(payload: UserTokenPayload) -> None:
     """Event dispatched when a user authorizes your Client-ID via Twitch OAuth on a built-in web adapter.
