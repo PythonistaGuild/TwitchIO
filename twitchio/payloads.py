@@ -32,11 +32,13 @@ from .eventsub.enums import TransportMethod
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
 
+    from .authentication import Scopes
     from .eventsub.enums import SubscriptionType
     from .types_.eventsub import Condition, _SubscriptionData
+    from .types_.tokens import _TokenRefreshedPayload
 
 
-__all__ = ("EventErrorPayload", "WebsocketSubscriptionData")
+__all__ = ("EventErrorPayload", "TokenRefreshedPayload", "WebsocketSubscriptionData")
 
 
 class EventErrorPayload:
@@ -99,3 +101,37 @@ class WebsocketSubscriptionData:
         self.transport: TransportMethod = TransportMethod.WEBSOCKET
         self.type: SubscriptionType = data["type"]
         self.version: str = data["version"]
+
+
+class TokenRefreshedPayload:
+    """Payload received in the :func:`~twitchio.event_token_refreshed` event when a token managed by TwitchIO is successfully
+    refreshed on the :class:`~twitchio.Client`.
+
+    Attributes
+    ----------
+    user_id: str
+        The User ID associated with the refreshed token.
+    refresh_token: str
+        The new refresh token returned by Twitch.
+    token: str
+        The updated token after refreshing returned by Twitch.
+    scopes: :class:`~twitchio.Scopes`
+        The scopes associated with the token.
+    expires_in: int
+        The time the new token expires as an :class:`int` of seconds.
+    """
+
+    __slots__ = (
+        "expires_in",
+        "refresh_token",
+        "scopes",
+        "token",
+        "user_id",
+    )
+
+    def __init__(self, data: _TokenRefreshedPayload) -> None:
+        self.user_id: str = data["user_id"]
+        self.refresh_token: str = data["refresh_token"]
+        self.token: str = data["token"]
+        self.scopes: Scopes = data["scopes"]
+        self.expires_in: int = data["expires_in"]

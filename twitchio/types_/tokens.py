@@ -22,10 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import TypeAlias, TypedDict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, TypeAlias, TypedDict
 
 
-__all__ = ("TokenMapping", "TokenMappingData")
+if TYPE_CHECKING:
+    from ..authentication import Scopes
+
+
+__all__ = ("TokenMapping", "TokenMappingData", "_TokenRefreshedPayload")
 
 
 class TokenMappingData(TypedDict):
@@ -33,6 +39,14 @@ class TokenMappingData(TypedDict):
     token: str
     refresh: str
     last_validated: str
+
+
+class _TokenRefreshedPayload(TypedDict):
+    user_id: str
+    refresh_token: str
+    token: str
+    scopes: Scopes
+    expires_in: int
 
 
 TokenMapping: TypeAlias = dict[str, TokenMappingData]

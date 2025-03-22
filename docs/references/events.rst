@@ -316,6 +316,15 @@ Client Events
   Event dispatched when an exception is raised inside of a dispatched event.
 
   :param twitchio.EventErrorPayload payload: The payload containing information about the event and exception raised.
+
+.. py:function:: event_token_refreshed(payload: twitchio.TokenRefreshedPayload) -> None:
+  :async:
+  
+  Event dispatched when a token managed by the :class:`~twitchio.Client` is successfully refreshed.
+
+  You can use this event to update the stored token locally as they are refreshed.
+
+  :param TokenRefreshedPayload payload: The payload containing various information about the refreshed token.
   
 .. py:function:: event_oauth_authorized(payload: twitchio.authentication.UserTokenPayload) -> None
   :async:
@@ -1297,4 +1306,9 @@ Payloads
 .. attributetable:: twitchio.EventErrorPayload
 
 .. autoclass:: twitchio.EventErrorPayload()
+  :members:
+
+.. attributetable:: twitchio.TokenRefreshedPayload
+
+.. autoclass:: twitchio.TokenRefreshedPayload()
   :members:
