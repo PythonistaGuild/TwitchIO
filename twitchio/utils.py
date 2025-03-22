@@ -929,7 +929,7 @@ def handle_user_ids(is_self: bool = False) -> Callable[..., Any]:
 
             return func(*new_args, **new_kwargs)
 
-        return cast(F, wrapper)
+        return cast("F", wrapper)
 
     return decorator
 

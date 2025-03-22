@@ -34,16 +34,6 @@ import aiohttp
 from ..backoff import Backoff
 from ..exceptions import HTTPException, WebsocketConnectionException
 from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
-from ..types_.conduits import (
-    MessageTypes,
-    MetaData,
-    NotificationMessage,
-    ReconnectMessage,
-    RevocationMessage,
-    WebsocketMessages,
-    WelcomeMessage,
-    WelcomePayload,
-)
 from ..utils import (
     MISSING,
     _from_json,  # type: ignore
@@ -54,7 +44,17 @@ from .subscriptions import _SUB_MAPPING
 if TYPE_CHECKING:
     from ..authentication.tokens import ManagedHTTPClient
     from ..client import Client
-    from ..types_.conduits import Condition
+    from ..types_.conduits import (
+        Condition,
+        MessageTypes,
+        MetaData,
+        NotificationMessage,
+        ReconnectMessage,
+        RevocationMessage,
+        WebsocketMessages,
+        WelcomeMessage,
+        WelcomePayload,
+    )
     from ..types_.eventsub import SubscriptionResponse, _SubscriptionData
 
 
@@ -327,7 +327,7 @@ class Websocket:
             self._last_keepalive = datetime.datetime.now()
 
             try:
-                data: WebsocketMessages = cast(WebsocketMessages, _from_json(message.data))
+                data: WebsocketMessages = cast("WebsocketMessages", _from_json(message.data))
             except Exception:
                 logger.warning("Unable to parse JSON in eventsub websocket: <%s>", self)
                 continue
@@ -336,13 +336,13 @@ class Websocket:
             message_type: MessageTypes = metadata["message_type"]
 
             if message_type == "session_welcome":
-                welcome_data: WelcomeMessage = cast(WelcomeMessage, data)
+                welcome_data: WelcomeMessage = cast("WelcomeMessage", data)
 
                 await self._process_welcome(welcome_data)
 
             elif message_type == "session_reconnect":
                 logger.debug('Received "session_reconnect" message from eventsub websocket: <%s>', self)
-                reconnect_data: ReconnectMessage = cast(ReconnectMessage, data)
+                reconnect_data: ReconnectMessage = cast("ReconnectMessage", data)
 
                 await self._process_reconnect(reconnect_data)
 
@@ -352,12 +352,12 @@ class Websocket:
             elif message_type == "revocation":
                 logger.debug('Received "revocation" message from eventsub websocket: <%s>', self)
 
-                revocation_data: RevocationMessage = cast(RevocationMessage, data)
+                revocation_data: RevocationMessage = cast("RevocationMessage", data)
                 await self._process_revocation(revocation_data)
 
             elif message_type == "notification":
                 logger.debug('Received "notification" message from eventsub websocket: <%s>. %s', self, data)
-                notification_data: NotificationMessage = cast(NotificationMessage, data)
+                notification_data: NotificationMessage = cast("NotificationMessage", data)
 
                 try:
                     await self._process_notification(notification_data)

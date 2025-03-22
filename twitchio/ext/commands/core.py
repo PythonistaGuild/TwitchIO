@@ -168,7 +168,7 @@ class Command(Generic[Component_T, P]):
 
     async def __call__(self, context: Context) -> Any:
         callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
-        return await callback
+        return await callback  # type: ignore will fix later
 
     @property
     def component(self) -> Component_T | None:
@@ -197,7 +197,7 @@ class Command(Generic[Component_T, P]):
 
         If this command has no parent, this simply returns the name.
         """
-        return self._name if not self._parent else f"{self._parent._name} {self._name}"
+        return f"{self._parent._name} {self._name}" if self._parent else self._name
 
     @property
     def full_parent_name(self) -> str:

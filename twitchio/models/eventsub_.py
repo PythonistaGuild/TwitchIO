@@ -74,6 +74,7 @@ __all__ = (
     "Boundary",
     "ChannelAdBreakBegin",
     "ChannelBan",
+    "ChannelBitsUse",
     "ChannelChatClear",
     "ChannelChatClearUserMessages",
     "ChannelCheer",
@@ -156,6 +157,8 @@ __all__ = (
     "ModerateUnbanRequest",
     "ModerateWarn",
     "PollVoting",
+    "PowerUp",
+    "PowerUpEmote",
     "SharedChatSessionBegin",
     "SharedChatSessionEnd",
     "SharedChatSessionUpdate",
@@ -717,6 +720,97 @@ class AutomodTermsUpdate(BaseEvent):
 
     def __repr__(self) -> str:
         return f"<AutomodTermsUpdate broadcaster={self.broadcaster} moderator={self.moderator} action={self.action} automod={self.automod}>"
+
+
+class PowerUpEmote:
+    """
+    Represents a PowerUp Emote on a channel bits use event.
+
+    Attributes
+    ----------
+    id: str
+        The ID that uniquely identifies this emote.
+    name: str
+        The human readable emote token.
+    """
+
+    __slots__ = ("id", "name")
+
+    def __init__(self, data: PowerUpEmoteDataData) -> None:
+        self.id: str = data["id"]
+        self.name: str = data["name"]
+
+
+class PowerUp:
+    """
+    Represents a PowerUp on a channel bits use event.
+
+    Attributes
+    ----------
+    emote: PowerUpEmote | None
+        Emote associated with the reward. Is `None` if no emote was used.
+    type: typing.Literal["message_effect", "celebration", "gigantify_an_emote"]
+        The type of Power-up redeemed.
+
+            - message_effect
+            - celebration
+            - gigantify_an_emote
+
+    message_effect_id: str | None
+        The ID of the message effect. Is `None` if no message effect was used.
+    """
+
+    __slots__ = ("emote", "message_effect_id", "type")
+
+    def __init__(self, data: PowerUpData) -> None:
+        emote = data.get("emote")
+        self.emote: PowerUpEmote | None = PowerUpEmote(emote) if emote is not None else None
+        self.type: Literal["message_effect", "celebration", "gigantify_an_emote"] = data["type"]
+        self.message_effect_id: str | None = data.get("message_effect_id")
+
+
+class ChannelBitsUse(BaseEvent):
+    """
+    Represents a channel bits use event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcastter / channel where the Bits were redeemed.
+    user: PartialUser
+        The redeeming user.
+    bits: int
+        The number of Bits used.
+    type: typing.Literal["cheer", "power_up"]
+        What the Bits were used for.
+    text: str | None
+        The chat message in plain text. Is `None` if no chat message was used.
+    fragments: list[ChatMessageFragment]
+        The ordered list of chat message fragments. Is `None` if no chat message was used.
+    power_up: PowerUp | None
+        Data about Power-up. Is `None` if a Power-up is not used.
+    """
+
+    subscription_type = "channel.bits.use"
+
+    __slots__ = ("bits", "broadcaster", "fragments", "power_up", "text", "type", "user")
+
+    def __init__(self, payload: ChannelBitsUseEvent, *, http: HTTPClient) -> None:
+        self.broadcaster = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
+        )
+        self.user = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
+        self.bits: int = int(payload["bits"])
+        self.type: Literal["cheer", "power_up"] = payload["type"]
+        self.text: str | None = payload.get("message").get("text")
+        power_up = payload.get("power_up")
+        self.power_up: PowerUp | None = PowerUp(power_up) if power_up is not None else None
+        self.fragments: list[ChatMessageFragment] = [
+            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
+        ]
+
+    def __repr__(self) -> str:
+        return f"<ChannelBitsUse broadcaster={self.broadcaster} user={self.user} bits={self.bits} type={self.type}>"
 
 
 class ChannelUpdate(BaseEvent):
@@ -3575,7 +3669,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
             reward_id=self.reward.id,
             status="FULFILLED",
         )
-        reward = cast(CustomReward, self.reward)
+        reward = cast("CustomReward", self.reward)
         return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
     async def refund(self, *, token_for: str | PartialUser) -> CustomRewardRedemption:
@@ -3604,7 +3698,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
             reward_id=self.reward.id,
             status="CANCELED",
         )
-        reward = cast(CustomReward, self.reward)
+        reward = cast("CustomReward", self.reward)
         return CustomRewardRedemption(data["data"][0], parent_reward=reward, http=self._http)
 
 
@@ -4011,12 +4105,12 @@ class SuspiciousUserMessage(BaseEvent):
 
     banned_channels: list[str]
         A list of channel IDs where the suspicious user is also banned.
-    types: list[typing.Literal["manual", "ban_evader_detector", "shared_channel_ban"]]
+    types: list[typing.Literal["manually_added", "ban_evader", "banned_in_shared_channel"]]
         User types (if any) that apply to the suspicious user. Can be the following:
 
-        - manual
-        - ban_evader_detector
-        - shared_channel_ban
+        - manually_added
+        - ban_evader
+        - banned_in_shared_channel
 
     evaluation: typing.Literal["unknown", "possible", "likely"]
         A ban evasion likelihood value (if any) that as been applied to the user automatically by Twitch. Can be:
@@ -4040,7 +4134,7 @@ class SuspiciousUserMessage(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.low_trust_status: Literal["none", "active_monitoring", "restricted"] = payload["low_trust_status"]
         self.banned_channels: list[str] = payload["shared_ban_channel_ids"]
-        self.types: list[Literal["manual", "ban_evader_detector", "shared_channel_ban"]] = payload["types"]
+        self.types: list[Literal["manually_added", "ban_evader", "banned_in_shared_channel"]] = payload["types"]
         self.evaluation: Literal["unknown", "possible", "likely"] = payload["ban_evasion_evaluation"]
         self.message: BaseChatMessage = BaseChatMessage(payload, http=http)
 
