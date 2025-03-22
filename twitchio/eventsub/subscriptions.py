@@ -51,6 +51,7 @@ __all__ = (
     "ChannelModeratorAddSubscription",
     "ChannelModeratorRemoveSubscription",
     "ChannelPointsAutoRedeemSubscription",
+    "ChannelPointsAutoRedeemV2Subscription",
     "ChannelPointsRedeemAddSubscription",
     "ChannelPointsRedeemUpdateSubscription",
     "ChannelPointsRewardAddSubscription",
@@ -1530,6 +1531,45 @@ class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
         "channel.channel_points_automatic_reward_redemption.add"
     )
     version: ClassVar[Literal["1"]] = "1"
+
+    @handle_user_ids()
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id}
+
+
+class ChannelPointsAutoRedeemV2Subscription(SubscriptionPayload):
+    """The ``channel.channel_points_automatic_reward_redemption.add`` subscription type sends a notification when a viewer has redeemed an automatic channel points reward on the specified channel.
+
+    This is Version 2 of the subscription that includes message fragments and channel points.
+
+    .. important::
+        Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.
+
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
+    type: ClassVar[Literal["channel.channel_points_automatic_reward_redemption.add"]] = (
+        "channel.channel_points_automatic_reward_redemption.add"
+    )
+    version: ClassVar[Literal["2"]] = "2"
 
     @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
