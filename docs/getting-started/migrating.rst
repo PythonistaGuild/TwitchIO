@@ -440,6 +440,11 @@ Client:
 Removed
 ~~~~~~~
 
+- ``twitchio.ext.pubsub``
+   - Twitch no longer supports PubSub.
+- ``IRC``
+   - See: :ref:`FAQ <irc_faq>` for more information.
+
 Client:
 
 - Client parameter ``initial_channels``
