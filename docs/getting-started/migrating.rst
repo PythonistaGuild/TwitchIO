@@ -47,6 +47,7 @@ The following systems have been added to help aid in token management in version
 **Events:**
 
 - :func:`twitchio.event_oauth_authorized`
+- :func:`twitchio.event_token_refreshed`
 
 **Scopes:**
 
@@ -76,9 +77,13 @@ overriden, which can be done on most on methods that allow it via the ``token_fo
 Running a Client/Bot
 ====================
 
-Running a :class:`~twitchio.Client` or :class:`~twitchio.ext.commands.Bot` hasn't changed much since version 2, however both
-have now implemented ``__aenter__`` and ``__aexit__`` which allows them to be used in a Async Context Manager for easier
-management of close down and cleanup. These changes along with some async internals have also been reflected in :meth:`~twitchio.Client.run`.
+Running a :class:`~twitchio.Client` or :class:`~twitchio.ext.commands.Bot` hasn't changed much since version 2, however there are
+some major differences that should be taken into consideration:
+
+- IRC was removed from the core of TwitchIO. This means subscribing to chat and other chat related events is now done via ``EventSub``. This results in the removal of constructor parameters ``initial_channels``, ``heartbeat`` and ``retain_cache``.
+- TwitchIO 3 uses a much more modern asyncio design which results in the removal of any ``loop`` semantics including the constructor parameter ``loop``. Internally the start and close of the bot has also been changed, resulting in a more user-friendly interface.
+- ``App Tokens`` are generated automatically on start-up and there is rarely a need to provide one. However the option still exists via :meth:`~twitchio.Client.start` and :meth:`~twitchio.Client.login`.
+- Implemented ``__aenter__`` and ``__aexit__`` which allows them to be used in a Async Context Manager for easier management of close down and cleanup. These changes along with some async internals have also been reflected in :meth:`~twitchio.Client.run`.
 
 You can also :meth:`~twitchio.Client.login` the :class:`~twitchio.Client` without running a continuous asyncio event loop, E.g.
 for making HTTP Requests only or for using the :class:`~twitchio.Client` in an already running event loop.
@@ -106,14 +111,105 @@ However we recommend following the below as a simple and modern way of starting 
             ...
 
 
+In addition to the above changes, the :class:`~twitchio.Client` has undergone other various changes:
+
+- Added the :meth:`~twitchio.Client.setup_hook` callback which allows async setup on the :class:`~twitchio.Client` after ``login`` but before the :class:`~twitchio.Client` starts completely.
+- EventSub is fully managed on the :class:`~twitchio.Client`. See: :meth:`~twitchio.Client.subscribe_websocket` and :meth:`~twitchio.Client.subscribe_webhook`.
+- ``fetch_*`` methods no longer accept a ``token`` parameter. Instead you can pass ``token_for`` which is the ``user ID`` of the token you wish to use. However this is rarely needed as TwitchIO will select the most appropriate token for the call.
+- Some ``fetch_*`` methods which require pagination return a :class:`twitchio.HTTPAsyncIterator` for ease of use.
+
+
+.. note::
+
+   Remember: :class:`~twitchio.ext.commands.Bot` subclasses :class:`~twitchio.Client` and should be treated as a :class:`~twitchio.Client` with additional features.
+
+
 **Added:**
 
+- Parameter ``bot_id``
+- Parameter ``redirect_uri``
+- Parameter ``scopes``
+- Parameter ``session``
+- Parameter ``adapter``
+- Parameter ``fetch_client_user``
+- :attr:`twitchio.Client.bot_id`
+- :attr:`twitchio.Client.tokens`
+- :attr:`twitchio.Client.user`
+- :meth:`twitchio.Client.add_listener`
+- :meth:`twitchio.Client.add_token`
+- :meth:`twitchio.Client.delete_all_eventsub_subscriptions`
+- :meth:`twitchio.Client.delete_eventsub_subscription`
+- :meth:`twitchio.Client.delete_websocket_subscription`
+- :meth:`twitchio.Client.fetch_badges`
+- :meth:`twitchio.Client.fetch_drop_entitlements`
+- :meth:`twitchio.Client.fetch_emote_sets`
+- :meth:`twitchio.Client.fetch_emotes`
+- :meth:`twitchio.Client.fetch_eventsub_subscriptions`
+- :meth:`twitchio.Client.fetch_extension_transactions`
+- :meth:`twitchio.Client.fetch_extensions`
+- :meth:`twitchio.Client.fetch_game`
+- :meth:`twitchio.Client.fetch_stream_markers`
+- :meth:`twitchio.Client.fetch_team`
+- :meth:`twitchio.Client.listen`
+- :meth:`twitchio.Client.load_tokens`
 - :meth:`twitchio.Client.login`
+- :meth:`twitchio.Client.remove_listener`
+- :meth:`twitchio.Client.remove_token`
+- :meth:`twitchio.Client.save_tokens`
+- :meth:`twitchio.Client.setup_hook`
+- :meth:`twitchio.Client.subscribe_webhook`
+- :meth:`twitchio.Client.subscribe_websocket`
+- :meth:`twitchio.Client.update_entitlements`
+- :meth:`twitchio.Client.update_extensions`
+- :meth:`twitchio.Client.websocket_subscriptions`
+
 
 **Changed:**
 
 - :meth:`twitchio.Client.start`
 - :meth:`twitchio.Client.run`
+- :meth:`twitchio.Client.wait_for`
+   - ``predicate`` and ``timeout`` are now both keyword-only arguments.
+   - ``predicate`` is now async.
+- ``Client.wait_for_ready`` is now :meth:`twitchio.Client.wait_until_ready`
+- ``Client.create_user`` is now :meth:`twitchio.Client.create_partialuser`
+- ``Client.fetch_chatters_colors`` is now :meth:`~twitchio.Client.fetch_chatters_color`
+- ``Client.fetch_content_classification_labels`` is now :meth:`~twitchio.Client.fetch_classifications`
+
+
+**Removed:**
+
+- Client parameter ``initial_channels``
+- Client parameter ``heartbeat``
+- Client parameter ``retain_cache``
+- Client parameter ``loop``
+- ``Client.connected_channels``
+- ``Client.loop``
+- ``Client.nick``
+- ``Client.user_id``
+- ``Client.events``
+- ``Client.connect()``
+- ``Client.event_channel_join_failure()``
+- ``Client.event_channel_joined()``
+- ``Client.event_join()``
+- ``Client.event_mode()``
+- ``Client.event_notice()``
+- ``Client.event_part()``
+- ``Client.event_raw_data()``
+- ``Client.event_raw_notice()``
+- ``Client.event_raw_usernotice()``
+- ``Client.event_reconnect()``
+- ``Client.event_token_expired()``
+- ``Client.event_usernotice_subscription()``
+- ``Client.event_userstate()``
+- ``Client.get_channel()``
+- ``Client.get_webhook_subscriptions()``
+- ``Client.join_channels()``
+- ``Client.part_channels()``
+- ``Client.update_chatter_color()``
+- ``Client.from_client_credentials()``
+- ``Client.fetch_global_chat_badges()``
+- ``Client.fetch_global_emotes()``
 
 
 Logging
@@ -248,6 +344,25 @@ To wait until the bot is ready, consider using :meth:`twitchio.Client.wait_until
 Changelog
 =========
 
+Environment
+~~~~~~~~~~~
+
+Python:
+
+- Minimum Python version changed from ``3.7`` to ``3.11``.
+
+Dependencies:
+
+- Bumped ``aiohttp`` minimum version to ``3.9.1``
+- Added Optional ``[starlette]``
+- Added Optional ``[docs]`` (For developing the documentation)
+- Added Optional ``[dev]`` (Required tools for development)
+- Removed ``iso8601``
+- Removed ``typing-extensions``
+- Removed Optional ``[sounds]``
+- Removed Optional ``[speed]``
+
+
 Added
 ~~~~~
 
@@ -256,12 +371,42 @@ Added
 
 Client:
 
+- Parameter ``bot_id``
+- Parameter ``redirect_uri``
+- Parameter ``scopes``
+- Parameter ``session``
+- Parameter ``adapter``
+- Parameter ``fetch_client_user``
+- :attr:`twitchio.Client.bot_id`
 - :attr:`twitchio.Client.tokens`
+- :attr:`twitchio.Client.user`
+- :meth:`twitchio.Client.add_listener`
 - :meth:`twitchio.Client.add_token`
-- :meth:`twitchio.Client.remove_token`
+- :meth:`twitchio.Client.delete_all_eventsub_subscriptions`
+- :meth:`twitchio.Client.delete_eventsub_subscription`
+- :meth:`twitchio.Client.delete_websocket_subscription`
+- :meth:`twitchio.Client.fetch_badges`
+- :meth:`twitchio.Client.fetch_drop_entitlements`
+- :meth:`twitchio.Client.fetch_emote_sets`
+- :meth:`twitchio.Client.fetch_emotes`
+- :meth:`twitchio.Client.fetch_eventsub_subscriptions`
+- :meth:`twitchio.Client.fetch_extension_transactions`
+- :meth:`twitchio.Client.fetch_extensions`
+- :meth:`twitchio.Client.fetch_game`
+- :meth:`twitchio.Client.fetch_stream_markers`
+- :meth:`twitchio.Client.fetch_team`
+- :meth:`twitchio.Client.listen`
 - :meth:`twitchio.Client.load_tokens`
-- :meth:`twitchio.Client.save_tokens`
 - :meth:`twitchio.Client.login`
+- :meth:`twitchio.Client.remove_listener`
+- :meth:`twitchio.Client.remove_token`
+- :meth:`twitchio.Client.save_tokens`
+- :meth:`twitchio.Client.setup_hook`
+- :meth:`twitchio.Client.subscribe_webhook`
+- :meth:`twitchio.Client.subscribe_websocket`
+- :meth:`twitchio.Client.update_entitlements`
+- :meth:`twitchio.Client.update_extensions`
+- :meth:`twitchio.Client.websocket_subscriptions`
 
 Utils/Helpers:
 
@@ -275,6 +420,7 @@ Utils/Helpers:
 Events:
 
 - :func:`twitchio.event_oauth_authorized`
+- :func:`twitchio.event_token_refreshed`
 
 Changed
 ~~~~~~~
@@ -288,3 +434,42 @@ Client:
    - ``predicate`` is now async.
 - ``Client.wait_for_ready`` is now :meth:`twitchio.Client.wait_until_ready`
 - ``Client.create_user`` is now :meth:`twitchio.Client.create_partialuser`
+- ``Client.fetch_chatters_colors`` is now :meth:`~twitchio.Client.fetch_chatters_color`
+- ``Client.fetch_content_classification_labels`` is now :meth:`~twitchio.Client.fetch_classifications`
+
+Removed
+~~~~~~~
+
+Client:
+
+- Client parameter ``initial_channels``
+- Client parameter ``heartbeat``
+- Client parameter ``retain_cache``
+- Client parameter ``loop``
+- ``Client.connected_channels``
+- ``Client.loop``
+- ``Client.nick``
+- ``Client.user_id``
+- ``Client.events``
+- ``Client.connect()``
+- ``Client.event_channel_join_failure()``
+- ``Client.event_channel_joined()``
+- ``Client.event_join()``
+- ``Client.event_mode()``
+- ``Client.event_notice()``
+- ``Client.event_part()``
+- ``Client.event_raw_data()``
+- ``Client.event_raw_notice()``
+- ``Client.event_raw_usernotice()``
+- ``Client.event_reconnect()``
+- ``Client.event_token_expired()``
+- ``Client.event_usernotice_subscription()``
+- ``Client.event_userstate()``
+- ``Client.get_channel()``
+- ``Client.get_webhook_subscriptions()``
+- ``Client.join_channels()``
+- ``Client.part_channels()``
+- ``Client.update_chatter_color()``
+- ``Client.from_client_credentials()``
+- ``Client.fetch_global_chat_badges()``
+- ``Client.fetch_global_emotes()``
