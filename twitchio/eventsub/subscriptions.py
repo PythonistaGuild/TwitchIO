@@ -1548,6 +1548,11 @@ class ChannelPointsAutoRedeemV2Subscription(SubscriptionPayload):
     """The ``channel.channel_points_automatic_reward_redemption.add`` subscription type sends a notification when a viewer has redeemed an automatic channel points reward on the specified channel.
 
     This is Version 2 of the subscription that includes message fragments and channel points.
+    This does *not* notify for Power-up types currently, they are covered by V1 only. e.g.
+
+        - message_effect
+        - gigantify_an_emote
+        - celebration
 
     .. important::
         Must have ``channel:read:redemptions`` or ``channel:manage:redemptions`` scope.

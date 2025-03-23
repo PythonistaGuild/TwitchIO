@@ -918,7 +918,6 @@ class PartialUser:
         .. note::
             If you wish to view ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will need to provide a moderator, which can be
             either the broadcaster's or a moderators'. The token must include the ``moderator:read:chat_settings`` scope.
-            the toke
 
         Parameters
         ----------
