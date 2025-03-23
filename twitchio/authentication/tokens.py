@@ -94,6 +94,9 @@ class ManagedHTTPClient(OAuth):
         self._validate_task: asyncio.Task[None] | None = None
         self._client = client
 
+    def __repr__(self) -> str:
+        return self.__class__.__qualname__
+
     def _dispatch_event(self, user_id: str, payload: RefreshTokenPayload) -> None:
         if not self._client:
             return
@@ -122,7 +125,7 @@ class ManagedHTTPClient(OAuth):
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="token", original=e)
 
         if not valid_resp.login or not valid_resp.user_id:
-            logger.info("Refreshed token is not a user token. Adding to TokenManager as an app token.")
+            logger.info("Refreshed token is not a user token. Adding to %r as an app token.", self)
             self._app_token = resp.access_token
 
             return valid_resp
@@ -135,7 +138,7 @@ class ManagedHTTPClient(OAuth):
         }
 
         self._dispatch_event(valid_resp.user_id, resp)
-        logger.info('Token successfully added to TokenManager after refresh: "%s"', valid_resp.user_id)
+        logger.info('Token successfully added to %r after refresh: "%s"', self, valid_resp.user_id)
         return valid_resp
 
     async def add_token(self, token: str, refresh: str) -> ValidateTokenPayload:
@@ -149,11 +152,11 @@ class ManagedHTTPClient(OAuth):
                 msg: str = "Token was invalid. Please check the token or re-authenticate user with a new token."
                 raise InvalidTokenException(msg, token=token, refresh=refresh, type_="token", original=e)
 
-            logger.debug("Token was invalid when attempting to add it to the token manager. Attempting to refresh.")
+            logger.debug("Token was invalid when attempting to add it to %r. Attempting to refresh.", self)
             return await self._attempt_refresh_on_add(token, refresh)
 
         if not resp.login or not resp.user_id:
-            logger.info("Added token is not a user token. Adding to TokenManager as an app token.")
+            logger.info("Added token is not a user token. Adding to %r as an app token.", self)
             self._app_token = token
 
             return resp
@@ -169,7 +172,7 @@ class ManagedHTTPClient(OAuth):
             "last_validated": datetime.datetime.now().isoformat(),
         }
 
-        logger.debug('Token successfully added to TokenManager: "%s"', resp.user_id)
+        logger.debug('Token successfully added to %r: "%s"', self, resp.user_id)
         return resp
 
     def remove_token(self, user_id: str) -> TokenMappingData | None:
@@ -273,7 +276,7 @@ class ManagedHTTPClient(OAuth):
             self._dispatch_event(user_id, resp)
 
     async def _revalidate_all(self) -> None:
-        logger.debug("Attempting to revalidate all tokens that have passed the timeout on %s.", self.__class__.__qualname__)
+        logger.debug("Attempting to revalidate all tokens that have passed the timeout on %r.", self)
 
         for data in self._tokens.copy().values():
             user_id: str = data["user_id"]
@@ -304,7 +307,7 @@ class ManagedHTTPClient(OAuth):
                 self._tokens[user_id]["last_validated"] = datetime.datetime.now().isoformat()
 
     async def __validate_loop(self) -> None:
-        logger.debug("Started the token validation loop on %s.", self.__class__.__qualname__)
+        logger.debug("Started the token validation loop on %r.", self)
 
         while True:
             try:
@@ -342,7 +345,7 @@ class ManagedHTTPClient(OAuth):
         with open(name, "w+", encoding="UTF-8") as fp:
             json.dump(self._tokens, fp)
 
-        logger.info('Tokens from %s have been saved to: "%s".', self.__class__.__qualname__, name)
+        logger.info('Tokens from %r have been saved to: "%s".', self, name)
 
     async def load_tokens(self, name: str | None = None) -> None:
         name = name or ".tio.tokens.json"
@@ -363,7 +366,7 @@ class ManagedHTTPClient(OAuth):
             except InvalidTokenException:
                 failed.append(key)
 
-        logger.info("Loaded %s tokens into the Token Manager.", loaded)
+        logger.info("Loaded %s tokens into %r.", loaded, self)
         if failed:
             msg: str = f"The following users tokens failed to load: {', '.join(failed)}"
             logger.warning(msg)

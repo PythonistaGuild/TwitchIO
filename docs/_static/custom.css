@@ -118,6 +118,10 @@ code {
 	font-family: "Lato", sans-serif!important;
 }
 
+.site-toc .toc ul {
+	padding-left: 24px;
+}
+
 li > a > code > .pre {
 	font-family: "Lato", sans-serif!important;
 }

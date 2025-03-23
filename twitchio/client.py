@@ -984,6 +984,37 @@ class Client:
         data = await self._http.get_channel_info(broadcaster_ids, token_for)
         return [ChannelInfo(d, http=self._http) for d in data["data"]]
 
+    async def fetch_channel(
+        self,
+        broadcaster_id: str | int,
+        *,
+        token_for: str | PartialUser | None = None,
+    ) -> ChannelInfo | None:
+        """|coro|
+
+        Retrieve channel information from the API for a single broadcaster.
+
+        Parameters
+        ----------
+        broadcaster_id: str | int
+            The ID of the channel you wish to receive information for.
+        token_for: str | PartialUser | None
+            |token_for|
+
+        Returns
+        --------
+        :class:`~twitchio.ChannelInfo`
+            Channel information as a :class:`~twitchio.ChannelInfo` object.
+        None
+            No channel could be found.
+        """
+
+        data = await self._http.get_channel_info([broadcaster_id], token_for)
+        try:
+            return ChannelInfo(data["data"][0], http=self._http)
+        except IndexError:
+            return None
+
     async def fetch_cheermotes(
         self,
         *,
