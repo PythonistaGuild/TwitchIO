@@ -69,7 +69,7 @@ References
 
    references/client
    references/events
-   references/user
+   references/users/index
    references/eventsub_subscriptions
    references/web
    references/exceptions
