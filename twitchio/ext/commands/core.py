@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import enum
 import inspect
 from collections.abc import Callable, Coroutine, Generator
 from types import MappingProxyType, UnionType
@@ -43,8 +44,11 @@ from .types_ import CommandOptions, Component_T
 __all__ = (
     "Command",
     "CommandErrorPayload",
+    "ContextType",
     "Group",
     "Mixin",
+    "RewardCommand",
+    "RewardStatus",
     "command",
     "cooldown",
     "group",
@@ -55,6 +59,7 @@ __all__ = (
     "is_owner",
     "is_staff",
     "is_vip",
+    "reward_command",
 )
 
 
@@ -109,6 +114,56 @@ def get_signature_parameters(
         params[name] = parameter.replace(annotation=annotation)
 
     return params
+
+
+class ContextType(enum.Enum):
+    """Enum representing the type of type of a :class:`~.commands.Context` object.
+
+    The type represents how the :class:`~.commands.Context` was constructed and how it will behave.
+
+    Attributes
+    ----------
+    MESSAGE
+        When :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.MESSAGE`, the :class:`~.commands.Context` was
+        constructed with a :class:`~twitchio.ChatMessage`. This :class:`~.commands.Context` only works with
+        :class:`~.commands.Command`'s and has the broader functionality.
+    REWARD
+        When :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`, the :class:`~.commands.Context` was
+        constructed with a :class:`~twitchio.ChannelPointsRedemptionAdd`. This :class:`~.commands.Context` only works with
+        :class:`~.commands.RewardCommand`'s and has limited functionality in comparison to :attr:`~.commands.ContextType.MESSAGE`.
+
+        Notable limitations include not having access to a :class:`~twitchio.Chatter` and some :func:`~.commands.guard`'s will
+        not be available.
+    """
+
+    MESSAGE = "message"
+    REWARD = "reward"
+
+
+class RewardStatus(enum.Enum):
+    """
+    Enum provided to :func:`~.commands.reward_command` representing when the :class:`~.commands.RewardCommand` should
+    be invoked.
+
+    Attributes
+    ----------
+    unfulfilled: Literal["unfulfilled"]
+        Used to invoke a :class:`~.commands.RewardCommand` when the redemption is set to ``"unfulfilled"``. An unfulfilled
+        redemption is one still waiting to be approved or denied in the redemption queue.
+    fulfilled: Literal["fulfilled"]
+        Used to invoke a :class:`~.commands.RewardCommand` when the redemption is set to ``"fulfilled"``. A fulfilled
+        redemption is one that has been approved, either from the redemption queue, automatically or via a bot.
+    canceled: Literal["canceled"]
+        Used to invoke a :class:`~.commands.RewardCommand` when the redemption is set to ``"canceled"``. A canceled
+        redemption is one that has been denied, either from the redemption queue, or via a bot.
+    all: Literal["all"]
+        Used to invoke a :class:`~.commands.RewardCommand` on any status.
+    """
+
+    unfulfilled = "unfulfilled"
+    fulfilled = "fulfilled"
+    canceled = "canceled"
+    all = "all"
 
 
 class CommandErrorPayload:
@@ -540,15 +595,12 @@ class Command(Generic[Component_T, P]):
         context.error_dispatched = True
         context.bot.dispatch("command_error", payload=payload)
 
-    def error(
-        self,
-        func: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro],
-    ) -> Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro]:
+    def error(self, func: Any) -> Any:
         """|deco|
 
         A decorator which adds a local error handler to this command.
 
-        Similar to :meth:`~commands.Bot.event_command_error` except local to this command.
+        Similar to :meth:`~twitchio.ext.commands.Bot.event_command_error` except local to this command.
         """
         if not asyncio.iscoroutinefunction(func):
             raise TypeError(f'Command specific "error" callback for "{self._name}" must be a coroutine function.')
@@ -559,6 +611,95 @@ class Command(Generic[Component_T, P]):
     def before_invoke(self) -> None: ...
 
     def after_invoke(self) -> None: ...
+
+
+class RewardCommand(Command[Component_T, P]):
+    """Represents the :class:`~.commands.RewardCommand` class.
+
+    Reward commands are commands invoked from Channel Point Redemptions instead of the usual invocation via messages.
+
+    See the :func:`~.commands.reward_command` decorator for more information.
+
+    These are usually not created manually, instead see:
+
+    - :func:`~.commands.reward_command`
+
+    - :meth:`~.commands.Bot.add_command`
+    """
+
+    def __init__(
+        self,
+        callback: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        *,
+        reward_id: str,
+        invoke_when: RewardStatus,
+        **kwargs: Unpack[CommandOptions],
+    ) -> None:
+        name = reward_id if invoke_when is RewardStatus.all else f"{reward_id}_{invoke_when.value}"
+        self._reward_id: str = reward_id
+
+        super().__init__(callback, name=name, **kwargs)
+
+        self._aliases: list[str] = []
+        self._invoke_when: RewardStatus = invoke_when
+
+    @property
+    def parent(self) -> Group[Component_T, P] | None:
+        """:class:`~twitchio.ext.commands.RewardCommand` does not implement Groups or Sub-Commands.
+
+        This property always returns ``None``.
+        """
+        return None
+
+    @property
+    def reward_id(self) -> str:
+        """Property returning the reward id that this command belongs to."""
+        return self._reward_id
+
+    @property
+    def name(self) -> str:
+        """:class:`~twitchio.ext.commands.RewardCommand` do not allow custom names, and such the name of the command is always
+        a uniquely generated string based on the :attr:`~twitchio.ext.commands.RewardCommand.reward_id` and
+        :attr:`~twitchio.ext.commands.RewardCommand.invoke_when` properties.
+        """
+        return self._name
+
+    @property
+    def relative_name(self) -> str:
+        """:class:`~twitchio.ext.commands.RewardCommand` does not implement Groups or Sub-Commands.
+
+        This property always returns :attr:`~twitchio.ext.commands.RewardCommand.name`
+        """
+        return self.name
+
+    @property
+    def full_parent_name(self) -> str:
+        """:class:`~twitchio.ext.commands.RewardCommand` does not implement Groups or Sub-Commands.
+
+        This property always returns :attr:`~twitchio.ext.commands.RewardCommand.name`
+        """
+        return self.name
+
+    @property
+    def qualified_name(self) -> str:
+        """:class:`~twitchio.ext.commands.RewardCommand` does not implement Groups or Sub-Commands.
+
+        This property always returns :attr:`~twitchio.ext.commands.RewardCommand.name`
+        """
+        return self.name
+
+    @property
+    def aliases(self) -> list[str]:
+        """:class:`~twitchio.ext.commands.RewardCommand` do not allow aliases.
+
+        This property always returns an empty :class:`list`.
+        """
+        return self._aliases
+
+    @property
+    def invoke_when(self) -> RewardStatus:
+        """Property returning the :class:`~.commands.RewardStatus` this command will invoke under."""
+        return self._invoke_when
 
 
 class Mixin(Generic[Component_T]):
@@ -742,6 +883,86 @@ def command(
     return wrapper
 
 
+def reward_command(
+    id: str, invoke_when: RewardStatus = RewardStatus.fulfilled, extras: dict[Any, Any] | None = None, **kwargs: Any
+) -> Any:
+    """|deco|
+
+    A decorator which turns a coroutine into a :class:`~.commands.RewardCommand` which can be used in
+    :class:`~.commands.Component`'s or added to a :class:`~.commands.Bot`.
+
+    Reward commands are powerful tools which enable bots to process channel point redemptions and convert them into
+    mangeable arguments and :class:`~.commands.Context` which are parsed and sent to the wrapped callback coroutine.
+
+    Similar to standard commands, reward commands benefit from :func:`~.guard`'s and the ``before`` and ``after`` hooks on both,
+    :class:`~.commands.Component` and :class:`~.commands.Bot`. However some functionality may be limited or missing due to
+    Twitch limitations on the data provided around the user.
+
+    A best effort has been made to document features that will be limited by Reward Commands; usually with a warning, however
+    you should take into consideration that you will **not** receive a full :class:`~twitchio.Chatter` object when using a
+    :class:`~.commands.RewardCommand`.
+
+    Reward command callbacks should take in at minimum one parameter, which is :class:`~.commands.Context` and is always
+    passed.
+
+    By default, Reward Commands are only invoked when a channel point redemption is set to ``"fulfilled"``. This behaviour
+    can be changed by providing the ``invoke_when`` parameter.
+
+    :class:`~.commands.RewardCommand`'s use the Reward ``id`` `and` ``invoke_when`` parameters to generate a unique name.
+    This means that you can only have one :class:`~.commands.RewardCommand` per ``id`` and ``invoke_when`` pair.
+    If :attr:`~.commands.RewardStatus.all` is used this command will act as a catch all, rendering other commands with the
+    same ``id`` unusable.
+
+    To be able to use :class:`~.commands.RewardCommand`'s you must subscribe to the relevant events:
+
+    - :func:`~twitchio.event_custom_redemption_add`
+
+    - :func:`~twitchio.event_custom_redemption_update`
+
+    Parameters
+    ----------
+    id: str
+        The ID of the reward you wish to invoke this command for. This is always required.
+    invoke_when: :class:`~.commands.RewardStatus`
+        Indicates under which redemption status this command should invoke. Defaults to :attr:`~.commands.RewardStatus.fulfilled`
+    extras: dict
+        A dict of any data which is stored on this command object. Can be used anywhere you have access to the command object,
+        E.g. in a ``before`` or ``after`` hook.
+    guards_after_parsing: bool
+        An optional bool, indicating whether to run guards after argument parsing has completed.
+        Defaults to ``False``, which means guards will be checked **before** command arguments are parsed and available.
+    cooldowns_before_guards: bool
+        An optional bool, indicating whether to run cooldown guards after all other guards succeed.
+        Defaults to ``False``, which means cooldowns will be checked **after** all guards have successfully completed.
+    bypass_global_guards: bool
+        An optional bool, indicating whether the command should bypass the :meth:`.Bot.global_guard`.
+        Defaults to ``False``.
+
+    Examples
+    --------
+
+    .. code:: python3
+
+        @commands.reward_command(id="29fde826-1bd6-4cb3-82f1-bb990ea9f04c", invoke_when=commands.RewardStatus.fulfilled)
+        async def reward_test(self, ctx: commands.Context, *, user_input: str) -> None:
+            assert ctx.redemption
+            await ctx.send(f"{ctx.author} redeemed {ctx.redemption.reward.title} and said {user_input}")
+    """
+
+    def wrapper(
+        func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+    ) -> RewardCommand[Any, ...]:
+        if isinstance(func, (Command, RewardCommand)):
+            raise ValueError(f'Callback "{func._callback}" is already a Command.')  # type: ignore
+
+        if not asyncio.iscoroutinefunction(func):
+            raise TypeError(f'RewardCommand callback for "{func.__qualname__}" must be a coroutine function.')
+
+        return RewardCommand(reward_id=id, invoke_when=invoke_when, callback=func, extras=extras or {}, **kwargs)
+
+    return wrapper
+
+
 def group(
     name: str | None = None, aliases: list[str] | None = None, extras: dict[Any, Any] | None = None, **kwargs: Any
 ) -> Any:
@@ -831,9 +1052,9 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
     These are usually not created manually, instead see:
 
-    - :func:`.commands.group`
+    - :func:`~twitchio.ext.commands.group`
 
-    - :meth:`.commands.Bot.add_command`
+    - :meth:`~twitchio.ext.commands.Bot.add_command`
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -893,7 +1114,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
         A decorator which adds a :class:`~.commands.Command` as a sub-command to this group.
 
-        See: :class:`~.commands.command` for more information on commands
+        See: :func:`~.commands.command` for more information on commands
 
         Examples
         --------
@@ -934,7 +1155,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
             An optional bool, indicating whether to run cooldown guards after all other guards succeed.
             Defaults to ``False``, which means cooldowns will be checked **after** all guards have successfully completed.
         bypass_global_guards: bool
-            An optional bool, indicating whether the command should bypass the :func:`~.commands.Bot.global_guard`.
+            An optional bool, indicating whether the command should bypass the :func:`~twitchio.ext.commands.Bot.global_guard`.
             Defaults to ``False``.
         """
 
@@ -1127,6 +1348,11 @@ def is_staff() -> Any:
     This guards adds a predicate which prevents any chatter from using a command
     who does not possess the ``Twitch Staff`` badge.
 
+    .. warning::
+
+        Due to Twitch limitations, you cannot use this Guard on a :class:`.commands.RewardCommand`. If you do, it will always
+        fail.
+
     Raises
     ------
     GuardFailure
@@ -1134,7 +1360,10 @@ def is_staff() -> Any:
     """
 
     def predicate(context: Context) -> bool:
-        return context.chatter.staff
+        if context.type is ContextType.REWARD:
+            raise TypeError("This Guard can not be used on a RewardCommand instance.")
+
+        return context.chatter.staff  # type: ignore
 
     return guard(predicate)
 
@@ -1173,6 +1402,11 @@ def is_moderator() -> Any:
     See also, :func:`~.commands.is_elevated` for a guard to allow the ``broadcaster``, any ``moderator`` or ``VIP`` chatter
     to use the command.
 
+    .. warning::
+
+        Due to Twitch limitations, you cannot use this Guard on a :class:`.commands.RewardCommand`. If you do, it will always
+        fail.
+
     Raises
     ------
     GuardFailure
@@ -1180,7 +1414,10 @@ def is_moderator() -> Any:
     """
 
     def predicate(context: Context) -> bool:
-        return context.chatter.moderator
+        if context.type is ContextType.REWARD:
+            raise TypeError("This Guard can not be used on a RewardCommand instance.")
+
+        return context.chatter.moderator  # type: ignore
 
     return guard(predicate)
 
@@ -1197,6 +1434,11 @@ def is_vip() -> Any:
         Due to a Twitch limitation, moderators and broadcasters can not be VIPs, another guard has been made to help aid
         in allowing these members to also be seen as VIP, see: :func:`~.commands.is_elevated`.
 
+    .. warning::
+
+        Due to Twitch limitations, you cannot use this Guard on a :class:`.commands.RewardCommand`. If you do, it will always
+        fail.
+
     Raises
     ------
     GuardFailure
@@ -1204,7 +1446,10 @@ def is_vip() -> Any:
     """
 
     def predicate(context: Context) -> bool:
-        return context.chatter.vip
+        if context.type is ContextType.REWARD:
+            raise TypeError("This Guard can not be used on a RewardCommand instance.")
+
+        return context.chatter.vip  # type: ignore
 
     return guard(predicate)
 
@@ -1220,6 +1465,11 @@ def is_elevated() -> Any:
     .. important::
 
         The chatter only needs **1** of the badges to pass the guard.
+
+    .. warning::
+
+        Due to Twitch limitations, you cannot use this Guard on a :class:`.commands.RewardCommand`. If you do, it will always
+        fail.
 
     Example
     -------
@@ -1240,7 +1490,10 @@ def is_elevated() -> Any:
     """
 
     def predicate(context: Context) -> bool:
-        chatter: Chatter = context.chatter
+        if context.type is ContextType.REWARD:
+            raise TypeError("This Guard can not be used on a RewardCommand instance.")
+
+        chatter: Chatter = context.chatter  # type: ignore
         return chatter.moderator or chatter.vip
 
     return guard(predicate)

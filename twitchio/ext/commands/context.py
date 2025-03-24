@@ -27,7 +27,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
-from .core import CommandErrorPayload
+from twitchio.models.eventsub_ import ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate, ChatMessage
+
+from .core import CommandErrorPayload, ContextType, RewardCommand, RewardStatus
 from .exceptions import *
 from .view import StringView
 
@@ -39,7 +41,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
 
     from twitchio.models import SentMessage
-    from twitchio.models.eventsub_ import ChatMessage
     from twitchio.user import Chatter, PartialUser
 
     from .bot import Bot
@@ -50,37 +51,50 @@ if TYPE_CHECKING:
 
 
 class Context:
-    """The Context class constructed when a message is received and processed via the :func:`~twitchio.event_message`
-    event in a :class:`~.commands.Bot`.
+    """The Context class constructed when a message or reward redemption in the respective events is received and processed
+    in a :class:`~.commands.Bot`.
 
-    This object is available in all :class:`~.commands.Command`'s, :class:`~.commands.Groups`'s and associated sub-commands
-    and all command related events. It is also included in various areas relating to command invocation, including,
-    Guards and Before and After Hooks.
+    This object is available in all :class:`~.commands.Command`'s, :class:`~.commands.RewardCommand`'s,
+    :class:`~twitchio.ext.commands.Group`'s and associated sub-commands and all command related events.
+    It is also included in various areas relating to command invocation, including, :func:`~twitchio.ext.commands.guard`'s and
+    before and after hooks.
 
-    The Context class is a useful tool which provides information surrounding the command invocation, the broadcaster
-    and chatter involved and provides many useful methods and properties for ease of us.
+    The :class:`~.commands.Context` class is a useful tool which provides information surrounding the command invocation,
+    the broadcaster and chatter involved and provides many useful methods and properties for ease of us.
 
-    Usually you wouldn't construct this class this yourself, however it could be subclassed to implement custom functionality
-    or constructed from a message received via EventSub in :func:`~twitchio.event_message`.
+    Usually you wouldn't construct this class this yourself, however it could be subclassed and used with
+    :meth:`~twitchio.ext.commands.Bot.get_context` to implement custom functionality.
 
     Parameters
     ----------
-    message: :class:`twitchio.ChatMessage`
-        The message object, usually received via :func:`~twitchio.event_message`.
+    payload: :class:`twitchio.ChatMessage` | :class:`~twitchio.ChannelPointsRedemptionAdd` | :class:`~twitchio.ChannelPointsRedemptionUpdate`
+        The message or redemption object used to construct this Context.
     bot: :class:`~.commands.Bot`
         Your :class:`~.commands.Bot` class, this is required to perform multiple operations.
     """
 
-    def __init__(self, message: ChatMessage, *, bot: Bot) -> None:
-        self._message: ChatMessage = message
+    def __init__(
+        self,
+        payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate,
+        *,
+        bot: Bot,
+    ) -> None:
+        self._payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate = payload
         self._bot: Bot = bot
         self._component: Component | None = None
         self._prefix: str | None = None
 
-        self._raw_content: str = self._message.text
-        self._command: Command[Any, ...] | None = None
-        self._invoked_subcommand: Command[Any, ...] | None = None
-        self._invoked_with: str | None = None
+        if isinstance(payload, ChatMessage):
+            self._raw_content: str = payload.text
+            self._invoked_with: str | None = None
+            self._type: ContextType = ContextType.MESSAGE
+        else:
+            self._raw_content = payload.user_input
+            self._invoked_with = payload.reward.id
+            self._type: ContextType = ContextType.REWARD
+
+        self._command: Command[Any, ...] | RewardCommand[Any, ...] | None = None
+        self._invoked_subcommand: Command[Any, ...] | RewardCommand[Any, ...] | None = None
         self._subcommand_trigger: str | None = None
         self._command_failed: bool = False
         self._error_dispatched: bool = False
@@ -94,11 +108,30 @@ class Context:
         self._kwargs: dict[str, Any] = {}
 
     @property
-    def message(self) -> ChatMessage:
-        """Proptery of the message object that this context is built from. This is the :class:`~twitchio.ChatMessage`
-        received via EventSub from the chatter.
+    def message(self) -> ChatMessage | None:
+        """Property returning the :class:`~twitchio.ChatMessage` that this :class:`~.commands.Context` was
+        created from. This could be ``None`` if :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`.
         """
-        return self._message
+        return self._payload if isinstance(self._payload, ChatMessage) else None
+
+    @property
+    def redemption(self) -> ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate | None:
+        """Property returning the :class:`~twitchio.ChannelPointsRedemptionAdd` or :class:`~twitchio.ChannelPointsRedemptionUpdate`
+        that this :class:`~.commands.Context` was created from. This could be ``None`` if :attr:`~.commands.Context.type`
+        is :attr:`~.commands.ContextType.MESSAGE`.
+        """
+        return (
+            self._payload if isinstance(self._payload, (ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate)) else None
+        )
+
+    @property
+    def payload(self) -> ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate:
+        """Property returning the :class:`~twitchio.ChatMessage` or either :class:`~twitchio.ChannelPointsRedemptionAdd`
+        or :class:`~twitchio.ChannelPointsRedemptionUpdate` associated with this :class:`~.commands.Context`.
+
+        Unlike :attr:`~.commands.Context.message` and :attr:`~.commands.Context.redemption` this will always return a value.
+        """
+        return self._payload
 
     @property
     def component(self) -> Component | None:
@@ -109,8 +142,9 @@ class Context:
         return self._component
 
     @property
-    def command(self) -> Command[Any, ...] | None:
-        """Property returning the :class:`~.commands.Command` associated with this context, if found.
+    def command(self) -> Command[Any, ...] | RewardCommand[Any, ...] | None:
+        """Property returning the :class:`~.commands.Command` or :class:`~.commands.RewardCommand` associated with this context,
+        if found.
 
         This is only set when a command begins invocation. Could be ``None`` if the command has not started invocation,
         or one was not found.
@@ -134,36 +168,49 @@ class Context:
         """Property returning the string the context used to attempt to find
         a valid :class:`~.commands.Command`.
 
+        If :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD` this will return the ID of the reward.
+
         Could be ``None`` if a command has not been invoked from this context yet.
         """
         return self._invoked_with
 
     @property
-    def chatter(self) -> Chatter:
-        """Property returning the :class:`twitchio.PartialUser` who sent the :class:`~twitchio.ChatMessage`
-        in the channel that this context is built from.
+    def chatter(self) -> Chatter | PartialUser:
+        """Property returning a :class:`~twitchio.Chatter` if :attr:`~.commands.Context.type` is
+        :attr:`~.commands.ContextType.MESSAGE`; E.g. when invoked from a :class:`~twitchio.ChatMessage`.
+
+        When :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`, this will return a
+        :class:`twitchio.PartialUser`, which is the user who redeemed the reward.
         """
-        return self._message.chatter
+        return self._payload.chatter if isinstance(self._payload, ChatMessage) else self._payload.user
 
     @property
-    def author(self) -> Chatter:
-        """Alias to :attr:`.chatter`."""
-        return self._message.chatter
+    def author(self) -> Chatter | PartialUser:
+        """Property returning a :class:`~twitchio.Chatter` if :attr:`~.commands.Context.type` is
+        :attr:`~.commands.ContextType.MESSAGE`; E.g. when invoked from a :class:`~twitchio.ChatMessage`.
+
+        When :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`, this will return a
+        :class:`twitchio.PartialUser`, which is the user who redeemed the reward.
+        """
+        return self._payload.chatter if isinstance(self._payload, ChatMessage) else self._payload.user
 
     @property
     def broadcaster(self) -> PartialUser:
         """Property returning the :class:`twitchio.PartialUser` who is the broadcaster of the channel associated with this
         context.
         """
-        return self._message.broadcaster
+        return self._payload.broadcaster
 
     @property
     def source_broadcaster(self) -> PartialUser | None:
         """Property returning the :class:`twitchio.PartialUser` who is the broadcaster of the channel associated with
-        the original :class:`~twitchio.ChatMessage`. This will usually always be ``None`` as the default behaviour is to
-        ignore shared messages when invoking commands.
+        the original :class:`~twitchio.ChatMessage`.
+
+        This will usually always be ``None`` as the default behaviour is to ignore shared messages when invoking commands.
+
+        This will always be ``None`` when :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`.
         """
-        return self._message.source_broadcaster
+        return self._payload.source_broadcaster if isinstance(self._payload, ChatMessage) else None
 
     @property
     def channel(self) -> PartialUser:
@@ -181,13 +228,29 @@ class Context:
 
         This will only return a prefix after the context has been prepared, which occurs during invocation of a command,
         and after a valid prefix found.
+
+        This will always be ``None`` when :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`.
         """
         return self._prefix
 
     @property
     def content(self) -> str:
-        """Property returning the raw content of the message associated with this context."""
+        """Property returning the raw content of the message associated with this context.
+
+        If :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`, this will be the ``user_input`` of the
+        reward, if provided by the user.
+        """
         return self._raw_content
+
+    @property
+    def type(self) -> ContextType:
+        """Property returning the :class:`.commands.ContextType` associated with this :class:`.commands.Context`.
+
+        This will be :attr:`~.commands.ContextType.MESSAGE` when the context is invoked from a :class:`~twitchio.ChatMessage`.
+
+        Otherwise when invoked from a Channel Points Redemption this will be :attr:`~.commands.ContextType.REWARD`.
+        """
+        return self._type
 
     @property
     def error_dispatched(self) -> bool:
@@ -234,11 +297,19 @@ class Context:
         return self.chatter.id == self.bot.owner_id
 
     def is_valid(self) -> bool:
-        """Method which indicates whether this context is valid. E.g. hasa valid command prefix."""
+        """Method which indicates whether this context is valid. E.g. has a valid command prefix.
+
+        If :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD` this will return ``True`` if a valid
+        command is found.
+        """
+        if isinstance(self._payload, (ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate)):
+            return self._command is not None
+
         return self._prefix is not None
 
     def _validate_prefix(self, potential: str | Iterable[str]) -> None:
-        text: str = self._message.text
+        assert isinstance(self._payload, ChatMessage)
+        text: str = self._payload.text
 
         if isinstance(potential, str):
             if text.startswith(potential):
@@ -256,11 +327,13 @@ class Context:
                 return
 
     async def _get_prefix(self) -> None:
+        assert isinstance(self._payload, ChatMessage)
+
         assigned: PrefixT = self._bot._get_prefix
         potential: str | Iterable[str]
 
         if callable(assigned):
-            potential = await assigned(self._bot, self._message)
+            potential = await assigned(self._bot, self._payload)
         else:
             potential = assigned
 
@@ -271,10 +344,17 @@ class Context:
         self._validate_prefix(potential)
 
     def _get_command(self) -> None:
+        commands = self._bot._commands
+
+        if isinstance(self._payload, (ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate)):
+            status = self._payload.status
+            unique = f"{self._payload.reward.id}_{status}"
+            self._command = commands.get(self._payload.reward.id, commands.get(unique))
+            return
+
         if not self.prefix:
             return
 
-        commands = self._bot._commands
         self._view.skip_string(self.prefix)
 
         next_ = self._view.get_word()
@@ -288,16 +368,26 @@ class Context:
         return
 
     async def _prepare(self) -> None:
-        await self._get_prefix()
+        if isinstance(self._payload, ChatMessage):
+            await self._get_prefix()
+
         self._get_command()
 
     async def prepare(self) -> None:
+        """|coro|
+
+        Method called before invocation, used to retrieve a valid prefix and valid command.
+
+        This coroutine is called automatically in :meth:`.invoke` before anything else.
+
+        Could be overriden to add extra setup before command invocation.
+        """
         await self._prepare()
 
     async def invoke(self) -> bool | None:
         """|coro|
 
-        Invoke and process the command associated with this message context if it is valid.
+        Invoke and process the command associated with this message or redemption context if it is valid.
 
         This method first prepares the context for invocation, and checks whether the context has a
         valid command with a valid prefix.
@@ -305,7 +395,7 @@ class Context:
         .. warning::
 
             Usually you wouldn't use this method yourself, as it handled by TwitchIO interanally when
-            :meth:`~.commands.Bot.process_commands` is called in a :func:`twitchio.event_message` event.
+            :meth:`~.commands.Bot.process_commands` is called in various events.
 
         .. important::
 
@@ -334,6 +424,17 @@ class Context:
 
         if not self._command:
             raise CommandNotFound(f'The command "{self._invoked_with}" was not found.')
+
+        if isinstance(self._payload, (ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate)):
+            assert isinstance(self._command, RewardCommand)
+
+            status: RewardStatus = RewardStatus(self._payload.status)
+            invoke_when: RewardStatus = self._command._invoke_when
+
+            if invoke_when is RewardStatus.all:
+                pass
+            elif status is not invoke_when:
+                return
 
         self.bot.dispatch("command_invoked", self)
 
@@ -400,6 +501,11 @@ class Context:
         Send a chat message as a reply to the user who this message is associated with and to the channel associated with
         this context.
 
+        .. warning::
+
+            You cannot use this method in Reward based context. E.g.
+            if :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`.
+
         .. important::
 
             You must have the ``user:write:chat`` scope. If an app access token is used,
@@ -427,9 +533,14 @@ class Context:
             Twitch failed to process the message, could be ``400``, ``401``, ``403``, ``422`` or any ``5xx`` status code.
         MessageRejectedError
             Twitch rejected the message from various checks.
+        TypeError
+            Cannot reply in a Reward based Context.
         """
+        if self._type is ContextType.REWARD:
+            raise TypeError("Cannot reply to a message in a Reward based context.")
+
         new = (f"/me {content}" if me else content).strip()
-        return await self.channel.send_message(sender=self.bot.bot_id, message=new, reply_to_message_id=self.message.id)
+        return await self.channel.send_message(sender=self.bot.bot_id, message=new, reply_to_message_id=self._payload.id)
 
     async def send_announcement(
         self, content: str, *, color: Literal["blue", "green", "orange", "purple", "primary"] | None = None
@@ -468,6 +579,11 @@ class Context:
 
         Delete the message associated with this context.
 
+        .. warning::
+
+            You cannot use this method in Reward based context. E.g.
+            if :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`.
+
         .. important::
 
             The broadcaster of the associated channel must have granted your bot the ``moderator:manage:chat_messages`` scope.
@@ -482,8 +598,13 @@ class Context:
         ------
         HTTPException
             Twitch failed to remove the message. Could be ``400``, ``401``, ``403``, ``404`` or any ``5xx`` status code.
+        TypeError
+            Cannot delete the message of a Reward based Context.
         """
-        await self.channel.delete_chat_messages(moderator=self.bot.bot_id, message_id=self.message.id)
+        if self._type is ContextType.REWARD:
+            raise TypeError("Cannot delete a message in a Reward based context.")
+
+        await self.channel.delete_chat_messages(moderator=self.bot.bot_id, message_id=self._payload.id)
 
     async def clear_messages(self) -> None:
         """|coro|

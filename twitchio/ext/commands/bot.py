@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Iterable, Mapping
 
     from twitchio.eventsub.subscriptions import SubscriptionPayload
-    from twitchio.models.eventsub_ import ChatMessage
+    from twitchio.models.eventsub_ import ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate, ChatMessage
     from twitchio.types_.eventsub import SubscriptionResponse
     from twitchio.user import PartialUser
 
@@ -323,16 +323,22 @@ class Bot(Mixin[None], Client):
         """
         return self._components.get(name)
 
-    def get_context(self, message: ChatMessage, *, cls: Any = None) -> Any:
-        """Method to create and retrieve a :class:`~.commands.Context` object from a :class:`twitchio.ChatMessage`.
+    def get_context(
+        self,
+        payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate,
+        *,
+        cls: Any = None,
+    ) -> Any:
+        """Method to create and retrieve a :class:`~.commands.Context` object from either a
+        :class:`twitchio.ChatMessage`, :class:`twitchio.ChannelPointsRedemptionAdd` or :class:`twitchio.ChannelPointsRedemptionUpdate`.
 
         This method can be overriden to accept a custom class which inherits from :class:`~.commands.Context` for use within
         the command invocation process, instead of the default.
 
         Parameters
         ----------
-        message: :class:`~twitchio.ChatMessage`
-            The message to construct a :class:`~.commands.Context` or derivative from.
+        payload: :class:`~twitchio.ChatMessage` | :class:`twitchio.ChannelPointsRedemptionAdd` | :class:`twitchio.ChannelPointsRedemptionUpdate`
+            The message or redemption to construct a :class:`~.commands.Context` or derivative from.
         cls: Any
             A custom class to use as the context. This should inherit from :class:`~.commands.Context`.
 
@@ -346,23 +352,27 @@ class Bot(Mixin[None], Client):
 
             class Bot(commands.Bot):
 
-                def get_context(self, message: twitchio.ChatMessage, *, cls: Any = None) -> CustomContext:
+                def get_context(self, payload, *, cls: Any = None) -> CustomContext:
                     cls = cls or CustomContext
-                    return cls(message, bot=self)
+                    return cls(payload, bot=self)
 
             @commands.command()
             async def test(ctx: CustomContext) -> None:
                 ...
         """
         cls = cls or Context
-        return cls(message, bot=self)
+        return cls(payload, bot=self)
 
-    async def _process_commands(self, message: ChatMessage) -> None:
-        ctx: Context = self.get_context(message)
+    async def _process_commands(
+        self, payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate
+    ) -> None:
+        ctx: Context = self.get_context(payload)
         await self.invoke(ctx)
 
-    async def process_commands(self, message: ChatMessage) -> None:
-        await self._process_commands(message)
+    async def process_commands(
+        self, payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate
+    ) -> None:
+        await self._process_commands(payload)
 
     async def invoke(self, ctx: Context) -> None:
         try:
@@ -370,6 +380,12 @@ class Bot(Mixin[None], Client):
         except CommandError as e:
             payload = CommandErrorPayload(context=ctx, exception=e)
             self.dispatch("command_error", payload=payload)
+
+    async def event_custom_redemption_add(self, payload: ChannelPointsRedemptionAdd) -> None:
+        await self.process_commands(payload)
+
+    async def event_custom_redemption_update(self, payload: ChannelPointsRedemptionUpdate) -> None:
+        await self.process_commands(payload)
 
     async def event_message(self, payload: ChatMessage) -> None:
         if payload.chatter.id == self.bot_id:
