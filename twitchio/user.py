@@ -652,6 +652,7 @@ class PartialUser:
             The cost of the reward, in Channel Points. The minimum is 1 point.
         prompt: str | None
             The prompt shown to the viewer when they redeem the reward. The prompt is limited to a maximum of 200 characters.
+            If provided, the user must input a message when redeeming the reward.
         enabled: bool
             A Boolean value that determines whether the reward is enabled. Viewers see only enabled rewards. The default is True.
         background_color: str | Colour | None
