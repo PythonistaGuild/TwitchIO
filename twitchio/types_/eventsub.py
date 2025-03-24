@@ -39,6 +39,7 @@ __all__ = (
     "AutomodMessageUpdateEvent",
     "AutomodSettingsUpdateEvent",
     "AutomodTermsUpdateEvent",
+    "BaseChannelPointsRewardData",
     "BaseEmoteData",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
@@ -63,6 +64,7 @@ __all__ = (
     "ChannelPointsImageData",
     "ChannelPointsRewardRedemptionAddEvent",
     "ChannelPointsRewardRedemptionUpdateEvent",
+    "ChannelPointsUnlockedEmoteData",
     "ChannelPollBeginEvent",
     "ChannelPollEndEvent",
     "ChannelPollProgressEvent",
@@ -934,8 +936,10 @@ class BaseChannelPointsRewardData(TypedDict):
         "gigantify_an_emote",
         "celebration",
     ]
-    cost: int
-    unlocked_emote: ChannelPointsUnlockedEmoteData | None
+    cost: NotRequired[int]
+    unlocked_emote: NotRequired[ChannelPointsUnlockedEmoteData]
+    channel_points: NotRequired[int]
+    emote: NotRequired[ChannelPointsUnlockedEmoteData]
 
 
 class ChannelPointsAutoRewardRedemptionEvent(BroadcasterUserEvent):

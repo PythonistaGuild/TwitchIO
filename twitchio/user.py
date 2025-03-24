@@ -918,7 +918,6 @@ class PartialUser:
         .. note::
             If you wish to view ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will need to provide a moderator, which can be
             either the broadcaster's or a moderators'. The token must include the ``moderator:read:chat_settings`` scope.
-            the toke
 
         Parameters
         ----------
@@ -1122,15 +1121,17 @@ class PartialUser:
 
     async def send_message(
         self,
-        *,
-        sender: str | int | PartialUser,
         message: str,
+        sender: str | int | PartialUser,
+        *,
         token_for: str | PartialUser | None = None,
         reply_to_message_id: str | None = None,
     ) -> SentMessage:
         """|coro|
 
         Send a message to the broadcaster's chat room.
+
+        The PartialUser/User object this method is called on is the broadcaster / channel the message will be sent to.
 
         .. important::
             Requires an app access token or user access token that includes the ``user:write:chat`` scope.
@@ -1148,13 +1149,13 @@ class PartialUser:
 
         Parameters
         ----------
-        sender: str | int | PartialUser
-            The ID, or PartialUser, of the user sending the message. This ID must match the user ID in the user access token.
         message: str
             The message to send. The message is limited to a maximum of 500 characters.
             Chat messages can also include emoticons. To include emoticons, use the name of the emote.
             The names are case sensitive. Don't include colons around the name e.g., `:bleedPurple:`.
             If Twitch recognizes the name, Twitch converts the name to the emote before writing the chat message to the chat room
+        sender: str | int | PartialUser
+            The ID, or PartialUser, of the user sending the message. This ID must match the user ID in the user access token.
         token_for: str | PartialUser | None
             User access token that includes the ``user:write:chat`` scope.
             You can use an app access token which additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.

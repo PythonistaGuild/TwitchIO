@@ -25,6 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import datetime
+from itertools import accumulate
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, cast
 
 from twitchio.assets import Asset
@@ -58,6 +59,7 @@ if TYPE_CHECKING:
     )
 
 __all__ = (
+    "AutoRedeemReward",
     "AutomodBlockedTerm",
     "AutomodMessageHold",
     "AutomodMessageUpdate",
@@ -172,6 +174,7 @@ __all__ = (
     "SubscriptionRevoked",
     "SuspiciousUserMessage",
     "SuspiciousUserUpdate",
+    "UnlockedEmote",
     "UserAuthorizationGrant",
     "UserAuthorizationRevoke",
     "UserUpdate",
@@ -722,9 +725,9 @@ class AutomodTermsUpdate(BaseEvent):
         return f"<AutomodTermsUpdate broadcaster={self.broadcaster} moderator={self.moderator} action={self.action} automod={self.automod}>"
 
 
-class PowerUpEmote:
+class RewardEmote:
     """
-    Represents a PowerUp Emote on a channel bits use event.
+    Represents a minimal Reward Emote.
 
     Attributes
     ----------
@@ -736,9 +739,31 @@ class PowerUpEmote:
 
     __slots__ = ("id", "name")
 
-    def __init__(self, data: PowerUpEmoteDataData) -> None:
+    def __init__(self, data: ChannelPointsUnlockedEmoteData | PowerUpEmoteDataData) -> None:
         self.id: str = data["id"]
         self.name: str = data["name"]
+
+    def __repr__(self) -> str:
+        return f"<RewardEmote id={self.id} name={self.name}>"
+
+
+class PowerUpEmote(RewardEmote):
+    """
+    Represents a PowerUp Emote on a channel bits use event.
+
+    Attributes
+    ----------
+    id: str
+        The ID that uniquely identifies this emote.
+    name: str
+        The human readable emote token.
+    """
+
+    def __init__(self, data: PowerUpEmoteDataData) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<PowerUpEmote id={self.id} name={self.name}>"
 
 
 class PowerUp:
@@ -1063,11 +1088,11 @@ class ChatMessageEmote:
 
     Attributes
     ----------
-    set_id: str
+    set_id: str | None
         An ID that identifies the emote set that the emote belongs to.
     id: str
         An ID that uniquely identifies this emote.
-    owner: PartialUser
+    owner: PartialUser | None
         The broadcaster who owns the emote.
     format: list[typing.Literal["static", "animated"]]
         The formats that the emote is available in. For example, if the emote is available only as a static PNG, the array contains only static.
@@ -1082,7 +1107,7 @@ class ChatMessageEmote:
 
     def __init__(self, data: ChatMessageEmoteData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
-        self.set_id: str = data["emote_set_id"]
+        self.set_id: str | None = data.get("emote_set_id")
         self.id: str = data["id"]
         owner_id: str | None = data.get("owner_id")
         self.owner: PartialUser | None = PartialUser(owner_id, None, http=http) if owner_id is not None else None
@@ -1170,10 +1195,10 @@ class ChatMessageFragment:
         self.mention: PartialUser | None = (
             PartialUser(user["user_id"], user["user_login"], user["user_name"], http=http) if user is not None else None
         )
-        self.cheermote: ChatMessageCheermote | None = (
-            ChatMessageCheermote(data["cheermote"]) if data["cheermote"] is not None else None
-        )
-        self.emote: ChatMessageEmote | None = ChatMessageEmote(data["emote"], http=http) if data["emote"] else None
+        cheermote = data.get("cheermote")
+        self.cheermote: ChatMessageCheermote | None = ChatMessageCheermote(cheermote) if cheermote is not None else None
+        emote = data.get("emote")
+        self.emote: ChatMessageEmote | None = ChatMessageEmote(emote, http=http) if emote else None
 
     def __repr__(self) -> str:
         return f"<ChatMessageFragment type={self.type} text={self.text}>"
@@ -2333,7 +2358,7 @@ class BaseEmote:
         self.id: str = data["id"]
 
     def __repr__(self) -> str:
-        return f"<BaseEmote id={self.id} begin={self.id} end={self.end}>"
+        return f"<BaseEmote id={self.id} begin={self.begin} end={self.end}>"
 
 
 class SubscribeEmote(BaseEmote):
@@ -3199,7 +3224,60 @@ class ChannelPointsEmote(BaseEmote):
         super().__init__(data)
 
     def __repr__(self) -> str:
-        return f"<ChannelPointsEmote id={self.id} begin={self.id} end={self.end}>"
+        return f"<ChannelPointsEmote id={self.id} begin={self.begin} end={self.end}>"
+
+
+class UnlockedEmote(RewardEmote):
+    """
+    Represents an Unlocked Emote on an automatic redeem.
+
+    Attributes
+    ----------
+    id: str
+        The ID that uniquely identifies this emote.
+    name: str
+        The human readable emote token.
+    """
+
+    def __init__(self, data: ChannelPointsUnlockedEmoteData) -> None:
+        super().__init__(data)
+
+    def __repr__(self) -> str:
+        return f"<UnlockedEmote id={self.id} name={self.name}>"
+
+
+class AutoRedeemReward:
+    """
+    Represents a reward on an automatic redeem.
+
+    Attributes
+    ----------
+    type: typing.Literal["single_message_bypass_sub_mode", "send_highlighted_message", "random_sub_emote_unlock", "chosen_sub_emote_unlock", "chosen_modified_sub_emote_unlock", "message_effect", "gigantify_an_emote", "celebration"]
+    channel_points: int
+        Number of channel points used. This is also covers `cost` when using V1.
+    emote: UnlockedEmote | None
+        The human readable emote token.
+    """
+
+    __slots__ = ("channel_points", "emote", "type")
+
+    def __init__(self, data: BaseChannelPointsRewardData) -> None:
+        self.type: Literal[
+            "single_message_bypass_sub_mode",
+            "send_highlighted_message",
+            "random_sub_emote_unlock",
+            "chosen_sub_emote_unlock",
+            "chosen_modified_sub_emote_unlock",
+            "message_effect",
+            "gigantify_an_emote",
+            "celebration",
+        ] = data["type"]
+        self.channel_points: int | None = data.get("cost") or data.get("channel_points")
+        emote = data.get("unlocked_emote") or data.get("emote")
+        self.emote: UnlockedEmote | None = UnlockedEmote(emote) if emote else None
+
+    def __repr__(self) -> str:
+        return f"<AutoRedeemReward type={self.type} channel_points={self.channel_points}>"
 
 
 class ChannelPointsAutoRedeemAdd(BaseEvent):
@@ -3216,17 +3294,23 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
         The ID of the redemption.
     text: str
         The text of the chat message.
-    emotes: list[ChannelPointsEmote]
-        A list of ChannelPointsEmote objects that appear in the text.
-    user_input: str | None
-        The text input by the user if the reward requires input.
     redeemed_at: datetime.datetime
         The datetime object of when the reward was redeemed.
+    reward: AutoRedeemReward
+        The details of the reward auto redeemed.
+    emotes: list[ChannelPointsEmote]
+        A list of ChannelPointsEmote objects that appear in the text.
+        If using V1, this is populated by Twitch.
+        If using V2, the emotes can be found in the fragments, but we calculate the index ourselves for this property.
+    user_input: str | None
+        The text input by the user if the reward requires input. This is `None` when using V2. `text` is the preferred attribute to use.
+    fragments: list[ChatMessageFragment]
+        The ordered list of chat message fragments. This is only populated when using V2.
     """
 
     subscription_type = "channel.channel_points_automatic_reward_redemption.add"
 
-    __slots__ = ("broadcaster", "emotes", "id", "redeemed_at", "reward", "text", "user", "user_input")
+    __slots__ = ("_raw_emotes", "broadcaster", "fragments", "id", "redeemed_at", "reward", "text", "user", "user_input")
 
     def __init__(self, payload: ChannelPointsAutoRewardRedemptionEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
@@ -3235,13 +3319,28 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.id: str = payload["id"]
         self.text: str = payload["message"]["text"]
-        emotes = payload.get("message", {}).get("emotes", [])
-        self.emotes: list[ChannelPointsEmote] = [ChannelPointsEmote(emote) for emote in emotes] if emotes is not None else []
         self.user_input: str | None = payload.get("user_input")
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
+        self.reward: AutoRedeemReward = AutoRedeemReward(payload["reward"])
+        fragments = payload["message"].get("fragments", [])
+        self.fragments: list[ChatMessageFragment] = [ChatMessageFragment(f, http=http) for f in fragments]
+        self._raw_emotes = payload.get("message", {}).get("emotes", [])
 
     def __repr__(self) -> str:
         return f"<ChannelPointsAutoRedeemAdd broadcaster={self.broadcaster} user={self.user} id={self.id}>"
+
+    @property
+    def emotes(self) -> list[ChannelPointsEmote]:
+        if self._raw_emotes:
+            return [ChannelPointsEmote(emote) for emote in self._raw_emotes]
+        lengths = [len(frag.text) for frag in self.fragments]
+        offsets = [0, *list(accumulate(lengths))]
+
+        return [
+            ChannelPointsEmote({"id": frag.emote.id, "begin": offsets[i], "end": offsets[i + 1] - 1})
+            for i, frag in enumerate(self.fragments)
+            if frag.type == "emote" and frag.emote is not None
+        ]
 
 
 class CooldownSettings(NamedTuple):

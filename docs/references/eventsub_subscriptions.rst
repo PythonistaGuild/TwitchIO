@@ -184,6 +184,11 @@ Eventsub Subscriptions
 .. autoclass:: ChannelPointsAutoRedeemSubscription
     :members:
 
+.. attributetable:: ChannelPointsAutoRedeemV2Subscription
+
+.. autoclass:: ChannelPointsAutoRedeemV2Subscription
+    :members:
+
 .. attributetable:: ChannelPointsRewardAddSubscription
 
 .. autoclass:: ChannelPointsRewardAddSubscription
