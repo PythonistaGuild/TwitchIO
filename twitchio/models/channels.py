@@ -218,15 +218,15 @@ class ChannelInfo:
     def __repr__(self) -> str:
         return f"<ChannelInfo user={self.user} game_id={self.game_id} game_name={self.game_name} title={self.title} language={self.language} delay={self.delay}>"
 
-    async def fetch_game(self) -> Game:
+    async def fetch_game(self) -> Game | None:
         """|coro|
 
         Fetches the :class:~twitchio.Game` associated with this ChannelInfo.
 
         Returns
         -------
-        Game
+        Game | None
             The game associated with this ChannelInfo.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
-        return Game(payload["data"][0], http=self._http)
+        return Game(payload["data"][0], http=self._http) if payload["data"] else None
