@@ -286,7 +286,7 @@ class GCRACooldown(BaseCooldown):
         return now > (self.last_updated + self.per)
 
 
-KeyT: TypeAlias = Callable[[Any], Hashable] | Callable[[Any], Coroutine[Any, Any, Hashable]] | BucketType
+KeyT: TypeAlias = Callable[..., Hashable] | Callable[..., Coroutine[Any, Any, Hashable]] | BucketType
 
 
 class Bucket(Generic[PT]):
