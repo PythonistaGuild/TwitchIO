@@ -310,7 +310,7 @@ class Bucket(Generic[PT]):
 
     async def get_key(self, payload: PT) -> Hashable:
         if asyncio.iscoroutinefunction(self._key):
-            key = await self._key(payload)
+            key = await self._key(payload)  # type: ignore
         else:
             key = self._key(payload)  # type: ignore
 
