@@ -1025,6 +1025,10 @@ class ChannelSubscribeSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelSubscriptionEndSubscription(SubscriptionPayload):
     """The ``channel.subscription.end`` subscription type sends a notification when a subscription to the specified channel expires.
@@ -1059,6 +1063,10 @@ class ChannelSubscriptionEndSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
@@ -1240,6 +1248,10 @@ class ChannelBanSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelUnbanSubscription(SubscriptionPayload):
     """The ``channel.unban`` subscription type sends a notification when a viewer is unbanned from the specified channel.
@@ -1274,6 +1286,10 @@ class ChannelUnbanSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelUnbanRequestSubscription(SubscriptionPayload):
@@ -1489,6 +1505,10 @@ class ChannelModeratorAddSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelModeratorRemoveSubscription(SubscriptionPayload):
     """The ``channel.moderator.remove`` subscription type sends a notification when a user has moderator privileges removed on a specified channel.
@@ -1523,6 +1543,10 @@ class ChannelModeratorRemoveSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
@@ -1690,6 +1714,10 @@ class ChannelPointsRewardUpdateSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPointsRewardRemoveSubscription(SubscriptionPayload):
     """The ``channel.channel_points_custom_reward.remove`` subscription type sends a notification when a custom channel points reward has been removed from the specified channel.
@@ -1855,6 +1883,10 @@ class ChannelPollBeginSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPollProgressSubscription(SubscriptionPayload):
     """The ``channel.poll.progress`` subscription type sends a notification when users respond to a poll on the specified channel.
@@ -1889,6 +1921,10 @@ class ChannelPollProgressSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelPollEndSubscription(SubscriptionPayload):
@@ -1925,6 +1961,10 @@ class ChannelPollEndSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPredictionBeginSubscription(SubscriptionPayload):
     """The ``channel.prediction.begin`` subscription type sends a notification when a Prediction begins on the specified channel.
@@ -1959,6 +1999,10 @@ class ChannelPredictionBeginSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelPredictionLockSubscription(SubscriptionPayload):
@@ -1995,6 +2039,10 @@ class ChannelPredictionLockSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPredictionProgressSubscription(SubscriptionPayload):
     """The ``channel.prediction.progress`` subscription type sends a notification when users participate in a Prediction on the specified channel.
@@ -2030,6 +2078,10 @@ class ChannelPredictionProgressSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPredictionEndSubscription(SubscriptionPayload):
     """The ``channel.prediction.end`` subscription type sends a notification when a Prediction ends on the specified channel.
@@ -2064,6 +2116,10 @@ class ChannelPredictionEndSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class SuspiciousUserUpdateSubscription(SubscriptionPayload):
@@ -2184,6 +2240,10 @@ class ChannelVIPAddSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelVIPRemoveSubscription(SubscriptionPayload):
     """The ``channel.vip.remove`` subscription type sends a notification when a VIP is removed from the channel.
@@ -2218,6 +2278,10 @@ class ChannelVIPRemoveSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelWarningAcknowledgementSubscription(SubscriptionPayload):
@@ -2332,6 +2396,10 @@ class CharityDonationSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class CharityCampaignStartSubscription(SubscriptionPayload):
     """The ``channel.charity_campaign.start`` subscription type sends a notification when the broadcaster starts a charity campaign.
@@ -2369,6 +2437,10 @@ class CharityCampaignStartSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class CharityCampaignProgressSubscription(SubscriptionPayload):
@@ -2410,6 +2482,10 @@ class CharityCampaignProgressSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class CharityCampaignStopSubscription(SubscriptionPayload):
     """The ``channel.charity_campaign.stop`` subscription type sends a notification when the broadcaster stops a charity campaign.
@@ -2444,6 +2520,10 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class GoalBeginSubscription(SubscriptionPayload):
@@ -2482,6 +2562,10 @@ class GoalBeginSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class GoalProgressSubscription(SubscriptionPayload):
@@ -2522,6 +2606,10 @@ class GoalProgressSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class GoalEndSubscription(SubscriptionPayload):
     """The ``channel.goal.end`` subscription type sends a notification when the specified broadcaster ends a goal.
@@ -2556,6 +2644,10 @@ class GoalEndSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class HypeTrainBeginSubscription(SubscriptionPayload):
@@ -2595,6 +2687,10 @@ class HypeTrainBeginSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class HypeTrainProgressSubscription(SubscriptionPayload):
     """The ``channel.hype_train.progress`` subscription type sends a notification when a Hype Train makes progress on the specified channel.
@@ -2633,6 +2729,10 @@ class HypeTrainProgressSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class HypeTrainEndSubscription(SubscriptionPayload):
     """The ``channel.hype_train.end`` subscription type sends a notification when a Hype Train ends on the specified channel.
@@ -2667,6 +2767,10 @@ class HypeTrainEndSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ShieldModeBeginSubscription(SubscriptionPayload):
