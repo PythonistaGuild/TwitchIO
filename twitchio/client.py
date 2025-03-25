@@ -2068,7 +2068,7 @@ class Client:
         self,
         payload: SubscriptionPayload,
         *,
-        as_bot: bool = False,
+        as_bot: bool | None = None,
         token_for: str | PartialUser | None = None,
         socket_id: str | None = None,
     ) -> SubscriptionResponse | None:
@@ -2114,6 +2114,11 @@ class Client:
         HTTPException
             An error was raised while making the subscription request to Twitch.
         """
+        defaults = payload.default_auth
+        if as_bot is None:
+            as_bot = defaults.get("as_bot", False)
+        if token_for is None:
+            token_for = defaults.get("token_for", None)
         if as_bot and not self.bot_id:
             raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
 
@@ -2194,7 +2199,7 @@ class Client:
         self,
         payload: SubscriptionPayload,
         *,
-        as_bot: bool = False,
+        as_bot: bool | None = None,
         token_for: str | PartialUser | None = None,
         callback_url: str | None = None,
         eventsub_secret: str | None = None,
@@ -2250,6 +2255,11 @@ class Client:
         HTTPException
             An error was raised while making the subscription request to Twitch.
         """
+        defaults = payload.default_auth
+        if as_bot is None:
+            as_bot = defaults.get("as_bot", False)
+        if token_for is None:
+            token_for = defaults.get("token_for", None)
         if as_bot and not self.bot_id:
             raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
 

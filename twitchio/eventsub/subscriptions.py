@@ -25,13 +25,14 @@ SOFTWARE.
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, Unpack
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypedDict, Unpack
 
 from twitchio.utils import handle_user_ids
 
 
 if TYPE_CHECKING:
-    from ..types_.conduits import Condition
+    from twitchio.types_.conduits import Condition
+    from twitchio.user import PartialUser
 
 
 __all__ = (
@@ -136,6 +137,11 @@ _SUB_MAPPING: dict[str, str] = {
 }
 
 
+class DefaultAuthDict(TypedDict, total=False):
+    as_bot: bool
+    token_for: str | PartialUser | None
+
+
 class SubscriptionPayload(abc.ABC):
     type: ClassVar[Any]
     version: ClassVar[Any]
@@ -161,6 +167,10 @@ class SubscriptionPayload(abc.ABC):
     @property
     def condition(self) -> Condition:
         raise NotImplementedError
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {}
 
 
 class AutomodMessageHoldSubscription(SubscriptionPayload):
@@ -451,6 +461,10 @@ class ChannelBitsUseSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelUpdateSubscription(SubscriptionPayload):
     """The ``channel.update`` subscription type sends notifications when a broadcaster updates the category, title, content classification labels, or broadcast language for their channel.
@@ -555,6 +569,10 @@ class AdBreakBeginSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChatClearSubscription(SubscriptionPayload):
@@ -1543,6 +1561,10 @@ class ChannelPointsAutoRedeemSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPointsAutoRedeemV2Subscription(SubscriptionPayload):
     """The ``channel.channel_points_automatic_reward_redemption.add`` subscription type sends a notification when a viewer has redeemed an automatic channel points reward on the specified channel.
@@ -1587,6 +1609,10 @@ class ChannelPointsAutoRedeemV2Subscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPointsRewardAddSubscription(SubscriptionPayload):
     """The ``channel.channel_points_custom_reward.add`` subscription type sends a notification when a custom channel points reward has been created for the specified channel.
@@ -1621,6 +1647,10 @@ class ChannelPointsRewardAddSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelPointsRewardUpdateSubscription(SubscriptionPayload):
@@ -1698,6 +1728,10 @@ class ChannelPointsRewardRemoveSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
     """The ``channel.channel_points_custom_reward_redemption.add`` subscription type sends a notification when a viewer has redeemed a custom channel points reward on the specified channel.
@@ -1738,6 +1772,10 @@ class ChannelPointsRedeemAddSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
     """The ``channel.channel_points_custom_reward_redemption.update`` subscription type sends a notification when a redemption of a channel points custom reward has been updated for the specified channel.
@@ -1777,6 +1815,10 @@ class ChannelPointsRedeemUpdateSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelPollBeginSubscription(SubscriptionPayload):
