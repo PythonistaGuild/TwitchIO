@@ -390,8 +390,10 @@ Commands Events
   Below is a small example of overriding the default implementation in a :class:`~twitchio.ext.commands.Component`. This,
   when used in an extension allows your error handler to be hot-reloaded without losing access to a proper exception handler.
 
-  Example
-  -------
+  :param twitchio.ext.commands.CommandErrorPayload payload: The error payload containing context and the exception raised.
+
+
+  **Example**
 
   .. code:: python3
 
@@ -442,8 +444,6 @@ Commands Events
 
     async def setup(bot: commands.Bot) -> None:
         await bot.add_component(ErrorComponent(bot))
-
-  :param twitchio.ext.commands.CommandErrorPayload payload: The error payload containing context and the exception raised.
 
 
 Automod
