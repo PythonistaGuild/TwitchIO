@@ -266,6 +266,71 @@ class Client:
             task.add_done_callback(waits.discard)
             waits.add(task)
 
+    def safe_dispatch(self, name: str, *, payload: Any | None = None) -> None:
+        """Method to dispatch a custom :ref:`_Event`.
+
+        When an event is dispatched all listeners listening to the event, coroutine functions defined on the
+        :class:`~twitchio.Client` with the same name, and :meth:`~twitchio.Client.wait_for` waiting for the event will be
+        triggered.
+
+        Internally the :class:`~twitchio.Client` uses a method similar to this, however to avoid conflicts with built-in events
+        it is not documented and you should use this method instead when needing a custom event dispatched.
+
+        This method avoids conflicts with internal events by prefixing the name of the event with ``event_safe_``;
+        specifically in this case ``_safe_`` is added between the ``event_`` prefix and the name of the event.
+
+        All events in TwitchIO, including custom ones, must take between ``0`` or ``1`` arguments only. If ``None`` is
+        passed to the payload parameter (default), the event will be dispatched with no arguments attached. Otherwise you can
+        provide one parameter ``payload`` which (ideally) is a class containing all the information and methods needed in
+        your event. Keep in mind that events expect consistency; E.g. If your event takes a payload argument it should
+        **always** take a payload argument and vice versa. If designing an ``ext`` for TwitchIO this also will be inline
+        with how end-users will expect events to work.
+
+        .. note::
+
+            If you intend on using this in a custom ``ext`` for example; consider also adding a small prefix to the name to
+            identify your extension from others.
+
+        .. warning::
+
+            Overriding this method is highly discouraged. Any changes made to the safe name of the event may have hard to
+            track and unwanted side effects. TwitchIO uses events internally and any changes to these dispatched events
+            internally by users may also lead to consequences such as being rate limted or banned by Twitch, banned by
+            broadcasters or; memory, CPU, network and other performance issues.
+
+        Parameters
+        ----------
+        name: str
+            The name of the event you wish to dispatch. Remember the name of the event will be prefixed with ``event_safe_``.
+        payload: Any | None
+            The payload object dispatched to all your listeners. Defaults to ``None`` which would pass ``0`` arguments to all
+            listeners.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            class CoolPayload:
+
+                def __init__(self, number: int) -> None:
+                    self.number = number
+
+
+            class CoolComponent(commands.Component):
+
+                @commands.Component.listener()
+                async def event_safe_cool(self, payload: CoolPayload) -> None:
+                    print(f"Received 'cool' event with number: {payload.number}")
+
+
+            # Somewhere...
+            payload = CoolPayload(number=9)
+            client.safe_dispatch("cool", payload)
+        """
+        name_ = f"safe_{name}"
+        self.dispatch(name_, payload)
+
     async def setup_hook(self) -> None:
         """
         Method called after :meth:`~.login` has been called but before the client is ready.
