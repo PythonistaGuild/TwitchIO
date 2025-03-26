@@ -621,9 +621,11 @@ class Command(Generic[Component_T, P]):
     def before_invoke(self, func: Any) -> Any:
         """|deco|
 
-        A decorator which adds a local ``before_invoke`` callback to this command.
+        A decorator which adds a local ``before_invoke`` callback to this command, similar to
+        :meth:`~twitchio.ext.commands.Bot.before_invoke` except local to this command.
 
-        Similar to :meth:`~twitchio.ext.commands.Bot.before_invoke` except local to this command.
+        The ``before_invoke`` hook is called before the command callback, but after parsing arguments and guards are
+        successfully completed. Could be used to setup state for the command for example.
 
         Example
         -------
@@ -659,9 +661,17 @@ class Command(Generic[Component_T, P]):
     def after_invoke(self, func: Any) -> Any:
         """|deco|
 
-        A decorator which adds a local ``after_invoke`` callback to this command.
+        A decorator which adds a local ``after_invoke`` callback to this command, similar to
+        :meth:`~twitchio.ext.commands.Bot.after_invoke` except local to this command.
 
-        Similar to :meth:`~twitchio.ext.commands.Bot.after_invoke` except local to this command.
+        The ``after_invoke`` hook is called after the command callback has completed invocation. Could be used to cleanup
+        state after command invocation.
+
+        .. note::
+
+            This hook is always called; even when the :class:`~.commands.Command` fails to invoke. However, similar to
+            :meth:`.before_invoke` only if parsing arguments and guards are successfully completed.
+
 
         Example
         -------
