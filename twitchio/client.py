@@ -267,7 +267,7 @@ class Client:
             waits.add(task)
 
     def safe_dispatch(self, name: str, *, payload: Any | None = None) -> None:
-        """Method to dispatch a custom :ref:`_Event`.
+        """Method to dispatch a custom :ref:`event <Event Ref>`.
 
         When an event is dispatched all listeners listening to the event, coroutine functions defined on the
         :class:`~twitchio.Client` with the same name, and :meth:`~twitchio.Client.wait_for` waiting for the event will be
@@ -277,7 +277,7 @@ class Client:
         it is not documented and you should use this method instead when needing a custom event dispatched.
 
         This method avoids conflicts with internal events by prefixing the name of the event with ``event_safe_``;
-        specifically in this case ``_safe_`` is added between the ``event_`` prefix and the name of the event.
+        specifically in this case ``safe_`` is added between the ``event_`` prefix and the name of the event.
 
         All events in TwitchIO, including custom ones, must take between ``0`` or ``1`` arguments only. If ``None`` is
         passed to the payload parameter (default), the event will be dispatched with no arguments attached. Otherwise you can
