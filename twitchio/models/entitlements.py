@@ -93,18 +93,18 @@ class Entitlement:
     def __str__(self) -> str:
         return self.id
 
-    async def fetch_game(self) -> Game:
+    async def fetch_game(self) -> Game | None:
         """|coro|
 
         Fetches the :class:`~twitchio.Game` associated with this drop entitlement.
 
         Returns
         -------
-        Game
+        Game | None
             The game associated with this drop entitlement.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
-        return Game(payload["data"][0], http=self._http)
+        return Game(payload["data"][0], http=self._http) if payload["data"] else None
 
 
 class EntitlementStatus:

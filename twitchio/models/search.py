@@ -96,7 +96,7 @@ class SearchChannel:
     def __repr__(self) -> str:
         return f"<SearchChannel broadcaster={self.broadcaster} title={self.title} live={self.live} game_id={self.game_id}>"
 
-    async def fetch_game(self) -> Game:
+    async def fetch_game(self) -> Game | None:
         """|coro|
 
         Fetches the :class:`~twitchio.Game` associated with this channel.
@@ -110,4 +110,4 @@ class SearchChannel:
             The game associated with this :class:`~twitchio.SearchChannel` instance.
         """
         payload: GamesResponse = await self._http.get_games(ids=[self.game_id])
-        return Game(payload["data"][0], http=self._http)
+        return Game(payload["data"][0], http=self._http) if payload["data"] else None
