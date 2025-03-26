@@ -86,8 +86,8 @@ References
    :maxdepth: 1
    :caption: Models
 
-   references/eventsub_models
-   references/helix_models
+   references/eventsub/index
+   references/helix/index
    references/enums_etc
 
 .. toctree::

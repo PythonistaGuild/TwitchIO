@@ -1,9 +1,6 @@
 .. currentmodule:: twitchio
 
 
-Helix
-#################
-
 .. attributetable:: twitchio.CommercialStart
 
 .. autoclass:: twitchio.CommercialStart

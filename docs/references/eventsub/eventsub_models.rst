@@ -1,9 +1,6 @@
 .. currentmodule:: twitchio
 
 
-Eventsub
-#################
-
 .. attributetable:: twitchio.AutomodMessageHold
 
 .. autoclass:: twitchio.AutomodMessageHold()
