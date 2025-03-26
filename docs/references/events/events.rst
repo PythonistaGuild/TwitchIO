@@ -2,7 +2,7 @@
 
 .. _Event Ref:
 
-Events Reference
+Table Reference
 ################
 
 .. warning::
@@ -307,7 +307,7 @@ Events Reference
 
 
 Client Events
-~~~~~~~~~~~~~
+#############
 
 .. py:function:: event_ready() -> None
   :async:
@@ -362,7 +362,7 @@ Client Events
 
 
 Commands Events
-~~~~~~~~~~~~~~~
+###############
 
 .. py:function:: event_command_invoked(ctx: twitchio.ext.commands.Context) -> None
   :async:
@@ -383,14 +383,71 @@ Commands Events
    
   Event dispatched when a :class:`~twitchio.ext.commands.Command` encounters an error during invocation.
 
+  By default, every :class:`~twitchio.ext.commands.Bot` implements this event. You can override the default implementation
+  of this event to fine-tune errors. Care should be taken to make sure unexpected exceptions are properly logged or made
+  aware of.
+
+  Below is a small example of overriding the default implementation in a :class:`~twitchio.ext.commands.Component`. This,
+  when used in an extension allows your error handler to be hot-reloaded without losing access to a proper exception handler.
+
+  Example
+  -------
+
+  .. code:: python3
+
+    import logging
+
+    from twitchio.ext import commands
+
+
+    logger = logging.getLogger(__name__)
+
+
+    class ErrorComponent(commands.Component):
+
+        def __init__(self, bot: commands.Bot) -> None:
+            # Store the original error handler; if we re/unload this component it will be reassigned to our bot...
+            self.original = bot.event_command_error
+
+            # Override the default error handler...
+            bot.event_command_error = self.event_command_error
+
+            self.bot = bot
+
+        async def component_teardown(self) -> None:
+            # Reassign the original error handler...
+            self.bot.event_command_error = self.original
+
+        async def event_command_error(self, payload: commands.CommandErrorPayload) -> None:
+            ctx = payload.context
+            command = ctx.command
+            error = payload.exception
+
+            # We don't want to dispatch errors that have already been handled before...
+            if command and command.has_error and ctx.error_dispatched:
+                return
+
+            # Example: A common error to suppress is the CommandNotFound error...
+            if isinstance(error, commands.CommandNotFound):
+                return
+
+            # Example: As an example if a guard fails we can send a default message back...
+            if isinstance(error, commands.GuardFailure):
+                await ctx.send(f"{ctx.chatter} you do not have permission to use this command.")
+
+            # For all unhandled errors, we should log them so we know what went wrong...
+            msg = f'Ignoring exception in command "{ctx.command}":\n'
+            logger.error(msg, exc_info=error)
+
+
+    async def setup(bot: commands.Bot) -> None:
+        await bot.add_component(ErrorComponent(bot))
+
   :param twitchio.ext.commands.CommandErrorPayload payload: The error payload containing context and the exception raised.
 
 
-EventSub Events
-~~~~~~~~~~~~~~~
-
 Automod
--------
+#######
 
 .. py:function:: event_automod_message_hold(payload: twitchio.AutomodMessageHold) -> None
     :async:
@@ -444,7 +501,7 @@ Automod
 
 
 Bans
-----
+####
 
 .. py:function:: event_ban(payload: twitchio.ChannelBan) -> None
     :async:
@@ -496,7 +553,7 @@ Bans
 
 
 Channel / Broadcaster
----------------------
+#####################
 
 .. py:function:: event_channel_update(payload: twitchio.ChannelUpdate) -> None
     :async:
@@ -560,7 +617,7 @@ Channel / Broadcaster
 
 
 Channel Points
---------------
+##############
 
 .. py:function:: event_automatic_redemption_add(payload: twitchio.ChannelPointsAutoRedeemAdd) -> None
     :async:
@@ -635,7 +692,7 @@ Channel Points
     :param twitchio.ChannelPointsRedemptionUpdate payload: The EventSub payload received for this event.
 
 Charity Campaigns
------------------
+#################
 
 .. py:function:: event_charity_campaign_donate(payload: twitchio.CharityCampaignDonation) -> None
   :async:
@@ -686,7 +743,7 @@ Charity Campaigns
   :param twitchio.CharityCampaignStop payload: The EventSub payload for this event.
 
 Chat / Messages
----------------
+###############
 
 .. py:function:: event_message(payload: twitchio.ChatMessage) -> None
     :async:
@@ -811,7 +868,7 @@ Chat / Messages
   :param twitchio.ChannelBitsUse payload: The EventSub payload for this event.
 
 Goals
------
+#####
 
 .. py:function:: event_goal_begin(payload: twitchio.GoalBegin) -> None
   :async:
@@ -850,7 +907,7 @@ Goals
   :param twitchio.GoalEnd payload: The EventSub payload for this event.
 
 Hype Train
-----------
+##########
 
 .. py:function:: event_hype_train(payload: twitchio.HypeTrainBegin) -> None
   :async:
@@ -890,7 +947,7 @@ Hype Train
 
 
 Moderation
-----------
+##########
 
 .. py:function:: event_mod_action(payload: twitchio.ChannelModerate) -> None
   :async:
@@ -957,7 +1014,7 @@ Moderation
 
 
 Polls
------
+#####
 
 .. py:function:: event_poll_begin(payload: twitchio.ChannelPollBegin) -> None
   :async:
@@ -996,7 +1053,7 @@ Polls
   :param twitchio.ChannelPollEnd payload: The EventSub payload for this event.
 
 Predictions
------------
+###########
 
 .. py:function:: event_prediction_begin(payload: twitchio.ChannelPredictionBegin) -> None
   :async:
@@ -1048,7 +1105,7 @@ Predictions
 
 
 Shared Chat
------------
+###########
 
 .. py:function:: event_shared_chat_begin(payload: twitchio.SharedChatSessionBegin) -> None
   :async:
@@ -1088,7 +1145,7 @@ Shared Chat
 
 
 Shield Mode
------------
+###########
 
 .. py:function:: event_shield_mode_begin(payload: twitchio.ShieldModeBegin) -> None
   :async:
@@ -1116,7 +1173,7 @@ Shield Mode
 
 
 Shoutouts
----------
+#########
 
 .. py:function:: event_shoutout_create(payload: twitchio.ShoutoutCreate) -> None
   :async:
@@ -1143,7 +1200,7 @@ Shoutouts
   :param twitchio.ShoutoutReceive payload: The EventSub payload for this event.
 
 Subscriptions
--------------
+#############
 
 .. py:function:: event_subscription(payload: twitchio.ChannelSubscribe) -> None
   :async:
@@ -1194,7 +1251,7 @@ Subscriptions
   :param twitchio.ChannelSubscriptionMessage payload: The EventSub payload for this event.
 
 Streams
--------
+#######
 
 .. py:function:: event_stream_online(payload: twitchio.StreamOnline) -> None
   :async:
@@ -1221,7 +1278,7 @@ Streams
   :param twitchio.StreamOffline payload: The EventSub payload for this event.
 
 Suspicious Users
-----------------
+################
 
 .. py:function:: event_suspicious_user_message(payload: twitchio.SuspiciousUserMessage) -> None
   :async:
@@ -1248,7 +1305,7 @@ Suspicious Users
   :param twitchio.SuspiciousUserUpdate payload: The EventSub payload for this event.
 
 OAuth
------
+#####
 
 .. py:function:: event_user_authorization_grant(payload: twitchio.UserAuthorizationGrant) -> None
   :async:
@@ -1274,7 +1331,7 @@ OAuth
 
 
 User
------
+####
 
 .. py:function:: event_user_update(payload: twitchio.UserUpdate) -> None
   :async:
@@ -1289,7 +1346,7 @@ User
   :param twitchio.UserUpdate payload: The EventSub payload for this event.
 
 Warnings
---------
+########
 
 .. py:function:: event_warning_acknowledge(payload: twitchio.ChannelWarningAcknowledge) -> None
   :async:
