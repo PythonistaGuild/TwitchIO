@@ -1721,7 +1721,7 @@ class _CaseInsensitiveDict(dict[str, VT]):
     @overload
     def get(self, key: str, default: DT, /) -> VT | DT: ...
 
-    def get(self, key: str, default: DT = None, /) -> VT | DT:
+    def get(self, key: str, default: DT = None, /) -> VT | DT:  # type: ignore
         return super().get(key.casefold(), default)
 
     @overload
