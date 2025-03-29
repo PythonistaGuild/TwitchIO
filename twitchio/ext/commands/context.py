@@ -449,6 +449,12 @@ class Context:
                 await self._bot.after_invoke(self)
                 if self._component:
                     await self._component.component_after_invoke(self)
+
+                if self._command._after_hook:
+                    base_args: list[Any] = [self]
+                    base_args.insert(0, self._component) if self._component else None
+
+                    await self._command._after_hook(*base_args)
             except Exception as e:
                 payload = CommandErrorPayload(context=self, exception=CommandHookError(str(e), e))
                 self.bot.dispatch("command_error", payload=payload)

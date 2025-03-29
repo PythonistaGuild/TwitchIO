@@ -76,6 +76,7 @@ else:
 Coro: TypeAlias = Coroutine[Any, Any, None]
 CoroC: TypeAlias = Coroutine[Any, Any, bool]
 
+
 DT = TypeVar("DT")
 VT = TypeVar("VT")
 
@@ -204,8 +205,8 @@ class Command(Generic[Component_T, P]):
         self._name: str = name
         self.callback = callback
         self._aliases: list[str] = kwargs.get("aliases", [])
-        self._guards: list[Callable[..., bool] | Callable[..., CoroC]] = getattr(self._callback, "__command_guards__", [])
-        self._buckets: list[Bucket[Context]] = getattr(self._callback, "__command_cooldowns__", [])
+        self._guards: list[Callable[..., bool] | Callable[..., CoroC]] = getattr(callback, "__command_guards__", [])
+        self._buckets: list[Bucket[Context]] = getattr(callback, "__command_cooldowns__", [])
         self._guards_after_parsing = kwargs.get("guards_after_parsing", False)
         self._cooldowns_first = kwargs.get("cooldowns_before_guards", False)
 
@@ -214,6 +215,9 @@ class Command(Generic[Component_T, P]):
         self._extras: dict[Any, Any] = kwargs.get("extras", {})
         self._parent: Group[Component_T, P] | None = kwargs.get("parent")
         self._bypass_global_guards: bool = kwargs.get("bypass_global_guards", False)
+
+        self._before_hook: Callable[[Component_T, Context], Coro] | Callable[[Context], Coro] | None = None
+        self._after_hook: Callable[[Component_T, Context], Coro] | Callable[[Context], Coro] | None = None
 
     def __repr__(self) -> str:
         return f"Command(name={self._name}, parent={self.parent})"
@@ -542,8 +546,11 @@ class Command(Generic[Component_T, P]):
         context._args = args
         context._kwargs = kwargs
 
+        base_args: list[Any] = [context]
         args: list[Any] = [context, *args]
+
         args.insert(0, self._injected) if self._injected else None
+        base_args.insert(0, self._injected) if self._injected else None
 
         if self._guards_after_parsing:
             await self._run_guards(context)
@@ -556,6 +563,9 @@ class Command(Generic[Component_T, P]):
             await context.bot.before_invoke(context)
             if self._injected is not None:
                 await self._injected.component_before_invoke(context)
+
+            if self._before_hook:
+                await self._before_hook(*base_args)
         except Exception as e:
             raise CommandHookError(str(e), e) from e
 
@@ -608,9 +618,91 @@ class Command(Generic[Component_T, P]):
         self._error = func
         return func
 
-    def before_invoke(self) -> None: ...
+    def before_invoke(self, func: Any) -> Any:
+        """|deco|
 
-    def after_invoke(self) -> None: ...
+        A decorator which adds a local ``before_invoke`` callback to this command, similar to
+        :meth:`~twitchio.ext.commands.Bot.before_invoke` except local to this command.
+
+        The ``before_invoke`` hook is called before the command callback, but after parsing arguments and guards are
+        successfully completed. Could be used to setup state for the command for example.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            @commands.command()
+            async def test(ctx: commands.Context) -> None:
+                ...
+
+            @test.before_invoke
+            async def test_before(ctx: commands.Context) -> None:
+                # Open a database connection for example
+                ...
+
+                ctx.connection = connection
+                ...
+
+            @test.after_invoke
+            async def test_after(ctx: commands.Context) -> None:
+                # Close a database connection for example
+                ...
+
+                await ctx.connection.close()
+                ...
+        """
+        if not asyncio.iscoroutinefunction(func):
+            raise TypeError(f'The Command "before_invoke" callback for "{self._name}" must be a coroutine function.')
+
+        self._before_hook = func
+        return func
+
+    def after_invoke(self, func: Any) -> Any:
+        """|deco|
+
+        A decorator which adds a local ``after_invoke`` callback to this command, similar to
+        :meth:`~twitchio.ext.commands.Bot.after_invoke` except local to this command.
+
+        The ``after_invoke`` hook is called after the command callback has completed invocation. Could be used to cleanup
+        state after command invocation.
+
+        .. note::
+
+            This hook is always called; even when the :class:`~.commands.Command` fails to invoke. However, similar to
+            :meth:`.before_invoke` only if parsing arguments and guards are successfully completed.
+
+
+        Example
+        -------
+
+        .. code:: python3
+
+            @commands.command()
+            async def test(ctx: commands.Context) -> None:
+                ...
+
+            @test.before_invoke
+            async def test_before(ctx: commands.Context) -> None:
+                # Open a database connection for example
+                ...
+
+                ctx.connection = connection
+                ...
+
+            @test.after_invoke
+            async def test_after(ctx: commands.Context) -> None:
+                # Close a database connection for example
+                ...
+
+                await ctx.connection.close()
+                ...
+        """
+        if not asyncio.iscoroutinefunction(func):
+            raise TypeError(f'The Command "after_invoke" callback for "{self._name}" must be a coroutine function.')
+
+        self._after_hook = func
+        return func
 
 
 class RewardCommand(Command[Component_T, P]):
@@ -1629,7 +1721,7 @@ class _CaseInsensitiveDict(dict[str, VT]):
     @overload
     def get(self, key: str, default: DT, /) -> VT | DT: ...
 
-    def get(self, key: str, default: DT = None, /) -> VT | DT:
+    def get(self, key: str, default: DT = None, /) -> VT | DT:  # type: ignore
         return super().get(key.casefold(), default)
 
     @overload

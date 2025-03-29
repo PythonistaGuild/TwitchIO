@@ -68,7 +68,7 @@ References
    :caption: API References
 
    references/client
-   references/events
+   references/events/index
    references/users/index
    references/eventsub_subscriptions
    references/web
@@ -86,8 +86,8 @@ References
    :maxdepth: 1
    :caption: Models
 
-   references/eventsub_models
-   references/helix_models
+   references/eventsub/index
+   references/helix/index
    references/enums_etc
 
 .. toctree::

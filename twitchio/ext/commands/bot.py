@@ -452,7 +452,7 @@ class Bot(Mixin[None], Client):
         Commands from :class:`~.commands.Component`'s are included, however if you wish to control them separately,
         see: :meth:`~.commands.Component.component_after_invoke`.
 
-        The post-invoke hook will be called after a valid command has been invoked. If this coroutine errors,
+        The post-invoke hook will be called after a valid command has completed invocation. If this coroutine errors,
         a :exc:`~.commands.CommandHookError` will be raised from the original error.
 
         Useful for cleaning up any state like database connections or http clients.

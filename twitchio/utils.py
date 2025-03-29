@@ -52,9 +52,9 @@ if TYPE_CHECKING:
 try:
     import orjson  # type: ignore
 
-    _from_json = orjson.loads  # type: ignore
+    _from_json: Any = orjson.loads  # type: ignore
 except ImportError:
-    _from_json = json.loads
+    _from_json: Any = json.loads
 
 
 PY_312 = sys.version_info >= (3, 12)
