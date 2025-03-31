@@ -1435,7 +1435,6 @@ class HTTPClient:
 
     # MARK
     async def create_eventsub_subscription(self, **kwargs: Unpack[_SubscriptionData]) -> SubscriptionResponse:
-        # TODO: Token?
         token: str | None = None
 
         _type: SubscriptionType = kwargs["type"]
