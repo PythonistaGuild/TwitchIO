@@ -519,15 +519,11 @@ class Bot(Mixin[None], Client):
         self,
         payload: SubscriptionPayload,
         *,
-        as_bot: bool = True,
-        token_for: str | PartialUser | None = None,
         callback_url: str | None = None,
         eventsub_secret: str | None = None,
     ) -> SubscriptionResponse | None:
         return await super().subscribe_webhook(
             payload=payload,
-            as_bot=as_bot,
-            token_for=token_for,
             callback_url=callback_url,
             eventsub_secret=eventsub_secret,
         )
@@ -536,10 +532,13 @@ class Bot(Mixin[None], Client):
         self,
         payload: SubscriptionPayload,
         *,
-        as_bot: bool = True,
+        as_bot: bool | None = None,
         token_for: str | PartialUser | None = None,
         socket_id: str | None = None,
     ) -> SubscriptionResponse | None:
+        defaults = payload.default_auth
+        if as_bot is None:
+            as_bot = defaults.get("as_bot", True)
         return await super().subscribe_websocket(payload=payload, as_bot=as_bot, token_for=token_for, socket_id=socket_id)
 
     def _get_module_name(self, name: str, package: str | None) -> str:

@@ -31,7 +31,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
 
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
-from .eventsub.enums import SubscriptionType, TransportMethod
+from .eventsub.enums import SubscriptionType
 from .eventsub.websockets import Websocket
 from .exceptions import HTTPException
 from .http import HTTPAsyncIterator
@@ -2107,33 +2107,11 @@ class Client:
         data = await self._http.patch_drop_entitlements(ids=ids, fulfillment_status=fulfillment_status, token_for=token_for)
         return [EntitlementStatus(d) for d in data["data"]]
 
-    async def _subscribe(
-        self,
-        method: TransportMethod,
-        payload: SubscriptionPayload,
-        as_bot: bool = False,
-        token_for: str | None = None,
-        socket_id: str | None = None,
-        callback_url: str | None = None,
-        eventsub_secret: str | None = None,
-    ) -> SubscriptionResponse | None:
-        if method is TransportMethod.WEBSOCKET:
-            return await self.subscribe_websocket(payload=payload, as_bot=as_bot, token_for=token_for, socket_id=socket_id)
-
-        elif method is TransportMethod.WEBHOOK:
-            return await self.subscribe_webhook(
-                payload=payload,
-                as_bot=as_bot,
-                token_for=token_for,
-                callback_url=callback_url,
-                eventsub_secret=eventsub_secret,
-            )
-
     async def subscribe_websocket(
         self,
         payload: SubscriptionPayload,
         *,
-        as_bot: bool = False,
+        as_bot: bool | None = None,
         token_for: str | PartialUser | None = None,
         socket_id: str | None = None,
     ) -> SubscriptionResponse | None:
@@ -2179,9 +2157,15 @@ class Client:
         HTTPException
             An error was raised while making the subscription request to Twitch.
         """
+        defaults = payload.default_auth
+
+        if as_bot is None:
+            as_bot = defaults.get("as_bot", False)
+        if token_for is None:
+            token_for = defaults.get("token_for", None)
+
         if as_bot and not self.bot_id:
             raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
-
         elif as_bot:
             token_for = self.bot_id
 
@@ -2259,8 +2243,6 @@ class Client:
         self,
         payload: SubscriptionPayload,
         *,
-        as_bot: bool = False,
-        token_for: str | PartialUser | None = None,
         callback_url: str | None = None,
         eventsub_secret: str | None = None,
     ) -> SubscriptionResponse | None:
@@ -2284,19 +2266,6 @@ class Client:
         ----------
         payload: :class:`~twitchio.SubscriptionPayload`
             The payload which should include the required conditions to subscribe to.
-        as_bot: bool
-            Whether to subscribe to this event using the user token associated with the provided
-            :attr:`Client.bot_id`. If this is set to `True` and `bot_id` has not been set, this method will
-            raise `ValueError`. Defaults to `False` on :class:`Client` but will default to `True` on
-            :class:`~twitchio.ext.commands.Bot`
-        token_for: str | PartialUser | None
-            An optional User ID, or PartialUser, that will be used to find an appropriate managed user token for this request.
-
-            If `as_bot` is `True`, this is always the token associated with the
-            :attr:`~.bot_id` account. Defaults to `None`.
-
-            See: :meth:`~.add_token` to add managed tokens to the client.
-            If this paramter is not provided or `None`, the default app token is used.
         callback_url: str | None
             An optional url to use as the webhook `callback_url` for this subscription. If you are using one of the built-in
             web adapters, you should not need to set this. See: (web adapter docs link) for more info.
@@ -2315,21 +2284,12 @@ class Client:
         HTTPException
             An error was raised while making the subscription request to Twitch.
         """
-        if as_bot and not self.bot_id:
-            raise ValueError("Client is missing 'bot_id'. Provide a 'bot_id' in the Client constructor.")
-
-        elif as_bot:
-            token_for = self.bot_id
-
-        if not token_for:
-            raise ValueError("A valid User Access Token must be passed to subscribe to eventsub over websocket.")
-
         if not self._adapter and not callback_url:
             raise ValueError(
                 "Either a 'twitchio.web' Adapter or 'callback_url' should be provided for webhook based eventsub."
             )
 
-        callback: str | None = self._adapter.eventsub_url or callback_url
+        callback: str | None = callback_url or self._adapter.eventsub_url
         if not callback:
             raise ValueError(
                 "A callback URL must be provided when subscribing to events via Webhook. "
@@ -2343,9 +2303,6 @@ class Client:
         if not 10 <= len(secret) <= 100:
             raise ValueError("The 'eventsub_secret' must be between 10 and 100 characters long.")
 
-        if isinstance(token_for, PartialUser):
-            token_for = token_for.id
-
         type_ = SubscriptionType(payload.type)
         version: str = payload.version
         transport: SubscriptionCreateTransport = {"method": "webhook", "callback": callback, "secret": secret}
@@ -2355,7 +2312,7 @@ class Client:
             "version": version,
             "condition": payload.condition,
             "transport": transport,
-            "token_for": token_for,
+            "token_for": "",
         }
 
         try:
