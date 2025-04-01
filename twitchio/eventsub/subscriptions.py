@@ -1103,6 +1103,10 @@ class ChannelSubscriptionGiftSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelSubscribeMessageSubscription(SubscriptionPayload):
     """The ``channel.subscription.message`` subscription type sends a notification when a user sends a resubscription chat message in a specific channel.
@@ -1138,6 +1142,10 @@ class ChannelSubscribeMessageSubscription(SubscriptionPayload):
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
 
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class ChannelCheerSubscription(SubscriptionPayload):
     """The ``channel.cheer`` subscription type sends a notification when a user cheers on the specified channel.
@@ -1172,6 +1180,10 @@ class ChannelCheerSubscription(SubscriptionPayload):
     @property
     def condition(self) -> Condition:
         return {"broadcaster_user_id": self.broadcaster_user_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
 
 class ChannelRaidSubscription(SubscriptionPayload):
