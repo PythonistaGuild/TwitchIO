@@ -3253,6 +3253,7 @@ class AutoRedeemReward:
     Attributes
     ----------
     type: typing.Literal["single_message_bypass_sub_mode", "send_highlighted_message", "random_sub_emote_unlock", "chosen_sub_emote_unlock", "chosen_modified_sub_emote_unlock", "message_effect", "gigantify_an_emote", "celebration"]
+        The type of the reward. V2 does not cover Power-ups e.g. `gigantify_an_emote`, `celebration`, and `message_effect`.
     channel_points: int
         Number of channel points used. This is also covers `cost` when using V1.
     emote: UnlockedEmote | None
@@ -3284,6 +3285,9 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
     """
     Represents an automatic redemption of a channel points reward.
 
+    .. note::
+        This is a combination of V1 and V2.
+
     Attributes
     ----------
     broadcaster: PartialUser
@@ -3298,10 +3302,15 @@ class ChannelPointsAutoRedeemAdd(BaseEvent):
         The datetime object of when the reward was redeemed.
     reward: AutoRedeemReward
         The details of the reward auto redeemed.
+
+        V2 does not cover Power-ups e.g. `gigantify_an_emote`, `celebration`, and `message_effect`.
+        Please see ChannelBitsUseSubscription for those specific types if using V2.
     emotes: list[ChannelPointsEmote]
         A list of ChannelPointsEmote objects that appear in the text.
-        If using V1, this is populated by Twitch.
-        If using V2, the emotes can be found in the fragments, but we calculate the index ourselves for this property.
+
+        - If using V1, this is populated by Twitch.
+        - If using V2, the emotes can be found in the fragments, but we calculate the index ourselves for this property.
+
     user_input: str | None
         The text input by the user if the reward requires input. This is `None` when using V2. `text` is the preferred attribute to use.
     fragments: list[ChatMessageFragment]
