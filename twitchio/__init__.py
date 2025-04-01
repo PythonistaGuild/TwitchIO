@@ -26,7 +26,7 @@ __title__ = "TwitchIO"
 __author__ = "PythonistaGuild"
 __license__ = "MIT"
 __copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.0.0b3"
+__version__ = "3.0.0b4"
 
 from . import (  # noqa: F401
     authentication as authentication,
