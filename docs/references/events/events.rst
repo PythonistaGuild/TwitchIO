@@ -674,7 +674,7 @@ Channel Points
     
     Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Points Custom Reward Redemption Add <channelchannel_points_custom_reward_redemptionadd>`
     
-    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelPointsRedemptionAddSubscription`
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelPointsRedeemAddSubscription`
     for each required broadcaster to receive this event.
 
     :param twitchio.ChannelPointsRedemptionAdd payload: The EventSub payload received for this event.
@@ -686,7 +686,7 @@ Channel Points
     
     Corresponds to the Twitch EventSub subscriptions :es-docs:`Channel Points Custom Reward Redemption Update <channelchannel_points_custom_reward_redemptionupdate>`
     
-    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelPointsRedemptionUpdateSubscription`
+    You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelPointsRedeemUpdateSubscription`
     for each required broadcaster to receive this event.
 
     :param twitchio.ChannelPointsRedemptionUpdate payload: The EventSub payload received for this event.
@@ -1207,7 +1207,7 @@ Subscriptions
 
   Event dispatched when a specified channel receives a subscriber. This does not include resubscribes.
     
-  Corresponds to the Twitch EventSub subscription :es-docs:`Channel Subscribe <Channelsubscribe>`.
+  Corresponds to the Twitch EventSub subscription :es-docs:`Channel Subscribe <channelsubscribe>`.
     
   You must subscribe to EventSub with :class:`~twitchio.eventsub.ChannelSubscribeSubscription` for each required broadcaster
   to receive this event.
