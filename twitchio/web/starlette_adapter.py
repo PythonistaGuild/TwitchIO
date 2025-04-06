@@ -316,7 +316,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
 
         self.client.dispatch(event="oauth_authorized", payload=resp)
         return FetchTokenPayload(
-            status=20,
+            status=200,
             response=Response(content="Success. You can leave this page.", status_code=200),
             payload=resp,
         )
