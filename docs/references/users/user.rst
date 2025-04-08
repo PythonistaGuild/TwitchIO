@@ -8,4 +8,5 @@ User
 
 .. autoclass:: twitchio.User()
     :members:
+    :show-inheritance:
 
