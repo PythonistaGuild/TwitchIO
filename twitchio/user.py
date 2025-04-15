@@ -329,7 +329,6 @@ class PartialUser:
 
     async def fetch_bits_leaderboard(
         self,
-        token_for: str | PartialUser,
         count: int = 10,
         period: Literal["all", "day", "week", "month", "year"] = "all",
         started_at: datetime.datetime | None = None,
@@ -347,7 +346,6 @@ class PartialUser:
             When providing ``started_at``, you must also change the ``period`` parameter to any value other than "all".
 
             Conversely, if `period` is set to anything other than "all", ``started_at`` must also be provided.
-
 
         .. note::
             Requires user access token that includes the ``bits:read`` scope.
@@ -384,8 +382,6 @@ class PartialUser:
             A User ID that identifies a user that cheered bits in the channel.
             If count is greater than 1, the response may include users ranked above and below the specified user.
             To get the leaderboard's top leaders, don't specify a user ID.
-        token_for: str | PartialUser
-            User token to use that includes the ``bits:read`` scope.
 
         Returns
         -------
@@ -409,8 +405,7 @@ class PartialUser:
         from .models.bits import BitsLeaderboard
 
         data = await self._http.get_bits_leaderboard(
-            broadcaster_id=self.id,
-            token_for=token_for,
+            token_for=self.id,
             count=count,
             period=period,
             started_at=started_at,

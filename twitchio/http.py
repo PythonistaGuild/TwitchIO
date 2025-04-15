@@ -671,7 +671,6 @@ class HTTPClient:
     async def get_bits_leaderboard(
         self,
         *,
-        broadcaster_id: str | int,
         token_for: str | PartialUser,
         count: int = 10,
         period: Literal["day", "week", "month", "year", "all"] = "all",
@@ -679,7 +678,6 @@ class HTTPClient:
         user_id: str | int | PartialUser | None = None,
     ) -> BitsLeaderboardResponse:
         params: dict[str, str | int | datetime.datetime] = {
-            "broadcaster_id": broadcaster_id,
             "count": count,
             "period": period,
         }
