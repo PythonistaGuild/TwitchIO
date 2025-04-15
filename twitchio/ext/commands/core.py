@@ -342,10 +342,8 @@ class Command(Generic[Component_T, P]):
         result: Any = MISSING
 
         for arg in reversed(args):
-            type_: type = type(arg)
-            base = context.bot._base_converter._DEFAULTS.get(type_)
-
-            if base:
+            type_: type[Any] = type(arg)
+            if base := context.bot._base_converter._DEFAULTS.get(type_):
                 try:
                     result = base(raw)
                 except Exception:
@@ -433,9 +431,7 @@ class Command(Generic[Component_T, P]):
 
         for param in params:
             if param.kind == param.KEYWORD_ONLY:
-                raw = context._view.read_rest()
-
-                if raw:
+                if raw := context._view.read_rest():
                     result = await self._do_conversion(context, param=param, raw=raw, annotation=param.annotation)
                     kwargs[param.name] = result
                     break
@@ -798,7 +794,7 @@ class Mixin(Generic[Component_T]):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         case_: bool = kwargs.pop("case_insensitive", False)
         self._case_insensitive: bool = case_
-        self._commands: dict[str, Command[Component_T, ...] | Group[Any, ...]] = {} if not case_ else _CaseInsensitiveDict()
+        self._commands: dict[str, Command[Component_T, ...] | Group[Any, ...]] = _CaseInsensitiveDict() if case_ else {}
 
         super().__init__(*args, **kwargs)
 
