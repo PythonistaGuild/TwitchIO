@@ -213,12 +213,20 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         self._runner = None
         self._runner_task = None
 
+    def _task_callback(self, task: asyncio.Task[None]) -> None:
+        if not task.done():
+            return
+
+        if e := task.exception():
+            raise e
+
     async def run(self, host: str | None = None, port: int | None = None) -> None:
         self._runner = web.AppRunner(self, access_log=None, handle_signals=True)
         await self._runner.setup()
 
         site: web.TCPSite = web.TCPSite(self._runner, host or self._host, port or self._port, ssl_context=self._ssl_context)
         self._runner_task = asyncio.create_task(site.start(), name=f"twitchio-web-adapter:{self.__class__.__qualname__}")
+        self._runner_task.add_done_callback(self._task_callback)
 
     async def eventsub_callback(self, request: web.Request) -> web.Response:
         headers: EventSubHeaders = cast("EventSubHeaders", request.headers)
