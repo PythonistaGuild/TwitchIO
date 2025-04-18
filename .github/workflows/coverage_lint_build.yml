@@ -102,11 +102,14 @@ jobs:
       - name: "Run Pyright @ ${{ matrix.python-version }}"
         uses: jakebailey/pyright-action@v2
         with:
+          version: 1.1.398
           annotate: ${{ matrix.python-version != '3.x' }}
           warnings: false
 
       - name: Lint with Ruff
         uses: astral-sh/ruff-action@v3
+        with:
+          version: "0.11.2"
 
       - name: Check formatting with Ruff
         run: |

@@ -60,7 +60,7 @@ docs = [
     "sphinxcontrib_trio",
 ]
 starlette = ["starlette", "uvicorn"]
-dev = ["ruff", "pyright", "isort"]
+dev = ["ruff==0.11.2", "pyright==1.1.398", "isort"]
 
 [tool.ruff]
 line-length = 125
