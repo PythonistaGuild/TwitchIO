@@ -396,3 +396,29 @@ class StarletteAdapter(BaseAdapter, Starlette):
             return Response(status_code=500)
 
         return RedirectResponse(url=payload["url"], status_code=307)
+
+    def get_authorization_url(self, *, scopes: Scopes, force_verify: bool = False) -> str:
+        """Method used to create a OAuth URL with the given options and scopes for users to authenticate the application with.
+
+        Parameters
+        ----------
+        scopes: :class:`twitchio.Scopes`
+            A :class:`twitchio.Scopes` object with the desired scopes.
+        force_verify: :class:`bool`
+            A :class:`bool` indicating whether the user should forcefully re-authenticate. When set to `True` the user must
+            explicitly re-auth the application after visiting the URL. Defaults to `False`.
+
+        Returns
+        -------
+        str
+            The URL which can be provided to user(s) to authenticate your application.
+
+        Raises
+        ------
+        ValueError
+            Scopes is a required parameter.
+        """
+        if not scopes:
+            raise ValueError('"scopes" is a required parameter or attribute which is missing.')
+
+        return f"{self._domain}/oauth?scopes={scopes.urlsafe()}&force_verify={str(force_verify).lower()}"
