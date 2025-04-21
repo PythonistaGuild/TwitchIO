@@ -58,7 +58,7 @@ Decorators
 Guards
 ######
 
-.. autofunction:: twitchio.ext.commands.guard
+.. autofunction:: twitchio.ext.commands.guard()
 
 .. autofunction:: twitchio.ext.commands.is_owner
 
