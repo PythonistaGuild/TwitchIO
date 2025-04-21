@@ -342,7 +342,7 @@ class Command(Generic[Component_T, P]):
         result: Any = MISSING
 
         for arg in reversed(args):
-            type_: type[Any] = type(arg)
+            type_: type[Any] = type(arg)  # type: ignore
             if base := context.bot._base_converter._DEFAULTS.get(type_):
                 try:
                     result = base(raw)
@@ -1680,7 +1680,7 @@ def cooldown(*, base: type[BaseCooldown] = Cooldown, key: KeyT = BucketType.chat
         async def hello(ctx: commands.Context) -> None:
             ...
     """
-    bucket_: Bucket[Context] = Bucket.from_cooldown(base=base, key=key, **kwargs)
+    bucket_: Bucket[Context] = Bucket.from_cooldown(base=base, key=key, **kwargs)  # type: ignore
 
     def wrapper(func: Any) -> Any:
         nonlocal bucket_
