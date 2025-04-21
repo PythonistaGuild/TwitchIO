@@ -1122,6 +1122,7 @@ class PartialUser:
         *,
         token_for: str | PartialUser | None = None,
         reply_to_message_id: str | None = None,
+        source_only: bool | None = None,
     ) -> SentMessage:
         """|coro|
 
@@ -1130,10 +1131,10 @@ class PartialUser:
         The PartialUser/User object this method is called on is the broadcaster / channel the message will be sent to.
 
         .. important::
-            Requires an app access token or user access token that includes the ``user:write:chat`` scope.
+            Requires an App Access Token or user access token that includes the ``user:write:chat`` scope.
             User access token is generally recommended.
 
-            If app access token used, then additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
+            If an App Access Token is used, then additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
             This means creating a user token for the "bot" account with the above scopes associated to the correct Client ID. This token does not need to be used.
 
         .. tip::
@@ -1154,10 +1155,14 @@ class PartialUser:
             The ID, or PartialUser, of the user sending the message. This ID must match the user ID in the user access token.
         token_for: str | PartialUser | None
             User access token that includes the ``user:write:chat`` scope.
-            You can use an app access token which additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
+            You can use an App Access Token which additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
         reply_to_message_id: str | None
             The ID of the chat message being replied to.
-
+        source_only: bool | None
+            Determines if the chat message is sent only to the source channel (defined by the PartialUser this is called on) during a shared chat session.
+            This has no effect if the message is sent during a shared chat session.
+            This parameter can only be set when utilizing an `App Access Token`. It cannot be specified when a User Access Token is used, and will instead result in an HTTP 400 error.
+            If this parameter is not set, when using an App Access Token, then it will use the default that Twitch has set, which will be `True` after 2025-05-19.
         Returns
         -------
         SentMessage
@@ -1180,6 +1185,7 @@ class PartialUser:
             message=message,
             reply_to_message_id=reply_to_message_id,
             token_for=token_for,
+            source_only=source_only,
         )
 
         sent: SentMessage = SentMessage(data["data"][0])

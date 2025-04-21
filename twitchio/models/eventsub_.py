@@ -1310,6 +1310,8 @@ class ChatMessage(BaseChatMessage):
         The list of chat badges for the chatter in the channel the message was sent from.
         Is `None` when the message happens in the same channel as the broadcaster.
         Is not `None` when in a shared chat session, and the action happens in the channel of a participant other than the broadcaster.
+    source_only: bool | None
+        Whether a message delivered during a shared chat session is only sent to the source channel. This is `None` when not in a shared chat.
     """
 
     subscription_type = "channel.chat.message"
@@ -1362,7 +1364,7 @@ class ChatMessage(BaseChatMessage):
         self.source_badges: list[ChatMessageBadge] = [
             ChatMessageBadge(badge) for badge in (payload.get("source_badges") or [])
         ]
-
+        self.source_only: bool | None = payload.get("is_source_only")
         self.chatter: Chatter = Chatter(payload, broadcaster=self.broadcaster, badges=self.badges, http=http)
 
     def __repr__(self) -> str:

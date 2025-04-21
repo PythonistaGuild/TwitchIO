@@ -1260,10 +1260,13 @@ class HTTPClient:
         message: str,
         token_for: str | PartialUser | None,
         reply_to_message_id: str | None = None,
+        source_only: bool | None = None,
     ) -> SendChatMessageResponse:
         data = {"broadcaster_id": broadcaster_id, "sender_id": sender_id, "message": message}
         if reply_to_message_id is not None:
             data["reply_parent_message_id"] = reply_to_message_id
+        if source_only is not None:
+            data["for_source_only"] = source_only
 
         route: Route = Route("POST", "chat/messages", json=data, token_for=token_for)
         return await self.request_json(route)
