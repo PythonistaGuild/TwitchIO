@@ -46,6 +46,7 @@ from .user import ActiveExtensions, Extension, PartialUser, User
 from .utils import MISSING, EventWaiter, unwrap_function
 from .web import AiohttpAdapter
 from .web.utils import BaseAdapter
+from .eventsub.conduits import ConduitMixin
 
 
 if TYPE_CHECKING:
@@ -2558,3 +2559,6 @@ class Client:
 
     async def event_oauth_authorized(self, payload: UserTokenPayload) -> None:
         await self.add_token(payload["access_token"], payload["refresh_token"])
+
+
+class AutoClient(Client, ConduitMixin): ...

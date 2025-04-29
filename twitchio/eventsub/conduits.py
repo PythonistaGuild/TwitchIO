@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .enums import *
-from .subscriptions import *
-from .conduits import *
+__all__ = ("ConduitMixin",)
+
+
+class ConduitMixin:
+    ...

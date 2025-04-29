@@ -38,6 +38,7 @@ from .context import Context
 from .converters import _BaseConverter
 from .core import Command, CommandErrorPayload, Group, Mixin
 from .exceptions import *
+from twitchio.eventsub import ConduitMixin
 
 
 if TYPE_CHECKING:
@@ -742,3 +743,6 @@ class Bot(Mixin[None], Client):
     def modules(self) -> Mapping[str, types.ModuleType]:
         """Mapping[:class:`str`, :class:`py:types.ModuleType`]: A read-only mapping of extension name to extension."""
         return types.MappingProxyType(self.__modules)
+
+
+class AutoBot(Bot, ConduitMixin): ...
