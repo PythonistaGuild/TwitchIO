@@ -27,6 +27,7 @@ from typing import Any, Literal, Never, NotRequired, TypeAlias, TypedDict
 
 __all__ = (
     "Condition",
+    "ConduitData",
     "KeepAliveMessage",
     "KeepAliveMetaData",
     "MessageTypes",
