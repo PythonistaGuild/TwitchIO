@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from collections import defaultdict
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
@@ -39,6 +40,7 @@ from .models.bits import Cheermote, ExtensionTransaction
 from .models.ccls import ContentClassificationLabel
 from .models.channels import ChannelInfo
 from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
+from .models.eventsub_ import Conduit
 from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload, WebsocketSubscriptionData
@@ -401,6 +403,9 @@ class Client:
             partial = PartialUser(id=self._bot_id, http=self._http)
             self._user = await partial.user() if self._fetch_self else partial
 
+        await self._setup()
+
+    async def _setup(self) -> None:
         await self.setup_hook()
 
     async def __aenter__(self) -> Self:
@@ -2561,10 +2566,58 @@ class Client:
 
 
 class AutoClient(Client):
+    # Shards last 72 hours after Conduit dies...
+    # Retrieve Conduits
+    # If conduit id > enabled conduits; create new conduit
+    # If conduit exists; check it's shard status
+    # Automatically listen to conduit.shard.disabled and maintain the state of shards
+    # TODO: Type Annotations...
+    # TODO: swap_on_failure? reduce_on_failure?
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._conduit_id = kwargs.pop("conduit", None)
+        self._conduit_id: int | None = kwargs.pop("conduit_id", None)
+        if self._conduit_id is None:
+            raise RuntimeError('The "conduit_id" keyword-argument is a required argument which is missing.')
+
+        if self._conduit_id > 4 or self._conduit_id < 0:
+            raise ValueError('The "conduit_id" must be an integer between 0 and 4.')
+
         self._shard_count = kwargs.pop("shard_count", None)
-        self._initial_sub: ... = kwargs.pop("subscriptions", [])
         self._max_per_shard = kwargs.pop("max_per_shard", 1000)
+        self._initial_subs: ... = kwargs.pop("subscriptions", [])
+
+        if self._max_per_shard < 1000:
+            logger.warning('It is recommended that the "max_per_shard" parameter should not be set below 1000.')
+
+        if not self._shard_count:
+            logger.warning(
+                (
+                    'The "shard_count" parameter for %r was not provided. '
+                    "A best attempt will be made to determine the correct shard count based on the max_per_shard of %d."
+                ),
+                self,
+                self._max_per_shard,
+            )
+
+            # Try and determine best count based on provided subscriptions with leeway...
+            # Defaults to 1 shard if no subscriptions are passed...
+            total_subs = len(self._initial_subs)
+            self._shard_count = min(20_000, math.ceil(total_subs / self._max_per_shard) + 1)
 
         super().__init__(*args, **kwargs)
+
+    def __repr__(self) -> str:
+        return self.__class__.__name__
+
+    async def _setup(self) -> None:
+        # Create Conduits...
+        # If a conduit ID is already present we should assume this instance wants to take ownership of the conduit
+        # If there are any active shards we should error as another instance has ownership...
+        # Subscribe to "conduit.shard.disabled"
+
+        await self.setup_hook()
+
+    async def create_conduit(self) -> list[Conduit]:
+        # TODO: Docs...
+        payload = await self._http.create_conduit(self._shard_count)
+        return [Conduit(d, http=self._http) for d in payload["data"]]
