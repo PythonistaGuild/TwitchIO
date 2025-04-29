@@ -173,6 +173,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
             on_shutdown=[self.event_shutdown],
             on_startup=[self.event_startup],
         )
+        self._closing: bool = False
 
     def __repr__(self) -> str:
         return f"StarletteAdapter(host={self._host}, port={self._port})"
@@ -194,6 +195,11 @@ class StarletteAdapter(BaseAdapter, Starlette):
         await self.close()
 
     async def close(self) -> None:
+        if self._closing:
+            return
+
+        self._closing = True
+
         if self._runner_task is not None:
             try:
                 self._runner_task.cancel()
@@ -213,8 +219,14 @@ class StarletteAdapter(BaseAdapter, Starlette):
         if not task.done():
             return
 
-        if e := task.exception():
-            raise e
+        try:
+            if e := task.exception():
+                raise e
+        except asyncio.CancelledError as e:
+            if e.__cause__:
+                logger.exception(e.__cause__)
+            elif e.__context__:
+                logger.exception(e.__context__)
 
     async def run(self, host: str | None = None, port: int | None = None) -> None:
         self._host = host or self._host
