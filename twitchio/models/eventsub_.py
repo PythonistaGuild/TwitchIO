@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from twitchio.models.channel_points import CustomRewardRedemption
     from twitchio.types_.conduits import (
         Condition,
+        ConduitData,
         NotificationMessage,
         NotificationMetaData,
         NotificationSubscription as _NotificationSubscription,
@@ -5558,3 +5559,14 @@ class EventsubSubscriptions:
         return (
             f"<EventsubSubscriptions total={self.total} total_cost={self.total_cost} max_total_cost={self.max_total_cost}>"
         )
+
+
+class Conduit:
+    # TODO: Docs...
+
+    def __init__(self, data: ConduitData, *, http: HTTPClient) -> None:
+        self.raw: ConduitData = data
+        self.shard_count: int = data["shard_count"]
+        self.id: str = data["id"]
+
+        self._http = http
