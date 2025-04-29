@@ -31,14 +31,13 @@ import sys
 import types
 from typing import TYPE_CHECKING, Any, TypeAlias, Unpack
 
-from twitchio.client import Client
+from twitchio.client import AutoClient, Client
 
 from ...utils import _is_submodule
 from .context import Context
 from .converters import _BaseConverter
 from .core import Command, CommandErrorPayload, Group, Mixin
 from .exceptions import *
-from twitchio.eventsub import ConduitMixin
 
 
 if TYPE_CHECKING:
@@ -745,4 +744,6 @@ class Bot(Mixin[None], Client):
         return types.MappingProxyType(self.__modules)
 
 
-class AutoBot(Bot, ConduitMixin): ...
+class AutoBot(Bot, AutoClient):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)

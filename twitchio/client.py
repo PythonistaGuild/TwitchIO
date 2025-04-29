@@ -46,7 +46,6 @@ from .user import ActiveExtensions, Extension, PartialUser, User
 from .utils import MISSING, EventWaiter, unwrap_function
 from .web import AiohttpAdapter
 from .web.utils import BaseAdapter
-from .eventsub.conduits import ConduitMixin
 
 
 if TYPE_CHECKING:
@@ -2561,4 +2560,11 @@ class Client:
         await self.add_token(payload["access_token"], payload["refresh_token"])
 
 
-class AutoClient(Client, ConduitMixin): ...
+class AutoClient(Client):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._conduit_id = kwargs.pop("conduit", None)
+        self._shard_count = kwargs.pop("shard_count", None)
+        self._initial_sub: ... = kwargs.pop("subscriptions", [])
+        self._max_per_shard = kwargs.pop("max_per_shard", 1000)
+
+        super().__init__(*args, **kwargs)

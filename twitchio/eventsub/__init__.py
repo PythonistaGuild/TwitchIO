@@ -24,4 +24,3 @@ SOFTWARE.
 
 from .enums import *
 from .subscriptions import *
-from .conduits import *

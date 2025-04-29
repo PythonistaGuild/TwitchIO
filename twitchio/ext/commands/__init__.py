@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .bot import Bot as Bot, AutoBot as AutoBot
+from .bot import AutoBot as AutoBot, Bot as Bot
 from .components import *
 from .context import *
 from .cooldowns import *
