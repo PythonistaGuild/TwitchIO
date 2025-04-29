@@ -63,6 +63,8 @@ from .utils import MISSING, Colour, _from_json, date_to_datetime_with_z, handle_
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
 
+    from twitchio.types_.responses import ConduitPayload
+
     from .assets import Asset
     from .eventsub.enums import SubscriptionType
     from .models.channel_points import CustomReward
@@ -1340,15 +1342,15 @@ class HTTPClient:
     #     route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
     #     return await self.request_json(route)
 
-    # async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
-    #     params = {"shard_count": shard_count}
+    async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
+        params = {"shard_count": shard_count}
 
-    #     route: Route = Route("POST", "eventsub/conduits", params=params)
-    #     return await self.request_json(route)
+        route: Route = Route("POST", "eventsub/conduits", params=params)
+        return await self.request_json(route)
 
-    # async def get_conduits(self) -> ConduitPayload:
-    #     route = Route("GET", "eventsub/conduits")
-    #     return await self.request_json(route)
+    async def get_conduits(self) -> ConduitPayload:
+        route = Route("GET", "eventsub/conduits")
+        return await self.request_json(route)
 
     # def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[Shard]:
     #     params = {"conduit_id": conduit_id}
