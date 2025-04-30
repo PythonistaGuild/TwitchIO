@@ -142,10 +142,6 @@ def parse_timestamp(timestamp: str) -> datetime.datetime:
 def clamp(value: int, minimum: int, maximum: int) -> int:
     if minimum > maximum:
         raise ValueError("minimum value cannot be higher than maximum value.")
-    elif maximum < minimum:
-        raise ValueError("maximum value cannot be lower than minimum value.")
-    elif minimum == maximum:
-        return minimum
 
     return max(min(value, maximum), minimum)
 
