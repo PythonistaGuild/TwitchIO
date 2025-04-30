@@ -2578,24 +2578,27 @@ class AutoClient(Client):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         # Essentially a tri-bool:
         # 1.) When not passed we assume; User has 1 Conduit Only and they want to take ownership
-        # 2.) When explicitly passed None; User wants to create and take ownership of a new conduit
+        # 2.) When explicitly passed True; User wants to create and take ownership of a new conduit
         # 3.) When passed a string; User wants to take ownership of a specific conduit.
         # Case 1 errors later if len(conduits) > 1
         # Case 2 errors later if len(conduits) >= 5
         # Case 3 errors later if the conduit with the specified ID cannot be found.
 
-        self._conduit_id: str | None = kwargs.pop("conduit_id", MISSING)
+        self._conduit_id: str | bool = kwargs.pop("conduit_id", MISSING)
         if self._conduit_id is MISSING:
             logger.warning(
                 'No "conduit_id" was passed. If a single conduit exists we will try to take ownership. '
                 'If you want to take ownership of a specific conduit, please pass the "conduit_id" parameter.'
             )
 
-        elif self._conduit_id is None:
+        elif self._conduit_id is True:
             logger.warning(
                 '"conduit_id" was None. If possible a conduit will be created. '
                 'If you want to take ownership of a specific conduit, please pass the "conduit_id" parameter.'
             )
+
+        elif not isinstance(self._conduit_id, str):
+            raise TypeError('The parameter "conduit_id" must be either a str, True or not provided.')
 
         self._shard_count = kwargs.pop("shard_count", None)
         self._max_per_shard = kwargs.pop("max_per_shard", 1000)
@@ -2631,13 +2634,23 @@ class AutoClient(Client):
         # If there are any active shards we should error as another instance has ownership...
         # Subscribe to "conduit.shard.disabled"
 
-        # TODO: Case 3
-        if not self._conduit_id:
-            logger.info("Attempting to create and take ownership of a new Conduit.")
+        if self._conduit_id is MISSING:
+            conduits = await self.fetch_conduits()
+            count = len(conduits)
 
-            new = await self._generate_new_conduit()
-            logger.info('Successfully generated a new Conduit: "%s". Conduit contains %d shards.', new.id, new.shard_count)
-            self._conduit = new
+            if count > 1:
+                raise RuntimeError('Too many currently active conduits exist and no "conduit_id" parameter was passed.')
+
+            if count == 0:
+                logger.info("No currently active conduits. Attempting to generate a new one.")
+                await self._generate_new_conduit()
+            else:
+                logger.info("Conduit found: %r. Attempting to take ownership of this conduit.", conduits[0])
+
+        elif self._conduit_id is True:
+            logger.info("Attempting to create and take ownership of a new Conduit.")
+            await self._generate_new_conduit()
+
         else:
             conduits = await self.fetch_conduits()
 
@@ -2656,7 +2669,7 @@ class AutoClient(Client):
 
     async def _generate_new_conduit(self) -> Conduit:
         try:
-            conduit = await self.create_conduit(self._shard_count)
+            new = await self.create_conduit(self._shard_count)
         except HTTPException as e:
             if e.status == 429:
                 raise RuntimeError(
@@ -2665,7 +2678,11 @@ class AutoClient(Client):
                 )
 
             raise e
-        return conduit
+
+        logger.info('Successfully generated a new Conduit: "%s". Conduit contains %d shards.', new.id, new.shard_count)
+
+        self._conduit = new
+        return new
 
     async def fetch_conduit(self, conduit_id: str) -> Conduit | None:
         # TODO: Docs...
