@@ -66,6 +66,7 @@ __all__ = (
     "ColourFormatter",
     "_from_json",
     "_is_submodule",
+    "clamp",
     "date_to_datetime_with_z",
     "handle_user_ids",
     "parse_timestamp",
@@ -136,6 +137,17 @@ def parse_timestamp(timestamp: str) -> datetime.datetime:
         The parsed datetime object.
     """
     return datetime.datetime.fromisoformat(timestamp)
+
+
+def clamp(value: int, minimum: int, maximum: int) -> int:
+    if minimum > maximum:
+        raise ValueError("minimum value cannot be higher than maximum value.")
+    elif maximum < minimum:
+        raise ValueError("maximum value cannot be lower than minimum value.")
+    elif minimum == maximum:
+        return minimum
+
+    return max(min(value, maximum), minimum)
 
 
 class ColourFormatter(logging.Formatter):
