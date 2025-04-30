@@ -45,7 +45,7 @@ from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload, WebsocketSubscriptionData
 from .user import ActiveExtensions, Extension, PartialUser, User
-from .utils import MISSING, EventWaiter, unwrap_function
+from .utils import MISSING, EventWaiter, clamp, unwrap_function
 from .web import AiohttpAdapter
 from .web.utils import BaseAdapter
 
@@ -2566,6 +2566,7 @@ class Client:
 
 
 class AutoClient(Client):
+    # NOTE:
     # Shards last 72 hours after Conduit dies...
     # Retrieve Conduits
     # If conduit id > enabled conduits; create new conduit
@@ -2575,12 +2576,26 @@ class AutoClient(Client):
     # TODO: swap_on_failure? reduce_on_failure?
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        self._conduit_id: int | None = kwargs.pop("conduit_id", None)
-        if self._conduit_id is None:
-            raise RuntimeError('The "conduit_id" keyword-argument is a required argument which is missing.')
+        # Essentially a tri-bool:
+        # 1.) When not passed we assume; User has 1 Conduit Only and they want to take ownership
+        # 2.) When explicitly passed None; User wants to create and take ownership of a new conduit
+        # 3.) When passed a string; User wants to take ownership of a specific conduit.
+        # Case 1 errors later if len(conduits) > 1
+        # Case 2 errors later if len(conduits) >= 5
+        # Case 3 errors later if the conduit with the specified ID cannot be found.
 
-        if self._conduit_id > 4 or self._conduit_id < 0:
-            raise ValueError('The "conduit_id" must be an integer between 0 and 4.')
+        self._conduit_id: str | None = kwargs.pop("conduit_id", MISSING)
+        if self._conduit_id is MISSING:
+            logger.warning(
+                'No "conduit_id" was passed. If a single conduit exists we will try to take ownership. '
+                'If you want to take ownership of a specific conduit, please pass the "conduit_id" parameter.'
+            )
+
+        elif self._conduit_id is None:
+            logger.warning(
+                '"conduit_id" was None. If possible a conduit will be created. '
+                'If you want to take ownership of a specific conduit, please pass the "conduit_id" parameter.'
+            )
 
         self._shard_count = kwargs.pop("shard_count", None)
         self._max_per_shard = kwargs.pop("max_per_shard", 1000)
@@ -2600,9 +2615,10 @@ class AutoClient(Client):
             )
 
             # Try and determine best count based on provided subscriptions with leeway...
-            # Defaults to 1 shard if no subscriptions are passed...
+            # Defaults to 2 shards if no subscriptions are passed...
             total_subs = len(self._initial_subs)
-            self._shard_count = min(20_000, math.ceil(total_subs / self._max_per_shard) + 1)
+            self._shard_count = clamp(math.ceil(total_subs / self._max_per_shard) + 1, 2, 20_000)
+            self._conduit: Conduit | None = None
 
         super().__init__(*args, **kwargs)
 
@@ -2615,9 +2631,55 @@ class AutoClient(Client):
         # If there are any active shards we should error as another instance has ownership...
         # Subscribe to "conduit.shard.disabled"
 
+        # TODO: Case 3
+        if not self._conduit_id:
+            logger.info("Attempting to create and take ownership of a new Conduit.")
+
+            new = await self._generate_new_conduit()
+            logger.info('Successfully generated a new Conduit: "%s". Conduit contains %d shards.', new.id, new.shard_count)
+            self._conduit = new
+        else:
+            conduits = await self.fetch_conduits()
+
+            for conduit in conduits:
+                if conduit.id == self._conduit_id:
+                    logger.info('Conduit with the provided ID: "%s" found. Attempting to take ownership.', self._conduit_id)
+                    self._conduit = conduit
+
+        if not self._conduit:
+            raise RuntimeError("No conduit could be found with the provided ID or a new one can not be created.")
+
+        await self._associate_shards()
         await self.setup_hook()
 
-    async def create_conduit(self) -> list[Conduit]:
+    async def _associate_shards(self) -> None: ...
+
+    async def _generate_new_conduit(self) -> Conduit:
+        try:
+            conduit = await self.create_conduit(self._shard_count)
+        except HTTPException as e:
+            if e.status == 429:
+                raise RuntimeError(
+                    "Conduit limit reached. Please provide the Conduit ID you wish to take ownership of, "
+                    "or remove an existing conduit."
+                )
+
+            raise e
+        return conduit
+
+    async def fetch_conduit(self, conduit_id: str) -> Conduit | None:
         # TODO: Docs...
-        payload = await self._http.create_conduit(self._shard_count)
+        payload = await self._http.get_conduits()
+        for data in payload["data"]:
+            if data["id"] == conduit_id:
+                return Conduit(data, http=self._http)
+
+    async def fetch_conduits(self) -> list[Conduit]:
+        # TODO: Docs...
+        payload = await self._http.get_conduits()
         return [Conduit(d, http=self._http) for d in payload["data"]]
+
+    async def create_conduit(self, shard_count: int) -> Conduit:
+        # TODO: Docs...
+        payload = await self._http.create_conduit(shard_count)
+        return Conduit(payload["data"][0], http=self._http)
