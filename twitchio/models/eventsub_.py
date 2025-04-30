@@ -5570,3 +5570,12 @@ class Conduit:
         self.id: str = data["id"]
 
         self._http = http
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Conduit):
+            return NotImplemented
+
+        return self.id == other.id
+
+    def __repr__(self) -> str:
+        return f'Conduit(id="{self.id}", shard_count="{self.shard_count}")'
