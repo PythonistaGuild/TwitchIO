@@ -103,7 +103,7 @@ class Websocket:
         keep_alive_timeout: float = 10,
         reconnect_attempts: int | None = MISSING,
         client: Client | None = None,
-        shard_id: int | None = None,
+        shard_id: str | None = None,
         token_for: str | None = None,
         http: ManagedHTTPClient,
     ) -> None:
@@ -132,7 +132,7 @@ class Websocket:
         self._token_for: str | None = token_for
         self._http: ManagedHTTPClient = http
         self._subscriptions: dict[str, _SubscriptionData] = {}
-        self._shard_id: int | None = shard_id
+        self._shard_id: str | None = shard_id
 
         self._connecting: bool = False
         self._closed: bool = False
@@ -494,6 +494,9 @@ class Websocket:
             sockets.pop(self.session_id or "", None)
 
     async def close(self, cleanup: bool = True) -> None:
+        if self._closed or self._closing:
+            return
+
         self._closing = True
 
         if cleanup:
