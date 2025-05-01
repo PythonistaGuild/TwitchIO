@@ -2836,9 +2836,13 @@ class AutoClient(Client):
         return self._conduit_info
 
     async def close(self, **options: Any) -> None:
+        if self._closing:
+            return
+
         self._closing = True
 
         for socket in self._conduit_info.websockets.values():
             await socket.close()
 
+        self._conduit_info._sockets.clear()
         await super().close(**options)
