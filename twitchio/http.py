@@ -69,7 +69,7 @@ if TYPE_CHECKING:
     from .eventsub.enums import SubscriptionType
     from .models.channel_points import CustomReward
     from .models.moderation import AutomodCheckMessage, AutomodSettings
-    from .types_.conduits import Condition
+    from .types_.conduits import Condition, ShardUpdateRequest
     from .types_.eventsub import (
         SubscriptionCreateRequest,
         SubscriptionCreateTransport,
@@ -1334,13 +1334,12 @@ class HTTPClient:
 
     ### Conduits ###
 
-    # async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
+    async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
+        params = {"conduit_id": conduit_id}
+        body = {"shards": shards}
 
-    #     params = {"conduit_id": conduit_id}
-    #     body = {"shards": shards}
-
-    #     route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
-    #     return await self.request_json(route)
+        route = Route("PATCH", "eventsub/conduits/shards", params=params, json=body)
+        return await self.request_json(route)
 
     async def create_conduit(self, shard_count: int, /) -> ConduitPayload:
         params = {"shard_count": shard_count}
@@ -1365,11 +1364,11 @@ class HTTPClient:
 
     #     return iterator
 
-    # async def update_conduits(self, id: str, /, shard_count: int) -> ConduitPayload:
-    #     params = {"id": id, "shard_count": shard_count}
+    async def update_conduits(self, id: str, /, shard_count: int) -> ConduitPayload:
+        params = {"id": id, "shard_count": shard_count}
 
-    #     route: Route = Route("PATCH", "eventsub/conduits", params=params)
-    #     return await self.request_json(route)
+        route: Route = Route("PATCH", "eventsub/conduits", params=params)
+        return await self.request_json(route)
 
     ### CCLs ###
 
