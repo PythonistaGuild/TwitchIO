@@ -154,3 +154,8 @@ class MessageRejectedError(TwitchioException):
         self.message: str | None = message.dropped_message
         self.content: str = content
         super().__init__(msg)
+
+
+class MissingConduit(TwitchioException):
+    # TODO: Docs...
+    ...
