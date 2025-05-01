@@ -192,7 +192,7 @@ class Websocket:
 
         retries: int | None = self._reconnect_attempts
         if retries == 0 and reconnect:
-            logger.info("%s <%s> was closed unexepectedly, but is flagged as 'should not reconnect'.", self._log_name, self)
+            logger.info('%s "%s" was closed unexepectedly, but is flagged as "should not reconnect".', self._log_name, self)
             return await self.close()
 
         while True:
@@ -201,7 +201,7 @@ class Websocket:
                     new = await session.ws_connect(url_, heartbeat=self._heartbeat)
                     session.detach()
             except Exception as e:
-                logger.debug("Failed to connect to %s <%s>: %s.", self._log_name, self, e)
+                logger.debug('Failed to connect to %s "%s>"": %s.', self._log_name, self, e)
 
                 if fail_once:
                     await self.close()
@@ -213,7 +213,7 @@ class Websocket:
                 await self.close()
 
                 raise WebsocketConnectionException(
-                    "Failed to connect to %s <%s> after %s retries. "
+                    'Failed to connect to %s "%s" after %s retries. '
                     "Please attempt to reconnect or re-subscribe this eventsub connection.",
                     self._log_name,
                     self,
@@ -224,7 +224,7 @@ class Websocket:
                 retries -= 1
 
             delay: float = self._backoff.calculate()
-            logger.info('%s <%s> retrying to reconnect websocket connection in "%s" seconds.', self._log_name, self, delay)
+            logger.info('%s "%s" retrying to reconnect websocket connection in "%s" seconds.', self._log_name, self, delay)
 
             await asyncio.sleep(delay)
 
@@ -243,7 +243,7 @@ class Websocket:
             await self.close()
 
             raise WebsocketConnectionException(
-                "%s <%s> did not receive a welcome message from Twitch within the allowed timeframe. "
+                '%s "%s" did not receive a welcome message from Twitch within the allowed timeframe. '
                 "Please attempt to reconnect or re-subscribe this eventsub connection.",
                 self._log_name,
                 self,
@@ -349,11 +349,11 @@ class Websocket:
 
             type_: aiohttp.WSMsgType = message.type
             if type_ in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSING):
-                logger.debug("Received close message [%s] on %s: <%s>", self._socket.close_code, self._log_name, self)
+                logger.debug('Received close message [%s] on %s: "%s"', self._socket.close_code, self._log_name, self)
 
                 if self._socket.close_code == 4001:
                     logger.critical(
-                        "%s <%s> attempted to send an outgoing message to Twitch. "
+                        '%s "%s" attempted to send an outgoing message to Twitch. '
                         "Twitch prohibits sending outgoing messages to the server, this will result in a disconnect. "
                         "This websocket will NOT attempt to reconnect.",
                         self._log_name,
@@ -368,7 +368,7 @@ class Websocket:
                 break
 
             if type_ is not aiohttp.WSMsgType.TEXT:
-                logger.debug("Received unknown message from %s: <%s>", self._log_name, self)
+                logger.debug('Received unknown message from %s: "%s>"', self._log_name, self)
                 continue
 
             self._last_keepalive = datetime.datetime.now()
@@ -376,7 +376,7 @@ class Websocket:
             try:
                 data: WebsocketMessages = cast("WebsocketMessages", _from_json(message.data))
             except Exception:
-                logger.warning("Unable to parse JSON in %s: <%s>", self._log_name, self)
+                logger.warning('Unable to parse JSON in %s: "%s"', self._log_name, self)
                 continue
 
             metadata: MetaData = data["metadata"]
@@ -388,22 +388,22 @@ class Websocket:
                 await self._process_welcome(welcome_data)
 
             elif message_type == "session_reconnect":
-                logger.debug('Received "session_reconnect" message from %s: <%s>', self._log_name, self)
+                logger.debug('Received "session_reconnect" message from %s: "%s"', self._log_name, self)
                 reconnect_data: ReconnectMessage = cast("ReconnectMessage", data)
 
                 await self._process_reconnect(reconnect_data)
 
             elif message_type == "session_keepalive":
-                logger.debug('Received "session_keepalive" message from %s: <%s>', self._log_name, self)
+                logger.debug('Received "session_keepalive" message from %s: "%s"', self._log_name, self)
 
             elif message_type == "revocation":
-                logger.debug('Received "revocation" message from %s: <%s>', self._log_name, self)
+                logger.debug('Received "revocation" message from %s: "%s"', self._log_name, self)
 
                 revocation_data: RevocationMessage = cast("RevocationMessage", data)
                 await self._process_revocation(revocation_data)
 
             elif message_type == "notification":
-                logger.debug('Received "notification" message from %s: <%s>. %s', self._log_name, self, data)
+                logger.debug('Received "notification" message from %s: "%s". %s', self._log_name, self, data)
                 notification_data: NotificationMessage = cast("NotificationMessage", data)
 
                 try:
@@ -413,11 +413,11 @@ class Websocket:
                     logger.critical(msg, str(e), exc_info=e)
 
             else:
-                logger.warning("Received an unknown message type in %s: <%s>", self._log_name, self)
+                logger.warning('Received an unknown message type in %s: "%s"', self._log_name, self)
 
     async def _process_keepalive(self) -> None:
         assert self._last_keepalive
-        logger.debug("Started keep_alive task on : <%s>", self._log_name, self)
+        logger.debug('Started keep_alive task on : "%s"', self._log_name, self)
 
         while True:
             await asyncio.sleep(self._keep_alive_timeout)
@@ -451,10 +451,10 @@ class Websocket:
             event = WebsocketWelcome(payload["session"])
             self._client.dispatch("websocket_welcome", payload=event)
 
-        logger.info('Received "session_welcome" message from %s: <%s>', self._log_name, self)
+        logger.info('Received "session_welcome" message from %s: "%s"', self._log_name, self)
 
     async def _process_reconnect(self, data: ReconnectMessage) -> None:
-        logger.info("Attempting to reconnect %s due to a reconnect message from Twitch: <%s>", self._log_name, self)
+        logger.info('Attempting to reconnect %s due to a reconnect message from Twitch: "%s"', self._log_name, self)
         await self._reconnect(url=data["payload"]["session"]["reconnect_url"])
 
     async def _process_revocation(self, data: RevocationMessage) -> None:
@@ -535,5 +535,5 @@ class Websocket:
             payload: WebsocketClosed = WebsocketClosed(socket=self)
             self._client.dispatch("websocket_closed", payload=payload)
 
-        logger.info("Successfully closed %s: <%s>", self._log_name, self)
+        logger.info('Successfully closed %s: "%s"', self._log_name, self)
         self._closing = False

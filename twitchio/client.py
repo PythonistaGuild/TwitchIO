@@ -2590,7 +2590,7 @@ class ConduitInfo:
         self._sockets: dict[str, Websocket] = {}
 
     def __repr__(self) -> str:
-        return f"ConduitInfo(conduit={self._conduit}, shard_count={self.shard_count})"
+        return f'ConduitInfo(conduit="{self._conduit}", shard_count={self.shard_count})'
 
     @property
     def conduit(self) -> Conduit | None:
