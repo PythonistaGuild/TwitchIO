@@ -33,7 +33,7 @@ import aiohttp
 
 from ..backoff import Backoff
 from ..exceptions import HTTPException, WebsocketConnectionException
-from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
+from ..models.eventsub_ import SubscriptionRevoked, WebsocketWelcome, create_event_instance
 from ..utils import (
     MISSING,
     _from_json,  # type: ignore
@@ -64,6 +64,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 WSS: str = "wss://eventsub.wss.twitch.tv/ws"
 
 
+class WebsocketClosed:
+    # TODO: Docs...
+
+    def __init__(self, *, socket: Websocket) -> None:
+        self.socket: Websocket = socket
+
+
 class Websocket:
     __slots__ = (
         "__subscription_cost",
@@ -73,6 +80,7 @@ class Websocket:
         "_closing",
         "_connecting",
         "_connection_tasks",
+        "_failed",
         "_heartbeat",
         "_http",
         "_keep_alive_task",
@@ -83,6 +91,7 @@ class Websocket:
         "_ready",
         "_reconnect_attempts",
         "_session_id",
+        "_shard_id",
         "_socket",
         "_subscriptions",
         "_token_for",
@@ -94,7 +103,8 @@ class Websocket:
         keep_alive_timeout: float = 10,
         reconnect_attempts: int | None = MISSING,
         client: Client | None = None,
-        token_for: str,
+        shard_id: int | None = None,
+        token_for: str | None = None,
         http: ManagedHTTPClient,
     ) -> None:
         self._keep_alive_timeout: int = max(10, min(int(keep_alive_timeout), 600))
@@ -119,22 +129,29 @@ class Websocket:
         self.__subscription_cost: int = 0
 
         self._client: Client | None = client
-        self._token_for: str = token_for
+        self._token_for: str | None = token_for
         self._http: ManagedHTTPClient = http
         self._subscriptions: dict[str, _SubscriptionData] = {}
+        self._shard_id: int | None = shard_id
 
         self._connecting: bool = False
         self._closed: bool = False
         self._closing: bool = False
+        self._failed: bool = False
 
         self._connection_tasks: set[asyncio.Task[None]] = set()
 
         msg = "Websocket %s is being used without a Client/Bot. Event dispatching is disabled for this websocket."
         if not client:
+            if shard_id is not None:
+                # TODO: Proper Exception...
+                raise RuntimeError("...")
+
             logger.warning(msg, self)
 
     def __repr__(self) -> str:
-        return f"EventsubWebsocket(session_id={self._session_id})"
+        name = "Conduit" if self._shard_id is not None else "Eventsub"
+        return f"{name}Websocket(session_id={self._session_id}, shard_id={self._shard_id})"
 
     def __str__(self) -> str:
         return f"{self._session_id}"
@@ -153,6 +170,9 @@ class Websocket:
 
     @property
     def can_subscribe(self) -> bool:
+        if self._shard_id is not None:
+            return False
+
         return self.subscription_count < 300
 
     @property
@@ -235,6 +255,8 @@ class Websocket:
     async def _resubscribe(self) -> None:
         assert self._session_id
 
+        # We can likely keep this unchanged:
+        # In conduit transports our subscriptions will be empty anyway
         old_subs = self._subscriptions.copy()
         self._subscriptions.clear()
 
@@ -279,6 +301,10 @@ class Websocket:
         try:
             await socket.connect(url=url, reconnect=False, fail_once=True)
         except Exception:
+            # Conduit websockets (Shards) need to be handled on Client
+            if self._shard_id is not None:
+                return await self.close()
+
             return await self.connect(reconnect=True)
 
         if self._client:
@@ -286,7 +312,22 @@ class Websocket:
 
         await self.close()
 
-    def _create_connection_task(self) -> None:
+    async def _create_connection_task(self) -> None:
+        # Conduit websockets (Shards) need to be handled on the Client...
+        if self._shard_id is not None:
+            logger.warning(
+                'Conduit Websocket "%s" needs to close unexpectedly. %r will attempt to reassociate this shard if possible.',
+                self._session_id,
+                self._client,
+            )
+
+            try:
+                await self.close()
+            except Exception as e:
+                logger.debug("Exception during close of %r: %s", self, e, exc_info=e)
+
+            return
+
         task = asyncio.create_task(self.connect(reconnect=True))
         self._connection_tasks.add(task)
         task.add_done_callback(self._connection_tasks.discard)
@@ -298,7 +339,7 @@ class Websocket:
             try:
                 message: aiohttp.WSMessage = await self._socket.receive()
             except Exception:
-                self._create_connection_task()
+                await self._create_connection_task()
                 break
 
             type_: aiohttp.WSMsgType = message.type
@@ -317,7 +358,7 @@ class Websocket:
                 elif self._socket.close_code == 4003:
                     return await self.close()
 
-                self._create_connection_task()
+                await self._create_connection_task()
                 break
 
             if type_ is not aiohttp.WSMsgType.TEXT:
@@ -377,14 +418,18 @@ class Websocket:
             now: datetime.datetime = datetime.datetime.now()
 
             if self._last_keepalive + datetime.timedelta(seconds=self._keep_alive_timeout + 5) < now:
-                self._create_connection_task()
+                await self._create_connection_task()
                 return
 
     async def _process_welcome(self, data: WelcomeMessage) -> None:
         payload: WelcomePayload = data["payload"]
         new_id: str = payload["session"]["id"]
 
-        if self._session_id:
+        # TODO: Conduit logic...
+        if self._shard_id is not None:
+            pass
+
+        elif self._session_id:
             self._cleanup(closed=False)
             self._client._websockets[self._token_for] = {self.session_id: self}  # type: ignore
 
@@ -394,6 +439,12 @@ class Websocket:
         assert self._listen_task
 
         self._listen_task.set_name(f"EventsubWebsocketListener: {self._session_id}")
+
+        # TODO: Document Event
+        if self._client:
+            event = WebsocketWelcome(payload["session"])
+            self._client.dispatch("websocket_welcome", payload=event)
+
         logger.info('Received "session_welcome" message from eventsub websocket: <%s>', self)
 
     async def _process_reconnect(self, data: ReconnectMessage) -> None:
@@ -405,6 +456,10 @@ class Websocket:
 
         if self._client:
             self._client.dispatch(event="subscription_revoked", payload=payload)
+
+        # Conduit websockets (Shards) do not contain subscriptions directly on the websocket...
+        if self._shard_id is not None:
+            return
 
         self._subscriptions.pop(payload.id, None)
         if not self._subscriptions:
@@ -426,6 +481,13 @@ class Websocket:
 
     def _cleanup(self, closed: bool = True) -> None:
         self._closed = closed
+
+        # TODO: Conduit cleanup logic...
+        if self._shard_id is not None:
+            return
+
+        # If not conduit we will always have this...
+        assert self._token_for
 
         if self._client:
             sockets = self._client._websockets.get(self._token_for, {})
@@ -458,6 +520,11 @@ class Websocket:
         self._keep_alive_task = None
         self._listen_task = None
         self._socket = None
+
+        # TODO: Document new event...
+        if self._client:
+            payload: WebsocketClosed = WebsocketClosed(socket=self)
+            self._client.dispatch("websocket_closed", payload=payload)
 
         logger.info("Successfully closed eventsub websocket: <%s>", self)
         self._closing = False
