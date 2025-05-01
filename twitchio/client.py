@@ -40,7 +40,7 @@ from .models.bits import Cheermote, ExtensionTransaction
 from .models.ccls import ContentClassificationLabel
 from .models.channels import ChannelInfo
 from .models.chat import ChatBadge, ChatterColor, EmoteSet, GlobalEmote
-from .models.eventsub_ import Conduit
+from .models.eventsub_ import Conduit, WebsocketWelcome
 from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload, WebsocketSubscriptionData
@@ -65,6 +65,7 @@ if TYPE_CHECKING:
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
+    from .types_.conduits import ShardUpdateRequest
     from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
     from .types_.options import ClientOptions, WaitPredicateT
     from .types_.tokens import TokenMappingData
@@ -403,6 +404,7 @@ class Client:
             partial = PartialUser(id=self._bot_id, http=self._http)
             self._user = await partial.user() if self._fetch_self else partial
 
+        # Might need a skip_setup parameter?
         await self._setup()
 
     async def _setup(self) -> None:
@@ -2564,6 +2566,23 @@ class Client:
     async def event_oauth_authorized(self, payload: UserTokenPayload) -> None:
         await self.add_token(payload["access_token"], payload["refresh_token"])
 
+    async def fetch_conduit(self, conduit_id: str) -> Conduit | None:
+        # TODO: Docs...
+        payload = await self._http.get_conduits()
+        for data in payload["data"]:
+            if data["id"] == conduit_id:
+                return Conduit(data, http=self._http)
+
+    async def fetch_conduits(self) -> list[Conduit]:
+        # TODO: Docs...
+        payload = await self._http.get_conduits()
+        return [Conduit(d, http=self._http) for d in payload["data"]]
+
+    async def create_conduit(self, shard_count: int) -> Conduit:
+        # TODO: Docs...
+        payload = await self._http.create_conduit(shard_count)
+        return Conduit(payload["data"][0], http=self._http)
+
 
 class AutoClient(Client):
     # NOTE:
@@ -2574,6 +2593,11 @@ class AutoClient(Client):
     # Automatically listen to conduit.shard.disabled and maintain the state of shards
     # TODO: Type Annotations...
     # TODO: swap_on_failure? reduce_on_failure?
+    # TODO: event_autobot?_subscribe_error
+    # TODO: event_autobot?_conduit_create
+    # TODO: event_shard_disabled/revoked?
+    # TODO: Cleanup on Conduit Sockets...
+    # TODO: Periodic background check on shard-state
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         # Essentially a tri-bool:
@@ -2634,11 +2658,16 @@ class AutoClient(Client):
         # If there are any active shards we should error as another instance has ownership...
         # Subscribe to "conduit.shard.disabled"
 
+        # Listen to websocket closed
+        # Unexpected closes need to be handled on the Client for Conduits as we need to determine a few things first...
+        self.add_listener(self._websocket_closed, event="event_websocket_closed")
+
         if self._conduit_id is MISSING:
             conduits = await self.fetch_conduits()
             count = len(conduits)
 
             if count > 1:
+                # TODO: Maybe log currernt conduit info?
                 raise RuntimeError('Too many currently active conduits exist and no "conduit_id" parameter was passed.')
 
             if count == 0:
@@ -2660,12 +2689,90 @@ class AutoClient(Client):
                     self._conduit = conduit
 
         if not self._conduit:
+            # TODO: Maybe log currernt conduit info?
             raise RuntimeError("No conduit could be found with the provided ID or a new one can not be created.")
+
+        if self._conduit.shard_count != self._shard_count:
+            logger.info(
+                '%r "shard_count" differs to provided "shard_count". Attempting to update %r', self._conduit, self._conduit
+            )
+            self._conduit = await self._conduit.update(self._shard_count)
 
         await self._associate_shards()
         await self.setup_hook()
 
-    async def _associate_shards(self) -> None: ...
+    async def _websocket_closed(self, payload: ...) -> ...:
+        # Since conduit websockets don't have any reconnect logic we should attempt to see if the shard should
+        # still exist and if a new websocket(s) are needed we can reconnect here instead...
+        ...
+
+    async def _connect_and_welcome(self, websocket: Websocket) -> bool:
+        await websocket.connect(fail_once=True)
+
+        async def welcome_predicate(payload: WebsocketWelcome) -> bool:
+            nonlocal websocket
+            return websocket.session_id == payload.id
+
+        if not websocket._session_id:
+            try:
+                await self.wait_for("websocket_welcome", timeout=10, predicate=welcome_predicate)
+            except TimeoutError:
+                return False
+
+        return websocket._session_id is not None
+
+    async def _associate_flow(self, websocket: Websocket) -> None:
+        connected = await self._connect_and_welcome(websocket)
+
+        if not connected:
+            websocket._failed = True
+            raise TimeoutError(f"{websocket!r} failed to send a Welcome Payload within the 10s timeframe.")
+
+    async def _process_batched(self, batched: list[Websocket]) -> None:
+        tasks: list[asyncio.Task[None]] = []
+
+        for socket in batched:
+            task = asyncio.create_task(self._associate_flow(socket))
+            tasks.append(task)
+
+        await asyncio.wait(tasks)
+
+        assert self._conduit
+        payloads: list[ShardUpdateRequest] = []
+
+        for socket in batched:
+            # Crash here; we can't continue if a shard has a critical failure
+            if socket._failed:
+                raise RuntimeError(
+                    "Unable to associate shards with Conduit. An unexpected error occurred during association."
+                )
+
+            assert socket._session_id
+
+            payload: ShardUpdateRequest = {
+                "id": str(socket._shard_id),
+                "transport": {"method": "websocket", "session_id": socket._session_id},
+            }
+            payloads.append(payload)
+
+        # TODO: Convert this to the Conduit.method()
+        await self._http.update_conduit_shards(self._conduit.id, shards=payloads)
+        logger.info("Associated shards with %r successfully.", self._conduit)
+
+    async def _associate_shards(self) -> None:
+        assert self._conduit
+
+        batched: list[Websocket] = []
+        for i, n in enumerate(range(self._conduit.shard_count)):
+            if i % 10 == 0 and i != 0:
+                await self._process_batched(batched)
+                batched.clear()
+
+            websocket = Websocket(client=self, http=self._http, shard_id=n)
+            batched.append(websocket)
+
+        if batched:
+            await self._process_batched(batched)
 
     async def _generate_new_conduit(self) -> Conduit:
         try:
@@ -2683,20 +2790,3 @@ class AutoClient(Client):
 
         self._conduit = new
         return new
-
-    async def fetch_conduit(self, conduit_id: str) -> Conduit | None:
-        # TODO: Docs...
-        payload = await self._http.get_conduits()
-        for data in payload["data"]:
-            if data["id"] == conduit_id:
-                return Conduit(data, http=self._http)
-
-    async def fetch_conduits(self) -> list[Conduit]:
-        # TODO: Docs...
-        payload = await self._http.get_conduits()
-        return [Conduit(d, http=self._http) for d in payload["data"]]
-
-    async def create_conduit(self, shard_count: int) -> Conduit:
-        # TODO: Docs...
-        payload = await self._http.create_conduit(shard_count)
-        return Conduit(payload["data"][0], http=self._http)
