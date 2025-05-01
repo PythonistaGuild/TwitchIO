@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
 from .eventsub.enums import SubscriptionType
 from .eventsub.websockets import Websocket
-from .exceptions import HTTPException
+from .exceptions import HTTPException, MissingConduit
 from .http import HTTPAsyncIterator
 from .models.bits import Cheermote, ExtensionTransaction
 from .models.ccls import ContentClassificationLabel
@@ -2584,19 +2584,53 @@ class Client:
         return Conduit(payload["data"][0], http=self._http)
 
 
+class ConduitInfo:
+    def __init__(self) -> None:
+        self._conduit: Conduit | None = None
+        self._sockets: dict[str, Websocket] = {}
+
+    def __repr__(self) -> str:
+        return f"ConduitInfo(conduit={self._conduit}, shard_count={self.shard_count})"
+
+    @property
+    def conduit(self) -> Conduit | None:
+        return self._conduit
+
+    @property
+    def shard_count(self) -> int | None:
+        return self._conduit.shard_count if self._conduit else None
+
+    @property
+    def id(self) -> str | None:
+        return self._conduit.id if self._conduit else None
+
+    @property
+    def websockets(self) -> MappingProxyType[str, Websocket]:
+        return MappingProxyType(self._sockets)
+
+    async def update_shard_count(self, shard_count: int, /) -> Self:
+        if not self._conduit:
+            raise MissingConduit("Cannot update Conduit Shard Count as no Conduit has been assigned.")
+
+        self._conduit = await self._conduit.update(shard_count)
+        return self
+
+    async def update_shards(self, shards: list[ShardUpdateRequest]) -> Self:
+        if not self._conduit:
+            raise MissingConduit("Cannot update Conduit Shards as no Conduit has been assigned.")
+
+        await self._conduit.update_shards(shards)
+        return self
+
+
 class AutoClient(Client):
     # NOTE:
-    # Shards last 72 hours after Conduit dies...
-    # Retrieve Conduits
-    # If conduit id > enabled conduits; create new conduit
-    # If conduit exists; check it's shard status
     # Automatically listen to conduit.shard.disabled and maintain the state of shards
     # TODO: Type Annotations...
     # TODO: swap_on_failure? reduce_on_failure?
     # TODO: event_autobot?_subscribe_error
     # TODO: event_autobot?_conduit_create
     # TODO: event_shard_disabled/revoked?
-    # TODO: Cleanup on Conduit Sockets...
     # TODO: Periodic background check on shard-state
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -2645,7 +2679,10 @@ class AutoClient(Client):
             # Defaults to 2 shards if no subscriptions are passed...
             total_subs = len(self._initial_subs)
             self._shard_count = clamp(math.ceil(total_subs / self._max_per_shard) + 1, 2, 20_000)
-            self._conduit: Conduit | None = None
+            self._conduit_info: ConduitInfo = ConduitInfo()
+
+            # So we don't mess around in the event if we are closing everying...
+            self._closing: bool = False
 
         super().__init__(*args, **kwargs)
 
@@ -2653,9 +2690,6 @@ class AutoClient(Client):
         return self.__class__.__name__
 
     async def _setup(self) -> None:
-        # Create Conduits...
-        # If a conduit ID is already present we should assume this instance wants to take ownership of the conduit
-        # If there are any active shards we should error as another instance has ownership...
         # Subscribe to "conduit.shard.disabled"
 
         # Listen to websocket closed
@@ -2675,6 +2709,7 @@ class AutoClient(Client):
                 await self._generate_new_conduit()
             else:
                 logger.info("Conduit found: %r. Attempting to take ownership of this conduit.", conduits[0])
+                self._conduit_info._conduit = conduits[0]
 
         elif self._conduit_id is True:
             logger.info("Attempting to create and take ownership of a new Conduit.")
@@ -2686,17 +2721,19 @@ class AutoClient(Client):
             for conduit in conduits:
                 if conduit.id == self._conduit_id:
                     logger.info('Conduit with the provided ID: "%s" found. Attempting to take ownership.', self._conduit_id)
-                    self._conduit = conduit
+                    self._conduit_info._conduit = conduit
 
-        if not self._conduit:
+        if not self._conduit_info.conduit:
             # TODO: Maybe log currernt conduit info?
             raise RuntimeError("No conduit could be found with the provided ID or a new one can not be created.")
 
-        if self._conduit.shard_count != self._shard_count:
+        if self._conduit_info.conduit.shard_count != self._shard_count:
             logger.info(
-                '%r "shard_count" differs to provided "shard_count". Attempting to update %r', self._conduit, self._conduit
+                '%r "shard_count" differs to provided "shard_count". Attempting to update %r',
+                self._conduit_info,
+                self._conduit_info,
             )
-            self._conduit = await self._conduit.update(self._shard_count)
+            await self._conduit_info.update_shard_count(self._shard_count)
 
         await self._associate_shards()
         await self.setup_hook()
@@ -2704,7 +2741,8 @@ class AutoClient(Client):
     async def _websocket_closed(self, payload: ...) -> ...:
         # Since conduit websockets don't have any reconnect logic we should attempt to see if the shard should
         # still exist and if a new websocket(s) are needed we can reconnect here instead...
-        ...
+        if self._closing:
+            return
 
     async def _connect_and_welcome(self, websocket: Websocket) -> bool:
         await websocket.connect(fail_once=True)
@@ -2737,38 +2775,39 @@ class AutoClient(Client):
 
         await asyncio.wait(tasks)
 
-        assert self._conduit
+        assert self._conduit_info.conduit
         payloads: list[ShardUpdateRequest] = []
 
         for socket in batched:
             # Crash here; we can't continue if a shard has a critical failure
-            if socket._failed:
+            if socket._failed or not socket.connected:
                 raise RuntimeError(
                     "Unable to associate shards with Conduit. An unexpected error occurred during association."
                 )
 
-            assert socket._session_id
+            assert socket._session_id and socket._shard_id is not None
 
             payload: ShardUpdateRequest = {
-                "id": str(socket._shard_id),
+                "id": socket._shard_id,
                 "transport": {"method": "websocket", "session_id": socket._session_id},
             }
             payloads.append(payload)
 
-        # TODO: Convert this to the Conduit.method()
-        await self._http.update_conduit_shards(self._conduit.id, shards=payloads)
-        logger.info("Associated shards with %r successfully.", self._conduit)
+        await self._conduit_info.update_shards(payloads)
+        self._conduit_info._sockets.update({str(socket._shard_id): socket for socket in batched})
+
+        logger.info("Associated shards with %r successfully.", self._conduit_info)
 
     async def _associate_shards(self) -> None:
-        assert self._conduit
+        assert self._conduit_info.conduit
 
         batched: list[Websocket] = []
-        for i, n in enumerate(range(self._conduit.shard_count)):
+        for i, n in enumerate(range(self._conduit_info.conduit.shard_count)):
             if i % 10 == 0 and i != 0:
                 await self._process_batched(batched)
                 batched.clear()
 
-            websocket = Websocket(client=self, http=self._http, shard_id=n)
+            websocket = Websocket(client=self, http=self._http, shard_id=str(n))
             batched.append(websocket)
 
         if batched:
@@ -2789,5 +2828,17 @@ class AutoClient(Client):
 
         logger.info('Successfully generated a new Conduit: "%s". Conduit contains %d shards.', new.id, new.shard_count)
 
-        self._conduit = new
+        self._conduit_info._conduit = new
         return new
+
+    @property
+    def conduit_info(self) -> ConduitInfo:
+        return self._conduit_info
+
+    async def close(self, **options: Any) -> None:
+        self._closing = True
+
+        for socket in self._conduit_info.websockets.values():
+            await socket.close()
+
+        await super().close(**options)
