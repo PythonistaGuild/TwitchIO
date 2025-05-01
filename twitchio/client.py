@@ -2779,6 +2779,7 @@ class AutoClient(Client):
             new = await self.create_conduit(self._shard_count)
         except HTTPException as e:
             if e.status == 429:
+                # TODO: Maybe log currernt conduit info?
                 raise RuntimeError(
                     "Conduit limit reached. Please provide the Conduit ID you wish to take ownership of, "
                     "or remove an existing conduit."

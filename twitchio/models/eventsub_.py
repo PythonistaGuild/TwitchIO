@@ -5598,7 +5598,7 @@ class Conduit:
     async def delete(self) -> ...: ...
 
     async def update(self, shard_count: int, /) -> Conduit:
-        #TODO: Docs
+        # TODO: Docs
         payload = await self._http.update_conduits(self.id, shard_count=shard_count)
         return Conduit(payload["data"][0], http=self._http)
 
