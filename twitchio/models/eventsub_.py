@@ -51,6 +51,7 @@ if TYPE_CHECKING:
         NotificationTransport,
         RevocationSubscription,
         RevocationTransport,
+        ShardUpdateRequest,
         WelcomeSession,
     )
     from twitchio.types_.eventsub import *
@@ -5582,8 +5583,7 @@ class Conduit:
     def __init__(self, data: ConduitData, *, http: HTTPClient) -> None:
         self.raw: ConduitData = data
         self.shard_count: int = data["shard_count"]
-        self.id: str = data["id"]
-
+        self._id: str = data["id"]
         self._http = http
 
     def __eq__(self, other: object) -> bool:
@@ -5595,6 +5595,13 @@ class Conduit:
     def __repr__(self) -> str:
         return f'Conduit(id="{self.id}", shard_count="{self.shard_count}")'
 
+    def __str__(self) -> str:
+        return self.id
+
+    @property
+    def id(self) -> str:
+        return self._id
+
     async def delete(self) -> ...: ...
 
     async def update(self, shard_count: int, /) -> Conduit:
@@ -5604,4 +5611,7 @@ class Conduit:
 
     async def fetch_shards(self) -> ...: ...
 
-    async def update_shards(self) -> ...: ...
+    async def update_shards(self, shards: list[ShardUpdateRequest]) -> ...:
+        # TODO: Docs
+        # TODO; Shard Model...
+        await self._http.update_conduit_shards(self.id, shards=shards)
