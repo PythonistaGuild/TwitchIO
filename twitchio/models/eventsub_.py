@@ -51,6 +51,7 @@ if TYPE_CHECKING:
         NotificationTransport,
         RevocationSubscription,
         RevocationTransport,
+        WelcomeSession,
     )
     from twitchio.types_.eventsub import *
     from twitchio.types_.responses import (
@@ -179,6 +180,7 @@ __all__ = (
     "UserAuthorizationGrant",
     "UserAuthorizationRevoke",
     "UserUpdate",
+    "WebsocketWelcome",
     "Whisper",
 )
 
@@ -5561,8 +5563,21 @@ class EventsubSubscriptions:
         )
 
 
+class WebsocketWelcome:
+    def __init__(self, data: WelcomeSession) -> None:
+        self.id: str = data["id"]
+        self.status: Literal["connected"] = "connected"
+        self.keepalive_timeout_seconds: int = data["keepalive_timeout_seconds"]
+        self.reconnect_url: None = None
+        self.connected_at: str = data["connected_at"]
+
+
 class Conduit:
     # TODO: Docs...
+    # TODO: Update; shard count scale down/up
+    # TODO: Delete; Probably need client... Unless twitch has delete eventsub?
+    # TODO: Fetch shards
+    # TODO: Shard Model?
 
     def __init__(self, data: ConduitData, *, http: HTTPClient) -> None:
         self.raw: ConduitData = data
@@ -5579,3 +5594,14 @@ class Conduit:
 
     def __repr__(self) -> str:
         return f'Conduit(id="{self.id}", shard_count="{self.shard_count}")'
+
+    async def delete(self) -> ...: ...
+
+    async def update(self, shard_count: int, /) -> Conduit:
+        #TODO: Docs
+        payload = await self._http.update_conduits(self.id, shard_count=shard_count)
+        return Conduit(payload["data"][0], http=self._http)
+
+    async def fetch_shards(self) -> ...: ...
+
+    async def update_shards(self) -> ...: ...
