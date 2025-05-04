@@ -24,6 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
+import asyncio
 import copy
 import datetime
 import logging
@@ -509,28 +510,37 @@ class HTTPClient:
         logger.debug("Attempting a request to %r with %s.", route, self.__class__.__qualname__)
         route.headers.update(self.headers)
 
-        async with self._session.request(
-            route.method,
-            route.url,
-            headers=route.headers,
-            json=route.json or None,
-        ) as resp:
-            data: RawResponse | str = await json_or_text(resp)
+        failed: bool = False
+        while True:
+            async with self._session.request(
+                route.method,
+                route.url,
+                headers=route.headers,
+                json=route.json or None,
+            ) as resp:
+                data: RawResponse | str = await json_or_text(resp)
+                logger.debug("Request to %r with %s returned: status=%d", route, self.__class__.__qualname__, resp.status)
 
-            logger.debug("Request to %r with %s returned: status=%d", route, self.__class__.__qualname__, resp.status)
+                if resp.status == 503 and not failed:
+                    # Twitch recommends retrying 1 time after a 503...
+                    failed = True
+                    logger.debug("Retrying request to %r (1) times after 3 seconds.", route)
 
-            if resp.status >= 400:
-                raise HTTPException(
-                    f"Request {route} failed with status {resp.status}: {data}",
-                    route=route,
-                    status=resp.status,
-                    extra=data,
-                )
+                    await asyncio.sleep(3)
+                    continue
 
-            if resp.status == 204:
-                return None
+                if resp.status >= 400:
+                    raise HTTPException(
+                        f"Request {route} failed with status {resp.status}: {data}",
+                        route=route,
+                        status=resp.status,
+                        extra=data,
+                    )
 
-        return data
+                if resp.status == 204:
+                    return None
+
+            return data
 
     async def request_json(self, route: Route) -> Any:
         route.headers.update({"Accept": "application/json"})
