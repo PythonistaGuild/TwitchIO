@@ -2678,7 +2678,7 @@ class AutoClient(Client):
 
         self._shard_count = kwargs.pop("shard_count", None)
         self._max_per_shard = kwargs.pop("max_per_shard", 1000)
-        self._initial_subs: ... = kwargs.pop("subscriptions", [])
+        self._initial_subs: list[SubscriptionPayload] = kwargs.pop("subscriptions", [])
 
         if self._max_per_shard < 1000:
             logger.warning('It is recommended that the "max_per_shard" parameter should not be set below 1000.')
@@ -2848,6 +2848,11 @@ class AutoClient(Client):
 
         self._conduit_info._conduit = new
         self.dispatch("autobot_conduit_created", self._conduit_info)
+
+        # Maybe need an additional bool; will need feedback?
+        if self._initial_subs:
+            logger.info("Attempting to do an initial subscription on new conduit: %r.", self._conduit_info)
+            await self._multi_sub(self._initial_subs, stop_on_error=False)
 
         return new
 
