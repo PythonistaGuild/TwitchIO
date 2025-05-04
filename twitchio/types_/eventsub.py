@@ -174,6 +174,7 @@ class SubscriptionCreateTransport(TypedDict):
     callback: NotRequired[str]
     secret: NotRequired[str]
     session_id: NotRequired[str]
+    conduit_id: NotRequired[str]
 
 
 class _SubscriptionData(TypedDict):  # type: ignore
@@ -181,7 +182,7 @@ class _SubscriptionData(TypedDict):  # type: ignore
     version: str
     condition: Condition
     transport: SubscriptionCreateTransport
-    token_for: str
+    token_for: str | None
 
 
 class SubscriptionCreateRequest(TypedDict):
