@@ -2829,6 +2829,8 @@ class AutoClient(Client):
         logger.info('Successfully generated a new Conduit: "%s". Conduit contains %d shards.', new.id, new.shard_count)
 
         self._conduit_info._conduit = new
+        self.dispatch("autobot_conduit_created", self._conduit_info)
+
         return new
 
     @property
