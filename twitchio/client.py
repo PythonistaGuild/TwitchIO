@@ -29,7 +29,7 @@ import logging
 import math
 from collections import defaultdict
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, Self, Unpack
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack
 
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
 from .eventsub.enums import SubscriptionType
@@ -2623,6 +2623,24 @@ class ConduitInfo:
         return self
 
 
+class MultiSubscribeError(NamedTuple):
+    subscription: SubscriptionPayload
+    error: HTTPException
+
+
+class MultiSubscribeSuccess(NamedTuple):
+    subscription: SubscriptionPayload
+    response: SubscriptionResponse
+
+
+class MultiSubscribePayload:
+    __slots__ = ("errors", "success")
+
+    def __init__(self, success: list[MultiSubscribeSuccess], errors: list[MultiSubscribeError]) -> None:
+        self.success = success
+        self.errors = errors
+
+
 class AutoClient(Client):
     # NOTE:
     # Automatically listen to conduit.shard.disabled and maintain the state of shards
@@ -2729,9 +2747,9 @@ class AutoClient(Client):
 
         if self._conduit_info.conduit.shard_count != self._shard_count:
             logger.info(
-                '%r "shard_count" differs to provided "shard_count". Attempting to update %r',
+                '%r "shard_count" differs to provided "shard_count". Attempting to update the Conduit to %d shards.',
                 self._conduit_info,
-                self._conduit_info,
+                self._shard_count,
             )
             await self._conduit_info.update_shard_count(self._shard_count)
 
@@ -2836,6 +2854,110 @@ class AutoClient(Client):
     @property
     def conduit_info(self) -> ConduitInfo:
         return self._conduit_info
+
+    async def _multi_sub(self, subscriptions: list[SubscriptionPayload], *, stop_on_error: bool) -> MultiSubscribePayload:
+        assert self._conduit_info.conduit
+
+        conduit = self._conduit_info.conduit
+        transport: SubscriptionCreateTransport = {"method": "conduit", "conduit_id": conduit.id}
+
+        logger.info("Attempting to subscribe to %d subscriptions on %r.", len(subscriptions), self._conduit_info)
+
+        errors: list[MultiSubscribeError] = []
+        success: list[MultiSubscribeSuccess] = []
+
+        for payload in subscriptions:
+            data: _SubscriptionData = {
+                "type": SubscriptionType(payload.type),
+                "version": payload.version,
+                "condition": payload.condition,
+                "transport": transport,
+                "token_for": None,
+            }
+
+            try:
+                resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
+            except HTTPException as e:
+                if stop_on_error:
+                    logger.warning(
+                        'An error occured in call to "%r.multi_subscribe" with "stop_on_error" set to True.', e, exc_info=e
+                    )
+                    raise e
+
+                error_payload = MultiSubscribeError(subscription=payload, error=e)
+                errors.append(error_payload)
+            else:
+                success_payload = MultiSubscribeSuccess(subscription=payload, response=resp)
+                success.append(success_payload)
+
+        return MultiSubscribePayload(success=success, errors=errors)
+
+    async def multi_subscribe(
+        self, subscriptions: list[SubscriptionPayload], *, wait: bool = True, stop_on_error: bool = False
+    ) -> MultiSubscribePayload | asyncio.Task[MultiSubscribePayload]:
+        """|async|
+
+        This method attempts to subscribe to the provided list of EventSub subscriptions on the Conduit associated with
+        the :class:`twitchio.AutoClient`.
+
+        Since Conduits maintain subscriptions for up to ``72 hours`` after the Conduit/Shards go offline, calling this method
+        is intended to be used to setup the :class:`twitchio.AutoClient` initially, or after a Conduit has been offline for
+        ``72 hours`` or longer; however it can be used to mass subscribe at any other time.
+
+        Ideally the bulk of your subscriptions should only ever need to be subscribed to once and an Online status for the
+        Conduit and associated shards should be maintained and/or kept within the ``72 hour`` limit.
+
+        Conduit subscriptions only use `App Access Tokens <https://dev.twitch.tv/docs/authentication/>`_ (akin to webhooks);
+        however the user must have authorised the App (Client-ID) with the appropriate scopes associated with subscriptions.
+
+        An ``App Access Token`` is generated automatically each time the :class:`twitchio.AutoClient` is logged in which is
+        called automatically with :meth:`.login`, :meth:`.start` and :meth:`.run`.
+
+        To avoid some confusion and ease of use, if a list of subscriptions is passed to the :class:`twitchio.AutoClient`
+        constructor this method will be called automatically whenever it creates a **new** Conduit on startup.
+
+        By default this method will **not** stop attempting to subscribe to subscriptions if an error is received during
+        it's invocation, instead any subscriptions that failed will be included in the returned payload. This behaviour
+        can be changed by setting the ``stop_on_error`` parameter to ``True``.
+
+        If the ``wait`` parameter is set to ``True`` (default) this method acts like any other coroutine used with ``await``.
+        Otherwise when ``wait`` is ``False`` the subscriptions will occur in a background task and you will receive the
+        created :class:`asyncio.Task` instead; when ``wait`` is set to``False`` you will **not** receive a payload upon
+        completion, however the task can be awaited later to receive the result.
+
+        Parameters
+        ----------
+        subscriptions: list[SubscriptionPayload]
+            A list of :class:`~twitchio.SubscriptionPayload` to attempt subscribing to on the associated Conduit.
+        wait: bool
+            Whetheer to treat this method like a standard awaited coroutine or create and return a :class:`asyncio.Task`
+            instead. Defaults to ``True`` which treats the method as a standard coroutine.
+        stop_on_error: bool
+            Whether to stop and raise an exception when an error occurs attempting to subscribe to any subscription provided.
+            Defaults to ``False``, which adds any errors to the returned :class:`MultiSubscribePayload` instead of raising.
+
+        Returns
+        -------
+        MultiSubscribePayload
+            The payload containing successfull subscriptions and any errors.
+        :class:`asyncio.Task`
+            When ``wait`` is False, the created background task is returned.
+
+        Raises
+        ------
+        MissingConduit
+            Cannot subscribe when no Conduit is associated with this Client.
+        """
+        if not self._conduit_info.conduit:
+            raise MissingConduit("Unable to subscribe as a Conduit has not beed associated with %r.", self)
+
+        if wait:
+            return await self._multi_sub(subscriptions, stop_on_error=stop_on_error)
+
+        task: asyncio.Task[MultiSubscribePayload] = asyncio.create_task(
+            self._multi_sub(subscriptions, stop_on_error=stop_on_error)
+        )
+        return task
 
     async def close(self, **options: Any) -> None:
         if self._closing:
