@@ -2823,21 +2823,21 @@ class AutoClient(Client):
     The most common usecase will be case ``1``, which allows an application to connect to a new or existing Conduit
     automatically with little intervention or setup from developers, in this case the following happens:
 
-    - If excactly ``1`` Conduit exists:
-     -- Your application will associate with that conduit and assign transports.
-    - If no Conduit exists:
-     -- Your application will create and associate itself with the new Conduit, assigning transports.
-    - By default the amount of shards will be equal ``len(subscriptions) / max_per_shard`` or ``2`` whichever is greater.
-     -- Most applications will only require ``2`` or ``3`` shards, with the second shard mostly existing as a fallback.
+    * If excactly ``1`` Conduit exists:
+        * Your application will associate with that conduit and assign transports.
+    * If no Conduit exists:
+        * Your application will create and associate itself with the new Conduit, assigning transports.
+    * By default the amount of shards will be equal ``len(subscriptions) / max_per_shard`` or ``2`` whichever is greater.
+        * Most applications will only require ``2`` or ``3`` shards, with the second shard mostly existing as a fallback.
 
     In both scnearios above your application can restart at anytime without re-subscribing, however take note of the
     following requirements.
 
-    - Your application must reconnect within ``72 hours``.
-     -- If ``72 hours`` passes; your application will need to resubscribe to any eventsub subscriptions.
-    - Your application should be the only instance running. For multiple instances see case ``2`` and ``3``.
-    - If you require new subscriptions since the application was restarted, they can be passed to :meth:`.multi_subscribe` in
-    something like :meth:`.setup_hook`.
+    * Your application must reconnect within ``72 hours``.
+        * If ``72 hours`` passes; your application will need to resubscribe to any eventsub subscriptions.
+    * Your application should be the only instance running. For multiple instances see case ``2`` and ``3``.
+    * If you require new subscriptions since the application was restarted, they can be passed to :meth:`.multi_subscribe` in
+      something like :meth:`.setup_hook`.
 
     *An example of case 1:*
 
@@ -2871,11 +2871,10 @@ class AutoClient(Client):
 
     In this case the following happens:
 
-    - Your application will connect to the provided Conduit-ID.
-     -- If the conduit does not exist or could not be found, an error will be raised on start-up.
-     -- Your application will assign the amount of transports equal to the shard count the Conduit returns from Twitch **or**
-     the amount passed to ``shard_count``.
-     -- ``shard_count`` is not a required parameter, however see below for more info.
+    * Your application will connect to the provided Conduit-ID.
+        * If the conduit does not exist or could not be found, an error will be raised on start-up.
+        * Your application will assign the amount of transports equal to the shard count the Conduit returns from Twitch **or** the amount passed to ``shard_count``.
+        * ``shard_count`` is not a required parameter, however see below for more info.
 
     This case allows greater control over which Conduit your application connects to which is mostly only useful if your
     setup includes multiple Conduits and/or multiple instances of :class:`~twitchio.AutoClient` or
