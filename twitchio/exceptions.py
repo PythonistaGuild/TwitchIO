@@ -31,6 +31,7 @@ __all__ = (
     "HTTPException",
     "InvalidTokenException",
     "MessageRejectedError",
+    "MissingConduit",
     "TwitchioException",
     "WebsocketConnectionException",
 )
