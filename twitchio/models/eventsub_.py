@@ -143,6 +143,7 @@ __all__ = (
     "ChatUserMessageHold",
     "ChatUserMessageUpdate",
     "Chatter",
+    "Conduit",
     "CooldownSettings",
     "EventsubSubscription",
     "EventsubSubscriptions",
@@ -5565,6 +5566,7 @@ class EventsubSubscriptions:
 
 
 class WebsocketWelcome:
+    # TODO: Docs...
     def __init__(self, data: WelcomeSession) -> None:
         self.id: str = data["id"]
         self.status: Literal["connected"] = "connected"
@@ -5574,9 +5576,11 @@ class WebsocketWelcome:
 
 
 class Conduit:
+    """Work in progress..."""
+
     # TODO: Docs...
     # TODO: Update; shard count scale down/up
-    # TODO: Delete; Probably need client... Unless twitch has delete eventsub?
+    # TODO: Delete;
     # TODO: Fetch shards
     # TODO: Shard Model?
 

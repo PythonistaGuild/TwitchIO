@@ -143,6 +143,11 @@ class DefaultAuthDict(TypedDict, total=False):
 
 
 class SubscriptionPayload(abc.ABC):
+    """Abstract Base Class which every EventSub subscription inherits from.
+
+    See the individual subscriptions for more details on the specific subscription.
+    """
+
     type: ClassVar[Any]
     version: ClassVar[Any]
 
