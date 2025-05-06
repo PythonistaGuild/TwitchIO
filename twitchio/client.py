@@ -2635,7 +2635,7 @@ class ConduitInfo:
 
     @property
     def websockets(self) -> MappingProxyType[str, Websocket]:
-        """Property returning a mapping of Websocket Session ID to Websocket that are currently active and assigned to the
+        """Property returning a mapping of Websocket Shard-ID to Websocket that are currently active and assigned to the
         underlying :class:`~twitchio.Conduit`.
 
         .. warning::
@@ -2695,10 +2695,39 @@ class ConduitInfo:
             raise ValueError('The provided "shard_count" cannot be greater than 20_000.')
 
         self._conduit = await self._conduit.update(shard_count)
+        assert self.conduit
+        assert self.shard_count
+
         if assign_transports:
-            await self._client._associate_shards()
+            if self.shard_count > len(self.websockets):
+                await self._client._associate_shards()
+            elif self.shard_count < len(self.websockets):
+                remove = len(self.websockets) - self.shard_count
+                await self._disassociate_shards(remove)
 
         return self
+
+    async def _disassociate_shards(self, remove_count: int, /) -> None:
+        sockets = list(self._sockets.values())
+        closed = 0
+
+        for _ in range(remove_count):
+            socket = sockets.pop()
+            self._sockets.pop(str(socket._shard_id), None)
+
+            try:
+                closed += 1
+                await socket.close()
+            except Exception as e:
+                logger.debug("Ignoring exception in close of %r. It is likely a non-issue: %s", socket, e)
+
+        logger.info(
+            "Successfully scaled %r down to %d shards: Removed %d shards. %d shards remain active.",
+            self,
+            self.shard_count,
+            closed,
+            len(self.websockets),
+        )
 
     async def _update_shards(self, shards: list[ShardUpdateRequest]) -> Self:
         # TODO?
@@ -2967,7 +2996,12 @@ class AutoClient(Client):
         assert self._conduit_info.conduit
 
         batched: list[Websocket] = []
-        range_ = range(self._conduit_info.conduit.shard_count - len(self._conduit_info.websockets))
+
+        start = max([int(s) for s in self._conduit_info._sockets] + [0])
+        start = start + 1 if start != 0 else start
+
+        end = start + (self._conduit_info.conduit.shard_count - len(self._conduit_info.websockets))
+        range_ = range(start, end)
 
         for i, n in enumerate(range_):
             if i % 10 == 0 and i != 0:
