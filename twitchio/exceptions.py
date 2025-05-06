@@ -157,5 +157,6 @@ class MessageRejectedError(TwitchioException):
 
 
 class MissingConduit(TwitchioException):
-    # TODO: Docs...
-    ...
+    """Exception raised when :class:`~twitchio.AutoClient` or :class:`~twitchio.ext.commands.AutoBot` attempts to perform
+    an action that requires an associated :class:`twitchio.Conduit` which is missing or not assigned yet.
+    """

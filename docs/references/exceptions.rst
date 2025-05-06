@@ -15,6 +15,9 @@ Exceptions
 .. autoclass:: twitchio.MessageRejectedError()
     :members:
 
+.. autoclass:: twitchio.MissingConduit()
+    :members:
+
 
 Exception Hierarchy
 ~~~~~~~~~~~~~~~~~~~
@@ -25,3 +28,4 @@ Exception Hierarchy
         - :exc:`HTTPException`
             - :exc:`InvalidTokenException`
         - :exc:`MessageRejectedError`
+        - :exc:`MissingConduit`
