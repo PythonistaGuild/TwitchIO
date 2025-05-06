@@ -2799,7 +2799,163 @@ class MultiSubscribePayload:
 
 
 class AutoClient(Client):
-    """Work in progress..."""
+    """The TwitchIO :class:`~twitchio.AutoClient` class used to easily manage Twitch Conduits and Shards.
+
+    This class inherits from :class:`~twitchio.Client` and as such all attributes, properties and methods from
+    :class:`~twitchio.Client` are also available.
+
+    There is a ``commands.ext`` version of this class named :class:`~twitchio.commands.ext.AutoBot` which inherits from
+    :class:`twitchio.ext.commands.Bot` instead of :class:`~twitchio.Client`.
+
+    This or :class:`~twitchio.commands.ext.AutoBot` are the preferred clients of use when your application is either in
+    multiple channels/broadcasters *or* requires subscription continuity.
+
+    Twitch Conduits are a method of EventSub transport which allow higher throughput of events, higher
+    (essentially unlimited) subscription limts (within cost), continutiy of subscriptions and scaling.
+
+    To benefit from the subscription continuity of Conduits, your application is expected to have been connected to the
+    associated Conduit within ``72 hours`` of it going offline.
+
+    This and the :class:`~twitchio.commands.ext.AutoBot` classes make it easier to manage Conduits by implementing logic to
+    aid in connection, shard association and conduit/shard scaling. There are a few common ways they can be setup, with the
+    main ``3`` cases showcased below.
+
+    The most common usecase will be case ``1``, which allows an application to connect to a new or existing Conduit
+    automatically with little intervention or setup from developers, in this case the following happens:
+
+    - If excactly ``1`` Conduit exists:
+     -- Your application will associate with that conduit and assign transports.
+    - If no Conduit exists:
+     -- Your application will create and associate itself with the new Conduit, assigning transports.
+    - By default the amount of shards will be equal ``len(subscriptions) / max_per_shard`` or ``2`` whichever is greater.
+     -- Most applications will only require ``2`` or ``3`` shards, with the second shard mostly existing as a fallback.
+
+    In both scnearios above your application can restart at anytime without re-subscribing, however take note of the
+    following requirements.
+
+    - Your application must reconnect within ``72 hours``.
+     -- If ``72 hours`` passes; your application will need to resubscribe to any eventsub subscriptions.
+    - Your application should be the only instance running. For multiple instances see case ``2`` and ``3``.
+    - If you require new subscriptions since the application was restarted, they can be passed to :meth:`.multi_subscribe` in
+    something like :meth:`.setup_hook`.
+
+    *An example of case 1:*
+
+    .. code:: python3
+
+        class Bot(commands.AutoBot):
+
+            def __init__(self, subs: list[twitchio.SubscriptionPayload], *args, **kwargs) -> None:
+                super().__init__(*args, **kwargs, subscriptions=subs)
+
+            async def event_message(self, payload: twitchio.ChatMessage) -> None:
+                print(f"Received Message: {payload}")
+
+
+        async def main() -> None:
+            # An example list of subscriptions; you could create this list however, e.g. from a database...
+            # Subscribe to 3 channels messages...
+            # If you require additional subscriptions after restart and 72 hours HAS NOT passed; See: multi_subscribe()
+
+            subs = [
+                eventsub.ChatMessageSubscription(broadcaster_user_id=..., user_id=...),
+                eventsub.ChatMessageSubscription(broadcaster_user_id=..., user_id=...),
+                eventsub.ChatMessageSubscription(broadcaster_user_id=..., user_id=...),
+            ]
+
+            async with Bot(subs=subs, client_id=..., client_secret=..., bot_id=...) as bot:
+                await bot.start()
+
+
+    Case 2 is another common scenario which allows developers to connect to a specific Conduit by providing the Conduit-ID.
+
+    In this case the following happens:
+
+    - Your application will connect to the provided Conduit-ID.
+     -- If the conduit does not exist or could not be found, an error will be raised on start-up.
+     -- Your application will assign the amount of transports equal to the shard count the Conduit returns from Twitch **or**
+     the amount passed to ``shard_count``.
+     -- ``shard_count`` is not a required parameter, however see below for more info.
+
+    This case allows greater control over which Conduit your application connects to which is mostly only useful if your
+    setup includes multiple Conduits and/or multiple instances of :class:`~twitchio.AutoClient` or
+    :class:`~twitchio.commands.ext.AutoBot`.
+
+    If the former is true, each instance of :class:`~twitchio.AutoClient` and :class:`~twitchio.commands.ext.AutoBot` should
+    realistically connect to a different conduit each.
+
+    When the latter is true, your application can be setup to effectively distribute shards equally accross instances by
+    connecting to the same Conduit. In this scenario you will also need to pass the ``shard_count`` parameter to each
+    instance, dividing the total amount of shards required by the amount of instances that will run. You will also need to
+    pass ``False`` to the ``update_conduit_shards`` keyword-only parameter, as this will update the underlying Conduit
+    to only have a max of ``shard_count``; which will not be useful when distributing shards.
+
+    As this case is more involved and requires much more attention; e.g. multiple instances need to be started correctly and
+    connections to multiple Conduits need to be properly configured it usually wouldn't be advised for small to medium sized
+    applications, suiting only larger applications that require some scaling outside of a single process.
+
+    A single :class:`twitchio.AutoClient` (hardware permitting) should be able to handle a large amount of subscriptions
+    before needing to be scaled.
+
+    *An example of case 2 (multiple instances on one conduit):*
+
+    In this scenario your conduit should have ``6`` shards associated with it already. You should do this before starting
+    multiple instances. The example below would simply be run twice, assigning ``3`` shards to each instance.
+
+    You can prepare for this scenario by calling :meth:`twitchio.Conduit.update` with ``6`` shards, and keeping note of the
+    Conduit-ID, before starting both processes.
+
+    .. code:: python3
+
+        class Bot(commands.AutoBot):
+
+            def __init__(self, subs: list[twitchio.SubscriptionPayload], *args, **kwargs) -> None:
+                super().__init__(
+                    *args,
+                    **kwargs,
+                    subscriptions=subs,
+                    conduit_id="CONDUIT_1_ID",
+                    shard_count=3,
+                    update_conduit_shards=False,
+                )
+
+            async def event_message(self, payload: twitchio.ChatMessage) -> None:
+                print(f"Received Message: {payload}")
+
+
+        async def main() -> None:
+            # An example list of subscriptions; you could create this list however, e.g. from a database...
+            # Subscribe to 3 channels messages...
+            # If you require additional subscriptions after restart and 72 hours HAS NOT passed; See: multi_subscribe()
+
+            subs = [
+                eventsub.ChatMessageSubscription(broadcaster_user_id=..., user_id=...),
+                eventsub.ChatMessageSubscription(broadcaster_user_id=..., user_id=...),
+                eventsub.ChatMessageSubscription(broadcaster_user_id=..., user_id=...),
+            ]
+
+            async with Bot(subs=subs, client_id=..., client_secret=..., bot_id=...) as bot:
+                await bot.start()
+
+
+    For case 2 when connecting to multiple conduits instead, most of the above documentation applies, however you should
+    make sure to provide a different ``conduit_id`` per instance.
+
+    Case 3 documentation is a work in progress...
+
+    Parameters
+    ----------
+    conduit_id: str | None
+        ...
+    shard_count: int
+        ...
+    max_per_shard: int
+        ...
+    subscriptions: list[twitchio.SubscriptionPayload]
+        ...
+    update_conduit_shards: bool
+        ...
+    """
 
     # NOTE:
     # Automatically listen to conduit.shard.disabled and maintain the state of shards
@@ -2826,8 +2982,8 @@ class AutoClient(Client):
         # Case 2 errors later if len(conduits) >= 5
         # Case 3 errors later if the conduit with the specified ID cannot be found.
 
-        self._conduit_id: str | bool = kwargs.pop("conduit_id", MISSING)
-        if self._conduit_id is MISSING:
+        self._conduit_id: str | bool | None = kwargs.pop("conduit_id", MISSING)
+        if self._conduit_id is MISSING or self._conduit_id is None:
             logger.warning(
                 'No "conduit_id" was passed. If a single conduit exists we will try to take ownership. '
                 'If you want to take ownership of a specific conduit, please pass the "conduit_id" parameter.'
