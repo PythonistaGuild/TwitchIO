@@ -2806,10 +2806,10 @@ class AutoClient(Client):
     This class inherits from :class:`~twitchio.Client` and as such all attributes, properties and methods from
     :class:`~twitchio.Client` are also available.
 
-    There is a ``commands.ext`` version of this class named :class:`~twitchio.commands.ext.AutoBot` which inherits from
+    There is a ``commands.ext`` version of this class named :class:`~twitchio.ext.commands.AutoBot` which inherits from
     :class:`twitchio.ext.commands.Bot` instead of :class:`~twitchio.Client`.
 
-    This or :class:`~twitchio.commands.ext.AutoBot` are the preferred clients of use when your application is either in
+    This or :class:`~twitchio.ext.commands.AutoBot` are the preferred clients of use when your application is either in
     multiple channels/broadcasters *or* requires subscription continuity.
 
     Twitch Conduits are a method of EventSub transport which allow higher throughput of events, higher
@@ -2818,7 +2818,7 @@ class AutoClient(Client):
     To benefit from the subscription continuity of Conduits, your application is expected to have been connected to the
     associated Conduit within ``72 hours`` of it going offline.
 
-    This and the :class:`~twitchio.commands.ext.AutoBot` classes make it easier to manage Conduits by implementing logic to
+    This and the :class:`~twitchio.ext.commands.AutoBot` classes make it easier to manage Conduits by implementing logic to
     aid in connection, shard association and conduit/shard scaling. There are a few common ways they can be setup, with the
     main ``3`` cases showcased below.
 
@@ -2880,9 +2880,9 @@ class AutoClient(Client):
 
     This case allows greater control over which Conduit your application connects to which is mostly only useful if your
     setup includes multiple Conduits and/or multiple instances of :class:`~twitchio.AutoClient` or
-    :class:`~twitchio.commands.ext.AutoBot`.
+    :class:`~twitchio.ext.commands.AutoBot`.
 
-    If the former is true, each instance of :class:`~twitchio.AutoClient` and :class:`~twitchio.commands.ext.AutoBot` should
+    If the former is true, each instance of :class:`~twitchio.AutoClient` and :class:`~twitchio.ext.commands.AutoBot` should
     realistically connect to a different conduit each.
 
     When the latter is true, your application can be setup to effectively distribute shards equally accross instances by
