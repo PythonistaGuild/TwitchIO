@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from twitchio.user import PartialUser
 
     from .components import Component
-    from .types_ import BotOptions
+    from .types_ import AutoBotOptions, BotOptions
 
     PrefixT: TypeAlias = str | Iterable[str] | Callable[["Bot", "ChatMessage"], Coroutine[Any, Any, str | Iterable[str]]]
 
@@ -745,5 +745,28 @@ class Bot(Mixin[None], Client):
 
 
 class AutoBot(Bot, AutoClient):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    """The TwitchIO :class:`~twitchio.ext.commands.AutoBot` class used to easily manage Twitch Conduits and Shards.
+
+    This class beahves idential to :class:`~twitchio.ext.commands.Bot` with the addition of inheriting from
+    :class:`~twitchio.AutoClient`. See: :class:`~twitchio.AutoClient` for more details on how this class differs from
+    the :class:`~twitchio.ext.commands.Bot` which inherits from :class:`~twitchio.Client`.
+    """
+
+    def __init__(
+        self,
+        *,
+        client_id: str,
+        client_secret: str,
+        bot_id: str,
+        owner_id: str | None = None,
+        prefix: PrefixT,
+        **options: Unpack[AutoBotOptions],
+    ) -> None:
+        super().__init__(
+            client_id=client_id,
+            client_secret=client_secret,
+            bot_id=bot_id,
+            owner_id=owner_id,
+            prefix=prefix,
+            **options,
+        )

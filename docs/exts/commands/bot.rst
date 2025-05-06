@@ -9,6 +9,12 @@ Bot
     :members:
     :inherited-members:
 
+.. attributetable:: twitchio.ext.commands.AutoBot
+
+.. autoclass:: twitchio.ext.commands.AutoBot
+    :members:
+    :inherited-members:
+
 
 Mixin
 -----

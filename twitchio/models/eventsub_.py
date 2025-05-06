@@ -5576,10 +5576,21 @@ class WebsocketWelcome:
 
 
 class Conduit:
-    """Work in progress..."""
+    """The :class:`~twitchio.Conduit` model which is returned from various API endpoints relating to Conduits on Twitch.
+
+    This class can be used to manage the underlying Conduit, however for a more intuitive approach see:
+    :class:`~twitchio.AutoClient` or :class:`~twitchio.ext.commands.AutoBot` which wraps this class and provides a
+    :class:`~twitchio.ConduitInfo` class instead.
+
+    Parameters
+    ----------
+    raw: dict[Any, Any]
+        The raw response from Twitch which was used to create this class.
+    shard_count: int
+        The amount of shards assigned to this conduit.
+    """
 
     # TODO: Docs...
-    # TODO: Update; shard count scale down/up
     # TODO: Delete;
     # TODO: Fetch shards
     # TODO: Shard Model?
@@ -5604,12 +5615,26 @@ class Conduit:
 
     @property
     def id(self) -> str:
+        """Property returning the Conduit ID as a :class:`str`."""
         return self._id
 
     async def delete(self) -> ...: ...
 
     async def update(self, shard_count: int, /) -> Conduit:
-        # TODO: Docs
+        """|coro|
+
+        Method which updates the underlying Conduit on the Twitch API with the provided ``shard_count``.
+
+        Parameters
+        ----------
+        shard_count: int
+            The new amount of shards the Conduit should be assigned. Should be between ``1`` and ``20_000``.
+
+        Returns
+        -------
+        :class:`~twitchio.Conduit`
+            The updated :class:`~twitchio.Conduit`.
+        """
         payload = await self._http.update_conduits(self.id, shard_count=shard_count)
         return Conduit(payload["data"][0], http=self._http)
 
