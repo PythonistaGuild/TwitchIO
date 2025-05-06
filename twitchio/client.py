@@ -67,11 +67,14 @@ if TYPE_CHECKING:
     from .models.videos import Video
     from .types_.conduits import ShardUpdateRequest
     from .types_.eventsub import SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
-    from .types_.options import ClientOptions, WaitPredicateT
+    from .types_.options import AutoClientOptions, ClientOptions, WaitPredicateT
     from .types_.tokens import TokenMappingData
 
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+__all__ = ("AutoClient", "Client", "ConduitInfo", "MultiSubscribeError", "MultiSubscribePayload", "MultiSubscribeSuccess")
 
 
 class Client:
@@ -2133,7 +2136,7 @@ class Client:
 
         Parameters
         ----------
-        payload: :class:`twitchio.SubscriptionPayload`
+        payload: :class:`twitchio.eventsub.SubscriptionPayload`
             The payload which should include the required conditions to subscribe to.
         as_bot: bool
             Whether to subscribe to this event using the user token associated with the provided
@@ -2271,7 +2274,7 @@ class Client:
 
         Parameters
         ----------
-        payload: :class:`~twitchio.SubscriptionPayload`
+        payload: :class:`~twitchio.eventsub.SubscriptionPayload`
             The payload which should include the required conditions to subscribe to.
         callback_url: str | None
             An optional url to use as the webhook `callback_url` for this subscription. If you are using one of the built-in
@@ -2585,7 +2588,21 @@ class Client:
 
 
 class ConduitInfo:
-    def __init__(self) -> None:
+    """A special class wrapping :class:`~twitchio.Conduit` assigned only to :class:`~twitchio.AutoClient` and
+    :class:`~twitchio.ext.commands.AutoBot`.
+
+    This class serves as an abstraction layer to managing the :class:`~twitchio.Conduit` assigned to
+    :class:`~twitchio.AutoClient` or :class:`~twitchio.ext.commands.AutoBot` and contains various information and helper
+    methods.
+
+    .. warning::
+
+        The should not need to create this class yourself. Instead you can access it via
+        :attr:`~twitchio.AutoClient.conduit_info`.
+    """
+
+    def __init__(self, client: AutoClient) -> None:
+        self._client = client
         self._conduit: Conduit | None = None
         self._sockets: dict[str, Websocket] = {}
 
@@ -2594,28 +2611,97 @@ class ConduitInfo:
 
     @property
     def conduit(self) -> Conduit | None:
+        """A property returning the :class:`~twitchio.Conduit` that the :class:`~twitchio.AutoClient` currently has
+        ownership of. Could be ``None`` if a conduit has not yet been assigned, however this is usually done automatically
+        during the startup stages of the :class:`~twitchio.AutoClient`.
+        """
         return self._conduit
 
     @property
     def shard_count(self) -> int | None:
+        """Property returning the amount of shards the :class:`~twitchio.AutoClient` currently contains as an ``int``.
+        Could be ``None`` if a conduit has not yet been assigned, however this is usually done automatically during the
+        startup stages of the :class:`~twitchio.AutoClient`.
+        """
         return self._conduit.shard_count if self._conduit else None
 
     @property
     def id(self) -> str | None:
+        """Property returning the ID of the :class:`~twitchio.Conduit` that the :class:`~twitchio.AutoClient` currently has
+        ownership of. Could be ``None`` if a conduit has not yet been assigned, however this is usually done automatically
+        during the startup stages of the :class:`~twitchio.AutoClient`.
+        """
         return self._conduit.id if self._conduit else None
 
     @property
     def websockets(self) -> MappingProxyType[str, Websocket]:
+        """Property returning a mapping of Websocket Session ID to Websocket that are currently active and assigned to the
+        underlying :class:`~twitchio.Conduit`.
+
+        .. warning::
+
+            This property exists only for those requiring lower level access over the underlying websocket(s); however
+            ideally the websocket(s) should not be altered or interfered with. The mapping and property itself cannot be
+            altered.
+        """
         return MappingProxyType(self._sockets)
 
-    async def update_shard_count(self, shard_count: int, /) -> Self:
+    async def update_shard_count(self, shard_count: int, /, *, assign_transports: bool = True) -> Self:
+        """|coro|
+
+        Method wrapping :meth:`twitchio.Conduit.update` which updates the number of shards assigned to the
+        :class:`~twitchio.Conduit`. This method can be used to scale the :class:`~twitchio.Conduit` up (more shards) or down
+        with less shards.
+
+        .. warning::
+
+            Caution should be used when scaling multi-process solutions that connect to the same Conduit. In this particular
+            case it is more likely appropriate to close down and restart each instance and adjust the "shard_count" parameter
+            on :class:`~twitchio.AutoClient` accordingly. However this method can be called with the "assign_transports"
+            parameter set to ``False`` first to allow each instance to easily adjust when restarted.
+
+        Parameters
+        ----------
+        shard_count: :class:`int`
+            A positional-only :class:`int` which is the new amount of shards the :class:`~twitchio.Conduit` should contain.
+            The amount of shards should be between ``1`` and ``20_000``.
+        assign_transports: :class:`bool`
+            A keyword-only :class:`bool` set which determines whether new websockets should be created and assigned to the
+            Conduit. This should be set to ``False`` in multi-instance/process setups that require the
+            :class:`~twitchio.AutoClient`'s to be restarted to rebalance shards accordingly. Defaults to ``True`` which is
+            the best case for single instance :class:`~twitchio.AutoClient`'s.
+
+        Raises
+        ------
+        MissingConduit
+            No :class:`~twitchio.Conduit` has been assigned to the :class:`~twitchio.AutoClient`.
+        ValueError
+            The ``shard_count`` parameter cannot be lower than ``1`` and no higher than ``20_000``.
+        HTTPException
+            A an error occurred making the request to Twitch.
+
+        Returns
+        -------
+        ConduitInfo
+            Returns the updated :class:`ConduitInfo` and allows for chaining methods and attributes.
+        """
         if not self._conduit:
             raise MissingConduit("Cannot update Conduit Shard Count as no Conduit has been assigned.")
 
+        if shard_count <= 0:
+            raise ValueError('The provided "shard_count" must not be lower than 1.')
+
+        elif shard_count > 20_000:
+            raise ValueError('The provided "shard_count" cannot be greater than 20_000.')
+
         self._conduit = await self._conduit.update(shard_count)
+        if assign_transports:
+            await self._client._associate_shards()
+
         return self
 
-    async def update_shards(self, shards: list[ShardUpdateRequest]) -> Self:
+    async def _update_shards(self, shards: list[ShardUpdateRequest]) -> Self:
+        # TODO?
         if not self._conduit:
             raise MissingConduit("Cannot update Conduit Shards as no Conduit has been assigned.")
 
@@ -2624,16 +2710,58 @@ class ConduitInfo:
 
 
 class MultiSubscribeError(NamedTuple):
+    """A special :class:`typing.NamedTuple` containing two fields available in the :class:`~twitchio.MultiSubscribePayload`,
+    when a subscription to a Conduit is attempted via :meth:`~twitchio.AutoClient.multi_subscribe` and fails.
+
+    Attributes
+    ----------
+    subscription: :class:`twitchio.eventsub.SubscriptionPayload`
+        The subscription payload passed to :meth:`~twitchio.AutoClient.multi_subscribe` which failed.
+    error: :exc:`~twitchio.HTTPException`
+        The :exc:`~twitchio.HTTPException` containing various information, caught while attempting to subscribe to this
+        subscription.
+    """
+
     subscription: SubscriptionPayload
     error: HTTPException
 
 
 class MultiSubscribeSuccess(NamedTuple):
+    """A special :class:`typing.NamedTuple` containing two fields available in the :class:`~twitchio.MultiSubscribePayload`,
+    when a subscription to a Conduit is made successfully via :meth:`~twitchio.AutoClient.multi_subscribe`.
+
+    Attributes
+    ----------
+    subscription: :class:`twitchio.eventsub.SubscriptionPayload`
+        The subscription payload passed to :meth:`~twitchio.AutoClient.multi_subscribe` which was successfully subscribed to.
+    response: dict[str, Any]
+        The response data from the subscription received from Twitch.
+    """
+
     subscription: SubscriptionPayload
     response: SubscriptionResponse
 
 
 class MultiSubscribePayload:
+    """Payload received from the :meth:`~twitchio.AutoClient.multi_subscribe` method.
+
+    This payload contains a list of :class:`~twitchio.MultiSubscribeSuccess` which are the successful subscriptions
+    and another list of :class:`~twitchio.MultiSubscribeError` which are any subscriptions that failed.
+
+    This payload is only returned when the parameters ``wait`` is set to ``True`` and ``stop_on_error`` is ``False`` in
+    :meth:`~twitchio.AutoClient.multi_subscribe`.
+
+    If the ``wait`` parameter in :meth:`~twitchio.AutoClient.multi_subscribe` is set to ``False``, you can await the returned
+    :class:`asyncio.Task` later to retrieve this payload.
+
+    Attributes
+    ----------
+    success: list[:class:`~twitchio.MultiSubscribeSuccess`]
+        A list of :class:`~twitchio.MultiSubscribeSuccess` containing information about the successful subscriptions.
+    errors: list[:class:`~twitchio.MultiSubscribeError`]
+        A list of :class:`~twitchio.MultiSubscribeError` containing information about unsuccessful subscriptions.
+    """
+
     __slots__ = ("errors", "success")
 
     def __init__(self, success: list[MultiSubscribeSuccess], errors: list[MultiSubscribeError]) -> None:
@@ -2642,16 +2770,25 @@ class MultiSubscribePayload:
 
 
 class AutoClient(Client):
+    """Work in progress..."""
+
     # NOTE:
     # Automatically listen to conduit.shard.disabled and maintain the state of shards
-    # TODO: Type Annotations...
+    # TODO: Type Annotations...!!!
     # TODO: swap_on_failure? reduce_on_failure?
     # TODO: event_autobot?_subscribe_error
     # TODO: event_autobot?_conduit_create
     # TODO: event_shard_disabled/revoked?
     # TODO: Periodic background check on shard-state
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *,
+        client_id: str,
+        client_secret: str,
+        bot_id: str | None = None,
+        **kwargs: Unpack[AutoClientOptions],
+    ) -> None:
         # Essentially a tri-bool:
         # 1.) When not passed we assume; User has 1 Conduit Only and they want to take ownership
         # 2.) When explicitly passed True; User wants to create and take ownership of a new conduit
@@ -2679,11 +2816,18 @@ class AutoClient(Client):
         self._shard_count = kwargs.pop("shard_count", None)
         self._max_per_shard = kwargs.pop("max_per_shard", 1000)
         self._initial_subs: list[SubscriptionPayload] = kwargs.pop("subscriptions", [])
+        self._update_conduit_shards: bool = kwargs.pop("update_conduit_shards", True)
 
-        if self._max_per_shard < 1000:
+        if self._max_per_shard < 1000 and self._shard_count is not None:
             logger.warning('It is recommended that the "max_per_shard" parameter should not be set below 1000.')
 
-        if not self._shard_count:
+        if self._shard_count is not None:
+            if self._shard_count <= 0:
+                raise ValueError('"shard_count" cannot be lower than "1".')
+            if self._shard_count >= 20_000:
+                raise ValueError('"shard_count" has a maximum value of "20_000".')
+
+        if self._shard_count is None:
             logger.warning(
                 (
                     'The "shard_count" parameter for %r was not provided. '
@@ -2697,12 +2841,12 @@ class AutoClient(Client):
             # Defaults to 2 shards if no subscriptions are passed...
             total_subs = len(self._initial_subs)
             self._shard_count = clamp(math.ceil(total_subs / self._max_per_shard) + 1, 2, 20_000)
-            self._conduit_info: ConduitInfo = ConduitInfo()
+            self._conduit_info: ConduitInfo = ConduitInfo(self)
 
             # So we don't mess around in the event if we are closing everying...
             self._closing: bool = False
 
-        super().__init__(*args, **kwargs)
+        super().__init__(client_id=client_id, client_secret=client_secret, bot_id=bot_id, **kwargs)
 
     def __repr__(self) -> str:
         return self.__class__.__name__
@@ -2740,18 +2884,21 @@ class AutoClient(Client):
                 if conduit.id == self._conduit_id:
                     logger.info('Conduit with the provided ID: "%s" found. Attempting to take ownership.', self._conduit_id)
                     self._conduit_info._conduit = conduit
+                    self._shard_count = self._conduit_info.shard_count
 
         if not self._conduit_info.conduit:
             # TODO: Maybe log currernt conduit info?
-            raise RuntimeError("No conduit could be found with the provided ID or a new one can not be created.")
+            raise MissingConduit("No conduit could be found with the provided ID or a new one can not be created.")
 
-        if self._conduit_info.conduit.shard_count != self._shard_count:
+        if self._conduit_info.conduit.shard_count != self._shard_count and self._update_conduit_shards:
             logger.info(
                 '%r "shard_count" differs to provided "shard_count". Attempting to update the Conduit to %d shards.',
                 self._conduit_info,
                 self._shard_count,
             )
-            await self._conduit_info.update_shard_count(self._shard_count)
+
+            assert self._shard_count is not None
+            await self._conduit_info.update_shard_count(self._shard_count, assign_transports=False)
 
         await self._associate_shards()
         await self.setup_hook()
@@ -2811,7 +2958,7 @@ class AutoClient(Client):
             }
             payloads.append(payload)
 
-        await self._conduit_info.update_shards(payloads)
+        await self._conduit_info._update_shards(payloads)
         self._conduit_info._sockets.update({str(socket._shard_id): socket for socket in batched})
 
         logger.info("Associated shards with %r successfully.", self._conduit_info)
@@ -2820,7 +2967,9 @@ class AutoClient(Client):
         assert self._conduit_info.conduit
 
         batched: list[Websocket] = []
-        for i, n in enumerate(range(self._conduit_info.conduit.shard_count)):
+        range_ = range(self._conduit_info.conduit.shard_count - len(self._conduit_info.websockets))
+
+        for i, n in enumerate(range_):
             if i % 10 == 0 and i != 0:
                 await self._process_batched(batched)
                 batched.clear()
@@ -2832,6 +2981,8 @@ class AutoClient(Client):
             await self._process_batched(batched)
 
     async def _generate_new_conduit(self) -> Conduit:
+        assert self._shard_count
+
         try:
             new = await self.create_conduit(self._shard_count)
         except HTTPException as e:
@@ -2858,6 +3009,9 @@ class AutoClient(Client):
 
     @property
     def conduit_info(self) -> ConduitInfo:
+        """Property returning the :class:`~twitchio.ConduitInfo` associated with the :class:`~twitchio.AutoClient` or
+        :class:`~twitchio.ext.commands.AutoBot`.
+        """
         return self._conduit_info
 
     async def _multi_sub(self, subscriptions: list[SubscriptionPayload], *, stop_on_error: bool) -> MultiSubscribePayload:
@@ -2900,7 +3054,7 @@ class AutoClient(Client):
     async def multi_subscribe(
         self, subscriptions: list[SubscriptionPayload], *, wait: bool = True, stop_on_error: bool = False
     ) -> MultiSubscribePayload | asyncio.Task[MultiSubscribePayload]:
-        """|async|
+        """|coro|
 
         This method attempts to subscribe to the provided list of EventSub subscriptions on the Conduit associated with
         the :class:`twitchio.AutoClient`.
@@ -2933,7 +3087,7 @@ class AutoClient(Client):
         Parameters
         ----------
         subscriptions: list[SubscriptionPayload]
-            A list of :class:`~twitchio.SubscriptionPayload` to attempt subscribing to on the associated Conduit.
+            A list of :class:`~twitchio.eventsub.SubscriptionPayload` to attempt subscribing to on the associated Conduit.
         wait: bool
             Whetheer to treat this method like a standard awaited coroutine or create and return a :class:`asyncio.Task`
             instead. Defaults to ``True`` which treats the method as a standard coroutine.
