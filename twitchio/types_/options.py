@@ -32,10 +32,11 @@ if TYPE_CHECKING:
     import aiohttp
 
     from ..authentication import Scopes
+    from ..eventsub.subscriptions import SubscriptionPayload
     from ..web.utils import BaseAdapter
 
 
-__all__ = ("ClientOptions", "WaitPredicateT")
+__all__ = ("AutoClientOptions", "ClientOptions", "WaitPredicateT")
 
 
 class ClientOptions(TypedDict, total=False):
@@ -44,6 +45,14 @@ class ClientOptions(TypedDict, total=False):
     session: aiohttp.ClientSession | None
     adapter: NotRequired[BaseAdapter]
     fetch_client_user: NotRequired[bool]
+
+
+class AutoClientOptions(ClientOptions, total=False):
+    conduit_id: str
+    shard_count: int | None
+    max_per_shard: int
+    subscriptions: list[SubscriptionPayload]
+    update_conduit_shards: bool
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]
