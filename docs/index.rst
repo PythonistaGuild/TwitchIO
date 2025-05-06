@@ -68,6 +68,7 @@ References
    :caption: API References
 
    references/client
+   references/conduits/index
    references/events/index
    references/users/index
    references/eventsub_subscriptions

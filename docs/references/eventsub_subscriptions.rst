@@ -4,6 +4,8 @@
 Eventsub Subscriptions
 #######################
 
+.. autoclass:: SubscriptionPayload()
+
 .. attributetable:: AutomodMessageHoldSubscription
 
 .. autoclass:: AutomodMessageHoldSubscription
