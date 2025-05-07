@@ -2804,7 +2804,7 @@ class AutoClient(Client):
     There is a ``commands.ext`` version of this class named :class:`~twitchio.ext.commands.AutoBot` which inherits from
     :class:`twitchio.ext.commands.Bot` instead of :class:`~twitchio.Client`.
 
-    This class inherits from :class:`~twitchio.Client` and as such all attributes, properties and methods from
+    This class inherits from :class:`~twitchio.Client` and as such most attributes, properties and methods from
     :class:`~twitchio.Client` are also available.
 
     This or :class:`~twitchio.ext.commands.AutoBot` are the preferred clients of use when your application is either in
@@ -3332,13 +3332,33 @@ class AutoClient(Client):
         await super().close(**options)
 
     async def delete_websocket_subscription(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        .. important::
+
+            AutoClient does not implement this method.
+        """
         raise NotImplementedError("AutoClient does not implement this method.")
 
     def websocket_subscriptions(self) -> Any:
+        """
+        .. important::
+
+            AutoClient does not implement this method.
+        """
         raise NotImplementedError("AutoClient does not implement this method.")
 
     async def subscribe_websocket(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        .. important::
+
+            AutoClient does not implement this method.
+        """
         raise NotImplementedError("AutoClient does not implement this method.")
 
     async def subscribe_webhook(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        .. important::
+
+            AutoClient does not implement this method.
+        """
         raise NotImplementedError("AutoClient does not implement this method.")
