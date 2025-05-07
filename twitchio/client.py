@@ -3330,3 +3330,15 @@ class AutoClient(Client):
 
         self._conduit_info._sockets.clear()
         await super().close(**options)
+
+    async def delete_websocket_subscription(self, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError("AutoClient does not implement this method.")
+
+    def websocket_subscriptions(self) -> Any:
+        raise NotImplementedError("AutoClient does not implement this method.")
+
+    async def subscribe_websocket(self, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError("AutoClient does not implement this method.")
+
+    async def subscribe_webhook(self, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError("AutoClient does not implement this method.")
