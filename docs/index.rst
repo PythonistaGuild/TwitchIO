@@ -28,9 +28,10 @@ and manage applications on twitch. TwitchIO is inspired by `discord.py <https://
 - Modern ``async`` Python using ``asyncio``
 - Fully annotated and complies with the ``pyright`` strict type-checker
 - Intuitive with ease of use, using modern object orientated design
-- Feature full including extensions for ``chat bots``, running ``routine tasks`` and ``playing sounds`` on stream (Conduits support soon...)
+- Conduit support for scaling and EventSub continuity
+- Feature full including extensions for ``chat bots``, running ``routine tasks`` and ``playing sounds`` on stream
 - Easily manage ``OAuth Tokens`` and data
-- Built-in ``EventSub`` support via both ``Webhook`` and ``Websockets``
+- Built-in ``EventSub`` support via ``Webhook``, ``Websockets`` and :ref:`Conduits<Conduit Ref>`.
 
 
 Help and support
