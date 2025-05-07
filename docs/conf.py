@@ -53,7 +53,7 @@ extensions = [
     "sphinxcontrib_trio",
     "sphinx_wagtail_theme",
     "sig_prefix",
-    "exc_hierarchy"
+    "exc_hierarchy",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -88,7 +88,7 @@ html_theme_options = dict(
             "Documentation|https://twitchio.dev",
         ]
     ),
-    header_links = "Guides|/guides/index.html, Examples|https://github.com/PythonistaGuild/TwitchIO/tree/main/examples, Commands|/exts/commands/index.html, Routines|/exts/routines/index.html",
+    header_links="Guides|/guides/index.html, Examples|https://github.com/PythonistaGuild/TwitchIO/tree/main/examples, Commands|/exts/commands/index.html, Routines|/exts/routines/index.html",
 )
 
 copyright = "2017 - Present, PythonistaGuild"
@@ -137,7 +137,7 @@ intersphinx_mapping = {
 
 extlinks = {
     "tioissue": ("https://github.com/PythonistaGuild/Twitchio/issues/%s", "GH-%s"),
-    "es-docs": ("https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#%s", "Twitch Eventsub %s")
+    "es-docs": ("https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#%s", "Twitch Eventsub %s"),
 }
 
 

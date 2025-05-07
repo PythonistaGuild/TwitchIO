@@ -139,7 +139,7 @@ class AiterPyM(PyMethod):
 
     def get_signature_prefix(self, sig: str) -> list[nodes.Node]:
         cname, name = self.parse_name_(sig)
-        
+
         if "aiter" in self.options:
             node = aiter()
             node["python-name"] = name

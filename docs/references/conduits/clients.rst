@@ -1,7 +1,7 @@
 .. currentmodule:: twitchio
 
-Clients
-#######
+AutoClient
+##########
 
 .. attributetable:: twitchio.AutoClient()
     
