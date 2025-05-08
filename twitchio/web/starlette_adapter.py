@@ -176,7 +176,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         self._closing: bool = False
 
     def __repr__(self) -> str:
-        return f"StarletteAdapter(host={self._host}, port={self._port})"
+        return f'{self.__class__.__name__}(host="{self._host}", port={self._port})'
 
     @property
     def eventsub_url(self) -> str:
@@ -189,7 +189,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         return f"{self._domain}/oauth/callback"
 
     async def event_startup(self) -> None:
-        logger.info("Starting TwitchIO StarletteAdapter on http://%s:%s.", self._host, self._port)
+        logger.info("Starting %r on http://%s:%s.", self, self._host, self._port)
 
     async def event_shutdown(self) -> None:
         await self.close()

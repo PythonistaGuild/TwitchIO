@@ -417,7 +417,7 @@ class Websocket:
 
     async def _process_keepalive(self) -> None:
         assert self._last_keepalive
-        logger.debug('Started keep_alive task on : "%s"', self._log_name, self)
+        logger.debug('Started keep_alive task on %s: "%s"', self._log_name, self)
 
         while True:
             await asyncio.sleep(self._keep_alive_timeout)

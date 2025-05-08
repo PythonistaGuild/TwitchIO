@@ -180,6 +180,9 @@ class AiohttpAdapter(BaseAdapter, web.Application):
     def __init_subclass__(cls: type[AiohttpAdapter]) -> None:
         return
 
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}(host="{self._host}", port={self._port})'
+
     @property
     def eventsub_url(self) -> str:
         """Property returning the fully qualified URL to the EventSub callback."""
@@ -191,7 +194,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         return f"{self._domain}/oauth/callback"
 
     async def event_startup(self) -> None:
-        logger.info("Starting TwitchIO AiohttpAdapter on http://%s:%s.", self._host, self._port)
+        logger.info("Starting %r on http://%s:%s.", self, self._host, self._port)
 
     async def event_shutdown(self) -> None:
         logger.info("Successfully shutdown TwitchIO <%s>.", self.__class__.__qualname__)
