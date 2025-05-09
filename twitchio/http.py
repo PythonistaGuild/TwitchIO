@@ -46,7 +46,7 @@ from .models.charity import CharityDonation
 from .models.chat import Chatters, UserEmote
 from .models.clips import Clip
 from .models.entitlements import Entitlement
-from .models.eventsub_ import EventsubSubscription, EventsubSubscriptions
+from .models.eventsub_ import ConduitShard, EventsubSubscription, EventsubSubscriptions
 from .models.games import Game
 from .models.hype_train import HypeTrainEvent
 from .models.moderation import BannedUser, BlockedTerm, UnbanRequest
@@ -70,7 +70,7 @@ if TYPE_CHECKING:
     from .eventsub.enums import SubscriptionType
     from .models.channel_points import CustomReward
     from .models.moderation import AutomodCheckMessage, AutomodSettings
-    from .types_.conduits import Condition, ShardUpdateRequest
+    from .types_.conduits import Condition, ShardData, ShardUpdateRequest
     from .types_.eventsub import (
         SubscriptionCreateRequest,
         SubscriptionCreateTransport,
@@ -1344,6 +1344,12 @@ class HTTPClient:
 
     ### Conduits ###
 
+    async def delete_conduit(self, conduit_id: str, /) -> None:
+        params = {"conduit_id": conduit_id}
+
+        route = Route("DELETE", "eventsub/conduits", params=params)
+        await self.request(route)
+
     async def update_conduit_shards(self, conduit_id: str, /, *, shards: list[ShardUpdateRequest]) -> ...:
         params = {"conduit_id": conduit_id}
         body = {"shards": shards}
@@ -1361,18 +1367,18 @@ class HTTPClient:
         route = Route("GET", "eventsub/conduits")
         return await self.request_json(route)
 
-    # def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[Shard]:
-    #     params = {"conduit_id": conduit_id}
-    #     if status:
-    #         params["status"] = status
+    def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[ConduitShard]:
+        params = {"conduit_id": conduit_id}
+        if status:
+            params["status"] = status
 
-    #     def converter(data: ShardData, *, raw: Any) -> Shard:
-    #         return Shard(data=data)
+        def converter(data: ShardData, *, raw: Any) -> ConduitShard:
+            return ConduitShard(data=data)
 
-    #     route: Route = Route("GET", "eventsub/conduits/shards", params=params)
-    #     iterator = self.request_paginated(route, converter=converter)
+        route: Route = Route("GET", "eventsub/conduits/shards", params=params)
+        iterator = self.request_paginated(route, converter=converter)
 
-    #     return iterator
+        return iterator
 
     async def update_conduits(self, id: str, /, shard_count: int) -> ConduitPayload:
         params = {"id": id, "shard_count": shard_count}
