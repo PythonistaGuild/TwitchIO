@@ -5623,7 +5623,7 @@ class Conduit:
     +-------------+-------------------------------------------+-----------------------------------------------+
     | __repr__    | ``repr(conduit)``, ``f"{conduit!r}"``     | Return the official represntation.            |
     +-------------+-------------------------------------------+-----------------------------------------------+
-    | __eq__      | conduit == other, conduit != other        | Compare equality of two conduits.             |
+    | __eq__      | ``conduit == other``, ``conduit != other``| Compare equality of two conduits.             |
     +-------------+-------------------------------------------+-----------------------------------------------+
 
     Parameters
