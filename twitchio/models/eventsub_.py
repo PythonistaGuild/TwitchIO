@@ -5792,7 +5792,7 @@ class Conduit:
 
         Returns
         -------
-        :class:`~twitchio.HTTPAsyncIterator`[:class:`~twitchio.ConduitShard`]
+        HTTPAsyncIterator[:class:`~twitchio.ConduitShard`]
             An :class:`~twitchio.HTTPAsyncIterator` which can be awaited or used with ``async for`` to retrieve the
             :class:`~twitchio.ConduitShard`'s.
 
