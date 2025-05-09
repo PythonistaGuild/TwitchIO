@@ -2570,19 +2570,66 @@ class Client:
         await self.add_token(payload["access_token"], payload["refresh_token"])
 
     async def fetch_conduit(self, conduit_id: str) -> Conduit | None:
-        # TODO: Docs...
+        """|coro|
+
+        Method which retrieves a :class:`~twitchio.Conduit` from the API, with the provided ID.
+
+        Parameters
+        ----------
+        conduit_id: str
+            The ID of the Conduit to retrieve.
+
+        Returns
+        -------
+        Conduit
+            The :class:`~twitchio.Conduit` with the associated ID, if found.
+        None
+            If the :class:`~twitchio.Conduit` cannnot be found ``None`` is returned.
+        """
         payload = await self._http.get_conduits()
         for data in payload["data"]:
             if data["id"] == conduit_id:
                 return Conduit(data, http=self._http)
 
     async def fetch_conduits(self) -> list[Conduit]:
-        # TODO: Docs...
+        """|coro|
+
+        Method to retrieve all :class:`~twitchio.Conduit`'s associated with this Client-ID.
+
+        Returns
+        -------
+        list[:class:`~twitchio.Conduit`]
+            The list of :class:`~twitchio.Conduit` associated with this application.
+        """
         payload = await self._http.get_conduits()
         return [Conduit(d, http=self._http) for d in payload["data"]]
 
     async def create_conduit(self, shard_count: int) -> Conduit:
-        # TODO: Docs...
+        """|coro|
+
+        Method to create a :class:`~twitchio.Conduit` on the API.
+
+        Parameters
+        ----------
+        shard_count: int
+            The amount of shards to assign to the Conduit. Must be between ``1`` and ``20_000``.
+
+        Raises
+        ------
+        ValueError
+            ``shard_count`` must be between ``1`` and ``20_000``.
+
+        Returns
+        -------
+        Conduit
+            The newly created :class:`~twitchio.Conduit`.
+        """
+        if shard_count <= 0:
+            raise ValueError('The provided "shard_count" must not be lower than 1.')
+
+        elif shard_count > 20_000:
+            raise ValueError('The provided "shard_count" cannot be greater than 20_000.')
+
         payload = await self._http.create_conduit(shard_count)
         return Conduit(payload["data"][0], http=self._http)
 
