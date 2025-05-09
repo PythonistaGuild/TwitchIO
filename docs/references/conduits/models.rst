@@ -14,6 +14,11 @@ Models
 .. autoclass:: twitchio.Conduit()
     :members:
 
+.. attributetable:: twitchio.ConduitShard()
+
+.. autoclass:: twitchio.ConduitShard()
+    :members:
+
 .. attributetable:: twitchio.MultiSubscribePayload()
 
 .. autoclass:: twitchio.MultiSubscribePayload()

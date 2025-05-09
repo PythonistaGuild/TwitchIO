@@ -145,6 +145,7 @@ __all__ = (
     "ChatUserMessageUpdate",
     "Chatter",
     "Conduit",
+    "ConduitShard",
     "CooldownSettings",
     "EventsubSubscription",
     "EventsubSubscriptions",
