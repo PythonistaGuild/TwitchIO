@@ -1368,7 +1368,7 @@ class HTTPClient:
         return await self.request_json(route)
 
     def get_conduit_shards(self, conduit_id: str, /, *, status: str | None = None) -> HTTPAsyncIterator[ConduitShard]:
-        params = {"conduit_id": conduit_id}
+        params = {"conduit_id": conduit_id, "first": 100}
         if status:
             params["status"] = status
 
