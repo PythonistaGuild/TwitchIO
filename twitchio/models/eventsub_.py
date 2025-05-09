@@ -5577,12 +5577,31 @@ class WebsocketWelcome:
 
 
 class ConduitShard:
-    # TODO: Docs...
+    """ConduitInfo model containing various information about a Shard on a :class:`~twitchio.Conduit`.
+
+    Attributes
+    ----------
+    raw: dict[str, Any]
+        The raw data retrieved from Twitch.
+    id: str
+        The ID of the shard. Will be a nummeric :class:`str` between ``0`` and ``19_999``.
+    method: str
+        A str literal of either ``websocket`` or ``webhook``, indicating what transport this shard uses.
+    session_id: str | None
+        If ``method == websocket``, this will be the ``session_id`` of the websocket. Could be ``None`` if the shard is not
+        connected or ``method == webhook``.
+    connected_at: :class:`datetime.datetime` | None
+        A :class:`datetime.datetime` of when the shard was connected in UTC. Only availabe when ``method == websocket``.
+    disconnected_at: :class:`datetime.datetime` | None
+        A :class:`datetime.datetime` of when the shard was lost connection in UTC. Only availabe when ``method == websocket``.
+    callback: str | None
+        The URL that notifications for the shard are sent via Webhooks. Only availabe when ``method == webhook``.
+    """
 
     def __init__(self, data: ShardData) -> None:
         self.raw: ShardData = data
         self.id = data["id"]
-        self._status = data["status"]
+        self._status: ShardStatus = data["status"]
 
         transport = data["transport"]
         self.method: str = transport["method"]
@@ -5599,11 +5618,41 @@ class ConduitShard:
         self.callback: str | None = transport.get("callback")
 
     @property
-    def status(self) -> str:
+    def status(self) -> ShardStatus:
+        """Property returning the status of the shard.
+
+        The possible statuses are provided below.
+
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | status                                    | Description                                                                                                       |
+        +===========================================+===================================================================================================================+
+        | ``enabled``                               | The shard is enabled.                                                                                             |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``webhook_callback_verification_pending`` | The shard is pending verification of the specified callback URL.                                                  |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``webhook_callback_verification_failed `` | The specified callback URL failed verification.                                                                   |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``notification_failures_exceeded``        | The notification delivery failure rate was too high.                                                              |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_disconnected``                | The client closed the connection.                                                                                 |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_failed_ping_pong``            | The client failed to respond to a ping message.                                                                   |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_received_inbound_traffic``    | The client sent a non-pong message. Clients may only send pong messages (and only in response to a ping message). |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_internal_error``              | The Twitch WebSocket server experienced an unexpected error.                                                      |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_network_timeout``             | The Twitch WebSocket server timed out writing the message to the client.                                          |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_network_error``               | The Twitch WebSocket server experienced a network error writing the message to the client.                        |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_failed_to_reconnect``         | The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message. |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        """
         return self._status
 
     def __repr__(self) -> str:
-        return f'ConduitShard(id={self.id}, method="{self.method}")'
+        return f'ConduitShard(id={self.id}, method="{self.method}", status="{self._status}")'
 
 
 class Conduit:
@@ -5626,15 +5675,13 @@ class Conduit:
     | __eq__      | ``conduit == other``, ``conduit != other``| Compare equality of two conduits.             |
     +-------------+-------------------------------------------+-----------------------------------------------+
 
-    Parameters
+    Attributes
     ----------
     raw: dict[Any, Any]
         The raw response from Twitch which was used to create this class.
     shard_count: int
         The amount of shards assigned to this conduit.
     """
-
-    # TODO: Docs...
 
     def __init__(self, data: ConduitData, *, http: HTTPClient) -> None:
         self.raw: ConduitData = data
@@ -5705,8 +5752,54 @@ class Conduit:
         payload = await self._http.update_conduits(self.id, shard_count=shard_count)
         return Conduit(payload["data"][0], http=self._http)
 
-    def fetch_shards(self, *, status: str | None = None) -> HTTPAsyncIterator[ConduitShard]:
-        # TODO: Document status properly...
+    def fetch_shards(self, *, status: ShardStatus | None = None) -> HTTPAsyncIterator[ConduitShard]:
+        """|aiter|
+
+        Method which returns the shards for the Conduit retrieved from the Twitch API.
+
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | status                                    | Description                                                                                                       |
+        +===========================================+===================================================================================================================+
+        | ``enabled``                               | The shard is enabled.                                                                                             |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``webhook_callback_verification_pending`` | The shard is pending verification of the specified callback URL.                                                  |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``webhook_callback_verification_failed `` | The specified callback URL failed verification.                                                                   |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``notification_failures_exceeded``        | The notification delivery failure rate was too high.                                                              |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_disconnected``                | The client closed the connection.                                                                                 |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_failed_ping_pong``            | The client failed to respond to a ping message.                                                                   |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_received_inbound_traffic``    | The client sent a non-pong message. Clients may only send pong messages (and only in response to a ping message). |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_internal_error``              | The Twitch WebSocket server experienced an unexpected error.                                                      |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_network_timeout``             | The Twitch WebSocket server timed out writing the message to the client.                                          |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_network_error``               | The Twitch WebSocket server experienced a network error writing the message to the client.                        |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+        | ``websocket_failed_to_reconnect``         | The client failed to reconnect to the Twitch WebSocket server within the required time after a Reconnect Message. |
+        +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
+
+        Parameters
+        ----------
+        status: str
+            An optional :class:`str` which when provided, filters the shards by their status on the API. Possible statuses
+            are listed above. Defaults to ``None`` which fetches all shards.
+
+        Returns
+        -------
+        :class:`~twitchio.HTTPAsyncIterator`[:class:`~twitchio.ConduitShard`]
+            An :class:`~twitchio.HTTPAsyncIterator` which can be awaited or used with ``async for`` to retrieve the
+            :class:`~twitchio.ConduitShard`'s.
+
+        Raises
+        ------
+        HTTPException
+            An error occurred making the request to Twitch.
+        """
         return self._http.get_conduit_shards(self._id, status=status)
 
     async def update_shards(self, shards: list[ShardUpdateRequest]) -> ...:
