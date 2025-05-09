@@ -2773,7 +2773,7 @@ class ConduitInfo:
         +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
         | ``webhook_callback_verification_pending`` | The shard is pending verification of the specified callback URL.                                                  |
         +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
-        | ``webhook_callback_verification_failed `` | The specified callback URL failed verification.                                                                   |
+        | ``webhook_callback_verification_failed``  | The specified callback URL failed verification.                                                                   |
         +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
         | ``notification_failures_exceeded``        | The notification delivery failure rate was too high.                                                              |
         +-------------------------------------------+-------------------------------------------------------------------------------------------------------------------+
