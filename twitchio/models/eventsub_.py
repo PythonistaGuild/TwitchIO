@@ -51,6 +51,7 @@ if TYPE_CHECKING:
         NotificationTransport,
         RevocationSubscription,
         RevocationTransport,
+        ShardData,
         ShardUpdateRequest,
         WelcomeSession,
     )
@@ -5575,12 +5576,55 @@ class WebsocketWelcome:
         self.connected_at: str = data["connected_at"]
 
 
+class ConduitShard:
+    # TODO: Docs...
+
+    def __init__(self, data: ShardData) -> None:
+        self.raw: ShardData = data
+        self.id = data["id"]
+        self._status = data["status"]
+
+        transport = data["transport"]
+        self.method: str = transport["method"]
+        self.session_id: str | None = transport.get("session_id")
+
+        self.connected_at: datetime.datetime | None = None
+        if cat := transport.get("connected_at"):
+            self.connected_at = parse_timestamp(cat)
+
+        self.disconnected_at: datetime.datetime | None = None
+        if dat := transport.get("disconnected_at"):
+            self.disconnected_at = parse_timestamp(dat)
+
+        self.callback: str | None = transport.get("callback")
+
+    @property
+    def status(self) -> str:
+        return self._status
+
+    def __repr__(self) -> str:
+        return f'ConduitShard(id={self.id}, method="{self.method}")'
+
+
 class Conduit:
     """The :class:`~twitchio.Conduit` model which is returned from various API endpoints relating to Conduits on Twitch.
 
     This class can be used to manage the underlying Conduit, however for a more intuitive approach see:
     :class:`~twitchio.AutoClient` or :class:`~twitchio.ext.commands.AutoBot` which wraps this class and provides a
     :class:`~twitchio.ConduitInfo` class instead.
+
+    Supported Operations
+    --------------------
+
+    +-------------+-------------------------------------------+-----------------------------------------------+
+    | Operation   | Usage(s)                                  | Description                                   |
+    +=============+===========================================+===============================================+
+    | __str__     | ``str(conduit)``, ``f"{conduit}"``        | Return the official str represntation.        |
+    +-------------+-------------------------------------------+-----------------------------------------------+
+    | __repr__    | ``repr(conduit)``, ``f"{conduit!r}"``     | Return the official represntation.            |
+    +-------------+-------------------------------------------+-----------------------------------------------+
+    | __eq__      | conduit == other, conduit != other        | Compare equality of two conduits.             |
+    +-------------+-------------------------------------------+-----------------------------------------------+
 
     Parameters
     ----------
@@ -5591,9 +5635,6 @@ class Conduit:
     """
 
     # TODO: Docs...
-    # TODO: Delete;
-    # TODO: Fetch shards
-    # TODO: Shard Model?
 
     def __init__(self, data: ConduitData, *, http: HTTPClient) -> None:
         self.raw: ConduitData = data
@@ -5605,20 +5646,35 @@ class Conduit:
         if not isinstance(other, Conduit):
             return NotImplemented
 
-        return self.id == other.id
+        return self._id == other._id
 
     def __repr__(self) -> str:
-        return f'Conduit(id="{self.id}", shard_count="{self.shard_count}")'
+        return f'Conduit(id="{self._id}", shard_count="{self.shard_count}")'
 
     def __str__(self) -> str:
-        return self.id
+        return self._id
 
     @property
     def id(self) -> str:
         """Property returning the Conduit ID as a :class:`str`."""
         return self._id
 
-    async def delete(self) -> ...: ...
+    async def delete(self) -> None:
+        """|coro|
+
+        Method to delete the associated :class:`~twitchio.Conduit` from the API.
+
+        Returns
+        -------
+        None
+            Successfully removed the :class:`~twitchio.Conduit`
+
+        Raises
+        ------
+        :class:`~twitchio.HTTPException`
+            ``404`` - Conduit was not found or you do not own this Conduit.
+        """
+        await self._http.delete_conduit(self.id)
 
     async def update(self, shard_count: int, /) -> Conduit:
         """|coro|
@@ -5630,15 +5686,28 @@ class Conduit:
         shard_count: int
             The new amount of shards the Conduit should be assigned. Should be between ``1`` and ``20_000``.
 
+        Raises
+        ------
+        ValueError
+            ``shard_count`` must be between ``1`` and ``20_000``.
+
         Returns
         -------
         :class:`~twitchio.Conduit`
             The updated :class:`~twitchio.Conduit`.
         """
+        if shard_count <= 0:
+            raise ValueError('The provided "shard_count" must not be lower than 1.')
+
+        elif shard_count > 20_000:
+            raise ValueError('The provided "shard_count" cannot be greater than 20_000.')
+
         payload = await self._http.update_conduits(self.id, shard_count=shard_count)
         return Conduit(payload["data"][0], http=self._http)
 
-    async def fetch_shards(self) -> ...: ...
+    def fetch_shards(self, *, status: str | None = None) -> HTTPAsyncIterator[ConduitShard]:
+        # TODO: Document status properly...
+        return self._http.get_conduit_shards(self._id, status=status)
 
     async def update_shards(self, shards: list[ShardUpdateRequest]) -> ...:
         # TODO: Docs
