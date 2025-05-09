@@ -24,6 +24,8 @@ SOFTWARE.
 
 from typing import Any, Literal, Never, NotRequired, TypeAlias, TypedDict
 
+from .eventsub import ShardStatus
+
 
 __all__ = (
     "Condition",
@@ -64,7 +66,7 @@ class ShardTransport(TypedDict):
 
 class ShardData(TypedDict):
     id: str
-    status: str
+    status: ShardStatus
     transport: ShardTransport
 
 

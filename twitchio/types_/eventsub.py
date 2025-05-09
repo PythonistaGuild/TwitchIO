@@ -136,6 +136,7 @@ __all__ = (
     "PowerUpData",
     "PowerUpEmoteDataData",
     "ReedemedRewardData",
+    "ShardStatus",
     "ShieldModeBeginEvent",
     "ShieldModeEndEvent",
     "ShoutoutCreateEvent",
@@ -1341,3 +1342,18 @@ class UserWhisperEvent(TypedDict):
     to_user_name: str
     whisper_id: str
     whisper: WhisperContent
+
+
+ShardStatus = Literal[
+    "enabled",
+    "webhook_callback_verification_pending",
+    "webhook_callback_verification_failed",
+    "notification_failures_exceeded",
+    "websocket_disconnected",
+    "websocket_failed_ping_pong",
+    "websocket_received_inbound_traffic",
+    "websocket_internal_error",
+    "websocket_network_timeout",
+    "websocket_network_error",
+    "websocket_failed_to_reconnect",
+]
