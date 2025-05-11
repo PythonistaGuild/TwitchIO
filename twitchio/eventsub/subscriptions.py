@@ -432,6 +432,7 @@ class ChannelBitsUseSubscription(SubscriptionPayload):
     - Cheers in a channel
     - Uses a Power-up
         - Will not emit when a streamer uses a Power-up for free in their own channel.
+    - Sends Combos
 
     .. important::
         Requires a user access token that includes the ``bits:read`` scope. This must be the broadcaster's token.

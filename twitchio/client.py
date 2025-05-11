@@ -2346,6 +2346,7 @@ class Client:
         token_for: str | PartialUser | None = None,
         type: str | None = None,
         user_id: str | PartialUser | None = None,
+        subscription_id: str | None = None,
         status: Literal[
             "enabled",
             "webhook_callback_verification_pending",
@@ -2372,7 +2373,7 @@ class Client:
         Fetches Eventsub Subscriptions for either webhook or websocket.
 
         .. note::
-            type, status and user_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
+            type, status, user_id, and subscription_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
 
             This endpoint returns disabled WebSocket subscriptions for a minimum of 1 minute as compared to webhooks which returns disabled subscriptions for a minimum of 10 days.
 
@@ -2386,6 +2387,8 @@ class Client:
             Filter subscriptions by subscription type. e.g. ``channel.follow`` For a list of subscription types, see `Subscription Types <https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#subscription-types>`_.
         user_id: str | PartialUser | None
             Filter subscriptions by user ID, or PartialUser. The response contains subscriptions where this ID matches a user ID that you specified in the Condition object when you created the subscription.
+        subscription_id: str | None
+            The specific subscription ID to fetch.
         status: str | None = None
             Filter subscriptions by its status. Possible values are:
 
@@ -2440,17 +2443,20 @@ class Client:
         Raises
         ------
         ValueError
-            Only one of 'status', 'user_id', or 'type' can be provided.
+            Only one of 'status', 'user_id', 'subscription_id', or 'type' can be provided.
         """
 
-        provided: int = len([v for v in (type, user_id, status) if v])
+        provided: int = len([v for v in (type, user_id, status, subscription_id) if v])
         if provided > 1:
-            raise ValueError("Only one of 'status', 'user_id', or 'type' can be provided.")
+            raise ValueError("Only one of 'status', 'user_id', 'subscription_id', or 'type' can be provided.")
 
         return await self._http.get_eventsub_subscription(
             type=type,
             max_results=max_results,
             token_for=token_for,
+            subscription_id=subscription_id,
+            user_id=user_id,
+            status=status,
         )
 
     async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
