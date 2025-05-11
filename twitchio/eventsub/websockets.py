@@ -67,8 +67,9 @@ WSS: str = "wss://eventsub.wss.twitch.tv/ws"
 class WebsocketClosed:
     # TODO: Docs...
 
-    def __init__(self, *, socket: Websocket) -> None:
+    def __init__(self, *, socket: Websocket, reassociate: bool) -> None:
         self.socket: Websocket = socket
+        self.reassociate = reassociate
 
 
 class Websocket:
@@ -192,7 +193,7 @@ class Websocket:
 
         retries: int | None = self._reconnect_attempts
         if retries == 0 and reconnect:
-            logger.info('%s "%s" was closed unexepectedly, but is flagged as "should not reconnect".', self._log_name, self)
+            logger.info('%s "%s" was closed unexpectedly, but is flagged as "should not reconnect".', self._log_name, self)
             return await self.close()
 
         while True:
@@ -317,6 +318,9 @@ class Websocket:
         await self.close()
 
     async def _create_connection_task(self) -> None:
+        if self._closing or self._closed:
+            return
+
         # Conduit websockets (Shards) need to be handled on the Client...
         if self._shard_id is not None:
             logger.warning(
@@ -327,7 +331,7 @@ class Websocket:
             )
 
             try:
-                await self.close()
+                await self.close(reassociate=True)
             except Exception as e:
                 logger.debug("Exception during close of %r: %s", self, e, exc_info=e)
 
@@ -488,7 +492,6 @@ class Websocket:
     def _cleanup(self, closed: bool = True) -> None:
         self._closed = closed
 
-        # TODO: Conduit cleanup logic...
         if self._shard_id is not None:
             return
 
@@ -499,7 +502,7 @@ class Websocket:
             sockets = self._client._websockets.get(self._token_for, {})
             sockets.pop(self.session_id or "", None)
 
-    async def close(self, cleanup: bool = True) -> None:
+    async def close(self, cleanup: bool = True, *, reassociate: bool = True) -> None:
         if self._closed or self._closing:
             return
 
@@ -508,15 +511,14 @@ class Websocket:
         if cleanup:
             self._cleanup()
 
+        if self._client:
+            reassociate = reassociate and self._shard_id is not None
+            payload: WebsocketClosed = WebsocketClosed(socket=self, reassociate=reassociate)
+            self._client.dispatch("websocket_closed", payload=payload)
+
         if self._keep_alive_task:
             try:
                 self._keep_alive_task.cancel()
-            except Exception:
-                pass
-
-        if self._listen_task:
-            try:
-                self._listen_task.cancel()
             except Exception:
                 pass
 
@@ -527,13 +529,15 @@ class Websocket:
                 pass
 
         self._keep_alive_task = None
-        self._listen_task = None
         self._socket = None
 
-        # TODO: Document new event...
-        if self._client:
-            payload: WebsocketClosed = WebsocketClosed(socket=self)
-            self._client.dispatch("websocket_closed", payload=payload)
+        if self._listen_task:
+            try:
+                self._listen_task.cancel()
+            except Exception:
+                pass
+
+            self._listen_task = None
 
         logger.info('Successfully closed %s: "%s"', self._log_name, self)
         self._closing = False
