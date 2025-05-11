@@ -49,10 +49,9 @@ class ClientOptions(TypedDict, total=False):
 
 class AutoClientOptions(ClientOptions, total=False):
     conduit_id: str
-    shard_count: int | None
+    shard_ids: list[int]
     max_per_shard: int
     subscriptions: list[SubscriptionPayload]
-    update_conduit_shards: bool
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]
