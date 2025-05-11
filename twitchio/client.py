@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack
 
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
 from .eventsub.enums import SubscriptionType
-from .eventsub.websockets import Websocket
+from .eventsub.websockets import Websocket, WebsocketClosed
 from .exceptions import HTTPException, MissingConduit
 from .http import HTTPAsyncIterator
 from .models.bits import Cheermote, ExtensionTransaction
@@ -2709,7 +2709,7 @@ class ConduitInfo:
         .. warning::
 
             Caution should be used when scaling multi-process solutions that connect to the same Conduit. In this particular
-            case it is more likely appropriate to close down and restart each instance and adjust the ``shard_count`` parameter
+            case it is more likely appropriate to close down and restart each instance and adjust the ``shard_ids`` parameter
             on :class:`~twitchio.AutoClient` accordingly. However this method can be called with ``assign_transports=False``
             first to allow each instance to easily adjust when restarted.
 
@@ -2751,12 +2751,15 @@ class ConduitInfo:
         assert self.conduit
         assert self.shard_count
 
+        end = max(self._client._shard_ids) + 1
+        shard_ids = list(range(end, end + (shard_count - len(self._client._shard_ids))))
+
         if assign_transports:
             if self.shard_count > len(self.websockets):
-                await self._client._associate_shards()
+                await self._client._associate_shards(shard_ids)
             elif self.shard_count < len(self.websockets):
                 remove = len(self.websockets) - self.shard_count
-                await self._disassociate_shards(remove)
+                await self._disassociate_shards(self.shard_count, remove)
 
         return self
 
@@ -2822,17 +2825,17 @@ class ConduitInfo:
 
         return self._conduit.fetch_shards(status=status)
 
-    async def _disassociate_shards(self, remove_count: int, /) -> None:
-        sockets = list(self._sockets.values())
+    async def _disassociate_shards(self, start: int, remove_count: int, /) -> None:
         closed = 0
 
-        for _ in range(remove_count):
-            socket = sockets.pop()
-            self._sockets.pop(str(socket._shard_id), None)
+        for n in range(start, start + remove_count):
+            socket = self._sockets.pop(str(n), None)
+            if not socket:
+                continue
 
             try:
                 closed += 1
-                await socket.close()
+                await socket.close(reassociate=False)
             except Exception as e:
                 logger.debug("Ignoring exception in close of %r. It is likely a non-issue: %s", socket, e)
 
@@ -2843,6 +2846,8 @@ class ConduitInfo:
             closed,
             len(self.websockets),
         )
+
+        self._client._shard_ids = sorted([int(k) for k in self._sockets])
 
     async def _update_shards(self, shards: list[ShardUpdateRequest]) -> Self:
         # TODO?
@@ -2942,7 +2947,7 @@ class AutoClient(Client):
         * Your application will associate with that conduit and assign transports; existing subscriptions remain.
     * If no Conduit exists:
         * Your application will create and associate itself with the new Conduit, assigning transports and subscribing.
-    * By default the amount of shards will be equal ``len(subscriptions) / max_per_shard`` or ``2`` whichever is greater **or** ``shard_count`` if passed.
+    * By default the amount of shards will be equal ``len(subscriptions) / max_per_shard`` or ``2`` whichever is greater **or** ``len(shard_ids)`` if passed.
         * Most applications will only require ``2`` or ``3`` shards, with the second shard mostly existing as a fallback.
 
     In both scenarios above your application can restart at anytime without re-subscribing, however take note of the
@@ -2989,8 +2994,8 @@ class AutoClient(Client):
 
     * Your application will connect to the provided Conduit-ID.
         * If the conduit does not exist or could not be found, an error will be raised on start-up.
-        * Your application will assign the amount of transports equal to the shard count the Conduit returns from Twitch **or** the amount passed to ``shard_count``.
-        * ``shard_count`` is not a required parameter, however see below for more info.
+        * Your application will assign the amount of transports equal to the shard count the Conduit returns from Twitch **or** the amount passed to ``len(shard_ids)``.
+        * ``shard_ids`` is not a required parameter, however see below for more info.
 
     This case allows greater control over which Conduit your application connects to which is mostly only useful if your
     setup includes multiple Conduits and/or multiple instances of :class:`~twitchio.AutoClient` or
@@ -3000,10 +3005,9 @@ class AutoClient(Client):
     realistically connect to a different conduit each.
 
     When the latter is true, your application can be setup to effectively distribute shards equally accross instances by
-    connecting to the same Conduit. In this scenario you will also need to pass the ``shard_count`` parameter to each
-    instance, dividing the total amount of shards required by the amount of instances that will run. You will also need to
-    pass ``False`` to the ``update_conduit_shards`` keyword-only parameter, as this will update the underlying Conduit
-    to only have a max of ``shard_count``; which will not be useful when distributing shards.
+    connecting to the same Conduit. In this scenario you will also need to pass the ``shard_ids`` parameter to each
+    instance, making sure each instance is assigned shards. E.g. ``shard_ids=[0, 1, 2]`` and ``shard_ids=[3, 4, 5]`` for a
+    ``2`` instance setup on a Conduit which contains ``6`` shards.
 
     As this case is more involved and requires much more attention; e.g. multiple instances need to be started correctly and
     connections to multiple Conduits need to be properly configured it usually wouldn't be advised for small to medium sized
@@ -3015,7 +3019,8 @@ class AutoClient(Client):
     **An example of case 2 (multiple instances on one conduit):**
 
     In this scenario your conduit should have ``6`` shards associated with it already. You should do this before starting
-    multiple instances. The example below would simply be run twice, assigning ``3`` shards to each instance.
+    multiple instances. The example below would simply be run twice, assigning ``3`` shards to each instance, E.g. on the
+    first instance ``shard_ids=[0, 1, 2]`` and the second instance ``shard_ids=[3, 4, 5]``.
 
     You can prepare for this scenario by calling :meth:`twitchio.Conduit.update` on the appropriate Conduit or by calling
     :meth:`~twitchio.ConduitInfo.update_shard_count` with ``6`` shards, and keeping note of the Conduit-ID, before starting
@@ -3031,8 +3036,7 @@ class AutoClient(Client):
                     **kwargs,
                     subscriptions=subs,
                     conduit_id="CONDUIT_1_ID",
-                    shard_count=3,
-                    update_conduit_shards=False,
+                    shard_ids=[...],
                 )
 
             async def event_message(self, payload: twitchio.ChatMessage) -> None:
@@ -3065,19 +3069,17 @@ class AutoClient(Client):
         ownership of, or ``None`` to connect to an existing Conduit or create one if none exist. You can also pass ``True``
         to this parameter, however see above for more details and examples on how this parameter affects your application.
         Defaults to ``None``, which is the most common use case.
-    shard_count: int
-        An optional :class:`int` which sets the amount of shards or transports that should be associated with the Conduit.
-        If the :class:`~twitchio.AutoClient` creates a new Conduit this will be what is sent to Twitch if passed. When this
-        parameter is passed and ``update_conduit_shards`` is ``True`` (Default), when your Client starts a request will be
-        made to Twitch to update the Conduit Shard Count on the API. If this parameter is passed and ``update_conduit_shards``
-        is ``False``, the Client will not update the total Shard Count on the API, however will connect ``shard_count``
-        amount of websocket transports. Together with ``update_conduit_shards=False``, this parameter can be used to equally
-        distribute shards accross multiple instances/processes on a single Conduit.
+    shard_ids: list[int]
+        An optional :class:`list` of :class:`int` which sets the shard IDs this instance of :class:`~twitchio.AutoClient`
+        will assign transports for. If the :class:`~twitchio.AutoClient` creates a new Conduit the length of this parameter
+        will be the ``shard_count`` which the Conduit will be created with. This parameter can be used to equally distribute
+        shards accross multiple instances/processes on a single Conduit. You should make sure the list of ``shard_ids`` is
+        consecutive and in order. E.g. ``list(range(3))`` or ``[0, 1, 2]``. Shard ID's are ``0`` indexed.
     max_per_shard: int
         An optional parameter which allows the Client to automatically determine the amount of shards you may require based on
         the amount of ``subscriptions`` passed. The default value is ``1000`` and the algorithm used to determine shards is
         simply: ``len(subscriptons) / max_per_shard`` or ``2`` whichever is greater. Note this parameter has no effect when
-        ``shard_count`` is explicitly passed.
+        ``shard_ids`` is explicitly passed.
     subscriptions: list[twitchio.eventsub.SubscriptionPayload]
         A list of any combination of EventSub subscriptions (all of which inherit from
         :class:`~twitchio.eventsub.SubscriptionPayload`) the Client should attempt to subscribe to when required. The
@@ -3085,10 +3087,6 @@ class AutoClient(Client):
         your Client connects to an existing Conduit either by passing ``conduit_id`` or automatically, this parameter has no
         effect. In cases where you need to update an existing Conduit with new subscriptions see:
         :meth:`~twitchio.AutoClient.multi_subscribe`.
-    update_conduit_shards: bool
-        Optional parameter which when ``True`` will hard update the Conduit Shard Count on the Twitch API.
-        This parameter should be set to ``False`` when you are using ``2`` or more instances/processes of
-        :class:`~twitchio.AutoClient`. Defaults to ``True``.
     """
 
     # NOTE:
@@ -3106,7 +3104,9 @@ class AutoClient(Client):
         bot_id: str | None = None,
         **kwargs: Unpack[AutoClientOptions],
     ) -> None:
+        self._shard_ids: list[int] = kwargs.pop("shard_ids", [])
         self._conduit_id: str | bool | None = kwargs.pop("conduit_id", MISSING)
+
         if self._conduit_id is MISSING or self._conduit_id is None:
             logger.warning(
                 'No "conduit_id" was passed. If a single conduit exists we will try to take ownership. '
@@ -3122,38 +3122,14 @@ class AutoClient(Client):
         elif not isinstance(self._conduit_id, str):
             raise TypeError('The parameter "conduit_id" must be either a str, True or not provided.')
 
-        self._shard_count = kwargs.pop("shard_count", None)
         self._max_per_shard = kwargs.pop("max_per_shard", 1000)
         self._initial_subs: list[SubscriptionPayload] = kwargs.pop("subscriptions", [])
-        self._update_conduit_shards: bool = kwargs.pop("update_conduit_shards", True)
 
-        if self._max_per_shard < 1000 and self._shard_count is not None:
+        if self._max_per_shard < 1000 and not self._shard_ids:
             logger.warning('It is recommended that the "max_per_shard" parameter should not be set below 1000.')
 
-        if self._shard_count is not None:
-            if self._shard_count <= 0:
-                raise ValueError('"shard_count" cannot be lower than "1".')
-            if self._shard_count >= 20_000:
-                raise ValueError('"shard_count" has a maximum value of "20_000".')
-
-        if self._shard_count is None:
-            logger.warning(
-                (
-                    'The "shard_count" parameter for %r was not provided. '
-                    "A best attempt will be made to determine the correct shard count based on the max_per_shard of %d."
-                ),
-                self,
-                self._max_per_shard,
-            )
-
-            # Try and determine best count based on provided subscriptions with leeway...
-            # Defaults to 2 shards if no subscriptions are passed...
-            total_subs = len(self._initial_subs)
-            self._shard_count = clamp(math.ceil(total_subs / self._max_per_shard) + 1, 2, 20_000)
-            self._conduit_info: ConduitInfo = ConduitInfo(self)
-
-            # So we don't mess around in the event if we are closing everying...
-            self._closing: bool = False
+        self._conduit_info: ConduitInfo = ConduitInfo(self)
+        self._closing: bool = False
 
         super().__init__(client_id=client_id, client_secret=client_secret, bot_id=bot_id, **kwargs)
 
@@ -3182,6 +3158,9 @@ class AutoClient(Client):
                 logger.info("Conduit found: %r. Attempting to take ownership of this conduit.", conduits[0])
                 self._conduit_info._conduit = conduits[0]
 
+                if not self._shard_ids:
+                    self._shard_ids = list(range(self._conduit_info.shard_count))  # type: ignore
+
         elif self._conduit_id is True:
             logger.info("Attempting to create and take ownership of a new Conduit.")
             await self._generate_new_conduit()
@@ -3193,33 +3172,35 @@ class AutoClient(Client):
                 if conduit.id == self._conduit_id:
                     logger.info('Conduit with the provided ID: "%s" found. Attempting to take ownership.', self._conduit_id)
                     self._conduit_info._conduit = conduit
-                    self._shard_count = self._conduit_info.shard_count
+
+                    if not self._shard_ids:
+                        self._shard_ids = list(range(self._conduit_info.shard_count))  # type: ignore
 
         if not self._conduit_info.conduit:
             # TODO: Maybe log currernt conduit info?
             raise MissingConduit("No conduit could be found with the provided ID or a new one can not be created.")
 
-        if self._conduit_info.conduit.shard_count != self._shard_count and self._update_conduit_shards:
-            logger.info(
-                '%r "shard_count" differs to provided "shard_count". Attempting to update the Conduit to %d shards.',
-                self._conduit_info,
-                self._shard_count,
-            )
-
-            assert self._shard_count is not None
-            await self._conduit_info.update_shard_count(self._shard_count, assign_transports=False)
-
-        await self._associate_shards()
+        await self._associate_shards(self._shard_ids)
         await self.setup_hook()
 
-    async def _websocket_closed(self, payload: ...) -> ...:
-        # Since conduit websockets don't have any reconnect logic we should attempt to see if the shard should
-        # still exist and if a new websocket(s) are needed we can reconnect here instead...
+    async def _websocket_closed(self, payload: WebsocketClosed) -> None:
         if self._closing:
             return
 
+        if not payload.socket._shard_id:
+            return
+
+        if not payload.reassociate:
+            self._conduit_info._sockets.pop(payload.socket._shard_id, None)
+            return
+
+        if payload.socket._shard_id not in self._conduit_info._sockets:
+            return
+
+        await self._associate_shards(shard_ids=[int(payload.socket._shard_id)])
+
     async def _connect_and_welcome(self, websocket: Websocket) -> bool:
-        await websocket.connect(fail_once=True)
+        await websocket.connect(fail_once=False)
 
         async def welcome_predicate(payload: WebsocketWelcome) -> bool:
             nonlocal websocket
@@ -3272,18 +3253,12 @@ class AutoClient(Client):
 
         logger.info("Associated shards with %r successfully.", self._conduit_info)
 
-    async def _associate_shards(self) -> None:
+    async def _associate_shards(self, shard_ids: list[int]) -> None:
         assert self._conduit_info.conduit
 
         batched: list[Websocket] = []
 
-        start = max([int(s) for s in self._conduit_info._sockets] + [0])
-        start = start + 1 if start != 0 else start
-
-        end = start + (self._conduit_info.conduit.shard_count - len(self._conduit_info.websockets))
-        range_ = range(start, end)
-
-        for i, n in enumerate(range_):
+        for i, n in enumerate(shard_ids):
             if i % 10 == 0 and i != 0:
                 await self._process_batched(batched)
                 batched.clear()
@@ -3294,11 +3269,17 @@ class AutoClient(Client):
         if batched:
             await self._process_batched(batched)
 
+        self._shard_ids = sorted([int(k) for k in self._conduit_info._sockets])
+
     async def _generate_new_conduit(self) -> Conduit:
-        assert self._shard_count
+        if not self._shard_ids:
+            # Try and determine best count based on provided subscriptions with leeway...
+            # Defaults to 2 shards if no subscriptions are passed...
+            total_subs = len(self._initial_subs)
+            self._shard_ids = list(range(clamp(math.ceil(total_subs / self._max_per_shard) + 1, 2, 20_000)))
 
         try:
-            new = await self.create_conduit(self._shard_count)
+            new = await self.create_conduit(len(self._shard_ids))
         except HTTPException as e:
             if e.status == 429:
                 # TODO: Maybe log currernt conduit info?
