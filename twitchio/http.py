@@ -1345,7 +1345,7 @@ class HTTPClient:
     ### Conduits ###
 
     async def delete_conduit(self, conduit_id: str, /) -> None:
-        params = {"conduit_id": conduit_id}
+        params = {"id": conduit_id}
 
         route = Route("DELETE", "eventsub/conduits", params=params)
         await self.request(route)
