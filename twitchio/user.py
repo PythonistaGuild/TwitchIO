@@ -88,7 +88,7 @@ class PartialUser:
     id: str | int
         The user's ID.
     name: str | None
-        The user's name. In most cases, this is provided. There are however, rare cases where it is not.
+        The user's name. Also known as *username* or *login name*. In most cases, this is provided. There are however, rare cases where it is not.
     display_name: str | None
         The user's display name in chat. In most cases, this is provided otherwise fallsback to `name`. There are however, rare cases where it is not.
     """
@@ -3459,7 +3459,7 @@ class User(PartialUser):
     id: str
         The user's ID.
     name: str | None
-        The user's name. In most cases, this is provided. There are however, rare cases where it is not.
+        The user's name. Also known as *username* or *login name*. In most cases, this is provided. There are however, rare cases where it is not.
     display_name: str
         The display name of the user.
     type: Literal["admin", "global_mod", "staff", ""]
