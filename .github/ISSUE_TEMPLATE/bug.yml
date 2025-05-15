@@ -2,7 +2,7 @@
 name: 🐛 Bug Report
 description: Submit a bug report for TwitchIO
 title: "[Bug]: "
-labels: ["unconfirmed bug", "needs verification"]
+labels: ["Unconfirmed Bug", "Needs Verification"]
 body:
   - type: markdown
     attributes:
