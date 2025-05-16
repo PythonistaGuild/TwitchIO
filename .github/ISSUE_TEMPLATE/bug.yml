@@ -4,14 +4,6 @@ description: Submit a bug report for TwitchIO
 title: "[Bug]: "
 labels: ["Unconfirmed Bug", "Needs Verification"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        ### Thank you for using TwitchIO!
-
-        If you'd rather use [our Discord server](https://discord.gg/RAKc3HF) for support than a Github issue please feel free to join
-        and talk to use there instead!
-        Feel free to discuss in [#help](https://discord.com/channels/490948346773635102/490951172673372195) or make a thread in our [#help-forum](https://canary.discord.com/channels/490948346773635102/1006716547223519293).
   - type: textarea
     id: what-happened
     attributes:

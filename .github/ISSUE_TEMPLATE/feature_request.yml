@@ -15,7 +15,7 @@ body:
   - type: textarea
     id: basic_example
     attributes:
-      label: "Basic Example"
+      label: "Basic Examples"
       description: Indicate here some basic examples of your feature.
       placeholder: Provide some basic example of your feature request
     validations:
@@ -25,7 +25,7 @@ body:
     attributes:
       label: "Drawbacks and Impact"
       description: What are the drawbacks or impacts of your feature request?
-      placeholder: Describe any the drawbacks or impacts of your feature request
+      placeholder: Describe any of the drawbacks or impacts of your feature request
     validations:
       required: false
   - type: textarea
