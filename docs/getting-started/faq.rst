@@ -84,6 +84,7 @@ If you are using :class:`~twitchio.ext.commands.Command`'s or anywhere :class:`~
 or are receiving a :class:`~twitchio.ChatMessage`, consider looking at :class:`~twitchio.Chatter` for a more complete object
 with more information and helpers.
 
+.. _bot-id-owner-id:
 
 How do I get the user IDs for BOT_ID and OWNER_ID?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
