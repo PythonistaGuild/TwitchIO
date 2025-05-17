@@ -37,6 +37,10 @@ Before running the code below, there just a couple more steps we need to take.
 #. Stop the bot and uncomment everything in ``setup_hook``.
 #. Start the bot.
 
+.. note::
+    If you are unsure how to get the user IDs for BOT_ID and OWNER_ID, please check the `FAQ here </getting-started/faq.html#how-do-i-get-the-user-ids-for-bot-id-and-owner-id>`_.
+
+
 **You only have to do this sequence of steps once. Or if the scopes need to change.**
 
 .. code:: python3

@@ -83,3 +83,27 @@ You can also create a :class:`~twitchio.PartialUser` with :meth:`~twitchio.Clien
 If you are using :class:`~twitchio.ext.commands.Command`'s or anywhere :class:`~twitchio.ext.commands.Context` is available,
 or are receiving a :class:`~twitchio.ChatMessage`, consider looking at :class:`~twitchio.Chatter` for a more complete object
 with more information and helpers.
+
+
+How do I get the user IDs for BOT_ID and OWNER_ID?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you do not know your user ID you can quickly fetch it using the :meth:`~twitchio.Client.fetch_users` method.
+
+.. code:: python3
+
+    import asyncio
+    import twitchio
+
+    CLIENT_ID: str = "..."
+    CLIENT_SECRET: str = "..."
+
+    async def main() -> None:
+            async with twitchio.Client(client_id=CLIENT_ID, client_secret=CLIENT_SECRET) as client:
+                await client.login()
+                user = await client.fetch_users(logins=["chillymosh", "my_bot"])
+                for u in user:
+                    print(f"User: {u.name} - ID: {u.id}")
+
+    if __name__ == "__main__":
+        asyncio.run(main())
