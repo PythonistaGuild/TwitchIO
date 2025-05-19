@@ -1677,7 +1677,7 @@ class Client:
         Raises
         ------
         ValueError
-            The combined number of 'ids' and 'logins' must not exceed `100` elements.
+            Please provide only one of `id` or `login`.
         """
 
         if id is not None and login is not None:
@@ -2526,7 +2526,7 @@ class Client:
 
         Returns
         --------
-        EventsubSubscription
+        EventsubSubscription | None
         """
 
         data = await self._http.get_eventsub_subscription(
