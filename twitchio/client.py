@@ -2534,8 +2534,7 @@ class Client:
             user_id=None,
             status=None,
         )
-        sub = await data.subscriptions
-        return sub[0] if sub else None
+        return await anext(data.subscriptions, None)
 
     async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
         """|coro|
