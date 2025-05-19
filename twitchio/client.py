@@ -1648,9 +1648,6 @@ class Client:
 
             You may look up a specific user using their user ID or login name.
 
-            For example, you may specify `50` IDs and `50` names or `100` IDs or names,
-            but you cannot specify `100` IDs and `100` names.
-
             If you don't specify an ID or login name but provide the `token_for` parameter,
             the request returns information about the user associated with the access token.
 
