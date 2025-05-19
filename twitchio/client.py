@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.entitlements import Entitlement, EntitlementStatus
-    from .models.eventsub_ import EventsubSubscriptions
+    from .models.eventsub_ import EventsubSubscription, EventsubSubscriptions
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
@@ -2501,6 +2501,44 @@ class Client:
             user_id=user_id,
             status=status,
         )
+
+    async def fetch_eventsub_subscription(
+        self,
+        subscription_id: str,
+        *,
+        token_for: str | PartialUser | None = None,
+    ) -> EventsubSubscription | None:
+        """|coro|
+
+        Fetches a specific Eventsub Subscription for either webhook or websocket.
+
+        .. note::
+            This endpoint returns disabled WebSocket subscriptions for a minimum of 1 minute as compared to webhooks which returns disabled subscriptions for a minimum of 10 days.
+
+        Parameters
+        -----------
+        subscription_id: str
+            The specific subscription ID to fetch.
+        token_for: str | PartialUser | None
+            By default, if this is ignored or set to None then the App Token is used. This is the case when you want to fetch webhook events.
+
+            Provide a user ID here for when you want to fetch websocket events tied to a user.
+
+        Returns
+        --------
+        EventsubSubscription
+        """
+
+        data = await self._http.get_eventsub_subscription(
+            type=None,
+            max_results=None,
+            token_for=token_for,
+            subscription_id=subscription_id,
+            user_id=None,
+            status=None,
+        )
+        sub = await data.subscriptions
+        return sub[0] if sub else None
 
     async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
         """|coro|
