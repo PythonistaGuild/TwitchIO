@@ -1,7 +1,7 @@
 .. _Migrating Guide:
 
-Migrating
-#########
+Migrating from Twitchio 2.x to 3.x
+##################################
 
 .. warning::
 
@@ -81,8 +81,10 @@ Running a :class:`~twitchio.Client` or :class:`~twitchio.ext.commands.Bot` hasn'
 some major differences that should be taken into consideration:
 
 - IRC was removed from the core of TwitchIO. This means subscribing to chat and other chat related events is now done via ``EventSub``. This results in the removal of constructor parameters ``initial_channels``, ``heartbeat`` and ``retain_cache``.
-- TwitchIO 3 uses a much more modern asyncio design which results in the removal of any ``loop`` semantics including the constructor parameter ``loop``. Internally the start and close of the bot has also been changed, resulting in a more user-friendly interface.
+- Instead of listing the usernames of the channels you want the bot to join, you let the web adapter listen for when a user wants to give you ``channel:bot`` permissions; then you subscribe to messages for that channel with ``subscribe_webhook()`` or ``subscribe_websockes()``. For example: ``subscribe_websocket(payload=eventsub.ChatMessageSubscription(broadcaster_user_id=..., user_id=...)``.
+- If you *really* need to send messages to a channel that hasn't explicitly granted you the ``channel:bot`` scope, you can use the ``token_for`` option to override the token twitchio would normally choose. But note that you'll only be able to connect up to 100 channels simuntaniously; a limit that wouldn't apply when using ``channel:bot`` instead. More info on Twitch-imposed rate limits here: https://dev.twitch.tv/docs/chat/#rate-limits
 - ``App Tokens`` are generated automatically on start-up and there is rarely a need to provide one. However the option still exists via :meth:`~twitchio.Client.start` and :meth:`~twitchio.Client.login`.
+- TwitchIO 3 uses a much more modern asyncio design which results in the removal of any ``loop`` semantics including the constructor parameter ``loop``. Internally the start and close of the bot has also been changed, resulting in a more user-friendly interface.
 - Implemented ``__aenter__`` and ``__aexit__`` which allows them to be used in a Async Context Manager for easier management of close down and cleanup. These changes along with some async internals have also been reflected in :meth:`~twitchio.Client.run`.
 
 You can also :meth:`~twitchio.Client.login` the :class:`~twitchio.Client` without running a continuous asyncio event loop, E.g.
