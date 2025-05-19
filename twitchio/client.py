@@ -1633,6 +1633,59 @@ class Client:
         data = await self._http.get_users(ids=ids, logins=logins, token_for=token_for)
         return [User(d, http=self._http) for d in data["data"]]
 
+    async def fetch_user(
+        self,
+        *,
+        id: str | int | None = None,
+        login: str | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> User | None:
+        """|coro|
+
+        Fetch information about one user.
+
+        .. note::
+
+            You may look up a specific user using their user ID or login name.
+
+            For example, you may specify `50` IDs and `50` names or `100` IDs or names,
+            but you cannot specify `100` IDs and `100` names.
+
+            If you don't specify an ID or login name but provide the `token_for` parameter,
+            the request returns information about the user associated with the access token.
+
+            To include the user's verified email address in the response,
+            you must have a user access token that includes the `user:read:email` scope.
+
+        Parameters
+        ----------
+        id: str | int | None
+            The id of the user to fetch information about.
+        login: str | None
+            The login name of the user to fetch information about.
+        token_for: str | PartialUser | None
+            |token_for|
+
+            If this parameter is provided, the token must have the `user:read:email` scope
+            in order to request the user's verified email address.
+
+        Returns
+        -------
+        :class:`twitchio.User`
+            A :class:`twitchio.User` object.
+
+        Raises
+        ------
+        ValueError
+            The combined number of 'ids' and 'logins' must not exceed `100` elements.
+        """
+
+        if id is not None and login is not None:
+            raise ValueError("Please provide only one of `id` or `login`.")
+
+        data = await self._http.get_users(ids=id, logins=login, token_for=token_for)
+        return User(data["data"][0], http=self._http) if data["data"] else None
+
     def search_categories(
         self,
         query: str,
