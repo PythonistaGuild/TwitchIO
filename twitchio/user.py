@@ -580,6 +580,7 @@ class PartialUser:
         user: str | int | PartialUser | None = None,
         first: int = 20,
         max_results: int | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> ChannelFollowers:
         """|coro|
 
@@ -600,6 +601,8 @@ class PartialUser:
             Min is 1 and Max is 100.
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+        token_for: str | PartialUser | None
+            An optional user token, for a moderator, to use instead of the User's token that this method is called on.
 
 
         Returns
@@ -610,7 +613,7 @@ class PartialUser:
 
         return await self._http.get_channel_followers(
             broadcaster_id=self.id,
-            token_for=self.id,
+            token_for=token_for or self.id,
             user_id=user,
             first=first,
             max_results=max_results,
