@@ -175,6 +175,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         )
         self._closing: bool = False
         self._server: uvicorn.Server | None = None
+        self._running: bool = False
 
     def __repr__(self) -> str:
         return f"StarletteAdapter(host={self._host}, port={self._port})"
@@ -221,6 +222,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
 
         logger.info("Successfully shutdown TwitchIO <%s>.", self.__class__.__qualname__)
         self._closing = False
+        self._running = False
 
     def _task_callback(self, task: asyncio.Task[None]) -> None:
         if not task.done():
@@ -236,6 +238,8 @@ class StarletteAdapter(BaseAdapter, Starlette):
                 logger.exception(e.__context__)
 
     async def run(self, host: str | None = None, port: int | None = None) -> None:
+        self._running = True
+
         self._host = host or self._host
         self._port = port or self._port
 

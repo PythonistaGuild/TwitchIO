@@ -492,7 +492,7 @@ class Client:
         self.__waiter.clear()
         await self.login(token=token, load_tokens=load_tokens, save_tokens=save_tokens)
 
-        if with_adapter:
+        if with_adapter and not self._adapter._running:
             await self._adapter.run()
 
         # Dispatch ready event... May change places in the future.
