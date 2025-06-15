@@ -171,6 +171,7 @@ class Client:
         self._ready_event.clear()
 
         self.__waiter: asyncio.Event = asyncio.Event()
+        self._setup_called = False
 
     @property
     def adapter(self) -> BaseAdapter:
@@ -194,10 +195,12 @@ class Client:
         None
         """
         if self._adapter:
-            await self._adapter.close()
+            await self._adapter.close(False)
 
         self._adapter = adapter
-        await self._adapter.run()
+
+        if self._setup_called:
+            await self._adapter.run()
 
     @property
     def tokens(self) -> MappingProxyType[str, TokenMappingData]:
@@ -439,6 +442,7 @@ class Client:
 
     async def _setup(self) -> None:
         await self.setup_hook()
+        self._setup_called = True
 
     async def __aenter__(self) -> Self:
         return self
