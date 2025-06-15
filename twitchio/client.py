@@ -165,6 +165,38 @@ class Client:
         self._ready_event.clear()
 
         self.__waiter: asyncio.Event = asyncio.Event()
+        self._setup_called = False
+
+    @property
+    def adapter(self) -> BaseAdapter:
+        """Property returning the :class:`~twitchio.AiohttpAdapter` or :class:`~twitchio.StarlettepAdapter` the bot is
+        currently running."""
+        return self._adapter
+
+    async def set_adapter(self, adapter: BaseAdapter) -> None:
+        """|async|
+
+        Method which sets and starts a new web adapter which inherits from either :class:`~twitchio.AiohttpAdapter` or
+        :class:`~twitchio.StarlettepAdapter` or implements the :class:`~twitchio.BaseAdapter` specifications.
+
+        Parameters
+        ----------
+        adapter: :class:`~twitchio.BaseAdapter`
+            The new adapter to assign and start.
+
+        Returns
+        -------
+        None
+        """
+        if self._adapter:
+            await self._adapter.close(False)
+
+        self._adapter = adapter
+
+        if self._setup_called:
+            await self._adapter.run()
+
+        self._adapter.client = self
 
     @property
     def tokens(self) -> MappingProxyType[str, TokenMappingData]:
@@ -402,6 +434,7 @@ class Client:
             self._user = await partial.user() if self._fetch_self else partial
 
         await self.setup_hook()
+        self._setup_called = True
 
     async def __aenter__(self) -> Self:
         return self
@@ -459,7 +492,7 @@ class Client:
         self.__waiter.clear()
         await self.login(token=token, load_tokens=load_tokens, save_tokens=save_tokens)
 
-        if with_adapter:
+        if with_adapter and not self._adapter._running:
             await self._adapter.run()
 
         # Dispatch ready event... May change places in the future.

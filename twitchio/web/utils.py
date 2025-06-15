@@ -86,6 +86,7 @@ class BaseAdapter(abc.ABC):
     client: Client
     _runner_task: asyncio.Task[None] | None
     _eventsub_secret: str | None
+    _running: bool
 
     @abc.abstractmethod
     async def event_startup(self) -> None: ...
@@ -94,7 +95,7 @@ class BaseAdapter(abc.ABC):
     async def event_shutdown(self) -> None: ...
 
     @abc.abstractmethod
-    async def close(self) -> None: ...
+    async def close(self, *args: Any, **kwargs: Any) -> None: ...
 
     @abc.abstractmethod
     async def run(self, host: str | None = None, port: int | None = None) -> None: ...

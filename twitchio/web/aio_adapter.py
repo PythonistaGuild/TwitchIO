@@ -176,6 +176,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         self.router.add_route("POST", self._eventsub_path, self.eventsub_callback)
 
         self._responded: deque[str] = deque(maxlen=5000)
+        self._running: bool = False
 
     def __init_subclass__(cls: type[AiohttpAdapter]) -> None:
         return
@@ -196,7 +197,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
     async def event_shutdown(self) -> None:
         logger.info("Successfully shutdown TwitchIO <%s>.", self.__class__.__qualname__)
 
-    async def close(self) -> None:
+    async def close(self, *args: Any, **kwargs: Any) -> None:
         if self._runner_task is not None:
             try:
                 self._runner_task.cancel()
@@ -212,6 +213,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
 
         self._runner = None
         self._runner_task = None
+        self._running = False
 
     def _task_callback(self, task: asyncio.Task[None]) -> None:
         if not task.done():
@@ -221,6 +223,8 @@ class AiohttpAdapter(BaseAdapter, web.Application):
             raise e
 
     async def run(self, host: str | None = None, port: int | None = None) -> None:
+        self._running = True
+
         self._runner = web.AppRunner(self, access_log=None, handle_signals=True)
         await self._runner.setup()
 
