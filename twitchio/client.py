@@ -3302,6 +3302,7 @@ class AutoClient(Client):
 
         await self._associate_shards(self._shard_ids)
         await self.setup_hook()
+        self._setup_called = True
 
     async def _websocket_closed(self, payload: WebsocketClosed) -> None:
         if self._closing:
