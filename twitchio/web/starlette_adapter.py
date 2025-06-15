@@ -194,7 +194,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
     async def event_shutdown(self) -> None:
         await self.close()
 
-    async def close(self) -> None:
+    async def close(self, with_client: bool = True) -> None:
         if self._closing:
             return
 
@@ -211,7 +211,9 @@ class StarletteAdapter(BaseAdapter, Starlette):
                 )
 
             self._runner_task = None
-            await self.client.close()
+
+            if with_client:
+                await self.client.close()
 
         logger.info("Successfully shutdown TwitchIO <%s>.", self.__class__.__qualname__)
 

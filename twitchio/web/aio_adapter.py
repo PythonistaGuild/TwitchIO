@@ -196,7 +196,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
     async def event_shutdown(self) -> None:
         logger.info("Successfully shutdown TwitchIO <%s>.", self.__class__.__qualname__)
 
-    async def close(self) -> None:
+    async def close(self, *args: Any, **kwargs: Any) -> None:
         if self._runner_task is not None:
             try:
                 self._runner_task.cancel()
