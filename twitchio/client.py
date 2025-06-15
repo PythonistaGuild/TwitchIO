@@ -188,15 +188,14 @@ class Client:
         -------
         None
         """
-        if self._adapter:
+        if self._adapter and self._adapter._running:
             await self._adapter.close(False)
 
         self._adapter = adapter
-
-        if self._setup_called:
-            await self._adapter.run()
-
         self._adapter.client = self
+
+        if self._setup_called and not self._adapter._running:
+            await self._adapter.run()
 
     @property
     def tokens(self) -> MappingProxyType[str, TokenMappingData]:
