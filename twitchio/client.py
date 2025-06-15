@@ -202,6 +202,8 @@ class Client:
         if self._setup_called:
             await self._adapter.run()
 
+        self._adapter.client = self
+
     @property
     def tokens(self) -> MappingProxyType[str, TokenMappingData]:
         """Property which returns a read-only mapping of the tokens that are managed by the `Client`.
