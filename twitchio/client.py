@@ -61,7 +61,7 @@ if TYPE_CHECKING:
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.entitlements import Entitlement, EntitlementStatus
-    from .models.eventsub_ import ConduitShard, EventsubSubscriptions
+    from .models.eventsub_ import ConduitShard, EventsubSubscription, EventsubSubscriptions
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
