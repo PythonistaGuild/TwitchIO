@@ -167,6 +167,33 @@ class Client:
         self.__waiter: asyncio.Event = asyncio.Event()
 
     @property
+    def adapter(self) -> BaseAdapter:
+        """Property returning the :class:`~twitchio.AiohttpAdapter` or :class:`~twitchio.StarlettepAdapter` the bot is
+        currently running."""
+        return self._adapter
+
+    async def set_adapter(self, adapter: BaseAdapter) -> None:
+        """|async|
+
+        Method which sets and starts a new web adapter which inherits from either :class:`~twitchio.AiohttpAdapter` or
+        :class:`~twitchio.StarlettepAdapter` or implements the :class:`~twitchio.BaseAdapter` specifications.
+
+        Parameters
+        ----------
+        adapter: :class:`~twitchio.BaseAdapter`
+            The new adapter to assign and start.
+
+        Returns
+        -------
+        None
+        """
+        if self._adapter:
+            await self._adapter.close()
+
+        self._adapter = adapter
+        await self._adapter.run()
+
+    @property
     def tokens(self) -> MappingProxyType[str, TokenMappingData]:
         """Property which returns a read-only mapping of the tokens that are managed by the `Client`.
 
