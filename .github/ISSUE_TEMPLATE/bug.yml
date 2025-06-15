@@ -1,0 +1,47 @@
+---
+name: 🐛 Bug Report
+description: Submit a bug report for TwitchIO
+title: "[Bug]: "
+labels: ["Unconfirmed Bug", "Needs Verification"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: "What actually happened?"
+      description: "Please enter details about the issue, including tracebacks if applicable (in codeblocks)."
+      placeholder: "My Bot will not start!"
+    validations:
+      required: true
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: "What did you expect to happen instead?"
+      description: "Please enter what you hoped or expected to happen instead of the issue that occurred."
+      placeholder: "My Bot started successfully!"
+    validations:
+      required: true
+  - type: textarea
+    id: mre
+    attributes:
+      label: "Minimum reproducible example:"
+      description: "Please provide the minimum necessary code to reproduce your issue, if relevant."
+      render: python
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: "Steps to reproduce the problem"
+      description: "It may not be obvious how to *cause* the issue, so please explain below."
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Additional logs:"
+      description: "If there is any logging output that may be relevant, please add it here."
+  - type: textarea
+    id: environment-details
+    attributes:
+      label: "System and Environment information"
+      description: "Please put the output of `python -m twitchio --version` here:"
+    validations:
+      required: true

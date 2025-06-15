@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.entitlements import Entitlement, EntitlementStatus
-    from .models.eventsub_ import EventsubSubscriptions
+    from .models.eventsub_ import EventsubSubscription, EventsubSubscriptions
     from .models.search import SearchChannel
     from .models.streams import Stream, VideoMarkers
     from .models.videos import Video
@@ -1660,6 +1660,56 @@ class Client:
         data = await self._http.get_users(ids=ids, logins=logins, token_for=token_for)
         return [User(d, http=self._http) for d in data["data"]]
 
+    async def fetch_user(
+        self,
+        *,
+        id: str | int | None = None,
+        login: str | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> User | None:
+        """|coro|
+
+        Fetch information about one user.
+
+        .. note::
+
+            You may look up a specific user using their user ID or login name.
+
+            If you don't specify an ID or login name but provide the `token_for` parameter,
+            the request returns information about the user associated with the access token.
+
+            To include the user's verified email address in the response,
+            you must have a user access token that includes the `user:read:email` scope.
+
+        Parameters
+        ----------
+        id: str | int | None
+            The id of the user to fetch information about.
+        login: str | None
+            The login name of the user to fetch information about.
+        token_for: str | PartialUser | None
+            |token_for|
+
+            If this parameter is provided, the token must have the `user:read:email` scope
+            in order to request the user's verified email address.
+
+        Returns
+        -------
+        :class:`twitchio.User`
+            A :class:`twitchio.User` object.
+
+        Raises
+        ------
+        ValueError
+            Please provide only one of `id` or `login`.
+        """
+
+        if id is not None and login is not None:
+            raise ValueError("Please provide only one of `id` or `login`.")
+
+        data = await self._http.get_users(ids=id, logins=login, token_for=token_for)
+        return User(data["data"][0], http=self._http) if data["data"] else None
+
     def search_categories(
         self,
         query: str,
@@ -2363,6 +2413,7 @@ class Client:
         token_for: str | PartialUser | None = None,
         type: str | None = None,
         user_id: str | PartialUser | None = None,
+        subscription_id: str | None = None,
         status: Literal[
             "enabled",
             "webhook_callback_verification_pending",
@@ -2389,7 +2440,7 @@ class Client:
         Fetches Eventsub Subscriptions for either webhook or websocket.
 
         .. note::
-            type, status and user_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
+            type, status, user_id, and subscription_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
 
             This endpoint returns disabled WebSocket subscriptions for a minimum of 1 minute as compared to webhooks which returns disabled subscriptions for a minimum of 10 days.
 
@@ -2403,6 +2454,8 @@ class Client:
             Filter subscriptions by subscription type. e.g. ``channel.follow`` For a list of subscription types, see `Subscription Types <https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#subscription-types>`_.
         user_id: str | PartialUser | None
             Filter subscriptions by user ID, or PartialUser. The response contains subscriptions where this ID matches a user ID that you specified in the Condition object when you created the subscription.
+        subscription_id: str | None
+            The specific subscription ID to fetch.
         status: str | None = None
             Filter subscriptions by its status. Possible values are:
 
@@ -2457,18 +2510,58 @@ class Client:
         Raises
         ------
         ValueError
-            Only one of 'status', 'user_id', or 'type' can be provided.
+            Only one of 'status', 'user_id', 'subscription_id', or 'type' can be provided.
         """
 
-        provided: int = len([v for v in (type, user_id, status) if v])
+        provided: int = len([v for v in (type, user_id, status, subscription_id) if v])
         if provided > 1:
-            raise ValueError("Only one of 'status', 'user_id', or 'type' can be provided.")
+            raise ValueError("Only one of 'status', 'user_id', 'subscription_id', or 'type' can be provided.")
 
         return await self._http.get_eventsub_subscription(
             type=type,
             max_results=max_results,
             token_for=token_for,
+            subscription_id=subscription_id,
+            user_id=user_id,
+            status=status,
         )
+
+    async def fetch_eventsub_subscription(
+        self,
+        subscription_id: str,
+        *,
+        token_for: str | PartialUser | None = None,
+    ) -> EventsubSubscription | None:
+        """|coro|
+
+        Fetches a specific Eventsub Subscription for either webhook or websocket.
+
+        .. note::
+            This endpoint returns disabled WebSocket subscriptions for a minimum of 1 minute as compared to webhooks which returns disabled subscriptions for a minimum of 10 days.
+
+        Parameters
+        -----------
+        subscription_id: str
+            The specific subscription ID to fetch.
+        token_for: str | PartialUser | None
+            By default, if this is ignored or set to None then the App Token is used. This is the case when you want to fetch webhook events.
+
+            Provide a user ID here for when you want to fetch websocket events tied to a user.
+
+        Returns
+        --------
+        EventsubSubscription | None
+        """
+
+        data = await self._http.get_eventsub_subscription(
+            type=None,
+            max_results=None,
+            token_for=token_for,
+            subscription_id=subscription_id,
+            user_id=None,
+            status=None,
+        )
+        return await anext(data.subscriptions, None)
 
     async def delete_eventsub_subscription(self, id: str, *, token_for: str | PartialUser | None = None) -> None:
         """|coro|
