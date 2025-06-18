@@ -87,7 +87,7 @@ with more information and helpers.
 .. _bot-id-owner-id:
 
 How do I get the user IDs for BOT_ID and OWNER_ID?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you do not know your user ID you can quickly fetch it using the :meth:`~twitchio.Client.fetch_users` method.
 
