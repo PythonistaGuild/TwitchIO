@@ -3317,7 +3317,10 @@ class AutoClient(Client):
         if payload.socket._shard_id not in self._conduit_info._sockets:
             return
 
-        await self._associate_shards(shard_ids=[int(payload.socket._shard_id)])
+        try:
+            await self._associate_shards(shard_ids=[int(payload.socket._shard_id)])
+        except Exception as e:
+            logger.debug("Error re-associating shards for conduit %r after websocket close: %s", self.conduit_info, e)
 
     async def _connect_and_welcome(self, websocket: Websocket) -> bool:
         await websocket.connect(fail_once=False)
