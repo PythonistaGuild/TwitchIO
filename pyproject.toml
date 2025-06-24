@@ -119,7 +119,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-exclude = ["venv", "docs", "examples", "twitchio/__main__.py"]
+exclude = [".venv", "venv", "docs", "examples", "twitchio/__main__.py"]
 useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false
