@@ -450,7 +450,6 @@ class Websocket:
 
         self._listen_task.set_name(f"EventsubWebsocketListener: {self._session_id}")
 
-        # TODO: Document Event
         if self._client:
             event = WebsocketWelcome(payload["session"])
             self._client.dispatch("websocket_welcome", payload=event)

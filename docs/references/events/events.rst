@@ -360,6 +360,13 @@ Client Events
 
   :param SubscriptionRevoked payload: The payload containing token information.
 
+.. py:function:: event_websocket_welcome(payload: ~models.eventsub_.WebsocketWelcome) -> None
+  :async:
+
+  Event dispatched when a websocket successfully connects to Twitch via Eventsub or Conduits.
+
+  :param WebsocketWelcome payload: The payload containing information about the connected websocket.
+
 
 Commands Events
 ###############
@@ -1384,4 +1391,9 @@ Payloads
 .. attributetable:: twitchio.TokenRefreshedPayload
 
 .. autoclass:: twitchio.TokenRefreshedPayload()
+  :members:
+
+.. attributetable:: twitchio.WebsocketWelcome
+
+.. autoclass:: twitchio.WebsocketWelcome()
   :members:

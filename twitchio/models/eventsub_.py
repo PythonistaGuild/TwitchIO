@@ -5568,17 +5568,26 @@ class EventsubSubscriptions:
 
 
 class WebsocketWelcome:
-    # TODO: Docs...
+    """The model received in the :func:`~twitchio.event_websocket_welcome` event.
+
+    Attributes
+    ----------
+    id: str
+        The ID associated with the Websocket, received from Twitch in "session_welcome".
+    keepalive_timeout_seconds: int
+        The keepalive timeout as an :class:`int` sent and confirmed by Twitch.
+    connected_at: :class:`datetime.datetime`
+        A :class:`datetime.datetime` representing when this websocket officially connected.
+    """
+
     def __init__(self, data: WelcomeSession) -> None:
         self.id: str = data["id"]
-        self.status: Literal["connected"] = "connected"
         self.keepalive_timeout_seconds: int = data["keepalive_timeout_seconds"]
-        self.reconnect_url: None = None
-        self.connected_at: str = data["connected_at"]
+        self.connected_at: datetime.datetime = parse_timestamp(data["connected_at"])
 
 
 class ConduitShard:
-    """ConduitInfo model containing various information about a Shard on a :class:`~twitchio.Conduit`.
+    """ConduitShard model containing various information about a Shard on a :class:`~twitchio.Conduit`.
 
     Attributes
     ----------
@@ -5728,6 +5737,11 @@ class Conduit:
         """|coro|
 
         Method which updates the underlying Conduit on the Twitch API with the provided ``shard_count``.
+
+        .. important::
+
+            If you are using :class:`~twitchio.AutoClient` or :class:`~twitchio.ext.commands.AutoBot` this will not
+            update the underlying websocket connections. See: :meth:`~twitchio.ConduitInfo.update_shard_count` instead.
 
         Parameters
         ----------
