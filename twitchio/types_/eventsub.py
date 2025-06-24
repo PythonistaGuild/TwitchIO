@@ -1226,17 +1226,26 @@ class HypeTrainContributionData(TypedDict):
     total: int
 
 
+class HypeTrainSharedParticipants(TypedDict):
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+
+
 class HypeTrainBeginEvent(BaseBroadcasterEvent):
     id: str
     total: int
     progress: int
     goal: int
     top_contributions: list[HypeTrainContributionData]
-    last_contribution: HypeTrainContributionData
     level: int
+    all_time_high_level: int
+    all_time_high_total: int
+    shared_train_participants: list[HypeTrainSharedParticipants]
     started_at: str
     expires_at: str
-    is_golden_kappa_train: bool
+    type: Literal["treasure", "golden_kappa", "regular"]
+    is_shared_train: bool
 
 
 class HypeTrainProgressEvent(BaseBroadcasterEvent):
@@ -1245,22 +1254,25 @@ class HypeTrainProgressEvent(BaseBroadcasterEvent):
     progress: int
     goal: int
     top_contributions: list[HypeTrainContributionData]
-    last_contribution: HypeTrainContributionData
     level: int
+    shared_train_participants: list[HypeTrainSharedParticipants]
     started_at: str
     expires_at: str
-    is_golden_kappa_train: bool
+    type: Literal["treasure", "golden_kappa", "regular"]
+    is_shared_train: bool
 
 
 class HypeTrainEndEvent(BaseBroadcasterEvent):
     id: str
-    level: int
     total: int
     top_contributions: list[HypeTrainContributionData]
+    level: int
+    shared_train_participants: list[HypeTrainSharedParticipants]
     started_at: str
     ended_at: str
     cooldown_ends_at: str
-    is_golden_kappa_train: bool
+    type: Literal["treasure", "golden_kappa", "regular"]
+    is_shared_train: bool
 
 
 class ShieldModeBeginEvent(BroadcasterModeratorEvent):

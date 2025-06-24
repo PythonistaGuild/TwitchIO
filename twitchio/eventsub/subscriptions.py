@@ -2687,7 +2687,7 @@ class HypeTrainBeginSubscription(SubscriptionPayload):
     """
 
     type: ClassVar[Literal["channel.hype_train.begin"]] = "channel.hype_train.begin"
-    version: ClassVar[Literal["1"]] = "1"
+    version: ClassVar[Literal["2"]] = "2"
 
     @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
@@ -2729,7 +2729,7 @@ class HypeTrainProgressSubscription(SubscriptionPayload):
     """
 
     type: ClassVar[Literal["channel.hype_train.progress"]] = "channel.hype_train.progress"
-    version: ClassVar[Literal["1"]] = "1"
+    version: ClassVar[Literal["2"]] = "2"
 
     @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
@@ -2768,7 +2768,7 @@ class HypeTrainEndSubscription(SubscriptionPayload):
     """
 
     type: ClassVar[Literal["channel.hype_train.end"]] = "channel.hype_train.end"
-    version: ClassVar[Literal["1"]] = "1"
+    version: ClassVar[Literal["2"]] = "2"
 
     @handle_user_ids()
     def __init__(self, **condition: Unpack[Condition]) -> None:
