@@ -4823,9 +4823,7 @@ class BaseHypeTrain(BaseEvent):
         "type",
     )
 
-    def __init__(
-        self, payload: HypeTrainBeginEvent | HypeTrainProgressEvent | HypeTrainEndEvent, *, http: HTTPClient
-    ) -> None:
+    def __init__(self, payload: BaseHypeTrainEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )

@@ -41,6 +41,7 @@ __all__ = (
     "AutomodTermsUpdateEvent",
     "BaseChannelPointsRewardData",
     "BaseEmoteData",
+    "BaseHypeTrainEvent",
     "ChannelAdBreakBeginEvent",
     "ChannelBanEvent",
     "ChannelBitsUseEvent",
@@ -1232,47 +1233,34 @@ class HypeTrainSharedParticipants(TypedDict):
     broadcaster_user_name: str
 
 
-class HypeTrainBeginEvent(BaseBroadcasterEvent):
+class BaseHypeTrainEvent(BaseBroadcasterEvent):
     id: str
     total: int
+    level: int
+    started_at: str
+    top_contributions: list[HypeTrainContributionData]
+    shared_train_participants: list[HypeTrainSharedParticipants]
+    type: Literal["treasure", "golden_kappa", "regular"]
+    is_shared_train: bool
+
+
+class HypeTrainBeginEvent(BaseHypeTrainEvent):
     progress: int
     goal: int
-    top_contributions: list[HypeTrainContributionData]
-    level: int
     all_time_high_level: int
     all_time_high_total: int
-    shared_train_participants: list[HypeTrainSharedParticipants]
-    started_at: str
     expires_at: str
-    type: Literal["treasure", "golden_kappa", "regular"]
-    is_shared_train: bool
 
 
-class HypeTrainProgressEvent(BaseBroadcasterEvent):
-    id: str
-    total: int
+class HypeTrainProgressEvent(BaseHypeTrainEvent):
     progress: int
     goal: int
-    top_contributions: list[HypeTrainContributionData]
-    level: int
-    shared_train_participants: list[HypeTrainSharedParticipants]
-    started_at: str
     expires_at: str
-    type: Literal["treasure", "golden_kappa", "regular"]
-    is_shared_train: bool
 
 
-class HypeTrainEndEvent(BaseBroadcasterEvent):
-    id: str
-    total: int
-    top_contributions: list[HypeTrainContributionData]
-    level: int
-    shared_train_participants: list[HypeTrainSharedParticipants]
-    started_at: str
+class HypeTrainEndEvent(BaseHypeTrainEvent):
     ended_at: str
     cooldown_ends_at: str
-    type: Literal["treasure", "golden_kappa", "regular"]
-    is_shared_train: bool
 
 
 class ShieldModeBeginEvent(BroadcasterModeratorEvent):
