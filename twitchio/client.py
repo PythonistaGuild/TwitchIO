@@ -2878,7 +2878,9 @@ class ConduitInfo:
                 await self._client._associate_shards(shard_ids)
             elif self.shard_count < len(self.websockets):
                 remove = len(self.websockets) - self.shard_count
-                await self._disassociate_shards(self.shard_count, remove)
+
+                async with self._client._associate_lock:
+                    await self._disassociate_shards(self.shard_count, remove)
 
         return self
 
@@ -3249,11 +3251,64 @@ class AutoClient(Client):
 
         self._conduit_info: ConduitInfo = ConduitInfo(self)
         self._closing: bool = False
+        self._background_check_task: asyncio.Task[None] | None = None
+        self._associate_lock: asyncio.Lock = asyncio.Lock()
 
         super().__init__(client_id=client_id, client_secret=client_secret, bot_id=bot_id, **kwargs)
 
     def __repr__(self) -> str:
         return self.__class__.__name__
+
+    async def _conduit_check(self) -> None:
+        while True:
+            await asyncio.sleep(120)
+            logger.debug("Checking status of Conduit assigned to %r", self)
+
+            try:
+                conduits = await self.fetch_conduits()
+            except Exception as e:
+                logger.debug("Exception received fetching Conduits during Conduit checK: %s. Disregarding...", e)
+                continue
+
+            conduit: Conduit | None = None
+
+            for c in conduits:
+                if c.id == self.conduit_info.id:
+                    conduit = c
+
+            if not conduit:
+                logger.debug("No conduit found during Conduit check. Disregarding...")
+                continue
+
+            broken: list[int] = []
+
+            try:
+                async for shard in conduit.fetch_shards():
+                    shard_id = int(shard.id)
+
+                    if shard_id not in self._shard_ids:
+                        continue
+
+                    if shard.callback:
+                        continue
+
+                    if shard.status.startswith("webhook"):
+                        continue
+
+                    if shard.status != "enabled":
+                        broken.append(shard_id)
+            except Exception as e:
+                logger.debug("Exception received fetching Conduit Shards during Conduit checK: %s. Disregarding...", e)
+                continue
+
+            if not broken:
+                continue
+
+            logger.debug("Potentially broken shards found during Conduit check. Trying to re-associate: %r", broken)
+            try:
+                await self._associate_shards(broken)
+            except Exception:
+                logger.warning("An attempt to re-associate Conduit Shards: %r was unsuccessful. Consider rebalancing.")
 
     async def _setup(self) -> None:
         # Subscribe to "conduit.shard.disabled"
@@ -3301,7 +3356,9 @@ class AutoClient(Client):
 
         await self._associate_shards(self._shard_ids)
         await self.setup_hook()
+
         self._setup_called = True
+        self._background_check_task = asyncio.create_task(self._conduit_check())
 
     async def _websocket_closed(self, payload: WebsocketClosed) -> None:
         if self._closing:
@@ -3377,22 +3434,29 @@ class AutoClient(Client):
         logger.info("Associated shards with %r successfully.", self._conduit_info)
 
     async def _associate_shards(self, shard_ids: list[int]) -> None:
-        assert self._conduit_info.conduit
+        await self._associate_lock.acquire()
 
-        batched: list[Websocket] = []
+        try:
+            assert self._conduit_info.conduit
 
-        for i, n in enumerate(shard_ids):
-            if i % 10 == 0 and i != 0:
+            batched: list[Websocket] = []
+
+            for i, n in enumerate(shard_ids):
+                if i % 10 == 0 and i != 0:
+                    await self._process_batched(batched)
+                    batched.clear()
+
+                websocket = Websocket(client=self, http=self._http, shard_id=str(n))
+                batched.append(websocket)
+
+            if batched:
                 await self._process_batched(batched)
-                batched.clear()
 
-            websocket = Websocket(client=self, http=self._http, shard_id=str(n))
-            batched.append(websocket)
-
-        if batched:
-            await self._process_batched(batched)
-
-        self._shard_ids = sorted([int(k) for k in self._conduit_info._sockets])
+            self._shard_ids = sorted([int(k) for k in self._conduit_info._sockets])
+        except:
+            raise
+        finally:
+            self._associate_lock.release()
 
     async def _generate_new_conduit(self) -> Conduit:
         if not self._shard_ids:
@@ -3548,6 +3612,13 @@ class AutoClient(Client):
             await socket.close()
 
         self._conduit_info._sockets.clear()
+
+        if self._background_check_task:
+            try:
+                self._background_check_task.cancel()
+            except Exception:
+                pass
+
         await super().close(**options)
 
     async def delete_websocket_subscription(self, *args: Any, **kwargs: Any) -> Any:
