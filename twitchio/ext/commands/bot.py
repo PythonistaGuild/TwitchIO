@@ -262,8 +262,7 @@ class Bot(Mixin[None], Client):
             else:
                 self._owner = user
 
-        await self.setup_hook()
-        self._setup_called = True
+        await self._setup()
 
     async def close(self, **options: Any) -> None:
         for module in tuple(self.__modules):
