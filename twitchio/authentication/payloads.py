@@ -100,9 +100,14 @@ class UserTokenPayload(BasePayload):
         A ``str`` or ``list[str]`` containing the scopes the user authenticated with.
     token_type: str
         The type of token provided. Usually ``bearer``.
+    user_id: str | None
+        An optional :class:`str` representing the ID of the User who authorized your application. This could be ``None``.
+    user_login: str | None
+        An optional :class:`str` representing the user name of the User who authorized your application.
+        This could be ``None``.
     """
 
-    __slots__ = ("access_token", "expires_in", "refresh_token", "scope", "token_type")
+    __slots__ = ("_user_id", "_user_login", "access_token", "expires_in", "refresh_token", "scope", "token_type")
 
     def __init__(self, raw: UserTokenResponse, /) -> None:
         super().__init__(raw)
@@ -112,6 +117,24 @@ class UserTokenPayload(BasePayload):
         self.expires_in: int = raw["expires_in"]
         self.scope: str | list[str] = raw["scope"]
         self.token_type: str = raw["token_type"]
+        self._user_id: str | None = None
+        self._user_login: str | None = None
+
+    @property
+    def user_id(self) -> str | None:
+        return self._user_id
+
+    @user_id.setter
+    def user_id(self, other: str) -> None:
+        self._user_id = other
+
+    @property
+    def user_login(self) -> str | None:
+        return self._user_login
+
+    @user_login.setter
+    def user_login(self, other: str) -> None:
+        self._user_login = other
 
 
 class ClientCredentialsPayload(BasePayload):

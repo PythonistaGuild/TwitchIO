@@ -32,6 +32,7 @@ import types
 from typing import TYPE_CHECKING, Any, TypeAlias, Unpack
 
 from twitchio.client import AutoClient, Client
+from twitchio.user import PartialUser
 
 from ...utils import _is_submodule
 from .context import Context
@@ -43,10 +44,11 @@ from .exceptions import *
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Iterable, Mapping
 
+    from twitchio.authentication.payloads import ClientCredentialsPayload, ValidateTokenPayload
     from twitchio.eventsub.subscriptions import SubscriptionPayload
     from twitchio.models.eventsub_ import ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate, ChatMessage
     from twitchio.types_.eventsub import SubscriptionResponse
-    from twitchio.user import PartialUser
+    from twitchio.user import User
 
     from .components import Component
     from .types_ import AutoBotOptions, BotOptions
@@ -176,6 +178,7 @@ class Bot(Mixin[None], Client):
         self._components: dict[str, Component] = {}
         self._base_converter: _BaseConverter = _BaseConverter(self)
         self.__modules: dict[str, types.ModuleType] = {}
+        self._owner: User | None = None
 
     @property
     def bot_id(self) -> str:
@@ -203,6 +206,64 @@ class Bot(Mixin[None], Client):
             The owner ID that has been set. ``None`` if this has not been set.
         """
         return self._owner_id
+
+    @property
+    def owner(self) -> User | None:
+        """Property which returns the :class:`~twitchio.User` associated with with the User who owns this bot.
+
+        Could be ``None`` if no ``owner_id`` was passed to the Bot constructor or the request failed.
+        Passing a ``owner_id`` is highly recommended.
+
+        .. important::
+
+            If ``owner_id`` has not been passed to the constructor of this :class:`.Bot` this will return ``None``.
+        """
+        return self._owner
+
+    async def login(self, *, token: str | None = None, load_tokens: bool = True, save_tokens: bool = True) -> None:
+        if self._login_called:
+            return
+
+        self._login_called = True
+        self._save_tokens = save_tokens
+
+        if not self._http.client_id:
+            raise RuntimeError('Expected a valid "client_id", instead received: %s', self._http.client_id)
+
+        if not token and not self._http.client_secret:
+            raise RuntimeError(f'Expected a valid "client_secret", instead received: {self._http.client_secret}')
+
+        if not token:
+            payload: ClientCredentialsPayload = await self._http.client_credentials_token()
+            validated: ValidateTokenPayload = await self._http.validate_token(payload.access_token)
+            token = payload.access_token
+
+            logger.info("Generated App Token for Client-ID: %s", validated.client_id)
+
+        self._http._app_token = token
+
+        if load_tokens:
+            async with self._http._token_lock:
+                await self.load_tokens()
+
+        if self._bot_id:
+            logger.debug("Fetching Clients self user for %r", self.__class__.__name__)
+            partial = PartialUser(id=self._bot_id, http=self._http)
+            self._user = await partial.user() if self._fetch_self else partial
+
+        if self._owner_id:
+            logger.debug("Fetching owner User for %r", self.__class__.__name__)
+            partial = PartialUser(id=self._owner_id, http=self._http)
+
+            try:
+                user = await partial.user()
+            except Exception:
+                logger.warning("Failed to retrieve the Owner User during startup. Owner will be None.")
+            else:
+                self._owner = user
+
+        await self.setup_hook()
+        self._setup_called = True
 
     async def close(self, **options: Any) -> None:
         for module in tuple(self.__modules):

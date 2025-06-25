@@ -222,7 +222,7 @@ class Client:
 
             This method returns sensitive information such as user-tokens. You should take care not to expose these tokens.
         """
-        return MappingProxyType(self._http._tokens)
+        return MappingProxyType(dict(self._http._tokens))
 
     @property
     def bot_id(self) -> str | None:
@@ -434,7 +434,7 @@ class Client:
                 await self.load_tokens()
 
         if self._bot_id:
-            logger.debug("Fetching Clients self user for %r", self)
+            logger.debug("Fetching Clients self user for %r", self.__class__.__name__)
             partial = PartialUser(id=self._bot_id, http=self._http)
             self._user = await partial.user() if self._fetch_self else partial
 
@@ -628,7 +628,7 @@ class Client:
 
         self._http.cleanup()
         self.__waiter.set()
-        logger.debug("Cleanup completed on %r.", self)
+        logger.debug("Cleanup completed on %r.", self.__class__.__name__)
 
     async def wait_until_ready(self) -> None:
         """|coro|

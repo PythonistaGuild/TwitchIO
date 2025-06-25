@@ -47,7 +47,7 @@ from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 if TYPE_CHECKING:
     from starlette.requests import Request
 
-    from ..authentication import AuthorizationURLPayload, UserTokenPayload
+    from ..authentication import AuthorizationURLPayload, UserTokenPayload, ValidateTokenPayload
     from ..client import Client
     from ..types_.eventsub import EventSubHeaders
 
@@ -347,7 +347,12 @@ class StarletteAdapter(BaseAdapter, Starlette):
             status: int = e.status
             return FetchTokenPayload(status=status, response=Response(status_code=status), exception=e)
 
+        validated: ValidateTokenPayload = await self.client._http.validate_token(resp.access_token)
+        resp._user_id = validated.user_id
+        resp._user_login = validated.login
+
         self.client.dispatch(event="oauth_authorized", payload=resp)
+
         return FetchTokenPayload(
             status=200,
             response=Response(content="Success. You can leave this page.", status_code=200),
