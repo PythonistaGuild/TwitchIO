@@ -33,6 +33,8 @@ from urllib.parse import unquote_plus
 
 from aiohttp import web
 
+from twitchio.authentication.payloads import ValidateTokenPayload
+
 from ..authentication import Scopes
 from ..eventsub.subscriptions import _SUB_MAPPING
 from ..exceptions import HTTPException
@@ -44,7 +46,7 @@ from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 if TYPE_CHECKING:
     from ssl import SSLContext
 
-    from ..authentication import AuthorizationURLPayload, UserTokenPayload
+    from ..authentication import AuthorizationURLPayload, UserTokenPayload, ValidateTokenPayload
     from ..client import Client
     from ..types_.eventsub import EventSubHeaders
 
@@ -321,7 +323,12 @@ class AiohttpAdapter(BaseAdapter, web.Application):
             status: int = e.status
             return FetchTokenPayload(status=status, response=web.Response(status=status), exception=e)
 
+        validated: ValidateTokenPayload = await self.client._http.validate_token(resp.access_token)
+        resp._user_id = validated.user_id
+        resp._user_login = validated.login
+
         self.client.dispatch(event="oauth_authorized", payload=resp)
+
         return FetchTokenPayload(
             status=20,
             response=web.Response(body="Success. You can leave this page.", status=200),
