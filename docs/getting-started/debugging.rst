@@ -34,7 +34,7 @@ may need to setup a rotating logger or monitor its size.
 Version/System Information
 --------------------------
 
-We will also often ask for your system information and versions of various libs. To make this easier you can run the following
+We will also often ask for your system information and versions of various dependencies. To make this easier you can run the following
 command in the environment TwitchIO is currently installed.
 
 **Windows:**
