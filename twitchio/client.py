@@ -29,7 +29,7 @@ import logging
 import math
 from collections import defaultdict
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack, overload
 
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
 from .eventsub.enums import SubscriptionType
@@ -3532,6 +3532,16 @@ class AutoClient(Client):
                 success.append(success_payload)
 
         return MultiSubscribePayload(success=success, errors=errors)
+
+    @overload
+    async def multi_subscribe(
+        self, subscriptions: list[SubscriptionPayload], *, wait: Literal[True] = True, stop_on_error: bool = False
+    ) -> MultiSubscribePayload: ...
+
+    @overload
+    async def multi_subscribe(
+        self, subscriptions: list[SubscriptionPayload], *, wait: Literal[False] = False, stop_on_error: bool = False
+    ) -> asyncio.Task[MultiSubscribePayload]: ...
 
     async def multi_subscribe(
         self, subscriptions: list[SubscriptionPayload], *, wait: bool = True, stop_on_error: bool = False
