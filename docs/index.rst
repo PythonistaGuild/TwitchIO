@@ -55,6 +55,7 @@ Getting Started
    :caption: Getting Started
 
    getting-started/installing
+   getting-started/debugging
    getting-started/migrating
    getting-started/quickstart
    getting-started/changelog
