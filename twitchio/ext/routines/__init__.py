@@ -451,6 +451,53 @@ class Routine:
         else:
             return max((self._last_start - datetime.datetime.now(tz=datetime.UTC)).total_seconds() + self._delta, 0)
 
+    def change_interval(
+        self,
+        *,
+        delta: datetime.timedelta | None = None,
+        time: datetime.datetime | None = None,
+        wait_first: bool = False,
+    ) -> None:
+        """Method to change the running interval of a currently running routine.
+
+        Parameters
+        ----------
+        delta: datetime.timedelta | None
+            A :class:`datetime.timedelta` of time to wait per iteration of the :class:`~Routine`. If this is ``None``,
+            you must pass the ``time`` parameter. Defaults to ``None``.
+        time: datetime.datetime | None
+            A :class:`datetime.datetime` to schedule an run each iteration of the :class:`~Routine`. The :class:`~Routine` will
+            run at the same time everyday. If this is ``None``, you must pass the ``delta`` parameter. Defaults to ``None``.
+        wait_first: bool
+            An optional :class:`bool` indicating whether the currently running routine should complete it's current iteration
+            before restarting. Defaults to ``False`` which will immediately cancel the currently running iteration and restart
+            the routine with the new times provided.
+        """
+        if not time and not delta:
+            raise RuntimeError('One of either the "time" or "delta" arguments must be passed.')
+
+        if time is not None and delta is not None:
+            raise RuntimeError(
+                'The "time" argument can not be used in conjunction with the "delta" argument. Only one should be set.'
+            )
+
+        if not time:
+            delta_ = delta
+        else:
+            delta_ = None
+
+            now = datetime.datetime.now(time.tzinfo)
+            if time < now:
+                time = datetime.datetime.combine(now.date(), time.time())
+            if time < now:
+                time = time + datetime.timedelta(days=1)
+
+        self._time = time
+        self._original_delta = delta_
+        self._delta = delta_.total_seconds() if delta_ else None
+
+        self.restart(force=not wait_first)
+
 
 def routine(
     *,
