@@ -162,7 +162,9 @@ In addition to the above changes, the :class:`~twitchio.Client` has undergone ot
 - :meth:`twitchio.Client.update_entitlements`
 - :meth:`twitchio.Client.update_extensions`
 - :meth:`twitchio.Client.websocket_subscriptions`
-
+- :meth:`twitchio.Client.fetch_conduit`
+- :meth:`twitchio.Client.fetch_conduits`
+- :meth:`twitchio.Client.create_conduit`
 
 **Changed:**
 
@@ -210,6 +212,45 @@ In addition to the above changes, the :class:`~twitchio.Client` has undergone ot
 - ``Client.from_client_credentials()``
 - ``Client.fetch_global_chat_badges()``
 - ``Client.fetch_global_emotes()``
+
+
+Conduits and AutoClient/Bot
+===========================
+
+Recently Twitch added the ``Conduit`` transport type. Conduits help separate your EventSub subscriptions from the underlying
+connection/transport (Websocket/Webhook) and load balances the events sent between them.
+
+Read more about Conduits on the `Twitch Docs <https://dev.twitch.tv/docs/eventsub/handling-conduit-events>`_ .
+
+Conduits come with some advantages over traditional EventSub:
+
+- Uses App Access Tokens (Not User Tokens)
+- Subscription Continuity (Subscriptions remain on the Conduit even if the Bot and all it's connections disconnect for upto 72 hours)
+- Load balancing between connections
+- Scale up and down easily
+- Less subscription limits
+
+In TwitchIO V3 we support Conduits in two forms:
+
+- Via :class:`twitchio.AutoClient` and :class:`twitchio.ext.commands.AutoBot`
+- Your own implementation using the Models and API.
+
+We highly recommended using Conduits in-place of the regular EventSub implementation for your application. The easiest way to get
+started is with :class:`twitchio.AutoClient` and :class:`twitchio.ext.commands.AutoBot`.
+
+**Added:**
+
+- :class:`twitchio.AutoClient`
+- :class:`twitchio.ext.commands.AutoBot`
+- :class:`twitchio.ConduitInfo`
+- :class:`twitchio.Conduit`
+- :class:`twitchio.ConduitShard`
+- :class:`twitchio.MultiSubscribePayload`
+- :class:`twitchio.MultiSubscribeSuccess`
+- :class:`twitchio.MultiSubscribeError`
+- :meth:`twitchio.Client.fetch_conduit`
+- :meth:`twitchio.Client.fetch_conduits`
+- :meth:`twitchio.Client.create_conduit`
 
 
 Logging
@@ -340,6 +381,39 @@ To wait until the bot is ready, consider using :meth:`twitchio.Client.wait_until
 - ``Client.wait_for_ready`` is now :meth:`twitchio.Client.wait_until_ready`
 
 
+Sounds Ext
+===========
+
+The sounds extension has been removed and will be replaced with an ``Overlays`` extension in a future release.
+
+
+Routines Ext
+============
+
+The way you use Routines has not changed significantly, with only one difference. You can no longer provide the ``seconds``, ``minutes``, ``hours`` etc 
+arguments and instead pass a :class:`datetime.timedelta` in their place.
+
+Besides this change, Routines mostly underwent optimizations and compatability with asyncio changes.
+
+**Added:**
+
+- :meth:`twitchio.ext.routines.Routine.next_iteration`
+- :attr:`twitchio.ext.routines.Routine.last_iteration`
+- :attr:`twitchio.ext.routines.Routine.current_iteration`
+- :attr:`twitchio.ext.routines.Routine.args`
+- :attr:`twitchio.ext.routines.Routine.kwargs`
+
+**Changed:**
+
+- :func:`twitchio.ext.routines.routine`
+   - Accepts a :class:`datetime.timedelta` in place of individual units.
+- :meth:`twitchio.ext.routines.Routine.change_interval`
+   - Accepts a :class:`datetime.timedelta` in place of individual units.
+
+**Removed:**
+
+- Attribute ``Routine.start_time``.
+
 
 Changelog
 =========
@@ -365,6 +439,20 @@ Dependencies:
 
 Added
 ~~~~~
+
+Conduits:
+
+- :class:`twitchio.AutoClient`
+- :class:`twitchio.ext.commands.AutoBot`
+- :class:`twitchio.ConduitInfo`
+- :class:`twitchio.Conduit`
+- :class:`twitchio.ConduitShard`
+- :class:`twitchio.MultiSubscribePayload`
+- :class:`twitchio.MultiSubscribeSuccess`
+- :class:`twitchio.MultiSubscribeError`
+- :class:`twitchio.`
+
+Adapters:
 
 - :class:`twitchio.web.AiohttpAdapter`
 - :class:`twitchio.web.StarletteAdapter`
@@ -407,6 +495,9 @@ Client:
 - :meth:`twitchio.Client.update_entitlements`
 - :meth:`twitchio.Client.update_extensions`
 - :meth:`twitchio.Client.websocket_subscriptions`
+- :meth:`twitchio.Client.fetch_conduit`
+- :meth:`twitchio.Client.fetch_conduits`
+- :meth:`twitchio.Client.create_conduit`
 
 Utils/Helpers:
 
@@ -422,6 +513,14 @@ Events:
 - :func:`twitchio.event_oauth_authorized`
 - :func:`twitchio.event_token_refreshed`
 
+Routines:
+
+- :meth:`twitchio.ext.routines.Routine.next_iteration`
+- :attr:`twitchio.ext.routines.Routine.last_iteration`
+- :attr:`twitchio.ext.routines.Routine.current_iteration`
+- :attr:`twitchio.ext.routines.Routine.args`
+- :attr:`twitchio.ext.routines.Routine.kwargs`
+
 Changed
 ~~~~~~~
 
@@ -436,6 +535,14 @@ Client:
 - ``Client.create_user`` is now :meth:`twitchio.Client.create_partialuser`
 - ``Client.fetch_chatters_colors`` is now :meth:`~twitchio.Client.fetch_chatters_color`
 - ``Client.fetch_content_classification_labels`` is now :meth:`~twitchio.Client.fetch_classifications`
+
+Routines:
+
+- :func:`twitchio.ext.routines.routine`
+   - Accepts a :class:`datetime.timedelta` in place of individual units.
+- :meth:`twitchio.ext.routines.Routine.change_interval`
+   - Accepts a :class:`datetime.timedelta` in place of individual units.
+
 
 Removed
 ~~~~~~~
@@ -478,3 +585,7 @@ Client:
 - ``Client.from_client_credentials()``
 - ``Client.fetch_global_chat_badges()``
 - ``Client.fetch_global_emotes()``
+
+Routines:
+
+- Attribute ``Routine.start_time``.
