@@ -180,7 +180,7 @@ class Client:
         return self._adapter
 
     async def set_adapter(self, adapter: BaseAdapter) -> None:
-        """|async|
+        """|coro|
 
         Method which sets and starts a new web adapter which inherits from either :class:`~twitchio.AiohttpAdapter` or
         :class:`~twitchio.StarlettepAdapter` or implements the :class:`~twitchio.BaseAdapter` specifications.
