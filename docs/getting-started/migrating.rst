@@ -381,6 +381,12 @@ To wait until the bot is ready, consider using :meth:`twitchio.Client.wait_until
 - ``Client.wait_for_ready`` is now :meth:`twitchio.Client.wait_until_ready`
 
 
+PubSub Ext
+==========
+
+Twitch removed support for PubSub. You can read more on this `blog post <https://discuss.dev.twitch.com/t/legacy-pubsub-deprecation-and-shutdown-timeline/58043>`_ .
+
+
 Sounds Ext
 ===========
 
