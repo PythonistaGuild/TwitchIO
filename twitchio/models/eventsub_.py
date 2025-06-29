@@ -4818,11 +4818,19 @@ class HypeTrainContribution:
 
 
 class BaseHypeTrain(BaseEvent):
-    __slots__ = ("broadcaster", "golden_kappa", "id", "level", "started_at", "top_contributions", "total")
+    __slots__ = (
+        "broadcaster",
+        "id",
+        "level",
+        "shared_train",
+        "shared_train_participants",
+        "started_at",
+        "top_contributions",
+        "total",
+        "type",
+    )
 
-    def __init__(
-        self, payload: HypeTrainBeginEvent | HypeTrainProgressEvent | HypeTrainEndEvent, *, http: HTTPClient
-    ) -> None:
+    def __init__(self, payload: BaseHypeTrainEvent, *, http: HTTPClient) -> None:
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
@@ -4833,7 +4841,12 @@ class BaseHypeTrain(BaseEvent):
             HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
         ]
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-        self.golden_kappa: bool = bool(payload["is_golden_kappa_train"])
+        self.shared_train_participants: list[PartialUser] = [
+            PartialUser(u["broadcaster_user_id"], u["broadcaster_user_login"], u["broadcaster_user_name"], http=http)
+            for u in payload["shared_train_participants"]
+        ]
+        self.shared_train: bool = bool(payload["is_shared_train"])
+        self.type: Literal["treasure", "golden_kappa", "regular"] = payload["type"]
 
     def __repr__(self) -> str:
         return f"<BaseHypeTrain id={self.id} broadcaster={self.broadcaster} started_at={self.started_at}>"
@@ -4859,22 +4872,36 @@ class HypeTrainBegin(BaseHypeTrain):
         The number of points required to reach the next level.
     top_contributions: list[HypeTrainContribution]
         The contributors with the most points contributed.
-    last_contribution: HypeTrainContribution
-        The most recent contribution.
+    all_time_high_level: int
+        The all-time high level this type of Hype Train has reached for this broadcaster.
+    all_time_high_total: int
+        The all-time high total this type of Hype Train has reached for this broadcaster.
+    shared_train: bool
+        Indicates if the Hype Train is shared.
+        When True, `shared_train_participants` will contain the list of broadcasters the train is shared with.
+    shared_train_participants: list[PartialUser]
+        List of broadcasters in the shared Hype Train.
+    type: typing.Literal["treasure", "golden_kappa", "regular"]
+        The type of the Hype Train. Possible values are:
+
+        - treasure
+        - golden_kappa
+        - regular
+
     started_at: datetime.datetime
         The datetime of when the hype train started.
     expires_at: datetime.datetime
         The datetime when the hype train expires. The expiration is extended when the hype train reaches a new level.
-    golden_kappa: bool
-        Indicates if the hype train is a Golden Kappa Train.
+
     """
 
     subscription_type = "channel.hype_train.begin"
 
     __slots__ = (
+        "all_time_high_level",
+        "all_time_high_total",
         "expires_at",
         "goal",
-        "last_contribution",
         "progress",
     )
 
@@ -4882,11 +4909,12 @@ class HypeTrainBegin(BaseHypeTrain):
         super().__init__(payload, http=http)
         self.progress: int = int(payload["progress"])
         self.goal: int = int(payload["goal"])
-        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
         self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
+        self.all_time_high_level: int = int(payload["all_time_high_level"])
+        self.all_time_high_total: int = int(payload["all_time_high_total"])
 
     def __repr__(self) -> str:
-        return f"<HypeTrainBegin id={self.id} broadcaster={self.broadcaster} goal={self.goal} started_at={self.started_at}>"
+        return f"<HypeTrainBegin id={self.id} broadcaster={self.broadcaster} goal={self.goal} started_at={self.started_at} type={self.type}>"
 
 
 class HypeTrainProgress(BaseHypeTrain):
@@ -4909,14 +4937,22 @@ class HypeTrainProgress(BaseHypeTrain):
         The number of points required to reach the next level.
     top_contributions: list[HypeTrainContribution]
         The contributors with the most points contributed.
-    last_contribution: HypeTrainContribution
-        The most recent contribution.
     started_at: datetime.datetime
         The datetime of when the hype train started.
     expires_at: datetime.datetime
         The datetime when the hype train expires. The expiration is extended when the hype train reaches a new level.
-    golden_kappa: bool
-        Indicates if the hype train is a Golden Kappa Train.
+    shared_train: bool
+        Indicates if the Hype Train is shared.
+        When True, `shared_train_participants` will contain the list of broadcasters the train is shared with.
+    shared_train_participants: list[PartialUser]
+        List of broadcasters in the shared Hype Train.
+    type: typing.Literal["treasure", "golden_kappa", "regular"]
+        The type of the Hype Train. Possible values are:
+
+        - treasure
+        - golden_kappa
+        - regular
+
     """
 
     subscription_type = "channel.hype_train.progress"
@@ -4924,7 +4960,6 @@ class HypeTrainProgress(BaseHypeTrain):
     __slots__ = (
         "expires_at",
         "goal",
-        "last_contribution",
         "progress",
     )
 
@@ -4932,11 +4967,10 @@ class HypeTrainProgress(BaseHypeTrain):
         super().__init__(payload, http=http)
         self.progress: int = int(payload["progress"])
         self.goal: int = int(payload["goal"])
-        self.last_contribution: HypeTrainContribution = HypeTrainContribution(payload["last_contribution"], http=http)
         self.expires_at: datetime.datetime = parse_timestamp(payload["expires_at"])
 
     def __repr__(self) -> str:
-        return f"<HypeTrainProgress id={self.id} broadcaster={self.broadcaster} goal={self.goal} progress={self.progress}>"
+        return f"<HypeTrainProgress id={self.id} broadcaster={self.broadcaster} goal={self.goal} progress={self.progress} type={self.type}>"
 
 
 class HypeTrainEnd(BaseHypeTrain):
@@ -4961,8 +4995,18 @@ class HypeTrainEnd(BaseHypeTrain):
         The datetime of when the hype train ended.
     cooldown_until: datetime.datetime
         The datetime when the hype train cooldown ends so that the next hype train can start.
-    golden_kappa: bool
-        Indicates if the hype train is a Golden Kappa Train.
+    shared_train: bool
+        Indicates if the Hype Train is shared.
+        When True, `shared_train_participants` will contain the list of broadcasters the train is shared with.
+    shared_train_participants: list[PartialUser]
+        List of broadcasters in the shared Hype Train.
+    type: typing.Literal["treasure", "golden_kappa", "regular"]
+        The type of the Hype Train. Possible values are:
+
+        - treasure
+        - golden_kappa
+        - regular
+
     """
 
     subscription_type = "channel.hype_train.end"
@@ -4978,7 +5022,7 @@ class HypeTrainEnd(BaseHypeTrain):
         self.cooldown_until: datetime.datetime = parse_timestamp(payload["cooldown_ends_at"])
 
     def __repr__(self) -> str:
-        return f"<HypeTrainEnd id={self.id} broadcaster={self.broadcaster} total={self.total} ended_at={self.ended_at}>"
+        return f"<HypeTrainEnd id={self.id} broadcaster={self.broadcaster} total={self.total} ended_at={self.ended_at} type={self.type}>"
 
 
 class ShieldModeBegin(BaseEvent):
