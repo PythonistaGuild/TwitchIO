@@ -6,22 +6,11 @@
 TwitchIO
 #########
 
-.. warning::
+A fully featured, powerful async Python library for the Twitch API and EventSub with modern Object-Orientated design
+and stateful objects.
 
-   This is a beta release. Please take care using this release in production ready applications.
-
-
-.. important::
-
-   This documentation is for **Version 3**. For **Version 2.10** see: `2.10 Docs <https://twitchio.dev/en/historical-2.10.0/>`_.
-
-
-TwitchIO is a powerful async Python library for the twitch API and EventSub. Fully featured, modern Object-Orientated design
-with stateful objects.
-
-TwitchIO provides ease of use when accessing the Twitch API with powerful extensions and hot-reloadable modules to help create
-and manage applications on twitch. TwitchIO is inspired by `discord.py <https://github.com/Rapptz/discord.py>`_.
-
+TwitchIO provides ease of use when accessing the Twitch API with powerful extensions for chat commands, web-frameworks and overlays 
+with hot-reloadable modules to help create and manage bots, backends, websites and other applications on Twitch.
 
 **Features:**
 
@@ -29,9 +18,12 @@ and manage applications on twitch. TwitchIO is inspired by `discord.py <https://
 - Fully annotated and complies with the ``pyright`` strict type-checker
 - Intuitive with ease of use, using modern object orientated design
 - Conduit support for scaling and EventSub continuity
-- Feature full including extensions for ``chat bots``, running ``routine tasks`` and ``playing sounds`` on stream
+- Feature full including extensions for ``chat bots``, running ``routine tasks`` and ``overlays`` on stream
 - Easily manage ``OAuth Tokens`` and data
 - Built-in ``EventSub`` support via ``Webhook``, ``Websockets`` and :ref:`Conduits<Conduit Ref>`.
+
+TwitchIO is a powerful async Python library for the twitch API and EventSub. Fully featured, modern Object-Orientated design
+with stateful objects. TwitchIO is inspired by `discord.py <https://github.com/Rapptz/discord.py>`_.
 
 
 Help and support
@@ -40,11 +32,6 @@ Help and support
 - For issues or bugs please visit: `GitHub <https://github.com/PythonistaGuild/TwitchIO/issues>`_
 - See our :ref:`faqs`
 - Visit our `Discord <https://discord.gg/RAKc3HF>`_ for help using TwitchIO
-
-
-.. warning::
-
-   This document is a work in progress.
 
 
 Getting Started
@@ -83,7 +70,7 @@ References
 
    exts/commands/index
    exts/routines/index
-   exts/sounds/index
+   exts/overlays/index
 
 .. toctree::
    :maxdepth: 1
