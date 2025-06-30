@@ -108,3 +108,36 @@ If you do not know your user ID you can quickly fetch it using the :meth:`~twitc
 
     if __name__ == "__main__":
         asyncio.run(main())
+
+
+How do I create a custom prefix(es) for Bot/AutoBot
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`~twitchio.ext.commands.Bot` and :class:`~twitchio.ext.commands.AutoBot` both allow a custom co-routine to be used
+to determine the prefix for Chat Commands. This coroutine can be used to assign prefixes based on channel, chatter or other 
+variables. A small example is shown below:
+
+.. code:: python3
+
+    from typing import Self
+
+    import twitchio
+    from twitchio.ext import commands
+
+    class Bot(commands.Bot):
+        def __init__(self) -> None:
+            super().__init__(..., prefix=self.custom_prefix)
+        
+        async def custom_prefix(self, bot: Self, message: twitchio.ChatMessage) -> None:
+            # The prefix will be ? if the chatters name startswith "cool"
+            # Otherwise it will default to "!"
+            # This coroutine can be used to connect to a cache or database etc to provide
+            # custom settable prefixes for example...
+
+            if message.chatter.name.startswith("cool"):
+                return "?"
+
+            return "!"
+
+
+The prefix can also be passed as or returned from this function as a list of :class:`str` to allow multiple prefixes to be used.
