@@ -55,7 +55,7 @@ Windows
     venv/Scripts/Activate
 
     # Install your packages...
-    pip install -U twitchio --pre
+    pip install -U twitchio
 
     # You can use your venv python while it's activated simply by running py
     # E.g. py main.py
@@ -88,7 +88,7 @@ Linux & MacOS
     source venv/bin/activate
 
     # Install your packages...
-    pip install -U twitchio --pre
+    pip install -U twitchio
 
     # You can use your venv python while it's activated simply by running python
     # E.g. python main.py
@@ -106,12 +106,6 @@ Linux & MacOS
 Extra and Optional Dependencies
 ===============================
 
-.. raw:: html
-
-    <span class="warn-tio">This version of TwitchIO is a Beta Version!</span>
-    <hr></hr>
-
-
 To use certain optional features of TwitchIO you will have to install the required packages needed to run them.
 The following commands can be used to install TwitchIO with optional features:
 
@@ -120,21 +114,21 @@ The following commands can be used to install TwitchIO with optional features:
 
 .. code:: shell
 
-    pip install -U twitchio[starlette] --pre
+    pip install -U twitchio[starlette]
 
 
 **For development purposes**:
 
 .. code:: shell
 
-    pip install -U twitchio[dev] --pre
+    pip install -U twitchio[dev]
 
 
 **For documentation purposes**:
 
 .. code:: shell
 
-    pip install -U twitchio[docs] --pre
+    pip install -U twitchio[docs]
 
 
 Custom Index
@@ -151,7 +145,7 @@ For convenience we provide an index thanks to `Abstract Umbra <https://github.co
 
 .. code:: shell
 
-    pip install -U twitchio --pre --extra-index-url https://pip.pythonista.gg
+    pip install -U twitchio --extra-index-url https://pip.pythonista.gg
 
 
 Installation Issues

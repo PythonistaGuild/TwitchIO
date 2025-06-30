@@ -5,7 +5,7 @@ Migrating
 
 .. warning::
 
-   This document is a work in progress.
+   This document is large and currently an active work in progress.
 
 
 Version 2 to version 3 has many breaking changes, new systems, new implementations and new designs that will require rewriting
