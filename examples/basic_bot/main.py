@@ -85,7 +85,7 @@ class GeneralCommands(commands.Component):
 
         !choice <choice_1> <choice_2> <choice_3> ...
         """
-        await ctx.reply(f"You provided {len(choices)}: I chose {random.choice(choices)}")
+        await ctx.reply(f"You provided {len(choices)} choices, I choose: {random.choice(choices)}")
 
     @commands.command(aliases=["thanks", "thank"])
     async def give(self, ctx: commands.Context, user: twitchio.User, amount: int, *, message: str | None = None) -> None:
