@@ -257,3 +257,4 @@ class RevocationReason(enum.Enum):
     AUTHORIZATION_REVOKED = "authorization_revoked"
     NOTIFICATION_FAILURES_EXCEEDED = "notification_failures_exceeded"
     VERSION_REMOVED = "version_removed"
+    CHAT_USER_BANNED = "chat_user_banned"
