@@ -45,6 +45,8 @@ from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
 
 if TYPE_CHECKING:
+    from os import PathLike
+
     from starlette.requests import Request
 
     from ..authentication import AuthorizationURLPayload, UserTokenPayload, ValidateTokenPayload
@@ -105,6 +107,12 @@ class StarletteAdapter(BaseAdapter, Starlette):
         An optional :class:`str` passed to use as the EventSub secret. It is recommended you pass this parameter when using
         an adapter for EventSub, as it will reset upon restarting otherwise. You can generate token safe secrets with the
         :mod:`secrets` module.
+    ssl_keyfile: str | PathLike[str] | None
+        An optional SSL key file passed to Uvicorn.
+    ssl_keyfile_password: str | None
+        An optional password to decrypt the ssl key, passed to Uvicorn.
+    ssl_certfile: str | PathLike[str] | None
+        An optional SSL certificate file, passed to Uvicorn.
 
     Examples
     --------
@@ -143,6 +151,9 @@ class StarletteAdapter(BaseAdapter, Starlette):
         domain: str | None = None,
         eventsub_path: str | None = None,
         eventsub_secret: str | None = None,
+        ssl_keyfile: str | PathLike[str] | None = None,
+        ssl_keyfile_password: str | None = None,
+        ssl_certfile: str | PathLike[str] | None = None,
     ) -> None:
         self._host: str = host or "localhost"
         self._port: int = port or 4343
@@ -176,6 +187,10 @@ class StarletteAdapter(BaseAdapter, Starlette):
         self._closing: bool = False
         self._server: uvicorn.Server | None = None
         self._running: bool = False
+
+        self.__certfile = ssl_certfile
+        self.__keyfile = ssl_keyfile
+        self.__keypass = ssl_keyfile_password
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(host="{self._host}", port={self._port})'
@@ -250,6 +265,9 @@ class StarletteAdapter(BaseAdapter, Starlette):
             log_level="critical",
             workers=0,
             timeout_graceful_shutdown=3,
+            ssl_keyfile=self.__keyfile,
+            ssl_keyfile_password=self.__keypass,
+            ssl_certfile=self.__certfile,
         )
 
         self._server = uvicorn.Server(config)
