@@ -352,6 +352,9 @@ class Scopes(metaclass=_ScopeMeta):
 
         for scope in scopes:
             if isinstance(scope, str):
+                if scope == "openid":
+                    continue
+
                 prop = getattr(self, scope.replace(":", "_"))
             elif isinstance(scope, _scope_property):  # type: ignore
                 prop = scope
