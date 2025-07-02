@@ -52,7 +52,7 @@ from .web.utils import BaseAdapter
 
 if TYPE_CHECKING:
     import datetime
-    from collections.abc import Awaitable, Callable, Coroutine
+    from collections.abc import Awaitable, Callable, Collection, Coroutine
 
     import aiohttp
 
@@ -3496,7 +3496,9 @@ class AutoClient(Client):
         """
         return self._conduit_info
 
-    async def _multi_sub(self, subscriptions: list[SubscriptionPayload], *, stop_on_error: bool) -> MultiSubscribePayload:
+    async def _multi_sub(
+        self, subscriptions: Collection[SubscriptionPayload], *, stop_on_error: bool
+    ) -> MultiSubscribePayload:
         assert self._conduit_info.conduit
 
         conduit = self._conduit_info.conduit
@@ -3535,16 +3537,20 @@ class AutoClient(Client):
 
     @overload
     async def multi_subscribe(
-        self, subscriptions: list[SubscriptionPayload], *, wait: Literal[True] = True, stop_on_error: bool = False
+        self, subscriptions: Collection[SubscriptionPayload], *, wait: Literal[True] = True, stop_on_error: bool = False
     ) -> MultiSubscribePayload: ...
 
     @overload
     async def multi_subscribe(
-        self, subscriptions: list[SubscriptionPayload], *, wait: Literal[False] = False, stop_on_error: bool = False
+        self, subscriptions: Collection[SubscriptionPayload], *, wait: Literal[False] = False, stop_on_error: bool = False
     ) -> asyncio.Task[MultiSubscribePayload]: ...
 
     async def multi_subscribe(
-        self, subscriptions: list[SubscriptionPayload], *, wait: bool = True, stop_on_error: bool = False
+        self,
+        subscriptions: Collection[SubscriptionPayload],
+        *,
+        wait: bool = True,
+        stop_on_error: bool = False,
     ) -> MultiSubscribePayload | asyncio.Task[MultiSubscribePayload]:
         """|coro|
 
