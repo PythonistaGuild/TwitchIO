@@ -288,6 +288,9 @@ class Bot(Mixin[None], Client):
                 self.remove_listener(listener)
 
     async def _add_component(self, component: Component, /) -> None:
+        if component.__component_name__ in self._components:
+            raise ComponentLoadError(f'A component named "{component.__component_name__}" has already been loaded.')
+
         for command in component.__all_commands__.values():
             command._injected = component
 
@@ -328,6 +331,10 @@ class Bot(Mixin[None], Client):
             await self._add_component(component)
         except Exception as e:
             self._cleanup_component(component)
+
+            if isinstance(e, ComponentLoadError):
+                raise e
+
             raise ComponentLoadError from e
 
         self._components[component.__component_name__] = component
