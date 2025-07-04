@@ -432,6 +432,8 @@ class Client:
         if load_tokens:
             async with self._http._token_lock:
                 await self.load_tokens()
+        else:
+            self._http._has_loaded = True
 
         if self._bot_id:
             logger.debug("Fetching Clients self user for %r", self.__class__.__name__)
