@@ -157,17 +157,17 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         if eventsub_secret and not 10 <= len(eventsub_secret) <= 100:
             raise ValueError("Eventsub Secret must be between 10 and 100 characters long.")
 
-        self._domain: str | None = None
+        self._ssl_context: SSLContext | None = ssl_context
+        self._proto = "https" if (ssl_context or domain) else "http"
+
         if domain:
             domain_ = domain.removeprefix("http://").removeprefix("https://").removesuffix("/")
-            self._domain = f"https://{domain_}"
+            self._domain = f"{self._proto}://{domain_}"
         else:
-            self._domain = f"http://{self._host}:{self._port}"
+            self._domain = f"{self._proto}://{self._host}:{self._port}"
 
         path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
         self._eventsub_path: str = f"/{path}"
-
-        self._ssl_context: SSLContext | None = ssl_context
 
         self._runner_task: asyncio.Task[None] | None = None
         self.startup = self.event_startup
@@ -197,7 +197,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         return f"{self._domain}/oauth/callback"
 
     async def event_startup(self) -> None:
-        logger.info("Starting %r on http://%s:%s.", self, self._host, self._port)
+        logger.info("Starting %r on %s://%s:%s.", self, self._proto, self._host, self._port)
 
     async def event_shutdown(self) -> None:
         logger.info("Successfully shutdown TwitchIO <%s>.", self.__class__.__qualname__)
