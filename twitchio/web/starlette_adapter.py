@@ -268,6 +268,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
             ssl_keyfile=self.__keyfile,
             ssl_keyfile_password=self.__keypass,
             ssl_certfile=self.__certfile,
+            timeout_keep_alive=5,
         )
 
         self._server = uvicorn.Server(config)
