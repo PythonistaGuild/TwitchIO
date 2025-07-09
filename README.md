@@ -32,7 +32,7 @@ Getting Started
 
 Useful Links
 --------------
-[Scope/OAuth URL Generator](https://chillymosh.com/tools/twitch-scopes/)
+[Scope/OAuth URL Generator](https://chillymosh.com/tools/twitch/twitch-scopes)
 
 [Twitch API Documentation](https://dev.twitch.tv/docs/)
 
