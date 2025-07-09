@@ -1982,7 +1982,7 @@ class HTTPClient:
         token_for: str | PartialUser,
     ) -> WarnChatUserResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
-        data = {"user_id": user_id, "reason": reason}
+        data = {"data": {"user_id": user_id, "reason": reason}}
 
         route: Route = Route("POST", "moderation/warnings", params=params, json=data, token_for=token_for)
         return await self.request_json(route)
