@@ -65,7 +65,9 @@ class Clip:
     creator: twitchio.PartialUser
         The user who created the clip.
     video_id: str
-        The ID of the video the clip is sourced from.
+        The ID of the video the clip is sourced from. This could be an empty :class:`str` if the video associated with the Clip
+        is not available. This could be due to either the broadcaster or Twitch removing the video or because the video has
+        not yet been made available (this can take a few minutes after Clip creation to occur).
     game_id: str
         The ID of the game that was being played when the clip was created.
     language: str
@@ -143,15 +145,23 @@ class Clip:
 
         Fetches the :class:`~twitchio.Video` associated with this clip, if it can be found.
 
+        .. note::
+
+            If :attr:`.video_id` is an empty :class:`str` this method will return ``None``. This could be due to either the
+            broadcaster or Twitch removing the video or because the video has not yet been made available
+            (this can take a few minutes after Clip creation to occur).
+
         Returns
         -------
         Video
             The video associated with this Clip.
         None
-            The video was not found.
+            The video was not found or is not yet available.
         """
-        data: list[Video] = await self._http.get_videos(ids=[self.video_id], period="all", sort="time", type="all", first=1)
+        if not self.video_id:
+            return None
 
+        data: list[Video] = await self._http.get_videos(ids=[self.video_id], period="all", sort="time", type="all", first=1)
         return data[0] if data else None
 
 
