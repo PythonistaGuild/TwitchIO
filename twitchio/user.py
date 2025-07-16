@@ -113,6 +113,9 @@ class PartialUser:
 
         return self.id == other.id
 
+    def __hash__(self) -> int:
+        return hash(self.id)
+
     @property
     def mention(self) -> str:
         """Property returning the users display_name formatted to mention them in chat.
