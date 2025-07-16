@@ -501,6 +501,37 @@ class Command(Generic[Component_T, P]):
             if result is not True:
                 raise GuardFailure(exc_msg, guard=guard)
 
+    async def run_guards(self, ctx: Context, *, with_cooldowns: bool = False) -> None:
+        """|coro|
+
+        Method which allows a :class:`~twitchio.ext.commands.Command` to run and check all associated Guards, including
+        any cooldowns, with the provided :class:`~twitchio.ext.commands.Context`.
+
+        This is useful if you would like to verify if a chatter is allowed to run a command without invoking the callback. E.g.
+        for displaying help or a list of available commands to a Chatter.
+
+        .. versionadded:: 3.1
+
+        Parameters
+        ----------
+        ctx: :class:`~twitchio.ext.commands.Context`
+            The :class:`~twitchio.ext.commands.Context` to run the Guards against.
+        with_cooldowns: bool
+            An optional :class:`bool` which indicates whether any associated cooldowns on this command should also be checked.
+            Since running a cooldown will trigger an update in the Cooldown bucket, this is ``False`` by default.
+
+        Returns
+        -------
+        None
+            The Guard checks successfully ran.
+
+        Raises
+        ------
+        GuardFailure
+            A Guard failed and would have prevented a user from invoking this command.
+        """
+        await self._run_guards(ctx, with_cooldowns=with_cooldowns)
+
     async def _run_guards(self, context: Context, *, with_cooldowns: bool = True) -> None:
         if with_cooldowns and self._cooldowns_first:
             await self._run_cooldowns(context)
