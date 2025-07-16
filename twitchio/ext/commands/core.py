@@ -219,6 +219,9 @@ class Command(Generic[Component_T, P]):
         self._before_hook: Callable[[Component_T, Context], Coro] | Callable[[Context], Coro] | None = None
         self._after_hook: Callable[[Component_T, Context], Coro] | Callable[[Context], Coro] | None = None
 
+        self._help: str = callback.__doc__ or ""
+        self.__doc__ = self._help
+
     def __repr__(self) -> str:
         return f"Command(name={self._name}, parent={self.parent})"
 
@@ -228,6 +231,16 @@ class Command(Generic[Component_T, P]):
     async def __call__(self, context: Context) -> Any:
         callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
         return await callback  # type: ignore will fix later
+
+    @property
+    def help(self) -> str:
+        """Property returning a :class:`str` which is the docstring associated with the command callback.
+
+        If no docstring is present on the callback of the command, an empty string will be returned instead.
+
+        .. versionadded:: 3.1
+        """
+        return self._help
 
     @property
     def component(self) -> Component_T | None:
