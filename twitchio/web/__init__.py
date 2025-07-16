@@ -40,8 +40,8 @@ logger.addHandler(handler)
 try:
     from .starlette_adapter import StarletteAdapter as StarletteAdapter
 except ImportError:
-    msg = "Please install the required packages: 'pip install twitchio[starlette]' to use the StarletteAdapter."
-    logger.warning("Starlette or uvicorn is not installed, StarletteAdapter will not be available. %s", msg)
+    msg = "If you require the StarletteAdapter please install the required packages: 'pip install twitchio[starlette]'."
+    logger.warning("Starlette or uvicorn is not installed, StarletteAdapter support will not be available. %s", msg)
 
 
 logger.removeHandler(handler)
