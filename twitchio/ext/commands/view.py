@@ -57,6 +57,10 @@ class StringView:
         self.end: int = len(buffer)
         self.previous = 0
 
+    def reset(self) -> None:
+        self.index = 0
+        self.previous = 0
+
     @property
     def current(self) -> str | None:
         return None if self.eof else self.buffer[self.index]
