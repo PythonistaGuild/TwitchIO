@@ -107,6 +107,8 @@ class Context:
         self._args: list[Any] = []
         self._kwargs: dict[str, Any] = {}
 
+        self._prepare_called: bool = False
+
     @property
     def message(self) -> ChatMessage | None:
         """Property returning the :class:`~twitchio.ChatMessage` that this :class:`~.commands.Context` was
@@ -343,7 +345,10 @@ class Context:
 
         self._validate_prefix(potential)
 
-    def _get_command(self) -> None:
+    def _get_command(self, reset: bool = False) -> None:
+        if self._prepare_called:
+            return
+
         commands = self._bot._commands
 
         if isinstance(self._payload, (ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate)):
@@ -361,17 +366,51 @@ class Context:
         self._invoked_with = next_
         command = commands.get(next_)
 
+        if reset:
+            self._view.reset()
+
         if not command:
             return
 
         self._command = command
         return
 
-    async def _prepare(self) -> None:
+    async def fetch_command(self) -> Command[Any, ...] | RewardCommand[Any, ...] | None:
+        """|coro|
+
+        Method which validates the prefix and finds and returns the command that would be invoked or ``None`` if no valid
+        command can be found.
+
+        If no valid ``prefix`` is found this method will always return ``None``.
+
+        .. note::
+
+            Unlike :meth:`.prepare` this method resets the state of the internal string-view used to find the ``prefix``,
+            ``command`` and ``arguments`` and can be safely used at anytime.
+
+        .. versionadded:: 3.1
+
+        Returns
+        -------
+        :class:`twitchio.ext.commands.Command` | :class:`twitchio.ext.commands.RewardCommand` | None
+            The :class:`twitchio.ext.commands.Command` or :class:`twitchio.ext.commands.RewardCommand` if found alongside
+            a valid prefix, otherwise ``None``.
+        """
+        try:
+            await self._prepare(reset=True)
+        except PrefixError:
+            return
+
+        return self._command
+
+    async def _prepare(self, reset: bool = False) -> None:
         if isinstance(self._payload, ChatMessage):
             await self._get_prefix()
 
-        self._get_command()
+        self._get_command(reset=reset)
+
+        if reset is False:
+            self._prepare_called = True
 
     async def prepare(self) -> None:
         """|coro|
@@ -381,6 +420,10 @@ class Context:
         This coroutine is called automatically in :meth:`.invoke` before anything else.
 
         Could be overriden to add extra setup before command invocation.
+
+        .. note::
+
+            If this method is overriden you should call `await super().prepare()` to ensure correct setup of the context.
         """
         await self._prepare()
 
