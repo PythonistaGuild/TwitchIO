@@ -97,27 +97,28 @@ class ChatterColor:
     -----------
     user: PartialUser
         PartialUser of the chatter.
-    colour: Colour
+    colour: Colour | None
         The :class:`~twitchio.utils.Colour`. There is an alias to this named `color`.
+        This is `None` if a colour is not set.
     """
 
     __slots__ = ("_colour", "user")
 
     def __init__(self, data: UserChatColorResponseData, *, http: HTTPClient) -> None:
         self.user = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
-        self._colour: Colour = Colour.from_hex(data["color"])
+        self._colour: Colour | None = Colour.from_hex(data["color"]) if data.get("color") else None
 
     def __repr__(self) -> str:
         return f"<ChatterColor user={self.user} color={self.colour}>"
 
     @property
-    def colour(self) -> Colour:
+    def colour(self) -> Colour | None:
         return self._colour
 
     color = colour
 
     def __str__(self) -> str:
-        return self._colour.hex
+        return self._colour.hex if self._colour is not None else ""
 
 
 class ChatBadge:
