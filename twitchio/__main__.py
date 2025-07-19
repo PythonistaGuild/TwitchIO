@@ -28,9 +28,9 @@ import os
 import pathlib
 import platform
 import re
-import sys
 import subprocess
-from typing import Callable
+import sys
+from collections.abc import Callable
 
 import aiohttp
 
@@ -91,7 +91,7 @@ async def teardown(bot: Bot) -> None: ...
 MAIN = """"""
 
 BOOLS = {
-    "y": True, 
+    "y": True,
     "yes": True,
     "n": False,
     "no": False,
@@ -114,23 +114,23 @@ def bool_validate(inp: str) -> bool:
 
 def validate_input(inp: str, check: Callable[[str], bool] | None = None, *, error_msg: str | None = None) -> str:
     error_msg = error_msg or "Invalid input, please try again!"
-    
+
     while True:
         response = input(inp)
         if not check:
             break
-        
+
         try:
             result = check(response)
         except Exception:
             result = False
-        
+
         if result is False:
             print(error_msg, end="\n\n")
             continue
-        
+
         break
-    
+
     return response
 
 
@@ -183,102 +183,108 @@ def version_info() -> None:
 
 
 def install_packages(exe: pathlib.Path, starlette: bool | None = False) -> None:
-    package = "twitchio" if not starlette else "twitchio[starlette]"
+    package = "twitchio[starlette]" if starlette else "twitchio"
     subprocess.call([exe, "-m", "pip", "install", package, "--upgrade", "--no-cache"])
 
 
 def generate_venv() -> None:
     # Create the venv...
     subprocess.call([sys.executable, "-m", "venv", ".venv"])
-    
+
     system = platform.system()
-    
+
     if system == "Windows":
         exe = pathlib.Path(".venv") / "Scripts" / "python.exe"
     elif system in ["Darwin", "Linux"]:
         exe = pathlib.Path(".venv") / "bin" / "python"
-    else:        
+    else:
         print("Unsupported operating system... Skipping package installation. Please manually install required packages.")
         return
-    
-    starlette = bool_check(validate_input("Would you like to install the optional Starlette and Uvicorn packages? (y/N): ",  bool_validate,))
-    install_packages(exe, starlette)  
+
+    starlette = bool_check(
+        validate_input(
+            "Would you like to install the optional Starlette and Uvicorn packages? (y/N): ",
+            bool_validate,
+        )
+    )
+    install_packages(exe, starlette)
 
 
 def generate_bot() -> ...:
     name = validate_input("Project name? (Leave blank to generate files in this directory): ")
     if name:
-        dir = pathlib.Path(name)
-        dir.mkdir(exist_ok=True)
-        os.chdir(dir)
+        _dir = pathlib.Path(name)
+        _dir.mkdir(exist_ok=True)
+        os.chdir(_dir)
     else:
-        dir = pathlib.Path.cwd()
-    
+        _dir = pathlib.Path.cwd()
+
     if sys.prefix != sys.base_prefix:
-        resp = bool_check(validate_input("No virtual environment used. Would you like to create one? (y/N): ",  bool_validate,))
-        
+        resp = bool_check(
+            validate_input(
+                "No virtual environment used. Would you like to create one? (y/N): ",
+                bool_validate,
+            )
+        )
+
         if resp:
             generate_venv()
-    
-    components = bool_check(validate_input("Would you like to setup commands.Components? (y/N): ",  bool_validate))
+
+    components = bool_check(validate_input("Would you like to setup commands.Components? (y/N): ", bool_validate))
     if components:
         comp_dir = pathlib.Path("components")
         comp_dir.mkdir(exist_ok=True)
-        
+
         with open(comp_dir / "general.py", "w") as fp:
             fp.write(COMPONENT)
-    
+
     client_id = None
     client_sec = None
-    config = bool_check(validate_input("Would you like to create a config? (y/N): ",  bool_validate))
-    
+    config = bool_check(validate_input("Would you like to create a config? (y/N): ", bool_validate))
+
     if config:
-        
         while True:
-            
             client_id = validate_input("Please enter your Client-ID: ")
             cid_reenter = validate_input("Please re-enter your Client-ID: ")
-            
+
             if client_id != cid_reenter:
                 print("Client-ID does not match, please try again...", end="\n\n")
                 continue
-            
+
             break
-        
-        while True:  
+
+        while True:
             client_sec = getpass.getpass("Please enter your Client-Secret: ")
             csec_reenter = getpass.getpass("Please re-enter your Client-Secret: ")
 
             if client_sec != csec_reenter:
                 print("Client-Secret does not match, please try again...", end="\n\n")
                 continue
-            
+
             break
-        
+
         config_data = f"""[secrets]\nclient_id = \"{client_id}\"\nclient_secret = \"{client_sec}\""""
         with open("config.toml", "w") as fp:
             fp.write(config_data)
-    
+
     if client_id and client_sec:
         while True:
             owner_name = validate_input("Please enter the Twitch username of the owner of this Bot (E.g. chillymosh): ")
             bot_name = validate_input("Please enter the Twitch username of the Bot Account (E.g. chillybot): ")
             names = f"Owner Name: '{owner_name}'\nBot Name: '{bot_name}'"
-            
+
             correct = bool_check(validate_input(f"Is this information correct? (y/N)\n\n{names}\n", bool_validate))
             if not correct:
                 continue
-            
+
             break
-        
-        
-    
+
     # TODO: .env
     # TODO: client details
     # TODO: fetch owner/bot IDs
     # with open(dir / "main.py", "w") as fp:
     #     ...
-        
+
     # with open(dir / "bot.py", "w") as fp:
     #     ...
 
