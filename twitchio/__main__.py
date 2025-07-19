@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 import argparse
+import asyncio
 import getpass
 import os
 import pathlib
@@ -54,15 +55,16 @@ parser = argparse.ArgumentParser(prog="twitchio")
 parser.add_argument("--version", action="store_true", help="Get version and debug information for TwitchIO.")
 
 # TODO: Only uncomment for testing, until complete...
-# new_bot = parser.add_argument_group("Create Bot", "Create and generate bot boilerplate via an interactive walkthrough.")
-# new_bot.add_argument("--create-new", action="store_true", help="Start an interactive walkthrough.")
+new_bot = parser.add_argument_group("Create Bot", "Create and generate bot boilerplate via an interactive walkthrough.")
+new_bot.add_argument("--create-new", action="store_true", help="Start an interactive walkthrough.")
 
 args = parser.parse_args()
 
 
-COMPONENT = """from typing import TYPE_CHECKING
+COMPONENT = """from __future__ import annotations
 
-import twitchio
+from typing import TYPE_CHECKING
+
 from twitchio.ext import commands
 
 
@@ -88,7 +90,96 @@ async def teardown(bot: Bot) -> None: ...
 
 """
 
-MAIN = """"""
+MAIN = """import asyncio
+import logging
+import tomllib
+
+from bot import Bot
+
+import twitchio
+
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
+
+
+def main() -> None:
+    twitchio.utils.setup_logging(level=logging.INFO)
+
+    with open("config.toml", "rb") as fp:
+        config = tomllib.load(fp)
+
+    async def runner() -> None:
+        async with Bot(**config["bot"]) as bot:
+            await bot.start()
+
+    try:
+        asyncio.run(runner())
+    except KeyboardInterrupt:
+        LOGGER.warning("Shutting down due to Keyboard Interrupt.")
+
+
+if __name__ == "__main__":
+    main()
+
+"""
+
+BOT = """from __future__ import annotations
+
+import json
+import logging
+from typing import TYPE_CHECKING, Any
+
+from twitchio import eventsub
+from twitchio.ext import commands
+
+
+if TYPE_CHECKING:
+    from twitchio.authentication import UserTokenPayload
+
+
+LOGGER: logging.Logger = logging.getLogger("Bot")
+
+
+class Bot(commands.AutoBot):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+    async def setup_hook(self) -> None:
+        subs: list[eventsub.SubscriptionPayload] = []
+
+        with open(".tio.tokens.json", "rb") as fp:
+            tokens = json.load(fp)
+
+            for user_id in tokens:
+                subs.extend(self.generate_subs(user_id))
+
+        if subs:
+            await self.multi_subscribe(subs)
+
+        {COMP}
+
+    async def event_ready(self) -> None:
+        LOGGER.info("Logged in as: %s. Owner: %s", self.user, self.owner)
+
+    def generate_subs(self, user_id: str) -> tuple[eventsub.SubscriptionPayload, ...]:
+        # Add the required eventsub subscriptions for each user...
+        assert self.user
+
+        return (eventsub.ChatMessageSubscription(broadcaster_user_id=user_id, user_id=self.user.id),)
+
+    async def event_oauth_authorized(self, payload: UserTokenPayload) -> None:
+        await self.add_token(payload.access_token, payload.refresh_token)
+
+        if not payload.user_id:
+            return
+
+        if payload.user_id == self.bot_id:
+            # Don't subscribe to events for the bot user
+            return
+
+        await self.multi_subscribe(self.generate_subs(payload.user_id))
+
+"""
 
 BOOLS = {
     "y": True,
@@ -210,7 +301,7 @@ def generate_venv() -> None:
     install_packages(exe, starlette)
 
 
-def generate_bot() -> ...:
+async def generate_bot() -> ...:
     name = validate_input("Project name? (Leave blank to generate files in this directory): ")
     if name:
         _dir = pathlib.Path(name)
@@ -230,7 +321,7 @@ def generate_bot() -> ...:
         if resp:
             generate_venv()
 
-    components = bool_check(validate_input("Would you like to setup commands.Components? (y/N): ", bool_validate))
+    components = bool_check(validate_input("\nWould you like to setup commands.Components? (y/N): ", bool_validate))
     if components:
         comp_dir = pathlib.Path("components")
         comp_dir.mkdir(exist_ok=True)
@@ -238,59 +329,75 @@ def generate_bot() -> ...:
         with open(comp_dir / "general.py", "w") as fp:
             fp.write(COMPONENT)
 
-    client_id = None
-    client_sec = None
-    config = bool_check(validate_input("Would you like to create a config? (y/N): ", bool_validate))
+    while True:
+        client_id = validate_input("Please enter your Client-ID: ")
+        cid_reenter = validate_input("Please re-enter your Client-ID: ")
 
-    if config:
-        while True:
-            client_id = validate_input("Please enter your Client-ID: ")
-            cid_reenter = validate_input("Please re-enter your Client-ID: ")
+        if client_id != cid_reenter:
+            print("Client-ID does not match, please try again...", end="\n\n")
+            continue
 
-            if client_id != cid_reenter:
-                print("Client-ID does not match, please try again...", end="\n\n")
-                continue
+        break
 
-            break
+    while True:
+        client_sec = getpass.getpass("Please enter your Client-Secret: ")
+        csec_reenter = getpass.getpass("Please re-enter your Client-Secret: ")
 
-        while True:
-            client_sec = getpass.getpass("Please enter your Client-Secret: ")
-            csec_reenter = getpass.getpass("Please re-enter your Client-Secret: ")
+        if client_sec != csec_reenter:
+            print("Client-Secret does not match, please try again...", end="\n\n")
+            continue
 
-            if client_sec != csec_reenter:
-                print("Client-Secret does not match, please try again...", end="\n\n")
-                continue
+        break
 
-            break
+    while True:
+        owner_name = validate_input("Please enter the Twitch username of the owner of this Bot (E.g. chillymosh): ")
+        bot_name = validate_input("Please enter the Twitch username of the Bot Account (E.g. chillybot): ")
+        names = f"Owner Name: '{owner_name}'\nBot Name: '{bot_name}'"
 
-        config_data = f"""[secrets]\nclient_id = \"{client_id}\"\nclient_secret = \"{client_sec}\""""
-        with open("config.toml", "w") as fp:
-            fp.write(config_data)
+        correct = bool_check(validate_input(f"Is this information correct? (y/N)\n\n{names}\n", bool_validate))
+        if not correct:
+            continue
 
-    if client_id and client_sec:
-        while True:
-            owner_name = validate_input("Please enter the Twitch username of the owner of this Bot (E.g. chillymosh): ")
-            bot_name = validate_input("Please enter the Twitch username of the Bot Account (E.g. chillybot): ")
-            names = f"Owner Name: '{owner_name}'\nBot Name: '{bot_name}'"
+        break
 
-            correct = bool_check(validate_input(f"Is this information correct? (y/N)\n\n{names}\n", bool_validate))
-            if not correct:
-                continue
+    import twitchio
 
-            break
+    client = twitchio.Client(client_id=client_id, client_secret=client_sec)
+    async with client:
+        await client.login()
 
-    # TODO: .env
-    # TODO: client details
-    # TODO: fetch owner/bot IDs
-    # with open(dir / "main.py", "w") as fp:
-    #     ...
+        owner = bot = None
+        try:
+            owner, bot = await client.fetch_users(logins=[owner_name, bot_name])
+        except twitchio.HTTPException:
+            print(
+                "Error fetching IDs of provided users. Please do this manually and enter them into the generated config.toml"
+            )
 
-    # with open(dir / "bot.py", "w") as fp:
-    #     ...
+    prefixr = validate_input("Please enter a command prefix for the Bot (Leave blank for '!'): ")
+    prefix = prefixr or "!"
+
+    config_data = (
+        f'[bot]\nclient_id = "{client_id}"\nclient_secret = "{client_sec}"\n'
+        f'owner_id = "{owner.id if owner else ""}"\nbot_id = "{bot.id if bot else ""}"\n'
+        f'prefix = "{prefix}"'
+    )
+
+    with open("config.toml", "w") as fp:
+        fp.write(config_data)
+
+    with open("main.py", "w") as fp:
+        fp.write(MAIN)
+
+    with open("bot.py", "w") as fp:
+        comp = 'await self.load_module("components.general")' if components else ""
+        fp.write(BOT.format(COMP=comp))
+
+    print("\n\nSuccessfully created Bot boilerplate with the provided details!")
 
 
 if args.version:
     version_info()
 
 elif args.create_new:
-    generate_bot()
+    asyncio.run(generate_bot())
