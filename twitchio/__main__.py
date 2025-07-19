@@ -54,7 +54,6 @@ except ImportError:
 parser = argparse.ArgumentParser(prog="twitchio")
 parser.add_argument("--version", action="store_true", help="Get version and debug information for TwitchIO.")
 
-# TODO: Only uncomment for testing, until complete...
 new_bot = parser.add_argument_group("Create Bot", "Create and generate bot boilerplate via an interactive walkthrough.")
 new_bot.add_argument("--create-new", action="store_true", help="Start an interactive walkthrough.")
 
@@ -301,7 +300,7 @@ def generate_venv() -> None:
     install_packages(exe, starlette)
 
 
-async def generate_bot() -> ...:
+async def generate_bot() -> None:
     name = validate_input("Project name? (Leave blank to generate files in this directory): ")
     if name:
         _dir = pathlib.Path(name)
