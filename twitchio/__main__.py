@@ -23,6 +23,7 @@ SOFTWARE.
 """
 
 import argparse
+import getpass
 import os
 import pathlib
 import platform
@@ -226,6 +227,51 @@ def generate_bot() -> ...:
         
         with open(comp_dir / "general.py", "w") as fp:
             fp.write(COMPONENT)
+    
+    client_id = None
+    client_sec = None
+    config = bool_check(validate_input("Would you like to create a config? (y/N): ",  bool_validate))
+    
+    if config:
+        
+        while True:
+            
+            client_id = validate_input("Please enter your Client-ID: ")
+            cid_reenter = validate_input("Please re-enter your Client-ID: ")
+            
+            if client_id != cid_reenter:
+                print("Client-ID does not match, please try again...", end="\n\n")
+                continue
+            
+            break
+        
+        while True:  
+            client_sec = getpass.getpass("Please enter your Client-Secret: ")
+            csec_reenter = getpass.getpass("Please re-enter your Client-Secret: ")
+
+            if client_sec != csec_reenter:
+                print("Client-Secret does not match, please try again...", end="\n\n")
+                continue
+            
+            break
+        
+        config_data = f"""[secrets]\nclient_id = \"{client_id}\"\nclient_secret = \"{client_sec}\""""
+        with open("config.toml", "w") as fp:
+            fp.write(config_data)
+    
+    if client_id and client_sec:
+        while True:
+            owner_name = validate_input("Please enter the Twitch username of the owner of this Bot (E.g. chillymosh): ")
+            bot_name = validate_input("Please enter the Twitch username of the Bot Account (E.g. chillybot): ")
+            names = f"Owner Name: '{owner_name}'\nBot Name: '{bot_name}'"
+            
+            correct = bool_check(validate_input(f"Is this information correct? (y/N)\n\n{names}\n", bool_validate))
+            if not correct:
+                continue
+            
+            break
+        
+        
     
     # TODO: .env
     # TODO: client details
