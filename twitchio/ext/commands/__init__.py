@@ -25,6 +25,7 @@ SOFTWARE.
 from .bot import AutoBot as AutoBot, Bot as Bot
 from .components import *
 from .context import *
+from .converters import *
 from .cooldowns import *
 from .core import *
 from .exceptions import *

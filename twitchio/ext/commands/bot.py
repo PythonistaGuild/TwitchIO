@@ -36,7 +36,6 @@ from twitchio.user import PartialUser
 
 from ...utils import _is_submodule
 from .context import Context
-from .converters import _BaseConverter
 from .core import Command, CommandErrorPayload, Group, Mixin
 from .exceptions import *
 
@@ -176,7 +175,6 @@ class Bot(Mixin[None], Client):
         self._owner_id: str | None = owner_id
         self._get_prefix: PrefixT = prefix
         self._components: dict[str, Component] = {}
-        self._base_converter: _BaseConverter = _BaseConverter(self)
         self.__modules: dict[str, types.ModuleType] = {}
         self._owner: User | None = None
 

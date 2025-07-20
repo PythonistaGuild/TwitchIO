@@ -24,19 +24,20 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, runtime_checkable
 
 from twitchio.user import User
+from twitchio.utils import Color, Colour
 
 from .exceptions import *
 
 
 if TYPE_CHECKING:
-    from .bot import Bot
     from .context import Context
-    from .types_ import BotT
 
-__all__ = ("_BaseConverter",)
+
+__all__ = ("ColorConverter", "ColourConverter", "Converter", "UserConverter")
+
 
 _BOOL_MAPPING: dict[str, bool] = {
     "true": True,
@@ -52,38 +53,86 @@ _BOOL_MAPPING: dict[str, bool] = {
 }
 
 
-class _BaseConverter:
-    def __init__(self, client: Bot) -> None:
-        self.__client: Bot = client
+T_co = TypeVar("T_co", covariant=True)
 
-        self._MAPPING: dict[Any, Any] = {User: self._user}
-        self._DEFAULTS: dict[type, Any] = {str: str, int: int, float: float, bool: self._bool, type(None): type(None)}
 
-    def _bool(self, arg: str) -> bool:
-        try:
-            result = _BOOL_MAPPING[arg.lower()]
-        except KeyError:
-            pretty: str = " | ".join(f'"{k}"' for k in _BOOL_MAPPING)
-            raise BadArgument(f'Failed to convert "{arg}" to type bool. Expected any: [{pretty}]', value=arg)
+@runtime_checkable
+class Converter(Protocol[T_co]):
+    """Base class used to create custom argument converters in :class:`~twitchio.ext.commands.Command`'s.
 
-        return result
+    To create a custom converter and do conversion logic on an argument you must override the :meth:`.convert` method.
+    :meth:`.convert` must be a coroutine.
 
-    async def _user(self, context: Context[BotT], arg: str) -> User:
+    Examples
+    --------
+
+    .. code:: python3
+
+        class LowerCaseConverter(commands.Converter[str]):
+
+            async def convert(self, ctx: commands.Context, arg: str) -> str:
+                return arg.lower()
+
+
+        @commands.command()
+        async def test(ctx: commands.Context, arg: LowerCaseConverter) -> None: ...
+
+
+    .. versionadded:: 3.1
+    """
+
+    async def convert(self, ctx: Context[Any], arg: str) -> T_co:
+        """|coro|
+
+        Method used on converters to implement conversion logic.
+
+        Parameters
+        ----------
+        ctx: :class:`~twitchio.ext.commands.Context`
+            The context provided to the converter after command invocation has started.
+        arg: str
+            The argument received in raw form as a :class:`str` and passed to the converter to do conversion logic on.
+        """
+        raise NotImplementedError("Classes that derive from Converter must implement this method.")
+
+
+class UserConverter(Converter[User]):
+    """The converter used to convert command arguments to a :class:`twitchio.User`.
+
+    This is a default converter which can be used in commands by annotating arguments with the :class:`twitchio.User` type.
+
+    .. note::
+
+        This converter uses an API call to attempt to fetch a valid :class:`twitchio.User`.
+
+
+    Example
+    -------
+
+    .. code:: python3
+
+        @commands.command()
+        async def test(ctx: commands.Context, *, user: twitchio.User) -> None: ...
+    """
+
+    async def convert(self, ctx: Context[Any], arg: str) -> User:
+        client = ctx.bot
+
         arg = arg.lower()
         users: list[User]
         msg: str = 'Failed to convert "{}" to User. A User with the ID or login could not be found.'
 
         if arg.startswith("@"):
             arg = arg.removeprefix("@")
-            users = await self.__client.fetch_users(logins=[arg])
+            users = await client.fetch_users(logins=[arg])
 
             if not users:
                 raise BadArgument(msg.format(arg), value=arg)
 
         if arg.isdigit():
-            users = await self.__client.fetch_users(logins=[arg], ids=[arg])
+            users = await client.fetch_users(logins=[arg], ids=[arg])
         else:
-            users = await self.__client.fetch_users(logins=[arg])
+            users = await client.fetch_users(logins=[arg])
 
         potential: list[User] = []
 
@@ -99,3 +148,70 @@ class _BaseConverter:
             return potential[0]
 
         raise BadArgument(msg.format(arg), value=arg)
+
+
+class ColourConverter(Converter[Colour]):
+    """The converter used to convert command arguments to a :class:`~twitchio.utils.Colour` object.
+
+    This is a default converter which can be used in commands by annotating arguments with the :class:`twitchio.utils.Colour` type.
+
+    This converter, attempts to convert ``hex`` and ``int`` type values only in the following formats:
+
+    - `"#FFDD00"`
+    - `"FFDD00"`
+    - `"0xFFDD00"`
+    - `16768256`
+
+
+    ``hex`` values are attempted first, followed by ``int``.
+
+    .. note::
+
+        There is an alias to this converter named ``ColorConverter``.
+
+    Example
+    -------
+
+    .. code:: python3
+
+        @commands.command()
+        async def test(ctx: commands.Context, *, colour: twitchio.utils.Colour) -> None: ...
+
+    .. versionadded:: 3.1
+    """
+
+    async def convert(self, ctx: Context[Any], arg: str) -> Colour:
+        try:
+            result = Colour.from_hex(arg)
+        except Exception:
+            pass
+        else:
+            return result
+
+        try:
+            result = Colour.from_int(int(arg))
+        except Exception:
+            raise ConversionError(f"Unable to convert to Colour. {arg!r} is not a valid hex or colour integer value.")
+
+        return result
+
+
+ColorConverter = ColourConverter
+
+
+def _bool(arg: str) -> bool:
+    try:
+        result = _BOOL_MAPPING[arg.lower()]
+    except KeyError:
+        pretty: str = " | ".join(f'"{k}"' for k in _BOOL_MAPPING)
+        raise BadArgument(f'Failed to convert "{arg}" to type bool. Expected any: [{pretty}]', value=arg)
+
+    return result
+
+
+DEFAULT_CONVERTERS: dict[type, Any] = {str: str, int: int, float: float, bool: _bool, type(None): type(None)}
+CONVERTER_MAPPING: dict[Any, Converter[Any] | type[Converter[Any]]] = {
+    User: UserConverter,
+    Colour: ColourConverter,
+    Color: ColourConverter,
+}
