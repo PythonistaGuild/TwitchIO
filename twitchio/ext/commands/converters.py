@@ -26,7 +26,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, runtime_checkable
 
-from twitchio.ext.commands.context import Context
 from twitchio.user import User
 from twitchio.utils import Colour
 
