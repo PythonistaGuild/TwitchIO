@@ -40,6 +40,8 @@ from .cooldowns import BaseCooldown, Bucket, BucketType, Cooldown, KeyT
 from .exceptions import *
 from .types_ import CommandOptions, Component_T
 
+from .converters import DEFAULT_CONVERTERS, CONVERTER_MAPPING, Converter
+
 
 __all__ = (
     "Command",
@@ -359,7 +361,7 @@ class Command(Generic[Component_T, P]):
 
         for arg in reversed(args):
             type_: type[Any] = type(arg)  # type: ignore
-            if base := context.bot._base_converter._DEFAULTS.get(type_):
+            if base := DEFAULT_CONVERTERS.get(type_):
                 try:
                     result = base(raw)
                 except Exception:
@@ -377,6 +379,7 @@ class Command(Generic[Component_T, P]):
         self, context: Context[BotT], param: inspect.Parameter, *, annotation: Any, raw: str | None
     ) -> Any:
         name: str = param.name
+        result: Any = MISSING
 
         if isinstance(annotation, UnionType) or getattr(annotation, "__origin__", None) is Union:
             converters = list(annotation.__args__)
@@ -385,8 +388,6 @@ class Command(Generic[Component_T, P]):
                 converters.remove(type(None))
             except ValueError:
                 pass
-
-            result: Any = MISSING
 
             for c in reversed(converters):
                 try:
@@ -414,7 +415,7 @@ class Command(Generic[Component_T, P]):
 
             return result
 
-        base = context.bot._base_converter._DEFAULTS.get(annotation, None if annotation != param.empty else str)
+        base = DEFAULT_CONVERTERS.get(annotation, None if annotation != param.empty else str)
         if base:
             try:
                 result = base(raw)
@@ -423,12 +424,23 @@ class Command(Generic[Component_T, P]):
 
             return result
 
-        converter = context.bot._base_converter._MAPPING.get(annotation, annotation)
+        converter = CONVERTER_MAPPING.get(annotation, annotation)
 
         try:
-            result = converter(context, raw)
+            if inspect.isclass(converter) and issubclass(converter, Converter):  # type: ignore
+                if inspect.ismethod(converter.convert):
+                    result = converter.convert(context, raw)
+                else:
+                    result = converter().convert(context, str(raw))
+            elif isinstance(converter, Converter):
+                result = converter.convert(context, str(raw))
+        except CommandError:
+            raise
         except Exception as e:
             raise BadArgument(f'Failed to convert "{name}" to {type(converter)}', name=name, value=raw) from e
+
+        if result is MISSING:
+            raise BadArgument(f'Failed to convert "{name}" to {type(converter)}', name=name, value=raw)
 
         if not asyncio.iscoroutine(result):
             return result
