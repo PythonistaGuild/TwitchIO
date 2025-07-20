@@ -85,3 +85,16 @@ Cooldowns
 
 .. attributetable:: twitchio.ext.commands.BucketType()
 .. autoclass:: twitchio.ext.commands.BucketType()
+
+
+Converters
+##########
+
+.. autoclass:: twitchio.ext.commands.Converter()
+    :members:
+
+.. autoclass:: twitchio.ext.commands.UserConverter()
+    :members:
+
+.. autoclass:: twitchio.ext.commands.ColourConverter()
+    :members:
