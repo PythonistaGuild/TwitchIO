@@ -36,6 +36,7 @@ if TYPE_CHECKING:
     import twitchio
 
     from .context import Context
+    from .types_ import BotT
 
 
 __all__ = ("BaseCooldown", "Bucket", "BucketType", "Cooldown", "GCRACooldown")
@@ -65,7 +66,7 @@ class BucketType(enum.Enum):
     channel = 2
     chatter = 3
 
-    def get_key(self, payload: twitchio.ChatMessage | Context) -> Any:
+    def get_key(self, payload: twitchio.ChatMessage | Context[BotT]) -> Any:
         if self is BucketType.user:
             return payload.chatter.id
 
@@ -75,7 +76,7 @@ class BucketType(enum.Enum):
         elif self is BucketType.chatter:
             return (payload.broadcaster.id, payload.chatter.id)
 
-    def __call__(self, payload: twitchio.ChatMessage | Context) -> Any:
+    def __call__(self, payload: twitchio.ChatMessage | Context[BotT]) -> Any:
         return self.get_key(payload)
 
 

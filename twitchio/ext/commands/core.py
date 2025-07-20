@@ -67,6 +67,7 @@ if TYPE_CHECKING:
     from twitchio.user import Chatter
 
     from .context import Context
+    from .types_ import BotT
 
     P = ParamSpec("P")
 else:
@@ -180,8 +181,8 @@ class CommandErrorPayload:
 
     __slots__ = ("context", "exception")
 
-    def __init__(self, *, context: Context, exception: CommandError) -> None:
-        self.context: Context = context
+    def __init__(self, *, context: Context[BotT], exception: CommandError) -> None:
+        self.context = context
         self.exception: CommandError = exception
 
 
@@ -197,7 +198,7 @@ class Command(Generic[Component_T, P]):
 
     def __init__(
         self,
-        callback: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        callback: Callable[Concatenate[Component_T, Context[Any], P], Coro] | Callable[Concatenate[Context[Any], P], Coro],
         *,
         name: str,
         **kwargs: Unpack[CommandOptions],
@@ -206,7 +207,7 @@ class Command(Generic[Component_T, P]):
         self.callback = callback
         self._aliases: list[str] = kwargs.get("aliases", [])
         self._guards: list[Callable[..., bool] | Callable[..., CoroC]] = getattr(callback, "__command_guards__", [])
-        self._buckets: list[Bucket[Context]] = getattr(callback, "__command_cooldowns__", [])
+        self._buckets: list[Bucket[Context[Any]]] = getattr(callback, "__command_cooldowns__", [])
         self._guards_after_parsing = kwargs.get("guards_after_parsing", False)
         self._cooldowns_first = kwargs.get("cooldowns_before_guards", False)
 
@@ -216,8 +217,8 @@ class Command(Generic[Component_T, P]):
         self._parent: Group[Component_T, P] | None = kwargs.get("parent")
         self._bypass_global_guards: bool = kwargs.get("bypass_global_guards", False)
 
-        self._before_hook: Callable[[Component_T, Context], Coro] | Callable[[Context], Coro] | None = None
-        self._after_hook: Callable[[Component_T, Context], Coro] | Callable[[Context], Coro] | None = None
+        self._before_hook: Callable[[Component_T, Context[Any]], Coro] | Callable[[Context[Any]], Coro] | None = None
+        self._after_hook: Callable[[Component_T, Context[Any]], Coro] | Callable[[Context[Any]], Coro] | None = None
 
         self._help: str = callback.__doc__ or ""
         self.__doc__ = self._help
@@ -228,7 +229,7 @@ class Command(Generic[Component_T, P]):
     def __str__(self) -> str:
         return self._name
 
-    async def __call__(self, context: Context) -> Any:
+    async def __call__(self, context: Context[BotT]) -> Any:
         callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
         return await callback  # type: ignore will fix later
 
@@ -327,7 +328,9 @@ class Command(Generic[Component_T, P]):
         return self._guards
 
     @property
-    def callback(self) -> Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro]:
+    def callback(
+        self,
+    ) -> Callable[Concatenate[Component_T, Context[Any], P], Coro] | Callable[Concatenate[Context[Any], P], Coro]:
         """Property returning the coroutine callback used in invocation.
         E.g. the function you wrap with :func:`.command`.
         """
@@ -335,7 +338,7 @@ class Command(Generic[Component_T, P]):
 
     @callback.setter
     def callback(
-        self, func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro]
+        self, func: Callable[Concatenate[Component_T, Context[Any], P], Coro] | Callable[Concatenate[Context[Any], P], Coro]
     ) -> None:
         self._callback = func
         unwrap = unwrap_function(func)
@@ -349,7 +352,7 @@ class Command(Generic[Component_T, P]):
         self._params: dict[str, inspect.Parameter] = get_signature_parameters(func, globalns)
 
     def _convert_literal_type(
-        self, context: Context, param: inspect.Parameter, args: tuple[Any, ...], *, raw: str | None
+        self, context: Context[BotT], param: inspect.Parameter, args: tuple[Any, ...], *, raw: str | None
     ) -> Any:
         name: str = param.name
         result: Any = MISSING
@@ -370,7 +373,9 @@ class Command(Generic[Component_T, P]):
 
         return result
 
-    async def _do_conversion(self, context: Context, param: inspect.Parameter, *, annotation: Any, raw: str | None) -> Any:
+    async def _do_conversion(
+        self, context: Context[BotT], param: inspect.Parameter, *, annotation: Any, raw: str | None
+    ) -> Any:
         name: str = param.name
 
         if isinstance(annotation, UnionType) or getattr(annotation, "__origin__", None) is Union:
@@ -435,7 +440,7 @@ class Command(Generic[Component_T, P]):
 
         return result
 
-    async def _parse_arguments(self, context: Context) -> ...:
+    async def _parse_arguments(self, context: Context[BotT]) -> ...:
         context._view.skip_ws()
         params: list[inspect.Parameter] = list(self._params.values())
 
@@ -501,7 +506,7 @@ class Command(Generic[Component_T, P]):
             if result is not True:
                 raise GuardFailure(exc_msg, guard=guard)
 
-    async def run_guards(self, ctx: Context, *, with_cooldowns: bool = False) -> None:
+    async def run_guards(self, ctx: Context[BotT], *, with_cooldowns: bool = False) -> None:
         """|coro|
 
         Method which allows a :class:`~twitchio.ext.commands.Command` to run and check all associated Guards, including
@@ -532,7 +537,7 @@ class Command(Generic[Component_T, P]):
         """
         await self._run_guards(ctx, with_cooldowns=with_cooldowns)
 
-    async def _run_guards(self, context: Context, *, with_cooldowns: bool = True) -> None:
+    async def _run_guards(self, context: Context[BotT], *, with_cooldowns: bool = True) -> None:
         if with_cooldowns and self._cooldowns_first:
             await self._run_cooldowns(context)
 
@@ -551,7 +556,7 @@ class Command(Generic[Component_T, P]):
         if with_cooldowns and not self._cooldowns_first:
             await self._run_cooldowns(context)
 
-    async def _run_cooldowns(self, context: Context) -> None:
+    async def _run_cooldowns(self, context: Context[BotT]) -> None:
         type_ = "group" if isinstance(self, Group) else "command"
 
         for bucket in self._buckets:
@@ -569,7 +574,7 @@ class Command(Generic[Component_T, P]):
                 cooldown=cooldown,
             )
 
-    async def _invoke(self, context: Context) -> Any:
+    async def _invoke(self, context: Context[BotT]) -> Any:
         context._component = self._injected
 
         if not self._guards_after_parsing:
@@ -616,7 +621,7 @@ class Command(Generic[Component_T, P]):
         except Exception as e:
             raise CommandInvokeError(msg=str(e), original=e) from e
 
-    async def invoke(self, context: Context) -> Any:
+    async def invoke(self, context: Context[BotT]) -> Any:
         try:
             return await self._invoke(context)
         except CommandError as e:
@@ -625,7 +630,7 @@ class Command(Generic[Component_T, P]):
             error = CommandInvokeError(str(e), original=e)
             await self._dispatch_error(context, error)
 
-    async def _dispatch_error(self, context: Context, exception: CommandError) -> None:
+    async def _dispatch_error(self, context: Context[BotT], exception: CommandError) -> None:
         payload = CommandErrorPayload(context=context, exception=exception)
 
         if self._error is not None:
@@ -761,7 +766,7 @@ class RewardCommand(Command[Component_T, P]):
 
     def __init__(
         self,
-        callback: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        callback: Callable[Concatenate[Component_T, Context[Any], P], Coro] | Callable[Concatenate[Context[Any], P], Coro],
         *,
         reward_id: str,
         invoke_when: RewardStatus,
@@ -999,7 +1004,7 @@ def command(
     """
 
     def wrapper(
-        func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        func: Callable[Concatenate[Component_T, Context[BotT], P], Coro] | Callable[Concatenate[Context[BotT], P], Coro],
     ) -> Command[Any, ...]:
         if isinstance(func, Command):
             raise ValueError(f'Callback "{func._callback}" is already a Command.')  # type: ignore
@@ -1082,7 +1087,7 @@ def reward_command(
     """
 
     def wrapper(
-        func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        func: Callable[Concatenate[Component_T, Context[BotT], P], Coro] | Callable[Concatenate[Context[BotT], P], Coro],
     ) -> RewardCommand[Any, ...]:
         if isinstance(func, (Command, RewardCommand)):
             raise ValueError(f'Callback "{func._callback}" is already a Command.')  # type: ignore
@@ -1163,7 +1168,7 @@ def group(
     """
 
     def wrapper(
-        func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+        func: Callable[Concatenate[Component_T, Context[BotT], P], Coro] | Callable[Concatenate[Context[BotT], P], Coro],
     ) -> Group[Any, ...]:
         if isinstance(func, Command):
             raise ValueError(f'Callback "{func._callback.__name__}" is already a Command.')  # type: ignore
@@ -1203,7 +1208,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
             if isinstance(command, Group):
                 yield from command.walk_commands()
 
-    async def _invoke(self, context: Context) -> None:
+    async def _invoke(self, context: Context[BotT]) -> None:
         view = context._view
         view.skip_ws()
         trigger = view.get_word()
@@ -1229,7 +1234,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
         raise CommandNotFound(f'The sub-command "{trigger}" for group "{self._name}" was not found.')
 
-    async def invoke(self, context: Context) -> None:
+    async def invoke(self, context: Context[BotT]) -> None:
         try:
             return await self._invoke(context)
         except CommandError as e:
@@ -1292,7 +1297,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         """
 
         def wrapper(
-            func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+            func: Callable[Concatenate[Component_T, Context[BotT], P], Coro] | Callable[Concatenate[Context[BotT], P], Coro],
         ) -> Command[Any, ...]:
             new = command(name=name, aliases=aliases, extras=extras, parent=self, **kwargs)(func)
 
@@ -1362,7 +1367,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         """
 
         def wrapper(
-            func: Callable[Concatenate[Component_T, Context, P], Coro] | Callable[Concatenate[Context, P], Coro],
+            func: Callable[Concatenate[Component_T, Context[BotT], P], Coro] | Callable[Concatenate[Context[BotT], P], Coro],
         ) -> Command[Any, ...]:
             new = group(name=name, aliases=aliases, extras=extras, parent=self, **kwargs)(func)
 
@@ -1466,7 +1471,7 @@ def is_owner() -> Any:
         The guard predicate returned ``False`` and prevented the chatter from using the command.
     """
 
-    def predicate(context: Context) -> bool:
+    def predicate(context: Context[BotT]) -> bool:
         return context.chatter.id == context.bot.owner_id
 
     return guard(predicate)
@@ -1491,7 +1496,7 @@ def is_staff() -> Any:
         The guard predicate returned ``False`` and prevented the chatter from using the command.
     """
 
-    def predicate(context: Context) -> bool:
+    def predicate(context: Context[BotT]) -> bool:
         if context.type is ContextType.REWARD:
             raise TypeError("This Guard can not be used on a RewardCommand instance.")
 
@@ -1517,7 +1522,7 @@ def is_broadcaster() -> Any:
         The guard predicate returned ``False`` and prevented the chatter from using the command.
     """
 
-    def predicate(context: Context) -> bool:
+    def predicate(context: Context[BotT]) -> bool:
         return context.chatter.id == context.broadcaster.id
 
     return guard(predicate)
@@ -1545,7 +1550,7 @@ def is_moderator() -> Any:
         The guard predicate returned ``False`` and prevented the chatter from using the command.
     """
 
-    def predicate(context: Context) -> bool:
+    def predicate(context: Context[BotT]) -> bool:
         if context.type is ContextType.REWARD:
             raise TypeError("This Guard can not be used on a RewardCommand instance.")
 
@@ -1577,7 +1582,7 @@ def is_vip() -> Any:
         The guard predicate returned ``False`` and prevented the chatter from using the command.
     """
 
-    def predicate(context: Context) -> bool:
+    def predicate(context: Context[BotT]) -> bool:
         if context.type is ContextType.REWARD:
             raise TypeError("This Guard can not be used on a RewardCommand instance.")
 
@@ -1621,7 +1626,7 @@ def is_elevated() -> Any:
         The guard predicate returned ``False`` and prevented the chatter from using the command.
     """
 
-    def predicate(context: Context) -> bool:
+    def predicate(context: Context[BotT]) -> bool:
         if context.type is ContextType.REWARD:
             raise TypeError("This Guard can not be used on a RewardCommand instance.")
 
@@ -1724,7 +1729,7 @@ def cooldown(*, base: type[BaseCooldown] = Cooldown, key: KeyT = BucketType.chat
         async def hello(ctx: commands.Context) -> None:
             ...
     """
-    bucket_: Bucket[Context] = Bucket.from_cooldown(base=base, key=key, **kwargs)  # type: ignore
+    bucket_: Bucket[Context[BotT]] = Bucket.from_cooldown(base=base, key=key, **kwargs)  # type: ignore
 
     def wrapper(func: Any) -> Any:
         nonlocal bucket_

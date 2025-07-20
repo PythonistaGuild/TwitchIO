@@ -34,6 +34,7 @@ from .exceptions import *
 if TYPE_CHECKING:
     from .bot import Bot
     from .context import Context
+    from .types_ import BotT
 
 __all__ = ("_BaseConverter",)
 
@@ -67,7 +68,7 @@ class _BaseConverter:
 
         return result
 
-    async def _user(self, context: Context, arg: str) -> User:
+    async def _user(self, context: Context[BotT], arg: str) -> User:
         arg = arg.lower()
         users: list[User]
         msg: str = 'Failed to convert "{}" to User. A User with the ID or login could not be found.'
