@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, runtime_checkable
 
 from twitchio.user import User
-from twitchio.utils import Colour
+from twitchio.utils import Color, Colour
 
 from .exceptions import *
 
@@ -210,4 +210,8 @@ def _bool(arg: str) -> bool:
 
 
 DEFAULT_CONVERTERS: dict[type, Any] = {str: str, int: int, float: float, bool: _bool, type(None): type(None)}
-CONVERTER_MAPPING: dict[Any, Converter[Any] | type[Converter[Any]]] = {User: UserConverter}
+CONVERTER_MAPPING: dict[Any, Converter[Any] | type[Converter[Any]]] = {
+    User: UserConverter,
+    Colour: ColourConverter,
+    Color: ColourConverter,
+}
