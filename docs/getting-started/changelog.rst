@@ -15,7 +15,7 @@ Changelog
 
     - Changes
         - Adjusted the Starlette logging warning wording.
-        - :class:`twitchio.PartialUser`, :class:`twitchio.User` and :class:`twitchio.Chatter` now have ``__hash__`` implementations, which use the unique ID.
+        - :class:`twitchio.PartialUser`, :class:`twitchio.User` and :class:`twitchio.Chatter` now have ``__hash__`` implementations derived from :class:`~twitchio.PartialUser`, which use the unique ID.
 
     - Bug fixes
         - :meth:`twitchio.Clip.fetch_video` now properly returns ``None`` when the :class:`twitchio.Clip` has no ``video_id``.
@@ -26,11 +26,11 @@ Changelog
         - Added :class:`~twitchio.ext.commands.Converter`
         - Added :class:`~twitchio.ext.commands.UserConverter`
         - Added :class:`~twitchio.ext.commands.ColourConverter`
-        - Added :class:`~twitchio.ext.commands.ColorConverter`
-        - Added :attr:`~twitchio.ext.commands.Command.help` which is the docstring of the command callback.
+        - Added :class:`~twitchio.ext.commands.ColorConverter` alias.
+        - Added :attr:`twitchio.ext.commands.Command.help` which is the docstring of the command callback.
         - Added ``__doc__`` to :class:`~twitchio.ext.commands.Command` which takes from the callback ``__doc__``.
-        - Added :meth:`~twitchio.ext.commands.Command.run_gaurds`
-        - Added :meth:`~twitchio.ext.commands.Context.fetch_command`
+        - Added :meth:`twitchio.ext.commands.Command.run_guards`
+        - Added :meth:`twitchio.ext.commands.Context.fetch_command`
         - :class:`~twitchio.ext.commands.Context` is now ``Generic`` and accepts a generic argument bound to :class:`~twitchio.ext.commands.Bot` or :class:`~twitchio.ext.commands.AutoBot`.
     
 
