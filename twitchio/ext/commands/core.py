@@ -36,11 +36,10 @@ from typing import TYPE_CHECKING, Any, Concatenate, Generic, Literal, ParamSpec,
 import twitchio
 from twitchio.utils import MISSING, unwrap_function
 
+from .converters import CONVERTER_MAPPING, DEFAULT_CONVERTERS, Converter
 from .cooldowns import BaseCooldown, Bucket, BucketType, Cooldown, KeyT
 from .exceptions import *
 from .types_ import CommandOptions, Component_T
-
-from .converters import DEFAULT_CONVERTERS, CONVERTER_MAPPING, Converter
 
 
 __all__ = (

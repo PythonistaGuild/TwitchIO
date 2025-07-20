@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from .context import Context
 
 
-__all__ = ("Converter", "UserConverter")
+__all__ = ("ColorConverter", "ColourConverter", "Converter", "UserConverter")
 
 
 _BOOL_MAPPING: dict[str, bool] = {
