@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from .context import Context
-    from .types_ import ComponentOptions
+    from .types_ import BotT, ComponentOptions
 
 
 __all__ = ("Component",)
@@ -262,13 +262,13 @@ class Component(_MetaComponent):
         This method is intended to be overwritten, by default it does nothing.
         """
 
-    async def component_before_invoke(self, ctx: Context) -> None:
+    async def component_before_invoke(self, ctx: Context[BotT]) -> None:
         """Hook called before a :class:`~.commands.Command` in this Component is invoked.
 
         Similar to :meth:`~.commands.Bot.before_invoke` but only applies to commands in this Component.
         """
 
-    async def component_after_invoke(self, ctx: Context) -> None:
+    async def component_after_invoke(self, ctx: Context[BotT]) -> None:
         """Hook called after a :class:`~.commands.Command` has successfully invoked in this Component.
 
         Similar to :meth:`~.commands.Bot.after_invoke` but only applies to commands in this Component.

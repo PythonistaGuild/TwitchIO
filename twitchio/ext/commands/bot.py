@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from twitchio.user import User
 
     from .components import Component
-    from .types_ import AutoBotOptions, BotOptions
+    from .types_ import AutoBotOptions, BotOptions, BotT
 
     PrefixT: TypeAlias = str | Iterable[str] | Callable[["Bot", "ChatMessage"], Coroutine[Any, Any, str | Iterable[str]]]
 
@@ -433,7 +433,7 @@ class Bot(Mixin[None], Client):
     async def _process_commands(
         self, payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate
     ) -> None:
-        ctx: Context = self.get_context(payload)
+        ctx = self.get_context(payload)
         await self.invoke(ctx)
 
     async def process_commands(
@@ -441,7 +441,7 @@ class Bot(Mixin[None], Client):
     ) -> None:
         await self._process_commands(payload)
 
-    async def invoke(self, ctx: Context) -> None:
+    async def invoke(self, ctx: Context[BotT]) -> None:
         try:
             await ctx.invoke()
         except CommandError as e:
@@ -482,7 +482,7 @@ class Bot(Mixin[None], Client):
         msg = f'Ignoring exception in command "{payload.context.command}":\n'
         logger.error(msg, exc_info=payload.exception)
 
-    async def before_invoke(self, ctx: Context) -> None:
+    async def before_invoke(self, ctx: Context[BotT]) -> None:
         """A pre invoke hook for all commands that have been added to the bot.
 
         Commands from :class:`~.commands.Component`'s are included, however if you wish to control them separately,
@@ -513,7 +513,7 @@ class Bot(Mixin[None], Client):
             The context associated with command invocation, before being passed to the command.
         """
 
-    async def after_invoke(self, ctx: Context) -> None:
+    async def after_invoke(self, ctx: Context[BotT]) -> None:
         """A post invoke hook for all commands that have been added to the bot.
 
         Commands from :class:`~.commands.Component`'s are included, however if you wish to control them separately,
@@ -544,7 +544,7 @@ class Bot(Mixin[None], Client):
             The context associated with command invocation, after being passed through the command.
         """
 
-    async def global_guard(self, ctx: Context, /) -> bool:
+    async def global_guard(self, ctx: Context[BotT], /) -> bool:
         """|coro|
 
         A global guard applied to all commmands added to the bot.

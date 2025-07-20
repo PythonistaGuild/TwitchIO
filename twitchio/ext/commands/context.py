@@ -25,12 +25,13 @@ SOFTWARE.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias
 
 from twitchio.models.eventsub_ import ChannelPointsRedemptionAdd, ChannelPointsRedemptionUpdate, ChatMessage
 
 from .core import CommandErrorPayload, ContextType, RewardCommand, RewardStatus
 from .exceptions import *
+from .types_ import BotT
 from .view import StringView
 
 
@@ -50,7 +51,7 @@ if TYPE_CHECKING:
     PrefixT: TypeAlias = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
 
 
-class Context:
+class Context(Generic[BotT]):
     """The Context class constructed when a message or reward redemption in the respective events is received and processed
     in a :class:`~.commands.Bot`.
 
@@ -77,10 +78,10 @@ class Context:
         self,
         payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate,
         *,
-        bot: Bot,
+        bot: BotT,
     ) -> None:
         self._payload: ChatMessage | ChannelPointsRedemptionAdd | ChannelPointsRedemptionUpdate = payload
-        self._bot: Bot = bot
+        self._bot = bot
         self._component: Component | None = None
         self._prefix: str | None = None
 
@@ -220,7 +221,7 @@ class Context:
         return self.broadcaster
 
     @property
-    def bot(self) -> Bot:
+    def bot(self) -> BotT:
         """Property returning the :class:`~.commands.Bot` object."""
         return self._bot
 

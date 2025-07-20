@@ -22,16 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, Union
 
 from twitchio.types_.options import AutoClientOptions, ClientOptions
 
 
 if TYPE_CHECKING:
+    from .bot import AutoBot, Bot
     from .components import Component
+    from .context import Context
 
 
 Component_T = TypeVar("Component_T", bound="Component | None")
+
+ContextT = TypeVar("ContextT", bound="Context[Any]")
+ContextT_co = TypeVar("ContextT_co", bound="Context[Any]", covariant=True)
+
+_Bot = Union["Bot", "AutoBot"]
+BotT = TypeVar("BotT", bound=_Bot, covariant=True)
 
 
 class CommandOptions(TypedDict, total=False):
