@@ -204,7 +204,10 @@ class Command(Generic[Component_T, P]):
         name: str,
         **kwargs: Unpack[CommandOptions],
     ) -> None:
+        self._signature: str | None
+
         self._name: str = name
+        self._parent: Group[Component_T, P] | None = kwargs.get("parent")
         self.callback = callback
         self._aliases: list[str] = kwargs.get("aliases", [])
         self._guards: list[Callable[..., bool] | Callable[..., CoroC]] = getattr(callback, "__command_guards__", [])
@@ -215,7 +218,6 @@ class Command(Generic[Component_T, P]):
         self._injected: Component_T | None = None
         self._error: Callable[[Component_T, CommandErrorPayload], Coro] | Callable[[CommandErrorPayload], Coro] | None = None
         self._extras: dict[Any, Any] = kwargs.get("extras", {})
-        self._parent: Group[Component_T, P] | None = kwargs.get("parent")
         self._bypass_global_guards: bool = kwargs.get("bypass_global_guards", False)
 
         self._before_hook: Callable[[Component_T, Context[Any]], Coro] | Callable[[Context[Any]], Coro] | None = None
@@ -233,6 +235,73 @@ class Command(Generic[Component_T, P]):
     async def __call__(self, context: Context[BotT]) -> Any:
         callback = self._callback(self._injected, context) if self._injected else self._callback(context)  # type: ignore
         return await callback  # type: ignore will fix later
+
+    def _get_signature(self) -> None:
+        params: dict[str, inspect.Parameter] | None = getattr(self, "_params", None)
+        if not params:
+            self._signature = None
+            return
+
+        help_sig = ""
+        for name, param in params.items():
+            s = "<{}>"
+
+            if param.default is not param.empty:
+                s = "[{}]"
+
+            if param.kind == param.KEYWORD_ONLY:
+                s = s.format(f"...{name}")
+
+            elif param.kind == param.VAR_POSITIONAL:
+                s = s.format(f"{name}...")
+
+            elif param.kind == param.POSITIONAL_OR_KEYWORD:
+                s = s.format(f"{name}")
+
+            help_sig += f" {s}"
+
+        self._signature = help_sig
+
+    @property
+    def signature(self) -> str | None:
+        """Property returning an easily readable POSIX-like argument signature for the command.
+
+        Useful when generating or displaying help.
+
+        The format is described below:
+
+        - ``<arg>`` is a required argument.
+        - ``[arg]`` is an optional argument.
+        - ``...arg`` is a consume-rest argument.
+        - ``arg...`` is an argument list.
+
+        Example
+        -------
+
+        .. code:: python3
+
+            @commands.command()
+            async def test(ctx: commands.Context, hello: str, world: int) -> None: ...
+                ...
+
+            print(test.signature)  # <hello> <world>
+
+
+            @commands.command()
+            async def test(ctx: commands.Context, arg: str, *, other: str | None = None) -> None: ...
+                ...
+
+            print(test.signature)  # <arg> [...other]
+
+
+            @commands.command()
+            async def test(ctx: commands.Context, arg: str, other: str | None = None, *args: str | None = None) -> None: ...
+                ...
+
+            print(test.signature)  # <arg> [other] [args...]
+
+        """
+        return self._signature
 
     @property
     def help(self) -> str:
@@ -351,6 +420,7 @@ class Command(Generic[Component_T, P]):
             globalns = {}
 
         self._params: dict[str, inspect.Parameter] = get_signature_parameters(func, globalns)
+        self._get_signature()
 
     def _convert_literal_type(
         self, context: Context[BotT], param: inspect.Parameter, args: tuple[Any, ...], *, raw: str | None
