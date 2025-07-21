@@ -21,6 +21,68 @@ Changelog
         - :meth:`twitchio.Clip.fetch_video` now properly returns ``None`` when the :class:`twitchio.Clip` has no ``video_id``.
         - :class:`twitchio.ChatterColor` no longer errors whan no valid hex is provided by Twitch.
 
+- twitchio.eventsub
+    - Additions
+        - Added :meth:`twitchio.AutomodMessageHold.respond`
+        - Added :meth:`twitchio.AutomodSettingsUpdate.respond`
+        - Added :meth:`twitchio.AutomodTermsUpdate.respond`
+        - Added :meth:`twitchio.ChannelBitsUse.respond`
+        - Added :meth:`twitchio.ChannelUpdate.respond`
+        - Added :meth:`twitchio.ChannelFollow.respond`
+        - Added :meth:`twitchio.ChannelAdBreakBegin.respond`
+        - Added :meth:`twitchio.ChannelChatClear.respond`
+        - Added :meth:`twitchio.ChannelChatClearUserMessages.respond`
+        - Added :meth:`twitchio.ChatMessage.respond`
+        - Added :meth:`twitchio.ChatNotification.respond`
+        - Added :meth:`twitchio.ChatMessageDelete.respond`
+        - Added :meth:`twitchio.ChatSettingsUpdate.respond`
+        - Added :meth:`twitchio.SharedChatSessionBegin.respond`
+        - Added :meth:`twitchio.SharedChatSessionUpdate.respond`
+        - Added :meth:`twitchio.SharedChatSessionEnd.respond`
+        - Added :meth:`twitchio.ChannelSubscribe.respond`
+        - Added :meth:`twitchio.ChannelSubscriptionEnd.respond`
+        - Added :meth:`twitchio.ChannelSubscriptionGift.respond`
+        - Added :meth:`twitchio.ChannelSubscriptionMessage.respond`
+        - Added :meth:`twitchio.ChannelCheer.respond`
+        - Added :meth:`twitchio.ChannelBan.respond`
+        - Added :meth:`twitchio.ChannelUnban.respond`
+        - Added :meth:`twitchio.ChannelUnbanRequest.respond`
+        - Added :meth:`twitchio.ChannelUnbanRequestResolve.respond`
+        - Added :meth:`twitchio.ChannelModerate.respond`
+        - Added :meth:`twitchio.ChannelModeratorAdd.respond`
+        - Added :meth:`twitchio.ChannelModeratorRemove.respond`
+        - Added :meth:`twitchio.ChannelPointsAutoRedeemAdd.respond`
+        - Added :meth:`twitchio.ChannelPointsReward.respond`
+        - Added :meth:`twitchio.ChannelPointsRedemptionAdd.respond`
+        - Added :meth:`twitchio.ChannelPointsRedemptionUpdate.respond`
+        - Added :meth:`twitchio.ChannelPollBegin.respond`
+        - Added :meth:`twitchio.ChannelPollProgress.respond`
+        - Added :meth:`twitchio.ChannelPollEnd.respond`
+        - Added :meth:`twitchio.ChannelPredictionBegin.respond`
+        - Added :meth:`twitchio.ChannelPredictionProgress.respond`
+        - Added :meth:`twitchio.ChannelPredictionLock.respond`
+        - Added :meth:`twitchio.ChannelPredictionEnd.respond`
+        - Added :meth:`twitchio.SuspiciousUserUpdate.respond`
+        - Added :meth:`twitchio.SuspiciousUserMessage.respond`
+        - Added :meth:`twitchio.ChannelVIPAdd.respond`
+        - Added :meth:`twitchio.ChannelVIPRemove.respond`
+        - Added :meth:`twitchio.ChannelWarningAcknowledge.respond`
+        - Added :meth:`twitchio.ChannelWarningSend.respond`
+        - Added :meth:`twitchio.BaseCharityCampaign.respond`
+        - Added :meth:`twitchio.CharityCampaignDonation.respond`
+        - Added :meth:`twitchio.GoalBegin.respond`
+        - Added :meth:`twitchio.GoalProgress.respond`
+        - Added :meth:`twitchio.GoalEnd.respond`
+        - Added :meth:`twitchio.HypeTrainBegin.respond`
+        - Added :meth:`twitchio.HypeTrainProgress.respond`
+        - Added :meth:`twitchio.HypeTrainEnd.respond`
+        - Added :meth:`twitchio.ShieldModeBegin.respond`
+        - Added :meth:`twitchio.ShieldModeEnd.respond`
+        - Added :meth:`twitchio.ShoutoutCreate.respond`
+        - Added :meth:`twitchio.ShoutoutReceive.respond`
+        - Added :meth:`twitchio.StreamOnline.respond`
+        - Added :meth:`twitchio.StreamOffline.respond`
+
 - ext.commands
     - Additions
         - Added :class:`~twitchio.ext.commands.Converter`

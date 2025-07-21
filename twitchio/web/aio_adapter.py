@@ -246,7 +246,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
             return web.Response(status=400)
 
         if not self._eventsub_secret:
-            msg: str = f"Eventsub Webhook '{self!r}' must be passed a secret. See: ... for more info.'"
+            msg: str = f"Eventsub Webhook '{self!r}' must be passed a secret.'"
             return web.Response(text=msg, status=400)
 
         msg_id: str | None = headers.get("Twitch-Eventsub-Message-Id", None)

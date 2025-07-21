@@ -288,7 +288,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
             return Response(status_code=400)
 
         if not self._eventsub_secret:
-            msg: str = f"Eventsub Webhook '{self!r}' must be passed a secret. See: ... for more info.'"
+            msg: str = f"Eventsub Webhook '{self!r}' must be passed a secret.'"
             return Response(msg, status_code=400)
 
         msg_id: str | None = headers.get("Twitch-Eventsub-Message-Id", None)
