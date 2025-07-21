@@ -42,6 +42,7 @@ from twitchio.utils import Colour, parse_timestamp
 if TYPE_CHECKING:
     from twitchio.http import HTTPAsyncIterator, HTTPClient
     from twitchio.models.channel_points import CustomRewardRedemption
+    from twitchio.models.chat import SentMessage
     from twitchio.types_.conduits import (
         Condition,
         ConduitData,
@@ -259,6 +260,63 @@ class BaseEvent:
         return NotificationSubscription(self._sub_data)
 
 
+class _ResponderEvent(BaseEvent):
+    broadcaster: PartialUser
+    _http: HTTPClient
+
+    async def respond(self, content: str, *, me: bool = False) -> SentMessage:
+        """|coro|
+
+        Helper method to respond by sending a message to the broadcasters channel this event originates from, as the bot.
+
+        .. warning::
+
+            You must set the ``bot_id`` parameter on your :class:`~twitchio.Client`, :class:`~twitchio.ext.commands.Bot` or
+            :class:`~twitchio.ext.commands.AutoBot` for this method to work.
+
+        .. important::
+
+            You must have the ``user:write:chat`` scope. If an app access token is used,
+            then additionally requires the ``user:bot`` scope on the bot,
+            and either ``channel:bot`` scope from the broadcaster or moderator status.
+
+        .. versionadded:: 3.1
+
+        Parameters
+        ----------
+        content: str
+            The content of the message you would like to send. This cannot exceed ``500`` characters. Additionally the content
+            parameter will be stripped of all leading and trailing whitespace.
+        me: bool
+            An optional bool indicating whether you would like to send this message with the ``/me`` chat command.
+
+        Returns
+        -------
+        SentMessage
+            The payload received by Twitch after sending this message.
+
+        Raises
+        ------
+        HTTPException
+            Twitch failed to process the message, could be ``400``, ``401``, ``403``, ``422`` or any ``5xx`` status code.
+        MessageRejectedError
+            Twitch rejected the message from various checks.
+        RuntimeError
+            You must provide the ``bot_id`` parameter to :class:`~twitchio.Client`, :class:`~twitchio.ext.commands.Bot` or
+            :class:`~twitchio.ext.commands.AutoBot` for this method to work.
+        """
+        client = getattr(self._http, "_client", None)
+        if not client:
+            raise NotImplementedError("This method is only available with Client/Bot dispatched events.")
+
+        bot_id = client.bot_id
+        if not bot_id:
+            raise RuntimeError(f"You must provide 'bot_id' to {client!r} to use this method.")
+
+        new = (f"/me {content}" if me else content).strip()
+        return await self.broadcaster.send_message(sender=bot_id, message=new)
+
+
 def create_event_instance(
     event_type: str,
     raw_data: NotificationMessage | Any,
@@ -279,6 +337,9 @@ def create_event_instance(
         instance._sub_data = sub_data
         instance._metadata = metadata
         instance._headers = headers
+
+    if isinstance(instance, _ResponderEvent):
+        instance._http = http  # type: ignore
 
     return instance
 
@@ -465,7 +526,7 @@ class AutomodBlockedTerm:
         return f"<BlockedTerm id={self.id} owner={self.owner} boundary={self.boundary}>"
 
 
-class AutomodMessageHold(BaseEvent):
+class AutomodMessageHold(_ResponderEvent):
     """
     Represents an automod message hold event. Both V1 and V2.
 
@@ -622,7 +683,7 @@ class AutomodMessageUpdate(AutomodMessageHold):
         return f"<AutomodMessageUpdate broadcaster={self.broadcaster} user={self.user} message_id={self.message_id} level={self.level}>"
 
 
-class AutomodSettingsUpdate(BaseEvent):
+class AutomodSettingsUpdate(_ResponderEvent):
     """
     Represents an automod settings update event.
 
@@ -689,7 +750,7 @@ class AutomodSettingsUpdate(BaseEvent):
         return f"<AutomodSettingsUpdate broadcaster={self.broadcaster} moderator={self.moderator} overall_level={self.overall_level}>"
 
 
-class AutomodTermsUpdate(BaseEvent):
+class AutomodTermsUpdate(_ResponderEvent):
     """
     Represents an automod terms update event.
 
@@ -801,7 +862,7 @@ class PowerUp:
         self.message_effect_id: str | None = data.get("message_effect_id")
 
 
-class ChannelBitsUse(BaseEvent):
+class ChannelBitsUse(_ResponderEvent):
     """
     Represents a channel bits use event.
 
@@ -845,7 +906,7 @@ class ChannelBitsUse(BaseEvent):
         return f"<ChannelBitsUse broadcaster={self.broadcaster} user={self.user} bits={self.bits} type={self.type}>"
 
 
-class ChannelUpdate(BaseEvent):
+class ChannelUpdate(_ResponderEvent):
     """
     Represents a channel update event.
 
@@ -883,7 +944,7 @@ class ChannelUpdate(BaseEvent):
         return f"<ChannelUpdate title={self.title} language={self.language} category_id={self.category_id} category_name={self.category_name}>"
 
 
-class ChannelFollow(BaseEvent):
+class ChannelFollow(_ResponderEvent):
     """
     Represents a channel follow event.
 
@@ -912,7 +973,7 @@ class ChannelFollow(BaseEvent):
         return f"<ChannelFollow broadcaster={self.broadcaster} user={self.user} followed_at={self.followed_at}>"
 
 
-class ChannelAdBreakBegin(BaseEvent):
+class ChannelAdBreakBegin(_ResponderEvent):
     """
     Represents a channel ad break event.
 
@@ -951,7 +1012,7 @@ class ChannelAdBreakBegin(BaseEvent):
         )
 
 
-class ChannelChatClear(BaseEvent):
+class ChannelChatClear(_ResponderEvent):
     """
     Represents a channel chat clear event.
 
@@ -974,7 +1035,7 @@ class ChannelChatClear(BaseEvent):
         return f"<ChannelChatClear broadcaster={self.broadcaster}>"
 
 
-class ChannelChatClearUserMessages(BaseEvent):
+class ChannelChatClearUserMessages(_ResponderEvent):
     """
     Represents a user's channel chat clear event.
 
@@ -1211,7 +1272,7 @@ class ChatMessageFragment:
         return f"<ChatMessageFragment type={self.type} text={self.text}>"
 
 
-class BaseChatMessage(BaseEvent):
+class BaseChatMessage(_ResponderEvent):
     __slots__ = (
         "broadcaster",
         "fragments",
@@ -1748,7 +1809,7 @@ class ChatCharityDonation:
         return f"<ChatCharityDonation name={self.name}>"
 
 
-class ChatNotification(BaseEvent):
+class ChatNotification(_ResponderEvent):
     """
     Represents a chat notification.
 
@@ -2007,7 +2068,7 @@ class ChatNotification(BaseEvent):
         return f"<ChatNotification broadcaster={self.broadcaster} chatter={self.chatter} id={self.id} text={self.text}>"
 
 
-class ChatMessageDelete(BaseEvent):
+class ChatMessageDelete(_ResponderEvent):
     """
     Represents a chat message delete event.
 
@@ -2038,7 +2099,7 @@ class ChatMessageDelete(BaseEvent):
         return f"<ChatMessageDelete broadcaster={self.broadcaster} user={self.user} message_id={self.message_id}>"
 
 
-class ChatSettingsUpdate(BaseEvent):
+class ChatSettingsUpdate(_ResponderEvent):
     """
     Represents a chat settings update event.
 
@@ -2127,7 +2188,7 @@ class ChatUserMessageUpdate(BaseChatMessage):
         return " ".join(fragment.text for fragment in self.fragments if fragment.type == "text")
 
 
-class BaseSharedChatSession(BaseEvent):
+class BaseSharedChatSession(_ResponderEvent):
     __slots__ = (
         "broadcaster",
         "host",
@@ -2240,7 +2301,7 @@ class SharedChatSessionEnd(BaseSharedChatSession):
         return f"<SharedChatSessionEnd session_id={self.session_id} broadcaster={self.broadcaster} host={self.host}>"
 
 
-class ChannelSubscribe(BaseEvent):
+class ChannelSubscribe(_ResponderEvent):
     """
     Represents a channel subscribe event.
 
@@ -2277,7 +2338,7 @@ class ChannelSubscribe(BaseEvent):
         return f"<ChannelSubscribe broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
 
 
-class ChannelSubscriptionEnd(BaseEvent):
+class ChannelSubscriptionEnd(_ResponderEvent):
     """
     Represents a channel subscription end event.
 
@@ -2314,7 +2375,7 @@ class ChannelSubscriptionEnd(BaseEvent):
         return f"<ChannelSubscriptionEnd broadcaster={self.broadcaster} user={self.user} tier={self.tier} gift={self.gift}>"
 
 
-class ChannelSubscriptionGift(BaseEvent):
+class ChannelSubscriptionGift(_ResponderEvent):
     """
     Represents a channel subscription gift event.
 
@@ -2391,7 +2452,7 @@ class SubscribeEmote(BaseEmote):
         return f"<SubscribeEmote id={self.id} begin={self.id} end={self.end}>"
 
 
-class ChannelSubscriptionMessage(BaseEvent):
+class ChannelSubscriptionMessage(_ResponderEvent):
     """
     Represents a subscription message event.
 
@@ -2437,7 +2498,7 @@ class ChannelSubscriptionMessage(BaseEvent):
         return f"<ChannelSubscriptionMessage broadcaster={self.broadcaster} user={self.user} text={self.text}>"
 
 
-class ChannelCheer(BaseEvent):
+class ChannelCheer(_ResponderEvent):
     """
     Represents a channel cheer event.
 
@@ -2513,7 +2574,7 @@ class ChannelRaid(BaseEvent):
         return f"<ChannelRaid from_broadcaster={self.from_broadcaster} to_broadcaster={self.to_broadcaster} viewer_count={self.viewer_count}>"
 
 
-class ChannelBan(BaseEvent):
+class ChannelBan(_ResponderEvent):
     """
     Represents a channel ban event.
 
@@ -2558,7 +2619,7 @@ class ChannelBan(BaseEvent):
         return f"<ChannelBan broadcaster={self.broadcaster} user={self.user} moderator={self.moderator} banned_at={self.banned_at}>"
 
 
-class ChannelUnban(BaseEvent):
+class ChannelUnban(_ResponderEvent):
     """
     Represents a channel unban event.
 
@@ -2589,7 +2650,7 @@ class ChannelUnban(BaseEvent):
         return f"<ChannelUnban broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
 
 
-class ChannelUnbanRequest(BaseEvent):
+class ChannelUnbanRequest(_ResponderEvent):
     """
     Represents a channel unban request event.
 
@@ -2624,7 +2685,7 @@ class ChannelUnbanRequest(BaseEvent):
         return f"<ChannelUnbanRequest broadcaster={self.broadcaster} user={self.user} id={self.id}>"
 
 
-class ChannelUnbanRequestResolve(BaseEvent):
+class ChannelUnbanRequestResolve(_ResponderEvent):
     """
     Represents a channel unban request resolve event.
 
@@ -2884,7 +2945,7 @@ class ModerateWarn:
         return f"<ModerateWarn user={self.user} reason={self.reason} chat_rules={self.chat_rules}>"
 
 
-class ChannelModerate(BaseEvent):
+class ChannelModerate(_ResponderEvent):
     """
     Represents a channel moderate event, both V1 and V2.
 
@@ -3163,7 +3224,7 @@ class ChannelModerate(BaseEvent):
         self.warn: ModerateWarn | None = ModerateWarn(warn, http=http) if warn is not None else None
 
 
-class ChannelModeratorAdd(BaseEvent):
+class ChannelModeratorAdd(_ResponderEvent):
     """
     Represents a moderator add event.
 
@@ -3189,7 +3250,7 @@ class ChannelModeratorAdd(BaseEvent):
         return f"<ChannelModeratorAdd broadcaster={self.broadcaster} user={self.user}>"
 
 
-class ChannelModeratorRemove(BaseEvent):
+class ChannelModeratorRemove(_ResponderEvent):
     """
     Represents a moderator remove event.
 
@@ -3290,7 +3351,7 @@ class AutoRedeemReward:
         return f"<AutoRedeemReward type={self.type} channel_points={self.channel_points}>"
 
 
-class ChannelPointsAutoRedeemAdd(BaseEvent):
+class ChannelPointsAutoRedeemAdd(_ResponderEvent):
     """
     Represents an automatic redemption of a channel points reward.
 
@@ -3377,7 +3438,7 @@ class CooldownSettings(NamedTuple):
     seconds: int
 
 
-class ChannelPointsReward(BaseEvent):
+class ChannelPointsReward(_ResponderEvent):
     """
     Represents an Eventsub Custom Reward.
 
@@ -3703,7 +3764,7 @@ class ChannelPointsRewardRemove(ChannelPointsReward):
         return f"<ChannelPointsRewardRemove broadcaster={self.broadcaster} id={self.id} title={self.title} cost={self.cost} enabled={self.enabled}>"
 
 
-class BaseChannelPointsRedemption(BaseEvent):
+class BaseChannelPointsRedemption(_ResponderEvent):
     __slots__ = ("broadcaster", "id", "redeemed_at", "reward", "status", "user", "user_input")
 
     def __init__(
@@ -3872,7 +3933,7 @@ class PollVoting(NamedTuple):
     amount: int
 
 
-class BaseChannelPoll(BaseEvent):
+class BaseChannelPoll(_ResponderEvent):
     __slots__ = ("broadcaster", "channel_points_voting", "choices", "id", "started_at", "status", "title")
 
     def __init__(
@@ -4006,7 +4067,7 @@ class ChannelPollEnd(BaseChannelPoll):
         return f"<ChannelPollEnd broadcaster={self.broadcaster} id={self.id} title={self.title} started_at={self.started_at} ended_at={self.ended_at}>"
 
 
-class BaseChannelPrediction(BaseEvent):
+class BaseChannelPrediction(_ResponderEvent):
     def __init__(
         self,
         payload: ChannelPredictionBeginEvent
@@ -4165,7 +4226,7 @@ class ChannelPredictionEnd(BaseChannelPrediction):
         return f"<ChannelPredictionEnd id={self.id} title={self.title} started_at={self.started_at} ended_at={self.ended_at} status={self.status} winning_outcome={self.winning_outcome}>"
 
 
-class SuspiciousUserUpdate(BaseEvent):
+class SuspiciousUserUpdate(_ResponderEvent):
     """
     Represents a suspicious user update event.
 
@@ -4203,7 +4264,7 @@ class SuspiciousUserUpdate(BaseEvent):
         return f"<SuspiciousUserUpdate broadcaster={self.broadcaster} user={self.user} moderator={self.moderator} low_trust_status={self.low_trust_status}>"
 
 
-class SuspiciousUserMessage(BaseEvent):
+class SuspiciousUserMessage(_ResponderEvent):
     """
     Represents a suspicious user message event.
 
@@ -4259,7 +4320,7 @@ class SuspiciousUserMessage(BaseEvent):
         return f"<SuspiciousUserMessage broadcaster={self.broadcaster} user={self.user} low_trust_status={self.low_trust_status}>"
 
 
-class ChannelVIPAdd(BaseEvent):
+class ChannelVIPAdd(_ResponderEvent):
     """
     Represents a channel VIP remove event.
 
@@ -4285,7 +4346,7 @@ class ChannelVIPAdd(BaseEvent):
         return f"<ChannelVIPAdd broadcaster={self.broadcaster} user={self.user}>"
 
 
-class ChannelVIPRemove(BaseEvent):
+class ChannelVIPRemove(_ResponderEvent):
     """
     Represents a channel VIP remove event.
 
@@ -4311,7 +4372,7 @@ class ChannelVIPRemove(BaseEvent):
         return f"<ChannelVIPRemove broadcaster={self.broadcaster} user={self.user}>"
 
 
-class ChannelWarningAcknowledge(BaseEvent):
+class ChannelWarningAcknowledge(_ResponderEvent):
     """
     Represents a channel warning acknowledge event.
 
@@ -4337,7 +4398,7 @@ class ChannelWarningAcknowledge(BaseEvent):
         return f"<ChannelWarningAcknowledge broadcaster={self.broadcaster} user={self.user}>"
 
 
-class ChannelWarningSend(BaseEvent):
+class ChannelWarningSend(_ResponderEvent):
     """
     Represents a channel warning send event.
 
@@ -4374,7 +4435,7 @@ class ChannelWarningSend(BaseEvent):
         return f"<ChannelWarningSend broadcaster={self.broadcaster} user={self.user} moderator={self.moderator}>"
 
 
-class BaseCharityCampaign(BaseEvent):
+class BaseCharityCampaign(_ResponderEvent):
     __slots__ = ("broadcaster", "current", "description", "id", "logo", "name", "target", "website")
 
     def __init__(
@@ -4399,7 +4460,7 @@ class BaseCharityCampaign(BaseEvent):
         return f"<BaseCharityCampaign broadcaster={self.broadcaster} id={self.id} name={self.name}>"
 
 
-class CharityCampaignDonation(BaseEvent):
+class CharityCampaignDonation(_ResponderEvent):
     """
     Represents a charity campaign donation event.
 
@@ -4551,7 +4612,7 @@ class CharityCampaignStop(BaseCharityCampaign):
         return f"<CharityCampaignStop broadcaster={self.broadcaster} id={self.id} name={self.name} stopped_at={self.stopped_at}>"
 
 
-class BaseGoal(BaseEvent):
+class BaseGoal(_ResponderEvent):
     __slots__ = ("broadcaster", "current_amount", "description", "id", "started_at", "target_amount", "type")
 
     def __init__(self, payload: GoalBeginEvent | GoalProgressEvent | GoalEndEvent, *, http: HTTPClient) -> None:
@@ -4817,7 +4878,7 @@ class HypeTrainContribution:
         return f"<HypeTrainContribution user={self.user} type={self.type} total={self.total}>"
 
 
-class BaseHypeTrain(BaseEvent):
+class BaseHypeTrain(_ResponderEvent):
     __slots__ = (
         "broadcaster",
         "id",
@@ -5025,7 +5086,7 @@ class HypeTrainEnd(BaseHypeTrain):
         return f"<HypeTrainEnd id={self.id} broadcaster={self.broadcaster} total={self.total} ended_at={self.ended_at} type={self.type}>"
 
 
-class ShieldModeBegin(BaseEvent):
+class ShieldModeBegin(_ResponderEvent):
     """
     Represents a shield mode begin event.
 
@@ -5060,7 +5121,7 @@ class ShieldModeBegin(BaseEvent):
         return f"<ShieldModeBegin broadcaster={self.broadcaster} moderator={self.moderator} started_at={self.started_at}>"
 
 
-class ShieldModeEnd(BaseEvent):
+class ShieldModeEnd(_ResponderEvent):
     """
     Represents a shield mode end event.
 
@@ -5095,7 +5156,7 @@ class ShieldModeEnd(BaseEvent):
         return f"<ShieldModeEnd broadcaster={self.broadcaster} moderator={self.moderator} ended_at={self.ended_at}>"
 
 
-class ShoutoutCreate(BaseEvent):
+class ShoutoutCreate(_ResponderEvent):
     """
     Represents a shoutout create event.
 
@@ -5151,7 +5212,7 @@ class ShoutoutCreate(BaseEvent):
         return f"<ShoutoutCreate broadcaster={self.broadcaster} to_broadcaster={self.to_broadcaster} started_at={self.started_at}>"
 
 
-class ShoutoutReceive(BaseEvent):
+class ShoutoutReceive(_ResponderEvent):
     """
     Represents a shoutout received event.
 
@@ -5188,7 +5249,7 @@ class ShoutoutReceive(BaseEvent):
         return f"<ShoutoutReceive broadcaster={self.broadcaster} from_broadcaster={self.from_broadcaster} started_at={self.started_at}>"
 
 
-class StreamOnline(BaseEvent):
+class StreamOnline(_ResponderEvent):
     """
     Represents a stream online event.
 
@@ -5227,7 +5288,7 @@ class StreamOnline(BaseEvent):
         return f"<StreamOnline id={self.id} broadcaster={self.broadcaster} started_at={self.started_at}>"
 
 
-class StreamOffline(BaseEvent):
+class StreamOffline(_ResponderEvent):
     """
     Represents a stream offline event.
 
