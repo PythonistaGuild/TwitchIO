@@ -477,7 +477,7 @@ class Client:
         token: str | None
             An optional app token to use instead of generating one automatically.
         with_adapter: bool
-            Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+            Whether to start and run a web adapter. Defaults to `True`.
         load_tokens: bool
             Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
             :meth:`.login` automatically. Defaults to ``True``.
@@ -546,7 +546,7 @@ class Client:
         token: str | None
             An optional app token to use instead of generating one automatically.
         with_adapter: bool
-            Whether to start and run a web adapter. Defaults to `True`. See: ... for more information.
+            Whether to start and run a web adapter. Defaults to `True`.
         load_tokens: bool
             Optional bool which indicates whether the :class:`Client` should call :meth:`.load_tokens` during
             :meth:`.login` automatically. Defaults to ``True``.
@@ -2214,10 +2214,6 @@ class Client:
 
         Subscribe to an EventSub Event via Websockets.
 
-        .. note::
-
-            See: ... for more information and recipes on using eventsub.
-
         Parameters
         ----------
         payload: :class:`twitchio.eventsub.SubscriptionPayload`
@@ -2344,10 +2340,6 @@ class Client:
         """|coro|
 
         Subscribe to an EventSub Event via Webhook.
-
-        .. note::
-
-            For more information on how to setup your bot with webhooks, see: ...
 
         .. important::
 
