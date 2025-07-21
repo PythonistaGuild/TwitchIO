@@ -263,6 +263,15 @@ class Command(Generic[Component_T, P]):
         self._signature = help_sig
 
     @property
+    def parameters(self) -> MappingProxyType[str, inspect.Parameter]:
+        """Property returning a copy mapping of name to :class:`inspect.Parameter` pair, which are the parameters
+        of the callback of this command, minus ``self`` (if in a class) and ``ctx``.
+
+        Can be used to retrieve the name, annotation, and default value of command parameters.
+        """
+        return MappingProxyType(self._params)
+
+    @property
     def signature(self) -> str | None:
         """Property returning an easily readable POSIX-like argument signature for the command.
 
