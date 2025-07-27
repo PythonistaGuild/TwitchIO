@@ -46,7 +46,7 @@
 	--color-important-background: #cd526a05;
 	--color-note-background--title: #269da1;
 	--color-note-background: #269da105;
-	--color-versionadd-background--title: #5aa569;
+	--color-versionadd-background--title: #3c4d5f;
 	--color-versionadd-background: #5aa56905;
 	--color-versionchange-background--title: #616faf;
 	--color-versionchange-background: #616faf05;
@@ -244,7 +244,8 @@ th {
 }
 
 .versionadded {
-	background-color: var(--color-versionadd-background) !important;
+	background-color: transparent !important;
+	box-shadow: none !important;
 }
 
 .versionmodified.added {
@@ -391,6 +392,10 @@ body.theme-dark {
 
 	blockquote {
 		border-color: #2b4459!important;
+	}
+
+	.versionadded {
+		background-color: transparent !important;
 	}
 }
 
@@ -641,6 +646,7 @@ dl.py > dd {
 
 .versionmodified {
 	padding: .25rem .5rem;
+	font-size: 0.9em;
 }
 
 /* Fix padding on meth/prop dd */

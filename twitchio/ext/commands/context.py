@@ -520,8 +520,6 @@ class Context(Generic[BotT]):
             then additionally requires the ``user:bot`` scope on the bot,
             and either ``channel:bot`` scope from the broadcaster or moderator status.
 
-            See: ... for more information.
-
         Parameters
         ----------
         content: str
@@ -562,8 +560,6 @@ class Context(Generic[BotT]):
             then additionally requires the ``user:bot`` scope on the bot,
             and either ``channel:bot`` scope from the broadcaster or moderator status.
 
-            See: ... for more information.
-
         Parameters
         ----------
         content: str
@@ -602,7 +598,6 @@ class Context(Generic[BotT]):
         .. important::
 
             The broadcaster of the associated channel must have granted your bot the ``moderator:manage:announcements`` scope.
-            See: ... for more information.
 
         Parameters
         ----------
@@ -637,7 +632,6 @@ class Context(Generic[BotT]):
         .. important::
 
             The broadcaster of the associated channel must have granted your bot the ``moderator:manage:chat_messages`` scope.
-            See: ... for more information.
 
         .. note::
 
@@ -664,7 +658,6 @@ class Context(Generic[BotT]):
         .. important::
 
             The broadcaster of the associated channel must have granted your bot the ``moderator:manage:chat_messages`` scope.
-            See: ... for more information.
 
         Raises
         ------
