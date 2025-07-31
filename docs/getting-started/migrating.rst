@@ -464,6 +464,13 @@ Dependencies:
 - Removed Optional ``[speed]``
 
 
+Library Revisions
+~~~~~~~~~~~~~~~~~
+
+General:
+- Twitch Identifiers (ID's) are now represented as :class:`str`. Previously an :class:`int`.
+
+
 Added
 ~~~~~
 
