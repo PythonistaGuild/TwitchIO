@@ -46,7 +46,7 @@ from .models.teams import Team
 from .payloads import EventErrorPayload, WebsocketSubscriptionData
 from .user import ActiveExtensions, Extension, PartialUser, User
 from .utils import MISSING, EventWaiter, clamp, unwrap_function
-from .web import AiohttpAdapter
+from .web import AiohttpAdapter, has_starlette
 from .web.utils import BaseAdapter
 
 
@@ -145,6 +145,10 @@ class Client:
             session=session,
             client=self,
         )
+        if not has_starlette:
+            msg = "If you require the StarletteAdapter please install the required packages: 'pip install twitchio[starlette]'."
+            logger.warning(msg)
+
         adapter: BaseAdapter | type[BaseAdapter] = options.get("adapter", AiohttpAdapter)
         if isinstance(adapter, BaseAdapter):
             adapter.client = self

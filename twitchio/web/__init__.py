@@ -24,24 +24,15 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import logging
-
-from ..utils import ColorFormatter
 from .aio_adapter import AiohttpAdapter as AiohttpAdapter
 from .utils import BaseAdapter as BaseAdapter, FetchTokenPayload as FetchTokenPayload
 
 
-handler = logging.StreamHandler()
-handler.setFormatter(ColorFormatter())
-logger = logging.getLogger(__name__)
-logger.addHandler(handler)
-
+has_starlette = False
 
 try:
     from .starlette_adapter import StarletteAdapter as StarletteAdapter
 except ImportError:
-    msg = "If you require the StarletteAdapter please install the required packages: 'pip install twitchio[starlette]'."
-    logger.warning("Starlette or uvicorn is not installed, StarletteAdapter support will not be available. %s", msg)
-
-
-logger.removeHandler(handler)
+    has_starlette = False
+else:
+    has_starlette = True
