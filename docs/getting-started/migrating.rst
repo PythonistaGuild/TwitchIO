@@ -252,6 +252,27 @@ started is with :class:`twitchio.AutoClient` and :class:`twitchio.ext.commands.A
 - :meth:`twitchio.Client.fetch_conduits`
 - :meth:`twitchio.Client.create_conduit`
 
+Cache and Channels
+===================
+
+TODO
+
+Twitch Identifiers
+===================
+
+Twitch identifiers (ID's) have been changed from :class:`int`'s to :class:`str`'s. This is inline with the data provided by Twitch.
+
+Twitch can not make any guarantees that in the future the format of ID's which can currently be converted to a :class:`int`
+won't change. For this reason instead of risking a library breaking bug being introduced via the API (in the small chance the format does change)
+the type of all identifiers will remain strings.
+
+Any ``.id`` attribute on a Twitch Model will be a :class:`str`.
+
+
+User, PartialUser and Chatters
+===============================
+
+TODO
 
 Logging
 =======
