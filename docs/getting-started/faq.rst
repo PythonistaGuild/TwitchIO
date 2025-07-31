@@ -141,3 +141,12 @@ variables. A small example is shown below:
 
 
 The prefix can also be passed as or returned from this function as a list of :class:`str` to allow multiple prefixes to be used.
+
+
+Why do my tokens in ``.tio.tokens.json`` occasionally go missing?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is usually caused by force closing the client while it is attempting to write to the file. If you use ``Ctrl + C`` to close
+your client, make sure you only do this once, and wait for up to ``5`` seconds.
+
+Alternatively, and highly recommended, you should look at storing your tokens in a different medium, such as a SQL Database.
