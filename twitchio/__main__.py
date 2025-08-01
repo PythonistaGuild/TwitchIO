@@ -260,17 +260,17 @@ def version_info() -> None:
     python_info = "\n".join(sys.version.split("\n"))
 
     info: str = f"""
-    twitchio : {get_version()}
-    aiohttp  : {aiohttp.__version__}
+twitchio : {get_version()}
+aiohttp  : {aiohttp.__version__}
 
-    Python:
-        - {python_info}
-    System:
-        - {platform.platform()}
-    Extras:
-        - Starlette : {starlette_version}
-        - Uvicorn   : {uvicorn_version}
-    """
+Python:
+    - {python_info}
+System:
+    - {platform.platform()}
+Extras:
+    - Starlette : {starlette_version}
+    - Uvicorn   : {uvicorn_version}
+"""
 
     print(info)
 
