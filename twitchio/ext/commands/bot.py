@@ -812,7 +812,7 @@ class Bot(Mixin[None], Client):
 class AutoBot(Bot, AutoClient):
     """The TwitchIO :class:`~twitchio.ext.commands.AutoBot` class used to easily manage Twitch Conduits and Shards.
 
-    This class beahves idential to :class:`~twitchio.ext.commands.Bot` with the addition of inheriting from
+    This class behaves identically to :class:`~twitchio.ext.commands.Bot` with the addition of inheriting from
     :class:`~twitchio.AutoClient`. See: :class:`~twitchio.AutoClient` for more details on how this class differs from
     the :class:`~twitchio.ext.commands.Bot` which inherits from :class:`~twitchio.Client`.
     """
