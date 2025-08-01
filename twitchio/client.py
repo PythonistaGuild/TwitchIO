@@ -3606,7 +3606,7 @@ class AutoClient(Client):
             Cannot subscribe when no Conduit is associated with this Client.
         """
         if not self._conduit_info.conduit:
-            raise MissingConduit("Unable to subscribe as a Conduit has not beed associated with %r.", self)
+            raise MissingConduit("Unable to subscribe as a Conduit has not been associated with %r.", self)
 
         if wait:
             return await self._multi_sub(subscriptions, stop_on_error=stop_on_error)
