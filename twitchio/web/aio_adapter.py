@@ -316,10 +316,12 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         if "code" not in request.query:
             return FetchTokenPayload(400, response=web.Response(status=400, text="No 'code' parameter provided."))
 
+        redirect = self._find_redirect(request)
+
         try:
             resp: UserTokenPayload = await self.client._http.user_access_token(
                 request.query["code"],
-                redirect_uri=self.redirect_url,
+                redirect_uri=redirect,
             )
         except HTTPException as e:
             logger.error("Exception raised while fetching Token in <%s>: %s", self.__class__.__qualname__, e)
@@ -378,7 +380,22 @@ class AiohttpAdapter(BaseAdapter, web.Application):
 
         return payload.response
 
+    def _find_redirect(self, request: web.Request) -> str:
+        stripped = self._domain.removeprefix(f"{self._proto}://")
+        local = f"{self._proto}://{self._host}"
+
+        if request.host.startswith((self._domain, stripped)):
+            redirect = self.redirect_url
+        elif request.host.startswith((self._host, local)):
+            redirect = f"{local}/oauth/callback"
+        else:
+            redirect = f"{request.scheme}://{request.host}/oauth/callback"
+
+        return redirect
+
     async def oauth_redirect(self, request: web.Request) -> web.Response:
+        redirect = self._find_redirect(request)
+
         scopes: str | None = request.query.get("scopes", request.query.get("scope", None))
         force_verify: bool = request.query.get("force_verify", "false").lower() == "true"
 
@@ -397,7 +414,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         try:
             payload: AuthorizationURLPayload = self.client._http.get_authorization_url(
                 scopes=scopes_,
-                redirect_uri=self.redirect_url,
+                redirect_uri=redirect,
                 force_verify=force_verify,
             )
         except Exception as e:

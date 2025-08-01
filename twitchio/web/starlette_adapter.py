@@ -162,7 +162,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         if eventsub_secret and not 10 <= len(eventsub_secret) <= 100:
             raise ValueError("Eventsub Secret must be between 10 and 100 characters long.")
 
-        self._domain: str | None = None
+        self._domain: str
         self._proto = "https" if (ssl_keyfile or domain) else "http"
 
         if domain:
@@ -358,10 +358,12 @@ class StarletteAdapter(BaseAdapter, Starlette):
         if "code" not in request.query_params:
             return FetchTokenPayload(400, response=Response(status_code=400, content="No 'code' parameter provided."))
 
+        redirect = self._find_redirect(request)
+
         try:
             resp: UserTokenPayload = await self.client._http.user_access_token(
                 request.query_params["code"],
-                redirect_uri=self.redirect_url,
+                redirect_uri=redirect,
             )
         except HTTPException as e:
             logger.error("Exception raised while fetching Token in <%s>: %s", self.__class__.__qualname__, e)
@@ -379,6 +381,25 @@ class StarletteAdapter(BaseAdapter, Starlette):
             response=Response(content="Success. You can leave this page.", status_code=200),
             payload=resp,
         )
+
+    def _find_redirect(self, request: Request) -> str:
+        stripped = self._domain.removeprefix(f"{self._proto}://")
+        local = f"{self._proto}://{self._host}"
+
+        host = request.url.hostname
+        scheme = request.url.scheme
+
+        if not host:
+            return self.redirect_url
+
+        if host.startswith((self._domain, stripped)):
+            redirect = self.redirect_url
+        elif host.startswith((self._host, local)):
+            redirect = f"{local}:{self._port}/oauth/callback"
+        else:
+            redirect = f"{scheme}://{host}/oauth/callback"
+
+        return redirect
 
     async def oauth_callback(self, request: Request) -> Response:
         """Default route callback for the OAuth Authentication redirect URL.
@@ -423,6 +444,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
     async def oauth_redirect(self, request: Request) -> Response:
         scopes: str | None = request.query_params.get("scopes", None)
         force_verify: bool = request.query_params.get("force_verify", "false").lower() == "true"
+        redirect = self._find_redirect(request)
 
         if not scopes:
             scopes = str(self.client._http.scopes) if self.client._http.scopes else None
@@ -439,7 +461,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         try:
             payload: AuthorizationURLPayload = self.client._http.get_authorization_url(
                 scopes=scopes_,
-                redirect_uri=self.redirect_url,
+                redirect_uri=redirect,
                 force_verify=force_verify,
             )
         except Exception as e:
