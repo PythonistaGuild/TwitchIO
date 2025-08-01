@@ -255,7 +255,22 @@ started is with :class:`twitchio.AutoClient` and :class:`twitchio.ext.commands.A
 Cache and Channels
 ===================
 
-TODO
+Previous versions of TwitchIO used caching mechanisms to store ``"Connected Channels"`` and the ``"Chatters"`` associated with those channels.
+
+Due to the removal of ``IRC`` this is no longer necessary and TwitchIO only does very limited caching where needed.
+
+``EventSub`` events that have an associated channel will contain a ``broadcaster`` attribute which is a :class:`twitchio.PartialUser`, 
+and is the channel the event originates from and can be used to perform actions on the channel/broadcaster.
+
+If you are using a :class:`~twitchio.ext.commands.Command`, a :class:`~twitchio.ext.commands.RewardCommand` or anywhere 
+:class:`~twitchio.ext.commands.Context` is available, consider using the helper methods and attributes available on 
+:class:`~twitchio.ext.commands.Context`.
+
+**Removed:**
+
+- ``Client.connected_channels``
+- ``Client.get_channel()``
+
 
 Twitch Identifiers
 ===================
