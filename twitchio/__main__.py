@@ -150,6 +150,9 @@ class Bot(commands.AutoBot):
             tokens = json.load(fp)
 
             for user_id in tokens:
+                if user_id == self.user.id:
+                    continue
+
                 subs.extend(self.generate_subs(user_id))
 
         if subs:
