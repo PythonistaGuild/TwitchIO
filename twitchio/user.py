@@ -29,7 +29,6 @@ from typing import TYPE_CHECKING, Literal
 from .assets import Asset
 from .exceptions import HTTPException, MessageRejectedError
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
-from .models.hype_train import HypeTrainStatus
 from .models.raids import Raid
 from .utils import Colour, parse_timestamp
 
@@ -56,7 +55,7 @@ if TYPE_CHECKING:
     from .models.clips import Clip, CreatedClip
     from .models.eventsub_ import ChannelChatMessageEvent, ChatMessageBadge
     from .models.goals import Goal
-    from .models.hype_train import HypeTrainEvent
+    from .models.hype_train import HypeTrainEvent, HypeTrainStatus
     from .models.moderation import (
         AutomodCheckMessage,
         AutomodSettings,
@@ -1392,6 +1391,8 @@ class PartialUser:
             HypeTrainStatus object if a Hype Train is currently active, otherwise None.
 
         """
+        from .models.hype_train import HypeTrainStatus
+
         data = await self._http.get_hype_train_status(broadcaster_id=self.id, token_for=self.id)
 
         if data["data"][0]["current"] is None:
