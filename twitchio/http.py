@@ -123,6 +123,7 @@ if TYPE_CHECKING:
         GlobalChatBadgesResponse,
         GlobalEmotesResponse,
         HypeTrainEventsResponseData,
+        HypeTrainStatusResponse,
         ModeratedChannelsResponseData,
         ModeratorsResponseData,
         PollsResponse,
@@ -1608,6 +1609,12 @@ class HTTPClient:
         )
 
         return iterator
+
+    async def get_hype_train_status(self, broadcaster_id: str | int, token_for: str) -> HypeTrainStatusResponse:
+        params = {"broadcaster_id": broadcaster_id}
+
+        route: Route = Route("GET", "hypetrain/status", params=params, token_for=token_for)
+        return await self.request_json(route)
 
     ### Moderation ###
 

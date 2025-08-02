@@ -66,6 +66,10 @@ __all__ = (
     "GlobalChatBadgesResponseVersions",
     "GlobalEmotesResponse",
     "GlobalEmotesResponseData",
+    "HypeTrainEventsResponse",
+    "HypeTrainStatusResponse",
+    "HypeTrainStatusResponseData",
+    "HypeTrainStatusTopContributions",
     "OAuthResponses",
     "RawResponse",
     "RefreshTokenResponse",
@@ -1086,6 +1090,53 @@ class HypeTrainEventsResponseData(TypedDict):
 class HypeTrainEventsResponse(TypedDict):
     data: list[HypeTrainEventsResponseData]
     pagination: Pagination
+
+
+class HypeTrainStatusTopContributions(TypedDict):
+    user_id: str
+    user_login: str
+    user_name: str
+    type: Literal["bits", "subscriptions", "other"]
+    total: int
+
+
+class HypeTrainStatusSharedParticipantsData(TypedDict):
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+
+
+class HypeTrainStatusAllTimeHighData(TypedDict):
+    level: int
+    total: int
+    achieved_at: str
+
+
+class HypeTrainStatusCurrentData(TypedDict):
+    id: str
+    broadcaster_user_id: str
+    broadcaster_user_login: str
+    broadcaster_user_name: str
+    level: int
+    total: int
+    progress: int
+    goal: int
+    top_contributions: list[HypeTrainStatusTopContributions]
+    shared_train_participants: list[HypeTrainStatusSharedParticipantsData]
+    started_at: str
+    expires_at: str
+    type: Literal["treasure", "golden_kappa", "regular"]
+    is_shared_train: bool
+
+
+class HypeTrainStatusResponseData(TypedDict):
+    current: HypeTrainStatusCurrentData | None
+    all_time_high: HypeTrainStatusAllTimeHighData | None
+    shared_all_time_high: HypeTrainStatusAllTimeHighData | None
+
+
+class HypeTrainStatusResponse(TypedDict):
+    data: list[HypeTrainStatusResponseData]
 
 
 class CheckAutomodStatusResponseData(TypedDict):
