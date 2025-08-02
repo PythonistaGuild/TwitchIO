@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Literal
 from .assets import Asset
 from .exceptions import HTTPException, MessageRejectedError
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
+from .models.hype_train import HypeTrainStatus
 from .models.raids import Raid
 from .utils import Colour, parse_timestamp
 
@@ -55,7 +56,7 @@ if TYPE_CHECKING:
     from .models.clips import Clip, CreatedClip
     from .models.eventsub_ import ChannelChatMessageEvent, ChatMessageBadge
     from .models.goals import Goal
-    from .models.hype_train import HypeTrainEvent, HypeTrainStatus
+    from .models.hype_train import HypeTrainEvent
     from .models.moderation import (
         AutomodCheckMessage,
         AutomodSettings,
