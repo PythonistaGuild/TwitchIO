@@ -591,6 +591,8 @@ class Context(Generic[BotT]):
             Twitch failed to process the message, could be ``400``, ``401``, ``403``, ``422`` or any ``5xx`` status code.
         MessageRejectedError
             Twitch rejected the message from various checks.
+        TranslatorError
+            An error occurred during translation.
         """
         translator: Translator | None = getattr(self.command, "translator", None)
         new = (f"/me {content}" if me else content).strip()
@@ -599,14 +601,21 @@ class Context(Generic[BotT]):
             return await self.channel.send_message(sender=self.bot.bot_id, message=new)
 
         invoked = self.invoked_with
-        code = langcode or translator.get_langcode(self, invoked.lower()) if invoked else None
+
+        try:
+            code = langcode or translator.get_langcode(self, invoked.lower()) if invoked else None
+        except Exception as e:
+            raise TranslatorError(f"An exception occurred fetching a language code for '{invoked}'.", original=e) from e
 
         if not code:
             return await self.channel.send_message(sender=self.bot.bot_id, message=new)
 
-        translated = await translator.translate(self, content, code)
-        new_translated = (f"/me {translated}" if me else translated).strip()
+        try:
+            translated = await translator.translate(self, content, code)
+        except Exception as e:
+            raise TranslatorError(f"An exception occurred translating content for '{invoked}'.", original=e) from e
 
+        new_translated = (f"/me {translated}" if me else translated).strip()
         return await self.channel.send_message(sender=self.bot.bot_id, message=new_translated)
 
     async def reply(self, content: str, *, me: bool = False) -> SentMessage:

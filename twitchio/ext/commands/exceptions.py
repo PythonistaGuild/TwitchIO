@@ -51,6 +51,7 @@ __all__ = (
     "ModuleNotLoadedError",
     "NoEntryPointError",
     "PrefixError",
+    "TranslatorError",
     "UnexpectedQuoteError",
 )
 
@@ -72,7 +73,7 @@ class CommandInvokeError(CommandError):
     Attributes
     ----------
     original: :class:`Exception` | None
-        The original exception that caused this error. Could be None.
+        The original exception that caused this error. Could be ``None``.
     """
 
     def __init__(self, msg: str | None = None, original: Exception | None = None) -> None:
@@ -204,3 +205,18 @@ class CommandOnCooldown(GuardFailure):
         self.cooldown: BaseCooldown = cooldown
         self.remaining: float = remaining
         super().__init__(msg or f"Cooldown is ratelimited. Try again in {remaining} seconds.")
+
+
+class TranslatorError(CommandError):
+    """Exception raised when a :class:`.commands.Translator` raises an error while attempting to get a language code
+    or translate content provided to :meth:`~.commands.Context.send_translated`.
+
+    Attributes
+    ----------
+    original: :class:`Exception` | None
+        The original exception that caused this error. Could be None.
+    """
+
+    def __init__(self, msg: str | None = None, original: Exception | None = None) -> None:
+        self.original: Exception | None = original
+        super().__init__(msg)
