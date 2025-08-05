@@ -558,7 +558,7 @@ class Context(Generic[BotT]):
         See the following documentation for more details on translators:
 
         - :class:`.commands.Translator`
-        - :class:`.commands.translator`
+        - :func:`.commands.translator`
 
         .. important::
 

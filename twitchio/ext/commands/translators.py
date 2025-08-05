@@ -41,7 +41,7 @@ class Translator(abc.ABC):
     This class allows you to implement logic to translate messages sent via the :meth:`.commands.Context.send_translated`
     method in commands or anywhere :class:`.commands.Context` is available.
 
-    You should pass your implemented class to the :meth:`.commands.translator` decorator on top of a :class:`~.commands.Command`.
+    You should pass your implemented class to the :func:`.commands.translator` decorator on top of a :class:`~.commands.Command`.
 
     .. important::
 
