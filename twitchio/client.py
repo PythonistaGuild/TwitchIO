@@ -3200,12 +3200,16 @@ class AutoClient(Client):
         simply: ``len(subscriptons) / max_per_shard`` or ``2`` whichever is greater. Note this parameter has no effect when
         ``shard_ids`` is explicitly passed.
     subscriptions: list[twitchio.eventsub.SubscriptionPayload]
-        A list of any combination of EventSub subscriptions (all of which inherit from
+        An optional list of any combination of EventSub subscriptions (all of which inherit from
         :class:`~twitchio.eventsub.SubscriptionPayload`) the Client should attempt to subscribe to when required. The
         :class:`~twitchio.AutoClient` will only attempt to subscribe to these subscriptions when it creates a new Conduit. If
         your Client connects to an existing Conduit either by passing ``conduit_id`` or automatically, this parameter has no
         effect. In cases where you need to update an existing Conduit with new subscriptions see:
-        :meth:`~twitchio.AutoClient.multi_subscribe`.
+        :meth:`~twitchio.AutoClient.multi_subscribe` or the parameter ``force_subscribe``.
+    force_subscribe: bool
+        An optional :class:`bool` which when ``True`` will force attempt to subscribe to the subscriptions provided in the
+        ``subscriptions`` parameter, regardless of whether a new conduit was created or not. Defaults to ``False``.
+
     """
 
     # NOTE:
@@ -3225,6 +3229,8 @@ class AutoClient(Client):
     ) -> None:
         self._shard_ids: list[int] = kwargs.pop("shard_ids", [])
         self._conduit_id: str | bool | None = kwargs.pop("conduit_id", MISSING)
+        self._force_sub: bool = kwargs.pop("force_subscribe", False)
+        self._subbed: bool = False
 
         if self._conduit_id is MISSING or self._conduit_id is None:
             logger.warning(
@@ -3353,6 +3359,9 @@ class AutoClient(Client):
             raise MissingConduit("No conduit could be found with the provided ID or a new one can not be created.")
 
         await self._associate_shards(self._shard_ids)
+        if self._force_sub and not self._subbed:
+            await self.multi_subscribe(self._initial_subs)
+
         await self.setup_hook()
 
         self._setup_called = True
@@ -3484,6 +3493,7 @@ class AutoClient(Client):
         if self._initial_subs:
             logger.info("Attempting to do an initial subscription on new conduit: %r.", self._conduit_info)
             await self._multi_sub(self._initial_subs, stop_on_error=False)
+            self._subbed = True
 
         return new
 
