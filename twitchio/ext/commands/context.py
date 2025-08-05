@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from .bot import Bot
     from .components import Component
     from .core import Command
+    from .translators import Translator
 
     PrefixT: TypeAlias = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
 
@@ -542,6 +543,24 @@ class Context(Generic[BotT]):
         """
         new = (f"/me {content}" if me else content).strip()
         return await self.channel.send_message(sender=self.bot.bot_id, message=new)
+
+    async def send_translated(self, content: str, *, me: bool = False, langcode: str | None = None) -> SentMessage:
+        translator: Translator | None = getattr(self.command, "translator", None)
+        new = (f"/me {content}" if me else content).strip()
+
+        if not self.command or not translator:
+            return await self.channel.send_message(sender=self.bot.bot_id, message=new)
+
+        invoked = self.invoked_with
+        code = langcode or translator.get_langcode(self, invoked.lower()) if invoked else None
+
+        if not code:
+            return await self.channel.send_message(sender=self.bot.bot_id, message=new)
+
+        translated = await translator.translate(self, content, code)
+        new_translated = (f"/me {translated}" if me else translated).strip()
+
+        return await self.channel.send_message(sender=self.bot.bot_id, message=new_translated)
 
     async def reply(self, content: str, *, me: bool = False) -> SentMessage:
         """|coro|

@@ -22,11 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .bot import AutoBot as AutoBot, Bot as Bot
-from .components import *
-from .context import *
-from .converters import *
-from .cooldowns import *
-from .core import *
-from .exceptions import *
-from .translators import *
+from __future__ import annotations
+
+import abc
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from .context import Context
+
+
+__all__ = ("Translator",)
+
+
+class Translator(abc.ABC):
+    @abc.abstractmethod
+    def get_langcode(self, ctx: Context[Any], name: str) -> str | None: ...
+
+    @abc.abstractmethod
+    async def translate(self, ctx: Context[Any], text: str, langcode: str) -> str: ...
