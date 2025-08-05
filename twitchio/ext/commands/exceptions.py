@@ -214,7 +214,7 @@ class TranslatorError(CommandError):
     Attributes
     ----------
     original: :class:`Exception` | None
-        The original exception that caused this error. Could be None.
+        The original exception that caused this error. Could be ``None``.
     """
 
     def __init__(self, msg: str | None = None, original: Exception | None = None) -> None:
