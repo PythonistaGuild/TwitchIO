@@ -54,6 +54,8 @@ Decorators
 
 .. autofunction:: twitchio.ext.commands.cooldown(*, base: BaseCooldown, rate: int, per: float, key: Callable[[Any], Hashable] | Callable[[Any], Coroutine[Any, Any, Hashable]] | BucketType, **kwargs: ~typing.Any)
 
+.. autofunction:: twitchio.ext.commands.translator
+
 
 Guards
 ######
@@ -97,4 +99,11 @@ Converters
     :members:
 
 .. autoclass:: twitchio.ext.commands.ColourConverter()
+    :members:
+
+
+Translators
+###########
+
+.. autoclass:: twitchio.ext.commands.Translator()
     :members:
