@@ -77,6 +77,7 @@ class Translator(abc.ABC):
         -------
 
         .. code:: python3
+
             # For example purposes only the "get_langcode" method is shown in this example...
             # The "translate" method must also be implemented...
 
@@ -128,6 +129,7 @@ class Translator(abc.ABC):
         -------
 
         .. code:: python3
+
             # For example purposes only the "translate" method is shown in this example...
             # The "get_langcode" method must also be implemented...
 
