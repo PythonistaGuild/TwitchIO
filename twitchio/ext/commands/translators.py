@@ -36,8 +36,115 @@ __all__ = ("Translator",)
 
 
 class Translator(abc.ABC):
-    @abc.abstractmethod
-    def get_langcode(self, ctx: Context[Any], name: str) -> str | None: ...
+    """Abstract Base Class for command translators.
+
+    This class allows you to implement logic to translate messages sent via the :meth:`.commands.Context.send_translated`
+    method in commands or anywhere :class:`.commands.Context` is available.
+
+    You should pass your implemented class to the :meth:`.commands.translator` decorator on top of a :class:`~.commands.Command`.
+
+    .. important::
+
+        You must implement every method of this ABC.
+    """
 
     @abc.abstractmethod
-    async def translate(self, ctx: Context[Any], text: str, langcode: str) -> str: ...
+    def get_langcode(self, ctx: Context[Any], name: str) -> str | None:
+        """Method which is called when :meth:`.commands.Context.send_translated` is used on a :class:`.commands.Command`
+        which has an associated Translator, to determine the ``langcode`` which should be passed to :meth:`.translate` or ``None``
+        if the content should not be translated.
+
+        By default the ``name`` or ``alias`` used to invoke the command is passed alongside :class:`.commands.Context` to aid in
+        determining the ``langcode`` you should use.
+
+        You can use any system for the language codes, however they must be a :class:`str`. We also recommend using a
+        recognized system such as the ``ISO 639`` language code format.
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            The context surrounding the command invocation.
+        name: str
+            The ``name`` or ``alias`` used to invoke the command. This does not include the prefix, however if you need to
+            retrieve the prefix see: :attr:`.commands.Context.prefix`.
+
+        Returns
+        -------
+        str
+            The language code as a :class:`str` to pass to :meth:`.translate`.
+
+        Example
+        -------
+
+        .. code:: python3
+            # For example purposes only the "get_langcode" method is shown in this example...
+            # The "translate" method must also be implemented...
+
+            class HelloTranslator(commands.Translator):
+                def __init__(self) -> None:
+                    self.code_mapping = {"hello": "en", "bonjour": "fr"}
+
+               def get_langcode(self, ctx: commands.Context, name: str) -> str | None:
+                   # Return a default of "en". Could also be ``None`` to prevent `translate` being called and to
+                   # send the default message...
+                   return self.code_mapping.get(name, "en")
+
+
+            @commands.command(name="hello", aliases=["bonjour"])
+            @commands.translator(HelloTranslator)
+            async def hello_command(ctx: commands.Context) -> None:
+                await ctx.send_translated("Hello!")
+        """
+
+    @abc.abstractmethod
+    async def translate(self, ctx: Context[Any], text: str, langcode: str) -> str:
+        """|coro|
+
+        Method used to translate the content passed to :meth:`.commands.Context.send_translated` with the language code returned from
+        :meth:`.get_langcode`. If ``None`` is returned from :meth:`.get_langcode`, this method will not be called and the
+        default content provided to :meth:`~.commands.Context.send_translated` will be sent instead.
+
+        You could use this method to call a local or external translation API, retrieve translations from a database or local
+        mapping etc.
+
+        This method must return a :class:`str`.
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            The context surrounding the command invocation.
+        text: str
+            The content passed to :meth:`~.commands.Context.send_translated` which should be translated.
+        langcode: str
+            The language code returned via :meth:`.get_langcode`, which can be used to determine the language the text should
+            be translated to.
+
+        Returns
+        -------
+        str
+            The translated text which should be sent. This should not exceed ``500`` characters.
+
+        Example
+        -------
+
+        .. code:: python3
+            # For example purposes only the "translate" method is shown in this example...
+            # The "get_langcode" method must also be implemented...
+
+            class HelloTranslator(commands.Translator):
+
+                async def translate(self, ctx: commands.Context, text: str, langcode: str) -> str:
+                    # Usually you would call an API, or retrieve from a database or dict or some other solution...
+                    # This is just for an example...
+
+                    if langcode == "en":
+                        return text
+
+                    elif langcode == "fr":
+                        return "Bonjour!"
+
+            @commands.command(name="hello", aliases=["bonjour"])
+            @commands.translator(HelloTranslator)
+            async def hello_command(ctx: commands.Context) -> None:
+                await ctx.send_translated("Hello!")
+        """

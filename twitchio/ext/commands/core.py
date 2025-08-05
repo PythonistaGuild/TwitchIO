@@ -272,6 +272,9 @@ class Command(Generic[Component_T, P]):
 
     @property
     def translator(self) -> Translator | None:
+        """Property returning the :class:`.commands.Translator` associated with this command or ``None`` if one was not
+        used.
+        """
         return self._translator
 
     @property
@@ -1480,6 +1483,19 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
 
 def translator(cls: Translator | type[Translator]) -> Any:
+    """|deco|
+
+    Decorator which adds a :class:`.commands.Translator` to a :class:`.commands.Command`.
+
+    You can provide the class or instance of your implemented :class:`.commands.Translator` to this decorator.
+
+    See the :class:`.commands.Translator` documentation for more information on translators.
+
+    .. note::
+
+        You can only have one :class:`.commands.Translator` per command.
+    """
+
     def wrapper(func: Any) -> Any:
         inst = cls() if inspect.isclass(cls) else cls
 

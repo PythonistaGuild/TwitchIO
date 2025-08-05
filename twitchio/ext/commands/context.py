@@ -545,6 +545,53 @@ class Context(Generic[BotT]):
         return await self.channel.send_message(sender=self.bot.bot_id, message=new)
 
     async def send_translated(self, content: str, *, me: bool = False, langcode: str | None = None) -> SentMessage:
+        """|coro|
+
+        Send a translated chat message to the channel associated with this context.
+
+        You must have added a :class:`.commands.Translator` to your :class:`.commands.Command` in order to effectively use
+        this method. If no :class:`.commands.Translator` is found, this method acts identical to :meth:`.send`.
+
+        If this method can not find a valid language code, E.g. both :meth:`.commands.Translator.get_langcode` and the parameter
+        ``langcode`` return ``None``, this method acts identical to :meth:`.send`.
+
+        See the following documentation for more details on translators:
+
+        - :class:`.commands.Translator`
+        - :class:`.commands.translator`
+
+        .. important::
+
+            You must have the ``user:write:chat`` scope. If an app access token is used,
+            then additionally requires the ``user:bot`` scope on the bot,
+            and either ``channel:bot`` scope from the broadcaster or moderator status.
+
+        Parameters
+        ----------
+        content: str
+            The content of the message you would like to translate and then send.
+            This **and** the translated version of this content cannot exceed ``500`` characters.
+            Additionally the content parameter will be stripped of all leading and trailing whitespace.
+        me: bool
+            An optional bool indicating whether you would like to send this message with the ``/me`` chat command.
+        langcode: str | None
+            An optional ``langcode`` to override the ``langcode`` returned from :meth:`.commands.Translator.get_langcode`.
+            This should only be provided if you do custom language code lookups outside of your
+            :class:`.commands.Translator`. Defaults to ``None``.
+
+
+        Returns
+        -------
+        SentMessage
+            The payload received by Twitch after sending this message.
+
+        Raises
+        ------
+        HTTPException
+            Twitch failed to process the message, could be ``400``, ``401``, ``403``, ``422`` or any ``5xx`` status code.
+        MessageRejectedError
+            Twitch rejected the message from various checks.
+        """
         translator: Translator | None = getattr(self.command, "translator", None)
         new = (f"/me {content}" if me else content).strip()
 
