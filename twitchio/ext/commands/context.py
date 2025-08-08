@@ -663,6 +663,93 @@ class Context(Generic[BotT]):
         new = (f"/me {content}" if me else content).strip()
         return await self.channel.send_message(sender=self.bot.bot_id, message=new, reply_to_message_id=self._payload.id)
 
+    async def reply_translated(self, content: str, *, me: bool = False, langcode: str | None = None) -> SentMessage:
+        """|coro|
+
+        Send a translated chat message as a reply to the user who this message is associated with and to the channel associated with
+        this context.
+
+        You must have added a :class:`.commands.Translator` to your :class:`.commands.Command` in order to effectively use
+        this method. If no :class:`.commands.Translator` is found, this method acts identical to :meth:`.reply`.
+
+        If this method can not find a valid language code, E.g. both :meth:`.commands.Translator.get_langcode` and the parameter
+        ``langcode`` return ``None``, this method acts identical to :meth:`.reply`.
+
+        See the following documentation for more details on translators:
+
+        - :class:`.commands.Translator`
+        - :func:`.commands.translator`
+
+        .. warning::
+
+            You cannot use this method in Reward based context. E.g.
+            if :attr:`~.commands.Context.type` is :attr:`~.commands.ContextType.REWARD`.
+
+        .. important::
+
+            You must have the ``user:write:chat`` scope. If an app access token is used,
+            then additionally requires the ``user:bot`` scope on the bot,
+            and either ``channel:bot`` scope from the broadcaster or moderator status.
+
+        Parameters
+        ----------
+        content: str
+            The content of the message you would like to translate and then send.
+            This **and** the translated version of this content cannot exceed ``500`` characters.
+            Additionally the content parameter will be stripped of all leading and trailing whitespace.
+        me: bool
+            An optional bool indicating whether you would like to send this message with the ``/me`` chat command.
+        langcode: str | None
+            An optional ``langcode`` to override the ``langcode`` returned from :meth:`.commands.Translator.get_langcode`.
+            This should only be provided if you do custom language code lookups outside of your
+            :class:`.commands.Translator`. Defaults to ``None``.
+
+
+        Returns
+        -------
+        SentMessage
+            The payload received by Twitch after sending this message.
+
+        Raises
+        ------
+        HTTPException
+            Twitch failed to process the message, could be ``400``, ``401``, ``403``, ``422`` or any ``5xx`` status code.
+        MessageRejectedError
+            Twitch rejected the message from various checks.
+        TranslatorError
+            An error occurred during translation.
+        """
+        if self._type is ContextType.REWARD:
+            raise TypeError("Cannot reply to a message in a Reward based context.")
+
+        translator: Translator | None = getattr(self.command, "translator", None)
+        new = (f"/me {content}" if me else content).strip()
+
+        if not self.command or not translator:
+            return await self.channel.send_message(sender=self.bot.bot_id, message=new, reply_to_message_id=self._payload.id)
+
+        invoked = self.invoked_with
+
+        try:
+            code = langcode or translator.get_langcode(self, invoked.lower()) if invoked else None
+        except Exception as e:
+            raise TranslatorError(f"An exception occurred fetching a language code for '{invoked}'.", original=e) from e
+
+        if not code:
+            return await self.channel.send_message(sender=self.bot.bot_id, message=new, reply_to_message_id=self._payload.id)
+
+        try:
+            translated = await translator.translate(self, content, code)
+        except Exception as e:
+            raise TranslatorError(f"An exception occurred translating content for '{invoked}'.", original=e) from e
+
+        new_translated = (f"/me {translated}" if me else translated).strip()
+        return await self.channel.send_message(
+            sender=self.bot.bot_id,
+            message=new_translated,
+            reply_to_message_id=self._payload.id,
+        )
+
     async def send_announcement(
         self, content: str, *, color: Literal["blue", "green", "orange", "purple", "primary"] | None = None
     ) -> None:
