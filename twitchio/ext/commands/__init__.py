@@ -29,3 +29,4 @@ from .converters import *
 from .cooldowns import *
 from .core import *
 from .exceptions import *
+from .translators import *
