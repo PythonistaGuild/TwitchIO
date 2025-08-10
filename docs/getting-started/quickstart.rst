@@ -88,6 +88,7 @@ Before running the code below, there are just a couple more steps we need to tak
                 owner_id=OWNER_ID,
                 prefix="!",
                 subscriptions=subs,
+                force_subscribe=True,
             )
 
         async def setup_hook(self) -> None:
@@ -234,6 +235,10 @@ Before running the code below, there are just a couple more steps we need to tak
 
             for row in rows:
                 tokens.append((row["token"], row["refresh"]))
+
+                if row["user_id"] == BOT_ID:
+                    continue
+                    
                 subs.extend([eventsub.ChatMessageSubscription(broadcaster_user_id=row["user_id"], user_id=BOT_ID)])
 
         return tokens, subs
