@@ -24,6 +24,11 @@ Changelog
         - :class:`twitchio.ChatterColor` no longer errors whan no valid hex is provided by Twitch.
         - Some general typing/spelling errors cleaned up in Documentation and Logging.
         - Removed some redundant logging.
+        - Fixed internal parsing of the payload received in :meth:`twitchio.PartialUser.warn_user` which was resulting in an error.
+
+- twitchio.Client
+    - Bug fixes
+        - Fixed tokens not being saved properly when ``load_tokens`` was ``False`` in :meth:`twitchio.Client.login`
 
 - twitchio.AutoClient
     - Additions
@@ -105,14 +110,19 @@ Changelog
 - twitchio.web.AiohttpAdapter
     - Bug fixes
         - Fixed the redirect URL not allowing HOST/PORT when a custom domain was passed.
-          - The redirect URL is now determined based on where the request came from.
+            - The redirect URL is now determined based on where the request came from.
+        - Now correctly changes the protocol to ``https`` when SSL is used directly on the adapter.
 
 - twitchio.web.StarletteAdapter
+    - Additions
+        - Added the ``timeout_keep_alive`` keyword parameter which allows controlling how long ``Starlette/Uvicorn`` will wait to gracefully close.
+
     - Bug fixes
         - Fixed the redirect URL not allowing HOST/PORT when a custom domain was passed.
-          - The redirect URL is now determined based on where the request came from.
+            - The redirect URL is now determined based on where the request came from.
         - Fixed Uvicorn hanging the process when attempting to close the :class:`asyncio.Loop` on **Windows**.
-          - After ``5 seconds`` Uvicorn will be forced closed if it cannot gracefully close in this time.
+            - After a default of ``5 seconds`` Uvicorn will be forced closed if it cannot gracefully close in this time. This time can be changed with the ``timeout_keep_alive`` parameter.
+        - Now correctly changes the protocol to ``https`` when SSL is used directly on the adapter.
 
 - ext.commands
     - Additions
@@ -133,6 +143,9 @@ Changelog
         - Added :meth:`twitchio.ext.commands.Command.run_guards`
         - Added :meth:`twitchio.ext.commands.Context.fetch_command`
         - :class:`~twitchio.ext.commands.Context` is now ``Generic`` and accepts a generic argument bound to :class:`~twitchio.ext.commands.Bot` or :class:`~twitchio.ext.commands.AutoBot`.
+    
+    - Bug fixes
+        - Prevent multiple :class:`~twitchio.ext.commands.Component`'s of the same name being added to a bot resulting in one overriding the other.
     
 
 3.0.0
