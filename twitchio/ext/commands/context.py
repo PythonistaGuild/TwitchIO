@@ -607,7 +607,7 @@ class Context(Generic[BotT]):
         except Exception as e:
             raise TranslatorError(f"An exception occurred fetching a language code for '{invoked}'.", original=e) from e
 
-        if not code:
+        if code is None:
             return await self.channel.send_message(sender=self.bot.bot_id, message=new)
 
         try:
@@ -735,7 +735,7 @@ class Context(Generic[BotT]):
         except Exception as e:
             raise TranslatorError(f"An exception occurred fetching a language code for '{invoked}'.", original=e) from e
 
-        if not code:
+        if code is None:
             return await self.channel.send_message(sender=self.bot.bot_id, message=new, reply_to_message_id=self._payload.id)
 
         try:
