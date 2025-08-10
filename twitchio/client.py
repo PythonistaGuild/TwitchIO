@@ -3209,7 +3209,10 @@ class AutoClient(Client):
     force_subscribe: bool
         An optional :class:`bool` which when ``True`` will force attempt to subscribe to the subscriptions provided in the
         ``subscriptions`` parameter, regardless of whether a new conduit was created or not. Defaults to ``False``.
-
+    force_scale: bool
+        An optional :class:`bool` which when ``True`` will force the :class:`~twitchio.Conduit` associated with the
+        AutoClient/Bot to scale up/down to the provided amount of shards in the ``shard_ids`` parameter if provided. If the
+        ``shard_ids`` parameter is not passed, this parameter has no effect. Defaults to ``False``.
     """
 
     # NOTE:
@@ -3228,8 +3231,10 @@ class AutoClient(Client):
         **kwargs: Unpack[AutoClientOptions],
     ) -> None:
         self._shard_ids: list[int] = kwargs.pop("shard_ids", [])
+        self._original_shards = self._shard_ids
         self._conduit_id: str | bool | None = kwargs.pop("conduit_id", MISSING)
         self._force_sub: bool = kwargs.pop("force_subscribe", False)
+        self._force_scale: bool = kwargs.pop("force_scale", False)
         self._subbed: bool = False
 
         if self._conduit_id is MISSING or self._conduit_id is None:
@@ -3358,6 +3363,10 @@ class AutoClient(Client):
             # TODO: Maybe log currernt conduit info?
             raise MissingConduit("No conduit could be found with the provided ID or a new one can not be created.")
 
+        if self._force_scale and self._original_shards:
+            logger.info("Scaling %r to %d shards.", len(self._original_shards))
+            await self._conduit_info.update_shard_count(len(self._original_shards), assign_transports=False)
+
         await self._associate_shards(self._shard_ids)
         if self._force_sub and not self._subbed:
             await self.multi_subscribe(self._initial_subs)
@@ -3438,7 +3447,12 @@ class AutoClient(Client):
         await self._conduit_info._update_shards(payloads)
         self._conduit_info._sockets.update({str(socket._shard_id): socket for socket in batched})
 
-        logger.info("Associated shards with %r successfully.", self._conduit_info)
+        logger.info(
+            "Associated shards with %r successfully. Shards: %d / %d (connected / Conduit total).",
+            self._conduit_info,
+            len(self._conduit_info.websockets),
+            self._conduit_info.shard_count,
+        )
 
     async def _associate_shards(self, shard_ids: list[int]) -> None:
         await self._associate_lock.acquire()
@@ -3626,14 +3640,25 @@ class AutoClient(Client):
         )
         return task
 
+    async def _close_sockets(self) -> None:
+        socks = self._conduit_info._sockets.values()
+        logger.info("Attempting to close %d associated Conduit Websockets.", len(socks))
+
+        tasks: list[asyncio.Task[None]] = [asyncio.create_task(s.close()) for s in socks]
+        await asyncio.wait(tasks)
+
+        logger.info("Successfully closed %d Conduit Websockets on %r.", len(socks), self)
+
     async def close(self, **options: Any) -> None:
         if self._closing:
             return
 
         self._closing = True
 
-        for socket in self._conduit_info.websockets.values():
-            await socket.close()
+        try:
+            await self._close_sockets()
+        except Exception as e:
+            logger.warning("An error occurred during the cleanup of Conduit Websockets: %s", e)
 
         self._conduit_info._sockets.clear()
 
