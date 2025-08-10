@@ -225,11 +225,11 @@ class Command(Generic[Component_T, P]):
         self._before_hook: Callable[[Component_T, Context[Any]], Coro] | Callable[[Context[Any]], Coro] | None = None
         self._after_hook: Callable[[Component_T, Context[Any]], Coro] | Callable[[Context[Any]], Coro] | None = None
 
-        translator: Translator | type[Translator] | None = getattr(callback, "__command_translator__", None)
+        translator: Translator[Any] | type[Translator[Any]] | None = getattr(callback, "__command_translator__", None)
         if translator and inspect.isclass(translator):
             translator = translator()
 
-        self._translator: Translator | None = translator
+        self._translator: Translator[Any] | None = translator
 
         self._help: str = callback.__doc__ or ""
         self.__doc__ = self._help
@@ -271,7 +271,7 @@ class Command(Generic[Component_T, P]):
         self._signature = help_sig
 
     @property
-    def translator(self) -> Translator | None:
+    def translator(self) -> Translator[Any] | None:
         """Property returning the :class:`.commands.Translator` associated with this command or ``None`` if one was not
         used.
         """
@@ -1482,7 +1482,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
         return wrapper
 
 
-def translator(cls: Translator | type[Translator]) -> Any:
+def translator(cls: Translator[Any] | type[Translator[Any]]) -> Any:
     """|deco|
 
     Decorator which adds a :class:`.commands.Translator` to a :class:`.commands.Command`.

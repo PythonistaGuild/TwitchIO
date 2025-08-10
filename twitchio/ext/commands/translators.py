@@ -25,17 +25,20 @@ SOFTWARE.
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 
 if TYPE_CHECKING:
     from .context import Context
 
 
+T = TypeVar("T")
+
+
 __all__ = ("Translator",)
 
 
-class Translator(abc.ABC):
+class Translator(Generic[T], abc.ABC):
     """Abstract Base Class for command translators.
 
     This class allows you to implement logic to translate messages sent via the :meth:`.commands.Context.send_translated`
@@ -49,16 +52,16 @@ class Translator(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_langcode(self, ctx: Context[Any], name: str) -> str | None:
+    def get_langcode(self, ctx: Context[Any], name: str) -> T | None:
         """Method which is called when :meth:`.commands.Context.send_translated` is used on a :class:`.commands.Command`
         which has an associated Translator, to determine the ``langcode`` which should be passed to :meth:`.translate` or ``None``
         if the content should not be translated.
 
-        By default the ``name`` or ``alias`` used to invoke the command is passed alongside :class:`.commands.Context` to aid in
-        determining the ``langcode`` you should use.
+        By default the lowercase ``name`` or ``alias`` used to invoke the command is passed alongside :class:`.commands.Context`
+        to aid in determining the ``langcode`` you should use.
 
-        You can use any system for the language codes, however they must be a :class:`str`. We also recommend using a
-        recognized system such as the ``ISO 639`` language code format.
+        You can use any format or type for the language codes. We recommend using a recognized system such as the ``ISO 639``
+        language code format as a :class:`str`.
 
         Parameters
         ----------
@@ -70,8 +73,10 @@ class Translator(abc.ABC):
 
         Returns
         -------
-        str
-            The language code as a :class:`str` to pass to :meth:`.translate`.
+        Any
+            The language code to pass to :meth:`.translate`.
+        None
+            No translation attempt should be made with :meth:`.translate`.
 
         Example
         -------
@@ -81,7 +86,7 @@ class Translator(abc.ABC):
             # For example purposes only the "get_langcode" method is shown in this example...
             # The "translate" method must also be implemented...
 
-            class HelloTranslator(commands.Translator):
+            class HelloTranslator(commands.Translator[str]):
                 def __init__(self) -> None:
                     self.code_mapping = {"hello": "en", "bonjour": "fr"}
 
@@ -98,7 +103,7 @@ class Translator(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def translate(self, ctx: Context[Any], text: str, langcode: str) -> str:
+    async def translate(self, ctx: Context[Any], text: str, langcode: T) -> str:
         """|coro|
 
         Method used to translate the content passed to :meth:`.commands.Context.send_translated` with the language code returned from
@@ -116,7 +121,7 @@ class Translator(abc.ABC):
             The context surrounding the command invocation.
         text: str
             The content passed to :meth:`~.commands.Context.send_translated` which should be translated.
-        langcode: str
+        langcode: Any
             The language code returned via :meth:`.get_langcode`, which can be used to determine the language the text should
             be translated to.
 
@@ -133,7 +138,7 @@ class Translator(abc.ABC):
             # For example purposes only the "translate" method is shown in this example...
             # The "get_langcode" method must also be implemented...
 
-            class HelloTranslator(commands.Translator):
+            class HelloTranslator(commands.Translator[str]):
 
                 async def translate(self, ctx: commands.Context, text: str, langcode: str) -> str:
                     # Usually you would call an API, or retrieve from a database or dict or some other solution...

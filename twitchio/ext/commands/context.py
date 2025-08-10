@@ -257,6 +257,15 @@ class Context(Generic[BotT]):
         return self._type
 
     @property
+    def translator(self) -> Translator[Any] | None:
+        """Property returning the :class:`.commands.Translator` assigned to the :class:`.commands.Command` if found or
+        ``None``. This property will always return ``None`` if no valid command or prefix is associated with this Context."""
+        if not self.command:
+            return None
+
+        return self.command.translator
+
+    @property
     def error_dispatched(self) -> bool:
         return self._error_dispatched
 
@@ -594,7 +603,7 @@ class Context(Generic[BotT]):
         TranslatorError
             An error occurred during translation.
         """
-        translator: Translator | None = getattr(self.command, "translator", None)
+        translator: Translator[Any] | None = self.translator
         new = (f"/me {content}" if me else content).strip()
 
         if not self.command or not translator:
@@ -722,7 +731,7 @@ class Context(Generic[BotT]):
         if self._type is ContextType.REWARD:
             raise TypeError("Cannot reply to a message in a Reward based context.")
 
-        translator: Translator | None = getattr(self.command, "translator", None)
+        translator: Translator[Any] | None = self.translator
         new = (f"/me {content}" if me else content).strip()
 
         if not self.command or not translator:
