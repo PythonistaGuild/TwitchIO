@@ -3604,6 +3604,20 @@ class ChannelPointsReward(_ResponderEvent):
         return Asset(url, http=self._http)
 
     async def fetch_reward(self) -> CustomReward:
+        """|coro|
+
+        Method to fetch and return the :class:`twitchio.CustomReward` associated with this event from the Twitch API.
+
+        Returns
+        -------
+        CustomReward
+            The reward object associated with this event, received from the Twitch API.
+
+        Raises
+        ------
+        HTTPException
+            An error occurred making the request to Twitch to fetch the reward.
+        """
         reward = await self.broadcaster.fetch_custom_rewards(ids=[self.id])
         return reward[0]
 
