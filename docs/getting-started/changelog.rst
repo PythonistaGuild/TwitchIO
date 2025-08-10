@@ -28,20 +28,14 @@ Changelog
 - twitchio.AutoClient
     - Additions
         - Added ``force_subscribe`` keyword argument to :class:`twitchio.AutoClient`, allowing subscriptions passed to be made everytime the client is started.
-        - Added ``force_scale`` keyword argument to :class:`twitchio.ext.commands.AutoClient`, allowing the associated Conduit to be scaled up/down on startup.
+        - Added ``force_scale`` keyword argument to :class:`twitchio.AutoClient`, allowing the associated Conduit to be scaled up/down on startup.
         - Added more informative logging in places.
 
     - Changes
         - Optimised the cleanup of conduit websockets. This largely only affects applications connected to large amounts of shards.
 
 - twitchio.ext.commands.AutoBot
-    - Additions
-        - Added ``force_subscribe`` keyword argument to :class:`twitchio.ext.commands.AutoBot`, allowing subscriptions passed to be made everytime the bot is started.
-        - Added ``force_scale`` keyword argument to :class:`twitchio.ext.commands.AutoBot`, allowing the associated Conduit to be scaled up/down on startup.
-        - Added more informative logging in places.
-
-    - Changes
-        - Optimised the cleanup of conduit websockets. This largely only affects applications connected to large amounts of shards.
+    - Updates are identical to the updates made in the ``twitchio.AutoClient`` changelog above.
 
 - twitchio.eventsub
     - Additions
