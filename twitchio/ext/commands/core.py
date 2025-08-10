@@ -1502,7 +1502,7 @@ def translator(cls: Translator[Any] | type[Translator[Any]]) -> Any:
         if isinstance(func, Command):
             func._translator = inst
         else:
-            func.__command_translator = inst
+            func.__command_translator__ = inst
 
         return func  # type: ignore
 
