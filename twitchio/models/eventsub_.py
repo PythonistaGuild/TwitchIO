@@ -1273,6 +1273,21 @@ class ChatMessageFragment:
 
 
 class BaseChatMessage(_ResponderEvent):
+    """
+    Represents the base attributes of a chat message.
+
+    Attributes
+    ----------
+    id: str
+        The ID of the message
+    text: str
+        The chat message in plain text.
+    broadcaster: PartialUser
+        The broadcaster whose room recieved the message.
+    fragments: list[ChatMessageFragment]
+        The chat message fragments.
+    """
+
     __slots__ = (
         "broadcaster",
         "fragments",
