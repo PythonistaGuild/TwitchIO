@@ -12,14 +12,26 @@ Changelog
 - twitchio
     - Additions
         - Added ``__hash__`` to :class:`twitchio.PartialUser` allowing it to be used as a key.
+        - Added the ``--create-new`` interactive script to ``__main__`` allowing boiler-plate to be generated for a new Bot.
 
     - Changes
         - Adjusted the Starlette logging warning wording.
+        - Delayed the Starlette logging warning and removed it from ``web/__init__.py``.
         - :class:`twitchio.PartialUser`, :class:`twitchio.User` and :class:`twitchio.Chatter` now have ``__hash__`` implementations derived from :class:`~twitchio.PartialUser`, which use the unique ID.
 
     - Bug fixes
         - :meth:`twitchio.Clip.fetch_video` now properly returns ``None`` when the :class:`twitchio.Clip` has no ``video_id``.
         - :class:`twitchio.ChatterColor` no longer errors whan no valid hex is provided by Twitch.
+        - Some general typing/spelling errors cleaned up in Documentation and Logging.
+        - Removed some redundant logging.
+
+- twitchio.AutoClient
+    - Additions
+        - Added ``force_subscribe`` keyword argument to :class:`twitchio.AutoClient`, allowing subscriptions passed to be made everytime the client is started.
+
+- twitchio.ext.commands.AutoBot
+    - Additions
+        - Added ``force_subscribe`` keyword argument to :class:`twitchio.ext.commands.AutoBot`, allowing subscriptions passed to be made everytime the bot is started. 
 
 - twitchio.eventsub
     - Additions
@@ -82,13 +94,35 @@ Changelog
         - Added :meth:`twitchio.ShoutoutReceive.respond`
         - Added :meth:`twitchio.StreamOnline.respond`
         - Added :meth:`twitchio.StreamOffline.respond`
+    
+    - Bug fixes
+        - Remove the unnecessary ``token_for`` parameter from :meth:`twitchio.ChannelPointsReward.fetch_reward`. `#510 <https://github.com/PythonistaGuild/TwitchIO/pull/510>`_
+
+- twitchio.web.AiohttpAdapter
+    - Bug fixes
+        - Fixed the redirect URL not allowing HOST/PORT when a custom domain was passed.
+          - The redirect URL is now determined based on where the request came from.
+
+- twitchio.web.StarletteAdapter
+    - Bug fixes
+        - Fixed the redirect URL not allowing HOST/PORT when a custom domain was passed.
+          - The redirect URL is now determined based on where the request came from.
+        - Fixed Uvicorn hanging the process when attempting to close the :class:`asyncio.Loop` on **Windows**.
+          - After ``5 seconds`` Uvicorn will be forced closed if it cannot gracefully close in this time.
 
 - ext.commands
     - Additions
+        - Added :class:`~twitchio.ext.commands.Translator`
+        - Added :func:`~twitchio.ext.commands.translator`
+        - Added :attr:`twitchio.ext.commands.Command.translator`
+        - Added :meth:`twitchio.ext.commands.Context.send_translated`
+        - Added :meth:`twitchio.ext.commands.Context.reply_translated`
         - Added :class:`~twitchio.ext.commands.Converter`
         - Added :class:`~twitchio.ext.commands.UserConverter`
         - Added :class:`~twitchio.ext.commands.ColourConverter`
         - Added :class:`~twitchio.ext.commands.ColorConverter` alias.
+        - Added :attr:`twitchio.ext.commands.Command.signature` which is a POSIX-like signature for the command.
+        - Added :attr:`twitchio.ext.commands.Command.parameters` which is a mapping of parameter name to :class:`inspect.Parameter` associated with the command callback.
         - Added :attr:`twitchio.ext.commands.Command.help` which is the docstring of the command callback.
         - Added ``__doc__`` to :class:`~twitchio.ext.commands.Command` which takes from the callback ``__doc__``.
         - Added :meth:`twitchio.ext.commands.Command.run_guards`

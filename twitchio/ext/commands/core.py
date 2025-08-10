@@ -61,6 +61,7 @@ __all__ = (
     "is_staff",
     "is_vip",
     "reward_command",
+    "translator",
 )
 
 
@@ -68,6 +69,7 @@ if TYPE_CHECKING:
     from twitchio.user import Chatter
 
     from .context import Context
+    from .translators import Translator
     from .types_ import BotT
 
     P = ParamSpec("P")
@@ -223,6 +225,12 @@ class Command(Generic[Component_T, P]):
         self._before_hook: Callable[[Component_T, Context[Any]], Coro] | Callable[[Context[Any]], Coro] | None = None
         self._after_hook: Callable[[Component_T, Context[Any]], Coro] | Callable[[Context[Any]], Coro] | None = None
 
+        translator: Translator[Any] | type[Translator[Any]] | None = getattr(callback, "__command_translator__", None)
+        if translator and inspect.isclass(translator):
+            translator = translator()
+
+        self._translator: Translator[Any] | None = translator
+
         self._help: str = callback.__doc__ or ""
         self.__doc__ = self._help
 
@@ -261,6 +269,13 @@ class Command(Generic[Component_T, P]):
             help_sig += f" {s}"
 
         self._signature = help_sig
+
+    @property
+    def translator(self) -> Translator[Any] | None:
+        """Property returning the :class:`.commands.Translator` associated with this command or ``None`` if one was not
+        used.
+        """
+        return self._translator
 
     @property
     def parameters(self) -> MappingProxyType[str, inspect.Parameter]:
@@ -1465,6 +1480,33 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
             return new
 
         return wrapper
+
+
+def translator(cls: Translator[Any] | type[Translator[Any]]) -> Any:
+    """|deco|
+
+    Decorator which adds a :class:`.commands.Translator` to a :class:`.commands.Command`.
+
+    You can provide the class or instance of your implemented :class:`.commands.Translator` to this decorator.
+
+    See the :class:`.commands.Translator` documentation for more information on translators.
+
+    .. note::
+
+        You can only have one :class:`.commands.Translator` per command.
+    """
+
+    def wrapper(func: Any) -> Any:
+        inst = cls() if inspect.isclass(cls) else cls
+
+        if isinstance(func, Command):
+            func._translator = inst
+        else:
+            func.__command_translator = inst
+
+        return func  # type: ignore
+
+    return wrapper
 
 
 def guard(predicate: Callable[..., bool] | Callable[..., CoroC]) -> Any:
