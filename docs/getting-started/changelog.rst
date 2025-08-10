@@ -115,13 +115,14 @@ Changelog
 
 - twitchio.web.StarletteAdapter
     - Additions
-        - Added the ``timeout_keep_alive`` keyword parameter which allows controlling how long ``Starlette/Uvicorn`` will wait to gracefully close.
+        - Added the ``timeout_graceful_shutdown`` keyword parameter which allows controlling how long ``Starlette/Uvicorn`` will wait to gracefully close.
+        - Added the ``timeout_keep_alive`` keyword parameter which allows controlling how long ``Uvicorn`` will wait until closing Keep-Alive connections after not receiving any data.
 
     - Bug fixes
         - Fixed the redirect URL not allowing HOST/PORT when a custom domain was passed.
             - The redirect URL is now determined based on where the request came from.
         - Fixed Uvicorn hanging the process when attempting to close the :class:`asyncio.Loop` on **Windows**.
-            - After a default of ``5 seconds`` Uvicorn will be forced closed if it cannot gracefully close in this time. This time can be changed with the ``timeout_keep_alive`` parameter.
+            - After a default of ``3 seconds`` Uvicorn will be forced closed if it cannot gracefully close in this time. This time can be changed with the ``timeout_graceful_shutdown`` parameter.
         - Now correctly changes the protocol to ``https`` when SSL is used directly on the adapter.
 
 - ext.commands
