@@ -52,6 +52,8 @@ class AutoClientOptions(ClientOptions, total=False):
     shard_ids: list[int]
     max_per_shard: int
     subscriptions: list[SubscriptionPayload]
+    force_subscribe: bool
+    force_scale: bool
 
 
 WaitPredicateT = Callable[..., Coroutine[Any, Any, bool]]

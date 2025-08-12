@@ -257,14 +257,12 @@ def get_version() -> str:
 
 
 def version_info() -> None:
-    python_info = "\n".join(sys.version.split("\n"))
-
     info: str = f"""
 twitchio : {get_version()}
 aiohttp  : {aiohttp.__version__}
 
 Python:
-    - {python_info}
+    - {sys.version}
 System:
     - {platform.platform()}
 Extras:

@@ -57,6 +57,8 @@ Exceptions
 
 .. autoexception:: twitchio.ext.commands.NoEntryPointError
 
+.. autoexception:: twitchio.ext.commands.TranslatorError
+
 
 Exception Hierarchy
 ~~~~~~~~~~~~~~~~~~~
@@ -80,6 +82,7 @@ Exception Hierarchy
                 - :exc:`ExpectedClosingQuoteError`
         - :exc:`GuardFailure`
             - :exc:`CommandOnCooldown`
+        - :exc:`TranslatorError`
     - :exc:`ModuleError`
         - :exc:`ModuleLoadFailure`
         - :exc:`ModuleAlreadyLoadedError`

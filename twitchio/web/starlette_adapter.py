@@ -113,6 +113,12 @@ class StarletteAdapter(BaseAdapter, Starlette):
         An optional password to decrypt the ssl key, passed to Uvicorn.
     ssl_certfile: str | PathLike[str] | None
         An optional SSL certificate file, passed to Uvicorn.
+    timeout_keep_alive: int
+        An optional :class:`int` which is the maximum amount of time in seconds ``Uvicorn`` should wait before closing
+        Keep-Alive connections. Defaults to ``5``.
+    timeout_graceful_shutdown: int
+        An optional :class:`int` which is the maximum amount of time in seconds ``Uvicorn`` should wait before forcefully
+        closing. Defaults to ``3``.
 
     Examples
     --------
@@ -154,7 +160,11 @@ class StarletteAdapter(BaseAdapter, Starlette):
         ssl_keyfile: str | PathLike[str] | None = None,
         ssl_keyfile_password: str | None = None,
         ssl_certfile: str | PathLike[str] | None = None,
+        timeout_keep_alive: int = 5,
+        timeout_graceful_shutdown: int = 3,
     ) -> None:
+        self._timeout_keep_alive = timeout_keep_alive
+        self._timeout_graceful_shutdown = timeout_graceful_shutdown
         self._host: str = host or "localhost"
         self._port: int = port or 4343
 
@@ -266,11 +276,11 @@ class StarletteAdapter(BaseAdapter, Starlette):
             port=self._port,
             log_level="critical",
             workers=0,
-            timeout_graceful_shutdown=3,
+            timeout_graceful_shutdown=self._timeout_graceful_shutdown,
             ssl_keyfile=self.__keyfile,
             ssl_keyfile_password=self.__keypass,
             ssl_certfile=self.__certfile,
-            timeout_keep_alive=5,
+            timeout_keep_alive=self._timeout_keep_alive,
         )
 
         self._server = uvicorn.Server(config)

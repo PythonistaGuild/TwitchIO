@@ -12,14 +12,35 @@ Changelog
 - twitchio
     - Additions
         - Added ``__hash__`` to :class:`twitchio.PartialUser` allowing it to be used as a key.
+        - Added the ``--create-new`` interactive script to ``__main__`` allowing boiler-plate to be generated for a new Bot.
 
     - Changes
         - Adjusted the Starlette logging warning wording.
+        - Delayed the Starlette logging warning and removed it from ``web/__init__.py``.
         - :class:`twitchio.PartialUser`, :class:`twitchio.User` and :class:`twitchio.Chatter` now have ``__hash__`` implementations derived from :class:`~twitchio.PartialUser`, which use the unique ID.
 
     - Bug fixes
         - :meth:`twitchio.Clip.fetch_video` now properly returns ``None`` when the :class:`twitchio.Clip` has no ``video_id``.
         - :class:`twitchio.ChatterColor` no longer errors whan no valid hex is provided by Twitch.
+        - Some general typing/spelling errors cleaned up in Documentation and Logging.
+        - Removed some redundant logging.
+        - Fixed internal parsing of the payload received in :meth:`twitchio.PartialUser.warn_user` which was resulting in an error.
+
+- twitchio.Client
+    - Bug fixes
+        - Fixed tokens not being saved properly when ``load_tokens`` was ``False`` in :meth:`twitchio.Client.login`
+
+- twitchio.AutoClient
+    - Additions
+        - Added ``force_subscribe`` keyword argument to :class:`twitchio.AutoClient`, allowing subscriptions passed to be made everytime the client is started.
+        - Added ``force_scale`` keyword argument to :class:`twitchio.AutoClient`, allowing the associated Conduit to be scaled up/down on startup.
+        - Added more informative logging in places.
+
+    - Changes
+        - Optimised the cleanup of conduit websockets. This largely only affects applications connected to large amounts of shards.
+
+- twitchio.ext.commands.AutoBot
+    - Updates are identical to the updates made in the ``twitchio.AutoClient`` changelog above.
 
 - twitchio.eventsub
     - Additions
@@ -82,18 +103,50 @@ Changelog
         - Added :meth:`twitchio.ShoutoutReceive.respond`
         - Added :meth:`twitchio.StreamOnline.respond`
         - Added :meth:`twitchio.StreamOffline.respond`
+    
+    - Bug fixes
+        - Remove the unnecessary ``token_for`` parameter from :meth:`twitchio.ChannelPointsReward.fetch_reward`. `#510 <https://github.com/PythonistaGuild/TwitchIO/pull/510>`_
+
+- twitchio.web.AiohttpAdapter
+    - Bug fixes
+        - Fixed the redirect URL not allowing HOST/PORT when a custom domain was passed.
+            - The redirect URL is now determined based on where the request came from.
+        - Now correctly changes the protocol to ``https`` when SSL is used directly on the adapter.
+
+- twitchio.web.StarletteAdapter
+    - Additions
+        - Added the ``timeout_graceful_shutdown`` keyword parameter which allows controlling how long ``Starlette/Uvicorn`` will wait to gracefully close.
+        - Added the ``timeout_keep_alive`` keyword parameter which allows controlling how long ``Uvicorn`` will wait until closing Keep-Alive connections after not receiving any data.
+
+    - Bug fixes
+        - Fixed the redirect URL not allowing HOST/PORT when a custom domain was passed.
+            - The redirect URL is now determined based on where the request came from.
+        - Fixed Uvicorn hanging the process when attempting to close the :class:`asyncio.Loop` on **Windows**.
+            - After a default of ``3 seconds`` Uvicorn will be forced closed if it cannot gracefully close in this time. This time can be changed with the ``timeout_graceful_shutdown`` parameter.
+        - Now correctly changes the protocol to ``https`` when SSL is used directly on the adapter.
 
 - ext.commands
     - Additions
+        - Added :class:`~twitchio.ext.commands.Translator`
+        - Added :func:`~twitchio.ext.commands.translator`
+        - Added :attr:`twitchio.ext.commands.Command.translator`
+        - Added :meth:`twitchio.ext.commands.Context.send_translated`
+        - Added :meth:`twitchio.ext.commands.Context.reply_translated`
+        - Added :attr:`twitchio.ext.commands.Context.translator`
         - Added :class:`~twitchio.ext.commands.Converter`
         - Added :class:`~twitchio.ext.commands.UserConverter`
         - Added :class:`~twitchio.ext.commands.ColourConverter`
         - Added :class:`~twitchio.ext.commands.ColorConverter` alias.
+        - Added :attr:`twitchio.ext.commands.Command.signature` which is a POSIX-like signature for the command.
+        - Added :attr:`twitchio.ext.commands.Command.parameters` which is a mapping of parameter name to :class:`inspect.Parameter` associated with the command callback.
         - Added :attr:`twitchio.ext.commands.Command.help` which is the docstring of the command callback.
         - Added ``__doc__`` to :class:`~twitchio.ext.commands.Command` which takes from the callback ``__doc__``.
         - Added :meth:`twitchio.ext.commands.Command.run_guards`
         - Added :meth:`twitchio.ext.commands.Context.fetch_command`
         - :class:`~twitchio.ext.commands.Context` is now ``Generic`` and accepts a generic argument bound to :class:`~twitchio.ext.commands.Bot` or :class:`~twitchio.ext.commands.AutoBot`.
+    
+    - Bug fixes
+        - Prevent multiple :class:`~twitchio.ext.commands.Component`'s of the same name being added to a bot resulting in one overriding the other.
     
 
 3.0.0

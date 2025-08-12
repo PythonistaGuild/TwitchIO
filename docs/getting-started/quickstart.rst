@@ -29,7 +29,7 @@ Since TwitchIO 3 is fully asynchronous we will be using `asqlite` as our library
     pip install -U git+https://github.com/Rapptz/asqlite.git
 
 
-Before running the code below, there just a couple more steps we need to take.
+Before running the code below, there are just a couple more steps we need to take. **You only have to do this sequence of steps once. Or if you change the scopes used.**
 
 #. Create a new Twitch account. This will be the dedicated bot account.
 #. Enter your CLIENT_ID, CLIENT_SECRET, BOT_ID and OWNER_ID into the placeholders in the below example. See :ref:`faqs` on how to retrieve the ``BOT_ID`` and ``OWNER_ID``.
@@ -40,8 +40,6 @@ Before running the code below, there just a couple more steps we need to take.
 
 .. note::
     If you are unsure how to get the user IDs for BOT_ID and OWNER_ID, please check :ref:`bot-id-owner-id`
-
-**You only have to do this sequence of steps once. Or if the scopes need to change.**
 
 .. code:: python3
 
@@ -90,6 +88,7 @@ Before running the code below, there just a couple more steps we need to take.
                 owner_id=OWNER_ID,
                 prefix="!",
                 subscriptions=subs,
+                force_subscribe=True,
             )
 
         async def setup_hook(self) -> None:
@@ -236,6 +235,10 @@ Before running the code below, there just a couple more steps we need to take.
 
             for row in rows:
                 tokens.append((row["token"], row["refresh"]))
+
+                if row["user_id"] == BOT_ID:
+                    continue
+                    
                 subs.extend([eventsub.ChatMessageSubscription(broadcaster_user_id=row["user_id"], user_id=BOT_ID)])
 
         return tokens, subs

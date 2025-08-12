@@ -45,6 +45,7 @@ class Bot(commands.AutoBot):
             owner_id=OWNER_ID,
             prefix="!",
             subscriptions=subs,
+            force_subscribe=True,
         )
 
     async def event_ready(self) -> None:
@@ -85,6 +86,9 @@ def main() -> None:
     with open(".tio.tokens.json", "rb") as fp:
         tokens = json.load(fp)
         for user_id in tokens:
+            if user_id == BOT_ID:
+                continue
+            
             subs.extend(
                 [
                     eventsub.ChatMessageSubscription(broadcaster_user_id=user_id, user_id=BOT_ID),

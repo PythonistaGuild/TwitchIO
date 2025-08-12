@@ -1273,6 +1273,21 @@ class ChatMessageFragment:
 
 
 class BaseChatMessage(_ResponderEvent):
+    """
+    Represents the base attributes of a chat message.
+
+    Attributes
+    ----------
+    id: str
+        The ID of the message
+    text: str
+        The chat message in plain text.
+    broadcaster: PartialUser
+        The broadcaster whose room recieved the message.
+    fragments: list[ChatMessageFragment]
+        The chat message fragments.
+    """
+
     __slots__ = (
         "broadcaster",
         "fragments",
@@ -3604,6 +3619,20 @@ class ChannelPointsReward(_ResponderEvent):
         return Asset(url, http=self._http)
 
     async def fetch_reward(self) -> CustomReward:
+        """|coro|
+
+        Method to fetch and return the :class:`twitchio.CustomReward` associated with this event from the Twitch API.
+
+        Returns
+        -------
+        CustomReward
+            The reward object associated with this event, received from the Twitch API.
+
+        Raises
+        ------
+        HTTPException
+            An error occurred making the request to Twitch to fetch the reward.
+        """
         reward = await self.broadcaster.fetch_custom_rewards(ids=[self.id])
         return reward[0]
 
