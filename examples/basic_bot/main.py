@@ -56,7 +56,7 @@ class Bot(commands.Bot):
 
 class GeneralCommands(commands.Component):
     @commands.command()
-    async def hi(self, ctx: commands.Context) -> None:
+    async def hi(self, ctx: commands.Context[Bot]) -> None:
         """Command that replys to the invoker with Hi <name>!
 
         !hi
@@ -64,7 +64,7 @@ class GeneralCommands(commands.Component):
         await ctx.reply(f"Hi {ctx.chatter}!")
 
     @commands.command()
-    async def say(self, ctx: commands.Context, *, message: str) -> None:
+    async def say(self, ctx: commands.Context[Bot], *, message: str) -> None:
         """Command which repeats what the invoker sends.
 
         !say <message>
@@ -72,7 +72,7 @@ class GeneralCommands(commands.Component):
         await ctx.send(message)
 
     @commands.command()
-    async def add(self, ctx: commands.Context, left: int, right: int) -> None:
+    async def add(self, ctx: commands.Context[Bot], left: int, right: int) -> None:
         """Command which adds to integers together.
 
         !add <number> <number>
@@ -80,7 +80,7 @@ class GeneralCommands(commands.Component):
         await ctx.reply(f"{left} + {right} = {left + right}")
 
     @commands.command()
-    async def choice(self, ctx: commands.Context, *choices: str) -> None:
+    async def choice(self, ctx: commands.Context[Bot], *choices: str) -> None:
         """Command which takes in an arbitrary amount of choices and randomly chooses one.
 
         !choice <choice_1> <choice_2> <choice_3> ...
@@ -88,7 +88,7 @@ class GeneralCommands(commands.Component):
         await ctx.reply(f"You provided {len(choices)} choices, I choose: {random.choice(choices)}")
 
     @commands.command(aliases=["thanks", "thank"])
-    async def give(self, ctx: commands.Context, user: twitchio.User, amount: int, *, message: str | None = None) -> None:
+    async def give(self, ctx: commands.Context[Bot], user: twitchio.User, amount: int, *, message: str | None = None) -> None:
         """A more advanced example of a command which has makes use of the powerful argument parsing, argument converters and
         aliases.
 

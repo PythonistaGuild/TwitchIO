@@ -1,6 +1,13 @@
 import twitchio
 from twitchio.ext import commands
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from main import Bot
+else:
+    from twitchio.ext.commands import Bot
+
 class MyComponent(commands.Component):
     def __init__(self, bot: commands.Bot) -> None:
         # Passing args is not required...
@@ -8,7 +15,7 @@ class MyComponent(commands.Component):
         self.bot = bot
 
     @commands.command(aliases=["hello", "howdy", "hey"])
-    async def hi(self, ctx: commands.Context) -> None:
+    async def hi(self, ctx: commands.Context[Bot]) -> None:
         """Simple command that says hello!
 
         !hi, !hello, !howdy, !hey
@@ -16,7 +23,7 @@ class MyComponent(commands.Component):
         await ctx.reply(f"Hello {ctx.chatter.mention}!")
 
     @commands.group(invoke_fallback=True)
-    async def socials(self, ctx: commands.Context) -> None:
+    async def socials(self, ctx: commands.Context[Bot]) -> None:
         """Group command for our social links.
 
         !socials
@@ -24,7 +31,7 @@ class MyComponent(commands.Component):
         await ctx.send("discord.gg/..., youtube.com/..., twitch.tv/...")
 
     @socials.command(name="discord")
-    async def socials_discord(self, ctx: commands.Context) -> None:
+    async def socials_discord(self, ctx: commands.Context[Bot]) -> None:
         """Sub command of socials that sends only our discord invite.
 
         !socials discord
@@ -33,7 +40,7 @@ class MyComponent(commands.Component):
 
     @commands.command(aliases=["repeat"])
     @commands.is_moderator()
-    async def say(self, ctx: commands.Context, *, content: str) -> None:
+    async def say(self, ctx: commands.Context[Bot], *, content: str) -> None:
         """Moderator only command which repeats back what you say.
 
         !say hello world, !repeat I am cool LUL

@@ -1,4 +1,10 @@
 from twitchio.ext import commands
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from main import Bot
+else:
+    from twitchio.ext.commands import Bot
 
 # Custom Exception for our component guard.
 class NotOwnerError(commands.GuardFailure): ...
@@ -22,7 +28,7 @@ class OwnerCmds(commands.Component):
         
     # Restrict all of the commands in this component to the owner.
     @commands.Component.guard()
-    def is_owner(self, ctx: commands.Context) -> bool:
+    def is_owner(self, ctx: commands.Context[Bot]) -> bool:
         if ctx.chatter.id != self.bot.owner_id:
             raise NotOwnerError
 
@@ -30,22 +36,22 @@ class OwnerCmds(commands.Component):
     
     # Manually load the cmds module.
     @commands.command()
-    async def load_cmds(self, ctx: commands.Context) -> None:
+    async def load_cmds(self, ctx: commands.Context[Bot]) -> None:
         await self.bot.load_module("components.cmds")
 
     # Manually unload the cmds module.
     @commands.command()
-    async def unload_cmds(self, ctx: commands.Context) -> None:
+    async def unload_cmds(self, ctx: commands.Context[Bot]) -> None:
         await self.bot.unload_module("components.cmds")
 
     # Hot reload the cmds module atomically.
     @commands.command()
-    async def reload_cmds(self, ctx: commands.Context) -> None:
+    async def reload_cmds(self, ctx: commands.Context[Bot]) -> None:
         await self.bot.reload_module("components.cmds")
 
     # Check which modules are loaded.
     @commands.command()
-    async def loaded_modules(self, ctx: commands.Context) -> None:
+    async def loaded_modules(self, ctx: commands.Context[Bot]) -> None:
         print(self.bot.modules)
         
 # This is our entry point for the module.
