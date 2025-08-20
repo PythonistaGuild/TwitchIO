@@ -227,9 +227,18 @@
 .. autoclass:: twitchio.Goal
     :members:
 
+.. attributetable:: twitchio.HypeTrainAllTimeHigh
+
+.. autoclass:: twitchio.HypeTrainAllTimeHigh
+
 .. attributetable:: twitchio.HypeTrainEvent
 
 .. autoclass:: twitchio.HypeTrainEvent
+    :members:
+
+.. attributetable:: twitchio.HypeTrainStatus
+
+.. autoclass:: twitchio.HypeTrainStatus
     :members:
 
 .. attributetable:: twitchio.HypeTrainContribution

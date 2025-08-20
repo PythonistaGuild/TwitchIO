@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from .models.clips import Clip, CreatedClip
     from .models.eventsub_ import ChannelChatMessageEvent, ChatMessageBadge
     from .models.goals import Goal
-    from .models.hype_train import HypeTrainEvent
+    from .models.hype_train import HypeTrainEvent, HypeTrainStatus
     from .models.moderation import (
         AutomodCheckMessage,
         AutomodSettings,
@@ -1376,6 +1376,29 @@ class PartialUser:
             token_for=self.id,
             max_results=max_results,
         )
+
+    async def fetch_hype_train_status(self) -> HypeTrainStatus | None:
+        """|coro|
+
+        Fetches the current Hype Train status for the broadcaster.
+
+        .. note::
+            Requires a user access token that includes the ``channel:read:hype_train`` scope.
+
+        Returns
+        -------
+        HypeTrainStatus | None
+            HypeTrainStatus object if a Hype Train is currently active, otherwise None.
+
+        """
+        from .models.hype_train import HypeTrainStatus
+
+        data = await self._http.get_hype_train_status(broadcaster_id=self.id, token_for=self.id)
+
+        if data["data"][0]["current"] is None:
+            return None
+
+        return HypeTrainStatus(data["data"][0], http=self._http)
 
     async def start_raid(self, to_broadcaster: str | int | PartialUser) -> Raid:
         """|coro|
