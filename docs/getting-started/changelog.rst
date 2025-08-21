@@ -6,6 +6,13 @@
 Changelog
 ##########
 
+3.2.0b
+======
+- twitchio
+    - Additions
+        - Added - :func:`~twitchio.PartialUser.fetch_hype_train_status`
+
+
 3.1.0
 =====
 
