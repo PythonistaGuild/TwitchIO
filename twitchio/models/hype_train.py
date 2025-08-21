@@ -191,7 +191,7 @@ class HypeTrainStatus:
         The user whose channel the Hype Train is occurring on.
     level: int
         The current level of the Hype Train.
-    total: int1
+    total: int
         The total amount contributed to the Hype Train.
     progress: int
         The number of points contributed to the Hype Train at the current level.
@@ -203,7 +203,7 @@ class HypeTrainStatus:
         The time the Hype Train started.
     expires_at: datetime.datetime
         The time the Hype Train expires.
-    type: Literal["treasure", "golden_kappa", "regular"]
+    type: typing.Literal["treasure", "golden_kappa", "regular"]
         The type of Hype Train. Can be one of `treasure`, `golden_kappa`, or `regular`.
     all_time_high: HypeTrainAllTimeHigh | None
         Information about the channel's hype train records.
