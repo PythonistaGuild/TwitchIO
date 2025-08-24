@@ -3477,6 +3477,16 @@ class PartialUser:
         """
         await self._http.delete_custom_reward(broadcaster_id=self.id, reward_id=id, token_for=self.id)
 
+    async def fetch_stream(self) -> Stream | None:
+        """|coro|
+
+        Fetches the current stream for this broadcaster / user. If the broadcaster is not streaming then it will return `None`.
+
+        Returns
+        -------
+        Stream | None
+        """
+        return await anext(self._http.get_streams(user_ids=[self.id], max_results=1), None)
 
 class User(PartialUser):
     """Represents a User.

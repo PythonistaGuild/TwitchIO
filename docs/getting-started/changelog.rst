@@ -11,6 +11,7 @@ Changelog
 - twitchio
     - Additions
         - Added - :func:`~twitchio.PartialUser.fetch_hype_train_status`
+        - Added - :func:`~twitchio.PartialUser.fetch_stream`
 
 
 3.1.0
