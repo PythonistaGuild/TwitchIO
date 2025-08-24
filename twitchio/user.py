@@ -3488,6 +3488,7 @@ class PartialUser:
         """
         return await anext(self._http.get_streams(user_ids=[self.id], max_results=1), None)
 
+
 class User(PartialUser):
     """Represents a User.
 
