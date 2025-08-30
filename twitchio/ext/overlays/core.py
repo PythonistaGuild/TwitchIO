@@ -108,7 +108,7 @@ class OverlayEvent:
         bites = bytearray()
 
         # Version Header: 2 Bytes
-        bites[:2] = struct.pack(">H", 0)
+        bites[:2] = struct.pack(">H", self.__VERSION__)
         # Compressed Data
         bites[2:] = zlib.compress(dump, level=9)
 
