@@ -1,0 +1,67 @@
+html, body {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+#wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    min-width: 100vw;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.tl {
+    align-items: start;
+    justify-content: start;
+}
+
+.tc {
+    align-items: center;
+    justify-content: start;
+}
+
+.tr {
+    align-items: end;
+    justify-content: start;
+}
+
+.cl {
+    align-items: start;
+    justify-content: center;
+}
+
+.cc {
+    align-items: center;
+    justify-content: center;
+}
+
+.cr {
+    align-items: end;
+    justify-content: center;
+}
+
+.bl {
+    align-items: start;
+    justify-content: end;
+}
+
+.bc {
+    align-items: center;
+    justify-content: end;
+}
+
+.br {
+    align-items: end;
+    justify-content: end;
+}
+
+.eventContainer {
+    display: flex;
+    flex-direction: column;
+}
