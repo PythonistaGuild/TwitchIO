@@ -22,12 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .adapters import *
-from .core import *
-from .enums import *
+from __future__ import annotations
+
+from typing import NotRequired, TypedDict
 
 
-try:
-    from .starlette_adapter import *
-except ImportError:
-    pass
+class OverlayPartT(TypedDict):
+    content: str
+    size: int
+    speed: NotRequired[str | None]
+    animation: NotRequired[str | None]
+
+
+class OverlayEventT(TypedDict):
+    parts: list[OverlayPartT]
+    audio: str
+    duration: int
+    duration_is_audio: bool
+    force_override: bool
+    stack_event: bool
