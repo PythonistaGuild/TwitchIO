@@ -33,8 +33,10 @@ import struct
 import zlib
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, overload
 
+from twitchio import Colour
+
 from .enums import Animation, AnimationSpeed, EventPosition, Font
-from .exceptions import BlueprintError
+from .exceptions import AudioAlreadyLoadedError, BlueprintError
 
 
 if TYPE_CHECKING:
@@ -55,16 +57,65 @@ class OverlayEvent:
         self._raw: OverlayEventT = {
             "parts": [],
             "audio": "",
-            "duration": 800000,
+            "duration": 5000,
             "duration_is_audio": False,
             "force_override": False,
-            "stack_event": True,
+            "stack_event": False,
         }
 
     def escape(self, value: str, /) -> str:
+        """Method which escapes the provided the content via the ``html`` standard library.
+
+        Parameters
+        ----------
+        value: str
+            The content to escape.
+
+        Returns
+        -------
+        str
+            The escaped content.
+        """
         return html.escape(value)
 
-    def add_html(self) -> Self: ...
+    def add_html(
+        self,
+        html: str,
+        animation: Animation | None = None,
+        animation_speed: AnimationSpeed | None = None,
+    ) -> Self:
+        """Method to add a custom HTML segment to this event.
+
+        .. important::
+
+            This method is unsafe and care should be taken to ensure that the input is trusted. The input provided to this
+            method will **NOT** be escaped and could be used to inject scripts into the Javascript of the overlay.
+
+        .. warning::
+
+            We do not recommend using this method if any of the input comes from a third-party or external source; including
+            chatters or other API's.
+
+        Parameters
+        ----------
+        html: str
+            The ``HTML`` to use as a segment for this event. Ensure the content provided to this parameter is trusted.
+        animation: :class:`~twitchio.ext.overlays.Animation` | ``None``
+            An optional animation to apply to the provided HTML content. Defaults to ``None``.
+        animation_speed: :class:`~twitchio.ext.overlays.AnimationSpeed` | ``None``
+            An optional speed of animation to provide. Defaults to ``None`` which is the default speed.
+
+        Returns
+        -------
+        OverlayEvent
+            This method returns ``self`` which allows for fluid-style chaining.
+        """
+        middle = f" animate__{animation.value}" if animation else ""
+        speed = f" animate__{animation_speed.value}" if animation_speed else ""
+        part: OverlayPartT = {"content": html, "animation": middle, "speed": speed}
+
+        self._raw["parts"].append(part)
+        return self
 
     def add_text(
         self,
@@ -74,8 +125,35 @@ class OverlayEvent:
         animation_speed: AnimationSpeed | None = None,
         font: Font | None = None,  # TODO: Default Font...
         size: int = 24,
+        colour: Colour | None = None,
     ) -> Self:
-        # TODO: Font...
+        """Method to add custom text content as a segement to this event.
+
+        .. note::
+
+            The text content provided to this method is escaped via :meth:`.escape`.
+
+        Parameters
+        ----------
+        content: str
+            The text content to use as a segment for this event. This content will be escaped.
+        animation: :class:`~twitchio.ext.overlays.Animation` | ``None``
+            An optional animation to apply to the provided text content. Defaults to ``None``.
+        animation_speed: :class:`~twitchio.ext.overlays.AnimationSpeed` | ``None``
+            An optional speed of animation to provide. Defaults to ``None`` which is the default speed.
+        font: :class:`~twitchio.ext.overlays.Font` | ``None``
+            ...
+        size: int
+            An optional :class:`int` which is the size of the font in `px`. Defaults to ``24``.
+        colour: :class:`twitchio.Colour`
+            An optional :class:`twitchio.Colour` or :class:`twitchio.Color` to use for the text. Defaults to ``None``, which
+            will be ``black`` / ``#000000``.
+
+        Returns
+        -------
+        OverlayEvent
+            This method returns ``self`` which allows for fluid-style chaining.
+        """
 
         if not isinstance(size, int):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise TypeError(f"Parameter 'size' expected 'int' got {type(size)!r}.")
@@ -83,19 +161,40 @@ class OverlayEvent:
         escaped = self.escape(content)
         middle = f" animate__{animation.value}" if animation else ""
         speed = f" animate__{animation_speed.value}" if animation_speed else ""
+        col = colour or Colour.from_hex("#000000")
 
-        part: OverlayPartT = {"content": escaped, "animation": middle, "speed": speed, "size": size}
+        part: OverlayPartT = {"content": escaped, "animation": middle, "speed": speed, "size": size, "colour": col.html}
         self._raw["parts"].append(part)
 
         return self
 
     def add_image(self) -> Self: ...
 
-    def set_audio(self) -> Self: ...
+    def set_audio(self, name: str, /) -> Self: ...
 
-    def set_position(self) -> Self: ...
+    def set_duration(self, value: int | None = 5000, *, as_audio: bool = False) -> Self:
+        """Method which sets the overall duration of this overlay event.
 
-    def set_duration(self, value: int, *, as_audio: bool = False) -> Self: ...
+        Parameters
+        ----------
+        value: int | None
+            The duration of the event in ``ms (milliseconds)`` as an :class:`int`. Could be ``None`` which would mean the
+            event will not be removed from the overlay until another condition is met, such as a new event overriding it.
+            Defaults to ``5000`` (5 seconds).
+        as_audio: bool
+            An optional bool which when set will ensure the event lasts for as long as any audio provided does. If a duration
+            is provided when this parameter is set to ``True``, the duration will be additive. Defaults to ``False``.
+
+        Returns
+        -------
+        OverlayEvent
+            This method returns ``self`` which allows for fluid-style chaining.
+        """
+        duration = max(0, value or 0) or None
+        self._raw["duration"] = duration
+        self._raw["duration_is_audio"] = as_audio
+
+        return self
 
     @overload
     def _compress(self, convert: Literal[True] = True) -> str: ...
@@ -140,6 +239,13 @@ class OverlayEvent:
         return self._compress()
 
     def as_dict(self) -> OverlayEventT:
+        """Method which does a deep-copy on the raw data and returns it as a dictionary.
+
+        Returns
+        -------
+        dict
+            The raw data for this event.
+        """
         return copy.deepcopy(self._raw)
 
 
@@ -177,6 +283,7 @@ class Overlay:
     def __init__(self, *, secret: str) -> None:
         self._secret = secret
         self._position = EventPosition.center
+        self._audio_paths: dict[str, os.PathLike[str]] = {}
 
     @property
     def secret(self) -> str:
@@ -259,6 +366,12 @@ class Overlay:
     def set_position(self, position: EventPosition, /) -> Self:
         self._position = position
         return self
+
+    async def mount_audio(self, name: str, *, path: os.PathLike[str]) -> ...:
+        if name in self._audio_paths:
+            raise AudioAlreadyLoadedError(f"Audio with the name '{name}' has already been added to {self!r}.")
+
+        self._audio_paths[name] = path
 
     def generate_html(self) -> str:
         template = self.template
