@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, overload
 from twitchio import Colour
 
 from .enums import Animation, AnimationSpeed, EventPosition, Font
-from .exceptions import AudioAlreadyLoadedError, BlueprintError
+from .exceptions import AudioLoadedError, BlueprintError
 
 
 if TYPE_CHECKING:
@@ -369,7 +369,7 @@ class Overlay:
 
     async def mount_audio(self, name: str, *, path: os.PathLike[str]) -> ...:
         if name in self._audio_paths:
-            raise AudioAlreadyLoadedError(f"Audio with the name '{name}' has already been added to {self!r}.")
+            raise AudioLoadedError(f"Audio with the name '{name}' has already been added to {self!r}.")
 
         self._audio_paths[name] = path
 

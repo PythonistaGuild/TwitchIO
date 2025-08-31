@@ -25,7 +25,7 @@ SOFTWARE.
 from twitchio import TwitchioException
 
 
-__all__ = ("OverlayException", "OverlayLoadError")
+__all__ = ("AudioLoadedError", "BlueprintError", "OverlayException", "OverlayLoadError", "OverlayNotSetupError")
 
 
 class OverlayException(TwitchioException): ...
@@ -38,3 +38,6 @@ class OverlayNotSetupError(OverlayException): ...
 
 
 class BlueprintError(OverlayException): ...
+
+
+class AudioLoadedError(OverlayException): ...
