@@ -29,15 +29,16 @@ from typing import NotRequired, TypedDict
 
 class OverlayPartT(TypedDict):
     content: str
-    size: int
+    size: NotRequired[int]
     speed: NotRequired[str | None]
     animation: NotRequired[str | None]
+    colour: NotRequired[str]
 
 
 class OverlayEventT(TypedDict):
     parts: list[OverlayPartT]
     audio: str
-    duration: int
+    duration: int | None
     duration_is_audio: bool
     force_override: bool
     stack_event: bool
