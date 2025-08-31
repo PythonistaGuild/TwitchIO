@@ -35,9 +35,9 @@ async function prepareData(data) {
 
     for (const part of data.parts) {
         const content = part.content;
-        const anim = part.animation;
-        const speed = part.speed;
-        const fontSize = part.size;
+        const anim = part.animation || "";
+        const speed = part.speed || "";
+        const fontSize = part.size || 22;
 
         let html = `<span style="font-size: ${fontSize}px;" class="animate__animated animate__infinite${anim}${speed}">${content}</span>`;
         element.insertAdjacentHTML("beforeend", html);
