@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
     margin: 0;
     box-sizing: border-box;
 }
@@ -61,7 +62,21 @@ html, body {
     justify-content: end;
 }
 
+.s {
+    align-self: flex-start;
+}
+
+.c {
+    align-self: center;
+}
+
+.e {
+    align-self: flex-end;
+}
+
 .eventContainer {
     display: flex;
     flex-direction: column;
+    width: fit-content;
+    flex-wrap: none;
 }
