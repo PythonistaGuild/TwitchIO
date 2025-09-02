@@ -2383,10 +2383,6 @@ class PartialUser:
         user_ids: list[str | int] | None
             A list of user IDs used to filter the results. To specify more than one ID, include this parameter for each moderator you want to get.
             The returned list includes only the users from the list who are moderators in the broadcaster's channel. You may specify a maximum of 100 IDs.
-        token_for: str | PartialUser
-            User access token that includes the ``moderation:read`` scope.
-            If your app also adds and removes moderators, you can use the ``channel:manage:moderators`` scope instead.
-            The user ID in the access token must match the broadcaster's ID.
         first: int
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
