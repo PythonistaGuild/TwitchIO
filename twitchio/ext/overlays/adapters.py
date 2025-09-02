@@ -61,6 +61,8 @@ class AiohttpOverlayAdapter(BaseOverlayAdapter, AiohttpAdapter):
         self.router.add_route("GET", "/overlays/{secret}", self.overlay_route)
         self.router.add_route("POST", "/overlays/{secret}/callback", self._overlay_callback)
         self.router.add_route("GET", "/overlays/{secret}/connect", self.websocket_connect)
+        self.router.add_route("GET", "/overlays/{secret}/audio/{aid}", self.overlay_audio)
+        self.router.add_route("GET", "/overlays/{secret}/image/{iid}", self.overlay_image)
 
     async def add_overlay(self, overlay: Overlay) -> Overlay:
         try:
@@ -76,6 +78,50 @@ class AiohttpOverlayAdapter(BaseOverlayAdapter, AiohttpAdapter):
 
         self._overlays[overlay.secret] = overlay
         return overlay
+
+    async def overlay_audio(self, request: web.Request) -> web.Response | web.FileResponse:
+        info = request.match_info
+
+        secret = info.get("secret")
+        aid = info.get("aid")
+
+        if not secret:
+            return web.Response(text="No overlay path was provided.", status=400)
+
+        overlay = self._overlays.get(secret)
+        if not overlay:
+            return web.Response(text=f"Overlay '{secret}' not found.", status=404)
+
+        if not aid:
+            return web.Response(text="No overlay audio identifier was provided.", status=400)
+
+        audio = overlay.get_audio(aid)
+        if not audio:
+            return web.Response(text=f"Overlay audio '{aid}' was not found.", status=404)
+
+        return web.FileResponse(audio)
+
+    async def overlay_image(self, request: web.Request) -> web.Response | web.FileResponse:
+        info = request.match_info
+
+        secret = info.get("secret")
+        iid = info.get("iid")
+
+        if not secret:
+            return web.Response(text="No overlay path was provided.", status=400)
+
+        overlay = self._overlays.get(secret)
+        if not overlay:
+            return web.Response(text=f"Overlay '{secret}' not found.", status=404)
+
+        if not iid:
+            return web.Response(text="No overlay image identifier was provided.", status=400)
+
+        image = overlay.get_image(iid)
+        if not image:
+            return web.Response(text=f"Overlay image '{iid}' was not found.", status=404)
+
+        return web.FileResponse(image)
 
     async def overlay_route(self, request: web.Request) -> web.Response:
         info = request.match_info
