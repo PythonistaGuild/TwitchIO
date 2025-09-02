@@ -25,7 +25,7 @@ SOFTWARE.
 from enum import Enum
 
 
-__all__ = ("Animation", "AnimationSpeed", "Font")
+__all__ = ("Alignment", "Animation", "AnimationSpeed", "Font")
 
 
 class Animation(Enum):
@@ -349,3 +349,9 @@ class EventPosition(Enum):
     bottom_left = "bl"
     bottom_center = "bc"
     bottom_right = "br"
+
+
+class Alignment(Enum):
+    left = "s"
+    center = "c"
+    right = "e"

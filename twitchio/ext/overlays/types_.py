@@ -24,21 +24,30 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import NotRequired, TypedDict
+from typing import NotRequired, TypeAlias, TypedDict
+
+
+ImageDimensions: TypeAlias = tuple[int, int]
 
 
 class OverlayPartT(TypedDict):
     content: str
     size: NotRequired[int]
+    dimensions: NotRequired[ImageDimensions | None]
     speed: NotRequired[str | None]
     animation: NotRequired[str | None]
     colour: NotRequired[str]
+    is_image: NotRequired[bool | None]
+    alignment: NotRequired[str | None]
 
 
 class OverlayEventT(TypedDict):
     parts: list[OverlayPartT]
     audio: str
+    volume: float
     duration: int | None
     duration_is_audio: bool
     force_override: bool
     stack_event: bool
+    speed: NotRequired[str | None]
+    animation: NotRequired[str | None]
