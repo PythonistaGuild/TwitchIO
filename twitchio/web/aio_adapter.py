@@ -105,6 +105,9 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         An optional :class:`str` passed to use as the EventSub secret. It is recommended you pass this parameter when using
         an adapter for EventSub, as it will reset upon restarting otherwise. You can generate token safe secrets with the
         :mod:`secrets` module.
+    oauth_path: str | None
+        An optional :class:`str` passed to use as the path for the OAuth route.  Defaults to ``/oauth``.
+        E.g. ``http://localhost:4343/oauth`` or ``https://mydomain.org/oauth``.
     redirect_path: str | None
         An optional :class:`str` passed to use as the path for the Oauth Redirect callback. Defaults to ``/oauth/callback``.
         E.g. ``http://localhost:4343/oauth/callback`` or ``https://mydomain.org/oauth/callback``.
@@ -148,6 +151,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         domain: str | None = None,
         eventsub_path: str | None = None,
         eventsub_secret: str | None = None,
+        oauth_path: str | None = None,
         redirect_path: str | None = None,
         ssl_context: SSLContext | None = None,
     ) -> None:
@@ -173,15 +177,18 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
         self._eventsub_path: str = f"/{path}"
 
-        opath: str = redirect_path.removeprefix("/").removesuffix("/") if redirect_path else "oauth/callback"
-        self._redirect_path: str = f"/{opath}"
+        rpath: str = redirect_path.removeprefix("/").removesuffix("/") if redirect_path else "oauth/callback"
+        self._redirect_path: str = f"/{rpath}"
+
+        opath: str = oauth_path.removeprefix("/").removesuffix("/") if oauth_path else "oauth"
+        self._oauth_path: str = f"/{opath}"
 
         self._runner_task: asyncio.Task[None] | None = None
         self.startup = self.event_startup
         self.shutdown = self.event_shutdown
 
         self.router.add_route("GET", self._redirect_path, self.oauth_callback)
-        self.router.add_route("GET", "/oauth", self.oauth_redirect)
+        self.router.add_route("GET", self._oauth_path, self.oauth_redirect)
         self.router.add_route("POST", self._eventsub_path, self.eventsub_callback)
 
         self._responded: deque[str] = deque(maxlen=5000)
