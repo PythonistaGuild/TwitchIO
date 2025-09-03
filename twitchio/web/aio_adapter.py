@@ -105,6 +105,9 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         An optional :class:`str` passed to use as the EventSub secret. It is recommended you pass this parameter when using
         an adapter for EventSub, as it will reset upon restarting otherwise. You can generate token safe secrets with the
         :mod:`secrets` module.
+    redirect_path: str | None
+        An optional :class:`str` passed to use as the path for the Oauth Redirect callback. Defaults to ``/oauth/callback``.
+        E.g. ``http://localhost:4343/oauth/callback`` or ``https://mydomain.org/oauth/callback``.
     ssl_context: SSLContext | None
         An optional :class:`SSLContext` passed to the adapter. If SSL is setup via a front-facing web server such as NGINX, you should leave this as None.
 
@@ -145,6 +148,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         domain: str | None = None,
         eventsub_path: str | None = None,
         eventsub_secret: str | None = None,
+        redirect_path: str | None = None,
         ssl_context: SSLContext | None = None,
     ) -> None:
         super().__init__()
@@ -169,11 +173,14 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
         self._eventsub_path: str = f"/{path}"
 
+        opath: str = redirect_path.removeprefix("/").removesuffix("/") if redirect_path else "oauth/callback"
+        self._redirect_path: str = f"/{opath}"
+
         self._runner_task: asyncio.Task[None] | None = None
         self.startup = self.event_startup
         self.shutdown = self.event_shutdown
 
-        self.router.add_route("GET", "/oauth/callback", self.oauth_callback)
+        self.router.add_route("GET", self._redirect_path, self.oauth_callback)
         self.router.add_route("GET", "/oauth", self.oauth_redirect)
         self.router.add_route("POST", self._eventsub_path, self.eventsub_callback)
 
@@ -194,7 +201,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
     @property
     def redirect_url(self) -> str:
         """Property returning the fully qualified URL to the OAuth callback."""
-        return f"{self._domain}/oauth/callback"
+        return f"{self._domain}{self._redirect_path}"
 
     async def event_startup(self) -> None:
         logger.info("Starting %r on %s://%s:%s.", self, self._proto, self._host, self._port)
@@ -387,9 +394,9 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         if request.host.startswith((self._domain, stripped)):
             redirect = self.redirect_url
         elif request.host.startswith((self._host, local)):
-            redirect = f"{local}/oauth/callback"
+            redirect = f"{local}:{self._port}{self._redirect_path}"
         else:
-            redirect = f"{request.scheme}://{request.host}/oauth/callback"
+            redirect = f"{request.scheme}://{request.host}{self._redirect_path}"
 
         return redirect
 

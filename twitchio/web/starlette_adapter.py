@@ -107,6 +107,9 @@ class StarletteAdapter(BaseAdapter, Starlette):
         An optional :class:`str` passed to use as the EventSub secret. It is recommended you pass this parameter when using
         an adapter for EventSub, as it will reset upon restarting otherwise. You can generate token safe secrets with the
         :mod:`secrets` module.
+    redirect_path: str | None
+        An optional :class:`str` passed to use as the path for the Oauth Redirect callback. Defaults to ``/oauth/callback``.
+        E.g. ``http://localhost:4343/oauth/callback`` or ``https://mydomain.org/oauth/callback``.
     ssl_keyfile: str | PathLike[str] | None
         An optional SSL key file passed to Uvicorn.
     ssl_keyfile_password: str | None
@@ -157,6 +160,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
         domain: str | None = None,
         eventsub_path: str | None = None,
         eventsub_secret: str | None = None,
+        redirect_path: str | None = None,
         ssl_keyfile: str | PathLike[str] | None = None,
         ssl_keyfile_password: str | None = None,
         ssl_certfile: str | PathLike[str] | None = None,
@@ -184,12 +188,15 @@ class StarletteAdapter(BaseAdapter, Starlette):
         path: str = eventsub_path.removeprefix("/").removesuffix("/") if eventsub_path else "callback"
         self._eventsub_path: str = f"/{path}"
 
+        opath: str = redirect_path.removeprefix("/").removesuffix("/") if redirect_path else "oauth/callback"
+        self._redirect_path: str = f"/{opath}"
+
         self._runner_task: asyncio.Task[None] | None = None
         self._responded: deque[str] = deque(maxlen=5000)
 
         super().__init__(
             routes=[
-                Route("/oauth/callback", self.oauth_callback, methods=["GET"]),
+                Route(self._redirect_path, self.oauth_callback, methods=["GET"]),
                 Route("/oauth", self.oauth_redirect, methods=["GET"]),
                 Route(self._eventsub_path, self.eventsub_callback, methods=["POST"]),
             ],
@@ -215,7 +222,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
     @property
     def redirect_url(self) -> str:
         """Property returning the fully qualified URL to the OAuth callback."""
-        return f"{self._domain}/oauth/callback"
+        return f"{self._domain}{self._redirect_path}"
 
     async def event_startup(self) -> None:
         logger.info("Starting %r on %s://%s:%s.", self, self._proto, self._host, self._port)
@@ -405,9 +412,9 @@ class StarletteAdapter(BaseAdapter, Starlette):
         if host.startswith((self._domain, stripped)):
             redirect = self.redirect_url
         elif host.startswith((self._host, local)):
-            redirect = f"{local}:{self._port}/oauth/callback"
+            redirect = f"{local}:{self._port}{self._redirect_path}"
         else:
-            redirect = f"{scheme}://{host}/oauth/callback"
+            redirect = f"{scheme}://{host}{self._redirect_path}"
 
         return redirect
 
