@@ -1353,6 +1353,10 @@ class PartialUser:
     ) -> HTTPAsyncIterator[HypeTrainEvent]:
         """|aiter|
 
+        .. warning::
+            This endpoint is deprecated and will stop working on 2025-12-4.
+            Please use :meth:`fetch_hype_train_status` instead.
+
         Fetches information about the broadcaster's current or most recent Hype Train event.
 
         Parameters
