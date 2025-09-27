@@ -155,7 +155,7 @@ Before running the code below, there are just a couple more steps we need to tak
 
         @commands.command()
         async def hi(self, ctx: commands.Context) -> None:
-            """Command that replys to the invoker with Hi <name>!
+            """Command that replies to the invoker with Hi <name>!
 
             !hi
             """
