@@ -81,6 +81,7 @@ if TYPE_CHECKING:
     from .types_.responses import (
         AddBlockedTermResponse,
         AdScheduleResponse,
+        AuthorizationByUserResponse,
         AutomodSettingsResponse,
         BannedUsersResponseData,
         BanUserResponse,
@@ -2508,6 +2509,11 @@ class HTTPClient:
     async def put_user(self, token_for: str, description: str | None) -> UpdateUserResponse:
         params = {"description": description} if description is not None else {"description": ""}
         route: Route = Route("PUT", "users", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    async def get_auth_by_user(self, user_ids: list[str]) -> AuthorizationByUserResponse:
+        params = {"user_id": user_ids}
+        route: Route = Route("GET", "authorization/users", params=params)
         return await self.request_json(route)
 
     def get_user_block_list(

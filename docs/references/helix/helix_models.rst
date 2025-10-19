@@ -367,6 +367,11 @@
 .. autoclass:: twitchio.VideoMarkers
     :members:
 
+.. attributetable:: twitchio.UserAuthorisation
+
+.. autoclass:: twitchio.UserAuthorisation
+    :members:
+
 .. attributetable:: twitchio.UserSubscription
 
 .. autoclass:: twitchio.UserSubscription
