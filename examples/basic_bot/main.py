@@ -57,7 +57,7 @@ class Bot(commands.Bot):
 class GeneralCommands(commands.Component):
     @commands.command()
     async def hi(self, ctx: commands.Context[Bot]) -> None:
-        """Command that replys to the invoker with Hi <name>!
+        """Command that replies to the invoker with Hi <name>!
 
         !hi
         """
