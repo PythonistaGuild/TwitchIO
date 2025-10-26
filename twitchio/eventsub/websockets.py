@@ -299,6 +299,7 @@ class Websocket:
             client=self._client,
             token_for=self._token_for,
             http=self._http,
+            shard_id=self._shard_id,
         )
 
         socket._subscriptions = self._subscriptions
