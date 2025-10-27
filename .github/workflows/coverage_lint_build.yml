@@ -33,7 +33,7 @@ jobs:
       - name: Build wheels
         run: pip wheel -w ./wheelhouse/ '.[starlette]'
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: artifact-wheels-${{ matrix.python-version }}
           path: ./wheelhouse/twitchio*.whl
@@ -46,7 +46,7 @@ jobs:
 
       - run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: artifact-source-dist
           path: "./**/dist/*.tar.gz"
