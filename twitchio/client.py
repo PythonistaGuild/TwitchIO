@@ -149,12 +149,17 @@ class Client:
             msg = "If you require the StarletteAdapter please install the required packages: 'pip install twitchio[starlette]'."
             logger.warning(msg)
 
-        adapter: BaseAdapter | type[BaseAdapter] = options.get("adapter", AiohttpAdapter)
+        self._adapter: BaseAdapter[Any] | AiohttpAdapter[Self]
+        adapter: BaseAdapter[Any] | type[BaseAdapter[Any]] | None = options.get("adapter")
+
         if isinstance(adapter, BaseAdapter):
-            adapter.client = self
             self._adapter = adapter
+        elif adapter is None:
+            self._adapter = AiohttpAdapter()
         else:
             self._adapter = adapter()
+
+        if not hasattr(self._adapter, "client"):
             self._adapter.client = self
 
         # Own Client User. Set in login...
@@ -178,12 +183,12 @@ class Client:
         self._setup_called = False
 
     @property
-    def adapter(self) -> BaseAdapter:
+    def adapter(self) -> BaseAdapter[Any]:
         """Property returning the :class:`~twitchio.AiohttpAdapter` or :class:`~twitchio.StarlettepAdapter` the bot is
         currently running."""
         return self._adapter
 
-    async def set_adapter(self, adapter: BaseAdapter) -> None:
+    async def set_adapter(self, adapter: BaseAdapter[Any]) -> None:
         """|coro|
 
         Method which sets and starts a new web adapter which inherits from either :class:`~twitchio.AiohttpAdapter` or
@@ -202,7 +207,8 @@ class Client:
             await self._adapter.close(False)
 
         self._adapter = adapter
-        self._adapter.client = self
+        if not hasattr(self._adapter, "client"):
+            self._adapter.client = self
 
         if self._setup_called and not self._adapter._running:
             await self._adapter.run()

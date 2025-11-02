@@ -413,3 +413,33 @@ class Scopes(metaclass=_ScopeMeta):
     def all(cls) -> Scopes:
         """Classmethod which creates this :class:`.Scopes` object with all scopes selected."""
         return cls([scope for scope in cls.__dict__.values() if isinstance(scope, _scope_property)])
+
+    @classmethod
+    def from_url(cls, url: str) -> Scopes:
+        """Classmethod which attempts to create this :class:`.Scopes` object from a URL containing scopes as a query parameter."""
+        self = cls()
+
+        if not url.startswith("http"):
+            url = url.replace("?scopes=", "")
+            url = f"http://localhost:4343?scopes={url}"
+
+        parsed = urllib.parse.parse_qs(url)
+        scopes: list[str] = []
+
+        for qs in parsed.values():
+            for s in qs:
+                unquoted = urllib.parse.unquote_plus(s)
+                splat = unquoted.split()
+                scopes.extend(splat)
+
+        for scope in scopes:
+            if scope == "openid":
+                continue
+
+            prop = getattr(self, scope.replace(":", "_"), None)
+            if not prop:
+                continue
+
+            self._selected.add(prop)
+
+        return self

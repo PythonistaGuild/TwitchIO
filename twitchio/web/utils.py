@@ -28,7 +28,7 @@ import abc
 import hashlib
 import hmac
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from aiohttp import web
 
@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from ..types_.eventsub import EventSubHeaders
 
 
+BT = TypeVar("BT", bound="Client")
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -82,8 +83,8 @@ class FetchTokenPayload:
         self.exception = exception
 
 
-class BaseAdapter(abc.ABC):
-    client: Client
+class BaseAdapter(abc.ABC, Generic[BT]):
+    client: BT
     _runner_task: asyncio.Task[None] | None
     _eventsub_secret: str | None
     _running: bool

@@ -28,7 +28,7 @@ import asyncio
 import datetime
 import logging
 from collections import deque
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import unquote_plus
 
 from aiohttp import web
@@ -54,10 +54,11 @@ if TYPE_CHECKING:
 __all__ = ("AiohttpAdapter",)
 
 
+BT = TypeVar("BT", bound="Client")
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class AiohttpAdapter(BaseAdapter, web.Application):
+class AiohttpAdapter(BaseAdapter[BT], web.Application):
     """The AiohttpAdapter for OAuth and Webhook based EventSub.
 
     This adapter uses ``aiohttp`` which is a base dependency and should be installed and available with Twitchio.
@@ -113,6 +114,9 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         E.g. ``http://localhost:4343/oauth/callback`` or ``https://mydomain.org/oauth/callback``.
     ssl_context: SSLContext | None
         An optional :class:`SSLContext` passed to the adapter. If SSL is setup via a front-facing web server such as NGINX, you should leave this as None.
+    client: :class:`~twitchio.Client` | None
+        An optional :class:`~twitchio.Client` or any derivative such as :class:`~twitchio.ext.commands.Bot` to set for this
+        adapter. When ``None`` the client will be set automatically after initalization. Defaults to ``None``.
 
     Examples
     --------
@@ -141,7 +145,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
                 super().__init__(adapter=adapter)
     """
 
-    client: Client
+    client: BT
 
     def __init__(
         self,
@@ -154,8 +158,13 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         oauth_path: str | None = None,
         redirect_path: str | None = None,
         ssl_context: SSLContext | None = None,
+        client: BT | None = None,
     ) -> None:
         super().__init__()
+
+        if client:
+            self.client = client
+
         self._runner: web.AppRunner | None = None
 
         self._host: str = host or "localhost"
@@ -194,7 +203,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         self._responded: deque[str] = deque(maxlen=5000)
         self._running: bool = False
 
-    def __init_subclass__(cls: type[AiohttpAdapter]) -> None:
+    def __init_subclass__(cls: type[AiohttpAdapter[BT]]) -> None:
         return
 
     def __repr__(self) -> str:

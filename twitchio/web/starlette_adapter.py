@@ -28,7 +28,7 @@ import asyncio
 import datetime
 import logging
 from collections import deque
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import unquote_plus
 
 import uvicorn
@@ -57,10 +57,11 @@ if TYPE_CHECKING:
 __all__ = ("StarletteAdapter",)
 
 
+BT = TypeVar("BT", bound="Client")
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class StarletteAdapter(BaseAdapter, Starlette):
+class StarletteAdapter(BaseAdapter[BT], Starlette):
     """The StarletteAdapter for OAuth and Webhook based EventSub.
 
     This adapter uses ``starlette`` which is an optional dependency and needs to be installed.
@@ -125,6 +126,9 @@ class StarletteAdapter(BaseAdapter, Starlette):
     timeout_graceful_shutdown: int
         An optional :class:`int` which is the maximum amount of time in seconds ``Uvicorn`` should wait before forcefully
         closing. Defaults to ``3``.
+    client: :class:`~twitchio.Client` | None
+        An optional :class:`~twitchio.Client` or any derivative such as :class:`~twitchio.ext.commands.Bot` to set for this
+        adapter. When ``None`` the client will be set automatically after initalization. Defaults to ``None``.
 
     Examples
     --------
@@ -153,7 +157,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
                 super().__init__(adapter=adapter)
     """
 
-    client: Client
+    client: BT
 
     def __init__(
         self,
@@ -170,7 +174,11 @@ class StarletteAdapter(BaseAdapter, Starlette):
         ssl_certfile: str | PathLike[str] | None = None,
         timeout_keep_alive: int = 5,
         timeout_graceful_shutdown: int = 3,
+        client: BT | None = None,
     ) -> None:
+        if client:
+            self.client = client
+
         self._timeout_keep_alive = timeout_keep_alive
         self._timeout_graceful_shutdown = timeout_graceful_shutdown
         self._host: str = host or "localhost"
