@@ -149,7 +149,7 @@ class Client:
             msg = "If you require the StarletteAdapter please install the required packages: 'pip install twitchio[starlette]'."
             logger.warning(msg)
 
-        adapter: BaseAdapter[Any] | type[BaseAdapter[Any]] | type[AiohttpAdapter[Self]] = options.get(  # type: ignore
+        adapter: BaseAdapter[Any] | type[BaseAdapter[Any]] | type[AiohttpAdapter[Self]] = options.get(
             "adapter", AiohttpAdapter
         )
         if isinstance(adapter, BaseAdapter):
