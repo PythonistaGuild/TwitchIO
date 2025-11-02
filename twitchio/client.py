@@ -29,7 +29,7 @@ import logging
 import math
 from collections import defaultdict
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack, overload
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack, cast, overload
 
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
 from .eventsub.enums import SubscriptionType
@@ -149,12 +149,14 @@ class Client:
             msg = "If you require the StarletteAdapter please install the required packages: 'pip install twitchio[starlette]'."
             logger.warning(msg)
 
-        adapter: BaseAdapter | type[BaseAdapter] = options.get("adapter", AiohttpAdapter)
+        adapter: BaseAdapter[Any] | type[BaseAdapter[Any]] | type[AiohttpAdapter[Self]] = options.get(  # type: ignore
+            "adapter", AiohttpAdapter
+        )
         if isinstance(adapter, BaseAdapter):
             adapter.client = self
             self._adapter = adapter
         else:
-            self._adapter = adapter()
+            self._adapter = cast("AiohttpAdapter[Self]", adapter())
             self._adapter.client = self
 
         # Own Client User. Set in login...
@@ -178,12 +180,12 @@ class Client:
         self._setup_called = False
 
     @property
-    def adapter(self) -> BaseAdapter:
+    def adapter(self) -> BaseAdapter[Any]:
         """Property returning the :class:`~twitchio.AiohttpAdapter` or :class:`~twitchio.StarlettepAdapter` the bot is
         currently running."""
         return self._adapter
 
-    async def set_adapter(self, adapter: BaseAdapter) -> None:
+    async def set_adapter(self, adapter: BaseAdapter[Any]) -> None:
         """|coro|
 
         Method which sets and starts a new web adapter which inherits from either :class:`~twitchio.AiohttpAdapter` or

@@ -28,7 +28,7 @@ import asyncio
 import datetime
 import logging
 from collections import deque
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import unquote_plus
 
 from aiohttp import web
@@ -54,10 +54,11 @@ if TYPE_CHECKING:
 __all__ = ("AiohttpAdapter",)
 
 
+BT = TypeVar("BT", bound="Client")
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class AiohttpAdapter(BaseAdapter, web.Application):
+class AiohttpAdapter(BaseAdapter[BT], web.Application):
     """The AiohttpAdapter for OAuth and Webhook based EventSub.
 
     This adapter uses ``aiohttp`` which is a base dependency and should be installed and available with Twitchio.
@@ -141,7 +142,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
                 super().__init__(adapter=adapter)
     """
 
-    client: Client
+    client: BT
 
     def __init__(
         self,
@@ -194,7 +195,7 @@ class AiohttpAdapter(BaseAdapter, web.Application):
         self._responded: deque[str] = deque(maxlen=5000)
         self._running: bool = False
 
-    def __init_subclass__(cls: type[AiohttpAdapter]) -> None:
+    def __init_subclass__(cls: type[AiohttpAdapter[BT]]) -> None:
         return
 
     def __repr__(self) -> str:

@@ -43,7 +43,7 @@ class ClientOptions(TypedDict, total=False):
     redirect_uri: str | None
     scopes: Scopes | None
     session: aiohttp.ClientSession | None
-    adapter: NotRequired[BaseAdapter]
+    adapter: NotRequired[BaseAdapter[Any]]
     fetch_client_user: NotRequired[bool]
 
 

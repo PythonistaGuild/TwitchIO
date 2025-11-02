@@ -28,7 +28,7 @@ import asyncio
 import datetime
 import logging
 from collections import deque
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import unquote_plus
 
 import uvicorn
@@ -57,10 +57,11 @@ if TYPE_CHECKING:
 __all__ = ("StarletteAdapter",)
 
 
+BT = TypeVar("BT", bound="Client")
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class StarletteAdapter(BaseAdapter, Starlette):
+class StarletteAdapter(BaseAdapter[BT], Starlette):
     """The StarletteAdapter for OAuth and Webhook based EventSub.
 
     This adapter uses ``starlette`` which is an optional dependency and needs to be installed.
@@ -153,7 +154,7 @@ class StarletteAdapter(BaseAdapter, Starlette):
                 super().__init__(adapter=adapter)
     """
 
-    client: Client
+    client: BT
 
     def __init__(
         self,
