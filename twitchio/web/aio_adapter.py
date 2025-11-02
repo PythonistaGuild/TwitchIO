@@ -114,6 +114,9 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
         E.g. ``http://localhost:4343/oauth/callback`` or ``https://mydomain.org/oauth/callback``.
     ssl_context: SSLContext | None
         An optional :class:`SSLContext` passed to the adapter. If SSL is setup via a front-facing web server such as NGINX, you should leave this as None.
+    client: :class:`~twitchio.Client` | None
+        An optional :class:`~twitchio.Client` or any derivative such as :class:`~twitchio.ext.commands.Bot` to set for this
+        adapter. When ``None`` the client will be set automatically after initalization.
 
     Examples
     --------
@@ -155,8 +158,13 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
         oauth_path: str | None = None,
         redirect_path: str | None = None,
         ssl_context: SSLContext | None = None,
+        client: BT | None = None,
     ) -> None:
         super().__init__()
+
+        if client:
+            self.client = client
+
         self._runner: web.AppRunner | None = None
 
         self._host: str = host or "localhost"

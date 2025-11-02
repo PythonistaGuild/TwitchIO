@@ -159,7 +159,8 @@ class Client:
         else:
             self._adapter = adapter()
 
-        self._adapter.client = self
+        if not hasattr(self._adapter, "client"):
+            self._adapter.client = self
 
         # Own Client User. Set in login...
         self._fetch_self: bool = options.get("fetch_client_user", True)
@@ -206,7 +207,8 @@ class Client:
             await self._adapter.close(False)
 
         self._adapter = adapter
-        self._adapter.client = self
+        if not hasattr(self._adapter, "client"):
+            self._adapter.client = self
 
         if self._setup_called and not self._adapter._running:
             await self._adapter.run()

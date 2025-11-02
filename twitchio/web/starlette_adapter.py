@@ -126,6 +126,9 @@ class StarletteAdapter(BaseAdapter[BT], Starlette):
     timeout_graceful_shutdown: int
         An optional :class:`int` which is the maximum amount of time in seconds ``Uvicorn`` should wait before forcefully
         closing. Defaults to ``3``.
+    client: :class:`~twitchio.Client` | None
+        An optional :class:`~twitchio.Client` or any derivative such as :class:`~twitchio.ext.commands.Bot` to set for this
+        adapter. When ``None`` the client will be set automatically after initalization.
 
     Examples
     --------
@@ -171,7 +174,11 @@ class StarletteAdapter(BaseAdapter[BT], Starlette):
         ssl_certfile: str | PathLike[str] | None = None,
         timeout_keep_alive: int = 5,
         timeout_graceful_shutdown: int = 3,
+        client: BT | None = None,
     ) -> None:
+        if client:
+            self.client = client
+
         self._timeout_keep_alive = timeout_keep_alive
         self._timeout_graceful_shutdown = timeout_graceful_shutdown
         self._host: str = host or "localhost"
