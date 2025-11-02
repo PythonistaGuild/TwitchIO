@@ -362,7 +362,7 @@ class Scopes(metaclass=_ScopeMeta):
 
                 prop = getattr(self, attr_name)
 
-            elif isinstance(scope, _scope_property): # type: ignore[unnecessary-isinstance]
+            elif isinstance(scope, _scope_property):  # type: ignore[unnecessary-isinstance]
                 prop = scope
 
             else:
