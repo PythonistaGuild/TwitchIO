@@ -29,7 +29,7 @@ import logging
 import math
 from collections import defaultdict
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, Self, Unpack, overload
 
 from .authentication import ManagedHTTPClient, Scopes, UserTokenPayload
 from .eventsub.enums import SubscriptionType
@@ -149,15 +149,17 @@ class Client:
             msg = "If you require the StarletteAdapter please install the required packages: 'pip install twitchio[starlette]'."
             logger.warning(msg)
 
-        adapter: BaseAdapter[Any] | type[BaseAdapter[Any]] | type[AiohttpAdapter[Self]] = options.get(
-            "adapter", AiohttpAdapter
-        )
+        self._adapter: BaseAdapter[Any] | AiohttpAdapter[Self]
+        adapter: BaseAdapter[Any] | type[BaseAdapter[Any]] | None = options.get("adapter")
+
         if isinstance(adapter, BaseAdapter):
-            adapter.client = self
             self._adapter = adapter
+        elif adapter is None:
+            self._adapter = AiohttpAdapter()
         else:
-            self._adapter = cast("AiohttpAdapter[Self]", adapter())
-            self._adapter.client = self
+            self._adapter = adapter()
+
+        self._adapter.client = self
 
         # Own Client User. Set in login...
         self._fetch_self: bool = options.get("fetch_client_user", True)
