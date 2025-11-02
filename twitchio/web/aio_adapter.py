@@ -116,7 +116,7 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
         An optional :class:`SSLContext` passed to the adapter. If SSL is setup via a front-facing web server such as NGINX, you should leave this as None.
     client: :class:`~twitchio.Client` | None
         An optional :class:`~twitchio.Client` or any derivative such as :class:`~twitchio.ext.commands.Bot` to set for this
-        adapter. When ``None`` the client will be set automatically after initalization.
+        adapter. When ``None`` the client will be set automatically after initalization. Defaults to ``None``.
 
     Examples
     --------

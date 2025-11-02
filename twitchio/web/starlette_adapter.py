@@ -128,7 +128,7 @@ class StarletteAdapter(BaseAdapter[BT], Starlette):
         closing. Defaults to ``3``.
     client: :class:`~twitchio.Client` | None
         An optional :class:`~twitchio.Client` or any derivative such as :class:`~twitchio.ext.commands.Bot` to set for this
-        adapter. When ``None`` the client will be set automatically after initalization.
+        adapter. When ``None`` the client will be set automatically after initalization. Defaults to ``None``.
 
     Examples
     --------
