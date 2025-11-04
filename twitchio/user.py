@@ -3777,6 +3777,7 @@ class Chatter(PartialUser):
         self._channel: PartialUser = broadcaster
         self._colour: Colour | None = Colour.from_hex(payload["color"]) if payload["color"] else None
         self._badges: list[ChatMessageBadge] = badges
+        self._message_id: str = payload["message_id"]
 
     def __repr__(self) -> str:
         return f"<Chatter id={self.id} name={self.name}, channel={self.channel}>"
@@ -4001,6 +4002,31 @@ class Chatter(PartialUser):
             broadcaster_id=self.channel, moderator_id=moderator, user_id=self, reason=reason, token_for=moderator
         )
         return Warning(data["data"][0], http=self._http)
+
+    async def delete_message(self, moderator: str | PartialUser) -> None:
+        """|coro|
+
+        Delete the message that this :class:`~twitchio.Chatter` object was created from.
+
+        .. important::
+            Restrictions:
+
+            - The message must have been created within the last 6 hours.
+            - The chatter must not be the broadcaster.
+            - The chatter must not be another moderator.
+
+        .. note::
+           The ``moderator`` provided must have the ``moderator:manage:chat_messages`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        """
+        await self._http.delete_chat_message(
+            broadcaster_id=self.channel, moderator_id=moderator, token_for=moderator, message_id=self._message_id
+        )
 
     async def block(
         self,
