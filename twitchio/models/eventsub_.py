@@ -1463,6 +1463,31 @@ class ChatMessage(BaseChatMessage):
         """An alias for colour"""
         return self.colour
 
+    async def delete(self, moderator: str | PartialUser) -> None:
+        """|coro|
+
+        Delete this message from the associated chat room.
+
+        .. important::
+            Restrictions:
+
+            - The message must have been created within the last 6 hours.
+            - The message must not belong to the broadcaster.
+            - The message must not belong to another moderator.
+
+        .. note::
+           The ``moderator`` provided must have the ``moderator:manage:chat_messages`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the user that has permission to moderate the broadcaster's chat room.
+            This ID must match the user ID in the user access token.
+        """
+        await self._http.delete_chat_message(
+            broadcaster_id=self.broadcaster, moderator_id=moderator, token_for=moderator, message_id=self.id
+        )
+
 
 class ChatSub:
     """
