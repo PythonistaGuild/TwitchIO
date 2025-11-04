@@ -8,4 +8,3 @@ Chatter
 
 .. autoclass:: twitchio.Chatter()
     :members:
-    :inherited-members:
