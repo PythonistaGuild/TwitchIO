@@ -44,7 +44,7 @@ from .models.eventsub_ import Conduit, WebsocketWelcome
 from .models.games import Game
 from .models.teams import Team
 from .payloads import EventErrorPayload, WebsocketSubscriptionData
-from .user import ActiveExtensions, Extension, PartialUser, User
+from .user import ActiveExtensions, Extension, PartialUser, User, UserAuthorisation
 from .utils import MISSING, EventWaiter, clamp, unwrap_function
 from .web import AiohttpAdapter, has_starlette
 from .web.utils import BaseAdapter
@@ -2210,6 +2210,32 @@ class Client:
 
         data = await self._http.patch_drop_entitlements(ids=ids, fulfillment_status=fulfillment_status, token_for=token_for)
         return [EntitlementStatus(d) for d in data["data"]]
+
+    async def fetch_auth_by_users(self, user_ids: list[str]) -> list[UserAuthorisation]:
+        """|coro|
+        Fetches authentication information for one or more users, up to 10.
+        This uses the app token associated with the Client ID and Secret provided.
+
+        Parameters
+        ----------
+        user_ids: list[str]
+            A list of user IDs to fetch authentication information for.
+            You may only fetch a maximum of `10` user IDs at a time.
+
+        Returns
+        -------
+        list[UserAuthorisation]
+
+        Raises
+        ------
+        ValueError
+            You may only fetch a maximum of ``10`` user IDs at a time.
+        """
+        if len(user_ids) > 10:
+            raise ValueError("You may only fetch a maximum of 10 user IDs at a time.")
+
+        data = await self._http.get_auth_by_user(user_ids=user_ids)
+        return [UserAuthorisation(u, http=self._http) for u in data["data"]]
 
     async def subscribe_websocket(
         self,

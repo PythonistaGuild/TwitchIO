@@ -10,8 +10,12 @@ Changelog
 ======
 - twitchio
     - Additions
-        - Added - :func:`~twitchio.PartialUser.fetch_hype_train_status`
-        - Added - :func:`~twitchio.PartialUser.fetch_stream`
+        - Added - :class:`~twitchio.UserAuthorisation` model
+        - Added - :func:`~twitchio.Client.fetch_auth_by_users` to :class:`~twitchio.Client`
+        - Added - :func:`~twitchio.PartialUser.fetch_auth` to :class:`~twitchio.PartialUser`
+        - Added - :func:`~twitchio.PartialUser.fetch_stream` to :class:`~twitchio.PartialUser` as a helper method.
+        - Added - :func:`~twitchio.PartialUser.fetch_hype_train_status` to :class:`~twitchio.PartialUser`. 
+            This replaces :func:`~twitchio.PartialUser.fetch_hype_train_events` which has been deprecated
 
     - Bug fixes
         - Fix :func:`~twitchio.utils.setup_logging` breaking coloured formatting on `CRITICAL` logging level

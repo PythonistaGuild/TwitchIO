@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.types_.responses import (
+        AuthorizationByUserResponseData,
         UserActiveExtensionsResponseData,
         UserExtensionsResponseData,
         UserPanelComponentItem,
@@ -75,7 +76,7 @@ if TYPE_CHECKING:
     from .models.subscriptions import BroadcasterSubscriptions, UserSubscription
     from .models.teams import ChannelTeam
 
-__all__ = ("ActiveExtensions", "Extension", "PartialUser", "User")
+__all__ = ("ActiveExtensions", "Extension", "PartialUser", "User", "UserAuthorisation")
 
 
 class PartialUser:
@@ -3211,6 +3212,20 @@ class PartialUser:
         data = await self._http.put_user(token_for=self.id, description=description)
         return User(data["data"][0], http=self._http)
 
+    async def fetch_auth(self) -> UserAuthorisation:
+        """|coro|
+
+        Fetches the user's authentication information.
+
+        Returns
+        -------
+        UserAuthorisation
+            UserAuthorisation object.
+        """
+
+        data = await self._http.get_auth_by_user(user_ids=[self.id])
+        return UserAuthorisation(data["data"][0], http=self._http)
+
     def fetch_block_list(self, *, first: int = 20, max_results: int | None = None) -> HTTPAsyncIterator[PartialUser]:
         """|aiter|
 
@@ -4087,3 +4102,29 @@ class Chatter(PartialUser):
             user_id=self, broadcaster_id=self.channel, token_for=self.channel, max_results=1
         )
         return await anext(data.followers, None)
+
+
+class UserAuthorisation:
+    """A class that contains authorisation information for a user against a Client ID / Twitch application.
+
+    Attributes
+    -----------
+    user: PartialUser
+        The user having authorised checked.
+    scopes: Scopes
+        The scopes the user has granted to the Client ID / application.
+    authorised: bool
+        Whether the user has authorised the Client ID / application.
+    """
+
+    __slots__ = ("authorised", "scopes", "user")
+
+    def __init__(self, data: AuthorizationByUserResponseData, *, http: HTTPClient) -> None:
+        from .authentication import Scopes
+
+        self.user: PartialUser = PartialUser(data["user_id"], data["user_login"], data["user_name"], http=http)
+        self.scopes: Scopes = Scopes(data["scopes"])
+        self.authorised: bool = bool(data["has_authorized"])
+
+    def __repr__(self) -> str:
+        return f"<UserAuthorisation user={self.user} authorised={self.authorised}>"

@@ -355,9 +355,16 @@ class Scopes(metaclass=_ScopeMeta):
                 if scope == "openid":
                     continue
 
-                prop = getattr(self, scope.replace(":", "_"))
-            elif isinstance(scope, _scope_property):  # type: ignore
+                attr_name = scope.replace(":", "_")
+
+                if not hasattr(self, attr_name):
+                    continue
+
+                prop = getattr(self, attr_name)
+
+            elif isinstance(scope, _scope_property):  # type: ignore[unnecessary-isinstance]
                 prop = scope
+
             else:
                 raise TypeError(f"Invalid scope provided: {type(scope)} is not a valid scope.")
 

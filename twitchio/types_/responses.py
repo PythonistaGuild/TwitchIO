@@ -30,6 +30,8 @@ from .conduits import Condition, ConduitData, ShardData
 __all__ = (
     "AdScheduleResponse",
     "AdScheduleResponseData",
+    "AuthorizationByUserResponse",
+    "AuthorizationByUserResponseData",
     "AuthorizationURLResponse",
     "BitsLeaderboardResponse",
     "ChannelChatBadgesResponseData",
@@ -1661,6 +1663,18 @@ class UsersResponse(TypedDict):
 
 class UpdateUserResponse(TypedDict):
     data: list[UsersResponseData]
+
+
+class AuthorizationByUserResponseData(TypedDict):
+    user_id: str
+    user_name: str
+    user_login: str
+    scopes: list[str]
+    has_authorized: bool
+
+
+class AuthorizationByUserResponse(TypedDict):
+    data: list[AuthorizationByUserResponseData]
 
 
 class UserBlockListResponseData(TypedDict):
