@@ -56,6 +56,7 @@ __all__ = (
     "guard",
     "is_broadcaster",
     "is_elevated",
+    "is_lead_moderator",
     "is_moderator",
     "is_owner",
     "is_staff",
@@ -1687,6 +1688,37 @@ def is_moderator() -> Any:
             raise TypeError("This Guard can not be used on a RewardCommand instance.")
 
         return context.chatter.moderator  # type: ignore
+
+    return guard(predicate)
+
+
+def is_lead_moderator() -> Any:
+    """|deco|
+
+    A decorator which adds a :func:`~.commands.guard` to a :class:`~.commands.Command`.
+
+    This guards adds a predicate which prevents any chatter from using a command
+    who does not possess the ``Lead Moderator`` badge.
+
+    See also, :func:`~.commands.is_elevated` for a guard to allow the ``broadcaster``, any ``moderator`` or ``VIP`` chatter
+    to use the command.
+
+    .. warning::
+
+        Due to Twitch limitations, you cannot use this Guard on a :class:`.commands.RewardCommand`. If you do, it will always
+        fail.
+
+    Raises
+    ------
+    GuardFailure
+        The guard predicate returned ``False`` and prevented the chatter from using the command.
+    """
+
+    def predicate(context: Context[BotT]) -> bool:
+        if context.type is ContextType.REWARD:
+            raise TypeError("This Guard can not be used on a RewardCommand instance.")
+
+        return context.chatter.lead_moderator  # type: ignore
 
     return guard(predicate)
 
