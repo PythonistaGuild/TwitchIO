@@ -68,6 +68,8 @@ Guards
 
 .. autofunction:: twitchio.ext.commands.is_broadcaster
 
+.. autofunction:: twitchio.ext.commands.is_lead_moderator
+
 .. autofunction:: twitchio.ext.commands.is_moderator
 
 .. autofunction:: twitchio.ext.commands.is_vip

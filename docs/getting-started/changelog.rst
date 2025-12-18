@@ -17,6 +17,7 @@ Changelog
         - Added - :func:`~twitchio.PartialUser.fetch_hype_train_status` to :class:`~twitchio.PartialUser`. 
             This replaces :func:`~twitchio.PartialUser.fetch_hype_train_events` which has been deprecated
         - Added - :attr:`~twitchio.Chatter.lead_moderator`
+        - Added - :func:`~twitchio.ext.commands.is_lead_moderator` guard
 
     - Changes
         - :attr:`~twitchio.Chatter.moderator` returns True for Lead Moderator role.

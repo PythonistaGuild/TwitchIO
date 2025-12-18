@@ -1547,6 +1547,8 @@ def guard(predicate: Callable[..., bool] | Callable[..., CoroC]) -> Any:
 
     - :func:`~.commands.is_broadcaster`
 
+    - :func:`~.commands.is_lead_moderator`
+
     - :func:`~.commands.is_moderator`
 
     - :func:`~.commands.is_vip`
