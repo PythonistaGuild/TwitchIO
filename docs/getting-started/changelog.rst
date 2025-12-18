@@ -16,6 +16,10 @@ Changelog
         - Added - :func:`~twitchio.PartialUser.fetch_stream` to :class:`~twitchio.PartialUser` as a helper method.
         - Added - :func:`~twitchio.PartialUser.fetch_hype_train_status` to :class:`~twitchio.PartialUser`. 
             This replaces :func:`~twitchio.PartialUser.fetch_hype_train_events` which has been deprecated
+        - Added - :attr:`~twitchio.Chatter.lead_moderator`
+
+    - Changes
+        - :attr:`~twitchio.Chatter.moderator` returns True for Lead Moderator role.
 
     - Bug fixes
         - Fix :func:`~twitchio.utils.setup_logging` breaking coloured formatting on `CRITICAL` logging level
