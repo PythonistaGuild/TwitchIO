@@ -3756,6 +3756,7 @@ class Chatter(PartialUser):
         "_is_artist_badge",
         "_is_broadcaster",
         "_is_founder",
+        "_is_lead_moderator",
         "_is_moderator",
         "_is_no_audio",
         "_is_no_video",
@@ -3833,6 +3834,13 @@ class Chatter(PartialUser):
         This bool should always be ``True`` when the chatter is a moderator.
         """
         return getattr(self, "_is_moderator", False) or self.broadcaster
+    @property
+    def lead_moderator(self) -> bool:
+        """A property returning a bool indicating whether the chatter is the lead moderator.
+
+        This bool should always be ``True`` when the chatter is the lead moderator.
+        """
+        return getattr(self, "_is_lead_moderator", False)
 
     @property
     def vip(self) -> bool:
