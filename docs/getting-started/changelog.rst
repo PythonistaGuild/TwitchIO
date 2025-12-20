@@ -18,9 +18,11 @@ Changelog
             This replaces :func:`~twitchio.PartialUser.fetch_hype_train_events` which has been deprecated
         - Added - :attr:`~twitchio.Chatter.lead_moderator`
         - Added - :func:`~twitchio.ext.commands.is_lead_moderator` guard
+        - Added - New optional title and duration arguments for :func:`~twitchio.PartialUser.create_clip`
 
     - Changes
         - :attr:`~twitchio.Chatter.moderator` returns True for Lead Moderator role.
+        - :func:`~twitchio.PartialUser.create_clip` `has_delay` argument has been deprecated.
 
     - Bug fixes
         - Fix :func:`~twitchio.utils.setup_logging` breaking coloured formatting on `CRITICAL` logging level

@@ -166,6 +166,18 @@ class Clip:
 
 
 class CreatedClip:
+    """Represents a Created Clip
+
+    Attributes
+    -----------
+    id: str
+        An ID that uniquely identifies the clip.
+    edit_url: str
+    A URL that you can use to edit the clip's title, identify the part of the clip to publish, and publish the clip. `Learn More <https://help.twitch.tv/s/article/how-to-use-clips>`_
+
+    The URL is valid for up to 24 hours or until the clip is published, whichever comes first.
+    """
+
     __slots__ = ("edit_url", "id")
 
     def __init__(self, data: CreateClipResponseData) -> None:

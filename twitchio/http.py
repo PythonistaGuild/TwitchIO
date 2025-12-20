@@ -1337,9 +1337,15 @@ class HTTPClient:
         *,
         broadcaster_id: str | int,
         token_for: str | PartialUser,
-        has_delay: bool = False,
+        title: str | None = None,
+        duration: float | None = None,
     ) -> CreateClipResponse:
-        params = {"broadcaster_id": broadcaster_id, "has_delay": has_delay}
+        params: dict[str, str | float] = {"broadcaster_id": broadcaster_id}
+
+        if title is not None:
+            params["title"] = title
+        if duration is not None:
+            params["duration"] = duration
 
         route: Route = Route("POST", "clips", params=params, token_for=token_for)
         return await self.request_json(route)

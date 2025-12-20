@@ -1236,7 +1236,12 @@ class PartialUser:
         return await self._http.put_user_chat_color(user_id=self.id, color=color, token_for=self.id)
 
     async def create_clip(
-        self, *, token_for: str | PartialUser, has_delay: bool = False
+        self,
+        *,
+        token_for: str | PartialUser,
+        has_delay: bool = False,
+        title: str | None = None,
+        duration: float | None = None,
     ) -> CreatedClip:  # TODO Test this with non broadcaster token
         """|coro|
 
@@ -1248,7 +1253,7 @@ class PartialUser:
         This may occur if you begin capturing the clip near the beginning or end of the stream.
 
         By default, Twitch publishes up to the last 30 seconds of the 90 seconds window and provides a default title for the clip.
-        To specify the title and the portion of the 90 seconds window that's used for the clip, use the URL in the CreatedClip's ``edit_url`` attribute.
+        You can now specify the title and the duration via this method, or specify the title and the portion of the 90 seconds window that's used for the clip by using the URL in the CreatedClip's ``edit_url`` attribute.
         You can specify a clip that's from 5 seconds to 60 seconds in length. The URL is valid for up to 24 hours or until the clip is published, whichever comes first.
 
         Creating a clip is an asynchronous process that can take a short amount of time to complete.
@@ -1258,12 +1263,20 @@ class PartialUser:
         .. note::
             Requires a user access token that includes the ``clips:edit`` scope.
 
+
+        .. warning::
+            The `has_delay` argument has been removed by Twitch and no longer has any effect.
+            It has been retained to avoid breaking changes for users who still have it set.
+
         Parameters
         ----------
+        title: str | None
+            The title of the clip.
+        duration: float | None
+            The length of the clip in seconds. Possible values range from 5 to 60 inclusively with a precision of 0.1. The default is 30
         has_delay: bool
-            A Boolean value that determines whether the API captures the clip at the moment the viewer requests it or after a delay.
-            If False (default), Twitch captures the clip at the moment the viewer requests it (this is the same clip experience as the Twitch UX).
-            If True, Twitch adds a delay before capturing the clip (this basically shifts the capture window to the right slightly).
+            This has been been removed by Twitch and no longer has any effect.
+            It has been retained to avoid breaking changes for users who still have it set.
         token_for: str | PartialUser
             User access token that includes the ``clips:edit`` scope.
 
@@ -1271,10 +1284,17 @@ class PartialUser:
         -------
         CreatedClip
             The CreatedClip object.
+        Raises
+        ------
+        ValueError
+            Clip duration must be between 5 and 60, with precision of 0.1
         """
+        if duration is not None and not (5 <= duration <= 60):
+            raise ValueError("Clip duration must be between 5 and 60, with precision of 0.1")
+
         from .models.clips import CreatedClip
 
-        data = await self._http.post_create_clip(broadcaster_id=self.id, token_for=token_for, has_delay=has_delay)
+        data = await self._http.post_create_clip(broadcaster_id=self.id, token_for=token_for, title=title, duration=duration)
         return CreatedClip(data["data"][0])
 
     def fetch_clips(
