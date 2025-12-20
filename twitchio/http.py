@@ -105,6 +105,7 @@ if TYPE_CHECKING:
         ClipsResponseData,
         ContentClassificationLabelsResponse,
         CreateChannelStreamScheduleSegmentResponse,
+        CreateClipFromVodResponse,
         CreateClipResponse,
         CreateStreamMarkerResponse,
         CreatorGoalsResponse,
@@ -1348,6 +1349,33 @@ class HTTPClient:
             params["duration"] = duration
 
         route: Route = Route("POST", "clips", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def post_create_clip_from_vod(
+        self,
+        *,
+        vod_id: str,
+        vod_offset: int,
+        title: str,
+        broadcaster_id: str | int,
+        editor_id: str | PartialUser,
+        token_for: str | PartialUser | None = None,
+        duration: float | None = None,
+    ) -> CreateClipFromVodResponse:
+        params: dict[str, str | float] = {
+            "broadcaster_id": broadcaster_id,
+            "editor_id": str(editor_id),
+            "vod_id": vod_id,
+            "vod_offset": vod_offset,
+            "title": title,
+        }
+
+        if duration is not None:
+            params["duration"] = duration
+
+        route: Route = Route("POST", "videos/clips", params=params, token_for=token_for)
+
         return await self.request_json(route)
 
     ### Conduits ###

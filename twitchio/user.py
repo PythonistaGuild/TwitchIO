@@ -1263,7 +1263,6 @@ class PartialUser:
         .. note::
             Requires a user access token that includes the ``clips:edit`` scope.
 
-
         .. warning::
             The `has_delay` argument has been removed by Twitch and no longer has any effect.
             It has been retained to avoid breaking changes for users who still have it set.
@@ -1295,6 +1294,74 @@ class PartialUser:
         from .models.clips import CreatedClip
 
         data = await self._http.post_create_clip(broadcaster_id=self.id, token_for=token_for, title=title, duration=duration)
+        return CreatedClip(data["data"][0])
+
+    async def create_clip_from_vod(
+        self,
+        *,
+        editor_id: str | PartialUser,
+        vod_id: str,
+        vod_offset: int,
+        title: str,
+        duration: float | None = None,
+        token_for: str | PartialUser | None = None,
+    ) -> CreatedClip:
+        """|coro|
+
+        Creates a clip from a broadcaster's VOD on behalf of the broadcaster or an editor of the channel.
+        Since a live stream is actively creating a VOD, this endpoint can also be used to create a clip from earlier in the current stream.
+
+        The duration of a clip can be from 5 seconds to 60 seconds in length, with a default of 30 seconds if not specified.
+
+        `vod_offset` indicates where the clip will end. In other words, the clip will start at (`vod_offset` - `duration`) and end at `vod_offset`.
+        This means that the value of `vod_offset` must greater than or equal to the value of duration.
+
+        The URL in the response's `edit_url` field allows you to edit the clip's title, feature the clip, create a portrait version of the clip, download the clip media, and share the clip directly to social platforms.
+
+        .. note::
+            Requires an app access token or user access token that includes the ``editor:manage:clips`` or ``channel:manage:clips`` scope.
+
+        Parameters
+        ----------
+        editor_id: str | PartialUser,
+            The user ID, or PartialUser, of the editor for the channel you want to create a clip for.
+            This can be the broadcaster.
+        vod_id: str,
+            ID of the VOD the user wants to clip.
+        vod_offset: int,
+            Offset in the VOD to create the clip.
+            The clip will start at (`vod_offset` - `duration`) and end at `vod_offset`.
+            This means that the value of `vod_offset` must greater than or equal to the value of duration.
+        title: str,
+            The title of the clip.
+        duration: float | None = None,
+            The length of the clip, in seconds. Precision is 0.1. Defaults to 30. Min: 5 seconds, Max: 60 seconds.
+        token_for: str | PartialUser | None
+            An optional user token to use instead of the default app token.
+
+        Returns
+        -------
+        CreatedClip
+            The CreatedClip object.
+        Raises
+        ------
+        ValueError
+            Clip duration must be between 5 and 60, with precision of 0.1
+        """
+        if duration is not None and not (5 <= duration <= 60):
+            raise ValueError("Clip duration must be between 5 and 60, with precision of 0.1")
+
+        from .models.clips import CreatedClip
+
+        data = await self._http.post_create_clip(
+            broadcaster_id=self.id,
+            title=title,
+            duration=duration,
+            vod_id=vod_id,
+            vod_offset=vod_offset,
+            editor_id=editor_id,
+            token_for=token_for,
+        )
         return CreatedClip(data["data"][0])
 
     def fetch_clips(

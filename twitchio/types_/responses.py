@@ -52,6 +52,8 @@ __all__ = (
     "ConduitPayload",
     "ContentClassificationLabelData",
     "ContentClassificationLabelsResponse",
+    "CreateClipFromVodResponse",
+    "CreateClipResponse",
     "EventsubSubscriptionResponse",
     "EventsubSubscriptionResponseData",
     "ExtensionAnalyticsResponse",
@@ -660,8 +662,17 @@ class CreateClipResponseData(TypedDict):
     id: str
 
 
+class CreateClipFromVodResponseData(TypedDict):
+    edit_url: str
+    id: str
+
+
 class CreateClipResponse(TypedDict):
     data: list[CreateClipResponseData]
+
+
+class CreateClipFromVodResponse(TypedDict):
+    data: list[CreateClipFromVodResponseData]
 
 
 class ClipsResponseData(TypedDict):
