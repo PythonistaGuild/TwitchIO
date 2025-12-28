@@ -470,4 +470,4 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
         if not scopes:
             raise ValueError('"scopes" is a required parameter or attribute which is missing.')
 
-        return f"{self._domain}/oauth?scopes={scopes.urlsafe()}&force_verify={str(force_verify).lower()}"
+        return f"{self._domain}{self._oauth_path}?scopes={scopes.urlsafe()}&force_verify={str(force_verify).lower()}"
