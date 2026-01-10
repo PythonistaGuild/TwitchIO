@@ -3407,7 +3407,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
     id: str
         The ID of the redemption.
     text: str | None
-        The text of the chat message.
+        The text of the chat message. This is `None` for redemptions that do not contain a message (e.g. emote unlocks).
     redeemed_at: datetime.datetime
         The datetime object of when the reward was redeemed.
     reward: AutoRedeemReward
@@ -3416,7 +3416,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
         V2 does not cover Power-ups e.g. `gigantify_an_emote`, `celebration`, and `message_effect`.
         Please see ChannelBitsUseSubscription for those specific types if using V2.
     emotes: list[ChannelPointsEmote] | None
-        A list of ChannelPointsEmote objects that appear in the text.
+        A list of ChannelPointsEmote objects that appear in the text. This is `None` for redemptions that do not contain a message.
 
         - If using V1, this is populated by Twitch.
         - If using V2, the emotes can be found in the fragments, but we calculate the index ourselves for this property.
@@ -3424,7 +3424,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
     user_input: str | None
         The text input by the user if the reward requires input. This is `None` when using V2. `text` is the preferred attribute to use.
     fragments: list[ChatMessageFragment] | None
-        The ordered list of chat message fragments. This is only populated when using V2.
+        The ordered list of chat message fragments. This is only populated when using V2. This is `None` for redemptions that do not contain a message.
     """
 
     subscription_type = "channel.channel_points_automatic_reward_redemption.add"
@@ -3447,7 +3447,6 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
                 if message is not None and payload["message"].get("fragments") is not None else None
         )
         self._raw_emotes: list[ChannelPointsEmote] | None = payload.get("message", {}).get("emotes", []) if message is not None else None
-
 
     def __repr__(self) -> str:
         return f"<ChannelPointsAutoRedeemAdd broadcaster={self.broadcaster} user={self.user} id={self.id}>"
