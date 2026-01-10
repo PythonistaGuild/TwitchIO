@@ -3406,7 +3406,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
         The user who redeemed the reward.
     id: str
         The ID of the redemption.
-    text: str
+    text: str | None
         The text of the chat message.
     redeemed_at: datetime.datetime
         The datetime object of when the reward was redeemed.
@@ -3415,7 +3415,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
 
         V2 does not cover Power-ups e.g. `gigantify_an_emote`, `celebration`, and `message_effect`.
         Please see ChannelBitsUseSubscription for those specific types if using V2.
-    emotes: list[ChannelPointsEmote]
+    emotes: list[ChannelPointsEmote] | None
         A list of ChannelPointsEmote objects that appear in the text.
 
         - If using V1, this is populated by Twitch.
@@ -3423,7 +3423,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
 
     user_input: str | None
         The text input by the user if the reward requires input. This is `None` when using V2. `text` is the preferred attribute to use.
-    fragments: list[ChatMessageFragment]
+    fragments: list[ChatMessageFragment] | None
         The ordered list of chat message fragments. This is only populated when using V2.
     """
 
@@ -3437,29 +3437,36 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
         )
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.id: str = payload["id"]
-        self.text: str = payload["message"]["text"]
+        message = payload.get("message")
+        self.text: str | None = payload["message"].get("text") if message is not None else None
         self.user_input: str | None = payload.get("user_input")
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
         self.reward: AutoRedeemReward = AutoRedeemReward(payload["reward"])
-        fragments = payload["message"].get("fragments", [])
-        self.fragments: list[ChatMessageFragment] = [ChatMessageFragment(f, http=http) for f in fragments]
-        self._raw_emotes = payload.get("message", {}).get("emotes", [])
+        self.fragments: list[ChatMessageFragment] | None = (
+                [ChatMessageFragment(f, http=http) for f in payload["message"].get("fragments", [])]
+                if message is not None and payload["message"].get("fragments") is not None else None
+        )
+        self._raw_emotes: list[ChannelPointsEmote] | None = payload.get("message", {}).get("emotes", []) if message is not None else None
+
 
     def __repr__(self) -> str:
         return f"<ChannelPointsAutoRedeemAdd broadcaster={self.broadcaster} user={self.user} id={self.id}>"
 
     @property
-    def emotes(self) -> list[ChannelPointsEmote]:
+    def emotes(self) -> list[ChannelPointsEmote] | None:
         if self._raw_emotes:
             return [ChannelPointsEmote(emote) for emote in self._raw_emotes]
-        lengths = [len(frag.text) for frag in self.fragments]
-        offsets = [0, *list(accumulate(lengths))]
+        if self.fragments:
+            lengths = [len(frag.text) for frag in self.fragments]
+            offsets = [0, *list(accumulate(lengths))]
 
-        return [
-            ChannelPointsEmote({"id": frag.emote.id, "begin": offsets[i], "end": offsets[i + 1] - 1})
-            for i, frag in enumerate(self.fragments)
-            if frag.type == "emote" and frag.emote is not None
-        ]
+            return [
+                ChannelPointsEmote({"id": frag.emote.id, "begin": offsets[i], "end": offsets[i + 1] - 1})
+                for i, frag in enumerate(self.fragments)
+                if frag.type == "emote" and frag.emote is not None
+            ]
+        else:
+            return None
 
 
 class CooldownSettings(NamedTuple):
