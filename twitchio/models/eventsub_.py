@@ -3462,6 +3462,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
             if frag.type == "emote" and frag.emote is not None
         ]
 
+
 class CooldownSettings(NamedTuple):
     """
     NamedTuple that represents a custom reward's cooldown settings.
