@@ -3407,7 +3407,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
     id: str
         The ID of the redemption.
     text: str
-        The text of the chat message. Empty for redemptions that do not contain a message (e.g. emote unlocks).
+        The text of the chat message. This will be an empty string for redemptions that do not contain a message (e.g. emote unlocks).
     redeemed_at: datetime.datetime
         The datetime object of when the reward was redeemed.
     reward: AutoRedeemReward
@@ -3415,7 +3415,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
 
         V2 does not cover Power-ups e.g. `gigantify_an_emote`, `celebration`, and `message_effect`.
         Please see ChannelBitsUseSubscription for those specific types if using V2.
-    emotes: list[ChannelPointsEmote] 
+    emotes: list[ChannelPointsEmote]
         A list of ChannelPointsEmote objects that appear in the text. Not populated for redemptions that do not contain a message.
 
         - If using V1, this is populated by Twitch.
@@ -3424,7 +3424,7 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
     user_input: str | None
         The text input by the user if the reward requires input. This is `None` when using V2. `text` is the preferred attribute to use.
     fragments: list[ChatMessageFragment]
-        The ordered list of chat message fragments. This is only populated when using V2 or for redemptions that do not contain a message.
+        The ordered list of chat message fragments. This is only populated when using V2, and only for redemptions that contain a message.
     """
 
     subscription_type = "channel.channel_points_automatic_reward_redemption.add"
@@ -3438,13 +3438,13 @@ class ChannelPointsAutoRedeemAdd(_ResponderEvent):
         self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.id: str = payload["id"]
         message = payload.get("message") or {}
-        self.text: str = message.get("text", "") or ""
+        self.text: str = message.get("text", "")
         self.user_input: str | None = payload.get("user_input")
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
         self.reward: AutoRedeemReward = AutoRedeemReward(payload["reward"])
         fragments = message.get("fragments", [])
         self.fragments: list[ChatMessageFragment] = [ChatMessageFragment(f, http=http) for f in fragments]
-        self._raw_emotes = message.get("emotes", []) 
+        self._raw_emotes = message.get("emotes", [])
 
     def __repr__(self) -> str:
         return f"<ChannelPointsAutoRedeemAdd broadcaster={self.broadcaster} user={self.user} id={self.id}>"
