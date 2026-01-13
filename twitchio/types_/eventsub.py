@@ -948,7 +948,7 @@ class BaseChannelPointsRewardData(TypedDict):
 class ChannelPointsAutoRewardRedemptionEvent(BroadcasterUserEvent):
     id: str
     reward: BaseChannelPointsRewardData
-    message: ChannelPointsMessageData
+    message: ChannelPointsMessageData | None
     user_input: str | None
     redeemed_at: str
 
