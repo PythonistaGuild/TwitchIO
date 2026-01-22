@@ -376,8 +376,8 @@ class PowerUpData(TypedDict):
 
 class ChannelBitsUseEvent(BroadcasterUserEvent):
     bits: int
-    type: Literal["cheer", "power_up"]
-    message: ChatMessageData
+    type: Literal["cheer", "power_up", "combo"]
+    message: ChatMessageData | None
     power_up: PowerUpData | None
 
 
