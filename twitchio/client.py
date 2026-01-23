@@ -58,6 +58,7 @@ if TYPE_CHECKING:
 
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .eventsub.subscriptions import SubscriptionPayload
+    from .ext.overlays import Overlay
     from .http import HTTPAsyncIterator
     from .models.clips import Clip
     from .models.entitlements import Entitlement, EntitlementStatus
@@ -2787,6 +2788,11 @@ class Client:
 
         payload = await self._http.create_conduit(shard_count)
         return Conduit(payload["data"][0], http=self._http)
+
+    def trigger_overlay(self, overlay: Overlay, *, id: str, force: bool = False) -> ...:
+        # FIXME: Starlette and adapter support checks...
+        # TODO: force...
+        self._adapter.trigger_overlay(overlay, id=id)  # type: ignore [Reason: Will Fix]
 
 
 class ConduitInfo:
