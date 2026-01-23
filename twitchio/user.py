@@ -1375,8 +1375,9 @@ class PartialUser:
         """|aiter|
 
         .. warning::
-            This endpoint is deprecated and will stop working on 2025-12-4.
+            This endpoint is deprecated and will stop working on 2026-01-15.
             Please use :meth:`fetch_hype_train_status` instead.
+            This method may be removed in a future release.
 
         Fetches information about the broadcaster's current or most recent Hype Train event.
 
