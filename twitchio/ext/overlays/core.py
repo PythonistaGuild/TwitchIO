@@ -128,10 +128,11 @@ class Overlay:
         data: NodeDataT = {}
         identifier: str = secrets.token_urlsafe(4)
 
+        uri = f"media/{file}" if not str(file).startswith(("http://", "https://")) else file
         data["type"] = "audio"
         data["location"] = str(file)
         data["html_id"] = identifier
-        data["raw"] = f"<audio id='{identifier}'><source src='media/{file}'></audio>"
+        data["raw"] = f"<audio id='{identifier}'><source src='{uri}'></audio>"
 
         node = Node(data)
         self._audio = node
