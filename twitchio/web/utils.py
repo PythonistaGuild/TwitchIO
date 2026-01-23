@@ -28,7 +28,7 @@ import abc
 import hashlib
 import hmac
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypedDict, TypeVar
 
 from aiohttp import web
 
@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from ..authentication import UserTokenPayload
     from ..client import Client
     from ..exceptions import HTTPException
+    from ..ext.overlays import Overlay
     from ..types_.eventsub import EventSubHeaders
 
 
@@ -50,6 +51,19 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 MESSAGE_TYPES = ["notification", "webhook_callback_verification", "revocation"]
+
+
+class TriggerEvent(TypedDict):
+    id: str
+    force: bool
+    overlay: Overlay
+
+
+class SocketMapping(TypedDict):
+    queue: asyncio.Queue[Overlay]
+    sockets: set[web.WebSocketResponse]
+    task: asyncio.Task[None]
+    should_close: bool
 
 
 class FetchTokenPayload:
