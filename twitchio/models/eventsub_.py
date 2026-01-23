@@ -879,7 +879,7 @@ class ChannelBitsUse(_ResponderEvent):
     text: str | None
         The chat message in plain text. Is `None` if no chat message was used.
     fragments: list[ChatMessageFragment]
-        The ordered list of chat message fragments. Is `None` if no chat message was used.
+        The ordered list of chat message fragments. This is only populated for Bits uses that contain a message.
     power_up: PowerUp | None
         Data about Power-up. Is `None` if a Power-up is not used.
     """
@@ -896,7 +896,7 @@ class ChannelBitsUse(_ResponderEvent):
         self.bits: int = int(payload["bits"])
         self.type: Literal["cheer", "power_up", "combo"] = payload["type"]
         message = payload.get("message") or {}
-        self.text: str = message.get("text", "")
+        self.text: str | None = message.get("text")
         power_up = payload.get("power_up")
         self.power_up: PowerUp | None = PowerUp(power_up) if power_up is not None else None
         fragments = message.get("fragments", [])
