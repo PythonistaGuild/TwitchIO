@@ -497,7 +497,7 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
         try:
             socket_mapping = self._sockets[id]
         except KeyError:
-            logger.warning("Attempted to send overlay %r to %s but no connection to %s is available.", overlay, id)
+            logger.warning("Attempted to send overlay %r to %s but no connection is available.", overlay, id)
             return
 
         queue = socket_mapping["queue"]
