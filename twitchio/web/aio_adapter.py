@@ -27,6 +27,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 import logging
+import pathlib
 from collections import deque
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import unquote_plus
@@ -40,6 +41,7 @@ from ..eventsub.subscriptions import _SUB_MAPPING
 from ..exceptions import HTTPException
 from ..models.eventsub_ import SubscriptionRevoked, create_event_instance
 from ..utils import _from_json, parse_timestamp  # type: ignore
+from .html import OVERLAY_HTML
 from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
 
@@ -48,7 +50,9 @@ if TYPE_CHECKING:
 
     from ..authentication import AuthorizationURLPayload, UserTokenPayload, ValidateTokenPayload
     from ..client import Client
+    from ..ext.overlays import Overlay
     from ..types_.eventsub import EventSubHeaders
+    from .utils import SocketMapping
 
 
 __all__ = ("AiohttpAdapter",)
@@ -199,9 +203,14 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
         self.router.add_route("GET", self._redirect_path, self.oauth_callback)
         self.router.add_route("GET", self._oauth_path, self.oauth_redirect)
         self.router.add_route("POST", self._eventsub_path, self.eventsub_callback)
+        self.router.add_route("GET", "/overlays/{id}", self.overlay_callback)
+        self.router.add_route("GET", "/overlays/ws/{id}", self.overlay_ws)
+        self.router.add_route("GET", "/overlays/media/{file}", self.overlay_media)
 
         self._responded: deque[str] = deque(maxlen=5000)
         self._running: bool = False
+
+        self._sockets: dict[str, SocketMapping] = {}
 
     def __init_subclass__(cls: type[AiohttpAdapter[BT]]) -> None:
         return
@@ -235,6 +244,18 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
                     self.__class__.__qualname__,
                     e,
                 )
+
+        for sock_map in self._sockets.values():
+            sockets = sock_map["sockets"]
+
+            sock_map["should_close"] = True
+            try:
+                sock_map["task"].cancel()
+            except Exception as e:
+                logger.debug("An error occurred during cleanup of overlay dispatcher: %s", e)
+
+            for socket in sockets:
+                await socket.close()
 
         if self._runner is not None:
             await self._runner.cleanup()
@@ -471,3 +492,79 @@ class AiohttpAdapter(BaseAdapter[BT], web.Application):
             raise ValueError('"scopes" is a required parameter or attribute which is missing.')
 
         return f"{self._domain}/oauth?scopes={scopes.urlsafe()}&force_verify={str(force_verify).lower()}"
+
+    def trigger_overlay(self, overlay: Overlay, *, id: str) -> None:
+        try:
+            socket_mapping = self._sockets[id]
+        except KeyError:
+            logger.warning("Attempted to send overlay %r to %s but no connection to %s is available.", overlay, id)
+            return
+
+        queue = socket_mapping["queue"]
+        queue.put_nowait(overlay)
+
+    async def overlay_media(self, request: web.Request) -> web.Response | web.FileResponse:
+        file: str = request.match_info["file"]
+        path = pathlib.Path(file)
+
+        if not path.exists() or not path.is_file():
+            return web.Response(text="Unknown File: File could not be found or is not valid.", status=400)
+
+        return web.FileResponse(path)
+
+    async def overlay_callback(self, request: web.Request) -> web.Response:
+        uid: str = request.match_info["id"]
+        domain = self._domain.removeprefix("http://").removeprefix("https://").removesuffix("/")
+
+        proto = "wss://" if self._proto == "https" else "ws://"
+        addr = f"{proto}{domain}/overlays/ws/{uid}"
+
+        # TODO: Timeout...
+        html = OVERLAY_HTML.format(WEBSOCKET_ADDR=f'"{addr}"', TIMEOUT=5000)
+        return web.Response(text=html, content_type="text/html")
+
+    async def _dispatch_overlays(self, id: str) -> None:
+        queue = self._sockets[id]["queue"]
+        sockets = self._sockets[id]["sockets"]
+
+        while True:
+            if self._sockets[id]["should_close"]:
+                break
+
+            overlay = await queue.get()
+            data = overlay.build()
+
+            for socket in sockets:
+                await socket.send_json(data)
+
+            delay = data.get("delay", 5000) / 1000
+            await asyncio.sleep(delay)
+
+    async def overlay_ws(self, request: web.Request) -> web.WebSocketResponse:
+        socket: web.WebSocketResponse = web.WebSocketResponse()
+        await socket.prepare(request)
+
+        uid: str = request.match_info["id"]
+
+        try:
+            self._sockets[uid]["sockets"].add(socket)
+        except (KeyError, AttributeError):
+            self._sockets[uid] = {
+                "queue": asyncio.Queue(),
+                "sockets": {socket},
+                "task": asyncio.create_task(self._dispatch_overlays(uid)),
+                "should_close": False,
+            }
+
+        while self._running:
+            message = await socket.receive()
+
+            if message.type in (web.WSMsgType.close, web.WSMsgType.closing, web.WSMsgType.closed):
+                break
+
+            if message.type == web.WSMsgType.text:
+                logger.debug("Received a payload from overlay websocket: %s", message.data)
+                await socket.pong()
+
+        self._sockets[uid]["sockets"].discard(socket)
+        return socket
