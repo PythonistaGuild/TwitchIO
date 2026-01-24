@@ -27,6 +27,7 @@ Changelog
     - Bug fixes
         - Fix :func:`~twitchio.utils.setup_logging` breaking coloured formatting on `CRITICAL` logging level
         - Fix :class:`~models.eventsub_.ChannelPointsAutoRedeemAdd` now accounts for attribute message in payload to be None
+        - Fix :class:`~models.eventsub_.ChannelBitsUse` now accounts for attribute message in payload to be None
 
 
 3.1.0
