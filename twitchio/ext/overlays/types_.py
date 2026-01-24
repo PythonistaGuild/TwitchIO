@@ -29,7 +29,7 @@ HTMLElementT: TypeAlias = Literal["div", "span", "p"]
 
 
 class NodeDataT(TypedDict, total=False):
-    type: Literal["text", "image", "audio", "html"]
+    type: Literal["text", "image", "audio", "html", "stylesheet"]
     element: HTMLElementT | None
     html_id: str | None
     html_class: str | None

@@ -47,7 +47,7 @@ __all__ = ("Node", "Overlay")
 class Node:
     def __init__(self, data: NodeDataT) -> None:
         self._raw = data
-        self._type: Literal["text", "image", "audio", "html"] = data.get("type", "text")
+        self._type: Literal["text", "image", "audio", "html", "stylesheet"] = data.get("type", "text")
 
         element = data.get("element")
         self._element = HTMLElement(element) if element else None
@@ -57,7 +57,7 @@ class Node:
         self._location = data.get("location")
 
     @property
-    def type(self) -> Literal["text", "image", "audio", "html"]:
+    def type(self) -> Literal["text", "image", "audio", "html", "stylesheet"]:
         return self._type
 
     @property
@@ -76,6 +76,10 @@ class Node:
     def location(self) -> str | None:
         return self._location
 
+    @property
+    def raw(self) -> str | None:
+        return self._raw.get("raw")
+
 
 class Overlay:
     VERSION: ClassVar[int] = 0
@@ -83,6 +87,7 @@ class Overlay:
     def __init__(self, data: OverlayDataT | None = None, *, duration: int = 5000) -> None:
         self._nodes: list[Node] = []
         self._audio: Node | None = None
+        self._stylesheet: Node | None = None
 
         data = data or {}
         nodes = data.get("nodes", [])
@@ -92,6 +97,22 @@ class Overlay:
             self._nodes.append(node)
 
         self._duration = data.get("delay") or duration
+
+    @property
+    def nodes(self) -> list[Node]:
+        return self._nodes.copy()
+
+    @property
+    def audio(self) -> Node | None:
+        return self._audio
+
+    @property
+    def stylesheet(self) -> Node | None:
+        return self._stylesheet
+
+    @property
+    def duration(self) -> int:
+        return self._duration
 
     def add_text(
         self,
@@ -120,26 +141,74 @@ class Overlay:
 
         return self
 
-    def add_image(self) -> ...: ...
+    def add_image(
+        self,
+        file: str | os.PathLike[str],
+        *,
+        html_class: str | None = None,
+        html_id: str | None = None,
+    ) -> Self:
+        data: NodeDataT = {}
 
-    def add_html(self) -> ...: ...
+        uri: str = f"media/{file}" if not str(file).startswith(("http://", "https://")) else str(file)
+        data["type"] = "image"
+        data["location"] = str(file)
+        data["html_class"] = html_class
+        data["html_id"] = html_id
 
-    def set_audio(self, file: str | os.PathLike[str]) -> Self:
+        id_ = f'id="{html_id}" ' if html_id else ""
+        class_ = f'class="{html_class}" ' if html_class else ""
+        data["raw"] = f"<img {id_}{class_}src='{html.escape(uri)}'></img>"
+
+        node = Node(data)
+        self._nodes.append(node)
+
+        return self
+
+    def add_html(self, html: str) -> Self:
+        data: NodeDataT = {}
+
+        data["type"] = "html"
+        data["raw"] = html
+        node = Node(data)
+
+        self._nodes.append(node)
+        return self
+
+    def set_audio(self, file: str | os.PathLike[str], *, duration: int | None = None, loop: bool = False) -> Self:
         data: NodeDataT = {}
         identifier: str = secrets.token_urlsafe(4)
 
-        uri = f"media/{file}" if not str(file).startswith(("http://", "https://")) else file
+        uri: str = f"media/{file}" if not str(file).startswith(("http://", "https://")) else str(file)
+        loop_ = "loop" if loop else ""
+
         data["type"] = "audio"
         data["location"] = str(file)
         data["html_id"] = identifier
-        data["raw"] = f"<audio id='{identifier}'><source src='{uri}'></audio>"
+        data["raw"] = f"<audio id='{identifier}' {loop_}><source src='{html.escape(uri)}'></audio>"
+
+        if duration:
+            self.set_duration(duration)
 
         node = Node(data)
         self._audio = node
 
         return self
 
-    def set_stylesheet(self) -> ...: ...
+    def set_stylesheet(self, file: str | os.PathLike[str]) -> Self:
+        data: NodeDataT = {}
+        identifier: str = secrets.token_urlsafe(4)
+
+        uri: str = f"media/{file}" if not str(file).startswith(("http://", "https://")) else str(file)
+        data["type"] = "stylesheet"
+        data["location"] = str(file)
+        data["html_id"] = identifier
+        data["raw"] = f"<link id='{identifier}' rel='stylesheet' href='{html.escape(uri)}'>"
+
+        node = Node(data)
+        self._stylesheet = node
+
+        return self
 
     def set_duration(self, value: int, /) -> Self:
         self._duration = value
@@ -153,7 +222,10 @@ class Overlay:
             nodes.append(node._raw)
 
         if self._audio:
-            nodes.append(self._audio._raw)
+            nodes.insert(0, self._audio._raw)
+
+        if self._stylesheet:
+            nodes.insert(0, self._stylesheet._raw)
 
         return data
 

@@ -65,12 +65,18 @@ OVERLAY_HTML = """<html>
                 sock.addEventListener("message", (e) => {{
                     const data = JSON.parse(e.data);
                     let nodes = data["nodes"];
-                    let delay = data["duration"];
+                    let delay = data["delay"];
+                    let ssId = null;
 
                     let container = document.getElementById("container");
 
                     for (let node of nodes) {{
-                        console.log(node["raw"]);
+                        if (node["type"] === "stylesheet") {{
+                            document.head.insertAdjacentHTML("beforeend", node["raw"]);
+                            ssId = node["html_id"];
+                            continue;
+                        }};
+
                         container.insertAdjacentHTML("beforeend", node["raw"]);
 
                         if (node["type"] === "audio") {{
@@ -78,12 +84,19 @@ OVERLAY_HTML = """<html>
                             audio.play();
                         }};
                     }};
+
+                    setTimeout(clearOverlay, delay, ssId);
                 }});
             }};
 
-            const clearOverlay = () => {{
+            const clearOverlay = (stylesheet) => {{
                 let container = document.getElementById("container");
                 container.innerHTML = "";
+
+                if (stylesheet !== null) {{
+                   let el = document.getElementById(stylesheet);
+                   el.remove();
+                }};
             }};
 
             const clearReconnect = () => {{
