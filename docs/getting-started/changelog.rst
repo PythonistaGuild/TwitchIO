@@ -6,7 +6,7 @@
 Changelog
 ##########
 
-3.2.0b
+3.2.0
 ======
 - twitchio
     - Additions
