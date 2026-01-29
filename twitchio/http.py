@@ -891,7 +891,7 @@ class HTTPClient:
 
         if background_color:
             if isinstance(background_color, Colour):
-                background_color = str(background_color)
+                background_color = background_color.html
             data["background_color"] = background_color
 
         if max_per_stream:
