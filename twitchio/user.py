@@ -474,19 +474,6 @@ class PartialUser:
         .. note::
             Requires user access token that includes the ``channel:manage:broadcast`` scope.
 
-        Examples
-        --------
-        .. code:: python3
-
-            import twitchio
-
-            users: list[ChannelInfo] = await client.fetch_channels([21734222])
-
-            msg_checks: list[AutomodCheckMessage]  = [AutomodCheckMessage(id="1234", text="Some Text"), AutomodCheckMessage(id="12345", text="Some More Text")]
-
-            checks: list[AutoModStatus] = await users[0].check_automod_status(messages=msg_checks, token_for="21734222")
-
-
         Parameters
         -----------
         game_id: str | None
@@ -1768,6 +1755,18 @@ class PartialUser:
 
         .. note::
             Requires a user access token that includes the ``moderation:read`` scope.
+
+        Examples
+        --------
+        .. code:: python3
+
+            my_user_id = "21734222"
+            user = await client.fetch_user(id=my_user_id)
+
+            msg_checks: list[AutomodCheckMessage]  = [AutomodCheckMessage(id="1234", text="Some Text"), AutomodCheckMessage(id="12345", text="Some More Text")]
+
+            checks: list[AutoModStatus] = await user.check_automod_status(messages=msg_checks, token_for=my_user_id)
+
 
         Parameters
         ----------
