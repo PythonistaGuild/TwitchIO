@@ -37,6 +37,7 @@ Changelog
         - Fix some typing issues with adapters in :class:`~twitchio.Client`.
         - Fixed a bug causing conduit websockets to be treated as eventsub websockets and fail after a reconnect attempt.
         - Fixed incorrect documentation in :func:`~twitchio.PartialUser.fetch_moderators`.
+        - Fix :class:`~models.eventsub_.BaseHypeTrain` now returns empty list for shared_train_participants if not shared_train.
 
 
 3.1.0
