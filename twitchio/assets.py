@@ -387,3 +387,6 @@ class Asset:
             fp.seek(0)
 
         return fp
+
+
+class ClipAsset(Asset): ...
