@@ -66,7 +66,7 @@ if TYPE_CHECKING:
 
     from twitchio.types_.responses import ConduitPayload
 
-    from .assets import Asset
+    from .assets import Asset, ClipAsset
     from .eventsub.enums import SubscriptionType
     from .models.channel_points import CustomReward
     from .models.moderation import AutomodCheckMessage, AutomodSettings
@@ -1349,6 +1349,19 @@ class HTTPClient:
 
         route: Route = Route("POST", "clips", params=params, token_for=token_for)
         return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_clips_download(
+        self,
+        *,
+        editor_id: str | PartialUser,
+        broadcaster_id: str | PartialUser,
+        clip_id: str,
+    ) -> ClipAsset:
+        params = {"editor_id": editor_id, "broadcaster_id": broadcaster_id, "clip_id": clip_id}
+        route: Route = Route("GET", "clips/downloads", params=params, token_for=editor_id)
+
+        data = await self.request_json(route)
 
     ### Conduits ###
 
