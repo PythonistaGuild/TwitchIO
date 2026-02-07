@@ -424,7 +424,7 @@ class SuspiciousChatUser:
         ] = data["types"]
 
     def __repr__(self) -> str:
-        return f"<SuspiciousChatUser user={self.user} broadcaster={self.broadcaster} moderator={self.moderator} updated_at={self.updated_at} status={self.status} types={self.types}>"
+        return f"<SuspiciousChatUser user={self.user!r} broadcaster={self.broadcaster!r} moderator={self.moderator!r} updated_at={self.updated_at} status={self.status} types={self.types}>"
 
 
 class Warning:
