@@ -7,7 +7,7 @@ Changelog
 ##########
 
 3.3.0b
-
+=======
 - twitchio
     - Additions
         - Added - :class:`~twitchio.SuspiciousChatUser` model.
