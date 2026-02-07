@@ -14,6 +14,12 @@ Changelog
         - Added - :func:`~twitchio.PartialUser.add_suspicious_chat_user` to :class:`~twitchio.PartialUser`.
         - Added - :func:`~twitchio.PartialUser.remove_suspicious_chat_user` to :class:`~twitchio.PartialUser`.
 
+3.2.1
+======
+- twitchio
+    - Bug fixes
+        - Creating a Custom Reward with background_color now uses correct HTML Hex.
+
 3.2.0
 ======
 - twitchio
