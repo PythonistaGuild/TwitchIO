@@ -2015,8 +2015,6 @@ class HTTPClient:
         data = {"user_id": user_id, "status": status}
 
         route: Route = Route("POST", "moderation/suspicious_users", params=params, json=data, token_for=token_for)
-        print(f"{route.params=}")
-        print(f"{route.json=}")
         return await self.request_json(route)
 
     @handle_user_ids()
