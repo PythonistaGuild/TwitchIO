@@ -362,6 +362,11 @@
 .. autoclass:: twitchio.StreamMarker
     :members:
 
+.. attributetable:: twitchio.SuspiciousChatUser
+
+.. autoclass:: twitchio.SuspiciousChatUser
+    :members:
+
 .. attributetable:: twitchio.VideoMarkers
 
 .. autoclass:: twitchio.VideoMarkers

@@ -143,6 +143,7 @@ if TYPE_CHECKING:
         StreamKeyResponse,
         StreamMarkersResponseData,
         StreamsResponseData,
+        SuspiciousChatUserResponse,
         TeamsResponse,
         TopGamesResponseData,
         UnbanRequestsResponseData,
@@ -1999,6 +2000,34 @@ class HTTPClient:
         data = {"data": {"user_id": user_id, "reason": reason}}
 
         route: Route = Route("POST", "moderation/warnings", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def post_add_suspicious_chat_user(
+        self,
+        broadcaster_id: str | int | PartialUser,
+        moderator_id: str | int | PartialUser,
+        user_id: str | int | PartialUser,
+        status: Literal["ACTIVE_MONITORING", "RESTRICTED"],
+        token_for: str | PartialUser | None = None,
+    ) -> SuspiciousChatUserResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+        data = {"user_id": user_id, "status": status}
+
+        route: Route = Route("POST", "moderation/suspicious_users", params=params, json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_suspicious_chat_user(
+        self,
+        broadcaster_id: str | int | PartialUser,
+        moderator_id: str | int | PartialUser,
+        user_id: str | int | PartialUser,
+        token_for: str | PartialUser | None = None,
+    ) -> SuspiciousChatUserResponse:
+        params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "user_id": user_id}
+
+        route: Route = Route("DELETE", "moderation/suspicious_users", params=params, token_for=token_for)
         return await self.request_json(route)
 
     ### Polls ###

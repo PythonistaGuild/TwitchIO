@@ -65,6 +65,7 @@ if TYPE_CHECKING:
         BannedUser,
         BlockedTerm,
         ShieldModeStatus,
+        SuspiciousChatUser,
         Timeout,
         UnbanRequest,
         Warning,
@@ -2582,6 +2583,11 @@ class PartialUser:
         active: bool
             A Boolean value that determines whether to activate Shield Mode.
             Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
+
+        Returns
+        -------
+        ShieldModeStatus
+            A ShieldModeStatus object.
         """
 
         from .models.moderation import ShieldModeStatus
@@ -2611,12 +2617,88 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
             This ID must match the user ID in the access token.
+
+        Returns
+        -------
+        ShieldModeStatus
+            A ShieldModeStatus object.
         """
 
         from .models.moderation import ShieldModeStatus
 
         data = await self._http.get_shield_mode_status(broadcaster_id=self.id, moderator_id=moderator, token_for=moderator)
         return ShieldModeStatus(data["data"][0], http=self._http)
+
+    async def add_suspicious_chat_user(
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        user: str | int | PartialUser,
+        status: Literal["ACTIVE_MONITORING", "RESTRICTED"],
+        token_for: str | None = None,
+    ) -> SuspiciousChatUser:
+        """|coro|
+
+        Adds a suspicious user status to a chatter on the broadcaster's channel.
+
+        .. note::
+           Requires an app access token or user access token that includes the ``moderator:manage:suspicious_users`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
+        user: str | int | PartialUser
+            The ID, or PartialUser, of the user being given the suspicious status.
+        status: Literal["ACTIVE_MONITORING", "RESTRICTED"]
+            The type of suspicious status. Possible values are: ``ACTIVE_MONITORING`` and ``RESTRICTED``.
+        token_for: str | PartialUser | None
+            An optional user token, if you do not wish to use the app access token. This must be the same ID as the moderator and requires the ``moderator:manage:suspicious_users`` scope.
+        Returns
+        -------
+        SuspiciousChatUser
+            A SuspiciousChatUser object.
+
+        """
+
+        from .models.moderation import SuspiciousChatUser
+
+        data = await self._http.post_add_suspicious_chat_user(
+            broadcaster_id=self.id, moderator_id=moderator, user_id=user, status=status, token_for=token_for
+        )
+        return SuspiciousChatUser(data["data"][0], http=self._http)
+
+    async def remove_suspicious_chat_user(
+        self, *, moderator: str | int | PartialUser, user: str | int | PartialUser, token_for: str | None = None
+    ) -> SuspiciousChatUser:
+        """|coro|
+
+        Removes a suspicious user status from a chatter on the broadcaster's channel.
+
+        .. note::
+           Requires an app access token or user access token that includes the ``moderator:manage:suspicious_users`` scope.
+
+        Parameters
+        ----------
+        moderator: str | int | PartialUser
+            The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
+        user: str | int | PartialUser
+            The ID, or PartialUser, of the user being given the suspicious status.
+        token_for: str | PartialUser | None
+            An optional user token, if you do not wish to use the app access token. This must be the same ID as the moderator and requires the ``moderator:manage:suspicious_users`` scope.
+        Returns
+        -------
+        SuspiciousChatUser
+            A SuspiciousChatUser object.
+
+        """
+
+        from .models.moderation import SuspiciousChatUser
+
+        data = await self._http.delete_suspicious_chat_user(
+            broadcaster_id=self.id, moderator_id=moderator, user_id=user, token_for=token_for
+        )
+        return SuspiciousChatUser(data["data"][0], http=self._http)
 
     def fetch_polls(
         self,

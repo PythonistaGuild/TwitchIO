@@ -206,6 +206,8 @@ class Scopes(metaclass=_ScopeMeta):
         Equivalent to the ``moderator:manage:shoutouts`` scope on Twitch.
     moderator_read_suspicious_users
         Equivalent to the ``moderator:read:suspicious_users`` scope on Twitch.
+    moderator_manage_suspicious_users
+        Equivalent to the ``moderator:manage:suspicious_users`` scope on Twitch.
     moderator_read_unban_requests
         Equivalent to the ``moderator:read:unban_requests`` scope on Twitch.
     moderator_manage_unban_requests
@@ -316,6 +318,7 @@ class Scopes(metaclass=_ScopeMeta):
     moderator_read_shoutouts = _scope_property()
     moderator_manage_shoutouts = _scope_property()
     moderator_read_suspicious_users = _scope_property()
+    moderator_manage_suspicious_users = _scope_property()
     moderator_read_unban_requests = _scope_property()
     moderator_manage_unban_requests = _scope_property()
     moderator_read_vips = _scope_property()
