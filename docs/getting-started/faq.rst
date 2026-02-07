@@ -150,3 +150,10 @@ This is usually caused by force closing the client while it is attempting to wri
 your client, make sure you only do this once, and wait for up to ``5`` seconds.
 
 Alternatively, and highly recommended, you should look at storing your tokens in a different medium, such as a SQL Database.
+
+
+What is the default redirect URL for oauth?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The default redirect url to be provided in your `Twitch Developer Console <https://dev.twitch.tv/console>`_ is http://localhost:4343/oauth/callback
+
+Keep in mind that this should be adjusted if you change the address, port or use a custom domain with your adapter.

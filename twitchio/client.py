@@ -3538,7 +3538,20 @@ class AutoClient(Client):
         # Maybe need an additional bool; will need feedback?
         if self._initial_subs:
             logger.info("Attempting to do an initial subscription on new conduit: %r.", self._conduit_info)
-            await self._multi_sub(self._initial_subs, stop_on_error=False)
+            payload = await self._multi_sub(self._initial_subs, stop_on_error=False)
+
+            errors: int = 0
+            for data in payload.errors:
+                if data.error.status != 409:
+                    errors += 1
+
+            if errors:
+                msg = (
+                    "An error(s) occurred during subscriptions to %r: %d/%d subscriptions failed. Check the users have"
+                    "been properly authorized. You can safely ignore this warning if you plan to authorize and subscribe later."
+                )
+                logger.warning(msg, self._conduit_info, errors, len(self._initial_subs))
+
             self._subbed = True
 
         return new

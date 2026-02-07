@@ -874,12 +874,12 @@ class ChannelBitsUse(_ResponderEvent):
         The redeeming user.
     bits: int
         The number of Bits used.
-    type: typing.Literal["cheer", "power_up"]
+    type: typing.Literal["cheer", "power_up", "combo"]
         What the Bits were used for.
     text: str | None
         The chat message in plain text. Is `None` if no chat message was used.
     fragments: list[ChatMessageFragment]
-        The ordered list of chat message fragments. Is `None` if no chat message was used.
+        The ordered list of chat message fragments. This is only populated for Bits uses that contain a message.
     power_up: PowerUp | None
         Data about Power-up. Is `None` if a Power-up is not used.
     """
@@ -894,13 +894,13 @@ class ChannelBitsUse(_ResponderEvent):
         )
         self.user = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.bits: int = int(payload["bits"])
-        self.type: Literal["cheer", "power_up"] = payload["type"]
-        self.text: str | None = payload.get("message").get("text")
+        self.type: Literal["cheer", "power_up", "combo"] = payload["type"]
+        message = payload.get("message") or {}
+        self.text: str | None = message.get("text")
         power_up = payload.get("power_up")
         self.power_up: PowerUp | None = PowerUp(power_up) if power_up is not None else None
-        self.fragments: list[ChatMessageFragment] = [
-            ChatMessageFragment(fragment, http=http) for fragment in payload["message"]["fragments"]
-        ]
+        fragments = message.get("fragments", [])
+        self.fragments: list[ChatMessageFragment] = [ChatMessageFragment(f, http=http) for f in fragments]
 
     def __repr__(self) -> str:
         return f"<ChannelBitsUse broadcaster={self.broadcaster} user={self.user} bits={self.bits} type={self.type}>"

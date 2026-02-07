@@ -58,7 +58,7 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class Bot(Mixin[None], Client):
+class Bot(Mixin[Any], Client):
     """The TwitchIO ``commands.Bot`` class.
 
     The Bot is an extension of and inherits from :class:`twitchio.Client` and comes with additonal powerful features for

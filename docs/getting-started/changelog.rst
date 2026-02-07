@@ -6,27 +6,37 @@
 Changelog
 ##########
 
-3.2.0b
+3.2.0
 ======
 - twitchio
     - Additions
-        - Added - :class:`~twitchio.UserAuthorisation` model
-        - Added - :func:`~twitchio.Client.fetch_auth_by_users` to :class:`~twitchio.Client`
-        - Added - :func:`~twitchio.PartialUser.fetch_auth` to :class:`~twitchio.PartialUser`
+        - Added - :class:`~twitchio.UserAuthorisation` model.
+        - Added - :func:`~twitchio.Client.fetch_auth_by_users` to :class:`~twitchio.Client`.
+        - Added - :func:`~twitchio.PartialUser.fetch_auth` to :class:`~twitchio.PartialUser`.
         - Added - :func:`~twitchio.PartialUser.fetch_stream` to :class:`~twitchio.PartialUser` as a helper method.
         - Added - :func:`~twitchio.PartialUser.fetch_hype_train_status` to :class:`~twitchio.PartialUser`. 
-            This replaces :func:`~twitchio.PartialUser.fetch_hype_train_events` which has been deprecated
-        - Added - :attr:`~twitchio.Chatter.lead_moderator`
-        - Added - :func:`~twitchio.ext.commands.is_lead_moderator` guard
-        - Added - New optional title and duration arguments for :func:`~twitchio.PartialUser.create_clip`
+            This replaces :func:`~twitchio.PartialUser.fetch_hype_train_events` which has been deprecated.
+        - Added - :attr:`~twitchio.Chatter.lead_moderator`.
+        - Added - :func:`~twitchio.ext.commands.is_lead_moderator` guard.
+        - Added - New optional title and duration arguments for :func:`~twitchio.PartialUser.create_clip`.
+        - Added - :func:`twitchio.ChatMessage.delete` method.
+        - Added - :func:`twitchio.Chatter.delete_message` method.
+        - Added - ``client`` keyword-only argument to web adapters; allowing adapters to have a :class:`~twitchio.Client` available at initialization.
+        - Added - web adapters are now ``Generic`` and accept a :class:`~twitchio.Client` or any derivative/subclass.
+        - Added - :func:`twitchio.Scopes.from_url` classmethod.
+        - Added the ``oauth_path`` and ``redirect_path`` arguments to web adapters.
 
     - Changes
         - :attr:`~twitchio.Chatter.moderator` returns True for Lead Moderator role.
         - :func:`~twitchio.PartialUser.create_clip` `has_delay` argument has been deprecated.
 
     - Bug fixes
-        - Fix :func:`~twitchio.utils.setup_logging` breaking coloured formatting on `CRITICAL` logging level
-        - Fix :class:`~models.eventsub_.ChannelPointsAutoRedeemAdd` now accounts for attribute message in payload to be None
+        - Fix :func:`~twitchio.utils.setup_logging` breaking coloured formatting on ``CRITICAL`` logging level.
+        - Fix :class:`~models.eventsub_.ChannelPointsAutoRedeemAdd` now accounts for attribute message in payload to be None.
+        - Fix :class:`~models.eventsub_.ChannelBitsUse` now accounts for attribute message in payload to be None.
+        - Fix some typing issues with adapters in :class:`~twitchio.Client`.
+        - Fixed a bug causing conduit websockets to be treated as eventsub websockets and fail after a reconnect attempt.
+        - Fixed incorrect documentation in :func:`~twitchio.PartialUser.fetch_moderators`.
 
 
 3.1.0

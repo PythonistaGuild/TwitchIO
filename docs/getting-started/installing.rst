@@ -10,17 +10,17 @@ TwitchIO 3 currently supports the following `Python <https://www.python.org/down
 +-----------------------------+-------------------------------------------------------+-------------------------------+
 | Python Version              | Status                                                | Notes                         |
 +=============================+=======================================================+===============================+
-| **<= 3.10**                 | .. raw:: html                                         | ...                           |
-|                             |                                                       |                               |
+| **<= 3.10**                 | .. raw:: html                                         | Versions **3.10** or under    |
+|                             |                                                       | are not supported.            |
 |                             |   <span class="error-tio">Not Supported</span>        |                               |
 |                             |                                                       |                               |
 +-----------------------------+-------------------------------------------------------+-------------------------------+
-| **3.11, 3.12, 3.13**        | .. raw:: html                                         | ...                           |
-|                             |                                                       |                               |
+| **3.11, 3.12, 3.13, 3.14**  | .. raw:: html                                         | These versions have been      |
+|                             |                                                       | tested and are supported.     |
 |                             |   <span class="success-tio">Fully Supported</span>    |                               |
 |                             |                                                       |                               |
 +-----------------------------+-------------------------------------------------------+-------------------------------+
-| **3.14**                    | .. raw:: html                                         | May require custom index      |
+| **3.15**                    | .. raw:: html                                         | May require custom index      |
 |                             |                                                       |                               |
 |                             |   <span class="warn-tio">Check Notes</span>           |                               |
 |                             |                                                       |                               |
@@ -134,7 +134,7 @@ The following commands can be used to install TwitchIO with optional features:
 Custom Index
 ============
 
-Using TwitchIO with ``Python >= 3.14`` may require the use of a custom pip index.
+Using TwitchIO with ``Python >= 3.15`` may require the use of a custom pip index.
 The index allows pip to fetch pre-built wheels for some dependencies that may require build-tools for C/C++ due to not having released their own wheels for recent versions of Python.
 
 Usually with time, dependencies will eventually release wheels for new Python releases.
