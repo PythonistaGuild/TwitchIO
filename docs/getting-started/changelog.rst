@@ -6,6 +6,14 @@
 Changelog
 ##########
 
+3.3.0b
+
+- twitchio
+    - Additions
+        - Added - :class:`~twitchio.SuspiciousChatUser` model.
+        - Added - :func:`~twitchio.PartialUser.add_suspicious_chat_user` to :class:`~twitchio.PartialUser`.
+        - Added - :func:`~twitchio.PartialUser.remove_suspicious_chat_user` to :class:`~twitchio.PartialUser`.
+
 3.2.0
 ======
 - twitchio
