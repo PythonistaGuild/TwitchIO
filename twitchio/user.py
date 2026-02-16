@@ -222,7 +222,8 @@ class PartialUser:
         Parameters
         -----------
         token_for: str | PartialUser
-            A user access token that includes the ``analytics:read:extensions`` scope.
+            The user ID (or PartialUser) whose user access token should be used for this request.
+            The token must include the ``analytics:read:extensions`` scope.
         extension_id: str
             The extension's client ID. If specified, the response contains a report for the specified extension.
             If not specified, the response includes a report for each extension that the authenticated user owns.
@@ -286,12 +287,13 @@ class PartialUser:
             If not, the API ignores your end date and uses an end date that is today minus one to two days.
 
         .. note::
-            Requires user access token that includes the ``analytics:read:extensions`` scope.
+            Requires user access token that includes the ``analytics:read:games`` scope.
 
         Parameters
         -----------
         token_for: str | PartialUser
-            A user access token that includes the ``analytics:read:extensions`` scope.
+            The user ID (or PartialUser) whose user access token should be used for this request.
+            The token must include the ``analytics:read:games`` scope.
         game_id: str
             The game's client ID. If specified, the response contains a report for the specified game.
             If not specified, the response includes a report for each of the authenticated user's games.
@@ -426,7 +428,7 @@ class PartialUser:
         Parameters
         -----------
         token_for: str | PartialUser | None
-            An optional user token to use instead of the default app token.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
 
         Returns
         --------
@@ -594,7 +596,8 @@ class PartialUser:
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | PartialUser | None
-            An optional user token, for a moderator, to use instead of the User's token that this method is called on.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            This should usually be the moderator's ID (matching the user in the access token).
 
 
         Returns
@@ -829,7 +832,8 @@ class PartialUser:
         Parameters
         ----------
         token_for: str | PartialUser | None
-            An optional user token to use instead of the default app token.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -887,7 +891,8 @@ class PartialUser:
         Parameters
         ----------
         token_for: str | PartialUser | None
-            An optional user token to use instead of the default app token.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
 
         Returns
         --------
@@ -918,9 +923,10 @@ class PartialUser:
             If you specify this field, this ID must match the user ID in the user access token.
 
         token_for: str | PartialUser | None
-            If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you will provide a token for the user in ``moderator``.
+            If you need the response to contain ``non_moderator_chat_delay`` and ``non_moderator_chat_delay_duration`` then you must provide the user ID (or PartialUser)
+            for the user in ``moderator`` so a managed user token can be selected.
             The required scope is ``moderator:read:chat_settings``.
-            Otherwise it is an optional user token to use instead of the default app token.
+            Otherwise it is an optional user ID (or PartialUser) used to select a managed user token for this request.
 
         Returns
         -------
@@ -1039,7 +1045,8 @@ class PartialUser:
         Parameters
         ----------
         token_for: str | PartialUser | None
-            An optional user token to use instead of the default app token.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
 
         Returns
         --------
@@ -1076,8 +1083,8 @@ class PartialUser:
             The announcement to make in the broadcaster's chat room. Announcements are limited to a maximum of 500 characters;
             announcements longer than 500 characters are truncated.
         color: Literal["blue", "green", "orange", "purple", "primary"] | None
-            An optional colour to use for the announcement. If set to ``"primary``" or `None`
-            the channels accent colour will be used instead. Defaults to `None`.
+            An optional colour to use for the announcement. If set to ``"primary``" or ``None``
+            the channels accent colour will be used instead. Defaults to ``None``.
         """
         return await self._http.post_chat_announcement(
             broadcaster_id=self.id, moderator_id=moderator, token_for=moderator, message=message, color=color
@@ -1149,8 +1156,9 @@ class PartialUser:
         sender: str | int | PartialUser
             The ID, or PartialUser, of the user sending the message. This ID must match the user ID in the user access token.
         token_for: str | PartialUser | None
-            User access token that includes the ``user:write:chat`` scope.
-            You can use an App Access Token which additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
+            The user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
+            You can use an App Access Token which additionally requires ``user:bot scope`` from chatting user auth scopes, and either ``channel:bot scope`` from broadcaster or moderator status.
         reply_to_message_id: str | None
             The ID of the chat message being replied to.
         source_only: bool | None
@@ -1266,7 +1274,8 @@ class PartialUser:
             This has been been removed by Twitch and no longer has any effect.
             It has been retained to avoid breaking changes for users who still have it set.
         token_for: str | PartialUser
-            User access token that includes the ``clips:edit`` scope.
+            The user ID (or PartialUser) used to select a managed user token for this request.
+            The token must include the ``clips:edit`` scope.
 
         Returns
         -------
@@ -1312,7 +1321,8 @@ class PartialUser:
             If False, returns only clips that aren't featured.
             All clips are returned if this parameter is not provided.
         token_for: str | PartialUser | None
-            An optional user token to use instead of the default app token.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
         first: int
             Maximum number of items to return per page. Default is 20.
             Min is 1 and Max is 100.
@@ -1487,7 +1497,8 @@ class PartialUser:
         start_time: datetime.datetime | None
             The datetime of when to start returning segments from the schedule. This can be timezone aware.
         token_for: str | PartialUser | None
-            An optional token to use instead of the default app token.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
         first: int
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 25 items per page. The default is 20.
@@ -1717,7 +1728,8 @@ class PartialUser:
         Parameters
         ----------
         token_for: str | PartialUser | None
-            An optional user token to use instead of the default app token.
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -1973,12 +1985,12 @@ class PartialUser:
             An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
             You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
 
-            If `None`, the ID of this :class:`~twitchio.PartialUser` will be used.
+            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
         user: str | PartialUser
             The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to `None`.
+            ``500`` characters long. Defaults to ``None``.
 
         Raises
         ------
@@ -2029,12 +2041,12 @@ class PartialUser:
             An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
             You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
 
-            If `None`, the ID of this :class:`~twitchio.PartialUser` will be used.
+            If ``None``, the ID of this :class:`~twitchio.PartialUser` will be used.
         user: str | PartialUser
             The ID of, or the :class:`~twitchio.PartialUser` of the user to ban.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to `None`.
+            ``500`` characters long. Defaults to ``None``.
         duration: int
             The duration of the timeout in seconds. The minimum duration is ``1`` second and the
             maximum is ``1_209_600`` seconds (2 weeks).
@@ -2346,8 +2358,6 @@ class PartialUser:
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
-        token_for: str | PartialUser
-            User access token that includes the ``moderator:manage:chat_messages`` scope.
         message_id: str
             The ID of the message to remove.
         """
@@ -2635,7 +2645,7 @@ class PartialUser:
         moderator: str | int | PartialUser,
         user: str | int | PartialUser,
         status: Literal["ACTIVE_MONITORING", "RESTRICTED"],
-        token_for: str | None = None,
+        token_for: str | PartialUser | None = None,
     ) -> SuspiciousChatUser:
         """|coro|
 
@@ -2653,7 +2663,9 @@ class PartialUser:
         status: Literal["ACTIVE_MONITORING", "RESTRICTED"]
             The type of suspicious status. Possible values are: ``ACTIVE_MONITORING`` and ``RESTRICTED``.
         token_for: str | PartialUser | None
-            An optional user token, if you do not wish to use the app access token. This must be the same ID as the moderator and requires the ``moderator:manage:suspicious_users`` scope.
+            Optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
+            If provided, this should match the user in ``moderator`` and the token must include the ``moderator:manage:suspicious_users`` scope.
         Returns
         -------
         SuspiciousChatUser
@@ -2669,7 +2681,11 @@ class PartialUser:
         return SuspiciousChatUser(data["data"][0], http=self._http)
 
     async def remove_suspicious_chat_user(
-        self, *, moderator: str | int | PartialUser, user: str | int | PartialUser, token_for: str | None = None
+        self,
+        *,
+        moderator: str | int | PartialUser,
+        user: str | int | PartialUser,
+        token_for: str | PartialUser | None = None,
     ) -> SuspiciousChatUser:
         """|coro|
 
@@ -2685,7 +2701,9 @@ class PartialUser:
         user: str | int | PartialUser
             The ID, or PartialUser, of the user being given the suspicious status.
         token_for: str | PartialUser | None
-            An optional user token, if you do not wish to use the app access token. This must be the same ID as the moderator and requires the ``moderator:manage:suspicious_users`` scope.
+            Optional user ID (or PartialUser) used to select a managed user token for this request.
+            If ``None``, the default app token is used.
+            If provided, this should match the user in ``moderator`` and The token must include the ``moderator:manage:suspicious_users`` scope.
         Returns
         -------
         SuspiciousChatUser
@@ -3420,7 +3438,8 @@ class PartialUser:
         Parameters
         ----------
         token_for: str | PartialUser | None
-            Optional user access token. To include extensions that you have under development, you must specify a user access token that includes the ``user:read:broadcast`` or ``user:edit:broadcast`` scope.
+            Optional user ID (or PartialUser) used to select a managed user token for this request.
+            To include extensions under development, The token must include the ``user:read:broadcast`` or ``user:edit:broadcast`` scope.
 
         Returns
         -------
@@ -3597,7 +3616,7 @@ class PartialUser:
     async def fetch_stream(self) -> Stream | None:
         """|coro|
 
-        Fetches the current stream for this broadcaster / user. If the broadcaster is not streaming then it will return `None`.
+        Fetches the current stream for this broadcaster / user. If the broadcaster is not streaming then it will return ``None``.
 
         Returns
         -------
@@ -3996,7 +4015,7 @@ class Chatter(PartialUser):
 
         There is an alias for this property named :attr:`.color`.
 
-        Could be `None` if the chatter has not set a colour.
+        Could be ``None`` if the chatter has not set a colour.
         """
         return self._colour
 
@@ -4006,7 +4025,7 @@ class Chatter(PartialUser):
 
         There is an alias for this property named :attr:`.colour`.
 
-        Could be `None` if the chatter has not set a color.
+        Could be ``None`` if the chatter has not set a color.
         """
         return self._colour
 
@@ -4034,7 +4053,7 @@ class Chatter(PartialUser):
             token stored with the ``moderator:manage:banned_users`` scope for this moderator.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to `None`.
+            ``500`` characters long. Defaults to ``None``.
 
         Raises
         ------
@@ -4087,7 +4106,7 @@ class Chatter(PartialUser):
             The default is ``600`` which is ten minutes.
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
-            ``500`` characters long. Defaults to `None`.
+            ``500`` characters long. Defaults to ``None``.
         """
         if reason and len(reason) > 500:
             raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
@@ -4196,7 +4215,7 @@ class Chatter(PartialUser):
     async def follow_info(self) -> ChannelFollowerEvent | None:
         """|coro|
 
-        Check whether this Chatter is following the broadcaster. If the user is not following then this will return `None`.
+        Check whether this Chatter is following the broadcaster. If the user is not following then this will return ``None``.
 
         .. important::
             You must have a user token for the broadcaster / channel that this chatter is being checked in.

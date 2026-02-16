@@ -114,7 +114,7 @@ class Video:
         Parameters
         -----------
         token_for: str
-            A user oauth token with the ``channel:manage:videos`` scope.
+            User ID (or PartialUser) with the ``channel:manage:videos`` scope.
         """
         await self._http.delete_videos(ids=[self.id], token_for=token_for)
 

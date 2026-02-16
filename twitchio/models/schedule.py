@@ -142,8 +142,6 @@ class ScheduleSegment:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:schedule`` scope.
         start_time: datetime.datetime | None
             The datetime that the broadcast segment starts. This can be timezone aware.
         duration: int | None
@@ -200,8 +198,6 @@ class ScheduleSegment:
 
         Parameters
         ----------
-        token_for: str | PartialUser
-            User access token that includes the ``channel:manage:schedule`` scope.
         """
         return await self._http.delete_channel_stream_schedule_segment(
             broadcaster_id=self._broadcaster_id, id=self.id, token_for=self._broadcaster_id
