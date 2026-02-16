@@ -1149,7 +1149,8 @@ class PartialUser:
         sender: str | int | PartialUser
             The ID, or PartialUser, of the user sending the message. This ID must match the user ID in the user access token.
         token_for: str | PartialUser | None
-            The user ID for looking up the access token that includes the ``user:write:chat`` scope.
+            The User ID that will be used to gather a token for authentication.
+            Note that the access token of this user id should includes the ``user:write:chat`` scope.
             You can use an App Access Token which additionally requires ``user:bot scope`` from chatting user, and either ``channel:bot scope`` from broadcaster or moderator status.
         reply_to_message_id: str | None
             The ID of the chat message being replied to.
