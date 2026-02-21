@@ -1192,7 +1192,8 @@ class ChatMessageEmote:
         Parameters
         ----------
         token_for : str | PartialUser | None
-            An optional user token to use instead of the default app token.
+            An optional User ID (or PartialUser) used to select a managed user token for this request.
+            If `None`, the default app token is used.
 
         Returns
         -------
@@ -3887,7 +3888,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         Parameters
         -----------
         token_for: str | PartialUser
-            The user's token that has permission manage the broadcaster's reward redemptions.
+            The user ID (or PartialUser) that has permission manage the broadcaster's reward redemptions.
 
         Returns
         --------
@@ -3916,7 +3917,7 @@ class ChannelPointsRedemptionAdd(BaseChannelPointsRedemption):
         Parameters
         -----------
         token_for: str | PartialUser
-            The user's token that has permission manage the broadcaster's reward redemptions.
+            The user ID (or PartialUser) that has permission manage the broadcaster's reward redemptions.
 
         Returns
         --------

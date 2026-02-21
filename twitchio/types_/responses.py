@@ -83,6 +83,7 @@ __all__ = (
     "StartCommercialResponse",
     "StartCommercialResponseData",
     "StreamsResponseData",
+    "SuspiciousChatUserResponse",
     "TeamsResponseData",
     "TopGamesResponseData",
     "UserChatColorResponse",
@@ -1562,6 +1563,19 @@ class StreamMarkersResponseData(TypedDict):
 class StreamMarkersResponse(TypedDict):
     data: list[StreamMarkersResponseData]
     pagination: Pagination
+
+
+class SuspiciousChatUserData(TypedDict):
+    user_id: str
+    broadcaster_id: str
+    moderator_id: str
+    updated_at: str
+    status: Literal["ACTIVE_MONITORING", "RESTRICTED", "NO_TREATMENT"]
+    types: list[Literal["MANUALLY_ADDED", "DETECTED_BAN_EVADER", "DETECTED_SUS_CHATTER", "BANNED_IN_SHARED_CHANNEL"]]
+
+
+class SuspiciousChatUserResponse(TypedDict):
+    data: list[SuspiciousChatUserData]
 
 
 class BroadcasterSubscriptionsResponseData(TypedDict):

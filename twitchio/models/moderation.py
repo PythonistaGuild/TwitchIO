@@ -42,6 +42,7 @@ if TYPE_CHECKING:
         CheckAutomodStatusResponseData,
         ResolveUnbanRequestsResponseData,
         ShieldModeStatusResponseData,
+        SuspiciousChatUserData,
         UnbanRequestsResponseData,
         WarnChatUserResponseData,
     )
@@ -54,6 +55,7 @@ __all__ = (
     "BannedUser",
     "BlockedTerm",
     "ShieldModeStatus",
+    "SuspiciousChatUser",
     "Timeout",
     "UnbanRequest",
     "Warning",
@@ -406,6 +408,23 @@ class ShieldModeStatus:
         return (
             f"<ShieldModeStatus active={self.active} moderator={self.moderator} last_activated_at={self.last_activated_at}>"
         )
+
+
+class SuspiciousChatUser:
+    __slots__ = ("broadcaster", "moderator", "status", "types", "updated_at", "user")
+
+    def __init__(self, data: SuspiciousChatUserData, *, http: HTTPClient) -> None:
+        self.user: PartialUser = PartialUser(data["user_id"], http=http)
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], http=http)
+        self.moderator: PartialUser = PartialUser(data["moderator_id"], http=http)
+        self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
+        self.status: Literal["ACTIVE_MONITORING", "RESTRICTED", "NO_TREATMENT"] = data["status"]
+        self.types: list[
+            Literal["MANUALLY_ADDED", "DETECTED_BAN_EVADER", "DETECTED_SUS_CHATTER", "BANNED_IN_SHARED_CHANNEL"]
+        ] = data["types"]
+
+    def __repr__(self) -> str:
+        return f"<SuspiciousChatUser user={self.user!r} broadcaster={self.broadcaster!r} moderator={self.moderator!r} updated_at={self.updated_at} status={self.status} types={self.types}>"
 
 
 class Warning:
