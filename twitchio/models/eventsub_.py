@@ -4958,11 +4958,15 @@ class BaseHypeTrain(_ResponderEvent):
             HypeTrainContribution(c, http=http) for c in payload["top_contributions"]
         ]
         self.started_at: datetime.datetime = parse_timestamp(payload["started_at"])
-        self.shared_train_participants: list[PartialUser] = [
-            PartialUser(u["broadcaster_user_id"], u["broadcaster_user_login"], u["broadcaster_user_name"], http=http)
-            for u in payload["shared_train_participants"]
-        ]
         self.shared_train: bool = bool(payload["is_shared_train"])
+        self.shared_train_participants: list[PartialUser] = (
+            [
+                PartialUser(u["broadcaster_user_id"], u["broadcaster_user_login"], u["broadcaster_user_name"], http=http)
+                for u in payload["shared_train_participants"]
+            ]
+            if self.shared_train
+            else []
+        )
         self.type: Literal["treasure", "golden_kappa", "regular"] = payload["type"]
 
     def __repr__(self) -> str:
