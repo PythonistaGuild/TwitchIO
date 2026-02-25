@@ -88,7 +88,10 @@ html_theme_options = dict(
             "Documentation|https://twitchio.dev",
         ]
     ),
-    header_links="Examples|https://github.com/PythonistaGuild/TwitchIO/tree/main/examples",
+    header_links=",".join(
+        ["Examples|https://github.com/PythonistaGuild/TwitchIO/tree/main/examples",
+         "Event Reference|https://twitchio.dev/en/latest/references/events/index.html"
+        ]
 )
 
 copyright = "2017 - Present, PythonistaGuild"
