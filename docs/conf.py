@@ -92,7 +92,7 @@ html_theme_options = dict(
         ["Examples|https://github.com/PythonistaGuild/TwitchIO/tree/main/examples",
          "Event Reference|https://twitchio.dev/en/latest/references/events/index.html"
         ]
-)
+))
 
 copyright = "2017 - Present, PythonistaGuild"
 html_show_copyright = True
