@@ -345,7 +345,7 @@ class ManagedHTTPClient(OAuth):
         with open(name, "w+", encoding="UTF-8") as fp:
             json.dump(self._tokens, fp)
 
-        logger.info('Tokens from %r have been saved to: "%s".', self, name)
+        logger.info('%s tokens from %r have been saved to: "%s".', len(self._tokens), self, name)
 
     async def load_tokens(self, name: str | None = None) -> None:
         name = name or ".tio.tokens.json"
