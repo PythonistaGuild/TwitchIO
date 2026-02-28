@@ -436,6 +436,7 @@ class Client:
         scopes: Scopes | None = None,
         force_flow: bool = False,
     ) -> DeviceCodeFlowResponse | None:
+        # TODO: Docs...
         if self._login_called:
             return
 
@@ -465,7 +466,70 @@ class Client:
         interval: int = 5,
         timeout: int | None = 90,
         scopes: Scopes | None = None,
+        block: bool = True,
     ) -> None:
+        """|coro|
+
+        .. warning::
+
+            DCF is intended to be used when your application cannot safely store a ``client-secret``. E.g. on a users
+            device (phone, tv, etc...).
+
+
+        .. note::
+
+            The :meth:`.login_dcf` method must be called before this method. :meth:`.login_dcf` provides a response payload
+            and other useful data that can be used with :meth:`.start_dcf`.
+
+
+        Method to start the :class:`~twitchio.Client` with DCF (Device Code Flow).
+
+        Unlike :meth:`.start` this method must be called after :meth:`.login_dcf` and does not directly call this method
+        itself.
+
+        Unlike :meth:`.start` this method can be used to run the :class:`~twitchio.Client` with or without asynchronous
+        blocking behaviours. However due to the design of ``DCF`` the :meth:`.login_dcf` method must still be called first.
+
+        When the ``device_code`` parameter is ``None`` (default), this method will not wait for an authorization response
+        from Twitch. However, a token must be loaded prior to this method being called
+        (usually automatically in :meth:`.login_dcf`), else a :exc:`RuntimeError` will be raised.
+
+        Parameters
+        ----------
+        device_code: :class:`str` | ``None``
+            The device code received as a response from :meth:`.login_dcf`. If :meth:`.login_dcf` loaded a saved token, you
+            can safely disregard this parameter, unless you are forcing a user to reauthenticate.
+        interval: :class:`int`
+            An :class:`int` as seconds, passed to determine how long we should wait before checking the users authentication
+            status in the DCF. This can be changed however the provided interval in the response from :meth:`.login_dcf` is
+            usually preferred. Defaults to ``5``.
+        timeout: :class:`int` | ``None``
+            An :class:`int` as seconds before this method will timeout waiting for a user to complete the DCF. Could be
+            ``None`` to disable timeout. Defaults to ``90``. If a timeout occurs a :exc:`TimeoutError` will be raised.
+        scopes: :class:`~twitchio.Scopes` | ``None``
+            A :class:`~twitchio.Scopes` that will be granted by the user during the DCF. This should be the same scopes passed
+            to :meth:`.login_dcf`. If scopes are assigned or passed to the :class:`~twitchio.Client` you do not need to pass
+            scopes here or in :meth:`.login_dcf`. Defaults to ``None`` which means you would need to pass scopes to the client.
+        block: :class:`bool`
+            A bool indicating whether to run the :class:`~twitchio.Client` in a asynchronously blocking loop. This is the
+            default and same behaviour as :meth:`.start`. When set to ``False``, your :class:`~twitchio.Client` will be logged
+            in and can be used standalone. Defaults to ``True``.
+
+        Raises
+        ------
+        RuntimeError
+            :meth:`.login_dcf` must be called before this method.
+        RuntimeError
+            A token and refresh pair must be loaded prior to calling this method, or you must pass the ``device_code`` parameter.
+        RuntimeError
+            A valid :class:`~twitchio.User` could not be fetched with the token received.
+        DeviceCodeFlowException
+            ...
+        HTTPException
+            ...
+        TimeoutError
+            ...
+        """
         if not self._login_called:
             raise RuntimeError('Client failed to start: "login_dcf" must be called before "start_dcf".')
 
@@ -493,6 +557,9 @@ class Client:
             )
 
         validated = await self.add_token(token=token, refresh=refresh)
+
+        # Technically a User Token, however this will allow similar default behaviours since DCF should be bound to a
+        # ...single user.
         self._http._app_token = token
 
         user = await self.fetch_user(id=validated.user_id)
@@ -500,8 +567,13 @@ class Client:
             raise RuntimeError("Unable to fetch associated user with DCF token.")
 
         self._bot_id = user.id
+
+        # Event Ready will act more similarly to setup_hook with DCF setups since we have to wait for the user to respond
         self.dispatch("ready")
         self._ready_event.set()
+
+        if not block:
+            return
 
         try:
             await self.__waiter.wait()
