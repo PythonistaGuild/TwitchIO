@@ -61,7 +61,7 @@ class ManagedHTTPClient(OAuth):
         self,
         *,
         client_id: str,
-        client_secret: str,
+        client_secret: str | None = None,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
         session: aiohttp.ClientSession = MISSING,

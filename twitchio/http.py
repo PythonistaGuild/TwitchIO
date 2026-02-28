@@ -36,8 +36,9 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Self, TypeAli
 
 import aiohttp
 
+from twitchio.exceptions import HTTPException
+
 from . import __version__
-from .exceptions import HTTPException
 from .models.analytics import ExtensionAnalytics, GameAnalytics
 from .models.bits import ExtensionTransaction
 from .models.channel_points import CustomRewardRedemption

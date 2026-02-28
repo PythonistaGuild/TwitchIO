@@ -24,10 +24,14 @@ SOFTWARE.
 
 from __future__ import annotations
 
+import asyncio
 import secrets
 import urllib.parse
 from typing import TYPE_CHECKING, ClassVar
 
+import twitchio
+
+from ..enums import DeviceCodeRejection
 from ..http import HTTPClient, Route
 from ..utils import MISSING
 from .payloads import *
@@ -39,6 +43,8 @@ if TYPE_CHECKING:
     from ..types_.responses import (
         AuthorizationURLResponse,
         ClientCredentialsResponse,
+        DeviceCodeFlowResponse,
+        DeviceCodeTokenResponse,
         RefreshTokenResponse,
         UserTokenResponse,
         ValidateTokenResponse,
@@ -53,7 +59,7 @@ class OAuth(HTTPClient):
         self,
         *,
         client_id: str,
-        client_secret: str,
+        client_secret: str | None = None,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
         session: aiohttp.ClientSession = MISSING,
@@ -121,6 +127,57 @@ class OAuth(HTTPClient):
 
         return ClientCredentialsPayload(data)
 
+    async def device_code_flow(self, *, scopes: Scopes | None = None) -> DeviceCodeFlowResponse:
+        scopes = scopes or self.scopes
+        if not scopes:
+            raise ValueError('"scopes" is a required parameter or attribute which is missing.')
+
+        params = self._create_params({"scopes": scopes.urlsafe()}, device_code=True)
+        route: Route = Route("POST", "/oauth2/device", use_id=True, headers=self.CONTENT_TYPE_HEADER, params=params)
+
+        return await self.request_json(route)
+
+    async def device_code_authorization(
+        self,
+        *,
+        scopes: Scopes | None = None,
+        device_code: str,
+        interval: int = 5,
+    ) -> DeviceCodeTokenResponse:
+        scopes = scopes or self.scopes
+        if not scopes:
+            raise ValueError('"scopes" is a required parameter or attribute which is missing.')
+
+        params = self._create_params(
+            {
+                "scopes": scopes.urlsafe(),
+                "device_code": device_code,
+                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            },
+            device_code=True,
+        )
+
+        route: Route = Route("POST", "/oauth2/token", use_id=True, params=params)
+
+        while True:
+            try:
+                resp = await self.request_json(route)
+            except twitchio.HTTPException as e:
+                if e.status != 400:
+                    msg = "Unknown error during Device Code Authorization."
+                    raise twitchio.DeviceCodeFlowException(msg, original=e) from e
+
+                message = e.extra.get("message", "").lower()
+
+                if message != "authorization_pending":
+                    msg = f"An error occurred during Device Code Authorization: {message.upper()}."
+                    raise twitchio.DeviceCodeFlowException(original=e, reason=DeviceCodeRejection(message))
+
+                await asyncio.sleep(interval)
+                continue
+
+            return resp
+
     def get_authorization_url(
         self,
         *,
@@ -163,10 +220,11 @@ class OAuth(HTTPClient):
         payload: AuthorizationURLPayload = AuthorizationURLPayload(data)
         return payload
 
-    def _create_params(self, extra_params: dict[str, str]) -> dict[str, str]:
-        params = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-        }
+    def _create_params(self, extra_params: dict[str, str], *, device_code: bool = False) -> dict[str, str]:
+        params = {"client_id": self.client_id}
+
+        if not device_code and self.client_secret:
+            params["client_secret"] = self.client_secret
+
         params.update(extra_params)
         return params
