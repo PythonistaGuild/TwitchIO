@@ -25,6 +25,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 import math
 from collections import defaultdict
@@ -68,6 +69,7 @@ if TYPE_CHECKING:
     from .types_.conduits import ShardUpdateRequest
     from .types_.eventsub import ShardStatus, SubscriptionCreateTransport, SubscriptionResponse, _SubscriptionData
     from .types_.options import AutoClientOptions, ClientOptions, WaitPredicateT
+    from .types_.responses import DeviceCodeFlowResponse
     from .types_.tokens import TokenMappingData
 
 
@@ -128,7 +130,7 @@ class Client:
         self,
         *,
         client_id: str,
-        client_secret: str,
+        client_secret: str | None = None,
         bot_id: str | None = None,
         **options: Unpack[ClientOptions],
     ) -> None:
@@ -187,6 +189,40 @@ class Client:
         """Property returning the :class:`~twitchio.AiohttpAdapter` or :class:`~twitchio.StarlettepAdapter` the bot is
         currently running."""
         return self._adapter
+
+    @property
+    def http(self) -> ManagedHTTPClient:
+        """Property exposing the internal :class:`~twitchio.ManagedHTTPClient` used for requests to the Twitch API.
+
+        .. warning::
+
+            Altering or changing this class during runtime may have unwanted side-effects. It is exposed for developer
+            easabilty, especially when OAuth or Device Code Flow methods are required. It is not intended to replace the use
+            of the built-in methods of the :class:`~twitchio.Client` or other models.
+        """
+        return self._http
+
+    async def device_code_flow(self, *, scopes: Scopes | None = None) -> DeviceCodeFlowResponse:
+        """|coro|
+
+        .. warning::
+
+            It's not intended to use DCF when storing a ``client-secret`` is a safe and practical option.
+            DCF is intended to be used on user devices where storing your ``client-secret`` is not possible.
+
+        .. note::
+
+            When using tokens generated through DCF, the only ``EventSub`` transport available is traditional websockets.
+            Using ``Conduits`` and ``Webhooks`` are not available as they require a ``App Token``.
+
+        Method which starts a Twitch Device Code Flow.
+
+        The DCF (Device Code Flow) is used to obtain an access/refresh token pair for use on client-side applications where
+        storing a ``client-secret`` would be unsafe E.g. a users device (Phone, TV, etc...).
+
+        When using a token
+        """
+        return await self._http.device_code_flow(scopes=scopes)
 
     async def set_adapter(self, adapter: BaseAdapter[Any]) -> None:
         """|coro|
@@ -391,6 +427,87 @@ class Client:
         By default, this method does not implement any logic.
         """
         ...
+
+    async def login_dcf(
+        self,
+        *,
+        load_token: bool = True,
+        save_token: bool = True,
+        scopes: Scopes | None = None,
+        force_flow: bool = False,
+    ) -> DeviceCodeFlowResponse | None:
+        if self._login_called:
+            return
+
+        self._login_called = True
+        self._save_tokens = save_token
+
+        if not self._http.client_id:
+            raise RuntimeError('Expected a valid "client_id", instead received: %s', self._http.client_id)
+
+        self._http._app_token = None
+
+        if load_token and not force_flow:
+            async with self._http._token_lock:
+                await self.load_tokens()
+        else:
+            self._http._has_loaded = True
+
+        await self._setup()
+
+        if not self._http._tokens:
+            return await self.device_code_flow(scopes=scopes)
+
+    async def start_dcf(
+        self,
+        *,
+        device_code: str | None = None,
+        interval: int = 5,
+        timeout: int | None = 90,
+        scopes: Scopes | None = None,
+    ) -> None:
+        if not self._login_called:
+            raise RuntimeError('Client failed to start: "login_dcf" must be called before "start_dcf".')
+
+        self.__waiter.clear()
+
+        try:
+            mapping = list(self._http._tokens.values())
+            pair = mapping[0]
+            token = pair["token"]
+            refresh = pair["refresh"]
+        except (IndexError, KeyError):
+            token = ""
+            refresh = ""
+
+        if device_code:
+            async with asyncio.timeout(timeout):
+                resp = await self._http.device_code_authorization(device_code=device_code, interval=interval, scopes=scopes)
+
+            token = resp["access_token"]
+            refresh = resp["refresh_token"]
+
+        if not token or not refresh:
+            raise RuntimeError(
+                "Unable to start Client: No DCF token pair was able to be loaded. Try force running the flow."
+            )
+
+        validated = await self.add_token(token=token, refresh=refresh)
+        self._http._app_token = token
+
+        user = await self.fetch_user(id=validated.user_id)
+        if not user:
+            raise RuntimeError("Unable to fetch associated user with DCF token.")
+
+        self._bot_id = user.id
+        self.dispatch("ready")
+        self._ready_event.set()
+
+        try:
+            await self.__waiter.wait()
+        finally:
+            self._ready_event.clear()
+            await self.close()
 
     async def login(self, *, token: str | None = None, load_tokens: bool = True, save_tokens: bool = True) -> None:
         """|coro|
@@ -884,7 +1001,7 @@ class Client:
         if name == "event_":
             raise ValueError('Listener and event names cannot be named "event_".')
 
-        if not asyncio.iscoroutinefunction(listener):
+        if not inspect.iscoroutinefunction(listener):
             raise TypeError("Listeners and Events must be coroutines.")
 
         self._listeners[name].add(listener)
