@@ -26,8 +26,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from .enums import DeviceCodeRejection
+
 
 __all__ = (
+    "DeviceCodeFlowException",
     "HTTPException",
     "InvalidTokenException",
     "MessageRejectedError",
@@ -82,6 +85,15 @@ class HTTPException(TwitchioException):
         self.extra = {"message": extra} if isinstance(extra, str) else extra
 
         super().__init__(msg)
+
+
+class DeviceCodeFlowException(HTTPException):
+    # TODO: Docs...
+    """..."""
+
+    def __init__(self, msg: str = "", /, *, original: HTTPException, reason: DeviceCodeRejection | None = None) -> None:
+        self.reason: DeviceCodeRejection = reason or DeviceCodeRejection.UNKNOWN
+        super().__init__(msg, route=original.route, status=original.status, extra=original.extra)
 
 
 class InvalidTokenException(HTTPException):
