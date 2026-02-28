@@ -65,7 +65,6 @@ class ManagedHTTPClient(OAuth):
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
         session: aiohttp.ClientSession = MISSING,
-        nested_key: str | None = None,
         client: Client | None = None,
     ) -> None:
         super().__init__(
@@ -85,7 +84,6 @@ class ManagedHTTPClient(OAuth):
 
         self._tokens: TokenMapping = {}
         self._app_token: str | None = None
-        self._nested_key: str | None = None
 
         self._token_lock: asyncio.Lock = asyncio.Lock()
         self._has_loaded: bool = False
@@ -114,7 +112,9 @@ class ManagedHTTPClient(OAuth):
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
         try:
             resp: RefreshTokenPayload = await self.__isolated.refresh_token(refresh)
+            print(resp)
         except HTTPException as e:
+            print(e)
             msg: str = f'Token was invalid and cannot be refreshed. Please re-authenticate user with token: "{token}"'
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="refresh", original=e)
 
