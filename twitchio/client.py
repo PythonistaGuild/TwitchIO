@@ -543,9 +543,11 @@ class Client:
             pair = mapping[0]
             token = pair["token"]
             refresh = pair["refresh"]
+            user_id = pair["user_id"]
         except (IndexError, KeyError):
             token = ""
             refresh = ""
+            user_id = ""
 
         if device_code:
             async with asyncio.timeout(timeout):
@@ -554,18 +556,19 @@ class Client:
             token = resp["access_token"]
             refresh = resp["refresh_token"]
 
+            validated = await self.add_token(token=token, refresh=refresh)
+            user_id = validated.user_id
+
         if not token or not refresh:
             raise RuntimeError(
                 "Unable to start Client: No DCF token pair was able to be loaded. Try force running the flow."
             )
 
-        validated = await self.add_token(token=token, refresh=refresh)
-
         # Technically a User Token, however this will allow similar default behaviours since DCF should be bound to a
         # ...single user.
         self._http._app_token = token
 
-        user = await self.fetch_user(id=validated.user_id)
+        user = await self.fetch_user(id=user_id)
         if not user:
             raise RuntimeError("Unable to fetch associated user with DCF token.")
 
