@@ -446,6 +446,9 @@ class Client:
         if not self._http.client_id:
             raise RuntimeError('Expected a valid "client_id", instead received: %s', self._http.client_id)
 
+        if self._http.client_secret:
+            raise RuntimeError('A "client_secret" cannot be used with Device Code Flows.')
+
         self._http._app_token = None
 
         if load_token and not force_flow:
