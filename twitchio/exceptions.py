@@ -99,7 +99,7 @@ class DeviceCodeFlowException(HTTPException):
     route: :class:`twitchio.Route` | None
         An optional :class:`twitchio.Route` supplied to this exception, which contains various information about the
         request.
-    status: int
+    status: :class:`int`
         The HTTP response code received from Twitch. E.g. ``404`` or ``409``.
     extra: dict[Literal["message"], str]
         A dict with a single key named "message", which may contain additional information from Twitch
