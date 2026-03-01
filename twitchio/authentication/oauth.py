@@ -72,6 +72,27 @@ class OAuth(HTTPClient):
         self.scopes = scopes
 
     async def validate_token(self, token: str, /) -> ValidateTokenPayload:
+        """|coro|
+
+        Method which validates the provided token.
+
+        Parameters
+        ----------
+        token: :class:`str`
+            The token to attempt to validate.
+
+        Returns
+        -------
+        ValidateTokenPayload
+            The payload received from Twitch if no HTTPException was raised.
+
+        Raises
+        ------
+        HTTPException
+            An error occurred during a request to Twitch.
+        HTTPException
+            Bad or invalid token provided.
+        """
         token = token.removeprefix("Bearer ").removeprefix("OAuth ")
 
         headers: dict[str, str] = {"Authorization": f"OAuth {token}"}
@@ -114,6 +135,20 @@ class OAuth(HTTPClient):
         return UserTokenPayload(data)
 
     async def revoke_token(self, token: str, /) -> None:
+        """|coro|
+
+        Method to revoke the authorization of a provided token.
+
+        Parameters
+        ----------
+        token: :class:`str`
+            The token to revoke authorization from. The token will be invalid and cannot be used after revocation.
+
+        Raises
+        ------
+        HTTPException
+            An error occurred during a request to Twitch.
+        """
         params = self._create_params({"token": token})
 
         route: Route = Route("POST", "/oauth2/revoke", use_id=True, headers=self.CONTENT_TYPE_HEADER, params=params)
