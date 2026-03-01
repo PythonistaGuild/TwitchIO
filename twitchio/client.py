@@ -3970,3 +3970,20 @@ class AutoClient(Client):
             AutoClient does not implement this method.
         """
         raise NotImplementedError("AutoClient does not implement this method.")
+    
+    async def start_dcf(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        .. important::
+
+            AutoClient does not implement this method.
+        """
+        raise NotImplementedError("AutoClient does not implement this method.")
+
+    async def login_dcf(self, *args: Any, **kwargs: Any) -> Any:
+        """
+        .. important::
+
+            AutoClient does not implement this method.
+        """
+        raise NotImplementedError("AutoClient does not implement this method.")
+
