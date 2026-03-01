@@ -202,28 +202,6 @@ class Client:
         """
         return self._http
 
-    async def device_code_flow(self, *, scopes: Scopes | None = None) -> DeviceCodeFlowResponse:
-        """|coro|
-
-        .. warning::
-
-            It's not intended to use DCF when storing a ``client-secret`` is a safe and practical option.
-            DCF is intended to be used on user devices where storing your ``client-secret`` is not possible.
-
-        .. note::
-
-            When using tokens generated through DCF, the only ``EventSub`` transport available is traditional websockets.
-            Using ``Conduits`` and ``Webhooks`` are not available as they require a ``App Token``.
-
-        Method which starts a Twitch Device Code Flow.
-
-        The DCF (Device Code Flow) is used to obtain an access/refresh token pair for use on client-side applications where
-        storing a ``client-secret`` would be unsafe E.g. a users device (Phone, TV, etc...).
-
-        When using a token
-        """
-        return await self._http.device_code_flow(scopes=scopes)
-
     async def set_adapter(self, adapter: BaseAdapter[Any]) -> None:
         """|coro|
 
@@ -436,7 +414,55 @@ class Client:
         scopes: Scopes | None = None,
         force_flow: bool = False,
     ) -> DeviceCodeFlowResponse | None:
-        # TODO: Docs...
+        """|coro|
+
+        .. warning::
+
+            DCF is intended to be used when your application cannot safely store a ``client-secret``. E.g. on a users
+            device (phone, tv, etc...).
+
+        .. note::
+
+            This method should be called before :meth:`.start_dcf`.
+
+        Method to initiate a DCF (Device Code Flow) and setup the :class:`~twitchio.Client`.
+
+        If a token has been loaded automcatically via this method, a DCF authorization flow will not be initiated.
+        You can change this behaviour by setting the ``force_flow`` keyword-only argument to ``True``. This will force the
+        user to re-authenticate via DCF.
+
+        This method works together with :meth:`.start_dcf` to complete the flow and setup the :class:`~twitchio.Client`.
+        You should call :meth:`.start_dcf` after this method.
+
+        Parameters
+        ----------
+        load_token: bool
+            Whether to attempt to load an existing saved token. Defaults to ``True``.
+        save_token: bool
+            Whether to save any tokens loaded into the :class:`~twitchio.Client` at close. Defaults to ``True``.
+        scopes: :class:`~twitchio.Scopes` | ``None``
+            A :class:`~twitchio.Scopes` object with the required scopes set for the user to authenticate with. If you pass
+            these to the :class:`~twitchio.Client` constructor you do not need to pass them here.
+        force_flow: bool
+            Wtheer to force the user to authenticate, even when an existing token is found and valid. Useful when you
+            require new scopes or for testing. Defaults to ``False``.
+
+        Returns
+        -------
+        DeviceCodeFlowResponse
+            A dict with the keys: ``device_code``, ``expires_in``, ``interval``, ``user_code`` and ``verification_uri``.
+        None
+            The Device Code Flow was not initiated; E.g. an existing token was loaded and ``force_flow`` was ``False``.
+
+        Raises
+        ------
+        RuntimeError
+            Invalid ``client_id`` was passed to the :class:`~twitchio.Client`.
+        RuntimeError
+            You cannot use a ``client_secret`` with DCF.
+        HTTPException
+            An error was raised making a request to Twitch.
+        """
         if self._login_called:
             return
 
@@ -460,7 +486,7 @@ class Client:
         await self._setup()
 
         if not self._http._tokens:
-            return await self.device_code_flow(scopes=scopes)
+            return await self._http.device_code_flow(scopes=scopes)
 
     async def start_dcf(
         self,
@@ -527,11 +553,11 @@ class Client:
         RuntimeError
             A valid :class:`~twitchio.User` could not be fetched with the token received.
         DeviceCodeFlowException
-            ...
+            An exception was raised during a request to Twitch for DCF. Check the device code is valid.
         HTTPException
-            ...
+            An exception was raised during a request to Twitch.
         TimeoutError
-            ...
+            Timed-out waiting for the user to complete the DCF.
         """
         if not self._login_called:
             raise RuntimeError('Client failed to start: "login_dcf" must be called before "start_dcf".')
