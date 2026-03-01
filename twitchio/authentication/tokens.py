@@ -112,9 +112,7 @@ class ManagedHTTPClient(OAuth):
     async def _attempt_refresh_on_add(self, token: str, refresh: str) -> ValidateTokenPayload:
         try:
             resp: RefreshTokenPayload = await self.__isolated.refresh_token(refresh)
-            print(resp)
         except HTTPException as e:
-            print(e)
             msg: str = f'Token was invalid and cannot be refreshed. Please re-authenticate user with token: "{token}"'
             raise InvalidTokenException(msg, token=token, refresh=refresh, type_="refresh", original=e)
 
