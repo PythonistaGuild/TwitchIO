@@ -599,6 +599,9 @@ class Client:
             raise RuntimeError("Unable to fetch associated user with DCF token.")
 
         self._bot_id = user.id
+        self._owner_id = user.id
+        self._user = user
+        self._owner = user
 
         # Event Ready will act more similarly to setup_hook with DCF setups since we have to wait for the user to respond
         self.dispatch("ready")
