@@ -29,6 +29,17 @@ __all__ = ("DeviceCodeRejection",)
 
 
 class DeviceCodeRejection(enum.Enum):
+    """An enum respresenting the reason a DCF (Device Code Flow) failed.
+    
+    Attributes
+    ----------
+    UNKNOWN
+        The reason is unknown. Twitch likely did not provide one or the exception was a 5xx status code.
+    INVALID_REFRESH_TOKEN
+        The refresh used was invalid or expired. DCF refresh tokens can only be used once and last ``30`` days.
+    INVALID_DEVICE_CODE
+        The provided device code was not valid or the user has already authenticated with this code.
+    """
     UNKNOWN = "unknown"
     INVALID_REFRESH_TOKEN = "invalid refresh token"
     INVALID_DEVICE_CODE = "invalid device code"

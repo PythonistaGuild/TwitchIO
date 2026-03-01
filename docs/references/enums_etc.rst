@@ -13,6 +13,11 @@ Enums and Payloads
 .. autoclass:: twitchio.eventsub.TransportMethod()
     :members:
 
+.. attributetable:: twitchio.DeviceCodeRejection
+    
+.. autoclass:: twitchio.DeviceCodeRejection()
+    :members:
+
 
 Websocket Subscription Data
 ============================
