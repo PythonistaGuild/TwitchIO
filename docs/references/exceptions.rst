@@ -9,6 +9,9 @@ Exceptions
 .. autoclass:: twitchio.HTTPException()
     :members:
 
+.. autoclass:: twitchio.DeviceCodeFlowException()
+    :members:
+
 .. autoclass:: twitchio.InvalidTokenException()
     :members:
 
@@ -27,5 +30,6 @@ Exception Hierarchy
     - :exc:`TwitchioException`
         - :exc:`HTTPException`
             - :exc:`InvalidTokenException`
+            - :exc:`DeviceCodeFlowException`
         - :exc:`MessageRejectedError`
         - :exc:`MissingConduit`

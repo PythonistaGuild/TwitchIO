@@ -30,7 +30,7 @@ __all__ = ("DeviceCodeRejection",)
 
 class DeviceCodeRejection(enum.Enum):
     """An enum respresenting the reason a DCF (Device Code Flow) failed.
-    
+
     Attributes
     ----------
     UNKNOWN
@@ -40,6 +40,7 @@ class DeviceCodeRejection(enum.Enum):
     INVALID_DEVICE_CODE
         The provided device code was not valid or the user has already authenticated with this code.
     """
+
     UNKNOWN = "unknown"
     INVALID_REFRESH_TOKEN = "invalid refresh token"
     INVALID_DEVICE_CODE = "invalid device code"
