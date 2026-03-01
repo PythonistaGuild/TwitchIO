@@ -38,6 +38,7 @@ from . import (  # noqa: F401
 from .assets import Asset as Asset
 from .authentication import Scopes as Scopes
 from .client import *
+from .enums import *
 from .exceptions import *
 from .http import HTTPAsyncIterator as HTTPAsyncIterator, Route as Route
 from .models import *

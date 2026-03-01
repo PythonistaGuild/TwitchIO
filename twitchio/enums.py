@@ -25,6 +25,9 @@ SOFTWARE.
 import enum
 
 
+__all__ = ("DeviceCodeRejection",)
+
+
 class DeviceCodeRejection(enum.Enum):
     UNKNOWN = "unknown"
     INVALID_REFRESH_TOKEN = "invalid refresh token"
