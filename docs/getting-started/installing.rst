@@ -1,5 +1,12 @@
 .. _installing:
 
+
+.. meta::
+    :description lang=en:
+        TwitchIO Installation - Upto date information on how to properly install and manage TwitchIO on various Python
+        versions.
+
+
 Installing
 ##########
 

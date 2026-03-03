@@ -1,6 +1,11 @@
 .. _quickstart:
 
 
+.. meta::
+    :description lang=en:
+        TwitchIO Quickstart - Get a Twitch Chat Bot running within minutes with the TwitchIO quickstart guide.
+
+
 Quickstart
 ###########
 

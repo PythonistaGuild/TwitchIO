@@ -74,7 +74,7 @@ html_last_updated_fmt = "%b %d, %Y"
 # html_logo = "logo.png"
 
 html_theme_options = dict(
-    project_name="Documentation",
+    project_name="TwitchIO - Documentation",
     github_url="https://github.com/PythonistaGuild/TwitchIO/tree/main/docs/",
     logo="logo.png",
     logo_alt="TwitchIO",

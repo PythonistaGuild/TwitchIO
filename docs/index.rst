@@ -1,12 +1,18 @@
+.. meta::
+    :description lang=en:
+        TwitchIO Documentation - Access the entire Twitch API and create powerful chat bots with ease. Fully featured,
+        using modern async Python with access to Eventsub, Webhooks, Websockets, Conduits and powerful plugins.
+
+
 .. raw:: html
 
    <img src="https://raw.githubusercontent.com/TwitchIO/TwitchIO/main/logo.png" class="indexLogo"></img>
 
 
-TwitchIO
+TwitchIO - Documentation
 #########
 
-A fully featured, powerful async Python library for the Twitch API and EventSub with modern Object-Orientated design
+TwitchIO is a fully featured, powerful async Python library for the Twitch API and EventSub with modern Object-Orientated design
 and stateful objects.
 
 TwitchIO provides ease of use when accessing the Twitch API with powerful extensions for chat commands, web-frameworks and overlays 
@@ -19,11 +25,10 @@ with hot-reloadable modules to help create and manage bots, backends, websites a
 - Intuitive with ease of use, using modern object orientated design
 - Conduit support for scaling and EventSub continuity
 - Feature full including extensions for ``chat bots``, running ``routine tasks`` and ``overlays`` on stream
-- Easily manage ``OAuth Tokens`` and data
+- Easily manage ``OAuth Tokens`` and ``Device Code Flow`` with built-in token management
 - Built-in ``EventSub`` support via ``Webhook``, ``Websockets`` and :ref:`Conduits<Conduit Ref>`.
 
-TwitchIO is a powerful async Python library for the twitch API and EventSub. Fully featured, modern Object-Orientated design
-with stateful objects. TwitchIO is inspired by `discord.py <https://github.com/Rapptz/discord.py>`_.
+TwitchIO was inspired by `discord.py <https://github.com/Rapptz/discord.py>`_.
 
 
 Help and support
