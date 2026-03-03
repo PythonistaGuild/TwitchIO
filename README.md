@@ -3,7 +3,7 @@
 ![Pyright Strict](https://img.shields.io/badge/Pyright-Strict-b8dbb4)
 ![GitHub License](https://img.shields.io/github/license/PythonistaGuild/twitchio)
 
-A fully featured, powerful async Python library for the Twitch API and EventSub with modern Object-Orientated design
+TwitchIO is a fully featured, powerful async Python library for the Twitch API and EventSub with modern Object-Orientated design
 and stateful objects.
 
 TwitchIO provides ease of use when accessing the Twitch API with powerful extensions for chat commands, web-frameworks and overlays 
@@ -16,7 +16,7 @@ with hot-reloadable modules to help create and manage bots, backends, websites a
 - Intuitive with ease of use, using modern object orientated design
 - Conduit support for scaling and EventSub continuity
 - Feature full including extensions for ``chat bots``, running ``routine tasks`` and ``overlays`` on stream
-- Easily manage ``OAuth Tokens`` and data
+- Easily manage ``OAuth Tokens`` and ``Device Code Flow`` with built-in token management
 - Built-in ``EventSub`` support via ``Webhook``, ``Websockets`` and ``Conduits``.
 
 ### Documentation
