@@ -39,6 +39,6 @@ Useful Links
 [Twitch Developer Console](https://dev.twitch.tv/console)
 
 ### Support
-For support using TwitchIO, please join the official [support server](https://discord.gg/RAKc3HF) on [Discord](https://discord.com/)
+For support using TwitchIO, please join the official [support server](https://discord.gg/YP548eEK3a) on [Discord](https://discord.com/)
 
-[![Discord Banner](https://discordapp.com/api/guilds/490948346773635102/widget.png?style=banner2)](https://discord.gg/RAKc3HF)
+[![Discord Banner](https://discordapp.com/api/guilds//1478717647813214298/widget.png?style=banner2)](https://discord.gg/YP548eEK3a)
