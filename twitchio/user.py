@@ -3962,7 +3962,7 @@ class Chatter(PartialUser):
 
         This bool should always be ``True`` when the chatter is the lead moderator.
         """
-        return getattr(self, "_is_lead_moderator", False)
+        return getattr(self, "_is_lead_moderator", False) or self.broadcaster
 
     @property
     def vip(self) -> bool:
