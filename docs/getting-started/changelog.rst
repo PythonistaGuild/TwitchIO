@@ -13,6 +13,26 @@ Changelog
         - Added - :class:`~twitchio.SuspiciousChatUser` model.
         - Added - :func:`~twitchio.PartialUser.add_suspicious_chat_user` to :class:`~twitchio.PartialUser`.
         - Added - :func:`~twitchio.PartialUser.remove_suspicious_chat_user` to :class:`~twitchio.PartialUser`.
+        - Added - :exc:`~twitchio.DeviceCodeFlowException`
+        - Added - :class:`~twitchio.DeviceCodeRejection`
+    
+    - Changes
+        - Some of the internal token management has been adjusted to support applications using DCF.
+
+- twitchio.Client
+    - Additions
+        - Added - :meth:`twitchio.Client.login_dcf`
+        - Added - :meth:`twitchio.Client.start_dcf`
+        - Added - :attr:`twitchio.Client.http`
+
+    - Changes
+        - The ``client_secret`` passed to :class:`~twitchio.Client` is now optional for DCF support.
+        - Some methods using deprecated ``asyncio`` methods were updated to use ``inspect``.
+
+- twitchio.ext.commands.Bot
+    - Changes
+        - The ``bot_id`` passed to :class:`~twitchio.ext.commands.Bot` is now optional for DCF support.
+
 
 3.2.1
 ======

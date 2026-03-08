@@ -26,8 +26,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from .enums import DeviceCodeRejection
+
 
 __all__ = (
+    "DeviceCodeFlowException",
     "HTTPException",
     "InvalidTokenException",
     "MessageRejectedError",
@@ -82,6 +85,30 @@ class HTTPException(TwitchioException):
         self.extra = {"message": extra} if isinstance(extra, str) else extra
 
         super().__init__(msg)
+
+
+class DeviceCodeFlowException(HTTPException):
+    """Exception raised when an error occurs during a DCF (Device Code Flow).
+
+    This exception inherits from :exc:`~twitchio.HTTPException` and contains additional information.
+
+    Attributes
+    ----------
+    reason: :class:`twitchio.DeviceCodeRejection`
+        The reason the Device Code Flow failed, as an enum. Could be ``UNKNOWN`` if the reason was not provided by Twitch.
+    route: :class:`twitchio.Route` | None
+        An optional :class:`twitchio.Route` supplied to this exception, which contains various information about the
+        request.
+    status: :class:`int`
+        The HTTP response code received from Twitch. E.g. ``404`` or ``409``.
+    extra: dict[Literal["message"], str]
+        A dict with a single key named "message", which may contain additional information from Twitch
+        about why the request failed.
+    """
+
+    def __init__(self, msg: str = "", /, *, original: HTTPException, reason: DeviceCodeRejection | None = None) -> None:
+        self.reason: DeviceCodeRejection = reason or DeviceCodeRejection.UNKNOWN
+        super().__init__(msg, route=original.route, status=original.status, extra=original.extra)
 
 
 class InvalidTokenException(HTTPException):

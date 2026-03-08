@@ -24,8 +24,8 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import asyncio
 import importlib.util
+import inspect
 import logging
 import sys
 import types
@@ -159,8 +159,8 @@ class Bot(Mixin[Any], Client):
         self,
         *,
         client_id: str,
-        client_secret: str,
-        bot_id: str,
+        client_secret: str | None = None,
+        bot_id: str | None = None,
         owner_id: str | None = None,
         prefix: PrefixT,
         **options: Unpack[BotOptions],
@@ -698,7 +698,7 @@ class Bot(Mixin[Any], Client):
             del sys.modules[name]
             raise NoEntryPointError(f'The module "{module}" has no setup coroutine.') from exc
 
-        if not asyncio.iscoroutinefunction(entry):
+        if not inspect.iscoroutinefunction(entry):
             del sys.modules[name]
             raise TypeError(f'The module "{module}"\'s setup function is not a coroutine.')
 
