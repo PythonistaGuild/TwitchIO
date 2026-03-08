@@ -603,19 +603,24 @@ class HTTPClient:
 
     ### Ads ###
 
-    async def start_commercial(self, broadcaster_id: str | int, length: int, token_for: str) -> StartCommercialResponse:
+    @handle_user_ids()
+    async def start_commercial(
+        self, broadcaster_id: str | int, length: int, token_for: str | None
+    ) -> StartCommercialResponse:
         data = {"broadcaster_id": broadcaster_id, "length": length}
 
         route: Route = Route("POST", "channels/commercial", json=data, token_for=token_for)
         return await self.request_json(route)
 
-    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str) -> AdScheduleResponse:
+    @handle_user_ids()
+    async def get_ad_schedule(self, broadcaster_id: str | int, token_for: str | None) -> AdScheduleResponse:
         params = {"broadcaster_id": broadcaster_id}
 
         route: Route = Route("GET", "channels/ads", params=params, token_for=token_for)
         return await self.request_json(route)
 
-    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str) -> SnoozeNextAdResponse:
+    @handle_user_ids()
+    async def post_snooze_ad(self, broadcaster_id: str | int, token_for: str | None) -> SnoozeNextAdResponse:
         params = {"broadcaster_id": broadcaster_id}
 
         route: Route = Route("POST", "channels/ads/snooze", params=params, token_for=token_for)
@@ -1090,7 +1095,7 @@ class HTTPClient:
     @handle_user_ids()
     async def get_chatters(
         self,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
         first: int = 100,
@@ -1104,7 +1109,6 @@ class HTTPClient:
 
         iterator = self.request_paginated(route, converter=converter, max_results=max_results)
         data = await self.request_json(route)
-
         return Chatters(iterator, data)
 
     @handle_user_ids()
@@ -1198,7 +1202,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         emote_mode: bool | None = None,
         follower_mode: bool | None = None,
         follower_mode_duration: int | None = None,
@@ -1631,7 +1635,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         messages: list[AutomodCheckMessage],
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
     ) -> CheckAutomodStatusResponse:
         params = {"broadcaster_id": broadcaster_id}
         msg = [x._to_dict() for x in messages]
@@ -1645,7 +1649,7 @@ class HTTPClient:
         user_id: str | int,
         msg_id: str,
         action: Literal["ALLOW", "DENY"],
-        token_for: str,
+        token_for: str | PartialUser | None,
     ) -> None:
         data = {"user_id": user_id, "msg_id": msg_id, "action": action}
 
@@ -1657,7 +1661,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
     ) -> AutomodSettingsResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
 

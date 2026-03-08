@@ -30,7 +30,7 @@ from .assets import Asset
 from .exceptions import HTTPException, MessageRejectedError
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
-from .utils import Colour, parse_timestamp
+from .utils import MISSING, Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -126,7 +126,7 @@ class PartialUser:
         """
         return f"@{self.display_name or '...'}"
 
-    async def start_commercial(self, *, length: int) -> CommercialStart:
+    async def start_commercial(self, *, length: int, token_for: str | PartialUser | None = MISSING) -> CommercialStart:
         """|coro|
 
         Starts a commercial on the specified channel.
@@ -137,23 +137,31 @@ class PartialUser:
             Only the broadcaster may start a commercial; the broadcaster's editors and moderators may not start commercials on behalf of the broadcaster.
 
         .. note::
-            Requires user access token that includes the ``channel:edit:commercial`` scope.
+            The broadcaster must be authenticated with the ``channel:edit:commercial`` scope
+            for the client ID associated with this application, whether using the default app token
+            or a directly supplied user token.
 
         Parameters
         ----------
         length: int
             The length of the commercial to run, in seconds. Max length is 180.
             If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+
 
         Returns
         -------
         CommercialStart
             A CommercialStart object.
         """
-        data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=self.id)
+        resolved_token_for = self.id if token_for is MISSING else token_for
+        data = await self._http.start_commercial(broadcaster_id=self.id, length=length, token_for=resolved_token_for)
         return CommercialStart(data["data"][0])
 
-    async def fetch_ad_schedule(self) -> AdSchedule:
+    async def fetch_ad_schedule(self, *, token_for: str | PartialUser | None = MISSING) -> AdSchedule:
         """|coro|
 
         Fetch ad schedule related information, including snooze, when the last ad was run, when the next ad is scheduled, and if the channel is currently in pre-roll free time.
@@ -164,17 +172,27 @@ class PartialUser:
             The user id in the user access token must match the id of this PartialUser object.
 
         .. note::
-            Requires user access token that includes the ``channel:read:ads`` scope.
+            The broadcaster must be authenticated with the ``channel:read:ads`` scope
+            for the client ID associated with this application, whether using the default app token
+            or a directly supplied user token.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
         AdSchedule
             An AdSchedule object.
         """
-        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=self.id)
+        resolved_token_for = self.id if token_for is MISSING else token_for
+        data = await self._http.get_ad_schedule(broadcaster_id=self.id, token_for=resolved_token_for)
         return AdSchedule(data["data"][0])
 
-    async def snooze_next_ad(self) -> SnoozeAd:
+    async def snooze_next_ad(self, *, token_for: str | PartialUser | None = MISSING) -> SnoozeAd:
         """|coro|
 
         If available, pushes back the timestamp of the upcoming automatic mid-roll ad by 5 minutes.
@@ -184,14 +202,24 @@ class PartialUser:
             The user id in the user access token must match the id of this PartialUser object.
 
         .. note::
-            Requires user access token that includes the ``channel:manage:ads`` scope.
+            The broadcaster must be authenticated with the  ``channel:manage:ads`` scope
+            for the client ID associated with this application, whether using the default app token
+            or a directly supplied user token.
+
+        Parameters
+        ----------
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
         SnoozeAd
             A SnoozeAd object.
         """
-        data = await self._http.post_snooze_ad(broadcaster_id=self.id, token_for=self.id)
+        resolved_token_for = self.id if token_for is MISSING else token_for
+        data = await self._http.post_snooze_ad(broadcaster_id=self.id, token_for=resolved_token_for)
         return SnoozeAd(data["data"][0])
 
     def fetch_extension_analytics(
@@ -789,27 +817,35 @@ class PartialUser:
     async def fetch_chatters(
         self,
         *,
-        moderator: str | int | PartialUser,  # TODO Default to bot_id, same for token_for.
+        moderator: str | int | PartialUser,
         first: int = 100,
         max_results: int | None = None,
+        token_for: str | PartialUser | None = MISSING,
     ) -> Chatters:
         """|coro|
 
         Fetches users that are connected to the broadcaster's chat session.
 
         .. note::
-            Requires user access token that includes the ``moderator:read:chatters`` scope.
+            Requires a user to auth with the ``moderator:read:chatters`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:read:chatters`` for this Client ID.
 
         Parameters
         ----------
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
-            This ID must match the user ID in the user access token.
+            This ID must match the user ID in the user access token, unless using the app token.
         first: int | None
             The maximum number of items to return per page in the response.
             The minimum page size is 1 item per page and the maximum is 1,000. The default is 100.
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+            If you choose to, then this can be the bot account itself.
 
         Returns
         -------
@@ -817,9 +853,14 @@ class PartialUser:
             A Chatters object containing the information of a broadcaster's connected chatters.
         """
         first = max(1, min(1000, first))
+        resolved_token_for = moderator if token_for is MISSING else token_for
 
         return await self._http.get_chatters(
-            token_for=moderator, first=first, broadcaster_id=self.id, moderator_id=moderator, max_results=max_results
+            token_for=resolved_token_for,
+            first=first,
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            max_results=max_results,
         )
 
     async def fetch_channel_emotes(self, token_for: str | PartialUser | None = None) -> list[ChannelEmote]:
@@ -892,7 +933,7 @@ class PartialUser:
         ----------
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If ``None``, the default app token is used.
+            If ``None``, or omitted, the default app token is used.
 
         Returns
         --------
@@ -952,6 +993,8 @@ class PartialUser:
         unique_chat_mode: bool | None = None,
         non_moderator_chat_delay: bool | None = None,
         non_moderator_chat_delay_duration: Literal[2, 4, 6] | None = None,
+        *,
+        token_for: str | PartialUser | None = MISSING,
     ) -> ChatSettings:
         """|coro|
 
@@ -965,7 +1008,10 @@ class PartialUser:
             - To remove the ``slow_mode_wait_time``, ``follower_mode_duration``, or ``non_moderator_chat_delay_duration`` field's value, set the corresponding ``slow_mode``, ``follower_mode``, or ``non_moderator_chat_delay`` field to False (and don't include the slow_mode_wait_time, follower_mode_duration, or non_moderator_chat_delay_duration field).
 
         .. note::
-            Requires a user access token that includes the ``moderator:manage:chat_settings`` scope.
+            Requires a user to auth with the ``moderator:manage:chat_settings`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:manage:chat_settings`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
@@ -999,6 +1045,10 @@ class PartialUser:
             The amount of time, in seconds, that messages are delayed before appearing in chat.
             Set only if non_moderator_chat_delay is True.
             Possible values in seconds: 2 (recommended), 4 and 6.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -1020,10 +1070,12 @@ class PartialUser:
 
         from .models.chat import ChatSettings
 
+        resolved_token_for = moderator if token_for is MISSING else token_for
+
         data = await self._http.patch_chat_settings(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=moderator,
+            token_for=resolved_token_for,
             emote_mode=emote_mode,
             follower_mode=follower_mode,
             follower_mode_duration=follower_mode_duration,
@@ -1095,6 +1147,7 @@ class PartialUser:
         *,
         to_broadcaster: str | int | PartialUser,
         moderator: str | int | PartialUser,
+        token_for: str | PartialUser | None = MISSING,
     ) -> None:
         """|coro|
 
@@ -1105,6 +1158,8 @@ class PartialUser:
 
         .. note::
             Requires a user access token that includes the ``moderator:manage:shoutouts`` scope.
+            The channel:bot scope for the user represented by the broadcaster_id
+            The moderator:manage:shoutouts and user:bot scopes for the user represented by the moderator_id in the query parameter.
 
         Parameters
         ----------
@@ -1112,9 +1167,14 @@ class PartialUser:
             The ID, or PartialUser, of the broadcaster that's receiving the Shoutout.
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If ``None``, the default app token is used.
         """
+        resolved_token_for = moderator if token_for is MISSING else token_for
         return await self._http.post_chat_shoutout(
-            broadcaster_id=self.id, moderator_id=moderator, token_for=moderator, to_broadcaster_id=to_broadcaster
+            broadcaster_id=self.id, moderator_id=moderator, token_for=resolved_token_for, to_broadcaster_id=to_broadcaster
         )
 
     async def send_message(
@@ -1742,7 +1802,11 @@ class PartialUser:
 
         return [ChannelTeam(d, http=self._http) for d in data["data"]]
 
-    async def check_automod_status(self, *messages: list[AutomodCheckMessage]) -> list[AutoModStatus]:
+    async def check_automod_status(
+        self,
+        *messages: AutomodCheckMessage,
+        token_for: str | PartialUser | None = MISSING,
+    ) -> list[AutoModStatus]:
         r"""|coro|
 
         Checks whether AutoMod would flag the specified message for review.
@@ -1767,7 +1831,9 @@ class PartialUser:
             For information about AutoMod, see `How to Use AutoMod <https://help.twitch.tv/s/article/how-to-use-automod?language=en_US>`_.
 
         .. note::
-            Requires a user access token that includes the ``moderation:read`` scope.
+            The broadcaster must be authenticated with the ``moderation:read`` scope
+            for the client ID associated with this application, whether using the default app token
+            or a directly supplied user token.
 
         Examples
         --------
@@ -1777,14 +1843,19 @@ class PartialUser:
             user = await client.fetch_user(id=my_user_id)
 
             msg_checks: list[AutomodCheckMessage]  = [AutomodCheckMessage(id="1234", text="Some Text"), AutomodCheckMessage(id="12345", text="Some More Text")]
+            checks: list[AutoModStatus] = await user.check_automod_status(*msg_checks)
 
-            checks: list[AutoModStatus] = await user.check_automod_status(messages=msg_checks, token_for=my_user_id)
-
+            single_check: list[AutoModStatus] = await user.check_automod_status(AutomodCheckMessage(id="1234", text="Some Text"), token_for=None)
+            other_checks: list[AutoModStatus] = await user.check_automod_status(AutomodCheckMessage(id="1234", text="Some Text"), AutomodCheckMessage(id="12345", text="Some More Text"))
 
         Parameters
         ----------
         \*messages: :class:`twitchio.AutomodCheckMessage`
-            An argument list of AutomodCheckMessage objects.
+            One or more AutomodCheckMessage objects passed as positional arguments.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this user's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -1793,10 +1864,15 @@ class PartialUser:
         """
         from .models.moderation import AutoModStatus
 
-        data = await self._http.post_check_automod_status(broadcaster_id=self.id, messages=messages, token_for=self.id)
+        resolved_token_for = self.id if token_for is MISSING else token_for
+        data = await self._http.post_check_automod_status(
+            broadcaster_id=self.id,
+            messages=list(messages),
+            token_for=resolved_token_for,
+        )
         return [AutoModStatus(d) for d in data["data"]]
 
-    async def approve_automod_messages(self, msg_id: str) -> None:
+    async def approve_automod_messages(self, msg_id: str, *, token_for: str | PartialUser | None = MISSING) -> None:
         """|coro|
 
         Allow the message that AutoMod flagged for review.
@@ -1804,18 +1880,28 @@ class PartialUser:
         The PartialUser / User object to perform this task is the moderator.
 
         .. note::
-            Requires a user access token that includes the ``moderator:manage:automod`` scope.
+            Requires a user to auth with the ``moderator:manage:automod`` scope.
+            Even when using the app token, the user of this PartialUser object must have authorized this app
+            with ``moderator:manage:automod`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
         msg_id: str
             The ID of the message to allow.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this user's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+
         """
+        resolved_token_for = self.id if token_for is MISSING else token_for
+
         return await self._http.post_manage_automod_messages(
-            user_id=self.id, msg_id=msg_id, action="ALLOW", token_for=self.id
+            user_id=self.id, msg_id=msg_id, action="ALLOW", token_for=resolved_token_for
         )
 
-    async def deny_automod_messages(self, msg_id: str) -> None:
+    async def deny_automod_messages(self, msg_id: str, *, token_for: str | PartialUser | None = MISSING) -> None:
         """|coro|
 
         Deny the message that AutoMod flagged for review.
@@ -1823,21 +1909,27 @@ class PartialUser:
         The PartialUser / User object to perform this task is the moderator.
 
         .. note::
-            Requires a user access token that includes the ``moderator:manage:automod`` scope.
+            Requires a user to auth with the ``moderator:manage:automod`` scope.
+            Even when using the app token, the user of this PartialUser object must have authorized this app
+            with ``moderator:manage:automod`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
         msg_id: str
             The ID of the message to deny.
         """
+        resolved_token_for = self.id if token_for is MISSING else token_for
+
         return await self._http.post_manage_automod_messages(
-            user_id=self.id, msg_id=msg_id, action="DENY", token_for=self.id
+            user_id=self.id, msg_id=msg_id, action="DENY", token_for=resolved_token_for
         )
 
     async def fetch_automod_settings(
         self,
         *,
         moderator: str | int | PartialUser,
+        token_for: str | PartialUser | None = MISSING,
     ) -> AutomodSettings:
         """|coro|
 
@@ -1846,13 +1938,20 @@ class PartialUser:
         The settings are used to automatically block inappropriate or harassing messages from appearing in the broadcaster's chat room.
 
         .. note::
-            Requires a user access token that includes the ``moderator:read:automod_settings`` scope.
+            Requires a user to auth with the ``moderator:read:automod_settings`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:read:automod_settings`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
             This ID must match the user ID in the user access token.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -1861,7 +1960,10 @@ class PartialUser:
         """
         from .models import AutomodSettings
 
-        data = await self._http.get_automod_settings(broadcaster_id=self.id, moderator_id=moderator, token_for=moderator)
+        resolved_token_for = moderator if token_for is MISSING else token_for
+        data = await self._http.get_automod_settings(
+            broadcaster_id=self.id, moderator_id=moderator, token_for=resolved_token_for
+        )
         return AutomodSettings(data["data"][0], http=self._http)
 
     async def update_automod_settings(
