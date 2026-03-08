@@ -22,26 +22,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.3.0b"
+import enum
 
-from . import (  # noqa: F401
-    authentication as authentication,
-    eventsub as eventsub,
-    types_ as types,  # pyright: ignore [reportUnusedImport]
-    utils as utils,
-    web as web,
-)
-from .assets import Asset as Asset
-from .authentication import Scopes as Scopes
-from .client import *
-from .enums import *
-from .exceptions import *
-from .http import HTTPAsyncIterator as HTTPAsyncIterator, Route as Route
-from .models import *
-from .payloads import *
-from .user import *
-from .utils import Color as Color, Colour as Colour
+
+__all__ = ("DeviceCodeRejection",)
+
+
+class DeviceCodeRejection(enum.Enum):
+    """An enum respresenting the reason a DCF (Device Code Flow) failed.
+
+    Attributes
+    ----------
+    UNKNOWN
+        The reason is unknown. Twitch likely did not provide one or the exception was a 5xx status code.
+    INVALID_REFRESH_TOKEN
+        The refresh used was invalid or expired. DCF refresh tokens can only be used once and last ``30`` days.
+    INVALID_DEVICE_CODE
+        The provided device code was not valid or the user has already authenticated with this code.
+    """
+
+    UNKNOWN = "unknown"
+    INVALID_REFRESH_TOKEN = "invalid refresh token"
+    INVALID_DEVICE_CODE = "invalid device code"

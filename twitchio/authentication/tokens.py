@@ -61,11 +61,10 @@ class ManagedHTTPClient(OAuth):
         self,
         *,
         client_id: str,
-        client_secret: str,
+        client_secret: str | None = None,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
         session: aiohttp.ClientSession = MISSING,
-        nested_key: str | None = None,
         client: Client | None = None,
     ) -> None:
         super().__init__(
@@ -85,7 +84,6 @@ class ManagedHTTPClient(OAuth):
 
         self._tokens: TokenMapping = {}
         self._app_token: str | None = None
-        self._nested_key: str | None = None
 
         self._token_lock: asyncio.Lock = asyncio.Lock()
         self._has_loaded: bool = False
@@ -213,12 +211,18 @@ class ManagedHTTPClient(OAuth):
             if e.extra.get("message", "").lower() not in ("invalid access token", "invalid oauth token"):
                 raise e
 
-            if isinstance(old, str):
+            if isinstance(old, str) and self.client_secret:
                 payload: ClientCredentialsPayload = await self.client_credentials_token()
                 self._app_token = payload.access_token
                 route.update_headers({"Authorization": f"Bearer {payload.access_token}"})
 
                 return await self.request(route)
+
+            if isinstance(old, str):
+                # Will be a DCF token...
+                # We only expect and will use a single token when DCF is used; the user shouldn't be loading multiples
+                vals = list(self._tokens.values())
+                old = vals[0]
 
             logger.debug('Token for "%s" was invalid or expired. Attempting to refresh token.', old["user_id"])
             refresh: RefreshTokenPayload = await self.__isolated.refresh_token(old["refresh"])

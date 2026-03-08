@@ -138,6 +138,22 @@ class AuthorizationURLResponse(TypedDict):
     state: str
 
 
+class DeviceCodeFlowResponse(TypedDict):
+    device_code: str
+    expires_in: int
+    interval: int
+    user_code: str
+    verification_uri: str
+
+
+class DeviceCodeTokenResponse(TypedDict):
+    access_token: str
+    expires_in: int
+    refresh_token: str
+    scope: list[str]
+    token_type: str
+
+
 OAuthResponses: TypeAlias = (
     RefreshTokenResponse | ValidateTokenResponse | ClientCredentialsResponse | UserTokenResponse | AuthorizationURLResponse
 )
