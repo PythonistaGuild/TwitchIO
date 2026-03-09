@@ -139,7 +139,7 @@ class PartialUser:
         .. note::
             The broadcaster must be authenticated with the ``channel:edit:commercial`` scope
             for the client ID associated with this application, whether using the default app token
-            or a directly supplied user token.
+            or the managed user token.
 
         Parameters
         ----------
@@ -148,7 +148,7 @@ class PartialUser:
             If you request a commercial that's longer than 180 seconds, the API uses 180 seconds.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If omitted, this defaults to this object's user ID and selects that managed user token.
             If ``None``, the default app token is used.
 
 
@@ -169,18 +169,16 @@ class PartialUser:
         .. important::
             A new ad cannot be run until 8 minutes after running a previous ad.
 
-            The user id in the user access token must match the id of this PartialUser object.
-
         .. note::
             The broadcaster must be authenticated with the ``channel:read:ads`` scope
             for the client ID associated with this application, whether using the default app token
-            or a directly supplied user token.
+            or the managed user token.
 
         Parameters
         ----------
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If omitted, this defaults to this object's user ID and selects that managed user token.
             If ``None``, the default app token is used.
 
         Returns
@@ -198,19 +196,16 @@ class PartialUser:
         If available, pushes back the timestamp of the upcoming automatic mid-roll ad by 5 minutes.
         This endpoint duplicates the snooze functionality in the creator dashboard's Ads Manager.
 
-        .. important::
-            The user id in the user access token must match the id of this PartialUser object.
-
         .. note::
             The broadcaster must be authenticated with the  ``channel:manage:ads`` scope
             for the client ID associated with this application, whether using the default app token
-            or a directly supplied user token.
+            or the managed user token.
 
         Parameters
         ----------
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If omitted, this defaults to this object's user ID and selects that managed user token.
             If ``None``, the default app token is used.
 
         Returns
@@ -1157,9 +1152,11 @@ class PartialUser:
             The broadcaster may send a Shoutout once every 2 minutes. They may send the same broadcaster a Shoutout once every 60 minutes.
 
         .. note::
-            Requires a user access token that includes the ``moderator:manage:shoutouts`` scope.
-            The channel:bot scope for the user represented by the broadcaster_id
-            The moderator:manage:shoutouts and user:bot scopes for the user represented by the moderator_id in the query parameter.
+            Requires a user to auth with the ``moderator:manage:shoutouts`` scope.
+
+            If using the app token then the following scopes are required:
+                - Broadcaster (user object) - ``channel:bot``
+                - Moderator - ``user:bot`` and ``moderator:manage:shoutouts``
 
         Parameters
         ----------
@@ -1169,10 +1166,11 @@ class PartialUser:
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators. This ID must match the user ID in the access token.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this broadcaster's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's user ID and selects that managed user token.
             If ``None``, the default app token is used.
         """
         resolved_token_for = moderator if token_for is MISSING else token_for
+
         return await self._http.post_chat_shoutout(
             broadcaster_id=self.id, moderator_id=moderator, token_for=resolved_token_for, to_broadcaster_id=to_broadcaster
         )
@@ -1833,7 +1831,7 @@ class PartialUser:
         .. note::
             The broadcaster must be authenticated with the ``moderation:read`` scope
             for the client ID associated with this application, whether using the default app token
-            or a directly supplied user token.
+            or the managed user token.
 
         Examples
         --------
@@ -1971,6 +1969,7 @@ class PartialUser:
         *,
         moderator: str | int | PartialUser,
         settings: AutomodSettings,
+        token_for: str | PartialUser | None = MISSING,
     ) -> AutomodSettings:
         """|coro|
 
@@ -1994,7 +1993,10 @@ class PartialUser:
         These levels affect how aggressively AutoMod holds back messages for moderators to review before they appear in chat or are denied (not shown).
 
         .. note::
-            Requires a user access token that includes the ``moderator:manage:automod_settings`` scope.
+            Requires a user to auth with the ``moderator:manage:automod_settings`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:manage:automod_settings`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
@@ -2004,6 +2006,10 @@ class PartialUser:
         settings: AutomodSettings
             AutomodSettings object containing the new settings for the broadcaster's channel.
             You can fetch this using :meth:`~fetch_automod_settings`
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -2012,8 +2018,10 @@ class PartialUser:
         """
         from .models import AutomodSettings
 
+        resolved_token_for = moderator if token_for is MISSING else token_for
+
         data = await self._http.put_automod_settings(
-            broadcaster_id=self.id, moderator_id=moderator, settings=settings, token_for=moderator
+            broadcaster_id=self.id, moderator_id=moderator, settings=settings, token_for=resolved_token_for
         )
         return AutomodSettings(data["data"][0], http=self._http)
 
@@ -2023,13 +2031,16 @@ class PartialUser:
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
+        token_for: str | PartialUser | None = MISSING,
     ) -> HTTPAsyncIterator[BannedUser]:
         """|aiter|
 
         Fetch all users that the broadcaster has banned or put in a timeout.
 
         .. note::
-            Requires a user access token that includes the ``moderation:read`` or ``moderator:manage:banned_users`` scope.
+            The broadcaster must be authenticated with either the ``moderation:read`` or ``moderator:manage:banned_users`` scope
+            for the client ID associated with this application, whether using the default app token
+            or the managed user token.
 
         Parameters
         ----------
@@ -2044,6 +2055,10 @@ class PartialUser:
             The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this object's user ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -2059,10 +2074,12 @@ class PartialUser:
         if user_ids is not None and len(user_ids) > 100:
             raise ValueError("You may only specify a maximum of 100 users.")
 
+        resolved_token_for = self.id if token_for is MISSING else token_for
+
         return self._http.get_banned_users(
             broadcaster_id=self.id,
             user_ids=user_ids,
-            token_for=self.id,
+            token_for=resolved_token_for,
             max_results=max_results,
         )
 
@@ -2072,14 +2089,21 @@ class PartialUser:
         moderator: str | PartialUser | None = None,
         user: str | PartialUser,
         reason: str | None = None,
+        token_for: str | PartialUser | None = MISSING,
     ) -> Ban:
         """|coro|
 
         Ban the provided user from the channel tied with this :class:`~twitchio.PartialUser`.
 
-        .. note::
+        If ``moderator`` is omitted or set to ``None``, it defaults to this object's user ID.
 
-            Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
+        .. note::
+            Requires a user to auth with the ``moderator:manage:banned_users`` scope.
+
+            **App token info** - the moderator must have authorized this app with
+            ``user:bot`` and ``moderator:manage:banned_users``.
+            In most setups, this is the dedicated bot account; pass that user as
+            ``moderator`` and set ``token_for=None``.
 
         Parameters
         ----------
@@ -2093,6 +2117,10 @@ class PartialUser:
         reason: str | None
             An optional reason this chatter is being banned. If provided the length of the reason must not be more than
             ``500`` characters long. Defaults to ``None``.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to the moderator's ID, if provided, otherwise falls back to broadcaster's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Raises
         ------
@@ -2111,11 +2139,14 @@ class PartialUser:
         if reason and len(reason) > 500:
             raise ValueError("The provided reason exceeds the allowed length of 500 characters.")
 
+        _moderator = moderator or self.id
+        resolved_token_for = _moderator if token_for is MISSING else token_for
+
         data = await self._http.post_ban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator or self.id,
+            moderator_id=_moderator,
             user_id=user,
-            token_for=moderator,
+            token_for=resolved_token_for,
             reason=reason,
         )
 
@@ -2124,18 +2155,25 @@ class PartialUser:
     async def timeout_user(
         self,
         *,
-        moderator: str | int | PartialUser | None,  # TODO Default to bot_id, same for token_for.
+        moderator: str | int | PartialUser | None,
         user: str | PartialUser | None,
         duration: int,
         reason: str | None = None,
+        token_for: str | PartialUser | None = MISSING,
     ) -> Timeout:
         """|coro|
 
         Timeout the provided user from the channel tied with this :class:`~twitchio.PartialUser`.
 
-        .. note::
+        If ``moderator`` is omitted or set to ``None``, it defaults to this object's user ID.
 
-            Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
+        .. note::
+            Requires a user to auth with the ``moderator:manage:banned_users`` scope.
+
+            **App token info** - the moderator must have authorized this app with
+            ``user:bot`` and ``moderator:manage:banned_users``.
+            In most setups, this is the dedicated bot account; pass that user as
+            ``moderator`` and set ``token_for=None``.
 
         Parameters
         ----------
@@ -2157,6 +2195,10 @@ class PartialUser:
             or use the :meth:`~twitchio.user.PartialUser.unban_user` endpoint.
 
             The default is ``600`` which is ten minutes.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to the moderator's ID, if provided, otherwise falls back to broadcaster's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -2165,11 +2207,14 @@ class PartialUser:
         """
         from .models import Timeout
 
+        _moderator = moderator or self.id
+        resolved_token_for = _moderator if token_for is MISSING else token_for
+
         data = await self._http.post_ban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator or self.id,
+            moderator_id=_moderator,
             user_id=user,
-            token_for=moderator,
+            token_for=resolved_token_for,
             duration=duration,
             reason=reason,
         )
@@ -2178,31 +2223,45 @@ class PartialUser:
     async def unban_user(
         self,
         *,
-        moderator: str | int | PartialUser,
+        moderator: str | int | PartialUser | None,
         user_id: str | int | PartialUser,
+        token_for: str | PartialUser | None = MISSING,
     ) -> None:
         """|coro|
 
         Unban a user from the broadcaster's channel.
 
-        .. note::
+        If ``moderator`` is omitted or set to ``None``, it defaults to this object's user ID.
 
-            Requires a user access token that includes the ``moderator:manage:banned_users`` scope.
+        .. note::
+            Requires a user to auth with the ``moderator:manage:banned_users`` scope.
+
+            **App token info** - the moderator must have authorized this app with
+            ``user:bot`` and ``moderator:manage:banned_users``.
+            In most setups, this is the dedicated bot account; pass that user as
+            ``moderator`` and set ``token_for=None``.
 
         Parameters
         ----------
-        moderator: str | int | PartialUser
-            The ID of the broadcaster or a user that has permission to moderate the broadcaster's chat room.
-            This ID must match the user ID in the user access token.
+        moderator: str | int | PartialUser | None
+            An optional ID of or the :class:`~twitchio.PartialUser` object of the moderator issuing this action.
+            You must have a token stored with the ``moderator:manage:banned_users`` scope for this moderator.
         user_id: str | int | PartialUser
             The ID, or PartialUser, of the user to ban or put in a timeout.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to the moderator's ID, if provided, otherwise falls back to broadcaster's ID and selects that managed user token.
+            If ``None``, the default app token is used.
         """
+
+        _moderator = moderator or self.id
+        resolved_token_for = _moderator if token_for is MISSING else token_for
 
         return await self._http.delete_unban_user(
             broadcaster_id=self.id,
-            moderator_id=moderator,
+            moderator_id=_moderator,
             user_id=user_id,
-            token_for=moderator,
+            token_for=resolved_token_for,
         )
 
     def fetch_unban_requests(
@@ -2315,6 +2374,8 @@ class PartialUser:
         moderator: str | int | PartialUser,
         first: int = 20,
         max_results: int | None = None,
+        *,
+        token_for: str | PartialUser | None = MISSING,
     ) -> HTTPAsyncIterator[BlockedTerm]:
         """|aiter|
 
@@ -2322,7 +2383,10 @@ class PartialUser:
         These are the terms that the broadcaster or moderator added manually or that were denied by AutoMod.
 
         .. note::
-            Requires a user access token that includes the ``moderator:read:blocked_terms` or ``moderator:manage:blocked_terms`` scope.
+            Requires a user to auth with either the ``moderator:read:blocked_terms` or ``moderator:manage:blocked_terms`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with one of the scopes for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
@@ -2333,6 +2397,10 @@ class PartialUser:
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used
 
         Returns
         -------
@@ -2340,11 +2408,12 @@ class PartialUser:
             HTTPAsyncIterator of BlockedTerm objects.
         """
         first = max(1, min(100, first))
+        resolved_token_for = moderator if token_for is MISSING else token_for
 
         return self._http.get_blocked_terms(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=moderator,
+            token_for=resolved_token_for,
             first=first,
             max_results=max_results,
         )
@@ -2354,6 +2423,7 @@ class PartialUser:
         *,
         moderator: str | int | PartialUser,
         text: str,
+        token_for: str | PartialUser | None = MISSING,
     ) -> BlockedTerm:
         """|coro|
 
@@ -2367,7 +2437,11 @@ class PartialUser:
             If the blocked term already exists, the response contains the existing blocked term.
 
         .. note::
-           Requires a user access token that includes the ``moderator:manage:blocked_terms`` scope.
+            Requires a user to auth with the ``moderator:manage:blocked_terms`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:manage:blocked_terms`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
+
 
         Parameters
         ----------
@@ -2379,6 +2453,10 @@ class PartialUser:
             Terms may include a wildcard character ``(*)``. The wildcard character must appear at the beginning or end of a word or set of characters. For example, ``*foo`` or ``foo*``.
 
             If the blocked term already exists, the response contains the existing blocked term.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -2396,10 +2474,12 @@ class PartialUser:
 
         from .models.moderation import BlockedTerm
 
+        resolved_token_for = moderator if token_for is MISSING else token_for
+
         data = await self._http.post_blocked_term(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=moderator,
+            token_for=resolved_token_for,
             text=text,
         )
         return BlockedTerm(data["data"][0], http=self._http)
@@ -2409,13 +2489,17 @@ class PartialUser:
         *,
         moderator: str | int | PartialUser,
         id: str,
+        token_for: str | PartialUser | None = MISSING,
     ) -> None:
         """|coro|
 
         Removes the word or phrase from the broadcaster's list of blocked terms.
 
         .. note::
-           Requires a user access token that includes the ``oderator:manage:blocked_terms`` scope.
+            Requires a user to auth with the ``moderator:manage:blocked_terms`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:manage:blocked_terms`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
@@ -2424,12 +2508,18 @@ class PartialUser:
             This ID must match the user ID in the user access token.
         id: str
             The ID of the blocked term to remove from the broadcaste's list of blocked terms.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
         """
+
+        resolved_token_for = moderator if token_for is MISSING else token_for
 
         return await self._http.delete_blocked_term(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=moderator,
+            token_for=resolved_token_for,
             id=id,
         )
 
@@ -2438,6 +2528,7 @@ class PartialUser:
         *,
         moderator: str | int | PartialUser,
         message_id: str | None = None,
+        token_for: str | PartialUser | None = MISSING,
     ) -> None:
         """|coro|
 
@@ -2453,7 +2544,10 @@ class PartialUser:
             If not specified, the request removes all messages in the broadcaster's chat room.
 
         .. note::
-           Requires a user access token that includes the ``moderator:manage:chat_messages`` scope.
+            Requires a user to auth with the ``moderator:manage:chat_messages`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:manage:chat_messages`` for this Client ID.
+            If you choose to, then this can be the bot account itself.
 
         Parameters
         ----------
@@ -2462,23 +2556,36 @@ class PartialUser:
             This ID must match the user ID in the user access token.
         message_id: str
             The ID of the message to remove.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
         """
+
+        resolved_token_for = moderator if token_for is MISSING else token_for
 
         return await self._http.delete_chat_message(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=moderator,
+            token_for=resolved_token_for,
             message_id=message_id,
         )
 
-    def fetch_moderated_channels(self, *, first: int = 20, max_results: int | None = None) -> HTTPAsyncIterator[PartialUser]:
+    def fetch_moderated_channels(
+        self,
+        *,
+        first: int = 20,
+        max_results: int | None = None,
+        token_for: str | PartialUser | None = MISSING,
+    ) -> HTTPAsyncIterator[PartialUser]:
         """|aiter|
 
         Fetches channels that the specified user has moderator privileges in.
 
         .. note::
-           Requires a user access token that includes the ``user:read:moderated_channels`` scope.
-           The user ID in the access token must match the broadcaster's ID.
+            The user must be authenticated with the ``user:read:moderated_channels`` scope
+            for the client ID associated with this application, whether using the default app token
+            or the managed user token.
 
         Parameters
         ----------
@@ -2486,6 +2593,10 @@ class PartialUser:
             The maximum number of items to return per page in the response. The minimum page size is 1 item per page and the maximum is 100 items per page. The default is 20.
         max_results: int | None
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this object's user ID and selects that managed user token.
+            If ``None``, the default app token is used.
 
         Returns
         -------
@@ -2493,10 +2604,12 @@ class PartialUser:
             HTTPAsyncIterator of PartialUser objects.
         """
         first = max(1, min(100, first))
+        resolved_token_for = self.id if token_for is MISSING else token_for
+
         return self._http.get_moderated_channels(
             user_id=self.id,
             first=first,
-            token_for=self.id,
+            token_for=resolved_token_for,
             max_results=max_results,
         )
 
@@ -2679,13 +2792,16 @@ class PartialUser:
         *,
         moderator: str | int | PartialUser,
         active: bool,
+        token_for: str | PartialUser | None = MISSING,
     ) -> ShieldModeStatus:
         """|coro|
 
         Activates or deactivates  the broadcaster's Shield Mode.
 
         .. note::
-           Requires a user access token that includes the ``moderator:manage:shield_mode`` scope.
+            Requires a user to auth with the ``moderator:manage:shield_mode`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:manage:shield_mode`` for this Client ID.
 
         Parameters
         ----------
@@ -2695,6 +2811,11 @@ class PartialUser:
         active: bool
             A Boolean value that determines whether to activate Shield Mode.
             Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+            If you choose to, then this can be the bot account itself.
 
         Returns
         -------
@@ -2704,10 +2825,12 @@ class PartialUser:
 
         from .models.moderation import ShieldModeStatus
 
+        resolved_token_for = moderator if token_for is MISSING else token_for
+
         data = await self._http.put_shield_mode_status(
             broadcaster_id=self.id,
             moderator_id=moderator,
-            token_for=moderator,
+            token_for=resolved_token_for,
             active=active,
         )
         return ShieldModeStatus(data["data"][0], http=self._http)
@@ -2716,19 +2839,27 @@ class PartialUser:
         self,
         *,
         moderator: str | int | PartialUser,
+        token_for: str | PartialUser | None = MISSING,
     ) -> ShieldModeStatus:
         """|coro|
 
         Fetches the broadcaster's Shield Mode activation status.
 
         .. note::
-           Requires a user access token that includes the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+            Requires a user to auth with either the ``moderator:read:shield_mode`` or ``moderator:manage:shield_mode`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with one of these scopes for this Client ID.
 
         Parameters
         ----------
         moderator: str | int | PartialUser
             The ID, or PartialUser, of the broadcaster or a user that is one of the broadcaster's moderators.
             This ID must match the user ID in the access token.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+            If you choose to, then this can be the bot account itself.
 
         Returns
         -------
@@ -2738,7 +2869,11 @@ class PartialUser:
 
         from .models.moderation import ShieldModeStatus
 
-        data = await self._http.get_shield_mode_status(broadcaster_id=self.id, moderator_id=moderator, token_for=moderator)
+        resolved_token_for = moderator if token_for is MISSING else token_for
+
+        data = await self._http.get_shield_mode_status(
+            broadcaster_id=self.id, moderator_id=moderator, token_for=resolved_token_for
+        )
         return ShieldModeStatus(data["data"][0], http=self._http)
 
     async def add_suspicious_chat_user(
@@ -3557,6 +3692,7 @@ class PartialUser:
         moderator: str | int | PartialUser,
         user_id: str | int | PartialUser,
         reason: str,
+        token_for: str | PartialUser | None = MISSING,
     ) -> Warning:
         """|coro|
 
@@ -3564,8 +3700,9 @@ class PartialUser:
         New warnings can be issued to a user when they already have a warning in the channel (new warning will replace old warning).
 
         .. note::
-            Requires a user access token that includes the ``moderator:manage:warnings`` scope.
-            moderator id must match the user id in the user access token.
+            Requires a user to auth with the ``moderator:manage:warnings`` scope.
+            Even when using the app token, the user specified in ``moderator`` must have authorized this app
+            with ``moderator:manage:warnings`` for this Client ID.
 
         Parameters
         ----------
@@ -3575,6 +3712,11 @@ class PartialUser:
             The ID, or PartialUser, of the user being warned.
         reason: str
             The reason provided for warning.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+            If you choose to, then this can be the bot account itself.
 
         Returns
         -------
@@ -3583,8 +3725,10 @@ class PartialUser:
         """
         from .models.moderation import Warning
 
+        resolved_token_for = moderator if token_for is MISSING else token_for
+
         data = await self._http.post_warn_chat_user(
-            broadcaster_id=self.id, moderator_id=moderator, user_id=user_id, reason=reason, token_for=moderator
+            broadcaster_id=self.id, moderator_id=moderator, user_id=user_id, reason=reason, token_for=resolved_token_for
         )
         return Warning(data["data"][0], http=self._http)
 

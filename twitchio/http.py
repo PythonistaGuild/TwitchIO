@@ -1674,7 +1674,7 @@ class HTTPClient:
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
         settings: AutomodSettings,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
     ) -> AutomodSettingsResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = settings.to_dict()
@@ -1685,7 +1685,7 @@ class HTTPClient:
     def get_banned_users(
         self,
         broadcaster_id: str | int,
-        token_for: str,
+        token_for: str | PartialUser | None,
         user_ids: list[str | int] | None = None,
         first: int = 20,
         max_results: int | None = None,
@@ -1708,7 +1708,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         user_id: str | int | PartialUser,
         duration: int | None = None,
         reason: str | None = None,
@@ -1729,7 +1729,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         user_id: str | int | PartialUser,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "user_id": user_id}
@@ -1790,7 +1790,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[BlockedTerm]:
@@ -1812,7 +1812,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         text: str,
     ) -> AddBlockedTermResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
@@ -1826,7 +1826,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         id: str,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "id": id}
@@ -1839,7 +1839,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         message_id: str | None = None,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
@@ -1849,10 +1849,11 @@ class HTTPClient:
         route: Route = Route("DELETE", "moderation/chat", params=params, token_for=token_for)
         return await self.request_json(route)
 
+    @handle_user_ids()
     def get_moderated_channels(
         self,
         user_id: str | int,
-        token_for: str,
+        token_for: str | PartialUser | None,
         first: int = 20,
         max_results: int | None = None,
     ) -> HTTPAsyncIterator[PartialUser]:
@@ -1970,7 +1971,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         active: bool,
     ) -> ShieldModeStatusResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
@@ -1984,7 +1985,7 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
     ) -> ShieldModeStatusResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
 
@@ -1998,7 +1999,7 @@ class HTTPClient:
         moderator_id: str | int | PartialUser,
         user_id: str | int | PartialUser,
         reason: str,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
     ) -> WarnChatUserResponse:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
         data = {"data": {"user_id": user_id, "reason": reason}}
