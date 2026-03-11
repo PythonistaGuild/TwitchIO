@@ -24,7 +24,7 @@ SOFTWARE.
 
 from __future__ import annotations
 
-import asyncio
+import inspect
 from collections.abc import Coroutine
 from functools import partial
 from types import MappingProxyType
@@ -344,7 +344,7 @@ class Component(_MetaComponent):
         """
 
         def wrapper(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[..., Coroutine[Any, Any, None]]:
-            if not asyncio.iscoroutinefunction(func):
+            if not inspect.iscoroutinefunction(func):
                 raise TypeError(f'Component listener func "{func.__qualname__}" must be a coroutine function.')
 
             name_ = name or func.__name__

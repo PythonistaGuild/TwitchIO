@@ -25,9 +25,9 @@ SOFTWARE.
 from __future__ import annotations
 
 import abc
-import asyncio
 import datetime
 import enum
+import inspect
 from collections.abc import Callable, Coroutine, Hashable
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeAlias, TypeVar
 
@@ -310,7 +310,7 @@ class Bucket(Generic[PT]):
             del self._cache[key]
 
     async def get_key(self, payload: PT) -> Hashable:
-        if asyncio.iscoroutinefunction(self._key):
+        if inspect.iscoroutinefunction(self._key):
             key = await self._key(payload)  # type: ignore
         else:
             key = self._key(payload)  # type: ignore

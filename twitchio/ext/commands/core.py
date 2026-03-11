@@ -763,7 +763,7 @@ class Command(Generic[Component_T, P]):
 
         Similar to :meth:`~twitchio.ext.commands.Bot.event_command_error` except local to this command.
         """
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             raise TypeError(f'Command specific "error" callback for "{self._name}" must be a coroutine function.')
 
         self._error = func
@@ -803,7 +803,7 @@ class Command(Generic[Component_T, P]):
                 await ctx.connection.close()
                 ...
         """
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             raise TypeError(f'The Command "before_invoke" callback for "{self._name}" must be a coroutine function.')
 
         self._before_hook = func
@@ -849,7 +849,7 @@ class Command(Generic[Component_T, P]):
                 await ctx.connection.close()
                 ...
         """
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             raise TypeError(f'The Command "after_invoke" callback for "{self._name}" must be a coroutine function.')
 
         self._after_hook = func
@@ -1115,7 +1115,7 @@ def command(
         if isinstance(func, Command):
             raise ValueError(f'Callback "{func._callback}" is already a Command.')  # type: ignore
 
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             raise TypeError(f'Command callback for "{func.__qualname__}" must be a coroutine function.')
 
         func_name = func.__name__
@@ -1198,7 +1198,7 @@ def reward_command(
         if isinstance(func, (Command, RewardCommand)):
             raise ValueError(f'Callback "{func._callback}" is already a Command.')  # type: ignore
 
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             raise TypeError(f'RewardCommand callback for "{func.__qualname__}" must be a coroutine function.')
 
         return RewardCommand(reward_id=id, invoke_when=invoke_when, callback=func, extras=extras or {}, **kwargs)
@@ -1279,7 +1279,7 @@ def group(
         if isinstance(func, Command):
             raise ValueError(f'Callback "{func._callback.__name__}" is already a Command.')  # type: ignore
 
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             raise TypeError(f'Group callback for "{func.__qualname__}" must be a coroutine function.')
 
         func_name = func.__name__
