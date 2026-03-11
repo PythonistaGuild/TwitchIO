@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from .components import Component
     from .types_ import AutoBotOptions, BotOptions, BotT
 
-    PrefixT: TypeAlias = str | Iterable[str] | Callable[["Bot", "ChatMessage"], Coroutine[Any, Any, str | Iterable[str]]]
+    PrefixT: TypeAlias = str | Iterable[str] | Callable[[BotT, "ChatMessage"], Coroutine[Any, Any, str | Iterable[str]]]
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -162,7 +162,7 @@ class Bot(Mixin[Any], Client):
         client_secret: str | None = None,
         bot_id: str | None = None,
         owner_id: str | None = None,
-        prefix: PrefixT,
+        prefix: PrefixT[BotT],
         **options: Unpack[BotOptions],
     ) -> None:
         super().__init__(
@@ -173,7 +173,7 @@ class Bot(Mixin[Any], Client):
         )
 
         self._owner_id: str | None = owner_id
-        self._get_prefix: PrefixT = prefix
+        self._get_prefix = prefix
         self._components: dict[str, Component] = {}
         self.__modules: dict[str, types.ModuleType] = {}
         self._owner: User | None = None
@@ -824,7 +824,7 @@ class AutoBot(Bot, AutoClient):
         client_secret: str,
         bot_id: str,
         owner_id: str | None = None,
-        prefix: PrefixT,
+        prefix: PrefixT[BotT],
         **options: Unpack[AutoBotOptions],
     ) -> None:
         super().__init__(

@@ -44,12 +44,11 @@ if TYPE_CHECKING:
     from twitchio.models import SentMessage
     from twitchio.user import Chatter, PartialUser
 
-    from .bot import Bot
     from .components import Component
     from .core import Command
     from .translators import Translator
 
-    PrefixT: TypeAlias = str | Iterable[str] | Callable[[Bot, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
+    PrefixT: TypeAlias = str | Iterable[str] | Callable[[BotT, ChatMessage], Coroutine[Any, Any, str | Iterable[str]]]
 
 
 class Context(Generic[BotT]):
@@ -342,11 +341,11 @@ class Context(Generic[BotT]):
     async def _get_prefix(self) -> None:
         assert isinstance(self._payload, ChatMessage)
 
-        assigned: PrefixT = self._bot._get_prefix
+        assigned = self._bot._get_prefix
         potential: str | Iterable[str]
 
         if callable(assigned):
-            potential = await assigned(self._bot, self._payload)
+            potential = await assigned(self._bot, self._payload)  # type: ignore
         else:
             potential = assigned
 
