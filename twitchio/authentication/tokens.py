@@ -30,7 +30,7 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import aiohttp
+import niquests
 
 from ..backoff import Backoff
 from ..exceptions import HTTPException, InvalidTokenException
@@ -64,7 +64,7 @@ class ManagedHTTPClient(OAuth):
         client_secret: str | None = None,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
-        session: aiohttp.ClientSession = MISSING,
+        session: niquests.AsyncSession = MISSING,
         client: Client | None = None,
     ) -> None:
         super().__init__(
@@ -315,8 +315,8 @@ class ManagedHTTPClient(OAuth):
 
         while True:
             try:
-                await self._revalidate_all()
-            except (ConnectionError, aiohttp.ClientConnectorError, HTTPException) as e:
+                await self._revalidate_all() # Confirm if niquests.ConnectionError is correct.
+            except (ConnectionError, niquests.ConnectionError, HTTPException) as e:
                 wait: float = self._backoff.calculate()
                 logger.debug("Unable to reach Twitch to revalidate tokens: %s. Retrying in %s's", e, wait)
 

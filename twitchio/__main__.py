@@ -33,7 +33,7 @@ import subprocess
 import sys
 from collections.abc import Callable
 
-import aiohttp
+import niquests
 
 
 try:
@@ -259,7 +259,7 @@ def get_version() -> str:
 def version_info() -> None:
     info: str = f"""
 twitchio : {get_version()}
-aiohttp  : {aiohttp.__version__}
+niquests  : {niquests.__version__}
 
 Python:
     - {sys.version}

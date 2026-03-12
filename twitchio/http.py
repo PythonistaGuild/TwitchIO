@@ -27,6 +27,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import datetime
+import inspect
 import logging
 import sys
 import urllib.parse
@@ -34,7 +35,7 @@ from collections import deque
 from collections.abc import AsyncIterator, Callable
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Self, TypeAlias, TypeVar, Unpack
 
-import aiohttp
+import niquests
 
 from twitchio.exceptions import HTTPException
 
@@ -170,11 +171,38 @@ T = TypeVar("T")
 PaginatedConverter: TypeAlias = Callable[..., T] | None
 
 
-async def json_or_text(resp: aiohttp.ClientResponse) -> dict[str, Any] | str:
-    text: str = await resp.text()
+async def _response_text(resp: niquests.Response | niquests.AsyncResponse) -> str:
+    text: Any = getattr(resp, "text", "")
+
+    if callable(text):
+        text = text()
+
+    if inspect.iscoroutine(text):
+        text = await text
+
+    return text or ""
+
+
+def _normalise_header_value(value: Any) -> str:
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="ignore")
+
+    return str(value)
+
+
+def _normalise_headers(headers: Any) -> dict[str, str]:
+    return {str(key): _normalise_header_value(value) for key, value in headers.items()}
+
+
+async def json_or_text(resp: niquests.Response | niquests.AsyncResponse) -> dict[str, Any] | str:
+    text: str = await _response_text(resp)
+    content_type: str | bytes = resp.headers.get("Content-Type", "")
+
+    if isinstance(content_type, bytes):
+        content_type = content_type.decode("utf-8", errors="ignore")
 
     try:
-        if resp.headers["Content-Type"].startswith("application/json"):
+        if content_type.startswith("application/json"):
             return _from_json(text)  # type: ignore
     except KeyError:
         pass
@@ -453,8 +481,8 @@ class HTTPAsyncIterator(Generic[T]):
 class HTTPClient:
     __slots__ = ("_client_id", "_session", "_session_set", "_should_close", "user_agent")
 
-    def __init__(self, session: aiohttp.ClientSession = MISSING, *, client_id: str) -> None:
-        self._session: aiohttp.ClientSession = session
+    def __init__(self, session: niquests.AsyncSession = MISSING, *, client_id: str) -> None:
+        self._session: niquests.AsyncSession = session
         self._should_close: bool = session is MISSING
         self._session_set: bool = False
 
@@ -462,8 +490,8 @@ class HTTPClient:
 
         # User Agent...
         pyver = f"{sys.version_info[0]}.{sys.version_info[1]}"
-        ua = "TwitchioClient (https://github.com/PythonistaGuild/TwitchIO {0}) Python/{1} aiohttp/{2}"
-        self.user_agent: str = ua.format(__version__, pyver, aiohttp.__version__)
+        ua = "TwitchioClient (https://github.com/PythonistaGuild/TwitchIO {0}) Python/{1} niquests/{2}"
+        self.user_agent: str = ua.format(__version__, pyver, niquests.__version__)
 
     @property
     def headers(self) -> dict[str, str]:
@@ -482,10 +510,10 @@ class HTTPClient:
             return
 
         logger.debug("Initialising ClientSession on %s.", self.__class__.__qualname__)
-        self._session = aiohttp.ClientSession(headers=self.headers)
+        self._session = niquests.AsyncSession(headers=self.headers, multiplexed=True, pool_maxsize=100)
 
     def clear(self) -> None:
-        if self._session and self._session.closed:
+        if self._session:
             logger.debug(
                 "Clearing %s session. A new session will be created on the next request.", self.__class__.__qualname__
             )
@@ -496,7 +524,7 @@ class HTTPClient:
         if not self._should_close:
             return
 
-        if self._session and not self._session.closed:
+        if self._session:
             try:
                 await self._session.close()
             except Exception as e:
@@ -504,6 +532,12 @@ class HTTPClient:
 
             self.clear()
             logger.debug("%s session closed successfully.", self.__class__.__qualname__)
+
+    async def _resolve_response(self, resp: niquests.Response | niquests.AsyncResponse) -> niquests.Response | niquests.AsyncResponse:
+        if self._session and getattr(resp, "lazy", False):
+            await self._session.gather(resp)
+
+        return resp
 
     async def request(self, route: Route) -> RawResponse | str | None:
         if not self._session_set:
@@ -516,35 +550,34 @@ class HTTPClient:
 
         failed: bool = False
         while True:
-            async with self._session.request(
-                route.method,
+            resp = await self._session.request( #TODO I don't think we need to update to helper methods .get() .put() etc.
+                route.method,                   # The design should be updated to accomodate niquests implementation more.
                 route.url,
                 headers=route.headers,
                 json=route.json or None,
-            ) as resp:
-                data: RawResponse | str = await json_or_text(resp)
-                logger.debug("Request to %r with %s returned: status=%d", route, self.__class__.__qualname__, resp.status)
+            )
+            resp = await self._resolve_response(resp)
+            data: RawResponse | str = await json_or_text(resp)
+            status: int = resp.status_code or 0
+            logger.debug("Request to %r with %s returned: status=%d", route, self.__class__.__qualname__, status)
 
-                if resp.status == 503 and not failed:
-                    # Twitch recommends retrying 1 time after a 503...
-                    failed = True
-                    logger.debug("Retrying request to %r (1) times after 3 seconds.", route)
+            if status == 503 and not failed:
+                # Twitch recommends retrying 1 time after a 503...
+                failed = True
+                logger.debug("Retrying request to %r (1) times after 3 seconds.", route)
 
-                    await asyncio.sleep(3)
-                    continue
+                await asyncio.sleep(3)
+                continue
 
-                if resp.status >= 400:
-                    raise HTTPException(
-                        f"Request {route} failed with status {resp.status}: {data}",
-                        route=route,
-                        status=resp.status,
-                        extra=data,
-                    )
+            if status >= 400:
+                raise HTTPException(
+                    f"Request {route} failed with status {status}: {data}",
+                    route=route,
+                    status=status,
+                    extra=data,
+                )
 
-                if resp.status == 204:
-                    return None
-
-            return data
+            return None if status == 204 else data
 
     async def request_json(self, route: Route) -> Any:
         route.headers.update({"Accept": "application/json"})
@@ -563,12 +596,14 @@ class HTTPClient:
 
         logger.debug('Attempting to request headers for asset "%s" with %s.', url, self.__class__.__qualname__)
 
-        async with self._session.head(url) as resp:
-            if resp.status != 200:
-                msg = f'Failed to header for asset at "{url}" with status {resp.status}.'
-                raise HTTPException(msg, status=resp.status, extra=await resp.text())
+        resp = await self._session.head(url)
+        resp = await self._resolve_response(resp)
+        status: int = resp.status_code or 0
+        if status != 200:
+            msg = f'Failed to header for asset at "{url}" with status {status}.'
+            raise HTTPException(msg, status=status, extra=await _response_text(resp))
 
-            return dict(resp.headers)
+        return _normalise_headers(resp.headers)
 
     async def _request_asset(self, asset: Asset, *, chunk_size: int = 1024) -> AsyncIterator[bytes]:
         if not self._session_set:
@@ -578,16 +613,33 @@ class HTTPClient:
 
         logger.debug('Attempting a request to asset "%r" with %s.', asset, self.__class__.__qualname__)
 
-        async with self._session.get(asset.url) as resp:
-            if resp.status != 200:
-                msg = f'Failed to get asset at "{asset.url}" with status {resp.status}.'
-                raise HTTPException(msg, status=resp.status, extra=await resp.text())
+        resp = await self._session.get(asset.url, stream=True)
+        try:
+            resp = await self._resolve_response(resp)
+            status: int = resp.status_code or 0
+            if status != 200:
+                msg = f'Failed to get asset at "{asset.url}" with status {status}.'
+                raise HTTPException(msg, status=status, extra=await _response_text(resp))
 
-            headers: dict[str, str] = dict(resp.headers)
+            headers: dict[str, str] = _normalise_headers(resp.headers)
             asset._set_ext(headers)
 
-            async for chunk in resp.content.iter_chunked(chunk_size):
-                yield chunk
+            chunks = resp.iter_content(chunk_size)
+            if inspect.iscoroutine(chunks):
+                chunks = await chunks
+
+            chunk_iter: Any = chunks
+
+            if hasattr(chunk_iter, "__aiter__"):
+                async for chunk in chunk_iter:
+                    yield chunk
+            else:
+                for chunk in chunk_iter:
+                    yield chunk
+        finally:
+            close_result = resp.close()
+            if inspect.isawaitable(close_result):
+                await close_result
 
     def request_paginated(
         self,

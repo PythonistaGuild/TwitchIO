@@ -38,7 +38,7 @@ from .payloads import *
 
 
 if TYPE_CHECKING:
-    import aiohttp
+    import niquests
 
     from ..types_.responses import (
         AuthorizationURLResponse,
@@ -62,7 +62,7 @@ class OAuth(HTTPClient):
         client_secret: str | None = None,
         redirect_uri: str | None = None,
         scopes: Scopes | None = None,
-        session: aiohttp.ClientSession = MISSING,
+        session: niquests.AsyncSession = MISSING,
     ) -> None:
         super().__init__(session=session, client_id=client_id)
 
