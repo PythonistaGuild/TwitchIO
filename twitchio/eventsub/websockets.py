@@ -26,10 +26,11 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+import inspect
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
-import aiohttp
+import niquests
 
 from ..backoff import Backoff
 from ..exceptions import HTTPException, WebsocketConnectionException
@@ -64,6 +65,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 WSS: str = "wss://eventsub.wss.twitch.tv/ws"
 
 
+async def _resolve_awaitable(value: Any) -> Any:
+    return await value if inspect.isawaitable(value) else value
+
+
 class WebsocketClosed:
     # TODO: Docs...
 
@@ -95,6 +100,8 @@ class Websocket:
         "_session_id",
         "_shard_id",
         "_socket",
+        "_socket_response",
+        "_socket_session",
         "_subscriptions",
         "_token_for",
     )
@@ -116,7 +123,9 @@ class Websocket:
 
         self._session_id: str | None = None
 
-        self._socket: aiohttp.ClientWebSocketResponse | None = None
+        self._socket: Any = None
+        self._socket_response: niquests.Response | niquests.AsyncResponse | None = None
+        self._socket_session: niquests.AsyncSession | None = None
         self._listen_task: asyncio.Task[None] | None = None
 
         self._ready: asyncio.Event = asyncio.Event()
@@ -143,12 +152,12 @@ class Websocket:
 
         self._connection_tasks: set[asyncio.Task[None]] = set()
 
-        msg = "Websocket %s is being used without a Client/Bot. Event dispatching is disabled for this websocket."
         if not client:
             if shard_id is not None:
                 # TODO: Proper Exception...
                 raise RuntimeError("...")
 
+            msg = "Websocket %s is being used without a Client/Bot. Event dispatching is disabled for this websocket."
             logger.warning(msg, self)
 
         self._log_name = "EventSub Websocket" if self._shard_id is None else "Conduit Websocket"
@@ -173,10 +182,7 @@ class Websocket:
 
     @property
     def can_subscribe(self) -> bool:
-        if self._shard_id is not None:
-            return False
-
-        return self.subscription_count < 300
+        return False if self._shard_id is not None else self.subscription_count < 300
 
     @property
     def subscription_count(self) -> int:
@@ -197,11 +203,26 @@ class Websocket:
             return await self.close()
 
         while True:
+            session: niquests.AsyncSession = niquests.AsyncSession()
             try:
-                async with aiohttp.ClientSession() as session:
-                    new = await session.ws_connect(url_, heartbeat=self._heartbeat)
-                    session.detach()
+                response: niquests.Response | niquests.AsyncResponse = await session.get(url_, timeout=self._heartbeat)
+                status = response.status_code or 0
+                new: Any = getattr(response, "extension", None)
+
+                if status != 101 or new is None:
+                    await _resolve_awaitable(response.close())
+                    await session.close()
+
+                    raise WebsocketConnectionException(
+                        f'Failed to connect to {self._log_name} "{self}" with status {status}. '
+                        "Please attempt to reconnect or re-subscribe this eventsub connection."
+                    )
             except Exception as e:
+                try:
+                    await session.close()
+                except Exception:
+                    pass
+
                 logger.debug('Failed to connect to %s "%s>"": %s.', self._log_name, self, e)
 
                 if fail_once:
@@ -233,6 +254,8 @@ class Websocket:
             await self.close(cleanup=False)
 
         self._socket = new
+        self._socket_response = response
+        self._socket_session = session
 
         if not self._listen_task:
             self._listen_task = asyncio.create_task(self._listen())
@@ -347,39 +370,38 @@ class Websocket:
 
         while True:
             try:
-                message: aiohttp.WSMessage = await self._socket.receive()
+                message = await _resolve_awaitable(self._socket.next_payload())
             except Exception:
-                await self._create_connection_task()
-                break
-
-            type_: aiohttp.WSMsgType = message.type
-            if type_ in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSING):
-                logger.debug('Received close message [%s] on %s: "%s"', self._socket.close_code, self._log_name, self)
-
-                if self._socket.close_code == 4001:
-                    logger.critical(
-                        '%s "%s" attempted to send an outgoing message to Twitch. '
-                        "Twitch prohibits sending outgoing messages to the server, this will result in a disconnect. "
-                        "This websocket will NOT attempt to reconnect.",
-                        self._log_name,
-                        self,
-                    )
-                    return await self.close()
-
-                elif self._socket.close_code == 4003:
-                    return await self.close()
+                if self._closing or self._closed:
+                    break
 
                 await self._create_connection_task()
                 break
 
-            if type_ is not aiohttp.WSMsgType.TEXT:
+            if message is None:
+                logger.debug('Received close message on %s: "%s"', self._log_name, self)
+
+                if self._closing or self._closed:
+                    break
+
+                await self._create_connection_task()
+                break
+
+            if isinstance(message, bytes):
+                try:
+                    message = message.decode("utf-8")
+                except Exception:
+                    logger.debug('Received undecodable bytes message from %s: "%s>"', self._log_name, self)
+                    continue
+
+            if not isinstance(message, str):
                 logger.debug('Received unknown message from %s: "%s>"', self._log_name, self)
                 continue
 
             self._last_keepalive = datetime.datetime.now()
 
             try:
-                data: WebsocketMessages = cast("WebsocketMessages", _from_json(message.data))
+                data: WebsocketMessages = cast("WebsocketMessages", _from_json(message))
             except Exception:
                 logger.warning('Unable to parse JSON in %s: "%s"', self._log_name, self)
                 continue
@@ -524,12 +546,26 @@ class Websocket:
 
         if self._socket:
             try:
-                await self._socket.close()
+                await _resolve_awaitable(self._socket.close())
+            except Exception:
+                pass
+
+        if self._socket_response:
+            try:
+                await _resolve_awaitable(self._socket_response.close())
+            except Exception:
+                pass
+
+        if self._socket_session:
+            try:
+                await self._socket_session.close()
             except Exception:
                 pass
 
         self._keep_alive_task = None
         self._socket = None
+        self._socket_response = None
+        self._socket_session = None
 
         if self._listen_task:
             try:

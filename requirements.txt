@@ -1,1 +1,3 @@
 aiohttp>=3.9.1,<4
+niquests[ws]>=3.9.0,<4
+# niquests[speedups,ws]>=3.9.0,<4
