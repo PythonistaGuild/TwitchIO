@@ -533,7 +533,9 @@ class HTTPClient:
             self.clear()
             logger.debug("%s session closed successfully.", self.__class__.__qualname__)
 
-    async def _resolve_response(self, resp: niquests.Response | niquests.AsyncResponse) -> niquests.Response | niquests.AsyncResponse:
+    async def _resolve_response(
+        self, resp: niquests.Response | niquests.AsyncResponse
+    ) -> niquests.Response | niquests.AsyncResponse:
         if self._session and getattr(resp, "lazy", False):
             await self._session.gather(resp)
 
@@ -550,8 +552,8 @@ class HTTPClient:
 
         failed: bool = False
         while True:
-            resp = await self._session.request( #TODO I don't think we need to update to helper methods .get() .put() etc.
-                route.method,                   # The design should be updated to accomodate niquests implementation more.
+            resp = await self._session.request(  # TODO I don't think we need to update to helper methods .get() .put() etc.
+                route.method,  # The design should be updated to accomodate niquests implementation more.
                 route.url,
                 headers=route.headers,
                 json=route.json or None,

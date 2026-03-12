@@ -315,7 +315,7 @@ class ManagedHTTPClient(OAuth):
 
         while True:
             try:
-                await self._revalidate_all() # Confirm if niquests.ConnectionError is correct.
+                await self._revalidate_all()  # Confirm if niquests.ConnectionError is correct.
             except (ConnectionError, niquests.ConnectionError, HTTPException) as e:
                 wait: float = self._backoff.calculate()
                 logger.debug("Unable to reach Twitch to revalidate tokens: %s. Retrying in %s's", e, wait)

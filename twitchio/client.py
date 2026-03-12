@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     import datetime
     from collections.abc import Awaitable, Callable, Collection, Coroutine
 
-    import aiohttp
+    import niquests
 
     from .authentication import ClientCredentialsPayload, ValidateTokenPayload
     from .eventsub.subscriptions import SubscriptionPayload
@@ -111,8 +111,8 @@ class Client:
         An optional :class:`~twitchio.Scopes` object to use as defaults when using anything related to Twitch OAuth.
 
         Useful when you want to set default scopes for users to authenticate with.
-    session: aiohttp.ClientSession | None
-        An optional :class:`aiohttp.ClientSession` to use for all HTTP requests including any requests made with
+    session: niquests.AsyncSession | None
+        An optional :class:`niquests.AsyncSession` to use for all HTTP requests including any requests made with
         :class:`~twitchio.Asset`'s.
     adapter:  twitchio.StarletteAdapter | twitchio.AiohttpAdapter | None
         An optional :class:`twitchio.web.StarletteAdapter` or :class:`twitchio.web.AiohttpAdapter` to use as the clients web server adapter.
@@ -136,7 +136,7 @@ class Client:
     ) -> None:
         redirect_uri: str | None = options.get("redirect_uri")
         scopes: Scopes | None = options.get("scopes")
-        session: aiohttp.ClientSession = options.get("session", MISSING) or MISSING
+        session: niquests.AsyncSession = options.get("session", MISSING) or MISSING
         self._bot_id: str | None = bot_id
 
         self._http = ManagedHTTPClient(
