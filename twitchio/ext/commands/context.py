@@ -383,7 +383,6 @@ class Context(Generic[BotT]):
             return
 
         self._command = command
-        return
 
     async def fetch_command(self) -> Command[Any, ...] | RewardCommand[Any, ...] | None:
         """|coro|
@@ -415,9 +414,20 @@ class Context(Generic[BotT]):
 
     async def _prepare(self, reset: bool = False) -> None:
         if isinstance(self._payload, ChatMessage):
+            original = self._payload.text
+            altered = self._payload.text
+
+            if self._payload.reply:
+                altered = self._payload.text.removeprefix(f"{self.payload.reply.parent_user.mention} ")  # type: ignore
+                self._payload.text = altered
+
             await self._get_prefix()
 
-        self._get_command(reset=reset)
+            self._view = StringView(altered)
+            self._get_command(reset=reset)
+            self._payload.text = original
+        else:
+            self._get_command(reset=reset)
 
         if reset is False:
             self._prepare_called = True
