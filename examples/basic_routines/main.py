@@ -3,8 +3,8 @@
 This example assumes you have a Client/Bot or Components already setup and configured.
 Consider reading the following examples first:
 
-Basic Bot: https://github.com/PythonistaGuild/TwitchIO/tree/main/examples/basic_bot
-Basic Bot (Using Conduits): https://github.com/PythonistaGuild/TwitchIO/tree/main/examples/basic_conduits
+Basic Bot: https://github.com/TwitchIO/TwitchIO/tree/main/examples/basic_bot
+Basic Bot (Using Conduits): https://github.com/TwitchIO/TwitchIO/tree/main/examples/basic_conduits
 
 Routines can be used and started anywhere, but an asyncio.Loop should generally be running first.
 """

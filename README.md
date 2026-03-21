@@ -1,7 +1,7 @@
 ![](https://raw.githubusercontent.com/TwitchIO/TwitchIO/main/logo.png)
 [![](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://www.python.org)
 ![Pyright Strict](https://img.shields.io/badge/Pyright-Strict-b8dbb4)
-![GitHub License](https://img.shields.io/github/license/PythonistaGuild/twitchio)
+![GitHub License](https://img.shields.io/github/license/TwitchIO/twitchio)
 
 TwitchIO is a fully featured, powerful async Python library for the Twitch API and EventSub with modern Object-Orientated design
 and stateful objects.

@@ -5,9 +5,9 @@
 Debugging
 #########
 
-Most issues can be resolved by checking the :ref:`faqs` or by asking in our `Discord <https://discord.gg/RAKc3HF>`_.
+Most issues can be resolved by checking the :ref:`faqs` or by asking in our `Discord <https://discord.gg/YP548eEK3a>`_.
 
-If you believe you have found a bug or issue with the library please make an issue on `GitHub <https://github.com/PythonistaGuild/TwitchIO/issues>`_.
+If you believe you have found a bug or issue with the library please make an issue on `GitHub <https://github.com/TwitchIO/TwitchIO/issues>`_.
 
 
 Logging

@@ -462,7 +462,7 @@ class HTTPClient:
 
         # User Agent...
         pyver = f"{sys.version_info[0]}.{sys.version_info[1]}"
-        ua = "TwitchioClient (https://github.com/PythonistaGuild/TwitchIO {0}) Python/{1} aiohttp/{2}"
+        ua = "TwitchioClient (https://github.com/TwitchIO/TwitchIO {0}) Python/{1} aiohttp/{2}"
         self.user_agent: str = ua.format(__version__, pyver, aiohttp.__version__)
 
     @property

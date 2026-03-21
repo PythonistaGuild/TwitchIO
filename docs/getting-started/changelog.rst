@@ -173,7 +173,7 @@ Changelog
         - Added :meth:`twitchio.StreamOffline.respond`
 
     - Bug fixes
-        - Remove the unnecessary ``token_for`` parameter from :meth:`twitchio.ChannelPointsReward.fetch_reward`. `#510 <https://github.com/PythonistaGuild/TwitchIO/pull/510>`_
+        - Remove the unnecessary ``token_for`` parameter from :meth:`twitchio.ChannelPointsReward.fetch_reward`. `#510 <https://github.com/TwitchIO/TwitchIO/pull/510>`_
 
 - twitchio.web.AiohttpAdapter
     - Bug fixes

@@ -34,9 +34,9 @@ TwitchIO was inspired by `discord.py <https://github.com/Rapptz/discord.py>`_.
 Help and support
 ----------------
 
-- For issues or bugs please visit: `GitHub <https://github.com/PythonistaGuild/TwitchIO/issues>`_
+- For issues or bugs please visit: `GitHub <https://github.com/TwitchIO/TwitchIO/issues>`_
 - See our :ref:`faqs`
-- Visit our `Discord <https://discord.gg/RAKc3HF>`_ for help using TwitchIO
+- Visit our `Discord <https://discord.gg/YP548eEK3a>`_ for help using TwitchIO
 
 
 Getting Started

@@ -9,7 +9,7 @@
 Quickstart
 ###########
 
-Consider reading through the `GitHub Examples <https://github.com/PythonistaGuild/TwitchIO/tree/main/examples>`_
+Consider reading through the `GitHub Examples <https://github.com/TwitchIO/TwitchIO/tree/main/examples>`_
 
 This mini tutorial will serve as an entry point into TwitchIO 3. After it you should have a small working bot and a basic understanding of TwitchIO.
 

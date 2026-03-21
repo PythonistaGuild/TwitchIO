@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2017 - Present PythonistaGuild
+Copyright (c) 2017 - Present TwitchIO, PythonistaGuild
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@ SOFTWARE.
 """
 
 __title__ = "TwitchIO"
-__author__ = "PythonistaGuild"
+__author__ = "TwitchIO, PythonistaGuild"
 __license__ = "MIT"
 __copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
 __version__ = "3.3.0b"

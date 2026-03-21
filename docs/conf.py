@@ -28,8 +28,8 @@ sys.path.append(os.path.abspath("_extensions"))
 
 on_rtd = os.environ.get("READTHEDOCS") == "True"
 project = "TwitchIO"
-copyright = "2017-Current, PythonistaGuild"
-author = "PythonistaGuild"
+copyright = "2017-Current, TwitchIO, PythonistaGuild"
+author = "TwitchIO, PythonistaGuild"
 
 # The full version, including alpha/beta/rc tags
 release = ""
@@ -75,7 +75,7 @@ html_last_updated_fmt = "%b %d, %Y"
 
 html_theme_options = dict(
     project_name="TwitchIO - Documentation",
-    github_url="https://github.com/PythonistaGuild/TwitchIO/tree/main/docs/",
+    github_url="https://github.com/TwitchIO/TwitchIO/tree/main/docs/",
     logo="logo.png",
     logo_alt="TwitchIO",
     logo_height=120,
@@ -83,18 +83,18 @@ html_theme_options = dict(
     logo_width=120,
     footer_links=",".join(
         [
-            "GitHub|https://github.com/PythonistaGuild/TwitchIO",
-            "Discord|https://discord.gg/RAKc3HF",
+            "GitHub|https://github.com/TwitchIO/TwitchIO",
+            "Discord|https://discord.gg/YP548eEK3a",
             "Documentation|https://twitchio.dev",
         ]
     ),
     header_links=",".join(
-        ["Examples|https://github.com/PythonistaGuild/TwitchIO/tree/main/examples",
+        ["Examples|https://github.com/TwitchIO/TwitchIO/tree/main/examples",
          "Event Reference|https://twitchio.dev/en/latest/references/events/index.html"
         ]
 ))
 
-copyright = "2017 - Present, PythonistaGuild"
+copyright = "2017 - Present, TwitchIO, PythonistaGuild"
 html_show_copyright = True
 html_show_sphinx = False
 
@@ -139,7 +139,7 @@ intersphinx_mapping = {
 }
 
 extlinks = {
-    "tioissue": ("https://github.com/PythonistaGuild/Twitchio/issues/%s", "GH-%s"),
+    "tioissue": ("https://github.com/TwitchIO/Twitchio/issues/%s", "GH-%s"),
     "es-docs": ("https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/#%s", "Twitch Eventsub %s"),
 }
 

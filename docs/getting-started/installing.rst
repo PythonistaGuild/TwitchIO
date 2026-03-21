@@ -152,10 +152,10 @@ For convenience we provide an index thanks to `Abstract Umbra <https://github.co
 
 .. code:: shell
 
-    pip install -U twitchio --extra-index-url https://pip.pythonista.gg
+    pip install -U twitchio --extra-index-url https://abstractumbra.github.io/pip/
 
 
 Installation Issues
 ===================
 Make sure you have the latest version of Python installed, or if you prefer, a Python version of 3.11 or greater.
-If you have any other issues feel free to search for duplicates and then create a new issue on `GitHub <https://github.com/PythonistaGuild/twitchio>`_ with as much detail as possible. Including providing the output of pip, your OS details and Python version.
+If you have any other issues feel free to search for duplicates and then create a new issue on `GitHub <https://github.com/TwitchIO/twitchio>`_ with as much detail as possible. Including providing the output of pip, your OS details and Python version.

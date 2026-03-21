@@ -1255,11 +1255,11 @@ def group(
 
         @commands.group(name="socials", invoke_fallback=True)
         async def socials_group(ctx: commands.Context) -> None:
-            await ctx.send("https://discord.gg/RAKc3HF, https://twitch.tv/chillymosh, ...")
+            await ctx.send("https://discord.gg/YP548eEK3a, https://twitch.tv/chillymosh, ...")
 
         @socials_group.command(name="discord", aliases=["disco"])
         async def socials_discord(ctx: commands.Context) -> None:
-            await ctx.send("https://discord.gg/RAKc3HF")
+            await ctx.send("https://discord.gg/YP548eEK3a")
 
         @socials_group.command(name="twitch")
         async def socials_twitch(ctx: commands.Context) -> None:
@@ -1371,11 +1371,11 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
             @commands.group(name="socials", invoke_fallback=True)
             async def socials_group(ctx: commands.Context) -> None:
-                await ctx.send("https://discord.gg/RAKc3HF, https://twitch.tv/chillymosh, ...")
+                await ctx.send("https://discord.gg/YP548eEK3a, https://twitch.tv/chillymosh, ...")
 
             @socials_group.command(name="discord", aliases=["disco"])
             async def socials_discord(ctx: commands.Context) -> None:
-                await ctx.send("https://discord.gg/RAKc3HF")
+                await ctx.send("https://discord.gg/YP548eEK3a")
 
             @socials_group.command(name="twitch")
             async def socials_twitch(ctx: commands.Context) -> None:
@@ -1432,7 +1432,7 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
 
             @commands.group(name="socials", invoke_fallback=True)
             async def socials_group(ctx: commands.Context) -> None:
-                await ctx.send("https://discord.gg/RAKc3HF, https://twitch.tv/chillymosh, ...")
+                await ctx.send("https://discord.gg/YP548eEK3a, https://twitch.tv/chillymosh, ...")
 
             @socials_group.command(name="twitch")
             async def socials_twitch(ctx: commands.Context) -> None:
@@ -1441,11 +1441,11 @@ class Group(Mixin[Component_T], Command[Component_T, P]):
             # Add a group to our parent group which further separates the commands...
             @socials_group.group(name="discord", aliases=["disco"], invoke_fallback=True)
             async def socials_discord(ctx: commands.Context) -> None:
-                await ctx.send("https://discord.gg/RAKc3HF, https://discord.gg/...")
+                await ctx.send("https://discord.gg/YP548eEK3a, https://discord.gg/...")
 
             @socials_discord.command(name="one", aliases=["1"])
             async def socials_discord_one(ctx: commands.Context) -> None:
-                await ctx.send("https://discord.gg/RAKc3HF")
+                await ctx.send("https://discord.gg/YP548eEK3a")
 
             @socials_discord.command(name="two", aliases=["2"])
             async def socials_discord_two(ctx: commands.Context) -> None:

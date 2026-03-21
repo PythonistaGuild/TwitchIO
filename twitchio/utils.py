@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2017 - Present PythonistaGuild
+Copyright (c) 2017 - Present TwitchIO, PythonistaGuild
 Copyright (c) 2015-present Rapptz (https://github.com/Rapptz/discord.py/blob/master/discord/utils.py)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
