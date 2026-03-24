@@ -43,8 +43,8 @@ Changelog = "https://twitchio.dev/en/latest/getting-started/changelog.html"
 distribution = true
 
 [tool.pdm.version]
-source = "scm"
-version_format = "twitchio.version:format_version"
+source = "file"
+path = "twitchio/__init__.py"
 fallback_version = "4.0.0a"
 
 [tool.ruff]
