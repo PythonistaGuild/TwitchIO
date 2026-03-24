@@ -51,34 +51,33 @@ exclude = ["venv", ".venv", ".venv*", "docs"]
 
 [tool.ruff.lint]
 select = [
-    "C4",
-    "E",
-    "F",
-    "G",
-    "I",
-    "PTH",
-    "RUF",
-    "SIM",
-    "TC",
-    "UP",
-    "W",
-    "PERF",
-    "ANN",
+    "C4",    # flake8-comprehensions (C4)
+    "E",     # pycodestyle Error (E)
+    "F",     # Pyflakes (F)
+    "G",     # flake8-logging-format (G)
+    "I",     # isort (I)
+    "PTH",   # flake8-use-pathlib (PTH)
+    "RUF",   # Ruff-specific rules (RUF)
+    "SIM",   # flake8-simplify (SIM)
+    "TC",    # flake8-type-checking (TC)
+    "UP",    # pyupgrade (UP)
+    "W",     # pycodestyle Warning (W)
+    "PERF",  # Perflint (PERF)
+    "ANN",   # flake8-annotations (ANN)
 ]
 ignore = [
-    "F402",
-    "F403",
-    "F405",
-    "PERF203",
-    "RUF001",
-    "RUF009",
-    "SIM105",
-    "UP034",
-    "ANN401",
-    "UP031",
+    "F402",     # import-shadowed-by-loop-var
+    "F403",     # undefined-local-with-import-star
+    "F405",     # undefined-local-with-import-star-usage
+    "PERF203",  # try-except-in-loop
+    "RUF001",   # ambiguous-unicode-character-string
+    "RUF009",   # function-call-in-dataclass-default-argument
+    "SIM105",   # suppressible-exception
+    "UP034",    # extraneous-parentheses
+    "ANN401",   # any-type
     "PTH123",
-    "E203",
-    "E501",
+    "E203",     # whitespace-before-punctuation
+    "E501",     # line-too-long
 ]
 
 [tool.ruff.lint.isort]
