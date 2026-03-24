@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2017 - Present TwitchIO, PythonistaGuild
+Copyright (c) 2025 - Present Evie. P., Chillymosh and TwitchIO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-
-__title__ = "TwitchIO"
-__author__ = "TwitchIO, PythonistaGuild"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017-Present (c) TwitchIO, PythonistaGuild"
-__version__ = "3.3.0b"
-
-from . import (  # noqa: F401
-    authentication as authentication,
-    eventsub as eventsub,
-    types_ as types,  # pyright: ignore [reportUnusedImport]
-    utils as utils,
-    web as web,
-)
-from .assets import Asset as Asset
-from .authentication import Scopes as Scopes
-from .client import *
-from .enums import *
-from .exceptions import *
-from .http import HTTPAsyncIterator as HTTPAsyncIterator, Route as Route
-from .models import *
-from .payloads import *
-from .user import *
-from .utils import Color as Color, Colour as Colour

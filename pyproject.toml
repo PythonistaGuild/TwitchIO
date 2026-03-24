@@ -1,72 +1,57 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [project]
-name = "twitchio"
-authors = [{ name = "TwitchIO, PythonistaGuild" }]
-dynamic = ["dependencies", "version"]
+name = "TwitchIO"
+authors = [
+    { name = "Evie. P.", email = "evieepy@gmail.com" },
+    { name = "Chillymosh" },
+]
+maintainers = [
+    { name = "Evie. P.", email = "evieepy@gmail.com" },
+    { name = "Chillymosh"},
+]
+dynamic = ["version"]
 description = "A powerful, asynchronous Python library for twitch.tv."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Utilities",
 ]
+license = { file = "LICENSE"}
+dependencies = ["picows>=1.17.0"]
 
 [project.urls]
 Homepage = "https://github.com/TwitchIO/TwitchIO"
 Documentation = "https://twitchio.dev"
+Changelog = "https://twitchio.dev/en/latest/getting-started/changelog.html"
 "Issue tracker" = "https://github.com/TwitchIO/TwitchIO/issues"
 
-[tool.setuptools]
-packages = [
-    "twitchio",
-    "twitchio.models",
-    "twitchio.eventsub",
-    "twitchio.authentication",
-    "twitchio.web",
-    "twitchio.ext.commands",
-    "twitchio.ext.routines",
-    "twitchio.types_",
-]
-include-package-data = true
+[tool.pdm]
+distribution = true
 
-[tool.setuptools.package-data]
-twitchio = ["py.typed"]
-
-[tool.setuptools.dynamic]
-dependencies = { file = ["requirements.txt"] }
-
-[project.optional-dependencies]
-docs = [
-    "sphinx-wagtail-theme",
-    "sphinx",
-    "docutils<0.18",
-    "sphinxcontrib-napoleon",
-    "sphinxcontrib-asyncio",
-    "sphinxcontrib-websupport",
-    "Pygments",
-    "sphinx-hoverxref",
-    "sphinxcontrib_trio",
-]
-starlette = ["starlette", "uvicorn"]
-dev = ["ruff==0.11.2", "pyright==1.1.402", "isort"]
+[tool.pdm.version]
+source = "scm"
+version_format = "twitchio.version:format_version"
+fallback_version = "4.0.0a"
 
 [tool.ruff]
 line-length = 125
-target-version = "py311"
+target-version = "py312"
 indent-width = 4
-exclude = ["venv", "docs", "examples"]
+exclude = ["venv", ".venv", ".venv*", "docs"]
 
 [tool.ruff.lint]
 select = [
@@ -119,9 +104,26 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.pyright]
-exclude = [".venv", "venv", "docs", "examples", "twitchio/__main__.py"]
+exclude = [
+    ".venv",
+    "venv",
+    "docs",
+    "examples", 
+    "twitchio/__main__.py", 
+    "twitchio/version.py", 
+    "**/node_modules", 
+    "**/__pycache__", 
+    "**/.*"
+]
 useLibraryCodeForTypes = true
 typeCheckingMode = "strict"
 reportImportCycles = false
 reportPrivateUsage = false
-pythonVersion = "3.11"
+pythonVersion = "3.12"
+
+[dependency-groups]
+dev = [
+    "pdm>=2.26.7",
+    "ruff>=0.15.7",
+    "pyright>=1.1.408",
+]
