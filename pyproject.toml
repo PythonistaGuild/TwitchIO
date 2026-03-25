@@ -1,6 +1,6 @@
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["uv_build"]
+build-backend = "uv_build"
 
 [project]
 name = "TwitchIO"
@@ -12,7 +12,7 @@ maintainers = [
     { name = "Evie. P.", email = "evieepy@gmail.com" },
     { name = "Chillymosh"},
 ]
-dynamic = ["version"]
+version = "4.0.0a"
 description = "A powerful, asynchronous Python library for twitch.tv."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -39,13 +39,9 @@ Documentation = "https://twitchio.dev"
 Changelog = "https://twitchio.dev/en/latest/getting-started/changelog.html"
 "Issue tracker" = "https://github.com/TwitchIO/TwitchIO/issues"
 
-[tool.pdm]
-distribution = true
-
-[tool.pdm.version]
-source = "file"
-path = "twitchio/__init__.py"
-fallback_version = "4.0.0a"
+[tool.uv.build-backend]
+module-name = "twitchio"
+module-root = ""
 
 [tool.ruff]
 line-length = 125
@@ -78,7 +74,6 @@ ignore = [
     "RUF009",
     "SIM105",
     "UP034",
-    "UP038",
     "ANN401",
     "UP031",
     "PTH123",
