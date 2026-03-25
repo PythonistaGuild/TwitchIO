@@ -21,4 +21,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__version__ = "4.0.0a"
+import json
+from typing import Any
+
+
+__all__ = ("JSON_LOADS",)
+
+
+try:
+    import orjson  # type: ignore
+
+    JSON_LOADS: Any = orjson.loads  # type: ignore
+except ImportError:
+    JSON_LOADS: Any = json.loads  # type: ignore
+
+
+class _MissingSentinel:
+    __slots__ = ()
+
+    def __eq__(self, other: Any) -> bool:
+        return False
+
+    def __bool__(self) -> bool:
+        return False
+
+    def __hash__(self) -> int:
+        return 0
+
+    def __repr__(self) -> str:
+        return "..."
+
+
+MISSING: Any = _MissingSentinel()
