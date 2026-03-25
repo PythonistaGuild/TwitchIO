@@ -24,6 +24,7 @@ SOFTWARE.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import logging
 import sys
 import threading
@@ -31,7 +32,7 @@ import time
 from types import MappingProxyType
 from typing import Any, ClassVar, no_type_check
 
-from picows import WSCloseCode, WSFrame, WSListener, WSMsgType, WSTransport, ws_connect
+from picows import WSCloseCode, WSFrame, WSListener, WSMsgType, WSTransport, ws_connect  # type: ignore
 
 from .utils import JSON_LOADS
 
@@ -92,6 +93,7 @@ class WebsocketWatcher(threading.Thread):
         self._last_ack: int = time.perf_counter_ns()
         self._last_update: int = time.perf_counter_ns()
         self._should_stop = threading.Event()
+        self._last_log: datetime.datetime | None = None
 
     def __repr__(self) -> str: ...
 
@@ -101,33 +103,37 @@ class WebsocketWatcher(threading.Thread):
         while not self._should_stop.is_set():
             dist = (time.perf_counter_ns() - self._last_update) / 1e9
             if dist > keep_alive:
-                self.notify(self.FAILED_MSG, self._socket, dist)
+                self.notify(self.FAILED_MSG, self._socket, dist, force=True)
                 self.stop()
                 continue
 
+            start = time.perf_counter_ns()
             try:
                 future = asyncio.run_coroutine_threadsafe(self._socket.poll(), self._socket._loop)
                 result = future.result(self.MIN_KEEP_ALIVE)
             except TimeoutError:
                 continue
+            else:
+                self.ack(notify=False)
+                end = time.perf_counter_ns()
 
-            if not self.ack(update=False) and result >= 0.5:
+            dist = (end - start) / 1e9
+            if dist > 1:
+                self.notify(self.BEHIND_MSG, self._socket, dist)
+            elif result > 0.5:
                 self.notify(self.SLOW_MSG, self._socket, result)
 
-            self.ack()
+            time.sleep(0.5)
 
     def stop(self) -> None:
         self._should_stop.set()
 
-    def ack(self, update: bool = True) -> None | bool:
-        if update:
-            self._last_ack = time.perf_counter_ns()
-            return
-
+    def ack(self, notify: bool = True) -> None:
         dist = (time.perf_counter_ns() - self._last_ack) / 1e9
-        if dist >= 1:
+        if notify and dist >= 1:
             self.notify(self.BEHIND_MSG, self._socket, dist)
-            return True
+
+        self._last_ack = time.perf_counter_ns()
 
     def update(self) -> None:
         now = time.perf_counter_ns()
@@ -135,7 +141,15 @@ class WebsocketWatcher(threading.Thread):
         self._last_update = now
 
     def notify(self, msg: str, /, *args: Any, **kwargs: Any) -> None:
+        now = datetime.datetime.now()
+
         level = kwargs.get("level", logging.WARNING)
+        force = kwargs.get("force", False)
+
+        if not force and self._last_log is not None and self._last_log >= (now - datetime.timedelta(seconds=5)):
+            return
+
+        self._last_log = now
         LOGGER.log(level, msg, *args)
 
 
