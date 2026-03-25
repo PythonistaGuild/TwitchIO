@@ -27,12 +27,13 @@ import asyncio
 import logging
 import sys
 import threading
+import time
 from types import MappingProxyType
-from typing import ClassVar, no_type_check
+from typing import Any, ClassVar, no_type_check
 
 from picows import WSCloseCode, WSFrame, WSListener, WSMsgType, WSTransport, ws_connect
 
-from .utils import JSON_LOADS, MISSING
+from .utils import JSON_LOADS
 
 
 __all__ = ("FrameListener", "Websocket", "WebsocketManager", "WebsocketWatcher")
@@ -45,19 +46,25 @@ WSS_URL: str = "wss://eventsub.wss.twitch.tv/ws"
 
 class WebsocketManager:
     def __init__(self) -> None:
-        self._sockets: dict[str, WebsocketWatcher] = {}
+        self._sockets: dict[str | int, Websocket] = {}
 
     @property
-    def sockets(self) -> MappingProxyType[str, WebsocketWatcher]:
+    def sockets(self) -> MappingProxyType[str | int, Websocket]:
         return MappingProxyType(self._sockets)
 
     def get_socket(self) -> WebsocketWatcher: ...
 
-    async def open_socket(self) -> ...:
+    async def open_socket(self, *, shard_id: int | None = None) -> ...:
         watcher = WebsocketWatcher()
-        ws = Websocket(watcher)
+        ws = Websocket(watcher, shard_id=shard_id)
+        watcher._socket = ws
 
-        await ws.connect()
+        try:
+            await ws.connect()
+        except Exception:
+            return
+
+        watcher.start()
 
     async def batch_open(self) -> ...: ...
 
@@ -69,19 +76,67 @@ class WebsocketManager:
 
 
 class WebsocketWatcher(threading.Thread):
+    _socket: Websocket
     DAEMON: ClassVar[bool] = True
+    MIN_KEEP_ALIVE: ClassVar[int] = 10
 
-    def __init__(self) -> None: ...
+    SLOW_MSG: ClassVar[str] = "%r performance is degraded. RTT took %s seconds. Check your network for degradation."
+    BEHIND_MSG: ClassVar[str] = (
+        "%r can't keep up. %s seconds behind. Check your network; and your application for synchronous blocking."
+    )
+    FAILED_MSG: ClassVar[str] = "%r failed: Too Far Behind (%s seconds behind). Attempting to recover connection."
+
+    def __init__(self) -> None:
+        super().__init__(daemon=self.DAEMON)
+
+        self._last_ack: int = time.perf_counter_ns()
+        self._last_update: int = time.perf_counter_ns()
+        self._should_stop = threading.Event()
 
     def __repr__(self) -> str: ...
 
-    def run(self) -> None: ...
+    def run(self) -> None:
+        keep_alive = self._socket._keep_alive + 1
 
-    def stop(self) -> None: ...
+        while not self._should_stop.is_set():
+            dist = (time.perf_counter_ns() - self._last_update) / 1e9
+            if dist > keep_alive:
+                self.notify(self.FAILED_MSG, self._socket, dist)
+                self.stop()
+                continue
 
-    def ack(self) -> None: ...
+            try:
+                future = asyncio.run_coroutine_threadsafe(self._socket.poll(), self._socket._loop)
+                result = future.result(self.MIN_KEEP_ALIVE)
+            except TimeoutError:
+                continue
 
-    def update(self) -> None: ...
+            if not self.ack(update=False) and result >= 0.5:
+                self.notify(self.SLOW_MSG, self._socket, result)
+
+            self.ack()
+
+    def stop(self) -> None:
+        self._should_stop.set()
+
+    def ack(self, update: bool = True) -> None | bool:
+        if update:
+            self._last_ack = time.perf_counter_ns()
+            return
+
+        dist = (time.perf_counter_ns() - self._last_ack) / 1e9
+        if dist >= 1:
+            self.notify(self.BEHIND_MSG, self._socket, dist)
+            return True
+
+    def update(self) -> None:
+        now = time.perf_counter_ns()
+        self._last_ack = now
+        self._last_update = now
+
+    def notify(self, msg: str, /, *args: Any, **kwargs: Any) -> None:
+        level = kwargs.get("level", logging.WARNING)
+        LOGGER.log(level, msg, *args)
 
 
 class FrameListener(WSListener):
@@ -149,14 +204,39 @@ class FrameListener(WSListener):
 
 
 class Websocket:
-    def __init__(self, watcher: WebsocketWatcher, /) -> None:
+    _listener: FrameListener
+    _transport: WSTransport
+
+    MIN_KEEP_ALIVE: ClassVar[int] = 10
+    MAX_KEEP_ALIVE: ClassVar[int] = 600
+
+    def __init__(self, watcher: WebsocketWatcher, /, *, shard_id: int | None = None, keep_alive_timeout: int = 10) -> None:
         self._watcher = watcher
         self._loop = asyncio.get_event_loop()
-        self._listener: FrameListener = MISSING
 
-    def __repr__(self) -> str: ...
+        self._keep_alive = max(self.MIN_KEEP_ALIVE, min(keep_alive_timeout, self.MAX_KEEP_ALIVE))
+        if self._keep_alive != keep_alive_timeout:
+            LOGGER.warning("'keep_alive_timeout' for %r was out of bounds. Setting timeout to: %s", self, self._keep_alive)
+
+        self._shard_id = shard_id
+        self._is_conduit = shard_id is not None
+
+    def __repr__(self) -> str:
+        return f"Websocket(shard_id={self._shard_id})"
 
     def __str__(self) -> str: ...
+
+    @property
+    def watcher(self) -> WebsocketWatcher:
+        return self._watcher
+
+    @property
+    def shard_id(self) -> int | None:
+        return self._shard_id
+
+    @property
+    def keep_alive(self) -> int:
+        return self._keep_alive
 
     def listener_factory(self) -> FrameListener:
         listener = FrameListener(self)
@@ -164,11 +244,15 @@ class Websocket:
 
     async def connect(self) -> ...:
         transport, listener = await ws_connect(self.listener_factory, WSS_URL, enable_auto_pong=False)
+
         self._listener = listener  # type: ignore
+        self._transport = transport
 
     async def close(self) -> ...: ...
 
     async def receive_message(self, data: ...) -> ...:
         print(f"MESSAGE: {data}")
 
-    async def poll(self) -> ...: ...
+    async def poll(self) -> float:
+        rts = await self._transport.measure_roundtrip_time(1)
+        return rts[0]
