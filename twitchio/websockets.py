@@ -29,6 +29,7 @@ import logging
 import sys
 import threading
 import time
+from collections import deque
 from types import MappingProxyType
 from typing import Any, ClassVar, no_type_check
 
@@ -81,59 +82,64 @@ class WebsocketWatcher(threading.Thread):
     DAEMON: ClassVar[bool] = True
     MIN_KEEP_ALIVE: ClassVar[int] = 10
 
-    SLOW_MSG: ClassVar[str] = "%r performance is degraded. RTT took %s seconds. Check your network for degradation."
-    BEHIND_MSG: ClassVar[str] = (
-        "%r can't keep up. %s seconds behind. Check your network; and your application for synchronous blocking."
-    )
-    FAILED_MSG: ClassVar[str] = "%r failed: Too Far Behind (%s seconds behind). Attempting to recover connection."
+    BEHIND_MSG: ClassVar[str] = "%r can't keep up. Average %.1fs behind in the past %d RTT rounds."
+    BLOCK_MSG: ClassVar[str] = "%r has been blocked for %.1fs. Consider checking your application for synchronous blocking."
+    FAILED_MSG: ClassVar[str] = "%r is not responding. Attempting to recover connection."
 
     def __init__(self) -> None:
         super().__init__(daemon=self.DAEMON)
 
-        self._last_ack: int = time.perf_counter_ns()
+        self._interval: int = 3
         self._last_update: int = time.perf_counter_ns()
         self._should_stop = threading.Event()
         self._last_log: datetime.datetime | None = None
+        self._recent_rtt: deque[float] = deque(maxlen=5)
 
     def __repr__(self) -> str: ...
 
     def run(self) -> None:
-        keep_alive = self._socket._keep_alive + 1
+        keep_alive = self._socket._keep_alive + 0.1
 
-        while not self._should_stop.is_set():
+        while not self._should_stop.wait(self._interval):
             dist = (time.perf_counter_ns() - self._last_update) / 1e9
+
             if dist > keep_alive:
-                self.notify(self.FAILED_MSG, self._socket, dist, force=True)
+                self.notify(self.FAILED_MSG, self._socket, force=True)
                 self.stop()
                 continue
 
-            start = time.perf_counter_ns()
-            try:
-                future = asyncio.run_coroutine_threadsafe(self._socket.poll(), self._socket._loop)
-                result = future.result(self.MIN_KEEP_ALIVE)
-            except TimeoutError:
-                continue
-            else:
-                self.ack(notify=False)
-                end = time.perf_counter_ns()
+            if self._recent_rtt:
+                avg_rtt = sum(self._recent_rtt) / len(self._recent_rtt)
+                if avg_rtt > 3:
+                    self.notify(self.BEHIND_MSG, self._socket, avg_rtt, len(self._recent_rtt))
 
-            dist = (end - start) / 1e9
-            if dist > 1:
-                self.notify(self.BEHIND_MSG, self._socket, dist)
-            elif result > 0.5:
-                self.notify(self.SLOW_MSG, self._socket, result)
+            total = 0
+            while True:
+                if total > keep_alive:
+                    self.notify(self.FAILED_MSG, self._socket, force=True)
+                    self.stop()
+                    break
 
-            time.sleep(0.5)
+                elif total > 0:
+                    self.notify(self.BLOCK_MSG, self._socket, total)
+
+                try:
+                    future = asyncio.run_coroutine_threadsafe(self._socket.poll(), self._socket._loop)
+                    result = future.result(self._interval)
+                    self._recent_rtt.append(result)
+                    break
+                except TimeoutError:
+                    total += self._interval
+                    continue
+                except asyncio.CancelledError:
+                    # TODO
+                    continue
+                except Exception:
+                    self.stop()
+                    break
 
     def stop(self) -> None:
         self._should_stop.set()
-
-    def ack(self, notify: bool = True) -> None:
-        dist = (time.perf_counter_ns() - self._last_ack) / 1e9
-        if notify and dist >= 1:
-            self.notify(self.BEHIND_MSG, self._socket, dist)
-
-        self._last_ack = time.perf_counter_ns()
 
     def update(self) -> None:
         now = time.perf_counter_ns()
@@ -170,8 +176,6 @@ class FrameListener(WSListener):
 
     @no_type_check  # asyncio has bad typing for the tasks in 3.14
     def on_ws_frame(self, transport: WSTransport, frame: WSFrame) -> None:
-        self._watcher.ack()
-
         if frame.msg_type is WSMsgType.PING:
             transport.send_pong(frame.get_payload_as_bytes())
             return
