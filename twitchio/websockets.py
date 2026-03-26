@@ -35,7 +35,8 @@ from typing import Any, ClassVar, no_type_check
 
 from picows import WSCloseCode, WSFrame, WSListener, WSMsgType, WSTransport, ws_connect  # type: ignore
 
-from .utils import JSON_LOADS
+from .backoff import Backoff
+from .utils import JSON_LOADS, MISSING
 
 
 __all__ = ("FrameListener", "Websocket", "WebsocketManager", "WebsocketWatcher")
@@ -47,7 +48,8 @@ WSS_URL: str = "wss://eventsub.wss.twitch.tv/ws"
 
 
 class WebsocketManager:
-    def __init__(self) -> None:
+    def __init__(self, *, max_retries: int | None = None) -> None:
+        self._max_retries = max_retries
         self._sockets: dict[str | int, Websocket] = {}
 
     @property
@@ -56,17 +58,45 @@ class WebsocketManager:
 
     def get_socket(self) -> WebsocketWatcher: ...
 
+    async def reconnect_socket(self, socket: Websocket) -> ...:
+        shard_id = socket.shard_id
+        socket._watcher.stop()
+        await socket.close()
+
+        if not socket._can_reconnect:
+            self._sockets.pop(str(socket._shard_id or socket.session_id), None)
+            return
+
+        backoff = Backoff()
+        tries = 0
+
+        while True:
+            if self._max_retries and tries >= self._max_retries:
+                break
+
+            try:
+                await self.open_socket(shard_id=shard_id)
+            except Exception as e:
+                LOGGER.debug("An error occurred reconnecting %r. %s", socket, e)
+            else:
+                LOGGER.info("%r was successfully reconnected.")
+                break
+
+            tries += 1
+            delay = backoff.calculate()
+
+            await asyncio.sleep(delay)
+
     async def open_socket(self, *, shard_id: int | None = None) -> ...:
-        watcher = WebsocketWatcher()
+        watcher = WebsocketWatcher(self)
         ws = Websocket(watcher, shard_id=shard_id)
         watcher._socket = ws
 
-        try:
-            await ws.connect()
-        except Exception:
-            return
-
+        await ws.connect()
+        await ws.wait_for_welcome()
         watcher.start()
+
+        self._sockets[str(shard_id or ws.session_id)] = ws
 
     async def batch_open(self) -> ...: ...
 
@@ -86,9 +116,10 @@ class WebsocketWatcher(threading.Thread):
     BLOCK_MSG: ClassVar[str] = "%r has been blocked for %.1fs. Consider checking your application for synchronous blocking."
     FAILED_MSG: ClassVar[str] = "%r is not responding. Attempting to recover connection."
 
-    def __init__(self) -> None:
+    def __init__(self, manager: WebsocketManager) -> None:
         super().__init__(daemon=self.DAEMON)
 
+        self._manager = manager
         self._interval: int = 3
         self._last_update: int = time.perf_counter_ns()
         self._should_stop = threading.Event()
@@ -105,7 +136,7 @@ class WebsocketWatcher(threading.Thread):
 
             if dist > keep_alive:
                 self.notify(self.FAILED_MSG, self._socket, force=True)
-                self.stop()
+                self.reconnect_socket()
                 continue
 
             if self._recent_rtt:
@@ -117,7 +148,7 @@ class WebsocketWatcher(threading.Thread):
             while True:
                 if total > keep_alive:
                     self.notify(self.FAILED_MSG, self._socket, force=True)
-                    self.stop()
+                    self.reconnect_socket()
                     break
 
                 elif total > 0:
@@ -137,6 +168,10 @@ class WebsocketWatcher(threading.Thread):
                 except Exception:
                     self.stop()
                     break
+
+    def reconnect_socket(self) -> None:
+        asyncio.run_coroutine_threadsafe(self._manager.reconnect_socket(self._socket), self._socket._loop)
+        self.stop()
 
     def stop(self) -> None:
         self._should_stop.set()
@@ -231,6 +266,7 @@ class Websocket:
     def __init__(self, watcher: WebsocketWatcher, /, *, shard_id: int | None = None, keep_alive_timeout: int = 10) -> None:
         self._watcher = watcher
         self._loop = asyncio.get_event_loop()
+        self._welcomed = asyncio.Event()
 
         self._keep_alive = max(self.MIN_KEEP_ALIVE, min(keep_alive_timeout, self.MAX_KEEP_ALIVE))
         if self._keep_alive != keep_alive_timeout:
@@ -238,6 +274,9 @@ class Websocket:
 
         self._shard_id = shard_id
         self._is_conduit = shard_id is not None
+        self._session_id: str = MISSING
+
+        self._can_reconnect: bool = True
 
     def __repr__(self) -> str:
         return f"Websocket(shard_id={self._shard_id})"
@@ -251,6 +290,10 @@ class Websocket:
     @property
     def shard_id(self) -> int | None:
         return self._shard_id
+
+    @property
+    def session_id(self) -> str:
+        return self._session_id
 
     @property
     def keep_alive_timeout(self) -> int:
@@ -270,6 +313,9 @@ class Websocket:
 
     async def receive_message(self, data: ...) -> ...:
         print(f"MESSAGE: {data}")
+
+    async def wait_for_welcome(self) -> None:
+        await self._welcomed.wait()
 
     async def poll(self) -> float:
         rts = await self._transport.measure_roundtrip_time(1)
