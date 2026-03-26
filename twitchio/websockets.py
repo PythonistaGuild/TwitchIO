@@ -253,7 +253,7 @@ class Websocket:
         return self._shard_id
 
     @property
-    def keep_alive(self) -> int:
+    def keep_alive_timeout(self) -> int:
         return self._keep_alive
 
     def listener_factory(self) -> FrameListener:
