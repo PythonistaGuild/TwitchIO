@@ -1,0 +1,190 @@
+"""MIT License
+
+Copyright (c) 2025 - Present Evie. P., Chillymosh and TwitchIO
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+from typing import NotRequired, Required, TypedDict
+
+
+# TODO: Accept Partial/User etc objects??
+
+
+class _BroadcasterCT(TypedDict):
+    """
+    broadcaster_user_id: str
+        The ID of the broadcaster/channel for this event.
+    """
+
+    broadcaster_user_id: Required[str]
+
+
+class _BroadcasterIdCT(TypedDict):
+    """
+    broadcaster_id: str
+        The ID of the broadcaster/channel for this event.
+    """
+
+    broadcaster_id: Required[str]
+
+
+class _ModeratorCT(TypedDict):
+    """
+    moderator_user_id: str
+        The ID of the moderator to subscribe with for this event.
+    """
+
+    moderator_user_id: Required[str]
+
+
+class _UserCT(TypedDict):
+    """
+    user_id: str
+        The ID of the user associated with this event.
+    """
+
+    user_id: Required[str]
+
+
+class _RewardCT(TypedDict):
+    reward_id: NotRequired[str]
+
+
+class _ClientCT(TypedDict):
+    client_id: Required[str]
+
+
+class _BroadcasterModeratorCT(_BroadcasterCT, _ModeratorCT):
+    __doc__ = f"""{_BroadcasterCT.__doc__.strip()}{_ModeratorCT.__doc__}"""  # type: ignore
+
+
+class _BroadcasterUserCT(_BroadcasterCT, _UserCT): ...
+
+
+class _BroadcasterRewardCT(_BroadcasterCT, _RewardCT): ...
+
+
+# -----------------------------------------------------------
+# Condition Payloads:
+
+
+class AutomodMessageHoldCT(_BroadcasterModeratorCT): ...
+
+
+class AutomodMessageUpdateCT(_BroadcasterModeratorCT): ...
+
+
+class AutomodSettingsUpdateCT(_BroadcasterModeratorCT): ...
+
+
+class AutomodTermsUpdateCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelAdBreakBeginCT(_BroadcasterIdCT): ...
+
+
+class ChannelBanCT(_BroadcasterCT): ...
+
+
+class ChannelBitUseCT(_BroadcasterCT): ...
+
+
+class ChannelChatClearCT(_BroadcasterUserCT): ...
+
+
+class ChannelChatClearUserMessagesCT(_BroadcasterUserCT): ...
+
+
+class ChannelChatMessageCT(_BroadcasterUserCT): ...
+
+
+class ChannelChatMessageDeleteCT(_BroadcasterUserCT): ...
+
+
+class ChannelChatNotificationCT(_BroadcasterUserCT): ...
+
+
+class ChannelChatSettingsUpdateCT(_BroadcasterUserCT): ...
+
+
+class ChannelChatUserMessageHoldCT(_BroadcasterUserCT): ...
+
+
+class ChannelChatUserMessageUpdate(_BroadcasterUserCT): ...
+
+
+class ChannelSubscribeCT(_BroadcasterCT): ...
+
+
+class ChannelSubscriptionEndCT(_BroadcasterCT): ...
+
+
+class ChannelSubscriptionGiftCT(_BroadcasterCT): ...
+
+
+class ChannelSubscriptionMessageCT(_BroadcasterCT): ...
+
+
+class ChannelCheerCT(_BroadcasterCT): ...
+
+
+class ChannelUpdateCT(_BroadcasterCT): ...
+
+
+class ChannelFollowCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelUnbanCT(_BroadcasterCT): ...
+
+
+class ChannelUnbanRequestCreateCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelUnbanRequestResolveCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelRaidCT(TypedDict, total=False):
+    from_broadcaster_user_id: str
+    to_broadcaster_user_id: str
+
+
+# NOTE: Includes V2
+class ChannelModerateCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelModeratorAddCT(_BroadcasterCT): ...
+
+
+class ChannelModeratorRemoveCT(_BroadcasterCT): ...
+
+
+class ChannelGuestStarSessionBeginCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelGuestStarSessionEndCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelGuestStarGuestUpdate(_BroadcasterModeratorCT): ...
+
+
+class ChannelGuestStarSettingsUpdate(_BroadcasterModeratorCT): ...
+
+
+# TODO: ...
