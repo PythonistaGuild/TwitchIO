@@ -75,10 +75,12 @@ class _BroadcasterModeratorCT(_BroadcasterCT, _ModeratorCT):
     __doc__ = f"""{_BroadcasterCT.__doc__.strip()}{_ModeratorCT.__doc__}"""  # type: ignore
 
 
-class _BroadcasterUserCT(_BroadcasterCT, _UserCT): ...
+class _BroadcasterUserCT(_BroadcasterCT, _UserCT):
+    __doc__ = f"""{_BroadcasterCT.__doc__.strip()}{_UserCT.__doc__}"""  # type: ignore
 
 
-class _BroadcasterRewardCT(_BroadcasterCT, _RewardCT): ...
+class _BroadcasterRewardCT(_BroadcasterCT, _RewardCT):
+    __doc__ = f"""{_BroadcasterCT.__doc__.strip()}{_RewardCT.__doc__}"""  # type: ignore
 
 
 # -----------------------------------------------------------
@@ -187,4 +189,112 @@ class ChannelGuestStarGuestUpdate(_BroadcasterModeratorCT): ...
 class ChannelGuestStarSettingsUpdate(_BroadcasterModeratorCT): ...
 
 
-# TODO: ...
+# NOTE: Includes V2
+class ChannelPointsAutomaticRewardRedemptionAddCT(_BroadcasterCT): ...
+
+
+class ChannelPointsCustomRewardAddCT(_BroadcasterCT): ...
+
+
+class ChannelPointsCustomRewardUpdateCT(_RewardCT): ...
+
+
+class ChannelPointsCustomRewardRemoveCT(_RewardCT): ...
+
+
+class ChannelPointsCustomRewardRedemptionAddCT(_RewardCT): ...
+
+
+class ChannelPointsCustomRewardRedemptionUpdateCT(_RewardCT): ...
+
+
+class ChannelPollBeginCT(_BroadcasterCT): ...
+
+
+class ChannelPollProgressCT(_BroadcasterCT): ...
+
+
+class ChannelPollEndCT(_BroadcasterCT): ...
+
+
+class ChannelPredictionBeginCT(_BroadcasterCT): ...
+
+
+class ChannelPredictionProgressCT(_BroadcasterCT): ...
+
+
+class ChannelPredictionLockCT(_BroadcasterCT): ...
+
+
+class ChannelPredictionEndCT(_BroadcasterCT): ...
+
+
+class ChannelSharedChatSessionBeginCT(_BroadcasterCT): ...
+
+
+class ChannelSharedChatSessionUpdateCT(_BroadcasterCT): ...
+
+
+class ChannelSharedChatSessionEndCT(_BroadcasterCT): ...
+
+
+class ChannelSuspiciousUserMessageCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelSuspiciousUserUpdateCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelVIPAddCT(_BroadcasterCT): ...
+
+
+class ChannelVIPRemoveCT(_BroadcasterCT): ...
+
+
+class ChannelWarningAcknowledgeCT(_BroadcasterModeratorCT): ...
+
+
+class ChannelWarningSendCT(_BroadcasterModeratorCT): ...
+
+
+class ConduitShardDisabledCT(_ClientCT):
+    conduit_id: NotRequired[str]
+
+
+class DropEntitlementGrantCT(TypedDict):
+    organization_id: Required[str]
+    category_id: NotRequired[str]
+    campaign_id: NotRequired[str]
+
+
+class ExtensionBitsTransactionCreateCT(TypedDict):
+    extension_client_id: Required[str]
+
+
+class GoalsCT(_BroadcasterCT): ...
+
+
+class HypeTrainBeginCT(_BroadcasterCT): ...
+
+
+class HypeTrainProgressCT(_BroadcasterCT): ...
+
+
+class HypeTrainEndCT(_BroadcasterCT): ...
+
+
+class StreamOnlineCT(_BroadcasterCT): ...
+
+
+class StreamOfflineCT(_BroadcasterCT): ...
+
+
+class UserAuthorizationGrantCT(_ClientCT): ...
+
+
+class UserAuthorizationRevokeCT(_ClientCT): ...
+
+
+class UserUpdateCT(_UserCT): ...
+
+
+class WhisperReceivedCT(_UserCT): ...
