@@ -23,7 +23,7 @@ SOFTWARE.
 
 from typing import NotRequired, Required, TypedDict
 
-
+# TODO: __all__
 # TODO: Accept Partial/User etc objects??
 
 
@@ -85,6 +85,78 @@ class _BroadcasterRewardCT(_BroadcasterCT, _RewardCT):
 
 # -----------------------------------------------------------
 # Condition Payloads:
+
+
+type AnyCondition = (
+    AutomodMessageHoldCT
+    | AutomodMessageUpdateCT
+    | AutomodSettingsUpdateCT
+    | AutomodTermsUpdateCT
+    | ChannelAdBreakBeginCT
+    | ChannelBanCT
+    | ChannelBitUseCT
+    | ChannelChatClearCT
+    | ChannelChatClearUserMessagesCT
+    | ChannelChatMessageCT
+    | ChannelChatMessageDeleteCT
+    | ChannelChatNotificationCT
+    | ChannelChatSettingsUpdateCT
+    | ChannelChatUserMessageHoldCT
+    | ChannelChatUserMessageUpdate
+    | ChannelSubscribeCT
+    | ChannelSubscriptionEndCT
+    | ChannelSubscriptionGiftCT
+    | ChannelSubscriptionMessageCT
+    | ChannelCheerCT
+    | ChannelUpdateCT
+    | ChannelFollowCT
+    | ChannelUnbanCT
+    | ChannelUnbanRequestCreateCT
+    | ChannelUnbanRequestResolveCT
+    | ChannelRaidCT
+    | ChannelModerateCT
+    | ChannelModeratorAddCT
+    | ChannelModeratorRemoveCT
+    | ChannelGuestStarSessionBeginCT
+    | ChannelGuestStarSessionEndCT
+    | ChannelGuestStarGuestUpdate
+    | ChannelGuestStarSettingsUpdate
+    | ChannelPointsAutomaticRewardRedemptionAddCT
+    | ChannelPointsCustomRewardAddCT
+    | ChannelPointsCustomRewardUpdateCT
+    | ChannelPointsCustomRewardRemoveCT
+    | ChannelPointsCustomRewardRedemptionAddCT
+    | ChannelPointsCustomRewardRedemptionUpdateCT
+    | ChannelPollBeginCT
+    | ChannelPollProgressCT
+    | ChannelPollEndCT
+    | ChannelPredictionBeginCT
+    | ChannelPredictionProgressCT
+    | ChannelPredictionLockCT
+    | ChannelPredictionEndCT
+    | ChannelSharedChatSessionBeginCT
+    | ChannelSharedChatSessionUpdateCT
+    | ChannelSharedChatSessionEndCT
+    | ChannelSuspiciousUserMessageCT
+    | ChannelSuspiciousUserUpdateCT
+    | ChannelVIPAddCT
+    | ChannelVIPRemoveCT
+    | ChannelWarningAcknowledgeCT
+    | ChannelWarningSendCT
+    | ConduitShardDisabledCT
+    | DropEntitlementGrantCT
+    | ExtensionBitsTransactionCreateCT
+    | GoalsCT
+    | HypeTrainBeginCT
+    | HypeTrainProgressCT
+    | HypeTrainEndCT
+    | StreamOnlineCT
+    | StreamOfflineCT
+    | UserAuthorizationGrantCT
+    | UserAuthorizationRevokeCT
+    | UserUpdateCT
+    | WhisperReceivedCT
+)
 
 
 class AutomodMessageHoldCT(_BroadcasterModeratorCT): ...
