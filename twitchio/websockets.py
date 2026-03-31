@@ -225,6 +225,9 @@ class FrameListener(WSListener):
         t.add_done_callback(self._tasks.discard)
 
     async def _eager_on_ws_frame(self, transport: WSTransport, frame: WSFrame) -> None:
+        # NOTE: It would be faster to NOT create an eager task and await here, however;
+        # if we dispatch events as an eager task the user would need to ensure they await
+        # in each subscribed event at some point, otherwise the websocket will block the event loop.
         if frame.msg_type is WSMsgType.TEXT:
             self._watcher.update()
 
