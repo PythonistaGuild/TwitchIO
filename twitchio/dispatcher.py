@@ -63,7 +63,7 @@ class EventDispatcher:
     def publish(self, name: str, /, *, safe: bool = False, payload: Any = MISSING) -> None:
         name = name.lower()
         name = f"event_{name}"
-        name = name if not safe else f"safe_{name}"
+        name = f"safe_{name}" if safe else name
 
         listeners = self._listeners[name]
         if not listeners:
