@@ -21,8 +21,58 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import asyncio
+from typing import Any, Self
 
-class Client: ...
+from .dispatcher import EventDispatcher
+from .http import HTTPClient
+from .websockets import WebsocketManager
 
 
-class ManagedClient: ...
+class Client:
+    def __init__(self) -> None:
+        self._http = HTTPClient()
+        self._events = EventDispatcher()
+        self._sockets = WebsocketManager(http=self._http)
+
+        self.__stop_event = asyncio.Event()
+        self._closed: bool = False
+
+    @property
+    def dispatcher(self) -> EventDispatcher:
+        return self._events
+
+    @property
+    def http(self) -> HTTPClient:
+        return self._http
+
+    def __repr__(self) -> str:
+        return "Client()"
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(self, *args: Any, **kwargs: Any) -> None:
+        await self.close()
+
+    def run(self) -> None:
+        async def runner() -> None:
+            async with self:
+                await self.start()
+
+        try:
+            asyncio.run(runner())
+        except KeyboardInterrupt:
+            pass
+
+    async def start(self) -> None:
+        await self.__stop_event.wait()
+
+    async def close(self) -> None:
+        if self._closed:
+            return
+
+        self._closed = True
+
+
+class ManagedClient(Client): ...
