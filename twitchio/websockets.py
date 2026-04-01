@@ -31,12 +31,16 @@ import threading
 import time
 from collections import deque
 from types import MappingProxyType
-from typing import Any, ClassVar, no_type_check
+from typing import TYPE_CHECKING, Any, ClassVar, no_type_check
 
 from picows import WSCloseCode, WSFrame, WSListener, WSMsgType, WSTransport, ws_connect  # type: ignore
 
 from .backoff import Backoff
 from .utils import JSON_LOADS, MISSING
+
+
+if TYPE_CHECKING:
+    from .http import HTTPClient
 
 
 __all__ = ("FrameListener", "Websocket", "WebsocketManager", "WebsocketWatcher")
@@ -48,7 +52,8 @@ WSS_URL: str = "wss://eventsub.wss.twitch.tv/ws"
 
 
 class WebsocketManager:
-    def __init__(self, *, max_retries: int | None = None) -> None:
+    def __init__(self, http: HTTPClient, *, max_retries: int | None = None) -> None:
+        self._http = http
         self._max_retries = max_retries
         self._sockets: dict[str | int, Websocket] = {}
 
@@ -59,6 +64,7 @@ class WebsocketManager:
     def get_socket(self) -> WebsocketWatcher: ...
 
     async def reconnect_socket(self, socket: Websocket) -> ...:
+        # TODO: Handle subscriptions...
         shard_id = socket.shard_id
         socket._watcher.stop()
         await socket.close()
