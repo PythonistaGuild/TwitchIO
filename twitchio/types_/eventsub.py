@@ -116,6 +116,7 @@ __all__ = (
     "ChatSubGiftData",
     "ChatUserMessageHoldEvent",
     "ChatUserMessageUpdateEvent",
+    "ChatWatchStreakData",
     "EventSubHeaders",
     "GoalBeginEvent",
     "GoalEndEvent",
@@ -552,6 +553,11 @@ class ChatBitsBadgeTierData(TypedDict):
     tier: int
 
 
+class ChatWatchStreakData(TypedDict):
+    streak_count: int
+    channel_points_awarded: int
+
+
 class ChannelChatNotificationEvent(BaseBroadcasterEvent):
     chatter_user_id: str
     chatter_user_login: str
@@ -584,6 +590,7 @@ class ChannelChatNotificationEvent(BaseBroadcasterEvent):
         "shared_chat_raid",
         "shared_chat_pay_it_forward",
         "shared_chat_announcement",
+        "watch_streak",
     ]
     sub: ChatSubData | None
     resub: ChatResubData | None
@@ -606,6 +613,8 @@ class ChannelChatNotificationEvent(BaseBroadcasterEvent):
     shared_chat_pay_it_forward: ChatPayItForwardData | None
     shared_chat_raid: ChatRaidData | None
     shared_chat_announcement: ChatAnnouncementData | None
+    watch_streak: ChatWatchStreakData | None
+    is_source_only: bool | None
 
 
 class ChannelChatMessageDeleteEvent(BaseBroadcasterEvent):

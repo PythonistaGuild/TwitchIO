@@ -15,6 +15,7 @@ Changelog
         - Added - :func:`~twitchio.PartialUser.remove_suspicious_chat_user` to :class:`~twitchio.PartialUser`.
         - Added - :exc:`~twitchio.DeviceCodeFlowException`
         - Added - :class:`~twitchio.DeviceCodeRejection`
+        - Added - :attr:`~twitchio.ChatNotification.watch_streak` and :attr:`~twitchio.ChatNotification.source_only` to :class:`~twitchio.ChatNotification` event.
     
     - Changes
         - Some of the internal token management has been adjusted to support applications using DCF.

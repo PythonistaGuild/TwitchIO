@@ -185,6 +185,7 @@ __all__ = (
     "UserAuthorizationGrant",
     "UserAuthorizationRevoke",
     "UserUpdate",
+    "WatchStreak",
     "WebsocketWelcome",
     "Whisper",
 )
@@ -1850,6 +1851,28 @@ class ChatCharityDonation:
         return f"<ChatCharityDonation name={self.name}>"
 
 
+class WatchStreak:
+    """
+    Represents information about the Watch Streak event.
+
+    Attributes
+    -----------
+    streak: int
+        The number of consecutive broadcasts for which the user has been watching.
+    points: int
+        The number of channel points awarded for the Watch Streak milestone.
+    """
+
+    __slots__ = ("points", "streak")
+
+    def __init__(self, data: ChatWatchStreakData) -> None:
+        self.streak: int = int(data["streak_count"])
+        self.points: int = int(data["channel_points_awarded"])
+
+    def __repr__(self) -> str:
+        return f"<WatchStreak streak={self.streak} points={self.points}>"
+
+
 class ChatNotification(_ResponderEvent):
     """
     Represents a chat notification.
@@ -1955,6 +1978,10 @@ class ChatNotification(_ResponderEvent):
     shared_announcement: ChatAnnouncement | None
         Information about the shared_chat_announcement event. Is `None` if `notice_type` is not `shared_chat_announcement`.
         This field has the same information as the announcement field but for a notice that happened for a channel in a shared chat session other than the broadcaster in the subscription condition.
+    source_only: bool | None
+        Whether the notification is only sent to the source channel. Is `None` if the notification is not in a shared chat session.
+    watch_streak: WatchStreak | None
+        Information about the Watch Streak event. Is `None` if notice_type is not `watch_streak`.
     """
 
     subscription_type = "channel.chat.notification"
@@ -1986,11 +2013,13 @@ class ChatNotification(_ResponderEvent):
         "shared_chat_resub",
         "shared_chat_sub",
         "shared_chat_sub_gift",
+        "source_only",
         "sub",
         "sub_gift",
         "system_message",
         "text",
         "unraid",
+        "watch_streak",
     )
 
     def __init__(self, payload: ChannelChatNotificationEvent, *, http: HTTPClient) -> None:
@@ -2076,6 +2105,10 @@ class ChatNotification(_ResponderEvent):
             if payload["shared_chat_announcement"] is not None
             else None
         )
+        self.source_only: bool | None = payload.get("is_source_only")
+        self.watch_streak: WatchStreak | None = (
+            WatchStreak(payload["watch_streak"]) if payload["watch_streak"] is not None else None
+        )
 
         self.notice_type: Literal[
             "sub",
@@ -2099,6 +2132,7 @@ class ChatNotification(_ResponderEvent):
             "shared_chat_raid",
             "shared_chat_pay_it_forward",
             "shared_chat_announcement",
+            "watch_streak",
         ] = payload["notice_type"]
 
     @property

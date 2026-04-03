@@ -10,7 +10,7 @@
 
 
 TwitchIO - Documentation
-#########
+#########################
 
 TwitchIO is a fully featured, powerful async Python library for the Twitch API and EventSub with modern Object-Orientated design
 and stateful objects.

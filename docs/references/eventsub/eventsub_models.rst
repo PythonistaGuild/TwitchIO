@@ -611,6 +611,11 @@
 .. autoclass:: twitchio.UserUpdate()
     :members:
 
+.. attributetable:: twitchio.WatchStreak
+
+.. autoclass:: twitchio.WatchStreak()
+    :members:
+
 .. attributetable:: twitchio.Whisper
 
 .. autoclass:: twitchio.Whisper()
