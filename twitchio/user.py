@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2017 - Present PythonistaGuild
+Copyright (c) 2017 - Present TwitchIO, PythonistaGuild
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -838,7 +838,7 @@ class PartialUser:
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
             If you choose to, then this can be the bot account itself.
 
@@ -1042,7 +1042,7 @@ class PartialUser:
             Possible values in seconds: 2 (recommended), 4 and 6.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
 
         Returns
@@ -1948,7 +1948,7 @@ class PartialUser:
             This ID must match the user ID in the user access token.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
 
         Returns
@@ -2008,7 +2008,7 @@ class PartialUser:
             You can fetch this using :meth:`~fetch_automod_settings`
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
 
         Returns
@@ -2399,7 +2399,7 @@ class PartialUser:
             Maximum number of total results to return. When this is set to None (default), then everything found is returned.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used
 
         Returns
@@ -2455,7 +2455,7 @@ class PartialUser:
             If the blocked term already exists, the response contains the existing blocked term.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
 
         Returns
@@ -2510,7 +2510,7 @@ class PartialUser:
             The ID of the blocked term to remove from the broadcaste's list of blocked terms.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
         """
 
@@ -2558,7 +2558,7 @@ class PartialUser:
             The ID of the message to remove.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
         """
 
@@ -2813,7 +2813,7 @@ class PartialUser:
             Set to True to activate Shield Mode; otherwise, False to deactivate Shield Mode.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
             If you choose to, then this can be the bot account itself.
 
@@ -2857,7 +2857,7 @@ class PartialUser:
             This ID must match the user ID in the access token.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
             If you choose to, then this can be the bot account itself.
 
@@ -3714,7 +3714,7 @@ class PartialUser:
             The reason provided for warning.
         token_for: str | PartialUser | None
             An optional user ID (or PartialUser) used to select a managed user token for this request.
-            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
             If you choose to, then this can be the bot account itself.
 
