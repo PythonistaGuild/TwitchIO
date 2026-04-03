@@ -286,6 +286,11 @@
     :members:
     :inherited-members:
 
+.. attributetable:: twitchio.Metadata
+
+.. autoclass:: twitchio.Metadata()
+    :members:
+
 .. attributetable:: twitchio.ModerateFollowers
 
 .. autoclass:: twitchio.ModerateFollowers()
@@ -520,6 +525,11 @@
 .. autoclass:: twitchio.GoalEnd()
     :members:
     :inherited-members:
+
+.. attributetable:: twitchio.Headers
+
+.. autoclass:: twitchio.Headers()
+    :members:
 
 .. attributetable:: twitchio.HypeTrainBegin
 
