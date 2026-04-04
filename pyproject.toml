@@ -7,10 +7,12 @@ name = "TwitchIO"
 authors = [
     { name = "Evie. P.", email = "evieepy@gmail.com" },
     { name = "Chillymosh" },
+    { name = "Chillymosh", email = "chillymosh@gmail.com" },
 ]
 maintainers = [
     { name = "Evie. P.", email = "evieepy@gmail.com" },
     { name = "Chillymosh"},
+    { name = "Chillymosh", email = "chillymosh@gmail.com" },
 ]
 version = "4.0.0a"
 description = "A powerful, asynchronous Python library for twitch.tv."
