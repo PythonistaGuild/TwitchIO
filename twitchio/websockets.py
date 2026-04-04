@@ -41,6 +41,15 @@ from .utils import JSON_LOADS, MISSING
 
 if TYPE_CHECKING:
     from .http import HTTPClient
+    from .types_.eventsub import (
+        KeepAliveMessage,
+        MessageTypes,
+        NotificationMessage,
+        ReconnectMessage,
+        RevocationMessage,
+        WebsocketMessages,
+        WelcomeMessage,
+    )
 
 
 __all__ = ("FrameListener", "Websocket", "WebsocketManager", "WebsocketWatcher")
@@ -320,8 +329,31 @@ class Websocket:
 
     async def close(self) -> ...: ...
 
-    async def receive_message(self, data: ...) -> ...:
-        print(f"MESSAGE: {data}")
+    async def receive_message(self, data: WebsocketMessages) -> ...:
+        metadata = data["metadata"]
+        message_type: MessageTypes = metadata["message_type"]
+
+        if message_type == "notification":
+            message: NotificationMessage = data  # type: ignore
+            LOGGER.debug("%r received notification message: %s", message)
+
+        elif message_type == "session_keepalive":
+            message: KeepAliveMessage = data  # type: ignore
+            LOGGER.debug("%r received keepalive message: %s", message)
+            self._watcher.update()
+
+        elif message_type == "session_reconnect":
+            message: ReconnectMessage = data  # type: ignore
+            LOGGER.debug("%r received reconnect message: %s", message)
+
+        elif message_type == "session_welcome":
+            message: WelcomeMessage = data  # type: ignore
+            LOGGER.debug("%r received welcome message: %s", message)
+            self._welcomed.set()
+
+        elif message_type == "revocation":
+            message: RevocationMessage = data  # type: ignore
+            LOGGER.debug("%r received revocation message: %s", message)
 
     async def wait_for_welcome(self) -> None:
         await self._welcomed.wait()
