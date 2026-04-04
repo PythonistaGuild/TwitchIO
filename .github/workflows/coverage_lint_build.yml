@@ -31,7 +31,7 @@ jobs:
         run: uv build --wheel
 
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifact-wheel-${{ matrix.python-version }}
           path: dist/*.whl
@@ -55,7 +55,7 @@ jobs:
         run: uv build --sdist
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifact-source-dist
           path: dist/*.tar.gz
