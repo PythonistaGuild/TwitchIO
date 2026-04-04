@@ -120,3 +120,8 @@ dev = [
     "ruff>=0.15.7",
     "pyright>=1.1.408",
 ]
+
+docs = [
+    "sphinx",
+    "furo",
+]
