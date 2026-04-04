@@ -117,7 +117,6 @@ pythonVersion = "3.12"
 
 [dependency-groups]
 dev = [
-    "pdm>=2.26.7",
     "ruff>=0.15.7",
     "pyright>=1.1.408",
 ]
