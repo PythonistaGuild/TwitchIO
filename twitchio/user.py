@@ -1111,13 +1111,20 @@ class PartialUser:
         moderator: str | int | PartialUser,
         message: str,
         color: Literal["blue", "green", "orange", "purple", "primary"] | None = None,
+        token_for: str | PartialUser | None = MISSING,
+        source_only: bool | None = None,
     ) -> None:
         """|coro|
 
         Sends an announcement to the broadcaster's chat room.
 
         .. note::
-            Requires a user access token that includes the ``moderator:manage:announcements`` scope.
+            Requires a user to auth with the ``moderator:manage:announcements`` scope.
+            This can be the bot account itself.
+
+            If using the app token then the following scopes are required:
+                - Broadcaster (user object) - ``channel:bot``
+                - Moderator - ``user:bot`` and ``moderator:manage:shoutouts``
 
         Parameters
         ----------
@@ -1132,9 +1139,28 @@ class PartialUser:
         color: Literal["blue", "green", "orange", "purple", "primary"] | None
             An optional colour to use for the announcement. If set to ``"primary``" or ``None``
             the channels accent colour will be used instead. Defaults to ``None``.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+        source_only: bool | None = None
+            This parameter can only be set when utilizing an App Access Token, otherwise it results in a HTTP 400 error.
+
+            Determines if the chat announcement is sent only to the source channel (the current User object) during a shared chat session.
+            This has no effect if the announcement is not sent during a shared chat session.
+
+            The default value when using an App Access Token is `True`. If you prefer to send an announcement to all channels in a shared chat session, set this parameter to `False`.
         """
+
+        resolved_token_for = moderator if token_for is MISSING else token_for
+
         return await self._http.post_chat_announcement(
-            broadcaster_id=self.id, moderator_id=moderator, token_for=moderator, message=message, color=color
+            broadcaster_id=self.id,
+            moderator_id=moderator,
+            token_for=resolved_token_for,
+            message=message,
+            color=color,
+            source_only=source_only,
         )
 
     async def send_shoutout(

@@ -1244,12 +1244,16 @@ class HTTPClient:
         self,
         broadcaster_id: str | int,
         moderator_id: str | int | PartialUser,
-        token_for: str | PartialUser,
+        token_for: str | PartialUser | None,
         message: str,
         color: Literal["blue", "green", "orange", "purple", "primary"] = "primary",
+        source_only: bool | None = None,
     ) -> None:
         params = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
-        data = {"color": color, "message": message}
+        data: dict[str, str | bool] = {"color": color, "message": message}
+
+        if source_only is not None:
+            data["for_source_only"] = source_only
 
         route: Route = Route("POST", "chat/announcements", json=data, params=params, token_for=token_for)
         return await self.request_json(route)
