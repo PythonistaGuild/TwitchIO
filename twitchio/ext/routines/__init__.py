@@ -370,6 +370,7 @@ class Routine:
             LOGGER.warning("The before_routine for %s has previously been set.", self.__repr__())
 
         self._before_routine = func
+        return func
 
     def after_routine(self, func: CoroT) -> None:
         """|deco|
@@ -385,6 +386,7 @@ class Routine:
             LOGGER.warning("The after_routine for %s has previously been set.", self.__repr__())
 
         self._after_routine = func
+        return func
 
     async def on_error(self, error: Exception) -> None:
         """|coro|
@@ -410,6 +412,7 @@ class Routine:
             raise TypeError(f'"error" for {self!r} expected a coroutine function not {type(func).__name__!r}')
 
         self._on_error = func
+        return func
 
     @property
     def completed_iterations(self) -> int:
