@@ -73,6 +73,7 @@ class SearchChannel:
         "_http",
         "broadcaster",
         "game_id",
+        "game_name",
         "language",
         "live",
         "name",
@@ -86,6 +87,7 @@ class SearchChannel:
         self._http: HTTPClient = http
         self.broadcaster: PartialUser = PartialUser(data["id"], data["broadcaster_login"], data["display_name"], http=http)
         self.game_id: str = data["game_id"]
+        self.game_name: str = data["game_name"]
         self.title: str = data["title"]
         self.thumbnail: Asset = Asset(data["thumbnail_url"], http=http)
         self.language: str = data["broadcaster_language"]
