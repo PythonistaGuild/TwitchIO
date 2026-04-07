@@ -2377,7 +2377,7 @@ class HTTPClient:
         if user_ids is not None:
             params["user_id"] = user_ids
         if game_ids is not None:
-            params["game_ids"] = game_ids
+            params["game_id"] = game_ids
         if user_logins is not None:
             params["user_login"] = user_logins
         if languages is not None:
