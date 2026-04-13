@@ -21,16 +21,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self, Unpack
 
 from .dispatcher import EventDispatcher
 from .http import HTTPClient
 from .websockets import WebsocketManager
 
 
+if TYPE_CHECKING:
+    from .types_.clients import ClientOptionsT
+
+
 class Client:
-    def __init__(self) -> None:
+    def __init__(self, **options: Unpack[ClientOptionsT]) -> None:
         self._http = HTTPClient()
         self._events = EventDispatcher()
         self._sockets = WebsocketManager(http=self._http)
