@@ -98,7 +98,10 @@ def get_signature_parameters(
 
     cache: dict[str, Any] = {}
     eval_annotation = twitchio.utils.evaluate_annotation
-    required_params = twitchio.utils.is_inside_class(function) + 1 if skip_parameters is None else skip_parameters
+    
+    bound_method = inspect.ismethod(function) and getattr(function, "__self__", None) is not None
+    required_params = (0 if bound_method else twitchio.utils.is_inside_class(function)) + 1
+    required_params = required_params if skip_parameters is None else skip_parameters
 
     if len(signature.parameters) < required_params:
         raise TypeError(
@@ -106,7 +109,7 @@ def get_signature_parameters(
         )
 
     iterator = iter(signature.parameters.items())
-    for _ in range(0, required_params):
+    for _ in range(required_params):
         next(iterator)
 
     for name, parameter in iterator:
