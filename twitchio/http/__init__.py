@@ -21,5 +21,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-
-class HTTPClient: ...
+from .clients import HTTPClient as HTTPClient
+from .routes import Route as Route
