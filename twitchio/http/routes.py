@@ -61,7 +61,7 @@ class Route:
             raise MissingCLIParamError("Excpected the 'url' parameter when 'cli' is set.")
 
         self._is_id = use_id
-        self._base_url = url or (self.API_URL if not use_id else self.ID_URL)
+        self._base_url = url or (self.ID_URL if use_id else self.API_URL)
         self._params = params
 
         self._data = data  # TODO: ...
@@ -110,7 +110,7 @@ class Route:
                     del self._params[key]
                 continue
 
-            if isinstance(value, (str, int)):
+            if isinstance(value, str | int):
                 url += f"{key}={self.encode(str(value), safe='+', plus=True)}&"
             elif duplicates:
                 for v in value:
