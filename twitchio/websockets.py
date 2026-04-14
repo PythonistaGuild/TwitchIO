@@ -85,16 +85,13 @@ class WebsocketManager:
         backoff = Backoff()
         tries = 0
 
-        while True:
-            if self._max_retries and tries >= self._max_retries:
-                break
-
+        while self._max_retries is None or tries < self._max_retries:
             try:
                 await self.open_socket(shard_id=shard_id)
             except Exception as e:
                 LOGGER.debug("An error occurred reconnecting %r. %s", socket, e)
             else:
-                LOGGER.info("%r was successfully reconnected.")
+                LOGGER.info("%r was successfully reconnected.", socket)
                 break
 
             tries += 1
@@ -335,25 +332,25 @@ class Websocket:
 
         if message_type == "notification":
             message: NotificationMessage = data  # type: ignore
-            LOGGER.debug("%r received notification message: %s", message)
+            LOGGER.debug("%r received notification message: %s", self, message)
 
         elif message_type == "session_keepalive":
             message: KeepAliveMessage = data  # type: ignore
-            LOGGER.debug("%r received keepalive message: %s", message)
+            LOGGER.debug("%r received keepalive message: %s", self, message)
             self._watcher.update()
 
         elif message_type == "session_reconnect":
             message: ReconnectMessage = data  # type: ignore
-            LOGGER.debug("%r received reconnect message: %s", message)
+            LOGGER.debug("%r received reconnect message: %s", self, message)
 
         elif message_type == "session_welcome":
             message: WelcomeMessage = data  # type: ignore
-            LOGGER.debug("%r received welcome message: %s", message)
+            LOGGER.debug("%r received welcome message: %s", self, message)
             self._welcomed.set()
 
         elif message_type == "revocation":
             message: RevocationMessage = data  # type: ignore
-            LOGGER.debug("%r received revocation message: %s", message)
+            LOGGER.debug("%r received revocation message: %s", self, message)
 
     async def wait_for_welcome(self) -> None:
         await self._welcomed.wait()
