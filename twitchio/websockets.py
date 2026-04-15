@@ -31,7 +31,7 @@ import threading
 import time
 from collections import deque
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar, no_type_check
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, no_type_check
 
 from picows import WSCloseCode, WSFrame, WSListener, WSMsgType, WSTransport, ws_connect  # type: ignore
 
@@ -44,10 +44,10 @@ if TYPE_CHECKING:
     from .types_.eventsub import (
         KeepAliveMessage,
         MessageTypes,
+        MetaData,
         NotificationMessage,
         ReconnectMessage,
         RevocationMessage,
-        WebsocketMessages,
         WelcomeMessage,
     )
 
@@ -58,6 +58,14 @@ __all__ = ("FrameListener", "Websocket", "WebsocketManager", "WebsocketWatcher")
 LOGGER: logging.Logger = logging.getLogger(__name__)
 PY_314: bool = sys.version_info >= (3, 14)
 WSS_URL: str = "wss://eventsub.wss.twitch.tv/ws"
+
+
+class Thing(TypedDict):
+    notfication: NotificationMessage
+    session_keepalive: KeepAliveMessage
+    session_reconnect: ReconnectMessage
+    session_welcome: WelcomeMessage
+    revocation: RevocationMessage
 
 
 class WebsocketManager:
@@ -326,31 +334,31 @@ class Websocket:
 
     async def close(self) -> ...: ...
 
-    async def receive_message(self, data: WebsocketMessages) -> ...:
-        metadata = data["metadata"]
+    async def receive_message(self, data: Any) -> ...:
+        metadata: MetaData = data["metadata"]
         message_type: MessageTypes = metadata["message_type"]
 
         if message_type == "notification":
-            message: NotificationMessage = data  # type: ignore
-            LOGGER.debug("%r received notification message: %s", self, message)
+            notification: NotificationMessage = data
+            LOGGER.debug("%r received notification message: %s", self, notification)
 
         elif message_type == "session_keepalive":
-            message: KeepAliveMessage = data  # type: ignore
-            LOGGER.debug("%r received keepalive message: %s", self, message)
+            keepalive: KeepAliveMessage = data
+            LOGGER.debug("%r received keepalive message: %s", self, keepalive)
             self._watcher.update()
 
         elif message_type == "session_reconnect":
-            message: ReconnectMessage = data  # type: ignore
-            LOGGER.debug("%r received reconnect message: %s", self, message)
+            reconnect: ReconnectMessage = data
+            LOGGER.debug("%r received reconnect message: %s", self, reconnect)
 
         elif message_type == "session_welcome":
-            message: WelcomeMessage = data  # type: ignore
-            LOGGER.debug("%r received welcome message: %s", self, message)
+            welcome: WelcomeMessage = data
+            LOGGER.debug("%r received welcome message: %s", self, welcome)
             self._welcomed.set()
 
         elif message_type == "revocation":
-            message: RevocationMessage = data  # type: ignore
-            LOGGER.debug("%r received revocation message: %s", self, message)
+            revocation: RevocationMessage = data
+            LOGGER.debug("%r received revocation message: %s", self, revocation)
 
     async def wait_for_welcome(self) -> None:
         await self._welcomed.wait()
