@@ -2683,6 +2683,7 @@ class Client:
         type: str | None = None,
         user_id: str | PartialUser | None = None,
         subscription_id: str | None = None,
+        conduit_id: str | None = None,
         status: Literal[
             "enabled",
             "webhook_callback_verification_pending",
@@ -2709,7 +2710,7 @@ class Client:
         Fetches Eventsub Subscriptions for either webhook or websocket.
 
         .. note::
-            type, status, user_id, and subscription_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
+            type, status, user_id, conduit_id, and subscription_id are mutually exclusive and only one can be passed, otherwise ValueError will be raised.
 
             This endpoint returns disabled WebSocket subscriptions for a minimum of 1 minute as compared to webhooks which returns disabled subscriptions for a minimum of 10 days.
 
@@ -2725,6 +2726,8 @@ class Client:
             Filter subscriptions by user ID, or PartialUser. The response contains subscriptions where this ID matches a user ID that you specified in the Condition object when you created the subscription.
         subscription_id: str | None
             The specific subscription ID to fetch.
+        conduit_id: str | None
+            Filter subscriptions by conduit ID.
         status: str | None = None
             Filter subscriptions by its status. Possible values are:
 
@@ -2782,9 +2785,9 @@ class Client:
             Only one of 'status', 'user_id', 'subscription_id', or 'type' can be provided.
         """
 
-        provided: int = len([v for v in (type, user_id, status, subscription_id) if v])
+        provided: int = len([v for v in (type, user_id, status, conduit_id, subscription_id) if v])
         if provided > 1:
-            raise ValueError("Only one of 'status', 'user_id', 'subscription_id', or 'type' can be provided.")
+            raise ValueError("Only one of 'status', 'user_id', 'conduit_id', 'subscription_id', or 'type' can be provided.")
 
         return await self._http.get_eventsub_subscription(
             type=type,
@@ -2793,6 +2796,7 @@ class Client:
             subscription_id=subscription_id,
             user_id=user_id,
             status=status,
+            conduit_id=conduit_id,
         )
 
     async def fetch_eventsub_subscription(

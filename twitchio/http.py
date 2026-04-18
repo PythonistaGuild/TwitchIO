@@ -1515,6 +1515,7 @@ class HTTPClient:
         user_id: str | PartialUser | None = None,
         subscription_id: str | None = None,
         type: str | None = None,
+        conduit_id: str | None = None,
         max_results: int | None = None,
         token_for: str | PartialUser | None = None,
     ) -> EventsubSubscriptions:
@@ -1528,6 +1529,8 @@ class HTTPClient:
             params["user_id"] = str(user_id)
         if subscription_id is not None:
             params["subscription_id"] = subscription_id
+        if conduit_id is not None:
+            params["conduit_id"] = conduit_id
 
         route: Route = Route("GET", "eventsub/subscriptions", params=params, token_for=token_for)
 

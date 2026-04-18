@@ -16,6 +16,7 @@ Changelog
         - Added - :exc:`~twitchio.DeviceCodeFlowException`
         - Added - :class:`~twitchio.DeviceCodeRejection`
         - Added - :attr:`~twitchio.ChatNotification.watch_streak` and :attr:`~twitchio.ChatNotification.source_only` to :class:`~twitchio.ChatNotification` event.
+        - Added - ``conduit_id`` parameter to :func:`twitchio.Client.fetch_eventsub_subscriptions`
     
     - Changes
         - Some of the internal token management has been adjusted to support applications using DCF.
