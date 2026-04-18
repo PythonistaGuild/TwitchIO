@@ -2573,11 +2573,13 @@ class Client:
             resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
         except HTTPException as e:
             if e.status == 409:
+                sub_id = e.extra["message"].partition("id=")[2] or ""
                 logger.error(
                     "Disregarding HTTPException in subscribe: "
-                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s' with ID '%s'",
                     payload.type,
                     str(payload.condition),
+                    sub_id,
                 )
                 return
 
@@ -2665,11 +2667,13 @@ class Client:
             resp: SubscriptionResponse = await self._http.create_eventsub_subscription(**data)
         except HTTPException as e:
             if e.status == 409:
-                logger.warning(
+                sub_id = e.extra["message"].partition("id=")[2] or ""
+                logger.error(
                     "Disregarding HTTPException in subscribe: "
-                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s'",
+                    "A subscription already exists for the specified event type and condition combination: '%s' and '%s' with ID '%s'",
                     payload.type,
                     str(payload.condition),
+                    sub_id,
                 )
                 return
 
