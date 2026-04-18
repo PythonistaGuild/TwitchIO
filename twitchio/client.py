@@ -3772,10 +3772,7 @@ class AutoClient(Client):
             logger.info("Attempting to do an initial subscription on new conduit: %r.", self._conduit_info)
             payload = await self._multi_sub(self._initial_subs, stop_on_error=False)
 
-            errors: int = 0
-            for data in payload.errors:
-                if data.error.status != 409:
-                    errors += 1
+            errors: int = sum(data.error.status != 409 for data in payload.errors)
 
             if errors:
                 msg = (
