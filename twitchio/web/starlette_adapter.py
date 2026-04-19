@@ -28,6 +28,7 @@ import asyncio
 import datetime
 import logging
 from collections import deque
+from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 from urllib.parse import unquote_plus
 
@@ -45,6 +46,7 @@ from .utils import MESSAGE_TYPES, BaseAdapter, FetchTokenPayload, verify_message
 
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
     from os import PathLike
 
     from starlette.requests import Request
@@ -59,6 +61,13 @@ __all__ = ("StarletteAdapter",)
 
 BT = TypeVar("BT", bound="Client")
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: StarletteAdapter[Any]) -> AsyncGenerator[None]:
+    await app.event_startup()
+    yield
+    await app.event_shutdown()
 
 
 class StarletteAdapter(BaseAdapter[BT], Starlette):
@@ -215,8 +224,7 @@ class StarletteAdapter(BaseAdapter[BT], Starlette):
                 Route(self._oauth_path, self.oauth_redirect, methods=["GET"]),
                 Route(self._eventsub_path, self.eventsub_callback, methods=["POST"]),
             ],
-            on_shutdown=[self.event_shutdown],
-            on_startup=[self.event_startup],
+            lifespan=lifespan,
         )
         self._closing: bool = False
         self._server: uvicorn.Server | None = None
