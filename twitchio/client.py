@@ -3314,7 +3314,7 @@ class AutoClient(Client):
     multiple channels/broadcasters *or* requires subscription continuity.
 
     Twitch Conduits are a method of EventSub transport which allow higher throughput of events, higher
-    (essentially unlimited) subscription limts (within cost), continutiy of subscriptions and scaling.
+    (essentially unlimited) subscription limts (within cost), continuity of subscriptions and scaling.
 
     To benefit from the subscription continuity of Conduits, your application is expected to have been connected to the
     associated Conduit within ``72 hours`` of it going offline.
