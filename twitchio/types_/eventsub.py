@@ -52,6 +52,7 @@ __all__ = (
     "ChannelChatNotificationEvent",
     "ChannelChatSettingsUpdateEvent",
     "ChannelCheerEvent",
+    "ChannelCustomPowerupRedemptionEvent",
     "ChannelFollowEvent",
     "ChannelModerateEvent",
     "ChannelModerateEventV2",
@@ -467,6 +468,20 @@ class ChannelChatMessageEvent(BaseBroadcasterEvent):
     source_broadcaster_user_name: str | None
     source_message_id: str | None
     source_badges: list[ChatMessageBadgeData] | None
+
+
+class CustomPowerupData(TypedDict):
+    id: str
+    title: str
+    bits_cost: int
+    prompt: str
+
+
+class ChannelCustomPowerupRedemptionEvent(BroadcasterUserEvent):
+    id: str
+    status: Literal["unfulfilled", "unknown", "fulfilled", "canceled"]
+    custom_power_up: ...
+    redeemed_at: str
 
 
 class ChatSubData(TypedDict):
