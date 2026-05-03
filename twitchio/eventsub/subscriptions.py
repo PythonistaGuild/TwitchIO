@@ -2543,6 +2543,7 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
     def default_auth(self) -> DefaultAuthDict:
         return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
+
 class CustomPowerupRedeemAddSubscription(SubscriptionPayload):
     """The ``channel.custom_power_up_redemption.add`` subscription type sends a notification when a viewer has redeemed a custom Power-up on the specified channel.
 
@@ -2565,9 +2566,7 @@ class CustomPowerupRedeemAddSubscription(SubscriptionPayload):
         The parameter "broadcaster_user_id" must be passed.
     """
 
-    type: ClassVar[Literal["channel.custom_power_up_redemption.add"]] = (
-        "channel.custom_power_up_redemption.add"
-    )
+    type: ClassVar[Literal["channel.custom_power_up_redemption.add"]] = "channel.custom_power_up_redemption.add"
     version: ClassVar[Literal["beta"]] = "beta"
 
     @handle_user_ids()
