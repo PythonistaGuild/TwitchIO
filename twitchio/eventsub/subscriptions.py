@@ -2543,6 +2543,49 @@ class CharityCampaignStopSubscription(SubscriptionPayload):
     def default_auth(self) -> DefaultAuthDict:
         return {"as_bot": False, "token_for": self.broadcaster_user_id}
 
+class CustomPowerupRedeemAddSubscription(SubscriptionPayload):
+    """The ``channel.custom_power_up_redemption.add`` subscription type sends a notification when a viewer has redeemed a custom Power-up on the specified channel.
+
+    .. important::
+        Must have ``bits:read`` scope.
+
+    One attribute ``.condition`` can be accessed from this class, which returns a mapping of the subscription
+    parameters provided.
+
+    Parameters
+    ----------
+    broadcaster_user_id: str | PartialUser
+        The ID, or PartialUser, of the broadcaster to subscribe to.
+    reward_id: str
+        Optional to only get notifications for a specific reward.
+
+    Raises
+    ------
+    ValueError
+        The parameter "broadcaster_user_id" must be passed.
+    """
+
+    type: ClassVar[Literal["channel.custom_power_up_redemption.add"]] = (
+        "channel.custom_power_up_redemption.add"
+    )
+    version: ClassVar[Literal["beta"]] = "beta"
+
+    @handle_user_ids()
+    def __init__(self, **condition: Unpack[Condition]) -> None:
+        self.broadcaster_user_id: str = condition.get("broadcaster_user_id", "")
+        self.reward_id: str = condition.get("reward_id", "")
+
+        if not self.broadcaster_user_id:
+            raise ValueError('The parameter "broadcaster_user_id" must be passed.')
+
+    @property
+    def condition(self) -> Condition:
+        return {"broadcaster_user_id": self.broadcaster_user_id, "reward_id": self.reward_id}
+
+    @property
+    def default_auth(self) -> DefaultAuthDict:
+        return {"as_bot": False, "token_for": self.broadcaster_user_id}
+
 
 class GoalBeginSubscription(SubscriptionPayload):
     """The ``channel.goal.begin`` subscription type sends a notification when the specified broadcaster begins a goal.
