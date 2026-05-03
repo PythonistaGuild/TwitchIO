@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 
     from .http import HTTPAsyncIterator, HTTPClient
     from .models.analytics import ExtensionAnalytics, GameAnalytics
-    from .models.bits import BitsLeaderboard
+    from .models.bits import BitsLeaderboard, CustomPowerup
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowerEvent, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
@@ -724,7 +724,8 @@ class PartialUser:
         Returns
         -------
         list[CustomReward]
-            _description_
+            A list of CustomReward objects.
+
         """
         from .models.channel_points import CustomReward
 
@@ -3623,6 +3624,29 @@ class PartialUser:
         Stream | None
         """
         return await anext(self._http.get_streams(user_ids=[self.id], max_results=1), None)
+
+    async def fetch_custom_powerups(self, *, ids: list[str] | None = None) -> list[CustomPowerup]:
+        """|coro|
+
+        Fetches list of custom powerups that the specified broadcaster created.
+
+        .. note::
+            Requires user access token that includes the ``bits:read`` scope.
+
+        Parameters
+        ----------
+        ids: list[str] | None
+            A list of IDs to filter the powerups by. You may request a maximum of 50.
+
+        Returns
+        -------
+        list[CustomPowerup]
+            A list of CustomPowerup objects.
+        """
+        from .models.bits import CustomPowerup
+
+        data = await self._http.get_custom_powerups(broadcaster_id=self.id, reward_ids=ids, token_for=self.id)
+        return [CustomPowerup(d, http=self._http) for d in data["data"]]
 
 
 class User(PartialUser):

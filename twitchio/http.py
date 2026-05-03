@@ -717,6 +717,22 @@ class HTTPClient:
         route: Route = Route("GET", "bits/cheermotes", params=params, token_for=token_for)
         return await self.request_json(route)
 
+    @handle_user_ids()
+    async def get_custom_powerups(
+        self,
+        *,
+        broadcaster_id: str,
+        token_for: str | PartialUser,
+        powerup_ids: list[str] | None = None,
+    ) -> CustomRewardsResponse:
+        params: dict[str, str | list[str]] = {"broadcaster_id": broadcaster_id}
+
+        if powerup_ids is not None:
+            params["id"] = powerup_ids
+
+        route: Route = Route("GET", "channel_points/custom_power_ups", params=params, token_for=token_for)
+        return await self.request_json(route)
+
     def get_extension_transactions(
         self,
         *,

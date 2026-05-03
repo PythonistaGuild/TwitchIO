@@ -53,6 +53,7 @@ __all__ = (
     "ContentClassificationLabelData",
     "ContentClassificationLabelsResponse",
     "CustomPowerupData",
+    "CustomPowerupResponseImage",
     "EventsubSubscriptionResponse",
     "EventsubSubscriptionResponseData",
     "ExtensionAnalyticsResponse",
@@ -371,6 +372,12 @@ class ChannelFollowersResponse(TypedDict):
     total: int
 
 
+class CustomPowerupResponseImage(_ImageUrlSizes): ...
+
+
+class CustomPowerupResponseDefaultImage(_ImageUrlSizes): ...
+
+
 class CustomPowerupData(TypedDict):
     broadcaster_id: str
     broadcaster_login: str
@@ -379,8 +386,9 @@ class CustomPowerupData(TypedDict):
     title: str
     prompt: str
     bits: int
-    image: _ImageUrlSizes
-    default_image: _ImageUrlSizes
+    image: CustomPowerupResponseImage
+    default_image: CustomPowerupResponseDefaultImage
+    background_color: str
     is_enabled: bool
     is_user_input_required: bool
     max_per_stream_setting: _MaxPerStreamSetting

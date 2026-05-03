@@ -24,11 +24,13 @@ SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal
 
 from twitchio.assets import Asset
 from twitchio.user import PartialUser
 from twitchio.utils import Colour, parse_timestamp
+
+from ._reward_settings import _CooldownSetting, _LimitSetting
 
 
 if TYPE_CHECKING:
@@ -45,23 +47,20 @@ if TYPE_CHECKING:
 __all__ = ("CustomReward", "CustomRewardRedemption", "RewardCooldown", "RewardLimitSettings")
 
 
-class RewardCooldown(NamedTuple):
+class RewardCooldown(_CooldownSetting):
     """NamedTuple that represents a custom reward's cooldown settings.
 
     Attributes
     -----------
     enabled: bool
-        Whether a coooldown between redemptions is enabled or not. Default is False.
+        Whether a cooldown between redemptions is enabled or not. Default is False.
     seconds: int
         The cooldown period in seconds. This only applies if ``is_enabled`` is True.
         Min value is 1; however, the minimum value is 60 for it to be shown in the Twitch UX.
     """
 
-    enabled: bool
-    seconds: int
 
-
-class RewardLimitSettings(NamedTuple):
+class RewardLimitSettings(_LimitSetting):
     """NamedTuple that represents a custom reward's stream limit settings.
 
     Attributes
@@ -71,9 +70,6 @@ class RewardLimitSettings(NamedTuple):
     value: int
         The max number of redemptions allowed. Minimum value is 1.
     """
-
-    enabled: bool
-    value: int
 
 
 class CustomReward:

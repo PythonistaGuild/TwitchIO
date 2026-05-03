@@ -83,6 +83,19 @@
 
 .. autoclass:: twitchio.RewardLimitSettings
 
+.. attributetable:: twitchio.PowerupCooldown
+
+.. autoclass:: twitchio.PowerupCooldown
+
+.. attributetable:: twitchio.PowerupLimitSettings
+
+.. autoclass:: twitchio.PowerupLimitSettings
+
+.. attributetable:: twitchio.CustomPowerup
+
+.. autoclass:: twitchio.CustomPowerup
+    :members:
+
 .. attributetable:: twitchio.CustomReward
 
 .. autoclass:: twitchio.CustomReward

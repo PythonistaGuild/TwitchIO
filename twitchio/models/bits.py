@@ -30,6 +30,8 @@ from twitchio.assets import Asset
 from twitchio.user import PartialUser
 from twitchio.utils import Colour, parse_timestamp
 
+from ._reward_settings import _CooldownSetting, _LimitSetting
+
 
 if TYPE_CHECKING:
     import datetime
@@ -40,6 +42,8 @@ if TYPE_CHECKING:
         BitsLeaderboardResponseData,
         CheermotesResponseData,
         CheermotesResponseTiers,
+        CustomPowerupData,
+        CustomPowerupResponseImage,
         ExtensionTransactionsResponseCost,
         ExtensionTransactionsResponseData,
         ExtensionTransactionsResponseProductData,
@@ -51,9 +55,12 @@ __all__ = (
     "BitsLeaderboard",
     "Cheermote",
     "CheermoteTier",
+    "CustomPowerup",
     "ExtensionCost",
     "ExtensionProductData",
     "ExtensionTransaction",
+    "PowerupCooldown",
+    "PowerupLimitSettings",
 )
 
 
@@ -352,3 +359,175 @@ class ExtensionCost:
 
     def __str__(self) -> str:
         return str(self.amount)
+
+
+class PowerupCooldown(_CooldownSetting):
+    """NamedTuple that represents a custom powerup's cooldown settings.
+
+    Attributes
+    -----------
+    enabled: bool
+        Whether a cooldown between redemptions is enabled or not.
+    seconds: int
+        The cooldown period in seconds. This only applies if ``is_enabled`` is True.
+    """
+
+
+class PowerupLimitSettings(_LimitSetting):
+    """NamedTuple that represents a custom powerup's stream redemption limit settings.
+
+    Attributes
+    -----------
+    enabled: bool
+        Whether the stream redemption setting is enabled or not.
+    value: int
+        The max number of redemptions allowed. Minimum value is 1.
+    """
+
+
+class CustomPowerup:
+    """Represents a custom Power-up from a broadcaster's channel.
+
+    Attributes
+    -----------
+    broadcaster: PartialUser
+        The broadcaster that owns the custom Power-up.
+    id: str
+        The ID that uniquely identifies this custom Power-up.
+    title: str
+        The title of the custom Power-up.
+    prompt: str
+        The prompt shown to the viewer when they redeem the custom Power-up if user input is required.
+    bits: int
+        The amount of Bits for the custom Power-up.
+    default_image: dict[str, str]
+        A set of default images for the custom Power-up. The keys are: ``url_1x``, ``url_2x``, ``url_4x``.
+    image: dict[str, str] | None
+        A set of custom images for the custom Power-up. Is ``None`` if the broadcaster didn't upload images.
+        The keys, if available, are: ``url_1x``, ``url_2x``, ``url_4x``.
+    colour: Colour
+        The background colour of the custom Power-up, parsed from Hex. There is an alias named ``color``.
+    enabled: bool
+        Whether the custom Power-up is enabled. Disabled custom Power-ups aren't shown to the user.
+    input_required: bool
+        Whether the user must enter information when redeeming the custom Power-up.
+    paused: bool
+        Whether the custom Power-up is currently paused. Viewers can't redeem paused custom Power-ups.
+    in_stock: bool
+        Whether the custom Power-up is currently in stock. Viewers can't redeem out of stock custom Power-ups.
+    current_stream_redeems: int | None
+        The number of redemptions redeemed during the current live stream. Counts against the ``max_per_stream``
+        limit. Is ``None`` if the broadcaster's stream isn't live or ``max_per_stream`` isn't enabled.
+    cooldown_until: datetime.datetime | None
+        The timestamp of when the cooldown period expires. Is ``None`` if the custom Power-up isn't in a cooldown
+        state.
+    cooldown: PowerupCooldown
+        The cooldown settings for the custom Power-up.
+        This represents whether the Power-up has a cooldown enabled and the cooldown period in seconds.
+    max_per_stream: PowerupLimitSettings
+        The per-stream redemption limit settings. ``value`` is the maximum number of redemptions allowed per
+        live stream.
+    max_per_user_stream: PowerupLimitSettings
+        The per-user per-stream redemption limit settings. ``value`` is the maximum number of redemptions
+        allowed per user per live stream.
+    """
+
+    __slots__ = (
+        "_http",
+        "_image",
+        "bits",
+        "broadcaster",
+        "colour",
+        "cooldown",
+        "cooldown_until",
+        "current_stream_redeems",
+        "default_image",
+        "enabled",
+        "id",
+        "in_stock",
+        "input_required",
+        "max_per_stream",
+        "max_per_user_stream",
+        "paused",
+        "prompt",
+        "title",
+    )
+
+    def __init__(self, data: CustomPowerupData, *, http: HTTPClient) -> None:
+        self._http: HTTPClient = http
+        self._image: CustomPowerupResponseImage | None = data.get("image")
+
+        self.broadcaster = PartialUser(
+            data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
+        )
+        self.id: str = data["id"]
+        self.title: str = data["title"]
+        self.prompt: str = data["prompt"]
+        self.bits: int = data["bits"]
+        self.default_image: dict[str, str] = {k: str(v) for k, v in data["default_image"].items()}
+        self.colour: Colour = Colour.from_hex(data["background_color"])
+        self.enabled: bool = data["is_enabled"]
+        self.input_required: bool = data["is_user_input_required"]
+        self.cooldown: PowerupCooldown = PowerupCooldown(
+            bool(data["global_cooldown_setting"]["is_enabled"]),
+            int(data["global_cooldown_setting"]["global_cooldown_seconds"]),
+        )
+        self.max_per_stream: PowerupLimitSettings = PowerupLimitSettings(
+            bool(data["max_per_stream_setting"]["is_enabled"]), int(data["max_per_stream_setting"]["max_per_stream"])
+        )
+        self.max_per_user_stream: PowerupLimitSettings = PowerupLimitSettings(
+            bool(data["max_per_user_stream_setting"]["is_enabled"]),
+            int(data["max_per_user_stream_setting"]["max_per_user_per_stream"]),
+        )
+
+        self.paused: bool = data["is_paused"]
+        self.in_stock: bool = data["is_in_stock"]
+        self.current_stream_redeems: int | None = (
+            int(data["redemptions_redeemed_current_stream"])
+            if data["redemptions_redeemed_current_stream"] is not None
+            else None
+        )
+        self.cooldown_until: datetime.datetime | None = (
+            parse_timestamp(data["cooldown_expires_at"]) if data["cooldown_expires_at"] else None
+        )
+
+    def __repr__(self) -> str:
+        return f"<CustomPowerup id={self.id} title={self.title} bits={self.bits}>"
+
+    def __str__(self) -> str:
+        return self.title
+
+    @property
+    def color(self) -> Colour | None:
+        return self.colour
+
+    @property
+    def image(self) -> dict[str, str] | None:
+        if self._image is not None:
+            return {k: str(v) for k, v in self._image.items()}
+        else:
+            return None
+
+    def get_image(self, size: Literal["1x", "2x", "4x"] = "2x", use_default: bool = False) -> Asset:
+        """Get an image Asset for the reward at a specified size.
+
+        Falls back to default images if no custom images have been uploaded.
+
+        Parameters
+        ----------
+        size: str
+            The size key of the image. Options are "1x", "2x", "4x". Defaults to "2x".
+        use_default: bool
+            Use default images instead of user uploaded images.
+
+        Returns
+        -------
+        Asset
+            The Asset for the image. Falls back to default images if no custom images have been uploaded.
+        """
+        if use_default or self.image is None or f"url_{size}" not in self.image:
+            url = self.default_image[f"url_{size}"]
+        else:
+            url = self.image[f"url_{size}"]
+
+        return Asset(url, http=self._http)
