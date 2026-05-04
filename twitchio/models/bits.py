@@ -42,7 +42,7 @@ if TYPE_CHECKING:
         BitsLeaderboardResponseData,
         CheermotesResponseData,
         CheermotesResponseTiers,
-        CustomPowerupData,
+        CustomPowerupResponseData,
         CustomPowerupResponseImage,
         ExtensionTransactionsResponseCost,
         ExtensionTransactionsResponseData,
@@ -453,7 +453,7 @@ class CustomPowerup:
         "title",
     )
 
-    def __init__(self, data: CustomPowerupData, *, http: HTTPClient) -> None:
+    def __init__(self, data: CustomPowerupResponseData, *, http: HTTPClient) -> None:
         self._http: HTTPClient = http
         self._image: CustomPowerupResponseImage | None = data.get("image")
 
