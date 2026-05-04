@@ -52,7 +52,8 @@ __all__ = (
     "ChannelChatNotificationEvent",
     "ChannelChatSettingsUpdateEvent",
     "ChannelCheerEvent",
-    "ChannelCustomPowerupRedemptionEvent",
+    "CustomPowerupData",
+    "CustomPowerupRedemptionAddEvent",
     "ChannelFollowEvent",
     "ChannelModerateEvent",
     "ChannelModerateEventV2",
@@ -477,10 +478,11 @@ class CustomPowerupData(TypedDict):
     prompt: str
 
 
-class ChannelCustomPowerupRedemptionEvent(BroadcasterUserEvent):
+class CustomPowerupRedemptionAddEvent(BroadcasterUserEvent):
     id: str
+    user_input: str
     status: Literal["unfulfilled", "unknown", "fulfilled", "canceled"]
-    custom_power_up: ...
+    custom_power_up: CustomPowerupData
     redeemed_at: str
 
 

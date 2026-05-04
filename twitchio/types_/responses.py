@@ -52,7 +52,7 @@ __all__ = (
     "ConduitPayload",
     "ContentClassificationLabelData",
     "ContentClassificationLabelsResponse",
-    "CustomPowerupData",
+    "CustomPowerupResponseData",
     "CustomPowerupResponseImage",
     "EventsubSubscriptionResponse",
     "EventsubSubscriptionResponseData",
@@ -378,7 +378,7 @@ class CustomPowerupResponseImage(_ImageUrlSizes): ...
 class CustomPowerupResponseDefaultImage(_ImageUrlSizes): ...
 
 
-class CustomPowerupData(TypedDict):
+class CustomPowerupResponseData(TypedDict):
     broadcaster_id: str
     broadcaster_login: str
     broadcaster_name: str
@@ -401,7 +401,7 @@ class CustomPowerupData(TypedDict):
 
 
 class CustomPowerupResponse(TypedDict):
-    data: list[CustomPowerupData]
+    data: list[CustomPowerupResponseData]
 
 
 class CustomRewardsResponseImage(_ImageUrlSizes): ...

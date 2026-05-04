@@ -148,6 +148,7 @@ __all__ = (
     "Conduit",
     "ConduitShard",
     "CooldownSettings",
+    "CustomPowerupRedemptionAdd",
     "EventsubSubscription",
     "EventsubSubscriptions",
     "GoalBegin",
@@ -4007,6 +4008,74 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
 
     def __repr__(self) -> str:
         return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
+
+
+
+# TODO Placeholder, need to think about how we want to handle this
+class PartialCustomPowerup:
+    """
+    Represents a partial custom Power-up, as received in a redemption event.
+
+    Attributes
+    ----------
+    id: str
+        The ID of the custom Power-up.
+    title: str
+        The title of the custom Power-up.
+    bits: int
+        The Bits cost of the custom Power-up.
+    prompt: str
+        The prompt of the custom Power-up.
+    """
+
+    def __init__(self, data: CustomPowerupData) -> None:
+        self.id: str = data["id"]
+        self.title: str = data["title"]
+        self.bits: int = data["bits_cost"]
+        self.prompt: str = data["prompt"]
+
+
+class CustomPowerupRedemptionAdd(_ResponderEvent):
+    """
+    Represents a custom Power-up redemption add event.
+
+    Attributes
+    ----------
+    broadcaster: PartialUser
+        The broadcaster whose channel had the custom Power-up redeemed.
+    user: PartialUser
+        The user who redeemed the custom Power-up.
+    id: str
+        The ID of the redemption.
+    user_input: str
+        The user input provided. Empty string if not provided.
+    status: typing.Literal["unfulfilled", "unknown", "fulfilled", "canceled"]
+        The status of the redemption. Defaults to unfulfilled.
+    redeemed_at: datetime.datetime
+        Datetime when the Power-up was redeemed.
+    custom_powerup: PartialCustomPowerup
+        Information about the custom Power-up that was redeemed.
+    """
+
+    subscription_type = "channel.custom_power_up_redemption.add"
+
+    __slots__ = ("broadcaster", "custom_powerup", "id", "redeemed_at", "status", "user", "user_input")
+
+    def __init__(self, payload: CustomPowerupRedemptionAddEvent, *, http: HTTPClient) -> None:
+        self.id: str = payload["id"]
+        self.broadcaster: PartialUser = PartialUser(
+            payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
+        )
+        self.user: PartialUser = PartialUser(
+            payload["user_id"], payload["user_login"], payload["user_name"], http=http
+        )
+        self.user_input: str = payload["user_input"]
+        self.status: Literal["unfulfilled", "unknown", "fulfilled", "canceled"] = payload["status"]
+        self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
+        self.custom_powerup: PartialCustomPowerup = PartialCustomPowerup(payload["custom_power_up"])
+
+    def __repr__(self) -> str:
+        return f"<CustomPowerupRedemptionAdd broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
 class PollVoting(NamedTuple):
