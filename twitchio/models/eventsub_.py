@@ -4010,7 +4010,6 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
         return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
 
 
-
 # TODO Placeholder, need to think about how we want to handle this
 class PartialCustomPowerup:
     """
@@ -4066,9 +4065,7 @@ class CustomPowerupRedemptionAdd(_ResponderEvent):
         self.broadcaster: PartialUser = PartialUser(
             payload["broadcaster_user_id"], payload["broadcaster_user_login"], payload["broadcaster_user_name"], http=http
         )
-        self.user: PartialUser = PartialUser(
-            payload["user_id"], payload["user_login"], payload["user_name"], http=http
-        )
+        self.user: PartialUser = PartialUser(payload["user_id"], payload["user_login"], payload["user_name"], http=http)
         self.user_input: str = payload["user_input"]
         self.status: Literal["unfulfilled", "unknown", "fulfilled", "canceled"] = payload["status"]
         self.redeemed_at: datetime.datetime = parse_timestamp(payload["redeemed_at"])
