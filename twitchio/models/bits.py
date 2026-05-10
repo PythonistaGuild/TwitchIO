@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     import datetime
 
     from twitchio.http import HTTPClient
+    from twitchio.types_.eventsub import CustomPowerupData
     from twitchio.types_.responses import (
         BitsLeaderboardResponse,
         BitsLeaderboardResponseData,
@@ -385,7 +386,34 @@ class PowerupLimitSettings(_LimitSetting):
     """
 
 
-class CustomPowerup:
+class PartialCustomPowerup:
+    """Represents a partial custom Power-up, as received in a redemption event.
+
+    Attributes
+    ----------
+    id: str
+        The ID of the custom Power-up.
+    title: str
+        The title of the custom Power-up.
+    bits: int
+        The Bits cost of the custom Power-up.
+    prompt: str
+        The prompt of the custom Power-up.
+    """
+
+    __slots__ = ("bits", "id", "prompt", "title")
+
+    def __init__(self, data: CustomPowerupData | CustomPowerupResponseData) -> None:
+        self.id: str = data["id"]
+        self.title: str = data["title"]
+        self.bits: int = data["bits"]
+        self.prompt: str = data["prompt"]
+
+    def __repr__(self) -> str:
+        return f"<PartialCustomPowerup id={self.id} title={self.title} bits={self.bits}>"
+
+
+class CustomPowerup(PartialCustomPowerup):
     """Represents a custom Power-up from a broadcaster's channel.
 
     Attributes
@@ -435,7 +463,6 @@ class CustomPowerup:
     __slots__ = (
         "_http",
         "_image",
-        "bits",
         "broadcaster",
         "colour",
         "cooldown",
@@ -443,14 +470,11 @@ class CustomPowerup:
         "current_stream_redeems",
         "default_image",
         "enabled",
-        "id",
         "in_stock",
         "input_required",
         "max_per_stream",
         "max_per_user_stream",
         "paused",
-        "prompt",
-        "title",
     )
 
     def __init__(self, data: CustomPowerupResponseData, *, http: HTTPClient) -> None:
@@ -460,10 +484,7 @@ class CustomPowerup:
         self.broadcaster = PartialUser(
             data["broadcaster_id"], data["broadcaster_login"], data["broadcaster_name"], http=http
         )
-        self.id: str = data["id"]
-        self.title: str = data["title"]
-        self.prompt: str = data["prompt"]
-        self.bits: int = data["bits"]
+        super().__init__(data)
         self.default_image: dict[str, str] = {k: str(v) for k, v in data["default_image"].items()}
         self.colour: Colour = Colour.from_hex(data["background_color"])
         self.enabled: bool = data["is_enabled"]

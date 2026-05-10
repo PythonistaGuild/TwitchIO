@@ -474,7 +474,7 @@ class ChannelChatMessageEvent(BaseBroadcasterEvent):
 class CustomPowerupData(TypedDict):
     id: str
     title: str
-    bits_cost: int
+    bits: int
     prompt: str
 
 

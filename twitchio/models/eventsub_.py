@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal, NamedTuple, cast
 
 from twitchio.assets import Asset
 from twitchio.eventsub import RevocationReason, TransportMethod
+from twitchio.models.bits import PartialCustomPowerup
 from twitchio.models.channel_points import CustomReward, RewardLimitSettings
 from twitchio.models.charity import CharityValues
 from twitchio.models.chat import EmoteSet
@@ -4008,30 +4009,6 @@ class ChannelPointsRedemptionUpdate(BaseChannelPointsRedemption):
 
     def __repr__(self) -> str:
         return f"<ChannelPointsRedemptionUpdate broadcaster={self.broadcaster} user={self.user} status={self.status} redeemed_at={self.redeemed_at}>"
-
-
-# TODO Placeholder, need to think about how we want to handle this
-class PartialCustomPowerup:
-    """
-    Represents a partial custom Power-up, as received in a redemption event.
-
-    Attributes
-    ----------
-    id: str
-        The ID of the custom Power-up.
-    title: str
-        The title of the custom Power-up.
-    bits: int
-        The Bits cost of the custom Power-up.
-    prompt: str
-        The prompt of the custom Power-up.
-    """
-
-    def __init__(self, data: CustomPowerupData) -> None:
-        self.id: str = data["id"]
-        self.title: str = data["title"]
-        self.bits: int = data["bits_cost"]
-        self.prompt: str = data["prompt"]
 
 
 class CustomPowerupRedemptionAdd(_ResponderEvent):
