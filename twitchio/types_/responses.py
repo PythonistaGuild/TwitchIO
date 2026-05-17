@@ -24,7 +24,7 @@ SOFTWARE.
 
 from typing import Any, Generic, Literal, NotRequired, TypeAlias, TypedDict, TypeVar
 
-from eventsub import ChatMessageData
+from .eventsub import ChatMessageData
 
 from .conduits import Condition, ConduitData, ShardData
 
