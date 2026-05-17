@@ -3764,7 +3764,6 @@ class PartialUser:
         *,
         message_id: str,
         moderator: str | PartialUser,
-        duration: int | None = None,
         token_for: str | PartialUser | None = MISSING,
     ) -> None:
         """|coro|
@@ -3793,9 +3792,6 @@ class PartialUser:
             If omitted, this defaults to this moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
         """
-        if duration is not None and (duration > 1800 or duration < 30):
-            raise ValueError("Count must be between 10 and 100.")
-
         resolved_token_for = moderator if token_for is MISSING else token_for
         await self._http.delete_chat_pin(
             broadcaster_id=self.id,
