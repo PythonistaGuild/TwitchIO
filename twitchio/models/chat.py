@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Literal
 
 from twitchio.assets import Asset
 from twitchio.user import PartialUser
-from twitchio.utils import Colour, parse_timestamp
+from twitchio.utils import MISSING, Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -47,6 +47,7 @@ if TYPE_CHECKING:
         GlobalChatBadgesResponseVersions,
         GlobalEmotesResponseData,
         GlobalEmotesResponseImages,
+        PinnedChatMessageData,
         SendChatMessageResponseData,
         SharedChatSessionResponseData,
         UserChatColorResponseData,
@@ -64,6 +65,7 @@ __all__ = (
     "Emote",
     "EmoteSet",
     "GlobalEmote",
+    "PinnedMessage",
     "SentMessage",
     "SharedChatSession",
     "UserEmote",
@@ -634,3 +636,134 @@ class SharedChatSession:
 
     def __repr__(self) -> str:
         return f"<SharedChatSession id={self.id} host={self.host} created_at={self.created_at}>"
+
+
+class PinnedMessage:
+    """
+    Represents a currently pinned chat message in a broadcaster's chat room.
+
+    Attributes
+    ----------
+    id: str
+        The ID of the pinned message.
+    broadcaster: PartialUser
+        The broadcaster whose chat room contains the pinned message.
+    sender: PartialUser
+        The user who sent the message.
+    moderator: PartialUser
+        The moderator who pinned the message.
+    text: str
+        The message text in plain text.
+    fragments: list[ChatMessageFragment]
+        The ordered list of chat message fragments.
+    starts_at: datetime.datetime
+        When the message was pinned.
+    ends_at: datetime.datetime | None
+        When the message will be automatically unpinned.
+        ``None`` if the message is pinned until the stream ends.
+    updated_at: datetime.datetime
+        When the pin was last updated.
+    """
+
+    __slots__ = ("broadcaster", "ends_at", "fragments", "id", "moderator", "sender", "starts_at", "text", "updated_at")
+
+    def __init__(self, data: PinnedChatMessageData, *, http: HTTPClient) -> None:
+        from twitchio.models.eventsub_ import ChatMessageFragment
+
+        self.id: str = data["message_id"]
+        self.broadcaster: PartialUser = PartialUser(data["broadcaster_id"], None, http=http)
+        self.sender: PartialUser = PartialUser(
+            data["sender_user_id"], data["sender_user_login"], data["sender_user_name"], http=http
+        )
+        self.moderator: PartialUser = PartialUser(
+            data["pinned_by_user_id"], data["pinned_by_user_login"], data["pinned_by_user_name"], http=http
+        )
+        self.text: str = data["message"]["text"]
+        self.fragments: list[ChatMessageFragment] = [ChatMessageFragment(f, http=http) for f in data["message"]["fragments"]]
+        self.starts_at: datetime.datetime = parse_timestamp(data["starts_at"])
+        ends_at: str | None = data.get("ends_at") or None
+        self.ends_at: datetime.datetime | None = parse_timestamp(ends_at) if ends_at else None
+        self.updated_at: datetime.datetime = parse_timestamp(data["updated_at"])
+
+    def __repr__(self) -> str:
+        return f"<PinnedMessage id={self.id} broadcaster={self.broadcaster} sender={self.sender}>"
+
+    async def update_pin(
+        self,
+        *,
+        moderator: str | PartialUser,
+        duration: int | None = None,
+        token_for: str | PartialUser | None = MISSING,
+    ) -> PinnedMessage:
+        """|coro|
+
+        Updates the duration of this pinned chat message.
+
+        .. note::
+            Requires one of the following:
+
+            - A user access token that includes the ``moderator:manage:chat_messages`` scope.
+            - An app access token where the application has been granted:
+                - The ``channel:bot`` scope for the user in ``broadcaster_id``.
+                - The ``moderator:manage:chat_messages`` scope for the user in ``moderator``.
+                - The ``user:bot`` scope for the user in ``moderator``.
+                - Moderator would usually be the bot account when using an app token.
+
+        Parameters
+        ----------
+        moderator : str | PartialUser
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+        duration: int | None
+            The number of seconds the message should remain pinned.
+            Minimum: 30. Maximum: 1800. If not specified, the message will be pinned until the stream ends.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+
+        Returns
+        -------
+        PinnedMessage
+            The updated pinned message.
+        """
+        return await self.broadcaster.update_pin_message(
+            message_id=self.id,
+            moderator=moderator,
+            duration=duration,
+            token_for=token_for,
+        )
+
+    async def unpin(
+        self,
+        *,
+        moderator: str | PartialUser,
+        token_for: str | PartialUser | None = MISSING,
+    ) -> None:
+        """|coro|
+
+        Unpins this chat message from the broadcaster's chat room.
+
+        .. note::
+            Requires one of the following:
+
+            - A user access token that includes the ``moderator:manage:chat_messages`` scope.
+            - An app access token where the application has been granted:
+                - The ``channel:bot`` scope for the user in ``broadcaster_id``.
+                - The ``moderator:manage:chat_messages`` scope for the user in ``moderator``.
+                - The ``user:bot`` scope for the user in ``moderator``.
+                - Moderator would usually be the bot account when using an app token.
+
+        Parameters
+        ----------
+        moderator : str | PartialUser
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to the moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+        """
+        await self.broadcaster.unpin_message(
+            message_id=self.id,
+            moderator=moderator,
+            token_for=token_for,
+        )

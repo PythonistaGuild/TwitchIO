@@ -52,7 +52,16 @@ if TYPE_CHECKING:
     from .models.channel_points import CustomReward
     from .models.channels import ChannelEditor, ChannelFollowerEvent, ChannelFollowers, ChannelInfo, FollowedChannels
     from .models.charity import CharityCampaign, CharityDonation
-    from .models.chat import ChannelEmote, ChatBadge, ChatSettings, Chatters, SentMessage, SharedChatSession, UserEmote
+    from .models.chat import (
+        ChannelEmote,
+        ChatBadge,
+        ChatSettings,
+        Chatters,
+        PinnedMessage,
+        SentMessage,
+        SharedChatSession,
+        UserEmote,
+    )
     from .models.clips import Clip, CreatedClip
     from .models.eventsub_ import ChannelChatMessageEvent, ChatMessageBadge
     from .models.goals import Goal
@@ -3632,7 +3641,9 @@ class PartialUser:
         """
         return await anext(self._http.get_streams(user_ids=[self.id], max_results=1), None)
 
-    async def fetch_pinned_message(self, moderator: str | PartialUser, *, token_for: str | PartialUser | None = MISSING):
+    async def fetch_pinned_message(
+        self, moderator: str | PartialUser, *, token_for: str | PartialUser | None = MISSING
+    ) -> PinnedMessage | None:
         """|coro|
 
         Fetches the currently pinned message for the specified broadcaster's chat room, including message fragments.
@@ -3658,7 +3669,10 @@ class PartialUser:
             If ``None``, the default app token is used.
         """
         resolved_token_for = moderator if token_for is MISSING else token_for
-        await self._http.get_chat_pin(broadcaster_id=self.id, moderator_id=moderator, token_for=resolved_token_for)
+        data = await self._http.get_chat_pin(broadcaster_id=self.id, moderator_id=moderator, token_for=resolved_token_for)
+        from twitchio.models.chat import PinnedMessage
+
+        return PinnedMessage(data["data"][0], http=self._http) if data["data"] else None
 
     async def pin_message(
         self,

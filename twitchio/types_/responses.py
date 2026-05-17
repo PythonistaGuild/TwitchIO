@@ -1361,7 +1361,7 @@ class PinnedChatMessageData(TypedDict):
     message: ChatMessageData
     starts_at: str
     ends_at: str
-    created_at: str
+    updated_at: str
 
 
 class PinnedChatMessageResponse(TypedDict):
