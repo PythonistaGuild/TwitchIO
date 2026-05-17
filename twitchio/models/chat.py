@@ -694,7 +694,7 @@ class PinnedMessage:
         moderator: str | PartialUser,
         duration: int | None = None,
         token_for: str | PartialUser | None = MISSING,
-    ) -> PinnedMessage:
+    ) -> None:
         """|coro|
 
         Updates the duration of this pinned chat message.
@@ -723,10 +723,9 @@ class PinnedMessage:
 
         Returns
         -------
-        PinnedMessage
-            The updated pinned message.
+        None
         """
-        return await self.broadcaster.update_pin_message(
+        await self.broadcaster.update_pin_message(
             message_id=self.id,
             moderator=moderator,
             duration=duration,
@@ -761,6 +760,10 @@ class PinnedMessage:
             An optional user ID (or PartialUser) used to select a managed user token for this request.
             If omitted, this defaults to the moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
+
+        Returns
+        -------
+        None
         """
         await self.broadcaster.unpin_message(
             message_id=self.id,

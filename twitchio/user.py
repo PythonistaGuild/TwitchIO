@@ -3687,7 +3687,6 @@ class PartialUser:
         Pins a chat message to the top of the specified broadcaster's chat room.
         Only one mod-pinned message can be active per channel at a time. If a mod-pinned message already exists, it is automatically replaced.
 
-
         .. note::
             Requires one of the following:
 
@@ -3711,6 +3710,10 @@ class PartialUser:
             An optional user ID (or PartialUser) used to select a managed user token for this request.
             If omitted, this defaults to this moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
+
+        Returns
+        -------
+        None
         """
         if duration is not None and (duration > 1800 or duration < 30):
             raise ValueError("Count must be between 10 and 100.")
@@ -3736,7 +3739,6 @@ class PartialUser:
 
         Updates the duration of an existing pinned chat message.
 
-
         .. note::
             Requires one of the following:
 
@@ -3760,6 +3762,10 @@ class PartialUser:
             An optional user ID (or PartialUser) used to select a managed user token for this request.
             If omitted, this defaults to this moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
+
+        Returns
+        -------
+        None
         """
         if duration is not None and (duration > 1800 or duration < 30):
             raise ValueError("Count must be between 10 and 100.")
@@ -3784,7 +3790,6 @@ class PartialUser:
 
         Unpins a pinned chat message from the broadcasters chat room.
 
-
         .. note::
             Requires one of the following:
 
@@ -3805,6 +3810,10 @@ class PartialUser:
             An optional user ID (or PartialUser) used to select a managed user token for this request.
             If omitted, this defaults to this moderator's ID and selects that managed user token.
             If ``None``, the default app token is used.
+
+        Returns
+        -------
+        None
         """
         resolved_token_for = moderator if token_for is MISSING else token_for
         await self._http.delete_chat_pin(
