@@ -30,7 +30,7 @@ from .assets import Asset
 from .exceptions import HTTPException, MessageRejectedError
 from .models.ads import AdSchedule, CommercialStart, SnoozeAd
 from .models.raids import Raid
-from .utils import Colour, parse_timestamp
+from .utils import MISSING, Colour, parse_timestamp
 
 
 if TYPE_CHECKING:
@@ -1125,6 +1125,7 @@ class PartialUser:
         token_for: str | PartialUser | None = None,
         reply_to_message_id: str | None = None,
         source_only: bool | None = None,
+        pin: bool | None = None,
     ) -> SentMessage:
         """|coro|
 
@@ -1166,6 +1167,12 @@ class PartialUser:
             This has no effect if the message is sent during a shared chat session.
             This parameter can only be set when utilizing an `App Access Token`. It cannot be specified when a User Access Token is used, and will instead result in an HTTP 400 error.
             If this parameter is not set, when using an App Access Token, then it will use the default that Twitch has set, which will be `True` after 2025-05-19.
+        pin: bool | None
+            If True, the message will be sent and immediately pinned. Twitch automatically sets this to False.
+            Cannot be combined with ``reply_to_message_id`` or ``source_only``.
+            When pin is True, additionally requires the ``moderator:manage:chat_messages`` scope and the sender must be the broadcaster or a moderator.
+            Messages pinned via this endpoint are always pinned for 20 minutes. If the pin fails, the message is not sent.
+
         Returns
         -------
         SentMessage
@@ -1189,6 +1196,7 @@ class PartialUser:
             reply_to_message_id=reply_to_message_id,
             token_for=token_for,
             source_only=source_only,
+            pin=pin,
         )
 
         sent: SentMessage = SentMessage(data["data"][0])
@@ -3623,6 +3631,178 @@ class PartialUser:
         Stream | None
         """
         return await anext(self._http.get_streams(user_ids=[self.id], max_results=1), None)
+
+    async def fetch_pinned_message(self, moderator: str | PartialUser, *, token_for: str | PartialUser | None = MISSING):
+        """|coro|
+
+        Fetches the currently pinned message for the specified broadcaster's chat room, including message fragments.
+        Only one mod-pinned message can be active per channel at a time.
+
+        .. note::
+            Requires one of the following:
+
+            - A user access token that includes the ``moderator:manage:chat_messages`` or ``moderator:read:chat_messages`` scope.
+            - An app access token where the application has been granted:
+                - The ``channel:bot`` scope for the user in ``broadcaster_id``.
+                - The ``moderator:manage:chat_messages`` or ``moderator:read:chat_messages`` scope for the user in ``moderator``.
+                - The ``user:bot`` scope for the user in ``moderator``.
+                - Moderator would usually be the bot account when using an app token.
+
+        Parameters
+        ----------
+        moderator : str | PartialUser
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+        """
+        resolved_token_for = moderator if token_for is MISSING else token_for
+        await self._http.get_chat_pin(broadcaster_id=self.id, moderator_id=moderator, token_for=resolved_token_for)
+
+    async def pin_message(
+        self,
+        *,
+        message_id: str,
+        moderator: str | PartialUser,
+        duration: int | None = None,
+        token_for: str | PartialUser | None = MISSING,
+    ) -> None:
+        """|coro|
+
+        Pins a chat message to the top of the specified broadcaster's chat room.
+        Only one mod-pinned message can be active per channel at a time. If a mod-pinned message already exists, it is automatically replaced.
+
+
+        .. note::
+            Requires one of the following:
+
+            - A user access token that includes the ``moderator:manage:chat_messages`` scope.
+            - An app access token where the application has been granted:
+                - The ``channel:bot`` scope for the user in ``broadcaster_id``.
+                - The ``moderator:manage:chat_messages`` scope for the user in ``moderator``.
+                - The ``user:bot`` scope for the user in ``moderator``.
+                - Moderator would usually be the bot account when using an app token.
+
+        Parameters
+        ----------
+        message_id: str
+            The ID of the message to pin.
+        moderator : str | PartialUser
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+        duration: int | None
+            The number of seconds the message should be pinned for.
+            Minimum: 30. Maximum: 1800. If not specified, the message will be pinned until the stream ends.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+        """
+        if duration is not None and (duration > 1800 or duration < 30):
+            raise ValueError("Count must be between 10 and 100.")
+
+        resolved_token_for = moderator if token_for is MISSING else token_for
+        await self._http.put_chat_pin(
+            broadcaster_id=self.id,
+            message_id=message_id,
+            moderator_id=moderator,
+            duration=duration,
+            token_for=resolved_token_for,
+        )
+
+    async def update_pin_message(
+        self,
+        *,
+        message_id: str,
+        moderator: str | PartialUser,
+        duration: int | None = None,
+        token_for: str | PartialUser | None = MISSING,
+    ) -> None:
+        """|coro|
+
+        Updates the duration of an existing pinned chat message.
+
+
+        .. note::
+            Requires one of the following:
+
+            - A user access token that includes the ``moderator:manage:chat_messages`` scope.
+            - An app access token where the application has been granted:
+                - The ``channel:bot`` scope for the user in ``broadcaster_id``.
+                - The ``moderator:manage:chat_messages`` scope for the user in ``moderator``.
+                - The ``user:bot`` scope for the user in ``moderator``.
+                - Moderator would usually be the bot account when using an app token.
+
+        Parameters
+        ----------
+        message_id: str
+            The ID of the message to pin.
+        moderator : str | PartialUser
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+        duration: int | None
+            The number of seconds the message should be pinned for.
+            Minimum: 30. Maximum: 1800. If not specified, the message will be pinned until the stream ends.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+        """
+        if duration is not None and (duration > 1800 or duration < 30):
+            raise ValueError("Count must be between 10 and 100.")
+
+        resolved_token_for = moderator if token_for is MISSING else token_for
+        await self._http.patch_chat_pin(
+            broadcaster_id=self.id,
+            message_id=message_id,
+            moderator_id=moderator,
+            duration=duration,
+            token_for=resolved_token_for,
+        )
+
+    async def unpin_message(
+        self,
+        *,
+        message_id: str,
+        moderator: str | PartialUser,
+        duration: int | None = None,
+        token_for: str | PartialUser | None = MISSING,
+    ) -> None:
+        """|coro|
+
+        Unpins a pinned chat message from the broadcasters chat room.
+
+
+        .. note::
+            Requires one of the following:
+
+            - A user access token that includes the ``moderator:manage:chat_messages`` scope.
+            - An app access token where the application has been granted:
+                - The ``channel:bot`` scope for the user in ``broadcaster_id``.
+                - The ``moderator:manage:chat_messages`` scope for the user in ``moderator``.
+                - The ``user:bot`` scope for the user in ``moderator``.
+                - Moderator would usually be the bot account when using an app token.
+
+        Parameters
+        ----------
+        message_id: str
+            The ID of the message to pin.
+        moderator : str | PartialUser
+            The ID, or PartialUser, of the broadcaster or one of the broadcaster's moderators.
+        token_for: str | PartialUser | None
+            An optional user ID (or PartialUser) used to select a managed user token for this request.
+            If omitted, this defaults to this moderator's ID and selects that managed user token.
+            If ``None``, the default app token is used.
+        """
+        if duration is not None and (duration > 1800 or duration < 30):
+            raise ValueError("Count must be between 10 and 100.")
+
+        resolved_token_for = moderator if token_for is MISSING else token_for
+        await self._http.delete_chat_pin(
+            broadcaster_id=self.id,
+            message_id=message_id,
+            moderator_id=moderator,
+            token_for=resolved_token_for,
+        )
 
 
 class User(PartialUser):
