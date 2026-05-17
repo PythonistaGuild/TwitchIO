@@ -128,6 +128,7 @@ if TYPE_CHECKING:
         HypeTrainStatusResponse,
         ModeratedChannelsResponseData,
         ModeratorsResponseData,
+        PinnedChatMessageResponse,
         PollsResponse,
         PollsResponseData,
         PredictionsResponse,
@@ -1277,12 +1278,15 @@ class HTTPClient:
         token_for: str | PartialUser | None,
         reply_to_message_id: str | None = None,
         source_only: bool | None = None,
+        pin: bool | None = None,
     ) -> SendChatMessageResponse:
         data = {"broadcaster_id": broadcaster_id, "sender_id": sender_id, "message": message}
         if reply_to_message_id is not None:
             data["reply_parent_message_id"] = reply_to_message_id
         if source_only is not None:
             data["for_source_only"] = source_only
+        if pin is not None:
+            data["pin"] = pin
 
         route: Route = Route("POST", "chat/messages", json=data, token_for=token_for)
         return await self.request_json(route)
@@ -1291,6 +1295,65 @@ class HTTPClient:
         params = {"user_id": user_id, "color": color}
 
         route: Route = Route("PUT", "chat/color", params=params, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def get_chat_pin(
+        self,
+        broadcaster_id: str,
+        moderator_id: str | int | PartialUser,
+        token_for: str | PartialUser | None,
+    ) -> PinnedChatMessageResponse:
+        data = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id}
+
+        route: Route = Route("GET", "chat/pins", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def put_chat_pin(
+        self,
+        broadcaster_id: str,
+        moderator_id: str | int | PartialUser,
+        message_id: str,
+        token_for: str | PartialUser | None,
+        duration: int | None = None,
+    ) -> None:
+        data = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "message_id": message_id}
+
+        if duration is not None:
+            data["duration"] = duration
+
+        route: Route = Route("PUT", "chat/pins", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def patch_chat_pin(
+        self,
+        broadcaster_id: str,
+        moderator_id: str | int | PartialUser,
+        message_id: str,
+        token_for: str | PartialUser | None,
+        duration: int | None = None,
+    ) -> None:
+        data = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "message_id": message_id}
+
+        if duration is not None:
+            data["duration"] = duration
+
+        route: Route = Route("PATCH", "chat/pins", json=data, token_for=token_for)
+        return await self.request_json(route)
+
+    @handle_user_ids()
+    async def delete_chat_pin(
+        self,
+        broadcaster_id: str,
+        moderator_id: str | int | PartialUser,
+        message_id: str,
+        token_for: str | PartialUser | None,
+    ) -> None:
+        data = {"broadcaster_id": broadcaster_id, "moderator_id": moderator_id, "message_id": message_id}
+
+        route: Route = Route("DELETE", "chat/pins", json=data, token_for=token_for)
         return await self.request_json(route)
 
     ### Clips ###
