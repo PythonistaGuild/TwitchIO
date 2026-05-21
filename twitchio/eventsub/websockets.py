@@ -204,18 +204,20 @@ class Websocket:
 
         self._reconnect_task = asyncio.create_task(self.reconnect(url=url))
 
+    async def _try_connect(self, url: str = MISSING, /) -> None:
+        if not self._shard_id:
+            return await self.connect(url=url)
+
+        assert isinstance(self._client, twitchio.AutoClient)
+        await self._client._associate_shards(shard_ids=[int(self._shard_id)])
+
     async def reconnect(self, *, url: str = MISSING) -> None:
         LOGGER.warning("Attempting to reconnect %s.", repr(self))
 
         attempts = self._attempts
         while attempts > 0:
             try:
-                if self._shard_id:
-                    assert isinstance(self._client, twitchio.AutoClient)
-                    await self._client._associate_shards(shard_ids=[int(self._shard_id)])
-                else:
-                    await self.connect(url=url)
-
+                await self._try_connect(url)
                 self._reconnect_task = None
                 return
             except Exception as e:
@@ -236,7 +238,22 @@ class Websocket:
         self._reconnect_task = None
         # TODO: Cleanup...
 
-    async def close(self) -> ...: ...
+    async def close(self) -> None:
+        if self._closing or self._closed:
+            return
+
+        self._closing = True
+
+        if self._reconnect_task:
+            try:
+                self._reconnect_task.cancel()
+            except:
+                pass
+
+        await self._listener.close()
+        self._condition.reset()
+        self._subscriptions = {}
+        self._closed = True
 
     async def receive(self, data: WebsocketMessages) -> ...:
         LOGGER.debug("Processing received MESSAGE from Twitch on %s.", repr(self))
@@ -307,6 +324,7 @@ class WebsocketListener:
 
         self._reconnecting: bool = False
         self._closed: bool = False
+        self._closing: bool = False
         self._timeout: int = 30
         self._ack: float = time.time()
 
@@ -321,7 +339,7 @@ class WebsocketListener:
         self.listen()
 
     async def reconnect(self) -> None:
-        if self._reconnecting or self._closed:
+        if self._reconnecting or self._closed or self._closing:
             return
 
         self._reconnecting = True
@@ -354,7 +372,7 @@ class WebsocketListener:
             await asyncio.sleep(self._timeout)
 
             if self._ack + self._timeout <= time.time():
-                LOGGER.warning("%s was not kept alive. Did not receive a message within timeout.", repr(self))
+                LOGGER.debug("%s was not kept alive. Did not receive a message within timeout.", repr(self))
                 return await self.reconnect()
 
     async def _listener(self) -> None:
@@ -421,15 +439,10 @@ class WebsocketListener:
             return self.cleanup()
 
         elif code in self.RECONNECT_CODES:
-            LOGGER.warning("%s received close code: %s -> %s.", repr(self), code, extra or "...")
-            return await self.reconnect()
-
-        elif code == self.UNEXPECTED_ERROR:
-            LOGGER.warning("%s received an unexpected error while listening: %s.", repr(self), extra or "...")
+            LOGGER.debug("%s received close code: %s -> %s.", repr(self), code, extra or "...")
             return await self.reconnect()
         else:
-            LOGGER.debug("Unable to handle or reconnect %s: %s -> %s.", repr(self), code or "Unknown", extra or "...")
-            await self.close()
+            return await self.reconnect()
 
     async def handle_message(self, raw: str) -> None:
         LOGGER.debug("Attempting to handle data frame on %s.", repr(self))
@@ -462,8 +475,10 @@ class WebsocketListener:
                 )
 
     async def close(self) -> None:
-        if self._closed:
+        if self._closing or self._closed:
             return
+
+        self._closing = True
 
         try:
             await self.transport.close(code=1000)
