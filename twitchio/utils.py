@@ -58,6 +58,7 @@ except ImportError:
 
 
 PY_312 = sys.version_info >= (3, 12)
+PY_314 = sys.version_info >= (3, 14)
 
 
 __all__ = (
