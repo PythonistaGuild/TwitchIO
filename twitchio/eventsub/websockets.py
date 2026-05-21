@@ -264,13 +264,12 @@ class Websocket:
             case {"metadata": {"message_type": "session_welcome"}}:
                 self._welcome_message(data)
             case {"metadata": {"message_type": "session_reconnect"}}:
-                await self.reconnect(url=data["payload"]["session"]["reconnect_url"])
+                return await self.reconnect(url=data["payload"]["session"]["reconnect_url"])
             case {"metadata": {"message_type": "revocation"}}:
                 revocation: RevocationMessage = data
                 # TODO ...
             case {"metadata": {"message_type": "session_keepalive"}}:
                 LOGGER.debug("Received SESSION_KEEPALIVE on %s: %s", repr(self), data)
-
             case _:
                 LOGGER.debug("Received unhandled or unknown message on %s: %s", repr(self), data)
 
