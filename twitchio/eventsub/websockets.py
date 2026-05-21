@@ -33,6 +33,8 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import aiohttp
 from aiohttp import WSMsgType
 
+import twitchio
+
 from ..backoff import Backoff
 from ..eventsub.subscriptions import _SUB_MAPPING
 from ..models.eventsub_ import WebsocketWelcome, create_event_instance
@@ -185,10 +187,10 @@ class Websocket:
             async with self._condition.wait():
                 await listener.connect(gurl, keep_alive=self._keep_alive_timeout)
         except TimeoutError:
-            # TODO
-            ...
+            # TODO ...
+            return
         except Exception:
-            # TODO
+            # TODO ...
             return
 
         self._listener = listener
@@ -208,11 +210,16 @@ class Websocket:
         attempts = self._attempts
         while attempts > 0:
             try:
-                await self.connect(url=url)
+                if self._shard_id:
+                    assert isinstance(self._client, twitchio.AutoClient)
+                    await self._client._associate_shards(shard_ids=[int(self._shard_id)])
+                else:
+                    await self.connect(url=url)
+
                 self._reconnect_task = None
                 return
             except Exception as e:
-                LOGGER.error("%s failed to connect: %s", repr(self), exc_info=e)
+                LOGGER.error("%s failed to connect: %s", repr(self), e, exc_info=e)
 
             attempts -= 1
             if attempts == 0:
@@ -312,7 +319,7 @@ class WebsocketListener:
         self.listen()
 
     async def reconnect(self) -> None:
-        if self._reconnecting:
+        if self._reconnecting or self._closed:
             return
 
         self._reconnecting = True
@@ -412,14 +419,14 @@ class WebsocketListener:
             return self.cleanup()
 
         elif code in self.RECONNECT_CODES:
-            LOGGER.warning("%s received close code: %s -> %s.", repr(self), code or "Unknown", extra or "...")
+            LOGGER.warning("%s received close code: %s -> %s.", repr(self), code, extra or "...")
             return await self.reconnect()
 
         elif code == self.UNEXPECTED_ERROR:
             LOGGER.warning("%s received an unexpected error while listening: %s.", repr(self), extra or "...")
             return await self.reconnect()
         else:
-            LOGGER.error("Unable to handle or reconnect %s: %s -> %s.", repr(self), code or "Unknown", extra or "...")
+            LOGGER.debug("Unable to handle or reconnect %s: %s -> %s.", repr(self), code or "Unknown", extra or "...")
             await self.close()
 
     async def handle_message(self, raw: str) -> None:
