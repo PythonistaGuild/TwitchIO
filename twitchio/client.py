@@ -2536,7 +2536,7 @@ class Client:
 
         elif not sockets:
             websocket = Websocket(client=self, token_for=token_for, http=self._http)
-            await websocket.connect(fail_once=True)
+            await websocket.connect()
 
             # session_id is guaranteed at this point.
             self._websockets[token_for] = {websocket.session_id: websocket}  # type: ignore
@@ -3218,7 +3218,7 @@ class ConduitInfo:
 
             try:
                 closed += 1
-                await socket.close(reassociate=False)
+                await socket.close()  # TODO: reassociate=False
             except Exception as e:
                 logger.debug("Ignoring exception in close of %r. It is likely a non-issue: %s", socket, e)
 
@@ -3660,19 +3660,19 @@ class AutoClient(Client):
             logger.debug("Error re-associating shards for conduit %r after websocket close: %s", self.conduit_info, e)
 
     async def _connect_and_welcome(self, websocket: Websocket) -> bool:
-        await websocket.connect(fail_once=False)
+        await websocket.connect()
 
         async def welcome_predicate(payload: WebsocketWelcome) -> bool:
             nonlocal websocket
             return websocket.session_id == payload.id
 
-        if not websocket._session_id:
+        if not websocket.session_id:
             try:
                 await self.wait_for("websocket_welcome", timeout=10, predicate=welcome_predicate)
             except TimeoutError:
                 return False
 
-        return websocket._session_id is not None
+        return websocket.session_id is not None
 
     async def _associate_flow(self, websocket: Websocket) -> None:
         connected = await self._connect_and_welcome(websocket)
@@ -3700,11 +3700,11 @@ class AutoClient(Client):
                     "Unable to associate shards with Conduit. An unexpected error occurred during association."
                 )
 
-            assert socket._session_id and socket._shard_id is not None
+            assert socket.session_id and socket._shard_id is not None
 
             payload: ShardUpdateRequest = {
                 "id": socket._shard_id,
-                "transport": {"method": "websocket", "session_id": socket._session_id},
+                "transport": {"method": "websocket", "session_id": socket.session_id},
             }
             payloads.append(payload)
 
