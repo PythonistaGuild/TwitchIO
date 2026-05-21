@@ -37,7 +37,7 @@ import twitchio
 
 from ..backoff import Backoff
 from ..eventsub.subscriptions import _SUB_MAPPING
-from ..models.eventsub_ import WebsocketWelcome, create_event_instance
+from ..models.eventsub_ import SubscriptionRevoked, WebsocketWelcome, create_event_instance
 from ..utils import MISSING, PY_314, _from_json as JSON_LOADS
 
 
@@ -175,7 +175,7 @@ class Websocket:
 
         return self.subscription_count < 300
 
-    async def connect(self, *, url: str = MISSING) -> ...:
+    async def connect(self, *, url: str = MISSING) -> None:
         gurl = url if url is not MISSING else f"{WSS}?keepalive_timeout_seconds={self._keep_alive_timeout}"
 
         if self._listener:
@@ -211,6 +211,9 @@ class Websocket:
         assert isinstance(self._client, twitchio.AutoClient)
         await self._client._associate_shards(shard_ids=[int(self._shard_id)])
 
+    # TODO: ...
+    async def _try_resub(self, url: str, /) -> None: ...
+
     async def reconnect(self, *, url: str = MISSING) -> None:
         LOGGER.warning("Attempting to reconnect %s.", repr(self))
 
@@ -218,6 +221,9 @@ class Websocket:
         while attempts > 0:
             try:
                 await self._try_connect(url)
+                if url is MISSING:
+                    await self._try_resub(url)
+
                 self._reconnect_task = None
                 return
             except Exception as e:
@@ -235,27 +241,31 @@ class Websocket:
             await asyncio.sleep(delay)
 
         LOGGER.warning("Reconnection attempts exhausted for %s. Destroying websocket.", repr(self))
-        self._reconnect_task = None
-        # TODO: Cleanup...
+        await self.close()
+
+    def cleanup(self) -> None:
+        if self._client and not self._shard_id:
+            sockets = self._client._websockets.get(self._token_for or "", {})
+            sockets.pop(self.session_id or "", None)
 
     async def close(self) -> None:
         if self._closing or self._closed:
             return
 
         self._closing = True
-
         if self._reconnect_task:
             try:
                 self._reconnect_task.cancel()
-            except:
-                pass
+            except Exception as e:
+                LOGGER.debug("Unknown error occurred during reconnect-task cleanup on %s: %s. Disregarding.", repr(self), e)
 
+        self.cleanup()
         await self._listener.close()
-        self._condition.reset()
         self._subscriptions = {}
+        self._condition.reset()
         self._closed = True
 
-    async def receive(self, data: WebsocketMessages) -> ...:
+    async def receive(self, data: WebsocketMessages) -> None:
         LOGGER.debug("Processing received MESSAGE from Twitch on %s.", repr(self))
 
         match data:
@@ -266,8 +276,7 @@ class Websocket:
             case {"metadata": {"message_type": "session_reconnect"}}:
                 return await self.reconnect(url=data["payload"]["session"]["reconnect_url"])
             case {"metadata": {"message_type": "revocation"}}:
-                revocation: RevocationMessage = data
-                # TODO ...
+                await self._revocation_message(data)
             case {"metadata": {"message_type": "session_keepalive"}}:
                 LOGGER.debug("Received SESSION_KEEPALIVE on %s: %s", repr(self), data)
             case _:
@@ -307,6 +316,21 @@ class Websocket:
 
         if self._client:
             self._client.dispatch(event=event, payload=payload_class)
+
+    async def _revocation_message(self, data: RevocationMessage) -> None:
+        LOGGER.debug("Received REVOCATION on %s: %s", repr(self), data)
+
+        payload: SubscriptionRevoked = SubscriptionRevoked(data=data["payload"]["subscription"])
+        if self._client:
+            self._client.dispatch(event="subscription_revoked", payload=payload)
+
+        if self._shard_id is not None:
+            return
+
+        self._subscriptions.pop(payload.id, None)
+        if not self._subscriptions:
+            LOGGER.info("Closing %s due to no remaining active subscriptions.", repr(self))
+            return await self.close()
 
 
 class WebsocketListener:
@@ -364,7 +388,7 @@ class WebsocketListener:
         self._tasks.add(task)  # type: ignore
         task.add_done_callback(self._tasks.discard)  # type: ignore
 
-    async def _keep_alive(self) -> ...:
+    async def _keep_alive(self) -> None:
         LOGGER.debug("Starting keep alive on %s.", repr(self))
 
         while True:
