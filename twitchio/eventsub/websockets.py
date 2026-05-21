@@ -251,6 +251,8 @@ class Websocket:
             case {"metadata": {"message_type": "revocation"}}:
                 revocation: RevocationMessage = data
                 # TODO ...
+            case {"metadata": {"message_type": "session_keepalive"}}:
+                LOGGER.debug("Received SESSION_KEEPALIVE on %s: %s", repr(self), data)
 
             case _:
                 LOGGER.debug("Received unhandled or unknown message on %s: %s", repr(self), data)
